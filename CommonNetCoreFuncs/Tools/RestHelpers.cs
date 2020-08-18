@@ -1,6 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Text;
@@ -23,16 +26,13 @@ namespace CommonNetCoreFuncs.Tools
             using (HttpClient httpClient = new HttpClient())
             {
                 HttpResponseMessage response = httpClient.GetAsync(new Uri(url)).Result;
-
                 response.EnsureSuccessStatusCode();
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception;
-
                     result = JsonConvert.DeserializeObject<T>(x.Result);
                 });
             }
-
             return result;
         }
 
@@ -57,12 +57,9 @@ namespace CommonNetCoreFuncs.Tools
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception;
-
                     result = JsonConvert.DeserializeObject<T>(x.Result);
-
                 });
             }
-
             return result;
         }
 
@@ -77,8 +74,79 @@ namespace CommonNetCoreFuncs.Tools
             using (HttpClient client = new HttpClient())
             {
                 HttpResponseMessage response = await client.PutAsync(apiUrl, putObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
-
                 response.EnsureSuccessStatusCode();
+            }
+        }
+
+        /// <summary>
+        /// PatchRequest
+        /// </summary>
+        /// <param name="apiUrl"></param>
+        /// <param name="patchDoc"></param>
+        /// <returns></returns>
+        /// <exception cref="HttpRequestException">Ignore.</exception>
+        public static async Task PatchRequest(string apiUrl, HttpContent patchDoc)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                HttpResponseMessage response = await client.PatchAsync(apiUrl, patchDoc).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+            }
+        }
+
+        public static JsonPatchDocument CreatePatch(object originalObject, object modifiedObject)
+        {
+            var original = JObject.FromObject(originalObject);
+            var modified = JObject.FromObject(modifiedObject);
+
+            var patch = new JsonPatchDocument();
+            FillPatchForObject(original, modified, patch, "/");
+
+            return patch;
+        }
+
+        static void FillPatchForObject(JObject orig, JObject mod, JsonPatchDocument patch, string path)
+        {
+            var origNames = orig.Properties().Select(x => x.Name).ToArray();
+            var modNames = mod.Properties().Select(x => x.Name).ToArray();
+
+            // Names removed in modified
+            foreach (var k in origNames.Except(modNames))
+            {
+                var prop = orig.Property(k);
+                patch.Remove(path + prop.Name);
+            }
+
+            // Names added in modified
+            foreach (var k in modNames.Except(origNames))
+            {
+                var prop = mod.Property(k);
+                patch.Add(path + prop.Name, prop.Value);
+            }
+
+            // Present in both
+            foreach (var k in origNames.Intersect(modNames))
+            {
+                var origProp = orig.Property(k);
+                var modProp = mod.Property(k);
+
+                if (origProp.Value.Type != modProp.Value.Type)
+                {
+                    patch.Replace(path + modProp.Name, modProp.Value);
+                }
+                else if (!string.Equals(origProp.Value.ToString(Formatting.None),modProp.Value.ToString(Formatting.None)))
+                {
+                    if (origProp.Value.Type == JTokenType.Object)
+                    {
+                        // Recurse into objects
+                        FillPatchForObject(origProp.Value as JObject, modProp.Value as JObject, patch, path + modProp.Name + "/");
+                    }
+                    else
+                    {
+                        // Replace values directly
+                        patch.Replace(path + modProp.Name, modProp.Value);
+                    }
+                }
             }
         }
     }

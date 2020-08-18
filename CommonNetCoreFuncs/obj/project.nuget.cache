@@ -1,10 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "5/Cd7B147QEGxldy8A/KbilBy9rhBieqCvDaJPMHJHUascucJZaBCRk+rto3dkrav550GeCS908SamQ4X/E7KA==",
+  "dgSpecHash": "2UIl4yNTxeNgJLRpDIl3+femsNFVZZqjFwSTc/vi4PJTUXzTaTbFnYsKCcmtl/3LgzR1d285Wk2dzPd21qpdhw==",
   "success": true,
   "projectFilePath": "C:\\Users\\VN034157\\source\\repos\\CommonNetCoreFuncs\\CommonNetCoreFuncs\\CommonNetCoreFuncs.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\VN034157\\.nuget\\packages\\microsoft.aspnet.webapi.client\\5.2.7\\microsoft.aspnet.webapi.client.5.2.7.nupkg.sha512",
+    "C:\\Users\\VN034157\\.nuget\\packages\\microsoft.aspnetcore.jsonpatch\\3.1.7\\microsoft.aspnetcore.jsonpatch.3.1.7.nupkg.sha512",
+    "C:\\Users\\VN034157\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
     "C:\\Users\\VN034157\\.nuget\\packages\\microsoft.extensions.configuration\\3.0.0\\microsoft.extensions.configuration.3.0.0.nupkg.sha512",
     "C:\\Users\\VN034157\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\3.0.0\\microsoft.extensions.configuration.abstractions.3.0.0.nupkg.sha512",
     "C:\\Users\\VN034157\\.nuget\\packages\\microsoft.extensions.configuration.binder\\3.0.0\\microsoft.extensions.configuration.binder.3.0.0.nupkg.sha512",

@@ -4,8 +4,17 @@ using System.Text;
 
 namespace CommonNetCoreFuncs.Tools
 {
+    /// <summary>
+    /// Methods for validating data
+    /// </summary>
     public static class DataValidation
     {
+        /// <summary>
+        /// Compares two like objects against each other to check to see if they contain the same values
+        /// </summary>
+        /// <param name="obj1"></param>
+        /// <param name="obj2"></param>
+        /// <returns>Returns true if the two objects have the same value for all elements</returns>
         public static bool IsEqual(this object obj1, object obj2)
         {
             // They're both null.

@@ -4,8 +4,17 @@ using System.Text;
 
 namespace CommonNetCoreFuncs.Conversion
 {
+    /// <summary>
+    /// Methods for converting different nullable variable types to string
+    /// </summary>
     public static class StringConversion
     {
+        /// <summary>
+        /// Converts Nullable DateTime to string using the passed in formatting
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="formatString"></param>
+        /// <returns>Returns formatted string representation of the passed in nullable DateTime</returns>
         public static string ToNString(this DateTime? x, string formatString = "MM/dd/yyyy")
         {
             string output = null;
@@ -16,6 +25,12 @@ namespace CommonNetCoreFuncs.Conversion
             }
             return output;
         }
+
+        /// <summary>
+        /// Converts nullable int to string 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns>Returns string representation of the passed in nullable int</returns>
         public static string ToNString(this int? x)
         {
             string output = null;
@@ -25,6 +40,11 @@ namespace CommonNetCoreFuncs.Conversion
             }
             return output;
         }
+        /// <summary>
+        /// Converts nullable long to string 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns>Returns string representation of the passed in nullable long</returns>
         public static string ToNString(this long? x)
         {
             string output = null;
@@ -34,6 +54,11 @@ namespace CommonNetCoreFuncs.Conversion
             }
             return output;
         }
+        /// <summary>
+        /// Converts nullable double to string 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns>Returns string representation of the passed in nullable double</returns>
         public static string ToNString(this double? x)
         {
             string output = null;

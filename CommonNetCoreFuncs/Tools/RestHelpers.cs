@@ -11,10 +11,17 @@ using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Tools
 {
+    /// <summary>
+    /// Helper functions that send requests to specified URI and return resulting values where applicable
+    /// Source1: https://medium.com/@srikanth.gunnala/generic-wrapper-to-consume-asp-net-web-api-rest-service-641b50462c0
+    /// Source2: https://stackoverflow.com/questions/43692053/how-can-i-create-a-jsonpatchdocument-from-comparing-two-c-sharp-objects
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public static class RestHelpers<T> where T : class
     {
         /// <summary>
         /// For getting the resources from a web api
+        /// From Source1
         /// </summary>
         /// <param name="url">API Url</param>
         /// <returns>A Task with result object of type T</returns>
@@ -38,6 +45,7 @@ namespace CommonNetCoreFuncs.Tools
 
         /// <summary>
         /// For creating a new item over a web api using POST
+        /// From Source1
         /// </summary>
         /// <param name="apiUrl">API Url</param>
         /// <param name="postObject">The object to be created</param>
@@ -65,6 +73,7 @@ namespace CommonNetCoreFuncs.Tools
 
         /// <summary>
         /// For updating an existing item over a web api using PUT
+        /// From Source1
         /// </summary>
         /// <param name="apiUrl">API Url</param>
         /// <param name="putObject">The object to be edited</param>
@@ -94,17 +103,32 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
+        /// <summary>
+        /// Converts two like models to JObjects and passes them into the FillPatchForObject method to create a JSON patch document
+        /// From Source2
+        /// </summary>
+        /// <param name="originalObject"></param>
+        /// <param name="modifiedObject"></param>
+        /// <returns></returns>
         public static JsonPatchDocument CreatePatch(object originalObject, object modifiedObject)
         {
-            var original = JObject.FromObject(originalObject);
-            var modified = JObject.FromObject(modifiedObject);
+            JObject original = JObject.FromObject(originalObject);
+            JObject modified = JObject.FromObject(modifiedObject);
 
-            var patch = new JsonPatchDocument();
+            JsonPatchDocument patch = new JsonPatchDocument();
             FillPatchForObject(original, modified, patch, "/");
 
             return patch;
         }
 
+        /// <summary>
+        /// Compares two JObjects together and creates a JSON patch document for the differences
+        /// From Source2
+        /// </summary>
+        /// <param name="orig"></param>
+        /// <param name="mod"></param>
+        /// <param name="patch"></param>
+        /// <param name="path"></param>
         static void FillPatchForObject(JObject orig, JObject mod, JsonPatchDocument patch, string path)
         {
             var origNames = orig.Properties().Select(x => x.Name).ToArray();

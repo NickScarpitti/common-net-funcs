@@ -19,6 +19,8 @@ namespace CommonNetCoreFuncs.Tools
     /// <typeparam name="T"></typeparam>
     public static class RestHelpers<T> where T : class
     {
+        static readonly HttpClient client = new HttpClient();
+
         /// <summary>
         /// For getting the resources from a web api
         /// From Source1
@@ -30,9 +32,11 @@ namespace CommonNetCoreFuncs.Tools
         public static async Task<T> Get(string url)
         {
             T result = null;
-            using (HttpClient httpClient = new HttpClient())
+            //using (HttpClient httpClient = new HttpClient())
+            //{
+            try
             {
-                HttpResponseMessage response = httpClient.GetAsync(new Uri(url)).Result;
+                HttpResponseMessage response = client.GetAsync(new Uri(url)).Result;
                 response.EnsureSuccessStatusCode();
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
@@ -40,6 +44,12 @@ namespace CommonNetCoreFuncs.Tools
                     result = JsonConvert.DeserializeObject<T>(x.Result);
                 });
             }
+            catch (Exception ex)
+            {
+                return result;
+            }
+                
+            //}
             return result;
         }
 
@@ -54,21 +64,54 @@ namespace CommonNetCoreFuncs.Tools
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
         public static async Task<T> PostRequest(string apiUrl, T postObject)
         {
-            T result = null;
-
-            using (HttpClient client = new HttpClient())
+            try
             {
-                HttpResponseMessage response = await client.PostAsync(apiUrl, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
+                T result = null;
 
-                response.EnsureSuccessStatusCode();
+                //using (HttpClient client = new HttpClient())
+                //{
+                    HttpResponseMessage response = await client.PostAsync(apiUrl, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
 
-                await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
-                {
-                    if (x.IsFaulted) throw x.Exception;
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
-                });
+                    response.EnsureSuccessStatusCode();
+
+                    await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                    {
+                        if (x.IsFaulted) throw x.Exception;
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    });
+                //}
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        public static async Task<T> DeleteRequest(string apiUrl, T deleteObject)
+        {
+            try
+            {
+                T result = deleteObject;
+
+                //using (HttpClient client = new HttpClient())
+                //{
+                    HttpResponseMessage response = await client.DeleteAsync(apiUrl).ConfigureAwait(false);
+
+                    response.EnsureSuccessStatusCode();
+
+                    await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                    {
+                        if (x.IsFaulted) throw x.Exception;
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    });
+                //}
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -80,11 +123,11 @@ namespace CommonNetCoreFuncs.Tools
         /// <exception cref="HttpRequestException">Ignore.</exception>
         public static async Task PutRequest(string apiUrl, T putObject)
         {
-            using (HttpClient client = new HttpClient())
-            {
+            //using (HttpClient client = new HttpClient())
+            //{
                 HttpResponseMessage response = await client.PutAsync(apiUrl, putObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-            }
+            //}
         }
 
         /// <summary>
@@ -96,11 +139,11 @@ namespace CommonNetCoreFuncs.Tools
         /// <exception cref="HttpRequestException">Ignore.</exception>
         public static async Task PatchRequest(string apiUrl, HttpContent patchDoc)
         {
-            using (HttpClient client = new HttpClient())
-            {
+            //using (HttpClient client = new HttpClient())
+            //{
                 HttpResponseMessage response = await client.PatchAsync(apiUrl, patchDoc).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-            }
+            //}
         }
 
         /// <summary>

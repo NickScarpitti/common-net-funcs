@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -67,6 +68,21 @@ namespace CommonNetCoreFuncs.Conversion
                 output = x.ToNString();
             }
             return output;
+        }
+        public static SelectListItem ToSelectListItem(this string value)
+        {
+            if (value != null)
+            {
+                return new SelectListItem
+                {
+                    Text = value,
+                    Value = value
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

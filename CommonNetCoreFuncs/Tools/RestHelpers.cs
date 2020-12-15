@@ -44,7 +44,7 @@ namespace CommonNetCoreFuncs.Tools
                     result = JsonConvert.DeserializeObject<T>(x.Result);
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return result;
             }
@@ -82,7 +82,7 @@ namespace CommonNetCoreFuncs.Tools
                 //}
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
@@ -108,7 +108,7 @@ namespace CommonNetCoreFuncs.Tools
                 //}
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }

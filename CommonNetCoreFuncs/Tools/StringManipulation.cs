@@ -98,5 +98,22 @@ namespace CommonNetCoreFuncs.Tools
                 return null;
             }
         }
+
+        public static string MakeNullNull(this string s)
+        {
+            if (s == null)
+            {
+                return null;
+            }
+            else if (s.ToUpper() == "NULL")
+            {
+                return null;
+            }
+            else if (s.ToUpper().Replace("NULL", "") == "")
+            {
+                return null;
+            }
+            return s;
+        }
     }
 }

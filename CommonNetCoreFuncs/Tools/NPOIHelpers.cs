@@ -14,14 +14,14 @@ namespace CommonNetCoreFuncs.Tools
 {
     public static class NPOIHelpers
     {
-        public enum styles
+        public enum Styles
         {
             Header,
             Body,
             Error,
             Custom
         }
-        public enum fonts
+        public enum Fonts
         {
             Default,
             Header,
@@ -41,7 +41,7 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return cell;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
@@ -63,7 +63,7 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return cell;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
@@ -115,7 +115,7 @@ namespace CommonNetCoreFuncs.Tools
                     return null;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
@@ -174,7 +174,7 @@ namespace CommonNetCoreFuncs.Tools
                 wb.Close();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -182,12 +182,12 @@ namespace CommonNetCoreFuncs.Tools
         public static string GetSafeDate(string dateFormat) { return DateTime.Today.ToString(dateFormat).Replace("/", "-"); }
    
         /// <exception cref="Exception">Ignore.</exception>
-        public static ICellStyle GetStyle(styles style, XSSFWorkbook wb, bool cellLocked = false, string htmlColor = null, IFont font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
+        public static ICellStyle GetStyle(Styles style, XSSFWorkbook wb, bool cellLocked = false, string htmlColor = null, IFont font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
         {
             ICellStyle cellStyle = wb.CreateCellStyle();
             switch (style)
             {
-                case styles.Header:
+                case Styles.Header:
                     cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
                     cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
@@ -195,21 +195,21 @@ namespace CommonNetCoreFuncs.Tools
                     cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
                     cellStyle.FillPattern = FillPattern.SolidForeground;
-                    cellStyle.SetFont(GetFont(fonts.Header, wb));
+                    cellStyle.SetFont(GetFont(Fonts.Header, wb));
                     break;
-                case styles.Body:
+                case Styles.Body:
                     cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
                     cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.COLOR_NORMAL;
-                    cellStyle.SetFont(GetFont(fonts.Default, wb));
+                    cellStyle.SetFont(GetFont(Fonts.Default, wb));
                     break;
-                case styles.Error:
+                case Styles.Error:
                     cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Red.Index;
                     cellStyle.FillPattern = FillPattern.SolidForeground;
                     break;
-                case styles.Custom:
+                case Styles.Custom:
                     XSSFCellStyle xStyle = (XSSFCellStyle)wb.CreateCellStyle();
                     if (alignment != null) { xStyle.Alignment = (NPOI.SS.UserModel.HorizontalAlignment)alignment; }
                     byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
@@ -224,17 +224,17 @@ namespace CommonNetCoreFuncs.Tools
             cellStyle.IsLocked = cellLocked;
             return cellStyle;
         }
-        public static IFont GetFont(fonts font, XSSFWorkbook wb)
+        public static IFont GetFont(Fonts font, XSSFWorkbook wb)
         {
             IFont cellFont = wb.CreateFont();
             switch (font)
             {
-                case fonts.Default:
+                case Fonts.Default:
                     cellFont.IsBold = false;
                     cellFont.FontHeightInPoints = 10;
                     cellFont.FontName = "Calibri";
                     break;
-                case fonts.Header:
+                case Fonts.Header:
                     cellFont.IsBold = true;
                     cellFont.FontHeightInPoints = 10;
                     cellFont.FontName = "Calibri";
@@ -252,8 +252,8 @@ namespace CommonNetCoreFuncs.Tools
                 {
                     if (data.Count > 0)
                     {
-                        ICellStyle headerStyle = GetStyle(styles.Header, wb);
-                        ICellStyle bodyStyle = GetStyle(styles.Body, wb);
+                        ICellStyle headerStyle = GetStyle(Styles.Header, wb);
+                        ICellStyle bodyStyle = GetStyle(Styles.Body, wb);
 
                         int x = 0;
                         int y = 0;
@@ -296,7 +296,7 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }

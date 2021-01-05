@@ -49,15 +49,15 @@
             },
             "Microsoft.AspNetCore.JsonPatch": {
               "target": "Package",
-              "version": "[3.1.9, )"
+              "version": "[5.0.1, )"
             },
             "NLog.Web.AspNetCore": {
               "target": "Package",
-              "version": "[4.9.3, )"
+              "version": "[4.10.0, )"
             },
             "NPOI": {
               "target": "Package",
-              "version": "[2.5.1, )"
+              "version": "[2.5.2, )"
             },
             "Newtonsoft.Json": {
               "target": "Package",
@@ -65,7 +65,7 @@
             },
             "System.Data.Odbc": {
               "target": "Package",
-              "version": "[4.7.0, )"
+              "version": "[5.0.0, )"
             },
             "System.Data.SqlClient": {
               "target": "Package",
@@ -73,7 +73,7 @@
             },
             "System.Drawing.Common": {
               "target": "Package",
-              "version": "[4.7.0, )"
+              "version": "[5.0.0, )"
             }
           },
           "imports": [

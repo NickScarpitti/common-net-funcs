@@ -137,13 +137,29 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="patchDoc"></param>
         /// <returns></returns>
         /// <exception cref="HttpRequestException">Ignore.</exception>
-        public static async Task PatchRequest(string apiUrl, HttpContent patchDoc)
+        public static async Task<T> PatchRequest(string apiUrl, HttpContent patchDoc)
         {
-            //using (HttpClient client = new HttpClient())
-            //{
+            try
+            {
+                T result = null;
+
+                //using (HttpClient client = new HttpClient())
+                //{
                 HttpResponseMessage response = await client.PatchAsync(apiUrl, patchDoc).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-            //}
+
+                await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                {
+                    if (x.IsFaulted) throw x.Exception;
+                    result = JsonConvert.DeserializeObject<T>(x.Result);
+                });
+                //}
+                return result;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         /// <summary>

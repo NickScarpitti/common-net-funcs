@@ -1,9 +1,0 @@
-C:\Users\VN034157\source\repos\CommonNetCoreFuncs\CommonNetCoreFuncs\bin\Debug\netcoreapp3.1\CommonNetCoreFuncs.deps.json
-C:\Users\VN034157\source\repos\CommonNetCoreFuncs\CommonNetCoreFuncs\bin\Debug\netcoreapp3.1\CommonNetCoreFuncs.dll
-C:\Users\VN034157\source\repos\CommonNetCoreFuncs\CommonNetCoreFuncs\bin\Debug\netcoreapp3.1\CommonNetCoreFuncs.pdb
-C:\Users\VN034157\source\repos\CommonNetCoreFuncs\CommonNetCoreFuncs\obj\Debug\netcoreapp3.1\CommonNetCoreFuncs.csprojAssemblyReference.cache
-C:\Users\VN034157\source\repos\CommonNetCoreFuncs\CommonNetCoreFuncs\obj\Debug\netcoreapp3.1\CommonNetCoreFuncs.AssemblyInfoInputs.cache
-C:\Users\VN034157\source\repos\CommonNetCoreFuncs\CommonNetCoreFuncs\obj\Debug\netcoreapp3.1\CommonNetCoreFuncs.AssemblyInfo.cs
-C:\Users\VN034157\source\repos\CommonNetCoreFuncs\CommonNetCoreFuncs\obj\Debug\netcoreapp3.1\CommonNetCoreFuncs.csproj.CoreCompileInputs.cache
-C:\Users\VN034157\source\repos\CommonNetCoreFuncs\CommonNetCoreFuncs\obj\Debug\netcoreapp3.1\CommonNetCoreFuncs.dll
-C:\Users\VN034157\source\repos\CommonNetCoreFuncs\CommonNetCoreFuncs\obj\Debug\netcoreapp3.1\CommonNetCoreFuncs.pdb

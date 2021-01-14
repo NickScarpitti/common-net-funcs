@@ -28,6 +28,14 @@ namespace CommonNetCoreFuncs.Tools
             BigWhiteHeader
         }
 
+        public static bool IsCellEmpty(this ICell cell)
+        {
+            if (string.IsNullOrWhiteSpace(cell.GetStringValue()))
+            {
+                return true;
+            }
+            return false;
+        }
         public static ICell GetCellFromReference(this ISheet ws, string cellName, int colOffset = 0, int rowOffset = 0)
         {
             try
@@ -37,7 +45,7 @@ namespace CommonNetCoreFuncs.Tools
                 ICell cell = row.GetCell(cr.Col + colOffset);
                 if (cell == null)
                 {
-                    cell = ws.CreateCell(row, cr.Col + colOffset);
+                    cell = row.CreateCell(cr.Col + colOffset);
                 }
                 return cell;
             }
@@ -59,7 +67,7 @@ namespace CommonNetCoreFuncs.Tools
                 ICell cell = row.GetCell(x + colOffset);
                 if (cell == null)
                 {
-                    cell = ws.CreateCell(row, x + colOffset);
+                    cell = row.CreateCell(x + colOffset);
                 }
                 return cell;
             }
@@ -106,7 +114,7 @@ namespace CommonNetCoreFuncs.Tools
                     ICell cell = row.GetCell(colNum + colOffset);
                     if (cell == null)
                     {
-                        cell = ws.CreateCell(row, colNum + colOffset);
+                        cell = row.CreateCell(colNum + colOffset);
                     }
                     return cell;
                 }
@@ -145,7 +153,7 @@ namespace CommonNetCoreFuncs.Tools
                 }
             }
         }
-        public static ICell CreateCell(this ISheet ws, IRow row, int col)
+        public static ICell CreateCell(this IRow row, int col)
         {
             return row.CreateCell(col);
         }
@@ -285,7 +293,7 @@ namespace CommonNetCoreFuncs.Tools
                             y++;
                         }
 
-                        ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, props.Count() - 1));
+                        ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, props.Length - 1));
 
                         foreach (var prop in props)
                         {

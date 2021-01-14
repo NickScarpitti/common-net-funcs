@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace CommonNetCoreFuncs.Tools
@@ -32,6 +35,16 @@ namespace CommonNetCoreFuncs.Tools
                 {
                     return false;
                 }
+            }
+            return true;
+        }
+
+        public static bool ValidateFileExtention(this string fileName, string[] validExtensions)
+        {
+            string extension = Path.GetExtension(fileName);
+            if (!validExtensions.Contains(extension.ToLower()))
+            {
+                return false;
             }
             return true;
         }

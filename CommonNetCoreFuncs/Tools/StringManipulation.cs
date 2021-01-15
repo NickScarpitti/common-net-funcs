@@ -105,11 +105,11 @@ namespace CommonNetCoreFuncs.Tools
             {
                 return null;
             }
-            else if (s.ToUpper() == "NULL")
+            else if (s.StrEq("Null"))
             {
                 return null;
             }
-            else if (s.ToUpper().Replace("NULL", "") == "")
+            else if (s.ToUpperInvariant().Replace("NULL", "") == "")
             {
                 return null;
             }

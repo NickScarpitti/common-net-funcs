@@ -217,7 +217,7 @@ namespace CommonNetCoreFuncs.Tools
                 {
                     patch.Replace(path + modProp.Name, modProp.Value);
                 }
-                else if (!string.Equals(origProp.Value.ToString(Formatting.None),modProp.Value.ToString(Formatting.None)))
+                else if (!origProp.Value.ToString(Formatting.None).StrEq(modProp.Value.ToString(Formatting.None)))
                 {
                     if (origProp.Value.Type == JTokenType.Object)
                     {

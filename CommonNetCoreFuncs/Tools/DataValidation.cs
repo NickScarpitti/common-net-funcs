@@ -42,11 +42,16 @@ namespace CommonNetCoreFuncs.Tools
         public static bool ValidateFileExtention(this string fileName, string[] validExtensions)
         {
             string extension = Path.GetExtension(fileName);
-            if (!validExtensions.Contains(extension.ToLower()))
+            if (!validExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase))
             {
                 return false;
             }
             return true;
+        }
+
+        public static bool StrEq(this string s1, string s2)
+        {
+            return string.Equals(s1, s2, StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

@@ -51,7 +51,7 @@ namespace CommonNetCoreFuncs.Tools
 
         public static bool StrEq(this string s1, string s2)
         {
-            return string.Equals(s1, s2, StringComparison.InvariantCultureIgnoreCase);
+            return string.Equals(s1 ?? "", s2 ?? "", StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

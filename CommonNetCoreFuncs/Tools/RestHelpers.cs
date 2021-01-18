@@ -19,6 +19,7 @@ namespace CommonNetCoreFuncs.Tools
     /// <typeparam name="T"></typeparam>
     public static class RestHelpers<T> where T : class
     {
+        //Use static client here instead of individual using statements to prevent maxing out the number of connections
         static readonly HttpClient client = new HttpClient();
 
         /// <summary>
@@ -32,24 +33,22 @@ namespace CommonNetCoreFuncs.Tools
         public static async Task<T> Get(string url)
         {
             T result = null;
-            //using (HttpClient httpClient = new HttpClient())
-            //{
             try
             {
                 HttpResponseMessage response = client.GetAsync(new Uri(url)).Result;
-                response.EnsureSuccessStatusCode();
-                await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                //response.EnsureSuccessStatusCode();
+                if (response.IsSuccessStatusCode)
                 {
-                    if (x.IsFaulted) throw x.Exception;
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
-                });
+                    await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                    {
+                        if (x.IsFaulted) throw x.Exception;
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    });
+                }
             }
             catch (Exception)
             {
-                return result;
             }
-                
-            //}
             return result;
         }
 
@@ -64,54 +63,51 @@ namespace CommonNetCoreFuncs.Tools
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
         public static async Task<T> PostRequest(string apiUrl, T postObject)
         {
+            T result = null;
             try
             {
-                T result = null;
-
-                //using (HttpClient client = new HttpClient())
-                //{
-                    HttpResponseMessage response = await client.PostAsync(apiUrl, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
-
-                    response.EnsureSuccessStatusCode();
-
+                HttpResponseMessage response = await client.PostAsync(apiUrl, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
+                //response.EnsureSuccessStatusCode();
+                if (response.IsSuccessStatusCode)
+                {
                     await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                     {
                         if (x.IsFaulted) throw x.Exception;
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     });
-                //}
-                return result;
+                }
             }
             catch (Exception)
             {
-                return null;
             }
+            return result;
         }
 
         public static async Task<T> DeleteRequest(string apiUrl, T deleteObject)
         {
+            T result = deleteObject;
             try
             {
-                T result = deleteObject;
-
-                //using (HttpClient client = new HttpClient())
-                //{
-                    HttpResponseMessage response = await client.DeleteAsync(apiUrl).ConfigureAwait(false);
-
-                    response.EnsureSuccessStatusCode();
-
+                HttpResponseMessage response = await client.DeleteAsync(apiUrl).ConfigureAwait(false);
+                //response.EnsureSuccessStatusCode();
+                if (response.IsSuccessStatusCode)
+                {
                     await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                     {
                         if (x.IsFaulted) throw x.Exception;
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     });
-                //}
-                return result;
+                }
+                else
+                {
+                    result = null;
+                }
             }
             catch (Exception)
             {
-                return null;
+                result = null;
             }
+            return result;
         }
 
         /// <summary>
@@ -123,11 +119,8 @@ namespace CommonNetCoreFuncs.Tools
         /// <exception cref="HttpRequestException">Ignore.</exception>
         public static async Task PutRequest(string apiUrl, T putObject)
         {
-            //using (HttpClient client = new HttpClient())
-            //{
-                HttpResponseMessage response = await client.PutAsync(apiUrl, putObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-            //}
+            HttpResponseMessage response = await client.PutAsync(apiUrl, putObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
         }
 
         /// <summary>
@@ -139,27 +132,24 @@ namespace CommonNetCoreFuncs.Tools
         /// <exception cref="HttpRequestException">Ignore.</exception>
         public static async Task<T> PatchRequest(string apiUrl, HttpContent patchDoc)
         {
+            T result = null;
             try
             {
-                T result = null;
-
-                //using (HttpClient client = new HttpClient())
-                //{
                 HttpResponseMessage response = await client.PatchAsync(apiUrl, patchDoc).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-
-                await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                //response.EnsureSuccessStatusCode();
+                if (response.IsSuccessStatusCode)
                 {
-                    if (x.IsFaulted) throw x.Exception;
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
-                });
-                //}
-                return result;
+                    await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                    {
+                        if (x.IsFaulted) throw x.Exception;
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    });
+                }
             }
             catch (Exception)
             {
-                return null;
             }
+            return result;
         }
 
         /// <summary>

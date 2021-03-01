@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CommonNetCoreFuncs.Tools
+namespace CommonNetCoreFuncs.Compare
 {
     public class GenericCompare<T>: IEqualityComparer<T>
     {

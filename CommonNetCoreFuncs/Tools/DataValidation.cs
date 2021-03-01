@@ -53,5 +53,13 @@ namespace CommonNetCoreFuncs.Tools
         {
             return string.Equals(s1 ?? "", s2 ?? "", StringComparison.InvariantCultureIgnoreCase);
         }
+
+        public static void AddDictionaryItem(this Dictionary<string, string> dict, string key, string value)
+        {
+            if (!dict.ContainsKey(key))
+            {
+                dict.Add(key, value);
+            }
+        }
     }
 }

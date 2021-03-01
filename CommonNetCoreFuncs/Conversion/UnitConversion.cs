@@ -8,33 +8,33 @@ namespace CommonNetCoreFuncs.Conversion
 {
     public static class UnitConversion
     {
-        public const double lbsToKgConst = 0.453592;
+        public const double kgToLbsConst = 2.20462;
         public const double ftToInConst = 12;
 
         public static double LbsToKg(this double massLbs)
         {
-            return massLbs * lbsToKgConst;
+            return massLbs / kgToLbsConst;
         }
         public static double LbsToKg(this double? massLbs)
         {
             if (massLbs != null)
             {
-                return Convert.ToDouble(massLbs) * lbsToKgConst;
+                return Convert.ToDouble(massLbs) / kgToLbsConst;
             }
             else
             {
                 return 0;
             }
         }
-        public static double KgToLbs(this double massLbs)
+        public static double KgToLbs(this double massKg)
         {
-            return massLbs / lbsToKgConst;
+            return massKg * kgToLbsConst;
         }
-        public static double KgToLbs(this double? massLbs)
+        public static double KgToLbs(this double? massKg)
         {
-            if (massLbs != null)
+            if (massKg != null)
             {
-                return Convert.ToDouble(massLbs) / lbsToKgConst;
+                return Convert.ToDouble(massKg) * kgToLbsConst;
             }
             else
             {

@@ -271,7 +271,7 @@ namespace CommonNetCoreFuncs.Tools
                         foreach (var prop in props)
                         {
                             ICell c = ws.GetCellFromCoordinates(x, y);
-                            c.SetCellValue(prop.Name);
+                            c.SetCellValue(prop.Name.ToString());
                             c.CellStyle = headerStyle;
                             x++;
                         }
@@ -304,7 +304,7 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 return false;
             }

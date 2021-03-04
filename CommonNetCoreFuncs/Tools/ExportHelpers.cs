@@ -35,45 +35,26 @@ namespace CommonNetCoreFuncs.Tools
         {
             try
             {
-                //string tempNameHash = DateTime.Now.GetHashCode().ToString() + ".xlsx";
-                //using (FileStream fileStream = new FileStream(Path.Combine(tempLocation, tempNameHash), FileMode.Create, FileAccess.Write))
-                //{
-                    XSSFWorkbook wb = new XSSFWorkbook();
-                    ISheet ws = wb.CreateSheet("Data");
-                    if (dataList != null)
+                XSSFWorkbook wb = new XSSFWorkbook();
+                ISheet ws = wb.CreateSheet("Data");
+                if (dataList != null)
+                {
+                    if (!NPOIHelpers.ExportFromTable(wb, ws, dataList))
                     {
-                        logger.LogInformation("Step 3");
-                        if (!NPOIHelpers.ExportFromTable(wb, ws, dataList))
-                        {
-                            return null;
-                        }
+                        return null;
                     }
-                    
-                    //wb.Write(fileStream);
-                    MemoryStream tempStream = new MemoryStream();
-                    wb.Write(tempStream, true);
-                    await tempStream.FlushAsync();
-                    tempStream.Position = 0;
-                    await tempStream.CopyToAsync(memoryStream);                   
-                    await tempStream.DisposeAsync();
-                    await memoryStream.FlushAsync();
-                    memoryStream.Position = 0;
-                //}
+                }
+
+                MemoryStream tempStream = new MemoryStream();
+                wb.Write(tempStream, true);
+                await tempStream.FlushAsync();
+                tempStream.Position = 0;
+                await tempStream.CopyToAsync(memoryStream);                   
+                await tempStream.DisposeAsync();
+                await memoryStream.FlushAsync();
+                memoryStream.Position = 0;
                 
                 return memoryStream;
-
-                //using (FileStream fileStream1 = new FileStream(Path.Combine(tempLocation, tempNameHash), FileMode.Open))
-                //{
-                //    await fileStream1.CopyToAsync(memoryStream);
-                //}
-                //memoryStream.Position = 0;
-
-                //if (File.Exists(Path.Combine(tempLocation, tempNameHash)))
-                //{
-                //    File.Delete(Path.Combine(tempLocation, tempNameHash));
-                //}
-
-                //return memoryStream;
             }
             catch (Exception ex)
             {

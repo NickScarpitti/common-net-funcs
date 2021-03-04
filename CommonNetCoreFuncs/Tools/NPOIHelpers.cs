@@ -9,11 +9,14 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.SS;
 
 namespace CommonNetCoreFuncs.Tools
 {
     public static class NPOIHelpers
     {
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         public enum Styles
         {
             Header,
@@ -49,8 +52,9 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return cell;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return null;
             }
 
@@ -71,8 +75,9 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return cell;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return null;
             }
 
@@ -82,7 +87,7 @@ namespace CommonNetCoreFuncs.Tools
             try
             {
                 IName name = wb.GetName(cellName);
-                CellReference[] crs = new AreaReference(name.RefersToFormula).GetAllReferencedCells();
+                CellReference[] crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
                 ISheet ws = null;
                 int rowNum = -1;
                 int colNum = -1;
@@ -123,8 +128,9 @@ namespace CommonNetCoreFuncs.Tools
                     return null;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return null;
             }
 
@@ -132,7 +138,7 @@ namespace CommonNetCoreFuncs.Tools
         public static void ClearAllFromName(this XSSFWorkbook wb, string cellName)
         {
             IName name = wb.GetName(cellName);
-            CellReference[] crs = new AreaReference(name.RefersToFormula).GetAllReferencedCells();
+            CellReference[] crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
             ISheet ws = wb.GetSheet(crs[0].SheetName);
 
             if (ws == null || crs.Length == 0 || name == null)
@@ -182,8 +188,9 @@ namespace CommonNetCoreFuncs.Tools
                 wb.Close();
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return false;
             }
         }
@@ -304,8 +311,9 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return false;
             }
         }

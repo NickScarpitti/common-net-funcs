@@ -311,41 +311,26 @@ namespace CommonNetCoreFuncs.Tools
         }
         public static string GetStringValue(this ICell c)
         {
-            switch (c.CellType)
+            return c.CellType switch
             {
-                case CellType.Unknown:
-                    return string.Empty;
-                case CellType.Numeric:
-                    return c.NumericCellValue.ToString();
-                case CellType.String:
-                    return c.StringCellValue;
-                case CellType.Formula:
-                    switch (c.CachedFormulaResultType)
-                    {
-                        case CellType.Unknown:
-                            return string.Empty;
-                        case CellType.Numeric:
-                            return c.NumericCellValue.ToString();
-                        case CellType.String:
-                            return c.StringCellValue;
-                        case CellType.Blank:
-                            return string.Empty;
-                        case CellType.Boolean:
-                            return c.BooleanCellValue.ToString();
-                        case CellType.Error:
-                            return c.ErrorCellValue.ToString();
-                        default:
-                            return string.Empty;
-                    }
-                case CellType.Blank:
-                    return string.Empty;
-                case CellType.Boolean:
-                    return c.BooleanCellValue.ToString();
-                case CellType.Error:
-                    return c.ErrorCellValue.ToString();
-                default:
-                    return string.Empty;
-            }
+                CellType.Unknown => string.Empty,
+                CellType.Numeric => c.NumericCellValue.ToString(),
+                CellType.String => c.StringCellValue,
+                CellType.Formula => c.CachedFormulaResultType switch
+                {
+                    CellType.Unknown => string.Empty,
+                    CellType.Numeric => c.NumericCellValue.ToString(),
+                    CellType.String => c.StringCellValue,
+                    CellType.Blank => string.Empty,
+                    CellType.Boolean => c.BooleanCellValue.ToString(),
+                    CellType.Error => c.ErrorCellValue.ToString(),
+                    _ => string.Empty,
+                },
+                CellType.Blank => string.Empty,
+                CellType.Boolean => c.BooleanCellValue.ToString(),
+                CellType.Error => c.ErrorCellValue.ToString(),
+                _ => string.Empty,
+            };
         }
     }
 }

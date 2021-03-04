@@ -42,6 +42,7 @@ namespace CommonNetCoreFuncs.Tools
                     ISheet ws = wb.CreateSheet("Data");
                     if (dataList != null)
                     {
+                        logger.LogInformation("Step 3");
                         if (!NPOIHelpers.ExportFromTable(wb, ws, dataList))
                         {
                             return null;
@@ -53,8 +54,7 @@ namespace CommonNetCoreFuncs.Tools
                     wb.Write(tempStream, true);
                     await tempStream.FlushAsync();
                     tempStream.Position = 0;
-                    await tempStream.CopyToAsync(memoryStream);
-                    logger.LogError($"tempStream.Length = {tempStream.Length}, memoryStream.Length = {memoryStream.Length}");
+                    await tempStream.CopyToAsync(memoryStream);                   
                     await tempStream.DisposeAsync();
                     await memoryStream.FlushAsync();
                     memoryStream.Position = 0;

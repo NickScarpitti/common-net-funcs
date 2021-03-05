@@ -13,7 +13,7 @@ using NPOI.SS;
 
 namespace CommonNetCoreFuncs.Tools
 {
-    public static class NPOIHelpers
+    public static class NpoiCommonHelpers
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -159,6 +159,7 @@ namespace CommonNetCoreFuncs.Tools
                 }
             }
         }
+
         public static ICell CreateCell(this IRow row, int col)
         {
             return row.CreateCell(col);
@@ -339,6 +340,39 @@ namespace CommonNetCoreFuncs.Tools
                 CellType.Error => c.ErrorCellValue.ToString(),
                 _ => string.Empty,
             };
+        }
+
+        public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, XSSFWorkbook wb)
+        {
+            MemoryStream tempStream = new MemoryStream();
+            wb.Write(tempStream, true);
+            await tempStream.FlushAsync();
+            tempStream.Seek(0, SeekOrigin.Begin);
+            await tempStream.CopyToAsync(memoryStream);
+            await tempStream.DisposeAsync();
+            await memoryStream.FlushAsync();
+            memoryStream.Seek(0, SeekOrigin.Begin);
+        }
+
+        public static void AddImage(this XSSFWorkbook wb, ISheet ws, byte[] imageData, string cellName)
+        {
+            IName name = wb.GetName(cellName);
+            AreaReference area = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007);
+
+            ICreationHelper helper = wb.GetCreationHelper();
+            IDrawing drawing = ws.CreateDrawingPatriarch();
+            IClientAnchor anchor = helper.CreateClientAnchor();
+            anchor.AnchorType = AnchorType.MoveAndResize;
+
+            int pictureIndex = wb.AddPicture(imageData, PictureType.PNG);
+                       
+            anchor.Col1 = area.FirstCell.Col;
+            anchor.Row1 = area.FirstCell.Row;
+            anchor.Col2 = area.LastCell.Col + 1; //TODO: Need to figure out how to get actual last row and col of the named range here
+            anchor.Row2 = area.LastCell.Row + 1;
+
+            IPicture picture = drawing.CreatePicture(anchor, pictureIndex);
+            //picture.Resize();
         }
     }
 }

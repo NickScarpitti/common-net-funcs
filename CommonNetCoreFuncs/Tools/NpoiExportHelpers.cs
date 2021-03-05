@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Tools
 {
-    public class ExportHelpers
+    public class NpoiExportHelpers
     {
-        private readonly ILogger<ExportHelpers> logger;
+        private readonly ILogger<NpoiExportHelpers> logger;
 
-        public ExportHelpers(ILogger<ExportHelpers> logger)
+        public NpoiExportHelpers(ILogger<NpoiExportHelpers> logger)
         {
             this.logger = logger;
         }
@@ -40,20 +40,13 @@ namespace CommonNetCoreFuncs.Tools
                 ISheet ws = wb.CreateSheet("Data");
                 if (dataList != null)
                 {
-                    if (!NPOIHelpers.ExportFromTable(wb, ws, dataList))
+                    if (!NpoiCommonHelpers.ExportFromTable(wb, ws, dataList))
                     {
                         return null;
                     }
                 }
 
-                MemoryStream tempStream = new MemoryStream();
-                wb.Write(tempStream, true);
-                await tempStream.FlushAsync();
-                tempStream.Position = 0;
-                await tempStream.CopyToAsync(memoryStream);                   
-                await tempStream.DisposeAsync();
-                await memoryStream.FlushAsync();
-                memoryStream.Position = 0;
+                await memoryStream.WriteFileToMemoryStreamAsync(wb);
                 
                 return memoryStream;
             }

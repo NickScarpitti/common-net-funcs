@@ -17,6 +17,7 @@ namespace CommonNetCoreFuncs.Tools
         {
             this.logger = logger;
         }
+
         /// <summary>
         /// GenericExcelExport
         /// </summary>
@@ -31,7 +32,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <exception cref="UnauthorizedAccessException">Ignore.</exception>
         /// <exception cref="PathTooLongException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
-        public async Task<MemoryStream> GenericExcelExport<T>(List<T> dataList, MemoryStream memoryStream, string tempLocation)
+        public async Task<MemoryStream> GenericExcelExport<T>(List<T> dataList, MemoryStream memoryStream)
         {
             try
             {

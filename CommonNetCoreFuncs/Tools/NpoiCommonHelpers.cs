@@ -354,25 +354,151 @@ namespace CommonNetCoreFuncs.Tools
             memoryStream.Seek(0, SeekOrigin.Begin);
         }
 
-        public static void AddImage(this XSSFWorkbook wb, ISheet ws, byte[] imageData, string cellName)
+        public static void AddImages(this XSSFWorkbook wb, List<byte[]> imageData, List<string> cellNames)
         {
-            IName name = wb.GetName(cellName);
-            AreaReference area = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007);
+            if (wb != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
+            {
+                ISheet ws = null;
+                ICreationHelper helper = wb.GetCreationHelper();
+                IDrawing drawing = null;
+                for (int i = 0; i < imageData.Count; i++)
+                {
+                    if (imageData[i].Length > 0 && wb != null && cellNames[i] != null)
+                    {
+                        ICell cell = wb.GetCellFromName(cellNames[i]);
+                        CellRangeAddress area = GetRangeOfMergedCells(cell);
 
-            ICreationHelper helper = wb.GetCreationHelper();
-            IDrawing drawing = ws.CreateDrawingPatriarch();
-            IClientAnchor anchor = helper.CreateClientAnchor();
-            anchor.AnchorType = AnchorType.MoveAndResize;
+                        if (cell != null && area != null)
+                        {
+                            if (ws == null)
+                            {
+                                ws = cell.Sheet;
+                                drawing = ws.CreateDrawingPatriarch();
+                            }
 
-            int pictureIndex = wb.AddPicture(imageData, PictureType.PNG);
-                       
-            anchor.Col1 = area.FirstCell.Col;
-            anchor.Row1 = area.FirstCell.Row;
-            anchor.Col2 = area.LastCell.Col + 1; //TODO: Need to figure out how to get actual last row and col of the named range here
-            anchor.Row2 = area.LastCell.Row + 1;
+                            IClientAnchor anchor = helper.CreateClientAnchor();
 
-            IPicture picture = drawing.CreatePicture(anchor, pictureIndex);
-            //picture.Resize();
+                            int imgWidth;
+                            int imgHeight;
+                            using (MemoryStream ms = new MemoryStream(imageData[i]))
+                            {
+                                Image img = Image.FromStream(ms);
+                                imgWidth = img.Width;
+                                imgHeight = img.Height;
+                            }
+                            double imgAspect = (double)imgWidth / imgHeight;
+
+                            int rangeWidth = ws.GetRangeWidthInPx(area.FirstColumn, area.LastColumn);
+                            int rangeHeight = ws.GetRangeHeightInPx(area.FirstRow, area.LastRow);
+                            double rangeAspect = (double)rangeWidth / rangeHeight;
+
+                            double scale;
+
+                            if (rangeAspect < imgAspect)
+                            {
+                                scale = (rangeWidth - 3.0) / imgWidth; //Set to width of cell -3px
+                            }
+                            else
+                            {
+                                scale = (rangeHeight -3.0) / imgHeight; //Set to width of cell -3px
+                            }
+                            int resizeWidth = (int)Math.Round(imgWidth * scale, 0, MidpointRounding.ToZero);
+                            int resizeHeight = (int)Math.Round(imgHeight * scale, 0, MidpointRounding.ToZero);
+                            int xMargin = (int)Math.Round((rangeWidth - resizeWidth) * XSSFShape.EMU_PER_PIXEL / 2.0, 0, MidpointRounding.ToZero);
+                            int yMargin = (int)Math.Round((rangeHeight - resizeHeight) * XSSFShape.EMU_PER_PIXEL * 1.75 / 2.0, 0, MidpointRounding.ToZero);
+
+                            anchor.AnchorType = AnchorType.DontMoveAndResize;
+                            anchor.Col1 = area.FirstColumn;
+                            anchor.Row1 = area.FirstRow;
+                            anchor.Col2 = area.LastColumn + 1;
+                            anchor.Row2 = area.LastRow + 1;
+                            anchor.Dx1 = xMargin;
+                            anchor.Dy1 = yMargin;
+                            anchor.Dx2 = -xMargin;
+                            anchor.Dy2 = -yMargin;
+
+                            int pictureIndex = wb.AddPicture(imageData[i], PictureType.PNG);
+                            IPicture picture = drawing.CreatePicture(anchor, pictureIndex);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static CellRangeAddress GetRangeOfMergedCells(this ICell cell)
+        {
+            if (cell != null && cell.IsMergedCell)
+            {               
+                ISheet sheet = cell.Sheet;
+                for (int i = 0; i < sheet.NumMergedRegions; i++)
+                {
+                    CellRangeAddress region = sheet.GetMergedRegion(i);
+                    if (region.ContainsRow(cell.RowIndex) &&
+                        region.ContainsColumn(cell.ColumnIndex))
+                    {
+                        return region;
+                    }
+                }
+                return null;
+            }
+            return CellRangeAddress.ValueOf($"{cell.Address}:{cell.Address}");
+        }
+
+        public static int GetRangeWidthInPx(this ISheet ws, int startCol, int endCol)
+        {
+            if (startCol > endCol)
+            {
+                int endTemp = startCol;
+                startCol = endCol;
+                endCol = endTemp;
+            }
+
+            float totalWidth = 0;
+            for (int i = startCol; i < endCol + 1; i++)
+            {
+                totalWidth += ws.GetColumnWidthInPixels(i);
+            }
+            int widthInt = (int)Math.Round(totalWidth, 0, MidpointRounding.ToZero);
+            return widthInt;
+        }
+
+        public static int GetRangeHeightInPx(this ISheet ws, int startRow, int endRow)
+        {
+            if (startRow > endRow)
+            {
+                int endTemp = startRow;
+                startRow = endRow;
+                endRow = endTemp;
+            }
+
+            float totaHeight = 0;
+            for (int i = startRow; i < endRow + 1; i++)
+            {                
+                totaHeight += ws.GetRow(i).HeightInPoints;
+            }
+            int heightInt = (int)Math.Round(totaHeight * XSSFShape.EMU_PER_POINT / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
+            return heightInt;
+        }
+
+        public static ICell[,] GetRange(ISheet sheet, string range)
+        {
+            string[] cellStartStop = range.Split(':');
+
+            CellReference cellRefStart = new CellReference(cellStartStop[0]);
+            CellReference cellRefStop = new CellReference(cellStartStop[1]);
+
+            ICell[,] cells = new ICell[cellRefStop.Row - cellRefStart.Row + 1, cellRefStop.Col - cellRefStart.Col + 1];
+
+            for (int i = cellRefStart.Row; i < cellRefStop.Row + 1; i++)
+            {
+                IRow row = sheet.GetRow(i);
+                for (int j = cellRefStart.Col; j < cellRefStop.Col + 1; j++)
+                {
+                    cells[i - cellRefStart.Row, j - cellRefStart.Col] = row.GetCell(j);
+                }
+            }
+
+            return cells;
         }
     }
 }

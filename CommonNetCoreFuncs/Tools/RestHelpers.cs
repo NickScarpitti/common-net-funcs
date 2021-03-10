@@ -20,7 +20,7 @@ namespace CommonNetCoreFuncs.Tools
     public static class RestHelpers<T> where T : class
     {
         //Use static client here instead of individual using statements to prevent maxing out the number of connections
-        static readonly HttpClient client = new HttpClient();
+        static readonly HttpClient client = new();
 
         /// <summary>
         /// For getting the resources from a web api
@@ -164,7 +164,7 @@ namespace CommonNetCoreFuncs.Tools
             JObject original = JObject.FromObject(originalObject);
             JObject modified = JObject.FromObject(modifiedObject);
 
-            JsonPatchDocument patch = new JsonPatchDocument();
+            JsonPatchDocument patch = new();
             FillPatchForObject(original, modified, patch, "/");
 
             return patch;

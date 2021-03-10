@@ -43,7 +43,7 @@ namespace CommonNetCoreFuncs.Tools
         {
             try
             {
-                CellReference cr = new CellReference(cellName);
+                CellReference cr = new(cellName);
                 IRow row = ws.GetRow(cr.Row + rowOffset);
                 ICell cell = row.GetCell(cr.Col + colOffset);
                 if (cell == null)
@@ -182,7 +182,7 @@ namespace CommonNetCoreFuncs.Tools
         {
             try
             {
-                using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+                using (FileStream fs = new(path, FileMode.Create, FileAccess.Write))
                 {
                     wb.Write(fs);
                 }
@@ -344,7 +344,7 @@ namespace CommonNetCoreFuncs.Tools
 
         public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, XSSFWorkbook wb)
         {
-            MemoryStream tempStream = new MemoryStream();
+            MemoryStream tempStream = new();
             wb.Write(tempStream, true);
             await tempStream.FlushAsync();
             tempStream.Seek(0, SeekOrigin.Begin);
@@ -380,7 +380,7 @@ namespace CommonNetCoreFuncs.Tools
 
                             int imgWidth;
                             int imgHeight;
-                            using (MemoryStream ms = new MemoryStream(imageData[i]))
+                            using (MemoryStream ms = new(imageData[i]))
                             {
                                 Image img = Image.FromStream(ms);
                                 imgWidth = img.Width;
@@ -418,7 +418,7 @@ namespace CommonNetCoreFuncs.Tools
                             anchor.Dy2 = -yMargin;
 
                             int pictureIndex = wb.AddPicture(imageData[i], PictureType.PNG);
-                            IPicture picture = drawing.CreatePicture(anchor, pictureIndex);
+                            drawing.CreatePicture(anchor, pictureIndex);
                         }
                     }
                 }
@@ -484,8 +484,8 @@ namespace CommonNetCoreFuncs.Tools
         {
             string[] cellStartStop = range.Split(':');
 
-            CellReference cellRefStart = new CellReference(cellStartStop[0]);
-            CellReference cellRefStop = new CellReference(cellStartStop[1]);
+            CellReference cellRefStart = new(cellStartStop[0]);
+            CellReference cellRefStop = new(cellStartStop[1]);
 
             ICell[,] cells = new ICell[cellRefStop.Row - cellRefStart.Row + 1, cellRefStop.Col - cellRefStart.Col + 1];
 

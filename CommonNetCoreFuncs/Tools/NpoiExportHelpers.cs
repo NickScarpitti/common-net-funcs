@@ -36,7 +36,7 @@ namespace CommonNetCoreFuncs.Tools
         {
             try
             {
-                XSSFWorkbook wb = new XSSFWorkbook();
+                XSSFWorkbook wb = new();
                 ISheet ws = wb.CreateSheet("Data");
                 if (dataList != null)
                 {

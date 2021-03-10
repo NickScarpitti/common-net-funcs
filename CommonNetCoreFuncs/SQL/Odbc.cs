@@ -22,11 +22,11 @@ namespace CommonNetCoreFuncs.SQL
         {
             try
             {
-                OdbcConnection conn = new OdbcConnection(connStr);
-                OdbcCommand cmd = new OdbcCommand(sql, conn);
+                OdbcConnection conn = new(connStr);
+                OdbcCommand cmd = new(sql, conn);
                 conn.Open();
-                OdbcDataAdapter da = new OdbcDataAdapter(cmd);
-                DataTable dt = new DataTable();
+                OdbcDataAdapter da = new(cmd);
+                DataTable dt = new();
                 da.Fill(dt);
                 conn.Close();
                 da.Dispose();
@@ -41,8 +41,8 @@ namespace CommonNetCoreFuncs.SQL
         }
         public static void RunUpdateQuery(string sql, string connStr)
         {
-            OdbcConnection conn = new OdbcConnection(connStr);
-            OdbcCommand cmd = new OdbcCommand(sql, conn);
+            OdbcConnection conn = new(connStr);
+            OdbcCommand cmd = new(sql, conn);
             conn.Open();
             cmd.ExecuteNonQuery();
             conn.Close();

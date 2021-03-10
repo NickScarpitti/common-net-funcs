@@ -71,8 +71,8 @@ namespace CommonNetCoreFuncs.Compare
 
                 // If we have collected numbers, compare them numerically.
                 // Otherwise, if we have strings, compare them alphabetically.
-                string str1 = new string(space1);
-                string str2 = new string(space2);
+                string str1 = new(space1);
+                string str2 = new(space2);
 
                 int result;
 

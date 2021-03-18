@@ -115,5 +115,16 @@ namespace CommonNetCoreFuncs.Tools
             }
             return s;
         }
+
+        public static string NullableToString(this DateTime? dt, string format = null)
+        {
+            string output = null;
+            if (dt != null)
+            {
+                DateTime dtActual = (DateTime)dt;
+                output = dtActual.ToString(format);
+            }
+            return output;
+        }
     }
 }

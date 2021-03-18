@@ -35,9 +35,8 @@ namespace CommonNetCoreFuncs.SQL
             catch (Exception ex)
             {
                 Logger.Error(ex, "Error getting data table");
-                return null;
             }
-
+            return new DataTable();
         }
         public static void RunUpdateQuery(string sql, string connStr)
         {

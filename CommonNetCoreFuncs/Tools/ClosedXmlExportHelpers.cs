@@ -1,19 +1,17 @@
-﻿using Microsoft.Extensions.Logging;
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
+﻿using ClosedXML.Excel;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Tools
 {
-    public class NpoiExportHelpers
+    public class ClosedXmlExportHelpers
     {
-        private readonly ILogger<NpoiExportHelpers> logger;
+        private readonly ILogger<ClosedXmlExportHelpers> logger;
 
-        public NpoiExportHelpers(ILogger<NpoiExportHelpers> logger)
+        public ClosedXmlExportHelpers(ILogger<ClosedXmlExportHelpers> logger)
         {
             this.logger = logger;
         }
@@ -22,25 +20,25 @@ namespace CommonNetCoreFuncs.Tools
         {
             try
             {
-                XSSFWorkbook wb = new();
-                ISheet ws = wb.CreateSheet("Data");
+                using XLWorkbook wb = new();
+                IXLWorksheet ws = wb.AddWorksheet("Data");
                 if (dataList != null)
                 {
-                    if (!NpoiCommonHelpers.ExportFromTable(wb, ws, dataList))
+                    if (!ClosedXmlCommonHelpers.ExportFromTable(wb, ws, dataList))
                     {
                         return null;
                     }
                 }
 
                 await memoryStream.WriteFileToMemoryStreamAsync(wb);
-                
+
                 return memoryStream;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "");
             }
-            
+
             return new MemoryStream();
         }
     }

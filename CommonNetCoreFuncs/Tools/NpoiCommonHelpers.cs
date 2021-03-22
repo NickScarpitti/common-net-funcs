@@ -4,11 +4,8 @@ using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Drawing;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using NPOI.SS;
 
 namespace CommonNetCoreFuncs.Tools
@@ -382,7 +379,7 @@ namespace CommonNetCoreFuncs.Tools
                             int imgHeight;
                             using (MemoryStream ms = new(imageData[i]))
                             {
-                                Image img = Image.FromStream(ms);
+                                using Image img = Image.FromStream(ms);
                                 imgWidth = img.Width;
                                 imgHeight = img.Height;
                             }
@@ -456,6 +453,11 @@ namespace CommonNetCoreFuncs.Tools
             float totalWidth = 0;
             for (int i = startCol; i < endCol + 1; i++)
             {
+                float columnWidth = ws.GetColumnWidthInPixels(i);
+                if (columnWidth == 0.0)
+                {
+                    logger.Warn($"Width of Column {i} is 0! Check referenced excel sheet: {ws.SheetName}");
+                }
                 totalWidth += ws.GetColumnWidthInPixels(i);
             }
             int widthInt = (int)Math.Round(totalWidth, 0, MidpointRounding.ToZero);

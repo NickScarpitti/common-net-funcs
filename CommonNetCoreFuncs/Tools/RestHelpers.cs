@@ -83,6 +83,28 @@ namespace CommonNetCoreFuncs.Tools
             return result;
         }
 
+        public static async Task<string> StringPostRequest(string apiUrl, T postObject)
+        {
+            string result = null;
+            try
+            {
+                HttpResponseMessage response = await client.PostAsync(apiUrl, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
+                //response.EnsureSuccessStatusCode();
+                if (response.IsSuccessStatusCode)
+                {
+                    await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                    {
+                        if (x.IsFaulted) throw x.Exception;
+                        result = JsonConvert.DeserializeObject<string>(x.Result);
+                    });
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return result;
+        }
+
         public static async Task<T> DeleteRequest(string apiUrl, T deleteObject)
         {
             T result = deleteObject;

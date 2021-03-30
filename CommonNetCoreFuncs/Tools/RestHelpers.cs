@@ -95,7 +95,7 @@ namespace CommonNetCoreFuncs.Tools
                     await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                     {
                         if (x.IsFaulted) throw x.Exception;
-                        result = JsonConvert.DeserializeObject<string>(x.Result);
+                        result = x.Result;
                     });
                 }
             }

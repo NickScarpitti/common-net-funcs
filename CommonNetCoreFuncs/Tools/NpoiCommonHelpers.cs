@@ -4,16 +4,16 @@ using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Drawing;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using NPOI.SS;
 
 namespace CommonNetCoreFuncs.Tools
 {
-    public static class NPOIHelpers
+    public static class NpoiCommonHelpers
     {
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         public enum Styles
         {
             Header,
@@ -40,7 +40,7 @@ namespace CommonNetCoreFuncs.Tools
         {
             try
             {
-                CellReference cr = new CellReference(cellName);
+                CellReference cr = new(cellName);
                 IRow row = ws.GetRow(cr.Row + rowOffset);
                 ICell cell = row.GetCell(cr.Col + colOffset);
                 if (cell == null)
@@ -49,8 +49,9 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return cell;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return null;
             }
 
@@ -71,8 +72,9 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return cell;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return null;
             }
 
@@ -82,7 +84,7 @@ namespace CommonNetCoreFuncs.Tools
             try
             {
                 IName name = wb.GetName(cellName);
-                CellReference[] crs = new AreaReference(name.RefersToFormula).GetAllReferencedCells();
+                CellReference[] crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
                 ISheet ws = null;
                 int rowNum = -1;
                 int colNum = -1;
@@ -123,8 +125,9 @@ namespace CommonNetCoreFuncs.Tools
                     return null;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return null;
             }
 
@@ -132,7 +135,7 @@ namespace CommonNetCoreFuncs.Tools
         public static void ClearAllFromName(this XSSFWorkbook wb, string cellName)
         {
             IName name = wb.GetName(cellName);
-            CellReference[] crs = new AreaReference(name.RefersToFormula).GetAllReferencedCells();
+            CellReference[] crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
             ISheet ws = wb.GetSheet(crs[0].SheetName);
 
             if (ws == null || crs.Length == 0 || name == null)
@@ -153,6 +156,7 @@ namespace CommonNetCoreFuncs.Tools
                 }
             }
         }
+
         public static ICell CreateCell(this IRow row, int col)
         {
             return row.CreateCell(col);
@@ -175,15 +179,16 @@ namespace CommonNetCoreFuncs.Tools
         {
             try
             {
-                using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+                using (FileStream fs = new(path, FileMode.Create, FileAccess.Write))
                 {
                     wb.Write(fs);
                 }
                 wb.Close();
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return false;
             }
         }
@@ -271,7 +276,7 @@ namespace CommonNetCoreFuncs.Tools
                         foreach (var prop in props)
                         {
                             ICell c = ws.GetCellFromCoordinates(x, y);
-                            c.SetCellValue(prop.Name);
+                            c.SetCellValue(prop.Name.ToString());
                             c.CellStyle = headerStyle;
                             x++;
                         }
@@ -304,48 +309,198 @@ namespace CommonNetCoreFuncs.Tools
                 }
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, "");
                 return false;
             }
         }
         public static string GetStringValue(this ICell c)
         {
-            switch (c.CellType)
+            return c.CellType switch
             {
-                case CellType.Unknown:
-                    return string.Empty;
-                case CellType.Numeric:
-                    return c.NumericCellValue.ToString();
-                case CellType.String:
-                    return c.StringCellValue;
-                case CellType.Formula:
-                    switch (c.CachedFormulaResultType)
+                CellType.Unknown => string.Empty,
+                CellType.Numeric => c.NumericCellValue.ToString(),
+                CellType.String => c.StringCellValue,
+                CellType.Formula => c.CachedFormulaResultType switch
+                {
+                    CellType.Unknown => string.Empty,
+                    CellType.Numeric => c.NumericCellValue.ToString(),
+                    CellType.String => c.StringCellValue,
+                    CellType.Blank => string.Empty,
+                    CellType.Boolean => c.BooleanCellValue.ToString(),
+                    CellType.Error => c.ErrorCellValue.ToString(),
+                    _ => string.Empty,
+                },
+                CellType.Blank => string.Empty,
+                CellType.Boolean => c.BooleanCellValue.ToString(),
+                CellType.Error => c.ErrorCellValue.ToString(),
+                _ => string.Empty,
+            };
+        }
+
+        public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, XSSFWorkbook wb)
+        {
+            MemoryStream tempStream = new();
+            wb.Write(tempStream, true);
+            await tempStream.FlushAsync();
+            tempStream.Seek(0, SeekOrigin.Begin);
+            await tempStream.CopyToAsync(memoryStream);
+            await tempStream.DisposeAsync();
+            await memoryStream.FlushAsync();
+            memoryStream.Seek(0, SeekOrigin.Begin);
+        }
+
+        public static void AddImages(this XSSFWorkbook wb, List<byte[]> imageData, List<string> cellNames)
+        {
+            if (wb != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
+            {
+                ISheet ws = null;
+                ICreationHelper helper = wb.GetCreationHelper();
+                IDrawing drawing = null;
+                for (int i = 0; i < imageData.Count; i++)
+                {
+                    if (imageData[i].Length > 0 && wb != null && cellNames[i] != null)
                     {
-                        case CellType.Unknown:
-                            return string.Empty;
-                        case CellType.Numeric:
-                            return c.NumericCellValue.ToString();
-                        case CellType.String:
-                            return c.StringCellValue;
-                        case CellType.Blank:
-                            return string.Empty;
-                        case CellType.Boolean:
-                            return c.BooleanCellValue.ToString();
-                        case CellType.Error:
-                            return c.ErrorCellValue.ToString();
-                        default:
-                            return string.Empty;
+                        ICell cell = wb.GetCellFromName(cellNames[i]);
+                        CellRangeAddress area = GetRangeOfMergedCells(cell);
+
+                        if (cell != null && area != null)
+                        {
+                            if (ws == null)
+                            {
+                                ws = cell.Sheet;
+                                drawing = ws.CreateDrawingPatriarch();
+                            }
+
+                            IClientAnchor anchor = helper.CreateClientAnchor();
+
+                            int imgWidth;
+                            int imgHeight;
+                            using (MemoryStream ms = new(imageData[i]))
+                            {
+                                using Image img = Image.FromStream(ms);
+                                imgWidth = img.Width;
+                                imgHeight = img.Height;
+                            }
+                            double imgAspect = (double)imgWidth / imgHeight;
+
+                            int rangeWidth = ws.GetRangeWidthInPx(area.FirstColumn, area.LastColumn);
+                            int rangeHeight = ws.GetRangeHeightInPx(area.FirstRow, area.LastRow);
+                            double rangeAspect = (double)rangeWidth / rangeHeight;
+
+                            double scale;
+
+                            if (rangeAspect < imgAspect)
+                            {
+                                scale = (rangeWidth - 3.0) / imgWidth; //Set to width of cell -3px
+                            }
+                            else
+                            {
+                                scale = (rangeHeight -3.0) / imgHeight; //Set to width of cell -3px
+                            }
+                            int resizeWidth = (int)Math.Round(imgWidth * scale, 0, MidpointRounding.ToZero);
+                            int resizeHeight = (int)Math.Round(imgHeight * scale, 0, MidpointRounding.ToZero);
+                            int xMargin = (int)Math.Round((rangeWidth - resizeWidth) * XSSFShape.EMU_PER_PIXEL / 2.0, 0, MidpointRounding.ToZero);
+                            int yMargin = (int)Math.Round((rangeHeight - resizeHeight) * XSSFShape.EMU_PER_PIXEL * 1.75 / 2.0, 0, MidpointRounding.ToZero);
+
+                            anchor.AnchorType = AnchorType.DontMoveAndResize;
+                            anchor.Col1 = area.FirstColumn;
+                            anchor.Row1 = area.FirstRow;
+                            anchor.Col2 = area.LastColumn + 1;
+                            anchor.Row2 = area.LastRow + 1;
+                            anchor.Dx1 = xMargin;
+                            anchor.Dy1 = yMargin;
+                            anchor.Dx2 = -xMargin;
+                            anchor.Dy2 = -yMargin;
+
+                            int pictureIndex = wb.AddPicture(imageData[i], PictureType.PNG);
+                            drawing.CreatePicture(anchor, pictureIndex);
+                        }
                     }
-                case CellType.Blank:
-                    return string.Empty;
-                case CellType.Boolean:
-                    return c.BooleanCellValue.ToString();
-                case CellType.Error:
-                    return c.ErrorCellValue.ToString();
-                default:
-                    return string.Empty;
+                }
             }
+        }
+
+        public static CellRangeAddress GetRangeOfMergedCells(this ICell cell)
+        {
+            if (cell != null && cell.IsMergedCell)
+            {               
+                ISheet sheet = cell.Sheet;
+                for (int i = 0; i < sheet.NumMergedRegions; i++)
+                {
+                    CellRangeAddress region = sheet.GetMergedRegion(i);
+                    if (region.ContainsRow(cell.RowIndex) &&
+                        region.ContainsColumn(cell.ColumnIndex))
+                    {
+                        return region;
+                    }
+                }
+                return null;
+            }
+            return CellRangeAddress.ValueOf($"{cell.Address}:{cell.Address}");
+        }
+
+        public static int GetRangeWidthInPx(this ISheet ws, int startCol, int endCol)
+        {
+            if (startCol > endCol)
+            {
+                int endTemp = startCol;
+                startCol = endCol;
+                endCol = endTemp;
+            }
+
+            float totalWidth = 0;
+            for (int i = startCol; i < endCol + 1; i++)
+            {
+                float columnWidth = ws.GetColumnWidthInPixels(i);
+                if (columnWidth == 0.0)
+                {
+                    logger.Warn($"Width of Column {i} is 0! Check referenced excel sheet: {ws.SheetName}");
+                }
+                totalWidth += ws.GetColumnWidthInPixels(i);
+            }
+            int widthInt = (int)Math.Round(totalWidth, 0, MidpointRounding.ToZero);
+            return widthInt;
+        }
+
+        public static int GetRangeHeightInPx(this ISheet ws, int startRow, int endRow)
+        {
+            if (startRow > endRow)
+            {
+                int endTemp = startRow;
+                startRow = endRow;
+                endRow = endTemp;
+            }
+
+            float totaHeight = 0;
+            for (int i = startRow; i < endRow + 1; i++)
+            {                
+                totaHeight += ws.GetRow(i).HeightInPoints;
+            }
+            int heightInt = (int)Math.Round(totaHeight * XSSFShape.EMU_PER_POINT / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
+            return heightInt;
+        }
+
+        public static ICell[,] GetRange(ISheet sheet, string range)
+        {
+            string[] cellStartStop = range.Split(':');
+
+            CellReference cellRefStart = new(cellStartStop[0]);
+            CellReference cellRefStop = new(cellStartStop[1]);
+
+            ICell[,] cells = new ICell[cellRefStop.Row - cellRefStart.Row + 1, cellRefStop.Col - cellRefStart.Col + 1];
+
+            for (int i = cellRefStart.Row; i < cellRefStop.Row + 1; i++)
+            {
+                IRow row = sheet.GetRow(i);
+                for (int j = cellRefStart.Col; j < cellRefStop.Col + 1; j++)
+                {
+                    cells[i - cellRefStart.Row, j - cellRefStart.Col] = row.GetCell(j);
+                }
+            }
+
+            return cells;
         }
     }
 }

@@ -9,7 +9,7 @@ namespace CommonNetCoreFuncs.Tools
     /// </summary>
     public static class StringManipulation
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// Clone of VBA Left() function 
@@ -32,7 +32,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error getting left chars");
+                logger.Error(ex, "Error getting left chars");
                 return null;
             }
         }
@@ -58,7 +58,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error getting right chars");
+                logger.Error(ex, "Error getting right chars");
                 return null;
             }
         }
@@ -114,6 +114,17 @@ namespace CommonNetCoreFuncs.Tools
                 return null;
             }
             return s;
+        }
+
+        public static string NullableToString(this DateTime? dt, string format = null)
+        {
+            string output = null;
+            if (dt != null)
+            {
+                DateTime dtActual = (DateTime)dt;
+                output = dtActual.ToString(format);
+            }
+            return output;
         }
     }
 }

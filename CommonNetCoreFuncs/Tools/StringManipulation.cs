@@ -21,6 +21,11 @@ namespace CommonNetCoreFuncs.Tools
         {
             try
             {
+                if (string.IsNullOrEmpty(st))
+                {
+                    return null;
+                }
+
                 if (numChars <= st.Length)
                 {
                     return st.Substring(0, numChars);
@@ -47,6 +52,11 @@ namespace CommonNetCoreFuncs.Tools
         {
             try
             {
+                if (string.IsNullOrEmpty(st))
+                {
+                    return null;
+                }
+
                 if (numChars <= st.Length)
                 {
                     return st.Substring(st.Length - numChars, numChars);

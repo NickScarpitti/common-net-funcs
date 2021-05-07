@@ -1,8 +1,6 @@
 ﻿using ClosedXML.Excel;
-using ClosedXML.Excel.Drawings;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -20,6 +18,7 @@ namespace CommonNetCoreFuncs.Tools
             Error,
             Custom
         }
+
         public enum Fonts
         {
             Default,
@@ -28,7 +27,7 @@ namespace CommonNetCoreFuncs.Tools
         }
 
         public static bool IsCellEmpty(this IXLCell cell)
-        {            
+        {
             if (string.IsNullOrWhiteSpace(cell.Value.ToString()))
             {
                 return true;
@@ -53,7 +52,11 @@ namespace CommonNetCoreFuncs.Tools
                 return false;
             }
         }
-        public static string GetSafeDate(string dateFormat) { return DateTime.Today.ToString(dateFormat).Replace("/", "-"); }
+
+        public static string GetSafeDate(string dateFormat)
+        {
+            return DateTime.Today.ToString(dateFormat).Replace("/", "-");
+        }
 
         public static IXLStyle GetStyle(Styles style, IXLWorkbook wb, bool cellLocked = false, string htmlColor = null, IXLFont font = null, XLAlignmentHorizontalValues? alignment = null)
         {
@@ -69,6 +72,7 @@ namespace CommonNetCoreFuncs.Tools
                     cellStyle.Fill.BackgroundColor = XLColor.LightGray; //XLColor.FromArgb(140, 140, 140);
                     cellStyle.Font = GetFont(Fonts.Header, wb);
                     break;
+
                 case Styles.Body:
                     cellStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                     cellStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
@@ -77,10 +81,12 @@ namespace CommonNetCoreFuncs.Tools
                     cellStyle.Fill.BackgroundColor = XLColor.NoColor; //NPOI.HSSF.Util.HSSFColor.COLOR_NORMAL;
                     cellStyle.Font = GetFont(Fonts.Default, wb);
                     break;
+
                 case Styles.Error:
                     cellStyle.Fill.BackgroundColor = XLColor.Red; //NPOI.HSSF.Util.HSSFColor.Red.Index;
                     cellStyle.Fill.PatternType = XLFillPatternValues.Solid; //FillPattern.SolidForeground;
                     break;
+
                 case Styles.Custom:
                     IXLStyle xStyle = wb.Style;
                     if (alignment != null) { xStyle.Alignment.Horizontal = (XLAlignmentHorizontalValues)alignment; }
@@ -89,6 +95,7 @@ namespace CommonNetCoreFuncs.Tools
                     if (font != null) { xStyle.Font = font; }
                     cellStyle = xStyle;
                     break;
+
                 default:
                     break;
             }
@@ -100,7 +107,7 @@ namespace CommonNetCoreFuncs.Tools
         /// Creates new instance of a IXLStyle object with reflection to avoid using the same reference to the existing workbook style
         /// </summary>
         /// <returns>Empty IXLStyle object</returns>
-        static IXLStyle CreateEmptyStyle()
+        private static IXLStyle CreateEmptyStyle()
         {
             var t = typeof(ClosedXML.Excel.XLConstants).Assembly.GetType("ClosedXML.Excel.XLStyle");
             MethodInfo m = t?.GetMethod("CreateEmptyStyle", BindingFlags.Static | BindingFlags.NonPublic);
@@ -118,16 +125,19 @@ namespace CommonNetCoreFuncs.Tools
                     cellFont.FontSize = 10;
                     cellFont.FontName = "Calibri";
                     break;
+
                 case Fonts.Header:
                     cellFont.Bold = true;
                     cellFont.FontSize = 10;
                     cellFont.FontName = "Calibri";
                     break;
+
                 default:
                     break;
             }
             return cellFont;
         }
+
         public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, List<T> data)
         {
             try
@@ -197,7 +207,7 @@ namespace CommonNetCoreFuncs.Tools
                 ValidatePackage = true,
                 GenerateCalculationChain = true
             };
-            
+
             wb.SaveAs(tempStream, options);
             await tempStream.FlushAsync();
             tempStream.Seek(0, SeekOrigin.Begin);
@@ -207,7 +217,7 @@ namespace CommonNetCoreFuncs.Tools
             memoryStream.Seek(0, SeekOrigin.Begin);
         }
 
-        //Corrupts excel file as is 
+        //Corrupts excel file as is
         //public static void AddImages(this IXLWorkbook wb, List<byte[]> imageData, List<string> cellNames)
         //{
         //    if (wb != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)

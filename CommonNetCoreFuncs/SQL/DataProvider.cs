@@ -1,9 +1,5 @@
-﻿using System;
-using System.Data;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data;
+
 //using IBM.Data.Db2;
 
 namespace CommonNetCoreFuncs.SQL

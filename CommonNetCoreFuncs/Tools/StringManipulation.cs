@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CommonNetCoreFuncs.Tools
 {
@@ -12,7 +10,7 @@ namespace CommonNetCoreFuncs.Tools
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Clone of VBA Left() function 
+        /// Clone of VBA Left() function
         /// </summary>
         /// <param name="st"></param>
         /// <param name="numChars"></param>

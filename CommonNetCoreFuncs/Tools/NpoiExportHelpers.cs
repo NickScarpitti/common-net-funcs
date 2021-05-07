@@ -4,7 +4,6 @@ using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Tools
@@ -18,10 +17,15 @@ namespace CommonNetCoreFuncs.Tools
             this.logger = logger;
         }
 
-        public async Task<MemoryStream> GenericExcelExport<T>(List<T> dataList, MemoryStream memoryStream)
+        public async Task<MemoryStream> GenericExcelExport<T>(List<T> dataList, MemoryStream memoryStream = null)
         {
             try
             {
+                if (memoryStream == null)
+                {
+                    memoryStream = new();
+                }
+
                 XSSFWorkbook wb = new();
                 ISheet ws = wb.CreateSheet("Data");
                 if (dataList != null)
@@ -33,14 +37,14 @@ namespace CommonNetCoreFuncs.Tools
                 }
 
                 await memoryStream.WriteFileToMemoryStreamAsync(wb);
-                
+
                 return memoryStream;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "");
             }
-            
+
             return new MemoryStream();
         }
     }

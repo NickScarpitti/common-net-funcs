@@ -2,11 +2,9 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Formatting;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Tools
@@ -20,7 +18,7 @@ namespace CommonNetCoreFuncs.Tools
     public static class RestHelpers<T> where T : class
     {
         //Use static client here instead of individual using statements to prevent maxing out the number of connections
-        static readonly HttpClient client = new();
+        private static readonly HttpClient client = new();
 
         /// <summary>
         /// For getting the resources from a web api
@@ -200,7 +198,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="mod"></param>
         /// <param name="patch"></param>
         /// <param name="path"></param>
-        static void FillPatchForObject(JObject orig, JObject mod, JsonPatchDocument patch, string path)
+        private static void FillPatchForObject(JObject orig, JObject mod, JsonPatchDocument patch, string path)
         {
             var origNames = orig.Properties().Select(x => x.Name).ToArray();
             var modNames = mod.Properties().Select(x => x.Name).ToArray();

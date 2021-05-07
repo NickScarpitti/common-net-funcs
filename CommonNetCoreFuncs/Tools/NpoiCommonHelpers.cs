@@ -1,12 +1,12 @@
-﻿using NPOI.SS.UserModel;
+﻿using NPOI.SS;
+using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Drawing;
+using System.IO;
 using System.Threading.Tasks;
-using NPOI.SS;
 
 namespace CommonNetCoreFuncs.Tools
 {
@@ -21,6 +21,7 @@ namespace CommonNetCoreFuncs.Tools
             Error,
             Custom
         }
+
         public enum Fonts
         {
             Default,
@@ -36,6 +37,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             return false;
         }
+
         public static ICell GetCellFromReference(this ISheet ws, string cellName, int colOffset = 0, int rowOffset = 0)
         {
             try
@@ -54,8 +56,8 @@ namespace CommonNetCoreFuncs.Tools
                 logger.Error(ex, "");
                 return null;
             }
-
         }
+
         public static ICell GetCellFromCoordinates(this ISheet ws, int x, int y, int colOffset = 0, int rowOffset = 0)
         {
             try
@@ -77,8 +79,8 @@ namespace CommonNetCoreFuncs.Tools
                 logger.Error(ex, "");
                 return null;
             }
-
         }
+
         public static ICell GetCellFromName(this XSSFWorkbook wb, string cellName, int colOffset = 0, int rowOffset = 0)
         {
             try
@@ -130,8 +132,8 @@ namespace CommonNetCoreFuncs.Tools
                 logger.Error(ex, "");
                 return null;
             }
-
         }
+
         public static void ClearAllFromName(this XSSFWorkbook wb, string cellName)
         {
             IName name = wb.GetName(cellName);
@@ -161,7 +163,6 @@ namespace CommonNetCoreFuncs.Tools
         {
             return row.CreateCell(col);
         }
-        
 
         public static string MakeExportNameUnique(string savePath, string fileName, string extension)
         {
@@ -192,8 +193,12 @@ namespace CommonNetCoreFuncs.Tools
                 return false;
             }
         }
-        public static string GetSafeDate(string dateFormat) { return DateTime.Today.ToString(dateFormat).Replace("/", "-"); }
-   
+
+        public static string GetSafeDate(string dateFormat)
+        {
+            return DateTime.Today.ToString(dateFormat).Replace("/", "-");
+        }
+
         /// <exception cref="Exception">Ignore.</exception>
         public static ICellStyle GetStyle(Styles style, XSSFWorkbook wb, bool cellLocked = false, string htmlColor = null, IFont font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
         {
@@ -210,6 +215,7 @@ namespace CommonNetCoreFuncs.Tools
                     cellStyle.FillPattern = FillPattern.SolidForeground;
                     cellStyle.SetFont(GetFont(Fonts.Header, wb));
                     break;
+
                 case Styles.Body:
                     cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
                     cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
@@ -218,10 +224,12 @@ namespace CommonNetCoreFuncs.Tools
                     cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.COLOR_NORMAL;
                     cellStyle.SetFont(GetFont(Fonts.Default, wb));
                     break;
+
                 case Styles.Error:
                     cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Red.Index;
                     cellStyle.FillPattern = FillPattern.SolidForeground;
                     break;
+
                 case Styles.Custom:
                     XSSFCellStyle xStyle = (XSSFCellStyle)wb.CreateCellStyle();
                     if (alignment != null) { xStyle.Alignment = (NPOI.SS.UserModel.HorizontalAlignment)alignment; }
@@ -231,12 +239,14 @@ namespace CommonNetCoreFuncs.Tools
                     if (font != null) { xStyle.SetFont(font); }
                     cellStyle = xStyle;
                     break;
+
                 default:
                     break;
             }
             cellStyle.IsLocked = cellLocked;
             return cellStyle;
         }
+
         public static IFont GetFont(Fonts font, XSSFWorkbook wb)
         {
             IFont cellFont = wb.CreateFont();
@@ -247,16 +257,19 @@ namespace CommonNetCoreFuncs.Tools
                     cellFont.FontHeightInPoints = 10;
                     cellFont.FontName = "Calibri";
                     break;
+
                 case Fonts.Header:
                     cellFont.IsBold = true;
                     cellFont.FontHeightInPoints = 10;
                     cellFont.FontName = "Calibri";
                     break;
+
                 default:
                     break;
             }
             return cellFont;
         }
+
         public static bool ExportFromTable<T>(XSSFWorkbook wb, ISheet ws, List<T> data)
         {
             try
@@ -315,6 +328,7 @@ namespace CommonNetCoreFuncs.Tools
                 return false;
             }
         }
+
         public static string GetStringValue(this ICell c)
         {
             return c.CellType switch
@@ -341,7 +355,7 @@ namespace CommonNetCoreFuncs.Tools
 
         public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, XSSFWorkbook wb)
         {
-            MemoryStream tempStream = new();
+            using MemoryStream tempStream = new();
             wb.Write(tempStream, true);
             await tempStream.FlushAsync();
             tempStream.Seek(0, SeekOrigin.Begin);
@@ -397,7 +411,7 @@ namespace CommonNetCoreFuncs.Tools
                             }
                             else
                             {
-                                scale = (rangeHeight -3.0) / imgHeight; //Set to width of cell -3px
+                                scale = (rangeHeight - 3.0) / imgHeight; //Set to width of cell -3px
                             }
                             int resizeWidth = (int)Math.Round(imgWidth * scale, 0, MidpointRounding.ToZero);
                             int resizeHeight = (int)Math.Round(imgHeight * scale, 0, MidpointRounding.ToZero);
@@ -425,7 +439,7 @@ namespace CommonNetCoreFuncs.Tools
         public static CellRangeAddress GetRangeOfMergedCells(this ICell cell)
         {
             if (cell != null && cell.IsMergedCell)
-            {               
+            {
                 ISheet sheet = cell.Sheet;
                 for (int i = 0; i < sheet.NumMergedRegions; i++)
                 {
@@ -475,7 +489,7 @@ namespace CommonNetCoreFuncs.Tools
 
             float totaHeight = 0;
             for (int i = startRow; i < endRow + 1; i++)
-            {                
+            {
                 totaHeight += ws.GetRow(i).HeightInPoints;
             }
             int heightInt = (int)Math.Round(totaHeight * XSSFShape.EMU_PER_POINT / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px

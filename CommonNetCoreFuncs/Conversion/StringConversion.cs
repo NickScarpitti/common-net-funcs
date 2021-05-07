@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CommonNetCoreFuncs.Conversion
 {
@@ -28,7 +26,7 @@ namespace CommonNetCoreFuncs.Conversion
         }
 
         /// <summary>
-        /// Converts nullable int to string 
+        /// Converts nullable int to string
         /// </summary>
         /// <param name="x"></param>
         /// <returns>Returns string representation of the passed in nullable int</returns>
@@ -41,8 +39,9 @@ namespace CommonNetCoreFuncs.Conversion
             }
             return output;
         }
+
         /// <summary>
-        /// Converts nullable long to string 
+        /// Converts nullable long to string
         /// </summary>
         /// <param name="x"></param>
         /// <returns>Returns string representation of the passed in nullable long</returns>
@@ -55,8 +54,9 @@ namespace CommonNetCoreFuncs.Conversion
             }
             return output;
         }
+
         /// <summary>
-        /// Converts nullable double to string 
+        /// Converts nullable double to string
         /// </summary>
         /// <param name="x"></param>
         /// <returns>Returns string representation of the passed in nullable double</returns>
@@ -69,6 +69,7 @@ namespace CommonNetCoreFuncs.Conversion
             }
             return output;
         }
+
         public static SelectListItem ToSelectListItem(this string value)
         {
             if (value != null)

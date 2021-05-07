@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Odbc;
-using System.Text;
 
 namespace CommonNetCoreFuncs.SQL
 {
@@ -12,6 +10,7 @@ namespace CommonNetCoreFuncs.SQL
     public static class Odbc
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// Returns a datatable using the SQL and data connection passed to the function
         /// </summary>
@@ -38,6 +37,7 @@ namespace CommonNetCoreFuncs.SQL
             }
             return new DataTable();
         }
+
         public static void RunUpdateQuery(string sql, string connStr)
         {
             OdbcConnection conn = new(connStr);

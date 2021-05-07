@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace CommonNetCoreFuncs.Compare
 {
-    public class GenericCompare<T>: IEqualityComparer<T>
+    public class GenericCompare<T> : IEqualityComparer<T>
     {
         public bool Equals(T obj1, T obj2)
         {

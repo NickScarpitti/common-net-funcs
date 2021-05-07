@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Conversion
 {
@@ -15,6 +11,7 @@ namespace CommonNetCoreFuncs.Conversion
         {
             return massLbs / kgToLbsConst;
         }
+
         public static double LbsToKg(this double? massLbs)
         {
             if (massLbs != null)
@@ -26,10 +23,12 @@ namespace CommonNetCoreFuncs.Conversion
                 return 0;
             }
         }
+
         public static double KgToLbs(this double massKg)
         {
             return massKg * kgToLbsConst;
         }
+
         public static double KgToLbs(this double? massKg)
         {
             if (massKg != null)
@@ -41,10 +40,12 @@ namespace CommonNetCoreFuncs.Conversion
                 return 0;
             }
         }
+
         public static double InsToFt(this double lenIns)
         {
             return lenIns / ftToInConst;
         }
+
         public static double InsToFt(this double? lenIns)
         {
             if (lenIns != null)
@@ -56,10 +57,12 @@ namespace CommonNetCoreFuncs.Conversion
                 return 0;
             }
         }
+
         public static double FtToIns(this double lenIns)
         {
             return lenIns * ftToInConst;
         }
+
         public static double FtToIns(this double? lenIns)
         {
             if (lenIns != null)

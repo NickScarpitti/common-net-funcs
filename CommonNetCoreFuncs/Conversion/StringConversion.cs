@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CommonNetCoreFuncs.Conversion
 {
@@ -84,6 +86,11 @@ namespace CommonNetCoreFuncs.Conversion
             {
                 return null;
             }
+        }
+
+        public static List<int> ToListInt(this List<string> values)
+        {
+            return values.Select(x => { return int.TryParse(x, out int i) ? i : (int?)null; }).Where(i => i.HasValue).Select(i => i.Value).ToList();
         }
     }
 }

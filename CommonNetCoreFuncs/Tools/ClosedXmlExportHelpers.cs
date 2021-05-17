@@ -36,7 +36,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "");
+                logger.LogError(ex, (ex.InnerException ?? new()).ToString());
             }
 
             return new MemoryStream();

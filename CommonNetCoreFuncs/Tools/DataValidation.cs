@@ -29,6 +29,7 @@ namespace CommonNetCoreFuncs.Tools
             {
                 var aPropValue = Prop.GetValue(obj1) ?? string.Empty;
                 var bPropValue = Prop.GetValue(obj2) ?? string.Empty;
+
                 if (aPropValue.ToString() != bPropValue.ToString())
                 {
                     return false;

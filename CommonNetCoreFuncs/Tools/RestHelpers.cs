@@ -17,6 +17,8 @@ namespace CommonNetCoreFuncs.Tools
     /// <typeparam name="T"></typeparam>
     public static class RestHelpers<T> where T : class
     {
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         //Use static client here instead of individual using statements to prevent maxing out the number of connections
         private static readonly HttpClient client = new();
 
@@ -44,8 +46,9 @@ namespace CommonNetCoreFuncs.Tools
                     });
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
             }
             return result;
         }
@@ -75,8 +78,9 @@ namespace CommonNetCoreFuncs.Tools
                     });
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
             }
             return result;
         }
@@ -97,8 +101,9 @@ namespace CommonNetCoreFuncs.Tools
                     });
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
             }
             return result;
         }
@@ -123,8 +128,9 @@ namespace CommonNetCoreFuncs.Tools
                     result = null;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
                 result = null;
             }
             return result;
@@ -166,8 +172,9 @@ namespace CommonNetCoreFuncs.Tools
                     });
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
             }
             return result;
         }

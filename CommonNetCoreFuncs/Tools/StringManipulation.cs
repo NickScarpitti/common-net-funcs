@@ -71,68 +71,14 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
-        /// <summary>
-        /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
-        /// </summary>
-        /// <param name="s"></param>
-        /// <returns>Nullable DateTime parsed from a string</returns>
-        public static DateTime? ParseNullableDateTime(this string s)
-        {
-            if (DateTime.TryParse(s, out DateTime dt))
-            {
-                DateTime? dtn = dt;
-                return dtn;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Used to reduce boilerplate code for parsing strings into nullable integers
-        /// </summary>
-        /// <param name="s"></param>
-        /// <returns>Nullable int parsed from a string</returns>
-        public static int? ParseNullableInt(this string s)
-        {
-            if (int.TryParse(s, out int i))
-            {
-                int? iNull = i;
-                return iNull;
-            }
-            else
-            {
-                return null;
-            }
-        }
 
         public static string MakeNullNull(this string s)
         {
-            if (s == null)
-            {
-                return null;
-            }
-            else if (s.StrEq("Null"))
-            {
-                return null;
-            }
-            else if (s.ToUpperInvariant().Replace("NULL", "") == "")
+            if (s == null || s.StrEq("Null") || s.ToUpperInvariant().Replace("NULL", "") == "")
             {
                 return null;
             }
             return s;
-        }
-
-        public static string NullableToString(this DateTime? dt, string format = null)
-        {
-            string output = null;
-            if (dt != null)
-            {
-                DateTime dtActual = (DateTime)dt;
-                output = dtActual.ToString(format);
-            }
-            return output;
         }
     }
 }

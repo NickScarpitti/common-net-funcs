@@ -14,7 +14,7 @@ namespace CommonNetCoreFuncs.Tools
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public enum Styles
+        public enum EStyles
         {
             Header,
             Body,
@@ -22,7 +22,7 @@ namespace CommonNetCoreFuncs.Tools
             Custom
         }
 
-        public enum Fonts
+        public enum EFonts
         {
             Default,
             Header,
@@ -44,16 +44,28 @@ namespace CommonNetCoreFuncs.Tools
             {
                 CellReference cr = new(cellName);
                 IRow row = ws.GetRow(cr.Row + rowOffset);
-                ICell cell = row.GetCell(cr.Col + colOffset);
-                if (cell == null)
-                {
-                    cell = row.CreateCell(cr.Col + colOffset);
-                }
+                ICell cell = row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 return cell;
             }
             catch (Exception ex)
             {
                 logger.Error(ex, "");
+                return null;
+            }
+        }
+
+        public static ICell GetCellOffset(this ICell startCell, int colOffset = 0, int rowOffset = 0)
+        {
+            try
+            {
+                ISheet ws = startCell.Sheet;
+                IRow row = ws.GetRow(startCell.RowIndex + rowOffset);
+                ICell cell = row.GetCell(startCell.ColumnIndex + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                return cell;
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, ex?.InnerException.ToString());
                 return null;
             }
         }
@@ -67,11 +79,7 @@ namespace CommonNetCoreFuncs.Tools
                 {
                     row = ws.CreateRow(y + rowOffset);
                 }
-                ICell cell = row.GetCell(x + colOffset);
-                if (cell == null)
-                {
-                    cell = row.CreateCell(x + colOffset);
-                }
+                ICell cell = row.GetCell(x + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 return cell;
             }
             catch (Exception ex)
@@ -115,11 +123,7 @@ namespace CommonNetCoreFuncs.Tools
                     {
                         row = ws.CreateRow(rowNum + rowOffset);
                     }
-                    ICell cell = row.GetCell(colNum + colOffset);
-                    if (cell == null)
-                    {
-                        cell = row.CreateCell(colNum + colOffset);
-                    }
+                    ICell cell = row.GetCell(colNum + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
                     return cell;
                 }
                 else
@@ -200,12 +204,12 @@ namespace CommonNetCoreFuncs.Tools
         }
 
         /// <exception cref="Exception">Ignore.</exception>
-        public static ICellStyle GetStyle(Styles style, XSSFWorkbook wb, bool cellLocked = false, string htmlColor = null, IFont font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
+        public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string htmlColor = null, IFont font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
         {
             ICellStyle cellStyle = wb.CreateCellStyle();
             switch (style)
             {
-                case Styles.Header:
+                case EStyles.Header:
                     cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
                     cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
@@ -213,24 +217,24 @@ namespace CommonNetCoreFuncs.Tools
                     cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
                     cellStyle.FillPattern = FillPattern.SolidForeground;
-                    cellStyle.SetFont(GetFont(Fonts.Header, wb));
+                    cellStyle.SetFont(GetFont(EFonts.Header, wb));
                     break;
 
-                case Styles.Body:
+                case EStyles.Body:
                     cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
                     cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.COLOR_NORMAL;
-                    cellStyle.SetFont(GetFont(Fonts.Default, wb));
+                    cellStyle.SetFont(GetFont(EFonts.Default, wb));
                     break;
 
-                case Styles.Error:
+                case EStyles.Error:
                     cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Red.Index;
                     cellStyle.FillPattern = FillPattern.SolidForeground;
                     break;
 
-                case Styles.Custom:
+                case EStyles.Custom:
                     XSSFCellStyle xStyle = (XSSFCellStyle)wb.CreateCellStyle();
                     if (alignment != null) { xStyle.Alignment = (NPOI.SS.UserModel.HorizontalAlignment)alignment; }
                     byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
@@ -247,18 +251,18 @@ namespace CommonNetCoreFuncs.Tools
             return cellStyle;
         }
 
-        public static IFont GetFont(Fonts font, XSSFWorkbook wb)
+        public static IFont GetFont(EFonts font, XSSFWorkbook wb)
         {
             IFont cellFont = wb.CreateFont();
             switch (font)
             {
-                case Fonts.Default:
+                case EFonts.Default:
                     cellFont.IsBold = false;
                     cellFont.FontHeightInPoints = 10;
                     cellFont.FontName = "Calibri";
                     break;
 
-                case Fonts.Header:
+                case EFonts.Header:
                     cellFont.IsBold = true;
                     cellFont.FontHeightInPoints = 10;
                     cellFont.FontName = "Calibri";
@@ -278,8 +282,8 @@ namespace CommonNetCoreFuncs.Tools
                 {
                     if (data.Count > 0)
                     {
-                        ICellStyle headerStyle = GetStyle(Styles.Header, wb);
-                        ICellStyle bodyStyle = GetStyle(Styles.Body, wb);
+                        ICellStyle headerStyle = GetStyle(EStyles.Header, wb);
+                        ICellStyle bodyStyle = GetStyle(EStyles.Body, wb);
 
                         int x = 0;
                         int y = 0;
@@ -515,6 +519,19 @@ namespace CommonNetCoreFuncs.Tools
             }
 
             return cells;
+        }
+
+        public static void AddDataValidation(this ISheet ws, CellRangeAddressList cellRangeAddressList, List<string> options)
+        {
+            XSSFDataValidationHelper validationHelper = null;
+            XSSFDataValidationConstraint dvConstraint = (XSSFDataValidationConstraint)validationHelper.CreateExplicitListConstraint(options.ToArray());
+            XSSFDataValidation dataValidation = (XSSFDataValidation)validationHelper.CreateValidation(dvConstraint, cellRangeAddressList);
+            dataValidation.ShowErrorBox = true;
+            dataValidation.ErrorStyle = 0;
+            dataValidation.CreateErrorBox("InvalidValue", "Selected value must be in list");
+            dataValidation.ShowErrorBox = true;
+            dataValidation.ShowPromptBox = false;
+            ws.AddValidationData(dataValidation);
         }
     }
 }

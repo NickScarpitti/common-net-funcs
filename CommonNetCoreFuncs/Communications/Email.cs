@@ -1,7 +1,9 @@
 ﻿using MailKit.Net.Smtp;
 using MimeKit;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace CommonNetCoreFuncs.Communications
@@ -15,22 +17,46 @@ namespace CommonNetCoreFuncs.Communications
     public static class Email
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-        public static bool SendEmail(MailAddress from, MailAddress to, string subject, string body, bool bodyIsHtml = false, MailAddress cc = null, string attachmentName = null, FileStream fileData = null)
+        public static bool SendEmail(MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, string attachmentName = null, FileStream fileData = null)
         {
             bool success = true;
             try
             {
                 //Confirm emails
-                if (!ConfirmValidEmail(from?.Email ?? "") || !ConfirmValidEmail(to?.Email ?? ""))
+                if (!ConfirmValidEmail(from?.Email ?? ""))
                 {
                     success = false;
                 }
 
-                if (cc != null)
+                if (success && toAddresses.Any())
                 {
-                    if (!ConfirmValidEmail(cc?.Email ?? ""))
+                    foreach (MailAddress mailAddress in toAddresses)
                     {
-                        success = false;
+                        if (!ConfirmValidEmail(mailAddress?.Email ?? ""))
+                        {
+                            success = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    success = false;
+                }
+                
+
+                if (success && ccAddresses != null)
+                {
+                    if (ccAddresses.Any())
+                    {
+                        foreach (MailAddress mailAddress in ccAddresses)
+                        {
+                            if (!ConfirmValidEmail(mailAddress?.Email ?? ""))
+                            {
+                                success = false;
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -38,10 +64,13 @@ namespace CommonNetCoreFuncs.Communications
                 {
                     MimeMessage email = new();
                     email.From.Add(new MailboxAddress(from.Name, from.Email));
-                    email.To.Add(new MailboxAddress(to.Name, to.Email));
-                    if (cc != null)
+                    email.To.AddRange(toAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+                    if (ccAddresses != null)
                     {
-                        email.Cc.Add(new MailboxAddress(cc.Name, cc.Email));
+                        if (ccAddresses.Any())
+                        {
+                            email.Cc.AddRange(ccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+                        }
                     }
                     email.Subject = subject;
 

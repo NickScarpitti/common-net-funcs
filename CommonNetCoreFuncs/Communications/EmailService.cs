@@ -4,14 +4,14 @@ namespace CommonNetCoreFuncs.Communications
 {
     public interface IEmailService
     {
-        bool SendEmail(string fromName, string fromEmail, string toName, string toEmail, string subject, string body, string attachmentName = null, MemoryStream fileData = null);
+        bool SendEmail(MailAddress from, MailAddress to, string toName, string toEmail, string subject, string body, MailAddress cc = null, string attachmentName = null, MemoryStream fileData = null);
     }
 
     public class EmailService : IEmailService
     {
-        public bool SendEmail(string fromName, string fromEmail, string toName, string toEmail, string subject, string body, string attachmentName = null, MemoryStream fileData = null)
+        public bool SendEmail(MailAddress from, MailAddress to, string toName, string toEmail, string subject, string body, MailAddress cc = null, string attachmentName = null, MemoryStream fileData = null)
         {
-            return Email.SendEmail(fromName, fromEmail, toName, toEmail, subject, body, attachmentName, fileData);
+            return Email.SendEmail(from, to, subject, body, cc, attachmentName, fileData);
         }
     }
 }

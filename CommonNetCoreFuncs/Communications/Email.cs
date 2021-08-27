@@ -5,17 +5,26 @@ using System.IO;
 
 namespace CommonNetCoreFuncs.Communications
 {
+    public class MailAddress
+    {
+        public string Name { get; set; }
+        public string Email { get; set; }
+    }
     public static class Email
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-        public static bool SendEmail(string fromName, string fromEmail, string toName, string toEmail, string subject, string body, string attachmentName = null, MemoryStream fileData = null)
+        public static bool SendEmail(MailAddress from, MailAddress to, string subject, string body, MailAddress cc = null, string attachmentName = null, MemoryStream fileData = null)
         {
             bool success = true;
             try
             {
                 MimeMessage email = new();
-                email.From.Add(new MailboxAddress(fromName, fromEmail));
-                email.To.Add(new MailboxAddress(toName, toEmail));
+                email.From.Add(new MailboxAddress(from.Name, from.Email));
+                email.To.Add(new MailboxAddress(to.Name, to.Email));
+                if (cc != null)
+                {
+                    email.Cc.Add(new MailboxAddress(cc.Name, cc.Email));
+                }
                 email.Subject = subject;
 
                 BodyBuilder bodyBuilder = new();

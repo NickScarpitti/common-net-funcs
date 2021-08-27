@@ -43,7 +43,7 @@ namespace CommonNetCoreFuncs.Communications
                 {
                     success = false;
                 }
-                
+
 
                 if (success && ccAddresses != null)
                 {
@@ -84,13 +84,14 @@ namespace CommonNetCoreFuncs.Communications
                         bodyBuilder.Attachments.Add(attachmentName, fileData);
                     }
 
-                email.Body = bodyBuilder.ToMessageBody();
+                    email.Body = bodyBuilder.ToMessageBody();
 
-                using SmtpClient smtpClient = new();
-                smtpClient.Connect("SMTPGTW1.HAM.AM.HONDA.COM", 25, true);
-                //smtpClient.Authenticate("user", "password");
-                smtpClient.Send(email);
-                smtpClient.Disconnect(true);
+                    using SmtpClient smtpClient = new();
+                    smtpClient.Connect("smtpgtw1.ham.am.honda.com", 25, MailKit.Security.SecureSocketOptions.None);
+                    //smtpClient.Authenticate("user", "password");
+                    smtpClient.Send(email);
+                    smtpClient.Disconnect(true);
+                }
             }
             catch (Exception ex)
             {

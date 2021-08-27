@@ -13,7 +13,7 @@ namespace CommonNetCoreFuncs.Communications
     public static class Email
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-        public static bool SendEmail(MailAddress from, MailAddress to, string subject, string body, MailAddress cc = null, string attachmentName = null, MemoryStream fileData = null)
+        public static bool SendEmail(MailAddress from, MailAddress to, string subject, string body, MailAddress cc = null, string attachmentName = null, FileStream fileData = null)
         {
             bool success = true;
             try
@@ -37,7 +37,7 @@ namespace CommonNetCoreFuncs.Communications
                 email.Body = bodyBuilder.ToMessageBody();
 
                 using SmtpClient smtpClient = new();
-                smtpClient.Connect("SMTPGTW1.HAM.AM.HONDA.COM", 25, true);
+                smtpClient.Connect("smtpgtw1.ham.am.honda.com", 25, MailKit.Security.SecureSocketOptions.None);
                 //smtpClient.Authenticate("user", "password");
                 smtpClient.Send(email);
                 smtpClient.Disconnect(true);

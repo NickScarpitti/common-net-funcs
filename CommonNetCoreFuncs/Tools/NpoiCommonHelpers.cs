@@ -17,6 +17,7 @@ namespace CommonNetCoreFuncs.Tools
         public enum EStyles
         {
             Header,
+            HeaderThickTop,
             Body,
             Error,
             Custom
@@ -49,7 +50,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "");
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
                 return null;
             }
         }
@@ -84,7 +85,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "");
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
                 return null;
             }
         }
@@ -133,7 +134,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "");
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
                 return null;
             }
         }
@@ -193,7 +194,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "");
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
                 return false;
             }
         }
@@ -215,6 +216,17 @@ namespace CommonNetCoreFuncs.Tools
                     cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
                     cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
+                    cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
+                    cellStyle.FillPattern = FillPattern.SolidForeground;
+                    cellStyle.SetFont(GetFont(EFonts.Header, wb));
+                    break;
+
+                case EStyles.HeaderThickTop:
+                    cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+                    cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+                    cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
+                    cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
+                    cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Medium;
                     cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
                     cellStyle.FillPattern = FillPattern.SolidForeground;
                     cellStyle.SetFont(GetFont(EFonts.Header, wb));
@@ -328,7 +340,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "");
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
                 return false;
             }
         }
@@ -523,14 +535,17 @@ namespace CommonNetCoreFuncs.Tools
 
         public static void AddDataValidation(this ISheet ws, CellRangeAddressList cellRangeAddressList, List<string> options)
         {
-            XSSFDataValidationHelper validationHelper = null;
-            XSSFDataValidationConstraint dvConstraint = (XSSFDataValidationConstraint)validationHelper.CreateExplicitListConstraint(options.ToArray());
-            XSSFDataValidation dataValidation = (XSSFDataValidation)validationHelper.CreateValidation(dvConstraint, cellRangeAddressList);
+            IDataValidationHelper validationHelper = ws.GetDataValidationHelper();
+            IDataValidationConstraint constraint = validationHelper.CreateExplicitListConstraint(options.ToArray());
+            IDataValidation dataValidation = validationHelper.CreateValidation(constraint, cellRangeAddressList);
+
             dataValidation.ShowErrorBox = true;
             dataValidation.ErrorStyle = 0;
             dataValidation.CreateErrorBox("InvalidValue", "Selected value must be in list");
             dataValidation.ShowErrorBox = true;
             dataValidation.ShowPromptBox = false;
+            //ws.AddValidationData(dataValidation);
+
             ws.AddValidationData(dataValidation);
         }
     }

@@ -48,7 +48,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "");
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
                 return false;
             }
         }
@@ -193,7 +193,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "");
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
                 return false;
             }
         }

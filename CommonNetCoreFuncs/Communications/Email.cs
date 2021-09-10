@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Communications
 {
@@ -14,10 +15,25 @@ namespace CommonNetCoreFuncs.Communications
         public string Email { get; set; }
     }
 
+    public static class EmailConfig
+    {
+        public static SmtpClient SsmtpClient { get; private set; }
+        public static async Task InitializeSmtp()
+        {
+            if (!SsmtpClient.IsConnected)
+            {
+                SmtpClient client = new();
+                await client.ConnectAsync("smtpgtw1.ham.am.honda.com", 25, MailKit.Security.SecureSocketOptions.None);
+                SsmtpClient = client;
+            }
+        }
+    }
+
     public static class Email
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-        public static bool SendEmail(MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, string attachmentName = null, FileStream fileData = null)
+
+        public static async Task<bool> SendEmail(MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, string attachmentName = null, FileStream fileData = null)
         {
             bool success = true;
             try
@@ -86,11 +102,14 @@ namespace CommonNetCoreFuncs.Communications
 
                     email.Body = bodyBuilder.ToMessageBody();
 
-                    using SmtpClient smtpClient = new();
-                    smtpClient.Connect("smtpgtw1.ham.am.honda.com", 25, MailKit.Security.SecureSocketOptions.None);
+                    //using SmtpClient smtpClient = new();
+                    if (!EmailConfig.SsmtpClient.IsConnected)
+                    {
+                        await EmailConfig.InitializeSmtp();
+                    }
                     //smtpClient.Authenticate("user", "password");
-                    smtpClient.Send(email);
-                    smtpClient.Disconnect(true);
+                    await EmailConfig.SsmtpClient.SendAsync(email);
+                    //await smtpClient.DisconnectAsync(true);
                 }
             }
             catch (Exception ex)

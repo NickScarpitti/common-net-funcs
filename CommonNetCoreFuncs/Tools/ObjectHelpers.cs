@@ -2,38 +2,40 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CommonNetCoreFuncs.Tools
 {
     public static class ObjectHelpers
     {
-        private static List<Type> refTypes = new() 
-        {
-            typeof(object),
-            typeof(string),
-            typeof(Enum),
-            typeof(List<bool>),
-            typeof(List<byte>),
-            typeof(List<sbyte>),
-            typeof(List<char>),
-            typeof(List<decimal>),
-            typeof(List<double>),
-            typeof(List<float>),
-            typeof(List<int>),
-            typeof(List<uint>),
-            typeof(List<nint>),
-            typeof(List<nuint>),
-            typeof(List<long>),
-            typeof(List<ulong>),
-            typeof(List<short>),
-            typeof(List<ushort>),
-            typeof(List<object>),
-            typeof(List<string>)
-        };
+        //private readonly static List<Type> refTypes = new() 
+        //{
+        //    typeof(object),
+        //    typeof(string),
+        //    typeof(Enum),
+        //    typeof(List<bool>),
+        //    typeof(List<byte>),
+        //    typeof(List<sbyte>),
+        //    typeof(List<char>),
+        //    typeof(List<decimal>),
+        //    typeof(List<double>),
+        //    typeof(List<float>),
+        //    typeof(List<int>),
+        //    typeof(List<uint>),
+        //    typeof(List<nint>),
+        //    typeof(List<nuint>),
+        //    typeof(List<long>),
+        //    typeof(List<ulong>),
+        //    typeof(List<short>),
+        //    typeof(List<ushort>),
+        //    typeof(List<object>),
+        //    typeof(List<string>)
+        //};
 
         public static void CopyPropertiesTo<T, TU>(this T source, TU dest)
         {
@@ -62,6 +64,21 @@ namespace CommonNetCoreFuncs.Tools
             return items;
         }
 
+        public static void TrimObjectStrings<T>(this T obj)
+        {
+            foreach (PropertyInfo prop in obj.GetType().GetProperties())
+            {
+                if (prop.PropertyType == typeof(string))
+                {
+                    string value = (string)prop.GetValue(obj) ?? string.Empty;
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        value = Regex.Replace(value.Trim(), @"\s+", " "); //Replaces any multiples of spacing with a single space
+                        prop.SetValue(obj, value.Trim());
+                    }
+                }
+            }
+        }
         //public static void TruncCircularRefs<T>(this T source, List<string> hashes)
         //{
 

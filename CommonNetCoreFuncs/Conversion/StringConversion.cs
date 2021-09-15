@@ -35,6 +35,23 @@ namespace CommonNetCoreFuncs.Conversion
         }
 
         /// <summary>
+        /// Converts Nullable DateTime to string using the passed in formatting
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="format"></param>
+        /// <returns>Returns formatted string representation of the passed in nullable Timespan</returns>
+        public static string ToNString(this TimeSpan? value, string format = null)
+        {
+            string output = null;
+            if (value != null)
+            {
+                TimeSpan tsActual = (TimeSpan)value;
+                output = tsActual.ToString(format);
+            }
+            return output;
+        }
+
+        /// <summary>
         /// Converts nullable int to string
         /// </summary>
         /// <param name="value"></param>
@@ -59,7 +76,7 @@ namespace CommonNetCoreFuncs.Conversion
             string output = null;
             if (value != null)
             {
-                output = value.ToNString();
+                output = value.ToString();
             }
             return output;
         }
@@ -74,7 +91,7 @@ namespace CommonNetCoreFuncs.Conversion
             string output = null;
             if (value != null)
             {
-                output = value.ToNString();
+                output = value.ToString();
             }
             return output;
         }

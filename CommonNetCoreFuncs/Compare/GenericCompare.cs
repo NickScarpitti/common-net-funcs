@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 
 namespace CommonNetCoreFuncs.Compare
 {
@@ -27,11 +28,11 @@ namespace CommonNetCoreFuncs.Compare
 
         public int GetHashCode(T obj)
         {
-            var Props = obj.GetType().GetProperties();
+            PropertyInfo[] props = obj.GetType().GetProperties();
             string allProps = null;
-            foreach (var Prop in Props)
+            foreach (PropertyInfo prop in props)
             {
-                var propValue = Prop.GetValue(obj) ?? string.Empty;
+                var propValue = prop.GetValue(obj) ?? string.Empty;
                 allProps += propValue;
             }
             return allProps.GetHashCode();

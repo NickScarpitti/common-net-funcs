@@ -138,15 +138,16 @@ namespace CommonNetCoreFuncs.Conversion
         /// <returns>Nullable DateTime parsed from a string</returns>
         public static DateTime? ToNDateTime(this string value)
         {
+            DateTime? dtn = null;
             if (DateTime.TryParse(value, out DateTime dt))
             {
-                DateTime? dtn = dt;
-                return dtn;
+                dtn = dt;
             }
-            else
+            else if (double.TryParse(value, out double dbl))
             {
-                return null;
+                dtn = DateTime.FromOADate(dbl);
             }
+            return dtn;
         }
 
         public static bool YesNoToBool(this string value)

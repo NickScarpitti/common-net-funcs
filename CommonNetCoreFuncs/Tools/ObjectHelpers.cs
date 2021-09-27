@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -79,6 +80,19 @@ namespace CommonNetCoreFuncs.Tools
                 }
             }
         }
+
+        /// <summary>
+        /// Clone one list into another without a reference linking the two
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        public static List<T> Clone<T>(this List<T> list)
+        {
+            string serialized = JsonConvert.SerializeObject(list);
+            return JsonConvert.DeserializeObject<List<T>>(serialized);
+        }
+
         //public static void TruncCircularRefs<T>(this T source, List<string> hashes)
         //{
 

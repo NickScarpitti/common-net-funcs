@@ -105,7 +105,7 @@ namespace CommonNetCoreFuncs.Communications
                     //using SmtpClient smtpClient = new();
                     if (!EmailConfig.SsmtpClient.IsConnected)
                     {
-                        await EmailConfig.InitializeSmtp();
+                        await EmailConfig.InitializeSmtp(smtpServer, smtpPort);
                     }
                     //smtpClient.Authenticate("user", "password");
                     await EmailConfig.SsmtpClient.SendAsync(email);

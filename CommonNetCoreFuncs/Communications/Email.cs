@@ -18,12 +18,12 @@ namespace CommonNetCoreFuncs.Communications
     public static class EmailConfig
     {
         public static SmtpClient SsmtpClient { get; private set; }
-        public static async Task InitializeSmtp()
+        public static async Task InitializeSmtp(string smtpServer, int smtpPort)
         {
             if (!SsmtpClient.IsConnected)
             {
                 SmtpClient client = new();
-                await client.ConnectAsync("smtpgtw1.ham.am.honda.com", 25, MailKit.Security.SecureSocketOptions.None);
+                await client.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.None);
                 SsmtpClient = client;
             }
         }
@@ -33,7 +33,7 @@ namespace CommonNetCoreFuncs.Communications
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public static async Task<bool> SendEmail(MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, string attachmentName = null, FileStream fileData = null)
+        public static async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, string attachmentName = null, FileStream fileData = null)
         {
             bool success = true;
             try

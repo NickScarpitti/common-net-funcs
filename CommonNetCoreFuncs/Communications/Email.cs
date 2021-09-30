@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Communications
@@ -15,25 +16,12 @@ namespace CommonNetCoreFuncs.Communications
         public string Email { get; set; }
     }
 
-    public static class EmailConfig
-    {
-        public static SmtpClient SsmtpClient { get; private set; }
-        public static async Task InitializeSmtp(string smtpServer, int smtpPort)
-        {
-            if (!SsmtpClient.IsConnected)
-            {
-                SmtpClient client = new();
-                await client.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.None);
-                SsmtpClient = client;
-            }
-        }
-    }
-
     public static class Email
     {
+        private static SmtpClient smtpClient = new();
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public static async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, string attachmentName = null, FileStream fileData = null)
+        public static async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, string attachmentName = null, Stream fileData = null)
         {
             bool success = true;
             try
@@ -97,19 +85,33 @@ namespace CommonNetCoreFuncs.Communications
                     bodyBuilder.TextBody = body;
                     if (!string.IsNullOrEmpty(attachmentName) && fileData != null)
                     {
+                        fileData.Position = 0; //Must have this to prevent errors writing data to the attachment
                         bodyBuilder.Attachments.Add(attachmentName, fileData);
                     }
 
                     email.Body = bodyBuilder.ToMessageBody();
 
-                    //using SmtpClient smtpClient = new();
-                    if (!EmailConfig.SsmtpClient.IsConnected)
+                    for (int i = 0; i < 8; i++)
                     {
-                        await EmailConfig.InitializeSmtp(smtpServer, smtpPort);
+                        try
+                        {
+                            //using SmtpClient smtpClient = new();
+                            if (!smtpClient.IsConnected)
+                            {
+                                await InitializeSmtp(smtpServer, smtpPort);
+                            }
+                            //smtpClient.Authenticate("user", "password");
+                            await smtpClient.SendAsync(email);
+                            //await smtpClient.DisconnectAsync(true);
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Warn(ex, (ex.InnerException ?? new()).ToString());
+                        }
+                        Thread.Sleep(500);
                     }
-                    //smtpClient.Authenticate("user", "password");
-                    await EmailConfig.SsmtpClient.SendAsync(email);
-                    //await smtpClient.DisconnectAsync(true);
+
                 }
             }
             catch (Exception ex)
@@ -118,6 +120,16 @@ namespace CommonNetCoreFuncs.Communications
                 success = false;
             }
             return success;
+        }
+
+        public static async Task InitializeSmtp(string smtpServer, int smtpPort)
+        {
+            if (!smtpClient.IsConnected)
+            {
+                SmtpClient client = new();
+                await client.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.None);
+                smtpClient = client;
+            }
         }
 
         public static bool ConfirmValidEmail(string email)

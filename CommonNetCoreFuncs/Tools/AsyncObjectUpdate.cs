@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -49,6 +50,22 @@ namespace CommonNetCoreFuncs.Tools
                 if (resultObject != null)
                 {
                     obj.AddRange(resultObject);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+            }
+        }
+
+        public static async Task ObjectFill(MemoryStream obj, Task<MemoryStream> task)
+        {
+            try
+            {
+                var resultObject = await task;
+                if (resultObject != null)
+                {
+                    resultObject.WriteTo(obj);
                 }
             }
             catch (System.Exception ex)

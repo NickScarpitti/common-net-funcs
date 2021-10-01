@@ -21,7 +21,7 @@ namespace CommonNetCoreFuncs.Communications
         private static SmtpClient smtpClient = new();
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public static async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, string attachmentName = null, Stream fileData = null)
+        public static async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, List<MailAddress> bccAddresses = null, string attachmentName = null, Stream fileData = null)
         {
             bool success = true;
             try
@@ -43,11 +43,6 @@ namespace CommonNetCoreFuncs.Communications
                         }
                     }
                 }
-                else
-                {
-                    success = false;
-                }
-
 
                 if (success && ccAddresses != null)
                 {
@@ -64,17 +59,33 @@ namespace CommonNetCoreFuncs.Communications
                     }
                 }
 
+                if (success && bccAddresses != null)
+                {
+                    if (bccAddresses.Any())
+                    {
+                        foreach (MailAddress mailAddress in bccAddresses)
+                        {
+                            if (!ConfirmValidEmail(mailAddress?.Email ?? ""))
+                            {
+                                success = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 if (success)
                 {
                     MimeMessage email = new();
                     email.From.Add(new MailboxAddress(from.Name, from.Email));
                     email.To.AddRange(toAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
-                    if (ccAddresses != null)
+                    if (ccAddresses != null && ccAddresses.Any())
                     {
-                        if (ccAddresses.Any())
-                        {
-                            email.Cc.AddRange(ccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
-                        }
+                        email.Cc.AddRange(ccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+                    }
+                    if (bccAddresses != null && bccAddresses.Any())
+                    {
+                        email.Bcc.AddRange(bccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
                     }
                     email.Subject = subject;
 

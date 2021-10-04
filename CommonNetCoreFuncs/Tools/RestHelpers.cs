@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Formatting;
@@ -234,7 +235,7 @@ namespace CommonNetCoreFuncs.Tools
                 {
                     patch.Replace(path + modProp.Name, modProp.Value);
                 }
-                else if (!origProp.Value.ToString(Formatting.None).StrEq(modProp.Value.ToString(Formatting.None)))
+                else if ((!origProp.Value.ToString(Formatting.None).StrEq(modProp.Value.ToString(Formatting.None)) && origProp.Value.Type != JTokenType.Date))
                 {
                     if (origProp.Value.Type == JTokenType.Object)
                     {
@@ -242,6 +243,20 @@ namespace CommonNetCoreFuncs.Tools
                         FillPatchForObject(origProp.Value as JObject, modProp.Value as JObject, patch, path + modProp.Name + "/");
                     }
                     else
+                    {
+                        // Replace values directly
+                        patch.Replace(path + modProp.Name, modProp.Value);
+                    }
+                }
+                else if (origProp.Value.Type == JTokenType.Date && modProp.Value.Type == JTokenType.Date)
+                {
+                    string originalDts = origProp.Value.ToString(Formatting.None).Replace(@"""", "").Replace(@"\", "");
+                    string modDts = modProp.Value.ToString(Formatting.None).Replace(@"""", "").Replace(@"\", "");
+
+                    bool originalSucceed = DateTime.TryParse(originalDts, out DateTime originalDate);
+                    bool modSucceed = DateTime.TryParse(modDts, out DateTime modDate);
+
+                    if (modSucceed && originalDate != modDate)
                     {
                         // Replace values directly
                         patch.Replace(path + modProp.Name, modProp.Value);

@@ -18,7 +18,6 @@ namespace CommonNetCoreFuncs.Communications
 
     public static class Email
     {
-        private static SmtpClient smtpClient = new();
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         public static async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, List<MailAddress> bccAddresses = null, string attachmentName = null, Stream fileData = null)
@@ -106,14 +105,10 @@ namespace CommonNetCoreFuncs.Communications
                     {
                         try
                         {
-                            //using SmtpClient smtpClient = new();
-                            if (!smtpClient.IsConnected)
-                            {
-                                await InitializeSmtp(smtpServer, smtpPort);
-                            }
-                            //smtpClient.Authenticate("user", "password");
+                            using SmtpClient smtpClient = new();
+                            await smtpClient.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.None);
                             await smtpClient.SendAsync(email);
-                            //await smtpClient.DisconnectAsync(true);
+                            await smtpClient.DisconnectAsync(true);
                             break;
                         }
                         catch (Exception ex)
@@ -131,16 +126,6 @@ namespace CommonNetCoreFuncs.Communications
                 success = false;
             }
             return success;
-        }
-
-        public static async Task InitializeSmtp(string smtpServer, int smtpPort)
-        {
-            if (!smtpClient.IsConnected)
-            {
-                SmtpClient client = new();
-                await client.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.None);
-                smtpClient = client;
-            }
         }
 
         public static bool ConfirmValidEmail(string email)

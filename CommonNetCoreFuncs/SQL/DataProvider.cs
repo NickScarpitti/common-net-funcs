@@ -6,7 +6,7 @@ namespace CommonNetCoreFuncs.SQL
 {
     public class DataProvider
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        //private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         public static DataTable GetDataTable(string sql, string connStr, bool showConnectionError = false)
         {

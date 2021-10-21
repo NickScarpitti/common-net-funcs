@@ -71,10 +71,9 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
-
         public static string MakeNullNull(this string s)
         {
-            if (s == null || s.StrEq("Null") || s.ToUpperInvariant().Replace("NULL", "") == "")
+            if (s == null || s.StrEq("Null") || s.ToUpperInvariant().Replace("NULL", "") == "" || s.Trim().StrEq("Null"))
             {
                 return null;
             }

@@ -154,5 +154,10 @@ namespace CommonNetCoreFuncs.Conversion
         {
             return value.StrEq(EYesNo.Yes.ToString());
         }
+
+        public static string CleanQueryParam(this string value)
+        {
+            return value.MakeNullNull()?.Replace("\n", "").Trim();
+        }
     }
 }

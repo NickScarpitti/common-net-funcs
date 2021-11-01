@@ -159,5 +159,45 @@ namespace CommonNetCoreFuncs.Conversion
         {
             return value.MakeNullNull()?.Replace("\n", "").Trim();
         }
+
+        public static List<string> CleanQueryParam(this List<string> values)
+        {
+            if (values == null)
+            {
+                return null;
+            }
+
+            List<string> cleanValues = new();
+            if (values.Any())
+            {
+                foreach (string value in values)
+                {
+                    cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim());
+                }
+            }
+            return cleanValues;
+        }
+
+        public static string ListToQueryParameters(this List<string> parameters, string queryParameterName)
+        {
+            string queryString = string.Empty;
+            bool firstItem = true;
+            if (parameters != null && parameters.Any())
+            {
+                foreach (string parameter in parameters)
+                {
+                    if (!firstItem)
+                    {
+                        queryString += $"&{queryParameterName}={parameter}";
+                    }
+                    else
+                    {
+                        queryString = $"{queryParameterName}={parameter}";
+                        firstItem = false;
+                    }
+                }
+            }
+            return queryString;
+        }
     }
 }

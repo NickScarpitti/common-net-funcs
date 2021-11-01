@@ -331,7 +331,7 @@ namespace CommonNetCoreFuncs.Tools
 
                         foreach (var prop in props)
                         {
-                            ws.AutoSizeColumn(x);
+                            ws.AutoSizeColumn(x, true);
                             x++;
                         }
                     }

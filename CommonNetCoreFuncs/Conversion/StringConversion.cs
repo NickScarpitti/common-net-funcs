@@ -178,13 +178,13 @@ namespace CommonNetCoreFuncs.Conversion
             return cleanValues;
         }
 
-        public static string ListToQueryParameters(this List<string> parameters, string queryParameterName)
+        public static string ListToQueryParameters<T>(this List<T> parameters, string queryParameterName)
         {
             string queryString = string.Empty;
             bool firstItem = true;
             if (parameters != null && parameters.Any())
             {
-                foreach (string parameter in parameters)
+                foreach (T parameter in parameters)
                 {
                     if (!firstItem)
                     {

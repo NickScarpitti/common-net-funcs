@@ -14,7 +14,7 @@ namespace CommonNetCoreFuncs.Tools
         /// </summary>
         /// <param name="st"></param>
         /// <param name="numChars"></param>
-        /// <returns>Returns a string of the length indicated from the left side of the source string</returns>
+        /// <returns>String of the length indicated from the left side of the source string</returns>
         public static string Left(this string st, int numChars)
         {
             try
@@ -45,7 +45,7 @@ namespace CommonNetCoreFuncs.Tools
         /// </summary>
         /// <param name="st"></param>
         /// <param name="numChars"></param>
-        /// <returns>Returns a string of the length indicated from the right side of the source string</returns>
+        /// <returns>String of the length indicated from the right side of the source string</returns>
         public static string Right(this string st, int numChars)
         {
             try
@@ -71,6 +71,11 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
+        /// <summary>
+        /// Makes a string with of the word "null" into a null value
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns>Null is the string passed in is null or is the word null with no other text characters other than whitespace</returns>
         public static string MakeNullNull(this string s)
         {
             if (s == null || s.StrEq("Null") || s.ToUpperInvariant().Replace("NULL", "") == "" || s.Trim().StrEq("Null"))

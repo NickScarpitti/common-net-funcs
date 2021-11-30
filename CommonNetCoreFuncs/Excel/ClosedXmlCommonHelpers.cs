@@ -5,13 +5,13 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace CommonNetCoreFuncs.Tools
+namespace CommonNetCoreFuncs.Excel
 {
     public static class ClosedXmlCommonHelpers
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public enum Styles
+        public enum EStyles
         {
             Header,
             Body,
@@ -19,13 +19,18 @@ namespace CommonNetCoreFuncs.Tools
             Custom
         }
 
-        public enum Fonts
+        public enum EFonts
         {
             Default,
             Header,
             BigWhiteHeader
         }
 
+        /// <summary>
+        /// Checks if cell is empty
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <returns>True if cell is empty</returns>
         public static bool IsCellEmpty(this IXLCell cell)
         {
             if (string.IsNullOrWhiteSpace(cell.Value.ToString()))
@@ -35,6 +40,12 @@ namespace CommonNetCoreFuncs.Tools
             return false;
         }
 
+        /// <summary>
+        /// Writes an excel file to the specified path
+        /// </summary>
+        /// <param name="wb"></param>
+        /// <param name="path"></param>
+        /// <returns>True if write was successful</returns>
         public static bool WriteExcelFile(IXLWorkbook wb, string path)
         {
             try
@@ -53,41 +64,43 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
-        public static string GetSafeDate(string dateFormat)
-        {
-            return DateTime.Today.ToString(dateFormat).Replace("/", "-");
-        }
-
-        public static IXLStyle GetStyle(Styles style, IXLWorkbook wb, bool cellLocked = false, string htmlColor = null, IXLFont font = null, XLAlignmentHorizontalValues? alignment = null)
+        /// <summary>
+        /// Get cell style based on enum EStyle options
+        /// </summary>
+        /// <param name="style"></param>
+        /// <param name="wb"></param>
+        /// <param name="cellLocked"></param>
+        /// <param name="htmlColor"></param>
+        /// <param name="font"></param>
+        /// <param name="alignment"></param>
+        /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
+        public static IXLStyle GetStyle(EStyles style, IXLWorkbook wb, bool cellLocked = false, string htmlColor = null, IXLFont font = null, XLAlignmentHorizontalValues? alignment = null)
         {
             IXLStyle cellStyle = CreateEmptyStyle();
             switch (style)
             {
-                case Styles.Header:
+                case EStyles.Header:
                     cellStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center; //Center
                     cellStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
                     cellStyle.Border.LeftBorder = XLBorderStyleValues.Thin;
                     cellStyle.Border.RightBorder = XLBorderStyleValues.Thin;
                     cellStyle.Border.TopBorder = XLBorderStyleValues.Thin;
                     cellStyle.Fill.BackgroundColor = XLColor.LightGray; //XLColor.FromArgb(140, 140, 140);
-                    cellStyle.Font = GetFont(Fonts.Header, wb);
+                    cellStyle.Font = GetFont(EFonts.Header, wb);
                     break;
-
-                case Styles.Body:
+                case EStyles.Body:
                     cellStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                     cellStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
                     cellStyle.Border.LeftBorder = XLBorderStyleValues.Thin;
                     cellStyle.Border.RightBorder = XLBorderStyleValues.Thin;
                     cellStyle.Fill.BackgroundColor = XLColor.NoColor; //NPOI.HSSF.Util.HSSFColor.COLOR_NORMAL;
-                    cellStyle.Font = GetFont(Fonts.Default, wb);
+                    cellStyle.Font = GetFont(EFonts.Default, wb);
                     break;
-
-                case Styles.Error:
+                case EStyles.Error:
                     cellStyle.Fill.BackgroundColor = XLColor.Red; //NPOI.HSSF.Util.HSSFColor.Red.Index;
                     cellStyle.Fill.PatternType = XLFillPatternValues.Solid; //FillPattern.SolidForeground;
                     break;
-
-                case Styles.Custom:
+                case EStyles.Custom:
                     IXLStyle xStyle = wb.Style;
                     if (alignment != null) { xStyle.Alignment.Horizontal = (XLAlignmentHorizontalValues)alignment; }
                     xStyle.Fill.BackgroundColor = XLColor.FromHtml(htmlColor);
@@ -95,7 +108,6 @@ namespace CommonNetCoreFuncs.Tools
                     if (font != null) { xStyle.Font = font; }
                     cellStyle = xStyle;
                     break;
-
                 default:
                     break;
             }
@@ -115,29 +127,41 @@ namespace CommonNetCoreFuncs.Tools
             return o as IXLStyle;
         }
 
-        public static IXLFont GetFont(Fonts font, IXLWorkbook wb)
+        /// <summary>
+        /// Get font styling based on EFonts option
+        /// </summary>
+        /// <param name="font"></param>
+        /// <param name="wb"></param>
+        /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
+        public static IXLFont GetFont(EFonts font, IXLWorkbook wb)
         {
             IXLFont cellFont = wb.Style.Font;
             switch (font)
             {
-                case Fonts.Default:
+                case EFonts.Default:
                     cellFont.Bold = false;
                     cellFont.FontSize = 10;
                     cellFont.FontName = "Calibri";
                     break;
-
-                case Fonts.Header:
+                case EFonts.Header:
                     cellFont.Bold = true;
                     cellFont.FontSize = 10;
                     cellFont.FontName = "Calibri";
                     break;
-
                 default:
                     break;
             }
             return cellFont;
         }
 
+        /// <summary>
+        /// Generates a simple excel file containing the passed in data in a tabular format
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="wb"></param>
+        /// <param name="ws"></param>
+        /// <param name="data"></param>
+        /// <returns>True if excel file was created successfully</returns>
         public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, List<T> data)
         {
             try
@@ -146,8 +170,8 @@ namespace CommonNetCoreFuncs.Tools
                 {
                     if (data.Count > 0)
                     {
-                        IXLStyle headerStyle = GetStyle(Styles.Header, wb);
-                        IXLStyle bodyStyle = GetStyle(Styles.Body, wb);
+                        IXLStyle headerStyle = GetStyle(EStyles.Header, wb);
+                        IXLStyle bodyStyle = GetStyle(EStyles.Body, wb);
 
                         int x = 1;
                         int y = 1;
@@ -198,6 +222,12 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
+        /// <summary>
+        /// Writes excel file to a MemoryStream object
+        /// </summary>
+        /// <param name="memoryStream"></param>
+        /// <param name="wb"></param>
+        /// <returns></returns>
         public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, IXLWorkbook wb)
         {
             MemoryStream tempStream = new();
@@ -275,38 +305,52 @@ namespace CommonNetCoreFuncs.Tools
         //    }
         //}
 
-        public static double GetRangeWidthInPx(this IXLWorksheet ws, int startCol, int endCol)
-        {
-            if (startCol > endCol)
-            {
-                int endTemp = startCol;
-                startCol = endCol;
-                endCol = endTemp;
-            }
+        /// <summary>
+        /// Get the width of a specified range in pixels
+        /// </summary>
+        /// <param name="ws"></param>
+        /// <param name="startCol"></param>
+        /// <param name="endCol"></param>
+        /// <returns>Double representation of the width of the column range in pixels</returns>
+        //public static double GetRangeWidthInPx(this IXLWorksheet ws, int startCol, int endCol)
+        //{
+        //    if (startCol > endCol)
+        //    {
+        //        int endTemp = startCol;
+        //        startCol = endCol;
+        //        endCol = endTemp;
+        //    }
 
-            double totalWidth = 0;
-            for (int i = startCol; i < endCol + 1; i++)
-            {
-                totalWidth += (ws.Column(i).Width - 1) * 7 + 12;
-            }
-            return totalWidth;
-        }
+        //    double totalWidth = 0;
+        //    for (int i = startCol; i < endCol + 1; i++)
+        //    {
+        //        totalWidth += (ws.Column(i).Width - 1) * 7 + 12;
+        //    }
+        //    return totalWidth;
+        //}
 
-        public static double GetRangeHeightInPx(this IXLWorksheet ws, int startRow, int endRow)
-        {
-            if (startRow > endRow)
-            {
-                int endTemp = startRow;
-                startRow = endRow;
-                endRow = endTemp;
-            }
+        /// <summary>
+        /// Get the height of a specified range in pixels
+        /// </summary>
+        /// <param name="ws"></param>
+        /// <param name="startCol"></param>
+        /// <param name="endCol"></param>
+        /// <returns>Double representation of the height of the rows range in pixels</returns>
+        //public static double GetRangeHeightInPx(this IXLWorksheet ws, int startRow, int endRow)
+        //{
+        //    if (startRow > endRow)
+        //    {
+        //        int endTemp = startRow;
+        //        startRow = endRow;
+        //        endRow = endTemp;
+        //    }
 
-            double totaHeight = 0;
-            for (int i = startRow; i < endRow + 1; i++)
-            {
-                totaHeight += ws.Row(i).Height;
-            }
-            return totaHeight;
-        }
+        //    double totaHeight = 0;
+        //    for (int i = startRow; i < endRow + 1; i++)
+        //    {
+        //        totaHeight += ws.Row(i).Height;
+        //    }
+        //    return totaHeight;
+        //}
     }
 }

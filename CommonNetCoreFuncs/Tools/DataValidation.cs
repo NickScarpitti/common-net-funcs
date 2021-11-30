@@ -15,7 +15,7 @@ namespace CommonNetCoreFuncs.Tools
         /// </summary>
         /// <param name="obj1"></param>
         /// <param name="obj2"></param>
-        /// <returns>Returns true if the two objects have the same value for all elements</returns>
+        /// <returns>True if the two objects have the same value for all elements</returns>
         public static bool IsEqual(this object obj1, object obj2)
         {
             // They're both null.
@@ -38,6 +38,12 @@ namespace CommonNetCoreFuncs.Tools
             return true;
         }
 
+        /// <summary>
+        /// Validates file extension based on list of valid extensions
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="validExtensions"></param>
+        /// <returns>True if the file has a valid extension</returns>
         public static bool ValidateFileExtention(this string fileName, string[] validExtensions)
         {
             string extension = Path.GetExtension(fileName);
@@ -48,11 +54,23 @@ namespace CommonNetCoreFuncs.Tools
             return true;
         }
 
+        /// <summary>
+        /// Compare two strings ignoring culture and case
+        /// </summary>
+        /// <param name="s1"></param>
+        /// <param name="s2"></param>
+        /// <returns>True if the strings are equal when ignoring culture and case</returns>
         public static bool StrEq(this string s1, string s2)
         {
             return string.Equals(s1 ?? "", s2 ?? "", StringComparison.InvariantCultureIgnoreCase);
         }
 
+        /// <summary>
+        /// Provides a safe way to add a new dictionary key without having to worry about duplication
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         public static void AddDictionaryItem(this Dictionary<string, string> dict, string key, string value)
         {
             if (!dict.ContainsKey(key))

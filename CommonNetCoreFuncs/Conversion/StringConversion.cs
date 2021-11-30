@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace CommonNetCoreFuncs.Conversion
@@ -22,7 +23,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <param name="format"></param>
-        /// <returns>Returns formatted string representation of the passed in nullable DateTime</returns>
+        /// <returns>Formatted string representation of the passed in nullable DateTime</returns>
         public static string ToNString(this DateTime? value, string format = null)
         {
             string output = null;
@@ -39,7 +40,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <param name="format"></param>
-        /// <returns>Returns formatted string representation of the passed in nullable Timespan</returns>
+        /// <returns>Formatted string representation of the passed in nullable Timespan</returns>
         public static string ToNString(this TimeSpan? value, string format = null)
         {
             string output = null;
@@ -55,7 +56,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// Converts nullable int to string
         /// </summary>
         /// <param name="value"></param>
-        /// <returns>Returns string representation of the passed in nullable int</returns>
+        /// <returns>String representation of the passed in nullable int</returns>
         public static string ToNString(this int? value)
         {
             string output = null;
@@ -70,7 +71,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// Converts nullable long to string
         /// </summary>
         /// <param name="value"></param>
-        /// <returns>Returns string representation of the passed in nullable long</returns>
+        /// <returns>String representation of the passed in nullable long</returns>
         public static string ToNString(this long? value)
         {
             string output = null;
@@ -85,7 +86,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// Converts nullable double to string
         /// </summary>
         /// <param name="value"></param>
-        /// <returns>Returns string representation of the passed in nullable double</returns>
+        /// <returns>String representation of the passed in nullable double</returns>
         public static string ToNString(this double? value)
         {
             string output = null;
@@ -96,6 +97,11 @@ namespace CommonNetCoreFuncs.Conversion
             return output;
         }
 
+        /// <summary>
+        /// Converts value to select list item
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
         public static SelectListItem ToSelectListItem(this string value)
         {
             if (value != null)
@@ -112,6 +118,11 @@ namespace CommonNetCoreFuncs.Conversion
             }
         }
 
+        /// <summary>
+        /// Converts list of string representations of integers into list of integers
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns>List of integers where the strings could be parsed to integers and not null</returns>
         public static List<int> ToListInt(this List<string> values)
         {
             return values.Select(x => { return int.TryParse(x, out int i) ? i : (int?)null; }).Where(i => i.HasValue).Select(i => i.Value).ToList();
@@ -150,16 +161,31 @@ namespace CommonNetCoreFuncs.Conversion
             return dtn;
         }
 
+        /// <summary>
+        /// Convert string "Yes"/"No" value into bool
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns>Bool representation of string value passed in</returns>
         public static bool YesNoToBool(this string value)
         {
             return value.StrEq(EYesNo.Yes.ToString());
         }
 
+        /// <summary>
+        /// Cleans potential parsing issues out of a query parameter
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns>String equivalent of value passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
         public static string CleanQueryParam(this string value)
         {
             return value.MakeNullNull()?.Replace("\n", "").Trim();
         }
 
+        /// <summary>
+        /// Cleans potential parsing issues out of a list of query parameters
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
         public static List<string> CleanQueryParam(this List<string> values)
         {
             if (values == null)
@@ -178,6 +204,13 @@ namespace CommonNetCoreFuncs.Conversion
             return cleanValues;
         }
 
+        /// <summary>
+        /// Converts list of query parameters into a query parameter string
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="parameters">List of a type that can be converted to string</param>
+        /// <param name="queryParameterName">The name to be used in front of the equals sign for the query parameter string</param>
+        /// <returns>String representation of the list passed in as query parameters with the name passed in as queryParameterName</returns>
         public static string ListToQueryParameters<T>(this List<T> parameters, string queryParameterName)
         {
             string queryString = string.Empty;
@@ -198,6 +231,35 @@ namespace CommonNetCoreFuncs.Conversion
                 }
             }
             return queryString;
+        }
+
+        /// <summary>
+        /// Get file name safe date in the chosen format
+        /// </summary>
+        /// <param name="dateFormat"></param>
+        /// <returns></returns>
+        public static string GetSafeDate(string dateFormat)
+        {
+            return DateTime.Today.ToString(dateFormat).Replace("/", "-");
+        }
+
+        /// <summary>
+        /// Adds number in () at the end of a file name if it would create a duplicate in the savePath
+        /// </summary>
+        /// <param name="savePath"></param>
+        /// <param name="fileName"></param>
+        /// <param name="extension"></param>
+        /// <returns>Unique file name string</returns>
+        public static string MakeExportNameUnique(string savePath, string fileName, string extension)
+        {
+            int i = 0;
+            string outputName = fileName;
+            while (File.Exists(Path.Combine(savePath, outputName)))
+            {
+                outputName = $"{fileName.Left(fileName.Length - extension.Length)} ({i}).{extension}";
+                i++;
+            }
+            return outputName;
         }
     }
 }

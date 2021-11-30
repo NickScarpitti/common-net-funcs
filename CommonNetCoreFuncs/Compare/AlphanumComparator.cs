@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace CommonNetCoreFuncs.Compare
 {
-    public class AlphanumComparator : IComparer<Object>
+    /// <summary>
+    /// Compare two alphanumeric values
+    /// </summary>
+    public class AlphanumComparator : IComparer<object>
     {
-        public int Compare(Object x, Object y)
+        public int Compare(object x, object y)
         {
             if (x is not string s1)
             {

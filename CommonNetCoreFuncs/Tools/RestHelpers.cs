@@ -23,13 +23,14 @@ namespace CommonNetCoreFuncs.Tools
         private static readonly HttpClient client = new();
 
         /// <summary>
-        /// For getting the resources from a web api
+        /// Executes a GET request against the specified URL and returns the result
         /// From Source1
         /// </summary>
         /// <param name="url">API Url</param>
         /// <returns>A Task with result object of type T</returns>
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
+        /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
         public static async Task<T> Get(string url)
         {
             T result = null;
@@ -54,20 +55,21 @@ namespace CommonNetCoreFuncs.Tools
         }
 
         /// <summary>
-        /// For creating a new item over a web api using POST
+        /// Executes a POST request against the provided URL with the postObject in the body and returns the result
         /// From Source1
         /// </summary>
-        /// <param name="apiUrl">API Url</param>
+        /// <param name="url">API Url</param>
         /// <param name="postObject">The object to be created</param>
         /// <returns>A Task with created item</returns>
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
-        public static async Task<T> PostRequest(string apiUrl, T postObject)
+        /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
+        public static async Task<T> PostRequest(string url, T postObject)
         {
             T result = null;
             try
             {
-                HttpResponseMessage response = await client.PostAsync(apiUrl, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
+                HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
                 {
@@ -85,12 +87,21 @@ namespace CommonNetCoreFuncs.Tools
             return result;
         }
 
-        public static async Task<string> StringPostRequest(string apiUrl, T postObject)
+        /// <summary>
+        /// Executes a POST request against the provided URL with the postObject in the body and returns the result in string format
+        /// </summary>
+        /// <param name="url">API Url</param>
+        /// <param name="postObject">The object to be created</param>
+        /// <returns>A Task with created item</returns>
+        /// <exception cref="HttpRequestException">Ignore.</exception>
+        /// <exception cref="ObjectDisposedException">Ignore.</exception>
+        /// <returns>String resulting from the POST request - Null if not success</returns>
+        public static async Task<string> StringPostRequest(string url, T postObject)
         {
             string result = null;
             try
             {
-                HttpResponseMessage response = await client.PostAsync(apiUrl, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
+                HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
                 {
@@ -108,9 +119,18 @@ namespace CommonNetCoreFuncs.Tools
             return result;
         }
 
+        /// <summary>
+        /// Executes a DELETE request against the provided URL with the deleteObject in the body and returns the result
+        /// </summary>
+        /// <param name="url">API Url</param>
+        /// <param name="postObject">The object to be created</param>
+        /// <returns>A Task with created item</returns>
+        /// <exception cref="HttpRequestException">Ignore.</exception>
+        /// <exception cref="ObjectDisposedException">Ignore.</exception>
+        /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
         public static async Task<T> DeleteRequest(string apiUrl, T deleteObject)
         {
-            T result = deleteObject;
+            T result = null;
             try
             {
                 HttpResponseMessage response = await client.DeleteAsync(apiUrl).ConfigureAwait(false);
@@ -123,21 +143,16 @@ namespace CommonNetCoreFuncs.Tools
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     });
                 }
-                else
-                {
-                    result = null;
-                }
             }
             catch (Exception ex)
             {
                 logger.Error(ex, (ex.InnerException ?? new()).ToString());
-                result = null;
             }
             return result;
         }
 
         /// <summary>
-        /// For updating an existing item over a web api using PUT
+        /// Executes a PUT request against the provided URL with the putObject in the body
         /// From Source1
         /// </summary>
         /// <param name="apiUrl">API Url</param>
@@ -150,12 +165,13 @@ namespace CommonNetCoreFuncs.Tools
         }
 
         /// <summary>
-        /// PatchRequest
+        /// Executes a PATCH request against the provided URL with the patchDoc in the body and returns the result
         /// </summary>
         /// <param name="apiUrl"></param>
         /// <param name="patchDoc"></param>
         /// <returns></returns>
         /// <exception cref="HttpRequestException">Ignore.</exception>
+        /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
         public static async Task<T> PatchRequest(string apiUrl, HttpContent patchDoc)
         {
             T result = null;
@@ -185,7 +201,7 @@ namespace CommonNetCoreFuncs.Tools
         /// </summary>
         /// <param name="originalObject"></param>
         /// <param name="modifiedObject"></param>
-        /// <returns></returns>
+        /// <returns>JsonPatchDocument document of changes from originalObject to modifiedObject</returns>
         public static JsonPatchDocument CreatePatch(object originalObject, object modifiedObject)
         {
             JObject original = JObject.FromObject(originalObject);
@@ -198,7 +214,7 @@ namespace CommonNetCoreFuncs.Tools
         }
 
         /// <summary>
-        /// Compares two JObjects together and creates a JSON patch document for the differences
+        /// Compares two JObjects together and populates a JsonPatchDocument with the differences
         /// From Source2
         /// </summary>
         /// <param name="orig"></param>

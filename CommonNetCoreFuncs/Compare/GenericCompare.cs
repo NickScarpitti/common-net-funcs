@@ -5,6 +5,12 @@ namespace CommonNetCoreFuncs.Compare
 {
     public class GenericCompare<T> : IEqualityComparer<T>
     {
+        /// <summary>
+        /// Compare two complex objects for value equality
+        /// </summary>
+        /// <param name="obj1"></param>
+        /// <param name="obj2"></param>
+        /// <returns>True if both objects contain identical properties</returns>
         public bool Equals(T obj1, T obj2)
         {
             // They're both null.
@@ -26,6 +32,11 @@ namespace CommonNetCoreFuncs.Compare
             return true;
         }
 
+        /// <summary>
+        /// Get hash of an object
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns>Hash string of object</returns>
         public int GetHashCode(T obj)
         {
             PropertyInfo[] props = obj.GetType().GetProperties();

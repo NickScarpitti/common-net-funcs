@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Communications
 {
+    /// <summary>
+    /// Class that stores both fields of a Mail Address
+    /// </summary>
     public class MailAddress
     {
         public string Name { get; set; }
@@ -20,6 +23,21 @@ namespace CommonNetCoreFuncs.Communications
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        /// <summary>
+        /// Sends an email using the SMTP server specified in the parameters
+        /// </summary>
+        /// <param name="smtpServer"></param>
+        /// <param name="smtpPort"></param>
+        /// <param name="from"></param>
+        /// <param name="toAddresses"></param>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        /// <param name="bodyIsHtml">Will render body as HTML if true</param>
+        /// <param name="ccAddresses"></param>
+        /// <param name="bccAddresses"></param>
+        /// <param name="attachmentName"></param>
+        /// <param name="fileData">Stream of file data you want to attach to the email</param>
+        /// <returns>Email sent success bool</returns>
         public static async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, List<MailAddress> bccAddresses = null, string attachmentName = null, Stream fileData = null)
         {
             bool success = true;
@@ -128,6 +146,11 @@ namespace CommonNetCoreFuncs.Communications
             return success;
         }
 
+        /// <summary>
+        /// Checks email string with simple regex to confirm that it is a properly formatted address
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns>True if email is valid</returns>
         public static bool ConfirmValidEmail(string email)
         {
             bool isValid = false;

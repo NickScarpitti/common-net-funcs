@@ -12,25 +12,25 @@ namespace CommonNetCoreFuncs.Tools
         /// <summary>
         /// Clone of VBA Left() function
         /// </summary>
-        /// <param name="st"></param>
+        /// <param name="s"></param>
         /// <param name="numChars"></param>
         /// <returns>String of the length indicated from the left side of the source string</returns>
-        public static string Left(this string st, int numChars)
+        public static string Left(this string s, int numChars)
         {
             try
             {
-                if (string.IsNullOrEmpty(st))
+                if (string.IsNullOrEmpty(s))
                 {
                     return null;
                 }
 
-                if (numChars <= st.Length)
+                if (numChars <= s.Length)
                 {
-                    return st.Substring(0, numChars);
+                    return s[..numChars];
                 }
                 else
                 {
-                    return st;
+                    return s;
                 }
             }
             catch (Exception ex)
@@ -43,25 +43,25 @@ namespace CommonNetCoreFuncs.Tools
         /// <summary>
         /// Clone of VBA Right() function
         /// </summary>
-        /// <param name="st"></param>
+        /// <param name="s"></param>
         /// <param name="numChars"></param>
         /// <returns>String of the length indicated from the right side of the source string</returns>
-        public static string Right(this string st, int numChars)
+        public static string Right(this string s, int numChars)
         {
             try
             {
-                if (string.IsNullOrEmpty(st))
+                if (string.IsNullOrEmpty(s))
                 {
                     return null;
                 }
 
-                if (numChars <= st.Length)
+                if (numChars <= s.Length)
                 {
-                    return st.Substring(st.Length - numChars, numChars);
+                    return s.Substring(s.Length - numChars, numChars);
                 }
                 else
                 {
-                    return st;
+                    return s;
                 }
             }
             catch (Exception ex)

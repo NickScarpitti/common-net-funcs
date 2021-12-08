@@ -88,6 +88,39 @@ namespace CommonNetCoreFuncs.Tools
         }
 
         /// <summary>
+        /// Executes a POST request against the provided URL with the postObject in the body and returns the result
+        /// From Source1
+        /// </summary>
+        /// <param name="url">API Url</param>
+        /// <param name="postObject">The object to be created</param>
+        /// <returns>A Task with created item</returns>
+        /// <exception cref="HttpRequestException">Ignore.</exception>
+        /// <exception cref="ObjectDisposedException">Ignore.</exception>
+        /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
+        public static async Task<T> GenericPostRequest<UT>(string url, UT postObject)
+        {
+            T result = null;
+            try
+            {
+                HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
+                //response.EnsureSuccessStatusCode();
+                if (response.IsSuccessStatusCode)
+                {
+                    await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                    {
+                        if (x.IsFaulted) throw x.Exception;
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Executes a POST request against the provided URL with the postObject in the body and returns the result in string format
         /// </summary>
         /// <param name="url">API Url</param>

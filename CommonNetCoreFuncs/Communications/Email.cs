@@ -131,6 +131,7 @@ namespace CommonNetCoreFuncs.Communications
                         catch (Exception ex)
                         {
                             logger.Warn(ex, (ex.InnerException ?? new()).ToString());
+                            if (i == 7) { success = false; } //Sets success to false when the email send fails on the last attempt
                         }
                         Thread.Sleep(500);
                     }

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
+    <UserSecretsId>38f0aeb6-a91f-4aae-8929-3617eb0bb530</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -15,9 +16,10 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.95.4" />
-    <PackageReference Include="MailKit" Version="2.15.0" />
+    <PackageReference Include="MailKit" Version="3.0.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="5.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="5.0.0" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="4.14.0" />
     <PackageReference Include="NPOI" Version="2.5.4" />
     <PackageReference Include="System.Data.Odbc" Version="5.0.0" />

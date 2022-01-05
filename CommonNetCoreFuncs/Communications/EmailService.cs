@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace CommonNetCoreFuncs.Communications
 {
     /// <summary>
-    /// Interface for use with dependancy injection
+    /// Interface for use with dependency injection
     /// </summary>
     public interface IEmailService
     {
@@ -13,7 +13,7 @@ namespace CommonNetCoreFuncs.Communications
     }
 
     /// <summary>
-    /// Implementation of IEmailService that can be used with dependancy injection in order to speed up sending multiple emails
+    /// Implementation of IEmailService that can be used with dependency injection in order to speed up sending multiple emails
     /// </summary>
     public class EmailService : IEmailService
     {

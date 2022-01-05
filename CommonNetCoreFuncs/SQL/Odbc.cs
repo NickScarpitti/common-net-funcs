@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Data.Odbc;
-
+using System.Threading.Tasks;
+using System.Data.Common;
 namespace CommonNetCoreFuncs.SQL
 {
     /// <summary>
@@ -17,7 +18,7 @@ namespace CommonNetCoreFuncs.SQL
         /// <param name="sql">Select query to retrieve populate datatable</param>
         /// <param name="connStr">Connection string to run the query on</param>
         /// <returns>DataTable containing the results of the SQL query</returns>
-        public static DataTable GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30, bool showConnectionError = false)
+        public static async Task<DataTable> GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30, bool showConnectionError = false)
         {
             try
             {
@@ -25,11 +26,16 @@ namespace CommonNetCoreFuncs.SQL
                 OdbcCommand cmd = new(sql, conn);
                 cmd.CommandTimeout = commandTimeoutSeconds;
                 conn.Open();
-                OdbcDataAdapter da = new(cmd);
-                DataTable dt = new();
-                da.Fill(dt);
-                conn.Close();
-                da.Dispose();
+                DbDataReader reader = await cmd.ExecuteReaderAsync();
+                DataTable dt = new DataTable();
+                dt.Load(reader);
+
+                //Synchronous method for reference
+                //OdbcDataAdapter da = new(cmd);
+                //DataTable dt = new();
+                //da.Fill(dt);
+                //conn.Close();
+                //da.Dispose();
                 return dt;
             }
             catch (Exception ex)

@@ -110,7 +110,6 @@ namespace CommonNetCoreFuncs.Communications
                     if (bodyIsHtml) { bodyBuilder.HtmlBody = body; }
                     else { bodyBuilder.TextBody = body; }
 
-                    bodyBuilder.TextBody = body;
                     if (!string.IsNullOrEmpty(attachmentName) && fileData != null)
                     {
                         fileData.Position = 0; //Must have this to prevent errors writing data to the attachment

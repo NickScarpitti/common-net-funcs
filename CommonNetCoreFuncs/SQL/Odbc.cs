@@ -3,8 +3,14 @@ using System.Data;
 using System.Data.Odbc;
 using System.Threading.Tasks;
 using System.Data.Common;
+
 namespace CommonNetCoreFuncs.SQL
 {
+    public class UpdateResult
+    {
+        public int RecordsChanged { get; set; }
+        public bool Success { get; set; }
+    }
     /// <summary>
     /// Interact with ODBC data sources
     /// </summary>
@@ -17,25 +23,48 @@ namespace CommonNetCoreFuncs.SQL
         /// </summary>
         /// <param name="sql">Select query to retrieve populate datatable</param>
         /// <param name="connStr">Connection string to run the query on</param>
+        /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
         /// <returns>DataTable containing the results of the SQL query</returns>
         public static async Task<DataTable> GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30, bool showConnectionError = false)
         {
             try
             {
-                OdbcConnection conn = new(connStr);
-                OdbcCommand cmd = new(sql, conn);
+                using OdbcConnection conn = new(connStr);
+                using OdbcCommand cmd = new(sql, conn);
                 cmd.CommandTimeout = commandTimeoutSeconds;
                 conn.Open();
-                DbDataReader reader = await cmd.ExecuteReaderAsync();
-                DataTable dt = new DataTable();
+                using DbDataReader reader = await cmd.ExecuteReaderAsync();
+                using DataTable dt = new();
                 dt.Load(reader);
+                conn.Close();
+                return dt;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error getting data table");
+            }
+            return new DataTable();
+        }
 
-                //Synchronous method for reference
-                //OdbcDataAdapter da = new(cmd);
-                //DataTable dt = new();
-                //da.Fill(dt);
-                //conn.Close();
-                //da.Dispose();
+        /// <summary>
+        /// Returns a DataTable using the SQL and data connection passed to the function
+        /// </summary>
+        /// <param name="sql">Select query to retrieve populate datatable</param>
+        /// <param name="connStr">Connection string to run the query on</param>
+        /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+        /// <returns>DataTable containing the results of the SQL query</returns>
+        public static DataTable GetDataTableSynchronous(string sql, string connStr, int commandTimeoutSeconds = 30)
+        {
+            try
+            {
+                using OdbcConnection conn = new(connStr);
+                using OdbcCommand cmd = new(sql, conn);
+                cmd.CommandTimeout = commandTimeoutSeconds;
+                conn.Open();
+                using OdbcDataAdapter da = new(cmd);
+                using DataTable dt = new();
+                da.Fill(dt);
+                conn.Close();
                 return dt;
             }
             catch (Exception ex)
@@ -48,26 +77,55 @@ namespace CommonNetCoreFuncs.SQL
         /// <summary>
         /// Execute an update query
         /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="connStr"></param>
-        public static bool RunUpdateQuery(string sql, string connStr)
+        /// <param name="sql">SQL query to add, delete, or update records</param>
+        /// <param name="connStr">Connection string to run the query on</param>
+        /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+        /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
+        public static async Task<UpdateResult> RunUpdateQuery(string sql, string connStr, int commandTimeoutSeconds = 30, bool showConnectionError = false)
         {
-            bool success = false;
+            UpdateResult updateResult = new();
             try
             {
-                OdbcConnection conn = new(connStr);
-                OdbcCommand cmd = new(sql, conn);
+                using OdbcConnection conn = new(connStr);
+                using OdbcCommand cmd = new(sql, conn);
+                cmd.CommandTimeout = commandTimeoutSeconds;
                 conn.Open();
-                cmd.ExecuteNonQuery();
+                updateResult.RecordsChanged = await cmd.ExecuteNonQueryAsync();
+                updateResult.Success = true; 
                 conn.Close();
-
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Error executing update query");
-                success = false;
             }
-            return success;
+            return updateResult;
+        }
+
+        /// <summary>
+        /// Execute an update query synchronously
+        /// </summary>
+        /// <param name="sql">SQL query to add, delete, or update records</param>
+        /// <param name="connStr">Connection string to run the query on</param>
+        /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+        /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
+        public static UpdateResult RunUpdateQuerySynchronous(string sql, string connStr, int commandTimeoutSeconds = 30)
+        {
+            UpdateResult updateResult = new();
+            try
+            {
+                using OdbcConnection conn = new(connStr);
+                using OdbcCommand cmd = new(sql, conn);
+                cmd.CommandTimeout = commandTimeoutSeconds;
+                conn.Open();
+                updateResult.RecordsChanged = cmd.ExecuteNonQuery();
+                updateResult.Success = true;
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error executing update query");
+            }
+            return updateResult;
         }
     }
 }

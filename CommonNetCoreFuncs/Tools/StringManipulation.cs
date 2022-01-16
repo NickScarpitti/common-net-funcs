@@ -12,25 +12,25 @@ namespace CommonNetCoreFuncs.Tools
         /// <summary>
         /// Clone of VBA Left() function
         /// </summary>
-        /// <param name="st"></param>
+        /// <param name="s"></param>
         /// <param name="numChars"></param>
-        /// <returns>Returns a string of the length indicated from the left side of the source string</returns>
-        public static string Left(this string st, int numChars)
+        /// <returns>String of the length indicated from the left side of the source string</returns>
+        public static string Left(this string s, int numChars)
         {
             try
             {
-                if (string.IsNullOrEmpty(st))
+                if (string.IsNullOrEmpty(s))
                 {
                     return null;
                 }
 
-                if (numChars <= st.Length)
+                if (numChars <= s.Length)
                 {
-                    return st.Substring(0, numChars);
+                    return s[..numChars];
                 }
                 else
                 {
-                    return st;
+                    return s;
                 }
             }
             catch (Exception ex)
@@ -43,25 +43,25 @@ namespace CommonNetCoreFuncs.Tools
         /// <summary>
         /// Clone of VBA Right() function
         /// </summary>
-        /// <param name="st"></param>
+        /// <param name="s"></param>
         /// <param name="numChars"></param>
-        /// <returns>Returns a string of the length indicated from the right side of the source string</returns>
-        public static string Right(this string st, int numChars)
+        /// <returns>String of the length indicated from the right side of the source string</returns>
+        public static string Right(this string s, int numChars)
         {
             try
             {
-                if (string.IsNullOrEmpty(st))
+                if (string.IsNullOrEmpty(s))
                 {
                     return null;
                 }
 
-                if (numChars <= st.Length)
+                if (numChars <= s.Length)
                 {
-                    return st.Substring(st.Length - numChars, numChars);
+                    return s.Substring(s.Length - numChars, numChars);
                 }
                 else
                 {
-                    return st;
+                    return s;
                 }
             }
             catch (Exception ex)
@@ -71,10 +71,14 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
-
+        /// <summary>
+        /// Makes a string with of the word "null" into a null value
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns>Null is the string passed in is null or is the word null with no other text characters other than whitespace</returns>
         public static string MakeNullNull(this string s)
         {
-            if (s == null || s.StrEq("Null") || s.ToUpperInvariant().Replace("NULL", "") == "")
+            if (s == null || s.StrEq("Null") || s.ToUpperInvariant().Replace("NULL", "") == "" || s.Trim().StrEq("Null"))
             {
                 return null;
             }

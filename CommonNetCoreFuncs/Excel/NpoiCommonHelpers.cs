@@ -8,7 +8,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace CommonNetCoreFuncs.Tools
+namespace CommonNetCoreFuncs.Excel
 {
     public static class NpoiCommonHelpers
     {
@@ -30,6 +30,11 @@ namespace CommonNetCoreFuncs.Tools
             BigWhiteHeader
         }
 
+        /// <summary>
+        /// Checks if cell is empty
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <returns>True if cell is empty</returns>
         public static bool IsCellEmpty(this ICell cell)
         {
             if (string.IsNullOrWhiteSpace(cell.GetStringValue()))
@@ -39,11 +44,19 @@ namespace CommonNetCoreFuncs.Tools
             return false;
         }
 
-        public static ICell GetCellFromReference(this ISheet ws, string cellName, int colOffset = 0, int rowOffset = 0)
+        /// <summary>
+        /// Get ICell offset from cellReference
+        /// </summary>
+        /// <param name="ws"></param>
+        /// <param name="cellReference">Cell reference in A1 notation</param>
+        /// <param name="colOffset">X axis offset from the named cell reference</param>
+        /// <param name="rowOffset">Y axis offset from the named cell reference</param>
+        /// <returns>ICell object of the specified offset of the named cell</returns>
+        public static ICell GetCellFromReference(this ISheet ws, string cellReference, int colOffset = 0, int rowOffset = 0)
         {
             try
             {
-                CellReference cr = new(cellName);
+                CellReference cr = new(cellReference);
                 IRow row = ws.GetRow(cr.Row + rowOffset);
                 ICell cell = row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 return cell;
@@ -55,6 +68,13 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
+        /// <summary>
+        /// Get ICell offset from the startCell
+        /// </summary>
+        /// <param name="startCell"></param>
+        /// <param name="colOffset">X axis offset from the named cell reference</param>
+        /// <param name="rowOffset">Y axis offset from the named cell reference</param>
+        /// <returns>ICell object of the specified offset of the startCell</returns>
         public static ICell GetCellOffset(this ICell startCell, int colOffset = 0, int rowOffset = 0)
         {
             try
@@ -71,6 +91,15 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
+        /// <summary>
+        /// Get ICell offset from the cell indicated with the x and y coordinates
+        /// </summary>
+        /// <param name="ws"></param>
+        /// <param name="x">X coordinate of starting cell</param>
+        /// <param name="y">Y coordinate of starting cell</param>
+        /// <param name="colOffset">X axis offset from the named cell reference</param>
+        /// <param name="rowOffset">Y axis offset from the named cell reference</param>
+        /// <returns>ICell object of the specified offset of the cell indicated with the x and y coordinates</returns>
         public static ICell GetCellFromCoordinates(this ISheet ws, int x, int y, int colOffset = 0, int rowOffset = 0)
         {
             try
@@ -90,6 +119,14 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
+        /// <summary>
+        /// Get ICell offset from the cell with named reference cellName
+        /// </summary>
+        /// <param name="wb"></param>
+        /// <param name="cellName"></param>
+        /// <param name="colOffset"></param>
+        /// <param name="rowOffset"></param>
+        /// <returns>ICell object of the specified offset of the cell with named reference cellName</returns>
         public static ICell GetCellFromName(this XSSFWorkbook wb, string cellName, int colOffset = 0, int rowOffset = 0)
         {
             try
@@ -139,6 +176,11 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
+        /// <summary>
+        /// Clear contents from cell with named reference cellName
+        /// </summary>
+        /// <param name="wb"></param>
+        /// <param name="cellName"></param>
         public static void ClearAllFromName(this XSSFWorkbook wb, string cellName)
         {
             IName name = wb.GetName(cellName);
@@ -164,23 +206,23 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
+        /// <summary>
+        /// Initializes cell at indicated row and column
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
+        /// <returns>ICell object of the cell that was created</returns>
         public static ICell CreateCell(this IRow row, int col)
         {
             return row.CreateCell(col);
         }
 
-        public static string MakeExportNameUnique(string savePath, string fileName, string extension)
-        {
-            int i = 0;
-            string outputName = fileName;
-            while (File.Exists(Path.Combine(savePath, outputName)))
-            {
-                outputName = $"{fileName.Left(fileName.Length - extension.Length)} ({i}).{extension}";
-                i++;
-            }
-            return outputName;
-        }
-
+        /// <summary>
+        /// Writes an excel file to the specified path
+        /// </summary>
+        /// <param name="wb"></param>
+        /// <param name="path"></param>
+        /// <returns>True if write was successful</returns>
         public static bool WriteExcelFile(XSSFWorkbook wb, string path)
         {
             try
@@ -199,12 +241,18 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
-        public static string GetSafeDate(string dateFormat)
-        {
-            return DateTime.Today.ToString(dateFormat).Replace("/", "-");
-        }
 
         /// <exception cref="Exception">Ignore.</exception>
+        /// <summary>
+        /// Get cell style based on enum EStyle options
+        /// </summary>
+        /// <param name="style"></param>
+        /// <param name="wb"></param>
+        /// <param name="cellLocked"></param>
+        /// <param name="htmlColor"></param>
+        /// <param name="font"></param>
+        /// <param name="alignment"></param>
+        /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
         public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string htmlColor = null, IFont font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
         {
             ICellStyle cellStyle = wb.CreateCellStyle();
@@ -263,6 +311,12 @@ namespace CommonNetCoreFuncs.Tools
             return cellStyle;
         }
 
+        /// <summary>
+        /// Get font styling based on EFonts option
+        /// </summary>
+        /// <param name="font"></param>
+        /// <param name="wb"></param>
+        /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
         public static IFont GetFont(EFonts font, XSSFWorkbook wb)
         {
             IFont cellFont = wb.CreateFont();
@@ -286,6 +340,15 @@ namespace CommonNetCoreFuncs.Tools
             return cellFont;
         }
 
+
+        /// <summary>
+        /// Generates a simple excel file containing the passed in data in a tabular format
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="wb"></param>
+        /// <param name="ws"></param>
+        /// <param name="data"></param>
+        /// <returns>True if excel file was created successfully</returns>
         public static bool ExportFromTable<T>(XSSFWorkbook wb, ISheet ws, List<T> data)
         {
             try
@@ -331,7 +394,7 @@ namespace CommonNetCoreFuncs.Tools
 
                         foreach (var prop in props)
                         {
-                            ws.AutoSizeColumn(x);
+                            ws.AutoSizeColumn(x, true);
                             x++;
                         }
                     }
@@ -345,30 +408,42 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
-        public static string GetStringValue(this ICell c)
+        /// <summary>
+        /// Gets string value contained in cell
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <returns>String representation of the value in cell</returns>
+        public static string GetStringValue(this ICell cell)
         {
-            return c.CellType switch
+            return cell.CellType switch
             {
                 CellType.Unknown => string.Empty,
-                CellType.Numeric => c.NumericCellValue.ToString(),
-                CellType.String => c.StringCellValue,
-                CellType.Formula => c.CachedFormulaResultType switch
+                CellType.Numeric => cell.NumericCellValue.ToString(),
+                CellType.String => cell.StringCellValue,
+                CellType.Formula => cell.CachedFormulaResultType switch
                 {
                     CellType.Unknown => string.Empty,
-                    CellType.Numeric => c.NumericCellValue.ToString(),
-                    CellType.String => c.StringCellValue,
+                    CellType.Numeric => cell.NumericCellValue.ToString(),
+                    CellType.String => cell.StringCellValue,
                     CellType.Blank => string.Empty,
-                    CellType.Boolean => c.BooleanCellValue.ToString(),
-                    CellType.Error => c.ErrorCellValue.ToString(),
+                    CellType.Boolean => cell.BooleanCellValue.ToString(),
+                    CellType.Error => cell.ErrorCellValue.ToString(),
                     _ => string.Empty,
                 },
                 CellType.Blank => string.Empty,
-                CellType.Boolean => c.BooleanCellValue.ToString(),
-                CellType.Error => c.ErrorCellValue.ToString(),
+                CellType.Boolean => cell.BooleanCellValue.ToString(),
+                CellType.Error => cell.ErrorCellValue.ToString(),
                 _ => string.Empty,
             };
         }
 
+
+        /// <summary>
+        /// Writes excel file to a MemoryStream object
+        /// </summary>
+        /// <param name="memoryStream"></param>
+        /// <param name="wb"></param>
+        /// <returns></returns>
         public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, XSSFWorkbook wb)
         {
             using MemoryStream tempStream = new();
@@ -381,6 +456,12 @@ namespace CommonNetCoreFuncs.Tools
             memoryStream.Seek(0, SeekOrigin.Begin);
         }
 
+        /// <summary>
+        /// Adds images into a workbook at the designated named ranges
+        /// </summary>
+        /// <param name="wb"></param>
+        /// <param name="imageData"></param>
+        /// <param name="cellNames"></param>
         public static void AddImages(this XSSFWorkbook wb, List<byte[]> imageData, List<string> cellNames)
         {
             if (wb != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
@@ -452,6 +533,11 @@ namespace CommonNetCoreFuncs.Tools
             }
         }
 
+        /// <summary>
+        /// Gets CellRangeAddress of merged cells
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <returns>CellRangeAddress of merged cells cell</returns>
         public static CellRangeAddress GetRangeOfMergedCells(this ICell cell)
         {
             if (cell != null && cell.IsMergedCell)
@@ -471,6 +557,13 @@ namespace CommonNetCoreFuncs.Tools
             return CellRangeAddress.ValueOf($"{cell.Address}:{cell.Address}");
         }
 
+        /// <summary>
+        /// Get the width of a specified range in pixels
+        /// </summary>
+        /// <param name="ws"></param>
+        /// <param name="startCol"></param>
+        /// <param name="endCol"></param>
+        /// <returns>Double representation of the width of the column range in pixels</returns>
         public static int GetRangeWidthInPx(this ISheet ws, int startCol, int endCol)
         {
             if (startCol > endCol)
@@ -494,6 +587,13 @@ namespace CommonNetCoreFuncs.Tools
             return widthInt;
         }
 
+        /// <summary>
+        /// Get the height of a specified range in pixels
+        /// </summary>
+        /// <param name="ws"></param>
+        /// <param name="startCol"></param>
+        /// <param name="endCol"></param>
+        /// <returns>Double representation of the height of the rows range in pixels</returns>
         public static int GetRangeHeightInPx(this ISheet ws, int startRow, int endRow)
         {
             if (startRow > endRow)
@@ -512,6 +612,12 @@ namespace CommonNetCoreFuncs.Tools
             return heightInt;
         }
 
+        /// <summary>
+        /// Get cells contained within a range
+        /// </summary>
+        /// <param name="sheet"></param>
+        /// <param name="range">String cell reference in A1 notation</param>
+        /// <returns>Array of cells contained within the range specified</returns>
         public static ICell[,] GetRange(ISheet sheet, string range)
         {
             string[] cellStartStop = range.Split(':');

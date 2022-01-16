@@ -8,7 +8,12 @@ namespace CommonNetCoreFuncs.Conversion
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public static string ConvertFileToBase64(this string filePath)
+        /// <summary>
+        /// Read local image file and convert it to a base 64 string
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns>Base 64 string representation of image file</returns>
+        public static string ConvertImageFileToBase64(this string filePath)
         {
             try
             {

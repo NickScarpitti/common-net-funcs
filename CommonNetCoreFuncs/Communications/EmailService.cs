@@ -4,16 +4,22 @@ using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.Communications
 {
+    /// <summary>
+    /// Interface for use with dependency injection
+    /// </summary>
     public interface IEmailService
     {
-        Task<bool> SendEmail(MailAddress from, List<MailAddress> to, string toName, string toEmail, string subject, string body, bool bodyIsHtml, List<MailAddress> cc = null, string attachmentName = null, FileStream fileData = null);
+        Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, List<MailAddress> bccAddresses = null, string attachmentName = null, Stream fileData = null);
     }
 
+    /// <summary>
+    /// Implementation of IEmailService that can be used with dependency injection in order to speed up sending multiple emails
+    /// </summary>
     public class EmailService : IEmailService
     {
-        public async Task<bool> SendEmail(MailAddress from, List<MailAddress> to, string toName, string toEmail, string subject, string body, bool bodyIsHtml, List<MailAddress> cc = null, string attachmentName = null, FileStream fileData = null)
+        public async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, List<MailAddress> bccAddresses = null, string attachmentName = null, Stream fileData = null)
         {
-            return await Email.SendEmail(from, to, subject, body, bodyIsHtml, cc, attachmentName, fileData);
+            return await Email.SendEmail(smtpServer, smtpPort, from, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachmentName, fileData);
         }
     }
 }

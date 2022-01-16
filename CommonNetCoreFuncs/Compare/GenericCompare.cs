@@ -1,9 +1,16 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 
 namespace CommonNetCoreFuncs.Compare
 {
     public class GenericCompare<T> : IEqualityComparer<T>
     {
+        /// <summary>
+        /// Compare two complex objects for value equality
+        /// </summary>
+        /// <param name="obj1"></param>
+        /// <param name="obj2"></param>
+        /// <returns>True if both objects contain identical properties</returns>
         public bool Equals(T obj1, T obj2)
         {
             // They're both null.
@@ -25,13 +32,18 @@ namespace CommonNetCoreFuncs.Compare
             return true;
         }
 
+        /// <summary>
+        /// Get hash of an object
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns>Hash string of object</returns>
         public int GetHashCode(T obj)
         {
-            var Props = obj.GetType().GetProperties();
+            PropertyInfo[] props = obj.GetType().GetProperties();
             string allProps = null;
-            foreach (var Prop in Props)
+            foreach (PropertyInfo prop in props)
             {
-                var propValue = Prop.GetValue(obj) ?? string.Empty;
+                var propValue = prop.GetValue(obj) ?? string.Empty;
                 allProps += propValue;
             }
             return allProps.GetHashCode();

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace CommonNetCoreFuncs.Tools
+namespace CommonNetCoreFuncs.Excel
 {
     public class ClosedXmlExportHelpers
     {
@@ -16,6 +16,13 @@ namespace CommonNetCoreFuncs.Tools
             this.logger = logger;
         }
 
+        /// <summary>
+        /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dataList"></param>
+        /// <param name="memoryStream"></param>
+        /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
         public async Task<MemoryStream> GenericExcelExport<T>(List<T> dataList, MemoryStream memoryStream)
         {
             try

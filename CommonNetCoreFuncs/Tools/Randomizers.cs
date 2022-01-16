@@ -29,7 +29,7 @@ namespace CommonNetCoreFuncs.Tools
 
         public static T RandomElement<T>(this IList<T> list)
         {
-            return list.Skip(rng.Next(list.Count())).FirstOrDefault();
+            return list.Skip(rng.Next(list.Count)).FirstOrDefault();
         }        
         
         public static T RandomElement<T>(this IEnumerable<T> list)

@@ -19,6 +19,7 @@ namespace CommonNetCoreFuncs.Conversion
             {
                 if (File.Exists(filePath))
                 {
+                    //TODO:: Update to using ImageSharp, SkiaSharp, or Microsoft.Maui.Graphics (https://docs.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/6.0/system-drawing-common-windows-only)
                     using Image image = Image.FromFile(filePath);
                     if (image != null)
                     {

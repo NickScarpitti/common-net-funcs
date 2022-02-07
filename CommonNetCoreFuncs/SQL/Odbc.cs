@@ -16,7 +16,7 @@ namespace CommonNetCoreFuncs.SQL
     /// </summary>
     public static class Odbc
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// Returns a DataTable using the SQL and data connection passed to the function
@@ -41,11 +41,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
             }
             catch (Exception ex)
             {
-                Logger.Error("Error getting datatable: "+ ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error getting datatable: "+ ex, (ex.InnerException ?? new()).ToString());
             }
             return new DataTable();
         }
@@ -71,11 +71,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
             }
             catch (Exception ex)
             {
-                Logger.Error("Error getting datatable: "+ ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error getting datatable: "+ ex, (ex.InnerException ?? new()).ToString());
             }
             return new DataTable();
         }
@@ -103,11 +103,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
             }
             catch (Exception ex)
             {
-                Logger.Error("Error getting datatable: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error getting datatable: " + ex, (ex.InnerException ?? new()).ToString());
             }
             return new DataTable();
         }
@@ -134,11 +134,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
             }
             catch (Exception ex)
             {
-                Logger.Error("Error executing update query: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error executing update query: " + ex, (ex.InnerException ?? new()).ToString());
             }
             return updateResult;
         }
@@ -165,11 +165,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
             }
             catch (Exception ex)
             {
-                Logger.Error("Error executing update query: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error executing update query: " + ex, (ex.InnerException ?? new()).ToString());
             }
             return updateResult;
         }

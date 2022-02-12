@@ -25,7 +25,7 @@ namespace CommonNetCoreFuncs.SQL
         /// <param name="connStr">Connection string to run the query on</param>
         /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
         /// <returns>DataTable containing the results of the SQL query</returns>
-        public static async Task<DataTable> GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30, bool showConnectionError = false)
+        public static async Task<DataTable> GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30)
         {
             try
             {
@@ -39,9 +39,43 @@ namespace CommonNetCoreFuncs.SQL
                 conn.Close();
                 return dt;
             }
+            catch (DbException ex)
+            {
+                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+            }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error getting data table");
+                Logger.Error("Error getting datatable: "+ ex, (ex.InnerException ?? new()).ToString());
+            }
+            return new DataTable();
+        }
+
+        /// <summary>
+        /// Returns a DataTable using the SQL and data connection passed to the function
+        /// </summary>
+        /// <param name="conn">ODBC connection to use</param>
+        /// <param name="cmd">Command to use with parameters</param>
+        /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+        /// <returns>DataTable containing the results of the SQL query</returns>
+        public static async Task<DataTable> GetDataTableWithParms(OdbcConnection conn, OdbcCommand cmd, int commandTimeoutSeconds = 30)
+        {
+            try
+            {
+                cmd.CommandTimeout = commandTimeoutSeconds;
+                conn.Open();
+                using DbDataReader reader = await cmd.ExecuteReaderAsync();
+                using DataTable dt = new();
+                dt.Load(reader);
+                conn.Close();
+                return dt;
+            }
+            catch (DbException ex)
+            {
+                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error getting datatable: "+ ex, (ex.InnerException ?? new()).ToString());
             }
             return new DataTable();
         }
@@ -67,9 +101,13 @@ namespace CommonNetCoreFuncs.SQL
                 conn.Close();
                 return dt;
             }
+            catch (DbException ex)
+            {
+                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+            }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error getting data table");
+                Logger.Error("Error getting datatable: " + ex, (ex.InnerException ?? new()).ToString());
             }
             return new DataTable();
         }
@@ -81,7 +119,7 @@ namespace CommonNetCoreFuncs.SQL
         /// <param name="connStr">Connection string to run the query on</param>
         /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
         /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
-        public static async Task<UpdateResult> RunUpdateQuery(string sql, string connStr, int commandTimeoutSeconds = 30, bool showConnectionError = false)
+        public static async Task<UpdateResult> RunUpdateQuery(string sql, string connStr, int commandTimeoutSeconds = 30)
         {
             UpdateResult updateResult = new();
             try
@@ -94,9 +132,13 @@ namespace CommonNetCoreFuncs.SQL
                 updateResult.Success = true; 
                 conn.Close();
             }
+            catch (DbException ex)
+            {
+                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+            }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error executing update query");
+                Logger.Error("Error executing update query: " + ex, (ex.InnerException ?? new()).ToString());
             }
             return updateResult;
         }
@@ -121,9 +163,13 @@ namespace CommonNetCoreFuncs.SQL
                 updateResult.Success = true;
                 conn.Close();
             }
+            catch (DbException ex)
+            {
+                Logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+            }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error executing update query");
+                Logger.Error("Error executing update query: " + ex, (ex.InnerException ?? new()).ToString());
             }
             return updateResult;
         }

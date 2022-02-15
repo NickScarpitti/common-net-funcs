@@ -38,7 +38,9 @@ namespace CommonNetCoreFuncs.Web
             T result = null;
             try
             {
+                logger.Info($"GET URL: {url}");
                 HttpResponseMessage response = client.GetAsync(new Uri(url)).Result;
+                logger.Info($"Response status code: {response.StatusCode}");
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
                 {
@@ -71,6 +73,7 @@ namespace CommonNetCoreFuncs.Web
             T result = null;
             try
             {
+                logger.Debug($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
                 HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
@@ -104,6 +107,7 @@ namespace CommonNetCoreFuncs.Web
             T result = null;
             try
             {
+                logger.Debug($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
                 HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
@@ -136,6 +140,7 @@ namespace CommonNetCoreFuncs.Web
             string result = null;
             try
             {
+                logger.Debug($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
                 HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
@@ -212,6 +217,7 @@ namespace CommonNetCoreFuncs.Web
             T result = null;
             try
             {
+                logger.Debug($"POST URL: {apiUrl} | {JsonConvert.SerializeObject(patchDoc)}");
                 HttpResponseMessage response = await client.PatchAsync(apiUrl, patchDoc).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)

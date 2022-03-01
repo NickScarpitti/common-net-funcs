@@ -172,6 +172,16 @@ namespace CommonNetCoreFuncs.Conversion
         }
 
         /// <summary>
+        /// Convert string "Y"/"N" value into bool
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns>Bool representation of string value passed in</returns>
+        public static bool YNToBool(this string value)
+        {
+            return value.StrEq("Y");
+        }
+
+        /// <summary>
         /// Cleans potential parsing issues out of a query parameter
         /// </summary>
         /// <param name="value"></param>

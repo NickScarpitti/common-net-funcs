@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.JsonPatch;
+﻿using CommonNetCoreFuncs.Tools;
+using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 using System;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Threading.Tasks;
 
-namespace CommonNetCoreFuncs.Tools
+namespace CommonNetCoreFuncs.Web
 {
     /// <summary>
     /// Helper functions that send requests to specified URI and return resulting values where applicable
@@ -17,7 +19,7 @@ namespace CommonNetCoreFuncs.Tools
     /// <typeparam name="T"></typeparam>
     public static class RestHelpers<T> where T : class
     {
-        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         //Use static client here instead of individual using statements to prevent maxing out the number of connections
         private static readonly HttpClient client = new();
@@ -49,7 +51,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
             }
             return result;
         }
@@ -82,7 +84,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
             }
             return result;
         }
@@ -115,7 +117,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
             }
             return result;
         }
@@ -147,7 +149,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
             }
             return result;
         }
@@ -161,7 +163,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
         /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
-        public static async Task<T> DeleteRequest(string apiUrl, T deleteObject)
+        public static async Task<T> DeleteRequest(string apiUrl)
         {
             T result = null;
             try
@@ -179,7 +181,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{apiUrl}");
             }
             return result;
         }
@@ -223,7 +225,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{apiUrl}");
             }
             return result;
         }

@@ -568,9 +568,7 @@ namespace CommonNetCoreFuncs.Excel
         {
             if (startCol > endCol)
             {
-                int endTemp = startCol;
-                startCol = endCol;
-                endCol = endTemp;
+                (endCol, startCol) = (startCol, endCol);
             }
 
             float totalWidth = 0;
@@ -598,9 +596,7 @@ namespace CommonNetCoreFuncs.Excel
         {
             if (startRow > endRow)
             {
-                int endTemp = startRow;
-                startRow = endRow;
-                endRow = endTemp;
+                (endRow, startRow) = (startRow, endRow); //Swap values with tuple assignment
             }
 
             float totaHeight = 0;

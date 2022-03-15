@@ -54,5 +54,31 @@ namespace CommonNetCoreFuncs.Excel
 
             return new MemoryStream();
         }
+
+        public bool AddGenericTable<T>(XSSFWorkbook wb, List<T> dataList, string sheetName)
+        {
+            bool success = false;
+            try
+            {
+                int i = 1;
+                string actualSheetName = sheetName;
+                while (wb.GetSheet(actualSheetName) != null) 
+                {
+                    actualSheetName = sheetName + $" ({i})"; //Get safe new sheet name
+                    i++;
+                }
+
+                ISheet ws = wb.CreateSheet(actualSheetName);
+                if (dataList != null)
+                {
+                    success = NpoiCommonHelpers.ExportFromTable(wb, ws, dataList);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, (ex.InnerException ?? new()).ToString());
+            }
+            return success;
+        }
     }
 }

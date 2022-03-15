@@ -163,7 +163,7 @@ namespace CommonNetCoreFuncs.Web
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
         /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
-        public static async Task<T> DeleteRequest(string apiUrl, T deleteObject)
+        public static async Task<T> DeleteRequest(string apiUrl)
         {
             T result = null;
             try

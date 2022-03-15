@@ -4,6 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <UserSecretsId>38f0aeb6-a91f-4aae-8929-3617eb0bb530</UserSecretsId>
+    <AssemblyVersion>1.0.0.1</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

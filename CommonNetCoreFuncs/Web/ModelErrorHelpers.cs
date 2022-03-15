@@ -9,8 +9,6 @@ namespace CommonNetCoreFuncs.Web
         public static Dictionary<string, string> ParseModelStateErrors(ModelStateDictionary modelState)
         {
             Dictionary<string, string> errors = new();
-            int i = modelState.ErrorCount;
-            List<string> modelErrors = new();
             foreach (string modelStateKey in modelState.Keys)
             {
                 var value = modelState[modelStateKey];

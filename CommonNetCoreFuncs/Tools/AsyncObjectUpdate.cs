@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -75,6 +76,23 @@ namespace CommonNetCoreFuncs.Tools
                 if (resultObject != null)
                 {
                     obj.AddRange(resultObject);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+            }
+        }
+
+        public static async Task ObjectFill(DataTable dt, Task<DataTable> task)
+        {
+            try
+            {
+                DataTable resultTable = await task;
+                if (resultTable != null)
+                {
+                    DataTableReader reader = resultTable.CreateDataReader();
+                    dt.Load(reader);
                 }
             }
             catch (System.Exception ex)

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CommonNetCoreFuncs.SQL
 {
@@ -10,7 +6,7 @@ namespace CommonNetCoreFuncs.SQL
     {
         public static bool IsClean(this string parameter)
         {
-            return string.IsNullOrWhiteSpace(parameter) || (!parameter.Contains(";") && !parameter.Contains("'") && !parameter.Contains("[") && !parameter.Contains("]") && !parameter.Contains("\"") && !parameter.Contains("`") &&
+            return string.IsNullOrWhiteSpace(parameter) || (!parameter.Contains(';') && !parameter.Contains('\'') && !parameter.Contains('[') && !parameter.Contains(']') && !parameter.Contains('"') && !parameter.Contains('`') &&
                 !parameter.Contains("select ", StringComparison.InvariantCultureIgnoreCase) && !parameter.Contains("from ", StringComparison.InvariantCultureIgnoreCase) &&
                 !parameter.Contains("where ", StringComparison.InvariantCultureIgnoreCase) && !parameter.Contains("having ", StringComparison.InvariantCultureIgnoreCase) &&
                 !parameter.Contains("select ", StringComparison.InvariantCultureIgnoreCase) && !parameter.Contains("group by ", StringComparison.InvariantCultureIgnoreCase) &&

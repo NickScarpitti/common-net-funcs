@@ -130,7 +130,7 @@ namespace CommonNetCoreFuncs.Communications
                         }
                         catch (Exception ex)
                         {
-                            logger.Warn(ex, (ex.InnerException ?? new()).ToString());
+                            logger.Warn(ex, "SendEmail Error");
                             if (i == 7) { success = false; } //Sets success to false when the email send fails on the last attempt
                         }
                         Thread.Sleep(500);
@@ -140,7 +140,7 @@ namespace CommonNetCoreFuncs.Communications
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "SendEmail Error");
                 success = false;
             }
             return success;
@@ -160,7 +160,7 @@ namespace CommonNetCoreFuncs.Communications
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ConfirmValidEmail Error");
             }
             return isValid;
         }

@@ -66,7 +66,7 @@ namespace CommonNetCoreFuncs.Web
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "GetDataTableRequest Error");
             }
             return dataTableRequest;
         }

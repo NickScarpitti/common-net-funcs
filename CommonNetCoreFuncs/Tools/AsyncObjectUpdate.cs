@@ -32,7 +32,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (System.Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ObjectUpdate Error");
             }
         }
 
@@ -56,7 +56,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (System.Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ObjectFill Error");
             }
         }
 
@@ -80,7 +80,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (System.Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ObjectFill Error");
             }
         }
 
@@ -97,7 +97,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (System.Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ObjectFill Error");
             }
         }
 
@@ -121,7 +121,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (System.Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ObjectFill Error");
             }
         }
     }

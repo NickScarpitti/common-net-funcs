@@ -34,7 +34,7 @@ namespace CommonNetCoreFuncs.Conversion
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ConvertImageFileToBase64 Error");
             }
             
             return null;

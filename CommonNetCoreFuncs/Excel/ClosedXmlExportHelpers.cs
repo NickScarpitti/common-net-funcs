@@ -43,7 +43,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, (ex.InnerException ?? new()).ToString());
+                logger.LogError(ex, "GenericExcelExport Error");
             }
 
             return new MemoryStream();

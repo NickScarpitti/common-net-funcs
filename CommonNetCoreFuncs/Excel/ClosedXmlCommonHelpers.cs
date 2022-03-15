@@ -59,7 +59,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "WriteExcelFile Error");
                 return false;
             }
         }
@@ -217,7 +217,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ExportFromTable Error");
                 return false;
             }
         }

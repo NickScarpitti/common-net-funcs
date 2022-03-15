@@ -51,7 +51,7 @@ namespace CommonNetCoreFuncs.Web
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
+                logger.Error(ex, "Get Error" + $"URL:{url}");
             }
             return result;
         }
@@ -84,7 +84,7 @@ namespace CommonNetCoreFuncs.Web
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
+                logger.Error(ex, "PostRequest Error" + $"URL:{url}");
             }
             return result;
         }
@@ -117,7 +117,7 @@ namespace CommonNetCoreFuncs.Web
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
+                logger.Error(ex, "GenericPostRequest Error" + $"URL:{url}");
             }
             return result;
         }
@@ -149,7 +149,7 @@ namespace CommonNetCoreFuncs.Web
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
+                logger.Error(ex, "StringPostRequest Error" + $"URL:{url}");
             }
             return result;
         }
@@ -181,7 +181,7 @@ namespace CommonNetCoreFuncs.Web
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{apiUrl}");
+                logger.Error(ex, "DeleteRequest Error" + $"URL:{apiUrl}");
             }
             return result;
         }
@@ -225,7 +225,7 @@ namespace CommonNetCoreFuncs.Web
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{apiUrl}");
+                logger.Error(ex, "PatchRequest Error" + $"URL:{apiUrl}");
             }
             return result;
         }

@@ -10,19 +10,24 @@
     <RepositoryUrl>https://github.com/NickScarpitti/CommonNetCoreFuncs.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression> MIT</PackageLicenseExpression>
-    <FileVersion></FileVersion>
     <PackageProjectUrl>https://github.com/NickScarpitti/CommonNetCoreFuncs</PackageProjectUrl>
     <PackageTags>dotnet;web;email;conversion;convert;excel;npoi;odbc;async;datatables;rest;api</PackageTags>
-    <AssemblyVersion>1.0.0.1</AssemblyVersion>
     <Nullable>enable</Nullable>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <Optimize>True</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>True</Optimize>
   </PropertyGroup>
 
   <ItemGroup>

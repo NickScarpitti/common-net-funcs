@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -10,11 +10,11 @@
     <RepositoryUrl>https://github.com/NickScarpitti/CommonNetCoreFuncs.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression> MIT</PackageLicenseExpression>
-    <AssemblyVersion></AssemblyVersion>
     <FileVersion></FileVersion>
     <PackageProjectUrl>https://github.com/NickScarpitti/CommonNetCoreFuncs</PackageProjectUrl>
     <PackageTags>dotnet;web;email;conversion;convert;excel;npoi;odbc;async;datatables;rest;api</PackageTags>
-    <AssemblyVersion>1.0.0.1</AssemblyVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -29,8 +29,8 @@
     <PackageReference Include="ClosedXML" Version="0.95.4" />
     <PackageReference Include="MailKit" Version="3.1.1" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
-    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="4.14.0" />
     <PackageReference Include="NPOI" Version="2.5.5" />
     <PackageReference Include="System.Data.Odbc" Version="6.0.0" />

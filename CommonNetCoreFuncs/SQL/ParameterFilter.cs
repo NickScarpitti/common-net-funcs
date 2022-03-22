@@ -4,7 +4,7 @@ namespace CommonNetCoreFuncs.SQL
 {
     public static class ParameterFilter
     {
-        public static bool IsClean(this string parameter)
+        public static bool IsClean(this string? parameter)
         {
             return string.IsNullOrWhiteSpace(parameter) || (!parameter.Contains(';') && !parameter.Contains('\'') && !parameter.Contains('[') && !parameter.Contains(']') && !parameter.Contains('"') && !parameter.Contains('`') &&
                 !parameter.Contains("select ", StringComparison.InvariantCultureIgnoreCase) && !parameter.Contains("from ", StringComparison.InvariantCultureIgnoreCase) &&

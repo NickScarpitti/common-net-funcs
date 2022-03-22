@@ -13,7 +13,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns>Base 64 string representation of image file</returns>
-        public static string ConvertImageFileToBase64(this string filePath)
+        public static string? ConvertImageFileToBase64(this string filePath)
         {
             try
             {

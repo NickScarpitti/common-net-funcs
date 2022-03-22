@@ -15,7 +15,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="s"></param>
         /// <param name="numChars"></param>
         /// <returns>String of the length indicated from the left side of the source string</returns>
-        public static string Left(this string s, int numChars)
+        public static string? Left(this string s, int numChars)
         {
             try
             {
@@ -46,7 +46,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="s"></param>
         /// <param name="numChars"></param>
         /// <returns>String of the length indicated from the right side of the source string</returns>
-        public static string Right(this string s, int numChars)
+        public static string? Right(this string? s, int numChars)
         {
             try
             {
@@ -76,7 +76,7 @@ namespace CommonNetCoreFuncs.Tools
         /// </summary>
         /// <param name="s"></param>
         /// <returns>Null is the string passed in is null or is the word null with no other text characters other than whitespace</returns>
-        public static string MakeNullNull(this string s)
+        public static string? MakeNullNull(this string? s)
         {
             if (s == null || s.StrEq("Null") || s.ToUpperInvariant().Replace("NULL", "") == "" || s.Trim().StrEq("Null"))
             {

@@ -9,7 +9,7 @@ namespace CommonNetCoreFuncs.Communications
     /// </summary>
     public interface IEmailService
     {
-        Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, List<MailAddress> bccAddresses = null, string attachmentName = null, Stream fileData = null);
+        Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, List<MailAddress>? ccAddresses = null, List<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null);
     }
 
     /// <summary>
@@ -17,7 +17,7 @@ namespace CommonNetCoreFuncs.Communications
     /// </summary>
     public class EmailService : IEmailService
     {
-        public async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, List<MailAddress> bccAddresses = null, string attachmentName = null, Stream fileData = null)
+        public async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, List<MailAddress>? ccAddresses = null, List<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null)
         {
             return await Email.SendEmail(smtpServer, smtpPort, from, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachmentName, fileData);
         }

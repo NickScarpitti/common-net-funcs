@@ -57,15 +57,19 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="obj"></param>
         public static void TrimObjectStrings<T>(this T obj)
         {
-            foreach (PropertyInfo prop in obj.GetType().GetProperties())
+            List<PropertyInfo>? props = obj?.GetType().GetProperties().ToList();
+            if (props != null)
             {
-                if (prop.PropertyType == typeof(string))
+                foreach (PropertyInfo prop in props)
                 {
-                    string value = (string)prop.GetValue(obj) ?? string.Empty;
-                    if (!string.IsNullOrEmpty(value))
+                    if (prop.PropertyType == typeof(string))
                     {
-                        value = Regex.Replace(value.Trim(), @"\s+", " "); //Replaces any multiples of spacing with a single space
-                        prop.SetValue(obj, value.Trim());
+                        string? value = (string)(prop.GetValue(obj) ?? string.Empty);
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            value = Regex.Replace(value.Trim(), @"\s+", " "); //Replaces any multiples of spacing with a single space
+                            prop.SetValue(obj, value.Trim());
+                        }
                     }
                 }
             }
@@ -77,7 +81,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <typeparam name="T"></typeparam>
         /// <param name="list"></param>
         /// <returns></returns>
-        public static List<T> Clone<T>(this List<T> list)
+        public static List<T>? Clone<T>(this List<T> list)
         {
             string serialized = JsonConvert.SerializeObject(list);
             return JsonConvert.DeserializeObject<List<T>>(serialized);

@@ -60,7 +60,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="s1"></param>
         /// <param name="s2"></param>
         /// <returns>True if the strings are equal when ignoring culture and case</returns>
-        public static bool StrEq(this string s1, string s2)
+        public static bool StrEq(this string? s1, string? s2)
         {
             return string.Equals(s1 ?? "", s2 ?? "", StringComparison.InvariantCultureIgnoreCase);
         }
@@ -71,7 +71,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="dict"></param>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public static void AddDictionaryItem(this Dictionary<string, string> dict, string key, string value)
+        public static void AddDictionaryItem(this Dictionary<string, string?> dict, string key, string? value)
         {
             if (!dict.ContainsKey(key))
             {

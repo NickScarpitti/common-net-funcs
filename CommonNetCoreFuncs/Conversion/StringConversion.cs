@@ -24,9 +24,9 @@ namespace CommonNetCoreFuncs.Conversion
         /// <param name="value"></param>
         /// <param name="format"></param>
         /// <returns>Formatted string representation of the passed in nullable DateTime</returns>
-        public static string ToNString(this DateTime? value, string format = null)
+        public static string? ToNString(this DateTime? value, string? format = null)
         {
-            string output = null;
+            string? output = null;
             if (value != null)
             {
                 DateTime dtActual = (DateTime)value;
@@ -41,9 +41,9 @@ namespace CommonNetCoreFuncs.Conversion
         /// <param name="value"></param>
         /// <param name="format"></param>
         /// <returns>Formatted string representation of the passed in nullable Timespan</returns>
-        public static string ToNString(this TimeSpan? value, string format = null)
+        public static string? ToNString(this TimeSpan? value, string? format = null)
         {
-            string output = null;
+            string? output = null;
             if (value != null)
             {
                 TimeSpan tsActual = (TimeSpan)value;
@@ -57,9 +57,9 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <returns>String representation of the passed in nullable int</returns>
-        public static string ToNString(this int? value)
+        public static string? ToNString(this int? value)
         {
-            string output = null;
+            string? output = null;
             if (value != null)
             {
                 output = value.ToString();
@@ -72,9 +72,9 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <returns>String representation of the passed in nullable long</returns>
-        public static string ToNString(this long? value)
+        public static string? ToNString(this long? value)
         {
-            string output = null;
+            string? output = null;
             if (value != null)
             {
                 output = value.ToString();
@@ -87,9 +87,9 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <returns>String representation of the passed in nullable double</returns>
-        public static string ToNString(this double? value)
+        public static string? ToNString(this double? value)
         {
-            string output = null;
+            string? output = null;
             if (value != null)
             {
                 output = value.ToString();
@@ -102,7 +102,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
-        public static SelectListItem ToSelectListItem(this string value)
+        public static SelectListItem? ToSelectListItem(this string value)
         {
             if (value != null)
             {
@@ -125,7 +125,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// <returns>List of integers where the strings could be parsed to integers and not null</returns>
         public static List<int> ToListInt(this List<string> values)
         {
-            return values.Select(x => { return int.TryParse(x, out int i) ? i : (int?)null; }).Where(i => i.HasValue).Select(i => i.Value).ToList();
+            return values.Select(x => { return int.TryParse(x, out int i) ? i : (int?)null; }).Where(i => i.HasValue).Select(i => i!.Value).ToList();
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value">String value to be converted to nullable int</param>
         /// <returns>Nullable int parsed from a string</returns>
-        public static int? ToNInt(this string value)
+        public static int? ToNInt(this string? value)
         {
             if (!string.IsNullOrEmpty(value) && int.TryParse(value, out int i))
             {
@@ -147,7 +147,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <returns>Nullable DateTime parsed from a string</returns>
-        public static DateTime? ToNDateTime(this string value)
+        public static DateTime? ToNDateTime(this string? value)
         {
             DateTime? dtn = null;
             if (DateTime.TryParse(value, out DateTime dt))
@@ -166,7 +166,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <returns>Bool representation of string value passed in</returns>
-        public static bool YesNoToBool(this string value)
+        public static bool YesNoToBool(this string? value)
         {
             return value.StrEq(EYesNo.Yes.ToString());
         }
@@ -176,7 +176,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <returns>Bool representation of string value passed in</returns>
-        public static bool YNToBool(this string value)
+        public static bool YNToBool(this string? value)
         {
             return value.StrEq("Y");
         }
@@ -186,7 +186,7 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="value"></param>
         /// <returns>String equivalent of value passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
-        public static string CleanQueryParam(this string value)
+        public static string? CleanQueryParam(this string? value)
         {
             return value.MakeNullNull()?.Replace("\n", "").Trim();
         }
@@ -196,22 +196,23 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="values"></param>
         /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
-        public static List<string> CleanQueryParam(this List<string> values)
+        public static List<string>? CleanQueryParam(this List<string>? values)
         {
             if (values == null)
             {
                 return null;
             }
 
-            List<string> cleanValues = new();
+            List<string?> cleanValues = new();
             if (values.Any())
             {
-                foreach (string value in values)
+                foreach (string? value in values)
                 {
                     cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim());
                 }
             }
-            return cleanValues;
+
+            return (cleanValues ?? new()).Where(x => x != null).ToList()!;
         }
 
         /// <summary>
@@ -221,11 +222,11 @@ namespace CommonNetCoreFuncs.Conversion
         /// <param name="parameters">List of a type that can be converted to string</param>
         /// <param name="queryParameterName">The name to be used in front of the equals sign for the query parameter string</param>
         /// <returns>String representation of the list passed in as query parameters with the name passed in as queryParameterName</returns>
-        public static string ListToQueryParameters<T>(this List<T> parameters, string queryParameterName)
+        public static string ListToQueryParameters<T>(this List<T>? parameters, string? queryParameterName)
         {
             string queryString = string.Empty;
             bool firstItem = true;
-            if (parameters != null && parameters.Any())
+            if (parameters != null && parameters.Any() && !string.IsNullOrWhiteSpace(queryParameterName))
             {
                 foreach (T parameter in parameters)
                 {

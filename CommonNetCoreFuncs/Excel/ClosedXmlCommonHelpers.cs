@@ -59,7 +59,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "WriteExcelFile Error");
                 return false;
             }
         }
@@ -74,9 +74,10 @@ namespace CommonNetCoreFuncs.Excel
         /// <param name="font"></param>
         /// <param name="alignment"></param>
         /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-        public static IXLStyle GetStyle(EStyles style, IXLWorkbook wb, bool cellLocked = false, string htmlColor = null, IXLFont font = null, XLAlignmentHorizontalValues? alignment = null)
+        public static IXLStyle? GetStyle(EStyles style, IXLWorkbook wb, bool cellLocked = false, string? htmlColor = null, IXLFont? font = null, XLAlignmentHorizontalValues? alignment = null)
         {
-            IXLStyle cellStyle = CreateEmptyStyle();
+            IXLStyle? cellStyle = CreateEmptyStyle();
+            if (cellStyle == null) { return null; }
             switch (style)
             {
                 case EStyles.Header:
@@ -119,10 +120,10 @@ namespace CommonNetCoreFuncs.Excel
         /// Creates new instance of a IXLStyle object with reflection to avoid using the same reference to the existing workbook style
         /// </summary>
         /// <returns>Empty IXLStyle object</returns>
-        private static IXLStyle CreateEmptyStyle()
+        private static IXLStyle? CreateEmptyStyle()
         {
             var t = typeof(ClosedXML.Excel.XLConstants).Assembly.GetType("ClosedXML.Excel.XLStyle");
-            MethodInfo m = t?.GetMethod("CreateEmptyStyle", BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo? m = t?.GetMethod("CreateEmptyStyle", BindingFlags.Static | BindingFlags.NonPublic);
             var o = m?.Invoke(null, null);
             return o as IXLStyle;
         }
@@ -170,20 +171,23 @@ namespace CommonNetCoreFuncs.Excel
                 {
                     if (data.Count > 0)
                     {
-                        IXLStyle headerStyle = GetStyle(EStyles.Header, wb);
-                        IXLStyle bodyStyle = GetStyle(EStyles.Body, wb);
+                        IXLStyle? headerStyle = GetStyle(EStyles.Header, wb);
+                        IXLStyle? bodyStyle = GetStyle(EStyles.Body, wb);
 
                         int x = 1;
                         int y = 1;
 
                         var header = data[0];
-                        var props = header.GetType().GetProperties();
+                        var props = header!.GetType().GetProperties();
                         foreach (var prop in props)
                         {
                             IXLCell c = ws.Cell(y, x);
                             c.Value = prop.Name.ToString();
                             c.Style = headerStyle;
-                            c.Style.Fill.BackgroundColor = headerStyle.Fill.BackgroundColor;
+                            if (c.Style != null)
+                            {
+                                c.Style.Fill.BackgroundColor = headerStyle?.Fill.BackgroundColor;
+                            }
                             x++;
                         }
                         x = 1;
@@ -191,7 +195,7 @@ namespace CommonNetCoreFuncs.Excel
 
                         foreach (var item in data)
                         {
-                            var props2 = item.GetType().GetProperties();
+                            var props2 = item!.GetType().GetProperties();
                             foreach (var prop in props2)
                             {
                                 var val = prop.GetValue(item) ?? string.Empty;
@@ -217,7 +221,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ExportFromTable Error");
                 return false;
             }
         }

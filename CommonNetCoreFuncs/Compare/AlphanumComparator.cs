@@ -7,7 +7,7 @@ namespace CommonNetCoreFuncs.Compare
     /// </summary>
     public class AlphanumComparator : IComparer<object>
     {
-        public int Compare(object x, object y)
+        public int Compare(object? x, object? y)
         {
             if (x is not string s1)
             {

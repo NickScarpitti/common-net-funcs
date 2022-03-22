@@ -15,8 +15,8 @@ namespace CommonNetCoreFuncs.Communications
     /// </summary>
     public class MailAddress
     {
-        public string Name { get; set; }
-        public string Email { get; set; }
+        public string? Name { get; set; }
+        public string? Email { get; set; }
     }
 
     public static class Email
@@ -38,7 +38,7 @@ namespace CommonNetCoreFuncs.Communications
         /// <param name="attachmentName"></param>
         /// <param name="fileData">Stream of file data you want to attach to the email</param>
         /// <returns>Email sent success bool</returns>
-        public static async Task<bool> SendEmail(string smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string subject, string body, bool bodyIsHtml = false, List<MailAddress> ccAddresses = null, List<MailAddress> bccAddresses = null, string attachmentName = null, Stream fileData = null)
+        public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, List<MailAddress>? ccAddresses = null, List<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null)
         {
             bool success = true;
             try
@@ -94,7 +94,7 @@ namespace CommonNetCoreFuncs.Communications
                 if (success)
                 {
                     MimeMessage email = new();
-                    email.From.Add(new MailboxAddress(from.Name, from.Email));
+                    email.From.Add(new MailboxAddress(from?.Name, from?.Email));
                     email.To.AddRange(toAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
                     if (ccAddresses != null && ccAddresses.Any())
                     {
@@ -130,7 +130,7 @@ namespace CommonNetCoreFuncs.Communications
                         }
                         catch (Exception ex)
                         {
-                            logger.Warn(ex, (ex.InnerException ?? new()).ToString());
+                            logger.Warn(ex, "SendEmail Error");
                             if (i == 7) { success = false; } //Sets success to false when the email send fails on the last attempt
                         }
                         Thread.Sleep(500);
@@ -140,7 +140,7 @@ namespace CommonNetCoreFuncs.Communications
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "SendEmail Error");
                 success = false;
             }
             return success;
@@ -160,7 +160,7 @@ namespace CommonNetCoreFuncs.Communications
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ConfirmValidEmail Error");
             }
             return isValid;
         }

@@ -11,7 +11,7 @@ namespace CommonNetCoreFuncs.Compare
         /// <param name="obj1"></param>
         /// <param name="obj2"></param>
         /// <returns>True if both objects contain identical properties</returns>
-        public bool Equals(T obj1, T obj2)
+        public bool Equals(T? obj1, T? obj2)
         {
             // They're both null.
             if (obj1 == null && obj2 == null) return true;
@@ -39,14 +39,17 @@ namespace CommonNetCoreFuncs.Compare
         /// <returns>Hash string of object</returns>
         public int GetHashCode(T obj)
         {
-            PropertyInfo[] props = obj.GetType().GetProperties();
-            string allProps = null;
-            foreach (PropertyInfo prop in props)
+            PropertyInfo[]? props = obj?.GetType().GetProperties();
+            string? allProps = null;
+            if (props != null)
             {
-                var propValue = prop.GetValue(obj) ?? string.Empty;
-                allProps += propValue;
+                foreach (PropertyInfo prop in props)
+                {
+                    var propValue = prop.GetValue(obj) ?? string.Empty;
+                    allProps += propValue;
+                }
             }
-            return allProps.GetHashCode();
+            return allProps?.GetHashCode() ?? 0;
         }
 
         //From: https://www.c-sharpcorner.com/article/introduction-to-generic-iequalitycomparer/

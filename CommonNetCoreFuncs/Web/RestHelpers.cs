@@ -33,25 +33,26 @@ namespace CommonNetCoreFuncs.Web
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
         /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
-        public static async Task<T> Get(string url)
+        public static async Task<T?> Get(string url)
         {
-            T result = null;
+            T? result = null;
             try
             {
+                logger.Info($"GET URL: {url}");
                 HttpResponseMessage response = client.GetAsync(new Uri(url)).Result;
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
                 {
                     await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                     {
-                        if (x.IsFaulted) throw x.Exception;
+                        if (x.IsFaulted) throw x.Exception ?? new();
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     });
                 }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
+                logger.Error(ex, "Get Error" + $"URL:{url}");
             }
             return result;
         }
@@ -66,25 +67,26 @@ namespace CommonNetCoreFuncs.Web
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
         /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-        public static async Task<T> PostRequest(string url, T postObject)
+        public static async Task<T?> PostRequest(string url, T? postObject)
         {
-            T result = null;
+            T? result = null;
             try
             {
+                logger.Debug($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
                 HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
                 {
                     await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                     {
-                        if (x.IsFaulted) throw x.Exception;
+                        if (x.IsFaulted) throw x.Exception ?? new();
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     });
                 }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
+                logger.Error(ex, "PostRequest Error" + $"URL:{url}");
             }
             return result;
         }
@@ -99,25 +101,26 @@ namespace CommonNetCoreFuncs.Web
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
         /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-        public static async Task<T> GenericPostRequest<UT>(string url, UT postObject)
+        public static async Task<T?> GenericPostRequest<UT>(string url, UT postObject)
         {
-            T result = null;
+            T? result = null;
             try
             {
+                logger.Debug($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
                 HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
                 {
                     await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                     {
-                        if (x.IsFaulted) throw x.Exception;
+                        if (x.IsFaulted) throw x.Exception ?? new();
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     });
                 }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
+                logger.Error(ex, "GenericPostRequest Error" + $"URL:{url}");
             }
             return result;
         }
@@ -131,25 +134,26 @@ namespace CommonNetCoreFuncs.Web
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
         /// <returns>String resulting from the POST request - Null if not success</returns>
-        public static async Task<string> StringPostRequest(string url, T postObject)
+        public static async Task<string?> StringPostRequest(string url, T postObject)
         {
-            string result = null;
+            string? result = null;
             try
             {
+                logger.Debug($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
                 HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
                 {
                     await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                     {
-                        if (x.IsFaulted) throw x.Exception;
+                        if (x.IsFaulted) throw x.Exception ?? new();
                         result = x.Result;
                     });
                 }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{url}");
+                logger.Error(ex, "StringPostRequest Error" + $"URL:{url}");
             }
             return result;
         }
@@ -163,9 +167,9 @@ namespace CommonNetCoreFuncs.Web
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <exception cref="ObjectDisposedException">Ignore.</exception>
         /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
-        public static async Task<T> DeleteRequest(string apiUrl)
+        public static async Task<T?> DeleteRequest(string apiUrl)
         {
-            T result = null;
+            T? result = null;
             try
             {
                 HttpResponseMessage response = await client.DeleteAsync(apiUrl).ConfigureAwait(false);
@@ -174,14 +178,14 @@ namespace CommonNetCoreFuncs.Web
                 {
                     await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                     {
-                        if (x.IsFaulted) throw x.Exception;
+                        if (x.IsFaulted) throw x.Exception ?? new();
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     });
                 }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{apiUrl}");
+                logger.Error(ex, "DeleteRequest Error" + $"URL:{apiUrl}");
             }
             return result;
         }
@@ -207,25 +211,26 @@ namespace CommonNetCoreFuncs.Web
         /// <returns></returns>
         /// <exception cref="HttpRequestException">Ignore.</exception>
         /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
-        public static async Task<T> PatchRequest(string apiUrl, HttpContent patchDoc)
+        public static async Task<T?> PatchRequest(string apiUrl, HttpContent patchDoc)
         {
-            T result = null;
+            T? result = null;
             try
             {
+                logger.Debug($"POST URL: {apiUrl} | {JsonConvert.SerializeObject(patchDoc)}");
                 HttpResponseMessage response = await client.PatchAsync(apiUrl, patchDoc).ConfigureAwait(false);
                 //response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
                 {
                     await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                     {
-                        if (x.IsFaulted) throw x.Exception;
+                        if (x.IsFaulted) throw x.Exception ?? new();
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     });
                 }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString() + $"URL:{apiUrl}");
+                logger.Error(ex, "PatchRequest Error" + $"URL:{apiUrl}");
             }
             return result;
         }
@@ -265,14 +270,14 @@ namespace CommonNetCoreFuncs.Web
             foreach (var k in origNames.Except(modNames))
             {
                 var prop = orig.Property(k);
-                patch.Remove(path + prop.Name);
+                patch.Remove(path + prop!.Name);
             }
 
             // Names added in modified
             foreach (var k in modNames.Except(origNames))
             {
                 var prop = mod.Property(k);
-                patch.Add(path + prop.Name, prop.Value);
+                patch.Add(path + prop!.Name, prop.Value);
             }
 
             // Present in both
@@ -281,24 +286,24 @@ namespace CommonNetCoreFuncs.Web
                 var origProp = orig.Property(k);
                 var modProp = mod.Property(k);
 
-                if (origProp.Value.Type != modProp.Value.Type)
+                if (origProp?.Value.Type != modProp?.Value.Type)
                 {
-                    patch.Replace(path + modProp.Name, modProp.Value);
+                    patch.Replace(path + modProp?.Name, modProp?.Value);
                 }
-                else if ((!origProp.Value.ToString(Formatting.None).StrEq(modProp.Value.ToString(Formatting.None)) && origProp.Value.Type != JTokenType.Date))
+                else if ((!(origProp?.Value.ToString(Formatting.None) ?? null).StrEq(modProp?.Value.ToString(Formatting.None)) && origProp?.Value.Type != JTokenType.Date))
                 {
-                    if (origProp.Value.Type == JTokenType.Object)
+                    if (origProp?.Value.Type == JTokenType.Object)
                     {
                         // Recurse into objects
-                        FillPatchForObject(origProp.Value as JObject, modProp.Value as JObject, patch, path + modProp.Name + "/");
+                        FillPatchForObject(origProp.Value as JObject ?? new(), modProp?.Value as JObject ?? new(), patch, path + modProp?.Name + "/");
                     }
                     else
                     {
                         // Replace values directly
-                        patch.Replace(path + modProp.Name, modProp.Value);
+                        patch.Replace(path + modProp?.Name, modProp?.Value);
                     }
                 }
-                else if (origProp.Value.Type == JTokenType.Date && modProp.Value.Type == JTokenType.Date)
+                else if (origProp?.Value.Type == JTokenType.Date && modProp?.Value.Type == JTokenType.Date)
                 {
                     string originalDts = origProp.Value.ToString(Formatting.None).Replace(@"""", "").Replace(@"\", "");
                     string modDts = modProp.Value.ToString(Formatting.None).Replace(@"""", "").Replace(@"\", "");

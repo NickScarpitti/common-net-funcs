@@ -40,7 +40,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <typeparam name="T"></typeparam>
         /// <param name="list"></param>
         /// <returns>Randomly selected object</returns>
-        public static T RandomElement<T>(this IList<T> list)
+        public static T? RandomElement<T>(this IList<T> list)
         {
             return list.Skip(rng.Next(list.Count)).FirstOrDefault();
         }
@@ -51,7 +51,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <typeparam name="T"></typeparam>
         /// <param name="list"></param>
         /// <returns>Randomly selected object</returns>
-        public static T RandomElement<T>(this IEnumerable<T> list)
+        public static T? RandomElement<T>(this IEnumerable<T> list)
         {
             return list.Skip(rng.Next(list.Count())).FirstOrDefault();
         }

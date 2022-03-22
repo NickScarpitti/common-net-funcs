@@ -48,7 +48,7 @@ namespace CommonNetCoreFuncs.Web
                     List<string> vals = searchValue.ToString().Split(",").ToList();
                     foreach (string val in vals)
                     {
-                        string cleanVal = val.CleanQueryParam();
+                        string cleanVal = val.CleanQueryParam()!;
                         int startPos = cleanVal.IndexOf("=") + 1;
                         string key = cleanVal[..(startPos - 1)];
                         if (startPos + 1 <= cleanVal.Length)
@@ -66,7 +66,7 @@ namespace CommonNetCoreFuncs.Web
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "GetDataTableRequest Error");
             }
             return dataTableRequest;
         }
@@ -96,10 +96,10 @@ namespace CommonNetCoreFuncs.Web
 
         public int PageSize { get; set; }
         public int Skip { get; set; }
-        public Dictionary<int, string> SortColumnDir { get; set; }
-        public Dictionary<int, string> SortColumns { get; set; }
-        public string Draw { get; set; }
-        public Dictionary<string, string> SearchValues { get; set; }
+        public Dictionary<int, string?> SortColumnDir { get; set; }
+        public Dictionary<int, string?> SortColumns { get; set; }
+        public string? Draw { get; set; }
+        public Dictionary<string, string?> SearchValues { get; set; }
     }
 
     public class SortAndLimitPostModel
@@ -109,8 +109,8 @@ namespace CommonNetCoreFuncs.Web
             SortColumns = new();
             SortColumnDir = new();
         }
-        public Dictionary<int, string> SortColumns { get; set; }
-        public Dictionary<int, string> SortColumnDir { get; set; }
+        public Dictionary<int, string?> SortColumns { get; set; }
+        public Dictionary<int, string?> SortColumnDir { get; set; }
         public int Skip { get; set; }
         public int PageSize { get; set; }
     }

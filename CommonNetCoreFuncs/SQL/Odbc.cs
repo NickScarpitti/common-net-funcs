@@ -41,11 +41,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, "GetDataTable Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error getting datatable: "+ ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error getting datatable: "+ ex, "GetDataTable Error");
             }
             return new DataTable();
         }
@@ -71,11 +71,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, "GetDataTableWithParms Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error getting datatable: "+ ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error getting datatable: "+ ex, "GetDataTableWithParms Error");
             }
             return new DataTable();
         }
@@ -103,11 +103,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, "GetDataTableSynchronous Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error getting datatable: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error getting datatable: " + ex, "GetDataTableSynchronous Error");
             }
             return new DataTable();
         }
@@ -134,11 +134,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, "RunUpdateQuery Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error executing update query: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error executing update query: " + ex, "RunUpdateQuery Error");
             }
             return updateResult;
         }
@@ -165,11 +165,11 @@ namespace CommonNetCoreFuncs.SQL
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("DB Error: " + ex, "RunUpdateQuerySynchronous Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error executing update query: " + ex, (ex.InnerException ?? new()).ToString());
+                logger.Error("Error executing update query: " + ex, "RunUpdateQuerySynchronous Error");
             }
             return updateResult;
         }

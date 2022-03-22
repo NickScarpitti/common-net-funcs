@@ -52,7 +52,7 @@ namespace CommonNetCoreFuncs.Excel
         /// <param name="colOffset">X axis offset from the named cell reference</param>
         /// <param name="rowOffset">Y axis offset from the named cell reference</param>
         /// <returns>ICell object of the specified offset of the named cell</returns>
-        public static ICell GetCellFromReference(this ISheet ws, string cellReference, int colOffset = 0, int rowOffset = 0)
+        public static ICell? GetCellFromReference(this ISheet ws, string cellReference, int colOffset = 0, int rowOffset = 0)
         {
             try
             {
@@ -63,7 +63,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "GetCellFromReference Error");
                 return null;
             }
         }
@@ -75,7 +75,7 @@ namespace CommonNetCoreFuncs.Excel
         /// <param name="colOffset">X axis offset from the named cell reference</param>
         /// <param name="rowOffset">Y axis offset from the named cell reference</param>
         /// <returns>ICell object of the specified offset of the startCell</returns>
-        public static ICell GetCellOffset(this ICell startCell, int colOffset = 0, int rowOffset = 0)
+        public static ICell? GetCellOffset(this ICell startCell, int colOffset = 0, int rowOffset = 0)
         {
             try
             {
@@ -86,7 +86,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, ex?.InnerException.ToString());
+                logger.Error(ex, "GetCellOffset Error");
                 return null;
             }
         }
@@ -100,7 +100,7 @@ namespace CommonNetCoreFuncs.Excel
         /// <param name="colOffset">X axis offset from the named cell reference</param>
         /// <param name="rowOffset">Y axis offset from the named cell reference</param>
         /// <returns>ICell object of the specified offset of the cell indicated with the x and y coordinates</returns>
-        public static ICell GetCellFromCoordinates(this ISheet ws, int x, int y, int colOffset = 0, int rowOffset = 0)
+        public static ICell? GetCellFromCoordinates(this ISheet ws, int x, int y, int colOffset = 0, int rowOffset = 0)
         {
             try
             {
@@ -114,7 +114,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "GetCellFromCoordinates Error");
                 return null;
             }
         }
@@ -127,13 +127,13 @@ namespace CommonNetCoreFuncs.Excel
         /// <param name="colOffset"></param>
         /// <param name="rowOffset"></param>
         /// <returns>ICell object of the specified offset of the cell with named reference cellName</returns>
-        public static ICell GetCellFromName(this XSSFWorkbook wb, string cellName, int colOffset = 0, int rowOffset = 0)
+        public static ICell? GetCellFromName(this XSSFWorkbook wb, string cellName, int colOffset = 0, int rowOffset = 0)
         {
             try
             {
                 IName name = wb.GetName(cellName);
                 CellReference[] crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
-                ISheet ws = null;
+                ISheet? ws = null;
                 int rowNum = -1;
                 int colNum = -1;
                 for (int i = 0; i < crs.Length; i++)
@@ -171,7 +171,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "GetCellFromName Error");
                 return null;
             }
         }
@@ -236,7 +236,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "WriteExcelFile Error");
                 return false;
             }
         }
@@ -253,7 +253,7 @@ namespace CommonNetCoreFuncs.Excel
         /// <param name="font"></param>
         /// <param name="alignment"></param>
         /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-        public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string htmlColor = null, IFont font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
+        public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string? htmlColor = null, IFont? font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
         {
             ICellStyle cellStyle = wb.CreateCellStyle();
             switch (style)
@@ -295,6 +295,7 @@ namespace CommonNetCoreFuncs.Excel
                     break;
 
                 case EStyles.Custom:
+                    htmlColor ??= string.Empty;
                     XSSFCellStyle xStyle = (XSSFCellStyle)wb.CreateCellStyle();
                     if (alignment != null) { xStyle.Alignment = (NPOI.SS.UserModel.HorizontalAlignment)alignment; }
                     byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
@@ -364,12 +365,15 @@ namespace CommonNetCoreFuncs.Excel
                         int y = 0;
 
                         var header = data[0];
-                        var props = header.GetType().GetProperties();
+                        var props = header!.GetType().GetProperties();
                         foreach (var prop in props)
                         {
-                            ICell c = ws.GetCellFromCoordinates(x, y);
-                            c.SetCellValue(prop.Name.ToString());
-                            c.CellStyle = headerStyle;
+                            ICell? c = ws.GetCellFromCoordinates(x, y);
+                            if (c != null)
+                            {
+                                c.SetCellValue(prop.Name.ToString());
+                                c.CellStyle = headerStyle;
+                            }
                             x++;
                         }
                         x = 0;
@@ -377,13 +381,16 @@ namespace CommonNetCoreFuncs.Excel
 
                         foreach (var item in data)
                         {
-                            var props2 = item.GetType().GetProperties();
+                            var props2 = item!.GetType().GetProperties();
                             foreach (var prop in props2)
                             {
                                 var val = prop.GetValue(item) ?? string.Empty;
-                                ICell c = ws.GetCellFromCoordinates(x, y);
-                                c.SetCellValue(val.ToString());
-                                c.CellStyle = bodyStyle;
+                                ICell? c = ws.GetCellFromCoordinates(x, y);
+                                if (c != null)
+                                {
+                                    c.SetCellValue(val.ToString());
+                                    c.CellStyle = bodyStyle;
+                                }
                                 x++;
                             }
                             x = 0;
@@ -403,7 +410,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ExportFromTable Error");
                 return false;
             }
         }
@@ -413,8 +420,13 @@ namespace CommonNetCoreFuncs.Excel
         /// </summary>
         /// <param name="cell"></param>
         /// <returns>String representation of the value in cell</returns>
-        public static string GetStringValue(this ICell cell)
+        public static string? GetStringValue(this ICell? cell)
         {
+            if (cell == null)
+            {
+                return null;
+            }
+
             return cell.CellType switch
             {
                 CellType.Unknown => string.Empty,
@@ -466,15 +478,15 @@ namespace CommonNetCoreFuncs.Excel
         {
             if (wb != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
             {
-                ISheet ws = null;
+                ISheet? ws = null;
                 ICreationHelper helper = wb.GetCreationHelper();
-                IDrawing drawing = null;
+                IDrawing? drawing = null;
                 for (int i = 0; i < imageData.Count; i++)
                 {
                     if (imageData[i].Length > 0 && wb != null && cellNames[i] != null)
                     {
-                        ICell cell = wb.GetCellFromName(cellNames[i]);
-                        CellRangeAddress area = GetRangeOfMergedCells(cell);
+                        ICell? cell = wb.GetCellFromName(cellNames[i]);
+                        CellRangeAddress? area = GetRangeOfMergedCells(cell);
 
                         if (cell != null && area != null)
                         {
@@ -491,8 +503,8 @@ namespace CommonNetCoreFuncs.Excel
                             using (MemoryStream ms = new(imageData[i]))
                             {
                                 using Image img = Image.FromStream(ms);
-                                imgWidth = img.Width;
-                                imgHeight = img.Height;
+                                imgWidth = img?.Width ?? 0;
+                                imgHeight = img?.Height ?? 0;
                             }
                             double imgAspect = (double)imgWidth / imgHeight;
 
@@ -526,7 +538,10 @@ namespace CommonNetCoreFuncs.Excel
                             anchor.Dy2 = -yMargin;
 
                             int pictureIndex = wb.AddPicture(imageData[i], PictureType.PNG);
-                            drawing.CreatePicture(anchor, pictureIndex);
+                            if (drawing != null)
+                            {
+                                drawing.CreatePicture(anchor, pictureIndex);
+                            }
                         }
                     }
                 }
@@ -538,7 +553,7 @@ namespace CommonNetCoreFuncs.Excel
         /// </summary>
         /// <param name="cell"></param>
         /// <returns>CellRangeAddress of merged cells cell</returns>
-        public static CellRangeAddress GetRangeOfMergedCells(this ICell cell)
+        public static CellRangeAddress? GetRangeOfMergedCells(this ICell? cell)
         {
             if (cell != null && cell.IsMergedCell)
             {
@@ -554,7 +569,11 @@ namespace CommonNetCoreFuncs.Excel
                 }
                 return null;
             }
-            return CellRangeAddress.ValueOf($"{cell.Address}:{cell.Address}");
+            else if (cell != null)
+            {
+                return CellRangeAddress.ValueOf($"{cell.Address}:{cell.Address}");
+            }
+            return null;
         }
 
         /// <summary>

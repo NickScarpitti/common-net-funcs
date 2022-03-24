@@ -4,9 +4,10 @@ using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using SixLabors.ImageSharp;
 
 namespace CommonNetCoreFuncs.Excel
 {
@@ -253,7 +254,7 @@ namespace CommonNetCoreFuncs.Excel
         /// <param name="font"></param>
         /// <param name="alignment"></param>
         /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-        public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string? htmlColor = null, IFont? font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
+        public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string? htmlColor = null, NPOI.SS.UserModel.IFont? font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
         {
             ICellStyle cellStyle = wb.CreateCellStyle();
             switch (style)
@@ -295,11 +296,19 @@ namespace CommonNetCoreFuncs.Excel
                     break;
 
                 case EStyles.Custom:
-                    htmlColor ??= string.Empty;
                     XSSFCellStyle xStyle = (XSSFCellStyle)wb.CreateCellStyle();
                     if (alignment != null) { xStyle.Alignment = (NPOI.SS.UserModel.HorizontalAlignment)alignment; }
-                    byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
-                    xStyle.SetFillForegroundColor(new XSSFColor(rgb));
+
+                    //Old version relies on System.Drawing
+                    //byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
+
+                    Regex regex = new (@"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+                    if (htmlColor != null && htmlColor.Length == 7 && regex.IsMatch(htmlColor))
+                    {
+                        byte[] rgb = new byte[] { Convert.ToByte(htmlColor.Substring(1, 2), 16), Convert.ToByte(htmlColor.Substring(3, 2), 16), Convert.ToByte(htmlColor.Substring(5, 2), 16) };
+                        xStyle.SetFillForegroundColor(new XSSFColor(rgb));
+                    }
+
                     xStyle.FillPattern = FillPattern.SolidForeground;
                     if (font != null) { xStyle.SetFont(font); }
                     cellStyle = xStyle;
@@ -318,9 +327,9 @@ namespace CommonNetCoreFuncs.Excel
         /// <param name="font"></param>
         /// <param name="wb"></param>
         /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
-        public static IFont GetFont(EFonts font, XSSFWorkbook wb)
+        public static NPOI.SS.UserModel.IFont GetFont(EFonts font, XSSFWorkbook wb)
         {
-            IFont cellFont = wb.CreateFont();
+            NPOI.SS.UserModel.IFont cellFont = wb.CreateFont();
             switch (font)
             {
                 case EFonts.Default:
@@ -401,7 +410,7 @@ namespace CommonNetCoreFuncs.Excel
 
                         foreach (var prop in props)
                         {
-                            ws.AutoSizeColumn(x, true);
+                            ws.AutoSizeColumn(x, true); //Requires LIBGDI+ to be installed in run environment to work correctly
                             x++;
                         }
                     }
@@ -500,12 +509,19 @@ namespace CommonNetCoreFuncs.Excel
 
                             int imgWidth;
                             int imgHeight;
-                            using (MemoryStream ms = new(imageData[i]))
-                            {
-                                using Image img = Image.FromStream(ms);
-                                imgWidth = img?.Width ?? 0;
-                                imgHeight = img?.Height ?? 0;
-                            }
+
+                            //Using old GDI+ System.Drawing
+                            //using (MemoryStream ms = new(imageData[i]))
+                            //{
+                            //    using Image img = Image.FromStream(ms);
+                            //    imgWidth = img?.Width ?? 0;
+                            //    imgHeight = img?.Height ?? 0;
+                            //}
+
+                            using Image image = Image.Load(imageData[i]);
+                            imgWidth = image.Width;
+                            imgHeight = image.Height;
+
                             double imgAspect = (double)imgWidth / imgHeight;
 
                             int rangeWidth = ws.GetRangeWidthInPx(area.FirstColumn, area.LastColumn);

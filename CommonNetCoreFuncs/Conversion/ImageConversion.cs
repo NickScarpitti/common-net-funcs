@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
+using SixLabors.ImageSharp;
 
 namespace CommonNetCoreFuncs.Conversion
 {
@@ -19,16 +19,16 @@ namespace CommonNetCoreFuncs.Conversion
             {
                 if (File.Exists(filePath))
                 {
-                    //TODO:: Update to using ImageSharp, SkiaSharp, or Microsoft.Maui.Graphics (https://docs.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/6.0/system-drawing-common-windows-only)
-                    using Image image = Image.FromFile(filePath);
-                    if (image != null)
+                    using MemoryStream ms = new (File.ReadAllBytes(filePath));
+                    if (ms.Length > 0)
                     {
-                        using MemoryStream ms = new();
-                        image.Save(ms, image.RawFormat);
-                        byte[] imageBytes = ms.ToArray();
-
-                        string base64 = Convert.ToBase64String(imageBytes);
-                        return base64;
+                        using Image image = Image.Load(ms);
+                        if (image != null && image.Height > 0 && image.Width > 0)
+                        {
+                            byte[] imageBytes = ms.ToArray();
+                            string base64 = Convert.ToBase64String(imageBytes);
+                            return base64;
+                        }
                     }
                 }
             }

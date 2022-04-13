@@ -15,7 +15,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="s"></param>
         /// <param name="numChars"></param>
         /// <returns>String of the length indicated from the left side of the source string</returns>
-        public static string? Left(this string s, int numChars)
+        public static string? Left(this string? s, int numChars)
         {
             try
             {

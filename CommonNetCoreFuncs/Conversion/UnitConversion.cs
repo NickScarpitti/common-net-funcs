@@ -114,5 +114,20 @@ namespace CommonNetCoreFuncs.Conversion
                 return 0;
             }
         }
+
+        public static double BitsToMb(this int bits)
+        {
+            return Math.Round(bits / 1048576.0, 1, MidpointRounding.AwayFromZero);
+        }
+
+        public static double BitsToMb(this long bits)
+        {
+            return Math.Round(bits / 1048576.0, 1, MidpointRounding.AwayFromZero);
+        }
+
+        public static double MbToGb(this double mb)
+        {
+            return Math.Round(mb / 1024.0, 1, MidpointRounding.AwayFromZero);
+        }
     }
 }

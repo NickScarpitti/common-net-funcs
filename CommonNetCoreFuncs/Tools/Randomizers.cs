@@ -20,9 +20,7 @@ namespace CommonNetCoreFuncs.Tools
             {
                 n--;
                 int k = rng.Next(n + 1);
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
+                (list[n], list[k]) = (list[k], list[n]);
             }
         }
 
@@ -42,7 +40,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <typeparam name="T"></typeparam>
         /// <param name="list"></param>
         /// <returns>Randomly selected object</returns>
-        public static T RandomElement<T>(this IList<T> list)
+        public static T? RandomElement<T>(this IList<T> list)
         {
             return list.Skip(rng.Next(list.Count)).FirstOrDefault();
         }
@@ -53,7 +51,7 @@ namespace CommonNetCoreFuncs.Tools
         /// <typeparam name="T"></typeparam>
         /// <param name="list"></param>
         /// <returns>Randomly selected object</returns>
-        public static T RandomElement<T>(this IEnumerable<T> list)
+        public static T? RandomElement<T>(this IEnumerable<T> list)
         {
             return list.Skip(rng.Next(list.Count())).FirstOrDefault();
         }

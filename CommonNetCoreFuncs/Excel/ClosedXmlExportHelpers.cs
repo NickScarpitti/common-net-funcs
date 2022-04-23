@@ -23,7 +23,7 @@ namespace CommonNetCoreFuncs.Excel
         /// <param name="dataList"></param>
         /// <param name="memoryStream"></param>
         /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
-        public async Task<MemoryStream> GenericExcelExport<T>(List<T> dataList, MemoryStream memoryStream)
+        public async Task<MemoryStream?> GenericExcelExport<T>(List<T> dataList, MemoryStream memoryStream)
         {
             try
             {
@@ -43,7 +43,7 @@ namespace CommonNetCoreFuncs.Excel
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, (ex.InnerException ?? new()).ToString());
+                logger.LogError(ex, "GenericExcelExport Error");
             }
 
             return new MemoryStream();

@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
+using SixLabors.ImageSharp;
 
 namespace CommonNetCoreFuncs.Conversion
 {
@@ -13,27 +13,28 @@ namespace CommonNetCoreFuncs.Conversion
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns>Base 64 string representation of image file</returns>
-        public static string ConvertImageFileToBase64(this string filePath)
+        public static string? ConvertImageFileToBase64(this string filePath)
         {
             try
             {
                 if (File.Exists(filePath))
                 {
-                    using Image image = Image.FromFile(filePath);
-                    if (image != null)
+                    using MemoryStream ms = new (File.ReadAllBytes(filePath));
+                    if (ms.Length > 0)
                     {
-                        using MemoryStream ms = new();
-                        image.Save(ms, image.RawFormat);
-                        byte[] imageBytes = ms.ToArray();
-
-                        string base64 = Convert.ToBase64String(imageBytes);
-                        return base64;
+                        using Image image = Image.Load(ms);
+                        if (image != null && image.Height > 0 && image.Width > 0)
+                        {
+                            byte[] imageBytes = ms.ToArray();
+                            string base64 = Convert.ToBase64String(imageBytes);
+                            return base64;
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ConvertImageFileToBase64 Error");
             }
             
             return null;

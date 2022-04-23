@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -19,19 +20,32 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="propertyName"></param>
         /// <param name="task"></param>
         /// <returns></returns>
-        public static async Task ObjectUpdate<T, UT>(T obj, string propertyName, Task<UT> task)
+        public static async Task ObjectUpdate<T, UT>(T? obj, string propertyName, Task<UT> task)
         {
             try
             {
-                IEnumerable<PropertyInfo> props = obj.GetType().GetProperties();
-                PropertyInfo prop = props.Where(x => x.Name.StrEq(propertyName)).FirstOrDefault();
-
-                var value = await task;
-                prop.SetValue(obj, value);
+                IEnumerable<PropertyInfo>? props = obj?.GetType().GetProperties();
+                if (props != null && props.Any())
+                {
+                    PropertyInfo? prop = props.Where(x => x.Name.StrEq(propertyName)).FirstOrDefault();
+                    if (prop != null)
+                    {
+                        var value = await task;
+                        prop.SetValue(obj, value);
+                    }
+                    else
+                    {
+                        throw new System.Exception("Invalid property name for object update");
+                    }
+                }
+                else
+                {
+                    throw new System.Exception("Unable to get properties of object to update");
+                }
             }
             catch (System.Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ObjectUpdate Error");
             }
         }
 
@@ -43,19 +57,22 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="obj"></param>
         /// <param name="task"></param>
         /// <returns></returns>
-        public static async Task ObjectFill<T, UT>(T obj, Task<UT> task)
+        public static async Task ObjectFill<T, UT>(T? obj, Task<UT> task)
         {
             try
             {
-                var resultObject = await task;
-                if (resultObject != null)
+                if (obj != null)
                 {
-                    resultObject.CopyPropertiesTo(obj);
+                    var resultObject = await task;
+                    if (resultObject != null)
+                    {
+                        resultObject.CopyPropertiesTo(obj);
+                    }
                 }
             }
             catch (System.Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ObjectFill Error");
             }
         }
 
@@ -67,19 +84,39 @@ namespace CommonNetCoreFuncs.Tools
         /// <param name="obj"></param>
         /// <param name="task"></param>
         /// <returns></returns>
-        public static async Task ObjectFill<T>(List<T> obj, Task<List<T>> task)
+        public static async Task ObjectFill<T>(List<T>? obj, Task<List<T>?> task)
         {
             try
             {
-                var resultObject = await task;
-                if (resultObject != null)
+                if (obj != null)
                 {
-                    obj.AddRange(resultObject);
+                    var resultObject = await task;
+                    if (resultObject != null)
+                    {
+                        obj.AddRange(resultObject);
+                    }
                 }
             }
             catch (System.Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ObjectFill Error");
+            }
+        }
+
+        public static async Task ObjectFill(DataTable dt, Task<DataTable> task)
+        {
+            try
+            {
+                DataTable resultTable = await task;
+                if (resultTable != null)
+                {
+                    DataTableReader reader = resultTable.CreateDataReader();
+                    dt.Load(reader);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                logger.Error(ex, "ObjectFill Error");
             }
         }
 
@@ -103,7 +140,7 @@ namespace CommonNetCoreFuncs.Tools
             }
             catch (System.Exception ex)
             {
-                logger.Error(ex, (ex.InnerException ?? new()).ToString());
+                logger.Error(ex, "ObjectFill Error");
             }
         }
     }

@@ -113,20 +113,35 @@ public static class UnitConversion
         {
             return 0;
         }
+    }
 
-        public static double BitsToMb(this int bits)
-        {
-            return Math.Round(bits / 1048576.0, 1, MidpointRounding.AwayFromZero);
-        }
+    /// <summary>
+    /// Convert bits to Mb
+    /// </summary>
+    /// <param name="bits"></param>
+    /// <returns>Double representation of the number of bits in Mb</returns>
+    public static double BitsToMb(this int bits)
+    {
+        return Math.Round(bits / 1048576.0, 1, MidpointRounding.AwayFromZero);
+    }
 
-        public static double BitsToMb(this long bits)
-        {
-            return Math.Round(bits / 1048576.0, 1, MidpointRounding.AwayFromZero);
-        }
+    /// <summary>
+    /// Convert bits to Mb
+    /// </summary>
+    /// <param name="bits"></param>
+    /// <returns>Double representation of the number of bits in Mb</returns>
+    public static double BitsToMb(this long bits)
+    {
+        return Math.Round(bits / 1048576.0, 1, MidpointRounding.AwayFromZero);
+    }
 
-        public static double MbToGb(this double mb)
-        {
-            return Math.Round(mb / 1024.0, 1, MidpointRounding.AwayFromZero);
-        }
+    /// <summary>
+    /// Convert Mb to Gb
+    /// </summary>
+    /// <param name="mb"></param>
+    /// <returns>Double representation of the number of Mb in Gb</returns>
+    public static double MbToGb(this double mb)
+    {
+        return Math.Round(mb / 1024.0, 1, MidpointRounding.AwayFromZero);
     }
 }

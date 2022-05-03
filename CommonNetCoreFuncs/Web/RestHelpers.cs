@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Formatting;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using CommonNetCoreFuncs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
@@ -33,8 +34,10 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
-    public static async Task<T?> Get(string url)
+    public static async Task<T?> Get(string url, string? bearerToken = null)
     {
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
         T? result = null;
         try
         {
@@ -67,8 +70,10 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-    public static async Task<T?> PostRequest(string url, T? postObject)
+    public static async Task<T?> PostRequest(string url, T? postObject, string? bearerToken = null)
     {
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
         T? result = null;
         try
         {
@@ -101,8 +106,10 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-    public static async Task<T?> GenericPostRequest<UT>(string url, UT postObject)
+    public static async Task<T?> GenericPostRequest<UT>(string url, UT postObject, string? bearerToken = null)
     {
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
         T? result = null;
         try
         {
@@ -134,8 +141,10 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
-    public static async Task<string?> StringPostRequest(string url, T postObject)
+    public static async Task<string?> StringPostRequest(string url, T postObject, string? bearerToken = null)
     {
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
         string? result = null;
         try
         {
@@ -167,8 +176,10 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
-    public static async Task<T?> DeleteRequest(string apiUrl)
+    public static async Task<T?> DeleteRequest(string apiUrl, string? bearerToken = null)
     {
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
         T? result = null;
         try
         {
@@ -197,8 +208,10 @@ public static class RestHelpers<T> where T : class
     /// <param name="apiUrl">API Url</param>
     /// <param name="putObject">The object to be edited</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
-    public static async Task PutRequest(string apiUrl, T putObject)
+    public static async Task PutRequest(string apiUrl, T putObject, string? bearerToken = null)
     {
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
         HttpResponseMessage response = await client.PutAsync(apiUrl, putObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
@@ -211,8 +224,10 @@ public static class RestHelpers<T> where T : class
     /// <returns></returns>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
-    public static async Task<T?> PatchRequest(string apiUrl, HttpContent patchDoc)
+    public static async Task<T?> PatchRequest(string apiUrl, HttpContent patchDoc, string? bearerToken = null)
     {
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
         T? result = null;
         try
         {

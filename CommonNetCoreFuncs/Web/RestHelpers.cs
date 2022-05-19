@@ -1,9 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Formatting;
+﻿using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
 using CommonNetCoreFuncs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;

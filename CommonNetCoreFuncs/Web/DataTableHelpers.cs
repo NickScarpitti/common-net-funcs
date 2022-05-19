@@ -50,6 +50,10 @@ public static class DataTableHelpers
                 {
                     string cleanVal = val.CleanQueryParam()!;
                     int startPos = cleanVal.IndexOf("=") + 1;
+                    if (startPos == 0)
+                    {
+                        continue;
+                    }
                     string key = cleanVal[..(startPos - 1)];
                     if (startPos + 1 <= cleanVal.Length)
                     {

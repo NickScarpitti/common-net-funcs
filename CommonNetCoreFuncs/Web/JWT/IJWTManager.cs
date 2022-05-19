@@ -1,5 +1,4 @@
-﻿using System;
-namespace CommonNetCoreFuncs.Web.JWT;
+﻿namespace CommonNetCoreFuncs.Web.JWT;
 
 public interface IJWTManager
 {

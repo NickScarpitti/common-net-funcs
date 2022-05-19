@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CommonNetCoreFuncs.Web.JWT;
+﻿namespace CommonNetCoreFuncs.Web.JWT;
 
 public class TokenObject
 {

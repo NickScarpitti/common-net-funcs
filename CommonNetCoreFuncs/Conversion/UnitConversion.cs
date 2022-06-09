@@ -1,11 +1,9 @@
-﻿using System;
-
-namespace CommonNetCoreFuncs.Conversion;
+﻿namespace CommonNetCoreFuncs.Conversion;
 
 public static class UnitConversion
 {
-    public const double kgToLbsConst = 2.20462;
-    public const double ftToInConst = 12;
+    public const double KgToLbsConst = 2.20462;
+    public const double FtToInConst = 12;
 
     /// <summary>
     /// Convert mass in lbs to kg
@@ -14,7 +12,7 @@ public static class UnitConversion
     /// <returns>Double representation of the mass in lbs converted to kg</returns>
     public static double LbsToKg(this double massLbs)
     {
-        return massLbs / kgToLbsConst;
+        return massLbs / KgToLbsConst;
     }
 
     /// <summary>
@@ -26,7 +24,7 @@ public static class UnitConversion
     {
         if (massLbs != null)
         {
-            return Convert.ToDouble(massLbs) / kgToLbsConst;
+            return Convert.ToDouble(massLbs) / KgToLbsConst;
         }
         else
         {
@@ -41,7 +39,7 @@ public static class UnitConversion
     /// <returns>Double representation of the mass in kg converted to lbs</returns>
     public static double KgToLbs(this double massKg)
     {
-        return massKg * kgToLbsConst;
+        return massKg * KgToLbsConst;
     }
 
     /// <summary>
@@ -53,7 +51,7 @@ public static class UnitConversion
     {
         if (massKg != null)
         {
-            return Convert.ToDouble(massKg) * kgToLbsConst;
+            return Convert.ToDouble(massKg) * KgToLbsConst;
         }
         else
         {
@@ -68,7 +66,7 @@ public static class UnitConversion
     /// <returns>Double representation of the length in inches converted to feet</returns>
     public static double InsToFt(this double lenIns)
     {
-        return lenIns / ftToInConst;
+        return lenIns / FtToInConst;
     }
 
     /// <summary>
@@ -80,7 +78,7 @@ public static class UnitConversion
     {
         if (lenIns != null)
         {
-            return Convert.ToDouble(lenIns) / ftToInConst;
+            return Convert.ToDouble(lenIns) / FtToInConst;
         }
         else
         {
@@ -95,7 +93,7 @@ public static class UnitConversion
     /// <returns>Double representation of the length in feet converted to inches</returns>
     public static double FtToIns(this double lenIns)
     {
-        return lenIns * ftToInConst;
+        return lenIns * FtToInConst;
     }
 
     /// <summary>
@@ -107,7 +105,7 @@ public static class UnitConversion
     {
         if (lenIns != null)
         {
-            return Convert.ToDouble(lenIns) * ftToInConst;
+            return Convert.ToDouble(lenIns) * FtToInConst;
         }
         else
         {

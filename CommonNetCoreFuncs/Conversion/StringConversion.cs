@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using CommonNetCoreFuncs.Tools;
+﻿using CommonNetCoreFuncs.Tools;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CommonNetCoreFuncs.Conversion;

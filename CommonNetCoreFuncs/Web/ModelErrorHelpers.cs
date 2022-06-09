@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using CommonNetCoreFuncs.Tools;
+﻿using CommonNetCoreFuncs.Tools;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CommonNetCoreFuncs.Web;

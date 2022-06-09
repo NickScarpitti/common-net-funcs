@@ -3,9 +3,6 @@ using CommonNetCoreFuncs.Tools;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using NLog;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CommonNetCoreFuncs.Web;
 

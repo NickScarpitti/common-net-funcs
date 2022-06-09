@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace CommonNetCoreFuncs.Compare;
+﻿namespace CommonNetCoreFuncs.Compare;
 
 /// <summary>
 /// Compare two alphanumeric values

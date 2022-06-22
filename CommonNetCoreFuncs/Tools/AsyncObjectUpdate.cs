@@ -35,15 +35,15 @@ public static class AsyncObjectUpdate
                 }
                 else
                 {
-                    throw new System.Exception("Invalid property name for object update");
+                    throw new Exception("Invalid property name for object update");
                 }
             }
             else
             {
-                throw new System.Exception("Unable to get properties of object to update");
+                throw new Exception("Unable to get properties of object to update");
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             logger.Error(ex, "ObjectUpdate Error");
         }
@@ -70,7 +70,7 @@ public static class AsyncObjectUpdate
                 }
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             logger.Error(ex, "ObjectFill Error");
         }
@@ -97,7 +97,7 @@ public static class AsyncObjectUpdate
                 }
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             logger.Error(ex, "ObjectFill Error");
         }
@@ -138,7 +138,7 @@ public static class AsyncObjectUpdate
                 resultObject.WriteTo(obj);
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             logger.Error(ex, "ObjectFill Error");
         }

@@ -3,9 +3,6 @@ using CommonNetCoreFuncs.Tools;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using NLog;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CommonNetCoreFuncs.Web;
 
@@ -50,6 +47,10 @@ public static class DataTableHelpers
                 {
                     string cleanVal = val.CleanQueryParam()!;
                     int startPos = cleanVal.IndexOf("=") + 1;
+                    if (startPos == 0)
+                    {
+                        continue;
+                    }
                     string key = cleanVal[..(startPos - 1)];
                     if (startPos + 1 <= cleanVal.Length)
                     {

@@ -32,7 +32,7 @@ public static class Email
     /// <param name="attachmentName"></param>
     /// <param name="fileData">Stream of file data you want to attach to the email</param>
     /// <returns>Email sent success bool</returns>
-    public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, List<MailAddress>? ccAddresses = null, List<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null)
+    public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, List<MailAddress>? ccAddresses = null, List<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null, bool readReceipt = false, string? readReceiptEmail = null)
     {
         bool success = true;
         try
@@ -111,6 +111,11 @@ public static class Email
                 }
 
                 email.Body = bodyBuilder.ToMessageBody();
+
+                if (readReceipt && !string.IsNullOrEmpty(readReceiptEmail))
+                {
+                    email.Headers[HeaderId.DispositionNotificationTo] = readReceiptEmail;
+                }
 
                 for (int i = 0; i < 8; i++)
                 {

@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using SixLabors.ImageSharp;
+﻿using SixLabors.ImageSharp;
 
 namespace CommonNetCoreFuncs.Conversion;
 

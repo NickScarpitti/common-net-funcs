@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CommonNetCoreFuncs.Tools;
+﻿namespace CommonNetCoreFuncs.Tools;
 
 /// <summary>
 /// Methods for complex string manipulation

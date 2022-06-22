@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
-namespace CommonNetCoreFuncs.Tools;
+﻿namespace CommonNetCoreFuncs.Tools;
 
 /// <summary>
 /// Methods for validating data

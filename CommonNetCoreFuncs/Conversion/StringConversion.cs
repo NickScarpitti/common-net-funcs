@@ -138,6 +138,23 @@ public static class StringConversion
         return null;
     }
 
+    public static double? ToNDouble(this string? value)
+    {
+        if (!string.IsNullOrEmpty(value) && double.TryParse(value, out double i))
+        {
+            return i;
+        }
+        return null;
+    }
+
+    public static decimal? ToNDecimal (this string? value)
+    {
+        if (!string.IsNullOrEmpty(value) && decimal.TryParse(value, out decimal i))
+        {
+            return i;
+        }
+        return null;
+    }
     /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
     /// </summary>

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CommonNetCoreFuncs.SQL;
+﻿namespace CommonNetCoreFuncs.SQL;
 
 public static class ParameterFilter
 {

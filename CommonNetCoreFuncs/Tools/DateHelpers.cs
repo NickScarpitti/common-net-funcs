@@ -1,10 +1,15 @@
-﻿using System;
-
-namespace CommonNetCoreFuncs.Tools
+﻿namespace CommonNetCoreFuncs.Tools
 {
     public static class DateHelpers
     {
-        public static double GetBusinessDays(DateTime? startDate, DateTime? endDate)
+        /// <summary>
+        /// Get the number of business days found within a date range (inclusive)
+        /// </summary>
+        /// <param name="startDate">First date of range to get business days for</param>
+        /// <param name="endDate">Last date of range to get business days for</param>
+        /// <param name="exceptionDates">Days that will not be counted as a business day such as holidays</param>
+        /// <returns></returns>
+        public static double GetBusinessDays(DateTime? startDate, DateTime? endDate, List<DateTime>? exceptionDates = null)
         {
             
             if (startDate == null || endDate == null)
@@ -20,7 +25,25 @@ namespace CommonNetCoreFuncs.Tools
             if (eDate.DayOfWeek == DayOfWeek.Saturday) calcBusinessDays--;
             if (sDate.DayOfWeek == DayOfWeek.Sunday) calcBusinessDays--;
 
+            if (exceptionDates != null)
+            {
+                int exceptionDays = exceptionDates.Where(x => x >= sDate && x <= eDate && x.DayOfWeek != DayOfWeek.Saturday && x.DayOfWeek != DayOfWeek.Sunday).Count();
+                calcBusinessDays -= exceptionDays;
+            }
+
             return calcBusinessDays;
+        }
+
+        /// <summary>
+        /// Get the date of the day requested given the week provided via the dateTime parameter
+        /// </summary>
+        /// <param name="dateTime">Date to search for the day of the week for</param>
+        /// <param name="dayOfWeek">The day of the indicated week to return the date for</param>
+        /// <returns></returns>
+        public static DateTime GetDayOfWeek(this DateTime dateTime, DayOfWeek dayOfWeek = DayOfWeek.Monday)
+        {
+            int diff = (7 + (dateTime.DayOfWeek - dayOfWeek)) % 7;
+            return dateTime.AddDays(-1 * diff).Date;
         }
     }
 }

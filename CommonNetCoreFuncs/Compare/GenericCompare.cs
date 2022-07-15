@@ -9,7 +9,7 @@ public class GenericCompare<T> : IEqualityComparer<T>
     /// </summary>
     /// <param name="obj1"></param>
     /// <param name="obj2"></param>
-    /// <returns>True if both objects contain identical properties</returns>
+    /// <returns>True if both objects contain identical values for all properties</returns>
     public bool Equals(T? obj1, T? obj2)
     {
         // They're both null.

@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Data;
+using System.Text.RegularExpressions;
+using NPOI.POIFS.FileSystem;
 using NPOI.SS;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
@@ -677,5 +679,85 @@ public static class NpoiCommonHelpers
         //ws.AddValidationData(dataValidation);
 
         ws.AddValidationData(dataValidation);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fileStream">Stream of Excel file being read</param>
+    /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
+    /// <returns></returns>
+    public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null)
+    {
+        DataTable dataTable = new();
+
+        try
+        {
+            bool isXlsx = DocumentFactoryHelper.HasOOXMLHeader(fileStream);
+            
+            if (isXlsx) //Only .xlsx files can have tables
+            {
+                XSSFWorkbook wb = new(fileStream);
+                ISheet? ws = null;
+                ITable? table = null;
+                if (!string.IsNullOrWhiteSpace(tableName))
+                {
+                    table = wb.GetTable(tableName);
+                }
+
+                //Get first table name if not specified or not found
+                if (string.IsNullOrWhiteSpace(tableName) || table == null)
+                {
+                    int numberOfSheets = wb.NumberOfSheets;
+                    for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex++)
+                    {
+                        ws = wb.GetSheetAt(sheetIndex);
+                        List<XSSFTable> tables = ((XSSFSheet)ws).GetTables();
+                        foreach (XSSFTable t in tables)
+                        {
+                            tableName = t.Name;
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(tableName))
+                    {
+                        table = wb.GetTable(tableName);
+                    }
+                }
+
+                if (table != null)
+                {
+                    if (ws == null)
+                    {
+                        ws = wb.GetSheet(table.SheetName);
+                    }
+
+                    //Get headers
+                    for (int i = table.StartColIndex; i < table.EndColIndex + 1; i++)
+                    {
+                        dataTable.Columns.Add(GetStringValue(GetCellFromCoordinates(ws, i, table.StartRowIndex)));
+                    }
+
+                    //Get body data
+                    for (int i = table.StartRowIndex + 1; i < table.EndRowIndex + 1; i++)
+                    {
+                        string?[] newRowData = new string?[table.EndColIndex + 1 - table.StartColIndex];
+
+                        for (int n = table.StartColIndex; n < table.EndColIndex + 1; n++)
+                        {
+                            newRowData[n - table.StartColIndex] = GetStringValue(GetCellFromCoordinates(ws, n, i));
+                        }
+
+                        dataTable.Rows.Add(newRowData);
+                    }
+                }
+            }           
+        }
+        catch (Exception ex)
+        {
+            logger.Error("Unable to read excel table data.", ex);
+        }
+
+        return dataTable;
     }
 }

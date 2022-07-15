@@ -11,7 +11,7 @@ public static class DataValidation
     /// <param name="obj1"></param>
     /// <param name="obj2"></param>
     /// <returns>True if the two objects have the same value for all elements</returns>
-    public static bool IsEqual(this object obj1, object obj2)
+    public static bool IsEqual(this object? obj1, object? obj2)
     {
         // They're both null.
         if (obj1 == null && obj2 == null) return true;
@@ -57,7 +57,7 @@ public static class DataValidation
     /// <returns>True if the strings are equal when ignoring culture and case</returns>
     public static bool StrEq(this string? s1, string? s2)
     {
-        return string.Equals(s1 ?? "", s2 ?? "", StringComparison.InvariantCultureIgnoreCase);
+        return string.Equals(s1?.Trim() ?? "", s2?.Trim() ?? "", StringComparison.InvariantCultureIgnoreCase);
     }
 
     /// <summary>

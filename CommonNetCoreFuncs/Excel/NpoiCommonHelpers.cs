@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Text.RegularExpressions;
+using NPOI.HSSF.UserModel;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS;
 using NPOI.SS.UserModel;
@@ -354,11 +355,32 @@ public static class NpoiCommonHelpers
     /// <param name="wb"></param>
     /// <param name="ws"></param>
     /// <param name="data"></param>
+    /// <param name="createTable">Turn the output into an Excel table (unused)</param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExportFromTable<T>(XSSFWorkbook wb, ISheet ws, List<T> data)
+    public static bool ExportFromTable<T>(XSSFWorkbook wb, ISheet ws, List<T> data, bool createTable = false)
     {
         try
         {
+            if (createTable)
+            {
+            //    XSSFTable table = ((XSSFSheet)ws).CreateTable();
+            //    CT_Table ctTable = table.GetCTTable();
+
+            //    table.Name = "Data";
+            //    table.DisplayName = "Data";
+            //    ctTable.id = 1;
+            //    ctTable.totalsRowShown = false;
+
+            //    var header = data[0];
+            //    var props = header!.GetType().GetProperties();
+
+            //    foreach (var prop in props)
+            //    {
+            //        ctTable.tableColumns = new();
+            //        ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { name = prop.Name.ToString(), uniqueName = prop.Name.ToString() });
+            //    }
+            }
+
             if (data != null)
             {
                 if (data.Count > 0)
@@ -682,7 +704,173 @@ public static class NpoiCommonHelpers
     }
 
     /// <summary>
-    /// 
+    /// Reads tabular data from an unformatted excel sheet to a DataTable object similar to Python Pandas
+    /// </summary>
+    /// <param name="fileStream">Stream of Excel file being read</param>
+    /// <param name="hasHeaders">Does the data being read have headers. Will be used for data table column names instead of default 'Column0', 'Column1'... if true. If no headers specified, first row of data must have a value for all columns in order to read all columns correctly./></param>
+    /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
+    /// <param name="startCellReference">Top left corner containing data to read. Will use A1 if not specified.</param>
+    /// <param name="endCellReference">Bottom right cell containing data to read. Will read to first full empty row if not specified.</param>
+    /// <returns></returns>
+    public static DataTable ReadExcelFileToDataTable(this Stream fileStream, bool hasHeaders = true, string? sheetName = null, string? startCellReference = null, string? endCellReference = null)
+    {
+        DataTable dataTable = new();
+
+        try
+        {
+            bool isXlsx = DocumentFactoryHelper.HasOOXMLHeader(fileStream);
+            IWorkbook? wb = null;
+            if (isXlsx) //Only .xlsx files can have tables
+            {
+                wb = new XSSFWorkbook(fileStream);
+            }
+            else
+            {
+                wb = new HSSFWorkbook(fileStream);
+            }
+
+            if (wb != null)
+            {
+                ISheet? ws = null;
+
+                if (!string.IsNullOrWhiteSpace(sheetName))
+                {
+                    ws = wb.GetSheet(sheetName);
+                }
+                else
+                {
+                    ws = wb.GetSheetAt(0); //Get first sheet if not specified
+                }
+
+                if (ws != null)
+                {
+                    int startColIndex = 0;
+                    int? endColIndex = null;
+                    int startRowIndex = 0;
+                    int? endRowIndex = null;
+                    ICell? startCell;
+                    ICell? endCell;
+
+                    if (string.IsNullOrWhiteSpace(startCellReference))
+                    {
+                        startCellReference = "A1";
+                    }
+
+                    startCell = ws.GetCellFromReference(startCellReference) ?? ws.GetCellFromReference("A1"); //Default to A1 if invalid cell referenced
+                    startColIndex = startCell!.ColumnIndex;
+                    startRowIndex = startCell!.RowIndex;
+
+                    if (!string.IsNullOrWhiteSpace(endCellReference))
+                    {
+                        endCell = ws.GetCellFromReference(endCellReference);
+                        if (endCell != null)
+                        {
+                            endColIndex = endCell.ColumnIndex;
+                            endRowIndex = endCell.RowIndex;
+                        }
+                    }
+
+                    //Add headers to table
+                    if (hasHeaders)
+                    {
+                        if ((endColIndex ?? 0) != 0)
+                        {
+                            for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
+                            {
+                                dataTable.Columns.Add(GetStringValue(GetCellFromCoordinates(ws, colIndex, startRowIndex)));
+                            }
+                        }
+                        else
+                        {
+                            string? currentCellVal = startCell.GetStringValue();
+                            int colIndex = 1;
+                            while (!string.IsNullOrWhiteSpace(currentCellVal))
+                            {
+                                endColIndex = colIndex - 1;
+                                dataTable.Columns.Add(currentCellVal);
+                                currentCellVal = startCell.GetCellOffset(colIndex, 0).GetStringValue();
+                                colIndex++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if ((endColIndex ?? 0) != 0)
+                        {
+                            for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
+                            {
+                                dataTable.Columns.Add($"Column{colIndex - startColIndex}");
+                            }
+                        }
+                        else
+                        {
+                            string? currentCellVal = startCell.GetStringValue();
+                            int colIndex = 1;
+                            while (!string.IsNullOrWhiteSpace(currentCellVal))
+                            {
+                                endColIndex = colIndex - 1;
+                                dataTable.Columns.Add($"Column{colIndex - 1}");
+                                currentCellVal = startCell.GetCellOffset(colIndex, 0).GetStringValue();
+                                colIndex++;
+                            }
+                        }
+                    }
+
+                    //Add rows to table
+                    if (dataTable.Columns.Count > 0)
+                    {
+                        if (endRowIndex != null)
+                        {
+                            for (int rowIndex = startRowIndex + (hasHeaders ? 1 : 0); rowIndex < endRowIndex + 1; rowIndex++)
+                            {
+                                string?[] newRowData = new string?[(int)endColIndex! + 1 - startColIndex];
+
+                                for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
+                                {
+                                    newRowData[colIndex - startColIndex] = GetStringValue(GetCellFromCoordinates(ws, colIndex, rowIndex));
+                                }
+                                dataTable.Rows.Add(newRowData);
+                            }
+                        }
+                        else
+                        {
+                            int rowIndex = startRowIndex + (hasHeaders ? 1 : 0);
+                            bool rowIsNotNull = true;
+
+                            while (rowIsNotNull)
+                            {
+                                rowIsNotNull = false;
+
+                                string?[] newRowData = new string?[(int)endColIndex! + 1 - startColIndex];
+
+                                for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
+                                {
+                                    string? cellValue = GetStringValue(GetCellFromCoordinates(ws, colIndex, rowIndex));
+                                    rowIsNotNull = rowIsNotNull ? rowIsNotNull : !string.IsNullOrWhiteSpace(cellValue);
+                                    newRowData[colIndex - startColIndex] = cellValue;
+                                }
+
+                                if (rowIsNotNull)
+                                {
+                                    dataTable.Rows.Add(newRowData);
+                                }
+                                rowIndex++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            logger.Error("Unable to read excel data.", ex);
+        }
+
+        return dataTable;
+    }
+
+    /// <summary>
+    /// Reads an Excel table into a DataTable object similar to Python Pandas
     /// </summary>
     /// <param name="fileStream">Stream of Excel file being read</param>
     /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>

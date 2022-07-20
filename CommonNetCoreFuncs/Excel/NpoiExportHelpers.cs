@@ -20,7 +20,7 @@ public class NpoiExportHelpers
     /// <param name="dataList"></param>
     /// <param name="memoryStream"></param>
     /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
-    public async Task<MemoryStream?> GenericExcelExport<T>(List<T> dataList, MemoryStream? memoryStream = null)
+    public async Task<MemoryStream?> GenericExcelExport<T>(List<T> dataList, MemoryStream? memoryStream = null, bool createTable = false)
     {
         try
         {
@@ -33,7 +33,7 @@ public class NpoiExportHelpers
             ISheet ws = wb.CreateSheet("Data");
             if (dataList != null)
             {
-                if (!NpoiCommonHelpers.ExportFromTable(wb, ws, dataList))
+                if (!NpoiCommonHelpers.ExportFromTable(wb, ws, dataList, createTable))
                 {
                     return null;
                 }

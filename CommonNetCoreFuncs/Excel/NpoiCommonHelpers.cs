@@ -57,7 +57,11 @@ public static class NpoiCommonHelpers
         try
         {
             CellReference cr = new(cellReference);
-            IRow row = ws.GetRow(cr.Row + rowOffset);
+            IRow? row = ws.GetRow(cr.Row + rowOffset);
+            if (row == null)
+            {
+                row= ws.CreateRow(cr.Row + rowOffset);
+            }
             ICell cell = row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
             return cell;
         }
@@ -80,7 +84,11 @@ public static class NpoiCommonHelpers
         try
         {
             ISheet ws = startCell.Sheet;
-            IRow row = ws.GetRow(startCell.RowIndex + rowOffset);
+            IRow? row = ws.GetRow(startCell.RowIndex + rowOffset);
+            if (row == null)
+            {
+                row = ws.CreateRow(startCell.RowIndex + rowOffset);
+            }
             ICell cell = row.GetCell(startCell.ColumnIndex + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
             return cell;
         }

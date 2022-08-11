@@ -58,10 +58,7 @@ public static class NpoiCommonHelpers
         {
             CellReference cr = new(cellReference);
             IRow? row = ws.GetRow(cr.Row + rowOffset);
-            if (row == null)
-            {
-                row= ws.CreateRow(cr.Row + rowOffset);
-            }
+            row??= ws.CreateRow(cr.Row + rowOffset);
             ICell cell = row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
             return cell;
         }
@@ -85,10 +82,7 @@ public static class NpoiCommonHelpers
         {
             ISheet ws = startCell.Sheet;
             IRow? row = ws.GetRow(startCell.RowIndex + rowOffset);
-            if (row == null)
-            {
-                row = ws.CreateRow(startCell.RowIndex + rowOffset);
-            }
+            row ??= ws.CreateRow(startCell.RowIndex + rowOffset);
             ICell cell = row.GetCell(startCell.ColumnIndex + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
             return cell;
         }
@@ -113,10 +107,7 @@ public static class NpoiCommonHelpers
         try
         {
             IRow row = ws.GetRow(y + rowOffset);
-            if (row == null)
-            {
-                row = ws.CreateRow(y + rowOffset);
-            }
+            row ??= ws.CreateRow(y + rowOffset);
             ICell cell = row.GetCell(x + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
             return cell;
         }
@@ -146,10 +137,7 @@ public static class NpoiCommonHelpers
             int colNum = -1;
             for (int i = 0; i < crs.Length; i++)
             {
-                if (ws == null)
-                {
-                    ws = wb.GetSheet(crs[i].SheetName);
-                }
+                ws ??= wb.GetSheet(crs[i].SheetName);
 
                 if (rowNum == -1 || rowNum > crs[i].Row)
                 {
@@ -165,10 +153,7 @@ public static class NpoiCommonHelpers
             if (ws != null && colNum > -1 && rowNum > -1)
             {
                 IRow row = ws.GetRow(rowNum + rowOffset);
-                if (row == null)
-                {
-                    row = ws.CreateRow(rowNum + rowOffset);
-                }
+                row ??= ws.CreateRow(rowNum + rowOffset);
                 ICell cell = row.GetCell(colNum + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 return cell;
             }
@@ -923,10 +908,7 @@ public static class NpoiCommonHelpers
 
                 if (table != null)
                 {
-                    if (ws == null)
-                    {
-                        ws = wb.GetSheet(table.SheetName);
-                    }
+                    ws ??= wb.GetSheet(table.SheetName);
 
                     //Get headers
                     for (int i = table.StartColIndex; i < table.EndColIndex + 1; i++)

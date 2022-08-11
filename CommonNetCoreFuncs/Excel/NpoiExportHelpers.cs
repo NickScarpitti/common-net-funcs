@@ -24,10 +24,7 @@ public class NpoiExportHelpers
     {
         try
         {
-            if (memoryStream == null)
-            {
-                memoryStream = new();
-            }
+            memoryStream ??= new();
 
             XSSFWorkbook wb = new();
             ISheet ws = wb.CreateSheet("Data");

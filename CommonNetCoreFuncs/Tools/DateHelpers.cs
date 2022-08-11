@@ -9,7 +9,7 @@
         /// <param name="endDate">Last date of range to get business days for</param>
         /// <param name="exceptionDates">Days that will not be counted as a business day such as holidays</param>
         /// <returns></returns>
-        public static double GetBusinessDays(DateTime? startDate, DateTime? endDate, List<DateTime>? exceptionDates = null)
+        public static int GetBusinessDays(DateTime? startDate, DateTime? endDate, List<DateTime>? exceptionDates = null)
         {
             
             if (startDate == null || endDate == null)
@@ -31,7 +31,7 @@
                 calcBusinessDays -= exceptionDays;
             }
 
-            return calcBusinessDays;
+            return (int)calcBusinessDays;
         }
 
         /// <summary>

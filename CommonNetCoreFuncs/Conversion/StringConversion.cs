@@ -138,6 +138,11 @@ public static class StringConversion
         return null;
     }
 
+    /// <summary>
+    /// Used to reduce boilerplate code for parsing strings into nullable doubles
+    /// </summary>
+    /// <param name="value">String value to be converted to nullable double</param>
+    /// <returns>Nullable double parsed from a string</returns>
     public static double? ToNDouble(this string? value)
     {
         if (!string.IsNullOrEmpty(value) && double.TryParse(value, out double i))
@@ -147,6 +152,11 @@ public static class StringConversion
         return null;
     }
 
+    /// <summary>
+    /// Used to reduce boilerplate code for parsing strings into nullable decimals
+    /// </summary>
+    /// <param name="value">String value to be converted to nullable decimal</param>
+    /// <returns>Nullable decimal parsed from a string</returns>
     public static decimal? ToNDecimal (this string? value)
     {
         if (!string.IsNullOrEmpty(value) && decimal.TryParse(value, out decimal i))
@@ -155,6 +165,7 @@ public static class StringConversion
         }
         return null;
     }
+
     /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
     /// </summary>

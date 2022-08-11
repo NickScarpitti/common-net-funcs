@@ -66,7 +66,7 @@ public static class DataValidation
     /// <param name="dict"></param>
     /// <param name="key"></param>
     /// <param name="value"></param>
-    public static void AddDictionaryItem(this Dictionary<string, string?> dict, string key, string? value)
+    public static void AddDictionaryItem<K, V>(this Dictionary<K, V?> dict, K key, V? value = default) where K : notnull
     {
         if (!dict.ContainsKey(key))
         {

@@ -1,4 +1,6 @@
-﻿namespace CommonNetCoreFuncs.Tools;
+﻿using System.Collections.Concurrent;
+
+namespace CommonNetCoreFuncs.Tools;
 
 /// <summary>
 /// Methods for validating data
@@ -71,6 +73,14 @@ public static class DataValidation
         if (!dict.ContainsKey(key))
         {
             dict.Add(key, value);
+        }
+    }
+
+    public static void AddDictionaryItem<K, V>(this ConcurrentDictionary<K, V?> dict, K key, V? value = default) where K : notnull
+    {
+        if (!dict.ContainsKey(key))
+        {
+            dict.TryAdd(key, value);
         }
     }
 }

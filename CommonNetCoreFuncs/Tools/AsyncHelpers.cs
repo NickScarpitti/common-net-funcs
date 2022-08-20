@@ -1,9 +1,10 @@
 ﻿using System.Data;
 using System.Reflection;
+using System.Threading;
 
 namespace CommonNetCoreFuncs.Tools;
 
-public static class AsyncObjectUpdate
+public static class AsyncHelpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -110,7 +111,7 @@ public static class AsyncObjectUpdate
                 dt.Load(reader);
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             logger.Error(ex, "ObjectFill Error");
         }

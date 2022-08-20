@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Concurrent;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
@@ -82,5 +83,13 @@ public static class ObjectHelpers
     {
         string serialized = JsonConvert.SerializeObject(list);
         return JsonConvert.DeserializeObject<List<T>>(serialized);
+    }
+
+    public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T> toAdd, ParallelOptions? parallelOptions = null)
+    {
+        Parallel.ForEach(toAdd, parallelOptions ?? new(), item =>
+        {
+            concurrentBag.Add(item);
+        });
     }
 }

@@ -131,7 +131,18 @@ public static class NpoiCommonHelpers
         try
         {
             IName name = wb.GetName(cellName);
-            CellReference[] crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
+            CellReference[] crs;
+            try
+            {
+                crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
+            }
+            catch (Exception ex)
+            {
+                logger.Warn($"Unable to locate cell with name {cellName}");
+                logger.Warn(ex);
+                return null;
+            }
+
             ISheet? ws = null;
             int rowNum = -1;
             int colNum = -1;
@@ -176,26 +187,43 @@ public static class NpoiCommonHelpers
     /// <param name="cellName"></param>
     public static void ClearAllFromName(this XSSFWorkbook wb, string cellName)
     {
-        IName name = wb.GetName(cellName);
-        CellReference[] crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
-        ISheet ws = wb.GetSheet(crs[0].SheetName);
-
-        if (ws == null || crs.Length == 0 || name == null)
+        try
         {
-            return;
-        }
-
-        for (int i = 0; i < crs.Length; i++)
-        {
-            IRow row = ws.GetRow(crs[i].Row);
-            if (row != null)
+            IName name = wb.GetName(cellName);
+            CellReference[] crs;
+            try
             {
-                ICell cell = row.GetCell(crs[i].Col);
-                if (cell != null)
+                crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
+            }
+            catch (Exception ex)
+            {
+                logger.Warn($"Unable to locate cell with name {cellName}");
+                logger.Warn(ex);
+                return;
+            }
+            ISheet ws = wb.GetSheet(crs[0].SheetName);
+
+            if (ws == null || crs.Length == 0 || name == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < crs.Length; i++)
+            {
+                IRow row = ws.GetRow(crs[i].Row);
+                if (row != null)
                 {
-                    row.RemoveCell(cell);
+                    ICell cell = row.GetCell(crs[i].Col);
+                    if (cell != null)
+                    {
+                        row.RemoveCell(cell);
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "ClearAllFromName Error");
         }
     }
 

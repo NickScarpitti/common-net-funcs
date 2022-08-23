@@ -1,17 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
-using NPOI.SS.UserModel;
+﻿using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 
 namespace CommonNetCoreFuncs.Excel;
 
 public class NpoiExportHelpers
 {
-    private readonly ILogger<NpoiExportHelpers> logger;
-
-    public NpoiExportHelpers(ILogger<NpoiExportHelpers> logger)
-    {
-        this.logger = logger;
-    }
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
     /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
@@ -20,7 +14,7 @@ public class NpoiExportHelpers
     /// <param name="dataList"></param>
     /// <param name="memoryStream"></param>
     /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
-    public async Task<MemoryStream?> GenericExcelExport<T>(List<T> dataList, MemoryStream? memoryStream = null, bool createTable = false)
+    public static async Task<MemoryStream?> GenericExcelExport<T>(List<T> dataList, MemoryStream? memoryStream = null, bool createTable = false)
     {
         try
         {
@@ -42,13 +36,13 @@ public class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "GenericExcelExport Error");
+            logger.Error(ex, "GenericExcelExport Error");
         }
 
         return new MemoryStream();
     }
 
-    public bool AddGenericTable<T>(XSSFWorkbook wb, List<T> dataList, string sheetName)
+    public static bool AddGenericTable<T>(XSSFWorkbook wb, List<T> dataList, string sheetName)
     {
         bool success = false;
         try
@@ -69,7 +63,7 @@ public class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "AddGenericTable Error");
+            logger.Error(ex, "AddGenericTable Error");
         }
         return success;
     }

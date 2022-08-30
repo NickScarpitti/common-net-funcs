@@ -447,10 +447,18 @@ public static class NpoiCommonHelpers
 
                     ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, props.Length - 1));
 
-                    foreach (var prop in props)
+                    try
                     {
-                        ws.AutoSizeColumn(x, true); //Requires LIBGDI+ to be installed in run environment to work correctly
-                        x++;
+                        foreach (var prop in props)
+                        {
+                            ws.AutoSizeColumn(x, true); //Requires LIBGDI+ to be installed in run environment to work correctly
+                            x++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Error using NPOI AutoSizeColumn", ex);
+                        logger.Warn("libgdiplus library required to use NPOI AutoSizeColumn method");
                     }
                 }
             }

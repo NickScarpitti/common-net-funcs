@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Text.RegularExpressions;
 using NPOI.HSSF.UserModel;
+using NPOI.OpenXmlFormats.Spreadsheet;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS;
 using NPOI.SS.UserModel;
@@ -382,26 +383,6 @@ public static class NpoiCommonHelpers
     {
         try
         {
-            if (createTable)
-            {
-            //    XSSFTable table = ((XSSFSheet)ws).CreateTable();
-            //    CT_Table ctTable = table.GetCTTable();
-
-            //    table.Name = "Data";
-            //    table.DisplayName = "Data";
-            //    ctTable.id = 1;
-            //    ctTable.totalsRowShown = false;
-
-            //    var header = data[0];
-            //    var props = header!.GetType().GetProperties();
-
-            //    foreach (var prop in props)
-            //    {
-            //        ctTable.tableColumns = new();
-            //        ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { name = prop.Name.ToString(), uniqueName = prop.Name.ToString() });
-            //    }
-            }
-
             if (data != null)
             {
                 if (data.Count > 0)
@@ -445,13 +426,43 @@ public static class NpoiCommonHelpers
                         y++;
                     }
 
-                    ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, props.Length - 1));
+                    if (!createTable)
+                    {
+                        ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, props.Length - 1));
+                    }
+                    else 
+                    { 
+                        //Based on code found here: https://stackoverflow.com/questions/65178752/format-a-excel-cell-range-as-a-table-using-npoi
+                        XSSFTable table = ((XSSFSheet)ws).CreateTable();
+                        CT_Table ctTable = table.GetCTTable();
+                        AreaReference dataRange = new(new CellReference(0, 0), new CellReference(y -1 , props.Length - 1));
+                        
+                        ctTable.@ref = dataRange.FormatAsString();
+                        ctTable.id = 1;
+                        ctTable.name = "Data";
+                        ctTable.displayName = "Data";
+                        ctTable.autoFilter = new() { @ref = dataRange.FormatAsString() };
+                        //ctTable.totalsRowShown = false;
+                        ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
+                        ctTable.tableColumns = new() { tableColumn = new() };
+                        
+                        var tableHeader = data[0];
+                        props = tableHeader!.GetType().GetProperties();
+
+
+                        uint i = 1;
+                        foreach (var prop in props)
+                        {
+                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn {id = i, name = prop.Name.ToString() });
+                            i++;
+                        }
+                    }
 
                     try
                     {
                         foreach (var prop in props)
                         {
-                            ws.AutoSizeColumn(x, true); //Requires LIBGDI+ to be installed in run environment to work correctly
+                            ws.AutoSizeColumn(x, true); //Requires LIBGDI+ to be installed in run environment to work correctly (not true for version 2.6.0+)
                             x++;
                         }
                     }

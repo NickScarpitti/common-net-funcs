@@ -165,7 +165,7 @@ public static class ClosedXmlCommonHelpers
     /// <param name="ws"></param>
     /// <param name="data"></param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, List<T> data)
+    public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, List<T> data, bool createTable = false)
     {
         try
         {
@@ -185,10 +185,18 @@ public static class ClosedXmlCommonHelpers
                     {
                         IXLCell c = ws.Cell(y, x);
                         c.Value = prop.Name.ToString();
-                        c.Style = headerStyle;
-                        if (c.Style != null)
+                        if (!createTable) 
                         {
-                            c.Style.Fill.BackgroundColor = headerStyle?.Fill.BackgroundColor;
+                            c.Style = headerStyle;
+
+                            if (c.Style != null)
+                            {
+                                c.Style.Fill.BackgroundColor = headerStyle?.Fill.BackgroundColor;
+                            }
+                        }
+                        else
+                        {
+                            c.Style = bodyStyle; //Use body style since main characteristics will be determined by table style
                         }
                         x++;
                     }
@@ -210,12 +218,35 @@ public static class ClosedXmlCommonHelpers
                         y++;
                     }
 
-                    ws.Range(1, 1, 1, props.Length - 1).SetAutoFilter();
 
-                    foreach (var prop in props)
+                    if (!createTable)
                     {
-                        ws.Column(x).AdjustToContents();
-                        x++;
+                        //Not compatible with table
+                        ws.Range(1, 1, 1, props.Length - 1).SetAutoFilter();
+                    }
+                    else
+                    {
+                        
+                        //Based on code found here: https://github.com/ClosedXML/ClosedXML/wiki/Using-Tables
+                        IXLTable table = ws.Range(1, 1, y - 1, props.Length).CreateTable();
+                        table.ShowTotalsRow = false;
+                        table.ShowRowStripes = true;
+                        table.Theme = XLTableTheme.TableStyleMedium1; //TODO:: Fix formatting
+                        table.ShowAutoFilter = true;
+                    }
+
+                    try
+                    {
+                        foreach (var prop in props)
+                        {
+                            ws.Column(x).AdjustToContents();
+                            x++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Error using NPOI AutoSizeColumn", ex);
+                        logger.Warn("libgdiplus library required to use ClosedXML AutoSizeColumn method");
                     }
                 }
             }

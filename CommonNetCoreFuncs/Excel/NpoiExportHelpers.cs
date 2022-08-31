@@ -42,7 +42,7 @@ public class NpoiExportHelpers
         return new MemoryStream();
     }
 
-    public static bool AddGenericTable<T>(XSSFWorkbook wb, List<T> dataList, string sheetName)
+    public static bool AddGenericTable<T>(XSSFWorkbook wb, List<T> dataList, string sheetName, bool createTable = false)
     {
         bool success = false;
         try
@@ -58,7 +58,7 @@ public class NpoiExportHelpers
             ISheet ws = wb.CreateSheet(actualSheetName);
             if (dataList != null)
             {
-                success = NpoiCommonHelpers.ExportFromTable(wb, ws, dataList);
+                success = NpoiCommonHelpers.ExportFromTable(wb, ws, dataList, createTable);
             }
         }
         catch (Exception ex)

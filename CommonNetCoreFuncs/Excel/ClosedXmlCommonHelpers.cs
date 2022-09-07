@@ -3,6 +3,9 @@ using ClosedXML.Excel;
 
 namespace CommonNetCoreFuncs.Excel;
 
+/// <summary>
+/// Methods to make reading and writing to an excel file easier using NPOI  
+/// </summary>
 public static class ClosedXmlCommonHelpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -161,9 +164,10 @@ public static class ClosedXmlCommonHelpers
     /// Generates a simple excel file containing the passed in data in a tabular format
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="wb"></param>
-    /// <param name="ws"></param>
-    /// <param name="data"></param>
+    /// <param name="wb">IXLWorkbook object to place data into</param>
+    /// <param name="ws">IXLWorksheet object to place data into</param>
+    /// <param name="data">Data to be exported</param>
+    /// <param name="createTable">Make the exported data into an Excel table</param>
     /// <returns>True if excel file was created successfully</returns>
     public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, List<T> data, bool createTable = false)
     {
@@ -231,7 +235,7 @@ public static class ClosedXmlCommonHelpers
                         IXLTable table = ws.Range(1, 1, y - 1, props.Length).CreateTable();
                         table.ShowTotalsRow = false;
                         table.ShowRowStripes = true;
-                        table.Theme = XLTableTheme.TableStyleMedium1; //TODO:: Fix formatting
+                        table.Theme = XLTableTheme.TableStyleMedium1;
                         table.ShowAutoFilter = true;
                     }
 

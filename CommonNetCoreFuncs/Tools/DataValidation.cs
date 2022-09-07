@@ -39,7 +39,7 @@ public static class DataValidation
     /// Validates file extension based on list of valid extensions
     /// </summary>
     /// <param name="fileName"></param>
-    /// <param name="validExtensions"></param>
+    /// <param name="validExtensions">Array of valid file extensions</param>
     /// <returns>True if the file has a valid extension</returns>
     public static bool ValidateFileExtention(this string fileName, string[] validExtensions)
     {
@@ -63,11 +63,11 @@ public static class DataValidation
     }
 
     /// <summary>
-    /// Provides a safe way to add a new dictionary key without having to worry about duplication
+    /// Provides a safe way to add a new Dictionary key without having to worry about duplication
     /// </summary>
-    /// <param name="dict"></param>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
+    /// <param name="dict">Dictionary to add item to</param>
+    /// <param name="key">Key of new item to add to dict</param>
+    /// <param name="value">Value of new item to add to dict</param>
     public static void AddDictionaryItem<K, V>(this Dictionary<K, V?> dict, K key, V? value = default) where K : notnull
     {
         if (!dict.ContainsKey(key))
@@ -76,6 +76,12 @@ public static class DataValidation
         }
     }
 
+    /// <summary>
+    /// Provides a safe way to add a new ConcurrentDictionary key without having to worry about duplication
+    /// </summary>
+    /// <param name="dict">ConcurrentDictionary to add item to</param>
+    /// <param name="key">Key of new item to add to dict</param>
+    /// <param name="value">Value of new item to add to dict</param>
     public static void AddDictionaryItem<K, V>(this ConcurrentDictionary<K, V?> dict, K key, V? value = default) where K : notnull
     {
         if (!dict.ContainsKey(key))

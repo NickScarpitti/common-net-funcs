@@ -10,7 +10,7 @@ public enum EYesNo
 }
 
 /// <summary>
-/// Methods for converting different nullable variable types to string
+/// Methods for converting various variable types to string and vice versa
 /// </summary>
 public static class StringConversion
 {
@@ -18,7 +18,7 @@ public static class StringConversion
     /// Converts Nullable DateTime to string using the passed in formatting
     /// </summary>
     /// <param name="value"></param>
-    /// <param name="format"></param>
+    /// <param name="format">Date time format</param>
     /// <returns>Formatted string representation of the passed in nullable DateTime</returns>
     public static string? ToNString(this DateTime? value, string? format = null)
     {
@@ -35,7 +35,7 @@ public static class StringConversion
     /// Converts Nullable DateTime to string using the passed in formatting
     /// </summary>
     /// <param name="value"></param>
-    /// <param name="format"></param>
+    /// <param name="format">Timespan format</param>
     /// <returns>Formatted string representation of the passed in nullable Timespan</returns>
     public static string? ToNString(this TimeSpan? value, string? format = null)
     {
@@ -98,13 +98,35 @@ public static class StringConversion
     /// </summary>
     /// <param name="value"></param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
-    public static SelectListItem? ToSelectListItem(this string value)
+    public static SelectListItem? ToSelectListItem(this string? value)
     {
         if (value != null)
         {
             return new SelectListItem
             {
                 Text = value,
+                Value = value
+            };
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="text"></param>
+    /// <returns>SelectListItem with text and value properties set to the passed in text and value</returns>
+    public static SelectListItem? ToSelectListItem(this string? value, string? text)
+    {
+        if (value != null && text != null)
+        {
+            return new SelectListItem
+            {
+                Text = text,
                 Value = value
             };
         }
@@ -272,7 +294,7 @@ public static class StringConversion
     /// Get file name safe date in the chosen format
     /// </summary>
     /// <param name="dateFormat"></param>
-    /// <returns></returns>
+    /// <returns>File name safe formatted date</returns>
     public static string GetSafeDate(string dateFormat)
     {
         return DateTime.Today.ToString(dateFormat).Replace("/", "-");
@@ -281,9 +303,9 @@ public static class StringConversion
     /// <summary>
     /// Adds number in () at the end of a file name if it would create a duplicate in the savePath
     /// </summary>
-    /// <param name="savePath"></param>
-    /// <param name="fileName"></param>
-    /// <param name="extension"></param>
+    /// <param name="savePath">Path to get unique name for</param>
+    /// <param name="fileName">File name to make unique</param>
+    /// <param name="extension">File extension</param>
     /// <returns>Unique file name string</returns>
     public static string MakeExportNameUnique(string savePath, string fileName, string extension)
     {

@@ -1,9 +1,11 @@
 ﻿using System.Data;
 using System.Reflection;
-using System.Threading;
 
 namespace CommonNetCoreFuncs.Tools;
 
+/// <summary>
+/// Methods for making asynchronous programming easier
+/// </summary>
 public static class AsyncHelpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -13,9 +15,9 @@ public static class AsyncHelpers
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="UT"></typeparam>
-    /// <param name="obj"></param>
-    /// <param name="propertyName"></param>
-    /// <param name="task"></param>
+    /// <param name="obj">Object to update</param>
+    /// <param name="propertyName">Name of property to update within obj object</param>
+    /// <param name="task">Async task to run that returns the value to assign to the property indicated</param>
     /// <returns></returns>
     public static async Task ObjectUpdate<T, UT>(T? obj, string propertyName, Task<UT> task)
     {
@@ -51,8 +53,8 @@ public static class AsyncHelpers
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="UT"></typeparam>
-    /// <param name="obj"></param>
-    /// <param name="task"></param>
+    /// <param name="obj">Object to insert data into</param>
+    /// <param name="task">Async task that returns the value to insert into obj object</param>
     /// <returns></returns>
     public static async Task ObjectFill<T, UT>(T? obj, Task<UT> task)
     {
@@ -78,8 +80,8 @@ public static class AsyncHelpers
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="UT"></typeparam>
-    /// <param name="obj"></param>
-    /// <param name="task"></param>
+    /// <param name="obj">List object to insert data into</param>
+    /// <param name="task">Async task that returns the list of values to insert into obj object</param>
     /// <returns></returns>
     public static async Task ObjectFill<T>(List<T>? obj, Task<List<T>?> task)
     {
@@ -100,6 +102,12 @@ public static class AsyncHelpers
         }
     }
 
+    /// <summary>
+    /// Task to fill dt variable asynchronously
+    /// </summary>
+    /// <param name="dt">DataTable to insert data into</param>
+    /// <param name="task">Async task that returns a DataTable object to insert into dt</param>
+    /// <returns></returns>
     public static async Task ObjectFill(DataTable dt, Task<DataTable> task)
     {
         try
@@ -118,21 +126,19 @@ public static class AsyncHelpers
     }
 
     /// <summary>
-    /// Task to fill a MemoryStream variable asynchronously
+    /// Task to fill ms variable asynchronously
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="UT"></typeparam>
-    /// <param name="obj"></param>
-    /// <param name="task"></param>
+    /// <param name="ms">MemoryStream to insert data into</param>
+    /// <param name="task">Async task that returns a MemoryStream object to insert into ms</param>
     /// <returns></returns>
-    public static async Task ObjectFill(MemoryStream obj, Task<MemoryStream> task)
+    public static async Task ObjectFill(MemoryStream ms, Task<MemoryStream> task)
     {
         try
         {
             var resultObject = await task;
             if (resultObject != null)
             {
-                resultObject.WriteTo(obj);
+                resultObject.WriteTo(ms);
             }
         }
         catch (Exception ex)

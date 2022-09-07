@@ -13,6 +13,11 @@ public static class DataTableHelpers
 {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
+    /// <summary>
+    /// Parse the DataTables HttpRequest object into the DataTableRequest class
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     public static DataTableRequest GetDataTableRequest(HttpRequest request)
     {
         DataTableRequest dataTableRequest = new();
@@ -72,6 +77,11 @@ public static class DataTableHelpers
         return dataTableRequest;
     }
 
+    /// <summary>
+    /// Transform DataTableRequest into an object that can be used to limit the results sent back from a query why using paging or applying a sort
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     public static SortAndLimitPostModel GetSortAndLimitPostModel(DataTableRequest request)
     {
         return new SortAndLimitPostModel()

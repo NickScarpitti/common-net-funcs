@@ -1,5 +1,8 @@
 ﻿namespace CommonNetCoreFuncs.Tools;
 
+/// <summary>
+/// Helpers for dealing with files
+/// </summary>
 public static class FileHelpers
 {
     /// <summary>

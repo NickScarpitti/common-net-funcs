@@ -39,7 +39,6 @@ public static class RestHelpers<T> where T : class
         {
             logger.Info($"GET URL: {url}");
             HttpResponseMessage response = client.GetAsync(new Uri(url)).Result;
-            //response.EnsureSuccessStatusCode();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -47,6 +46,10 @@ public static class RestHelpers<T> where T : class
                     if (x.IsFaulted) throw x.Exception ?? new();
                     result = JsonConvert.DeserializeObject<T>(x.Result);
                 });
+            }
+            else
+            {
+                logger.Warn($"GET request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
             }
         }
         catch (Exception ex)
@@ -73,9 +76,8 @@ public static class RestHelpers<T> where T : class
         T? result = null;
         try
         {
-            logger.Debug($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
-            //response.EnsureSuccessStatusCode();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -83,6 +85,10 @@ public static class RestHelpers<T> where T : class
                     if (x.IsFaulted) throw x.Exception ?? new();
                     result = JsonConvert.DeserializeObject<T>(x.Result);
                 });
+            }
+            else
+            {
+                logger.Warn($"POST request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
             }
         }
         catch (Exception ex)
@@ -109,9 +115,8 @@ public static class RestHelpers<T> where T : class
         T? result = null;
         try
         {
-            logger.Debug($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
-            //response.EnsureSuccessStatusCode();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -119,6 +124,10 @@ public static class RestHelpers<T> where T : class
                     if (x.IsFaulted) throw x.Exception ?? new();
                     result = JsonConvert.DeserializeObject<T>(x.Result);
                 });
+            }
+            else
+            {
+                logger.Warn($"POST request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
             }
         }
         catch (Exception ex)
@@ -144,9 +153,8 @@ public static class RestHelpers<T> where T : class
         string? result = null;
         try
         {
-            logger.Debug($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
-            //response.EnsureSuccessStatusCode();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -154,6 +162,10 @@ public static class RestHelpers<T> where T : class
                     if (x.IsFaulted) throw x.Exception ?? new();
                     result = x.Result;
                 });
+            }
+            else
+            {
+                logger.Warn($"POST request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
             }
         }
         catch (Exception ex)
@@ -172,15 +184,15 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
-    public static async Task<T?> DeleteRequest(string apiUrl, string? bearerToken = null)
+    public static async Task<T?> DeleteRequest(string url, string? bearerToken = null)
     {
         client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         T? result = null;
         try
         {
-            HttpResponseMessage response = await client.DeleteAsync(apiUrl).ConfigureAwait(false);
-            //response.EnsureSuccessStatusCode();
+            logger.Debug($"DELETE URL: {url}");
+            HttpResponseMessage response = await client.DeleteAsync(url).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -189,10 +201,14 @@ public static class RestHelpers<T> where T : class
                     result = JsonConvert.DeserializeObject<T>(x.Result);
                 });
             }
+            else
+            {
+                logger.Warn($"DELETE request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
+            }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "DeleteRequest Error" + $"URL:{apiUrl}");
+            logger.Error(ex, "DeleteRequest Error" + $"URL:{url}");
         }
         return result;
     }
@@ -201,34 +217,34 @@ public static class RestHelpers<T> where T : class
     /// Executes a PUT request against the provided URL with the putObject in the body
     /// From Source1
     /// </summary>
-    /// <param name="apiUrl">API Url</param>
+    /// <param name="url">API Url</param>
     /// <param name="putObject">The object to be edited</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
-    public static async Task PutRequest(string apiUrl, T putObject, string? bearerToken = null)
+    public static async Task PutRequest(string url, T putObject, string? bearerToken = null)
     {
         client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
-        HttpResponseMessage response = await client.PutAsync(apiUrl, putObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
+        HttpResponseMessage response = await client.PutAsync(url, putObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
     /// <summary>
     /// Executes a PATCH request against the provided URL with the patchDoc in the body and returns the result
     /// </summary>
-    /// <param name="apiUrl"></param>
+    /// <param name="url"></param>
     /// <param name="patchDoc"></param>
     /// <returns></returns>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
-    public static async Task<T?> PatchRequest(string apiUrl, HttpContent patchDoc, string? bearerToken = null)
+    public static async Task<T?> PatchRequest(string url, HttpContent patchDoc, string? bearerToken = null)
     {
         client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         T? result = null;
         try
         {
-            logger.Debug($"POST URL: {apiUrl} | {JsonConvert.SerializeObject(patchDoc)}");
-            HttpResponseMessage response = await client.PatchAsync(apiUrl, patchDoc).ConfigureAwait(false);
+            logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
+            HttpResponseMessage response = await client.PatchAsync(url, patchDoc).ConfigureAwait(false);
             //response.EnsureSuccessStatusCode();
             if (response.IsSuccessStatusCode)
             {
@@ -238,10 +254,14 @@ public static class RestHelpers<T> where T : class
                     result = JsonConvert.DeserializeObject<T>(x.Result);
                 });
             }
+            else
+            {
+                logger.Warn($"PATCH request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
+            }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "PatchRequest Error" + $"URL:{apiUrl}");
+            logger.Error(ex, "PatchRequest Error" + $"URL:{url}");
         }
         return result;
     }

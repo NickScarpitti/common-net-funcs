@@ -11,6 +11,9 @@ using SixLabors.ImageSharp;
 
 namespace CommonNetCoreFuncs.Excel;
 
+/// <summary>
+/// Methods to make reading and writing to an excel file easier using NPOI  
+/// </summary>
 public static class NpoiCommonHelpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -48,7 +51,7 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Get ICell offset from cellReference
     /// </summary>
-    /// <param name="ws"></param>
+    /// <param name="ws">Worksheet that cell is in</param>
     /// <param name="cellReference">Cell reference in A1 notation</param>
     /// <param name="colOffset">X axis offset from the named cell reference</param>
     /// <param name="rowOffset">Y axis offset from the named cell reference</param>
@@ -73,7 +76,7 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Get ICell offset from the startCell
     /// </summary>
-    /// <param name="startCell"></param>
+    /// <param name="startCell">Cell to get offset from</param>
     /// <param name="colOffset">X axis offset from the named cell reference</param>
     /// <param name="rowOffset">Y axis offset from the named cell reference</param>
     /// <returns>ICell object of the specified offset of the startCell</returns>
@@ -97,11 +100,11 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Get ICell offset from the cell indicated with the x and y coordinates
     /// </summary>
-    /// <param name="ws"></param>
+    /// <param name="ws">Worksheet that cell is in</param>
     /// <param name="x">X coordinate of starting cell</param>
     /// <param name="y">Y coordinate of starting cell</param>
-    /// <param name="colOffset">X axis offset from the named cell reference</param>
-    /// <param name="rowOffset">Y axis offset from the named cell reference</param>
+    /// <param name="colOffset">X axis offset from the cell reference</param>
+    /// <param name="rowOffset">Y axis offset from the cell reference</param>
     /// <returns>ICell object of the specified offset of the cell indicated with the x and y coordinates</returns>
     public static ICell? GetCellFromCoordinates(this ISheet ws, int x, int y, int colOffset = 0, int rowOffset = 0)
     {
@@ -122,10 +125,10 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Get ICell offset from the cell with named reference cellName
     /// </summary>
-    /// <param name="wb"></param>
-    /// <param name="cellName"></param>
-    /// <param name="colOffset"></param>
-    /// <param name="rowOffset"></param>
+    /// <param name="wb">Workbook that cell is in</param>
+    /// <param name="cellName">Name of cell being looked for</param>
+    /// <param name="colOffset">X axis offset from the named cell reference<</param>
+    /// <param name="rowOffset">Y axis offset from the named cell reference<</param>
     /// <returns>ICell object of the specified offset of the cell with named reference cellName</returns>
     public static ICell? GetCellFromName(this XSSFWorkbook wb, string cellName, int colOffset = 0, int rowOffset = 0)
     {
@@ -184,8 +187,8 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Clear contents from cell with named reference cellName
     /// </summary>
-    /// <param name="wb"></param>
-    /// <param name="cellName"></param>
+    /// <param name="wb">Workbook that cell is in</param>
+    /// <param name="cellName">Name of cell to clear contents from</param>
     public static void ClearAllFromName(this XSSFWorkbook wb, string cellName)
     {
         try
@@ -242,8 +245,8 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Writes an excel file to the specified path
     /// </summary>
-    /// <param name="wb"></param>
-    /// <param name="path"></param>
+    /// <param name="wb">XSSFWorkbook object to write to a file</param>
+    /// <param name="path">Full file path (including file name) to write wb object to</param>
     /// <returns>True if write was successful</returns>
     public static bool WriteExcelFile(XSSFWorkbook wb, string path)
     {
@@ -267,12 +270,12 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Get cell style based on enum EStyle options
     /// </summary>
-    /// <param name="style"></param>
-    /// <param name="wb"></param>
-    /// <param name="cellLocked"></param>
-    /// <param name="htmlColor"></param>
-    /// <param name="font"></param>
-    /// <param name="alignment"></param>
+    /// <param name="style">Name of preset defined styles to use</param>
+    /// <param name="wb">Workbook the style will be used in</param>
+    /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
+    /// <param name="htmlColor">Cell background color to be used (only used for custom font)</param>
+    /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
+    /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
     public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string? htmlColor = null, NPOI.SS.UserModel.IFont? font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
     {
@@ -344,8 +347,8 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Get font styling based on EFonts option
     /// </summary>
-    /// <param name="font"></param>
-    /// <param name="wb"></param>
+    /// <param name="font">Enum for preset fonts</param>
+    /// <param name="wb">Workbook the font will be used in</param>
     /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
     public static NPOI.SS.UserModel.IFont GetFont(EFonts font, XSSFWorkbook wb)
     {
@@ -373,10 +376,10 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Generates a simple excel file containing the passed in data in a tabular format
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="wb"></param>
-    /// <param name="ws"></param>
-    /// <param name="data"></param>
+    /// <typeparam name="T">Type of data inside of list to be inserted into the workbook</typeparam>
+    /// <param name="wb">Workbook to insert the data into</param>
+    /// <param name="ws">Worksheet to insert the data into</param>
+    /// <param name="data">Data to be inserted into the workbook</param>
     /// <param name="createTable">Turn the output into an Excel table (unused)</param>
     /// <returns>True if excel file was created successfully</returns>
     public static bool ExportFromTable<T>(XSSFWorkbook wb, ISheet ws, List<T> data, bool createTable = false)
@@ -519,8 +522,8 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Writes excel file to a MemoryStream object
     /// </summary>
-    /// <param name="memoryStream"></param>
-    /// <param name="wb"></param>
+    /// <param name="memoryStream">MemoryStream object to write XSSFWorkbook object to</param>
+    /// <param name="wb">XSSFWorkbook object to write into a MemoryStream</param>
     /// <returns></returns>
     public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, XSSFWorkbook wb)
     {
@@ -537,9 +540,9 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
     /// </summary>
-    /// <param name="wb"></param>
-    /// <param name="imageData"></param>
-    /// <param name="cellNames"></param>
+    /// <param name="wb">Workbook to insert images into</param>
+    /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
+    /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
     public static void AddImages(this XSSFWorkbook wb, List<byte[]> imageData, List<string> cellNames)
     {
         if (wb != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
@@ -625,7 +628,7 @@ public static class NpoiCommonHelpers
     /// Gets CellRangeAddress of merged cells
     /// </summary>
     /// <param name="cell"></param>
-    /// <returns>CellRangeAddress of merged cells cell</returns>
+    /// <returns>CellRangeAddress of merged cells</returns>
     public static CellRangeAddress? GetRangeOfMergedCells(this ICell? cell)
     {
         if (cell != null && cell.IsMergedCell)
@@ -681,8 +684,8 @@ public static class NpoiCommonHelpers
     /// Get the height of a specified range in pixels
     /// </summary>
     /// <param name="ws"></param>
-    /// <param name="startCol"></param>
-    /// <param name="endCol"></param>
+    /// <param name="startRow"></param>
+    /// <param name="endRow"></param>
     /// <returns>Double representation of the height of the rows range in pixels</returns>
     public static int GetRangeHeightInPx(this ISheet ws, int startRow, int endRow)
     {
@@ -727,6 +730,12 @@ public static class NpoiCommonHelpers
         return cells;
     }
 
+    /// <summary>
+    /// Adds list validation to all cells specified by cellRangeAddressList
+    /// </summary>
+    /// <param name="ws">ISheet object to add data validation to</param>
+    /// <param name="cellRangeAddressList">Cells to add data validation to</param>
+    /// <param name="options">Options to be used as the valid choices in the drop down</param>
     public static void AddDataValidation(this ISheet ws, CellRangeAddressList cellRangeAddressList, List<string> options)
     {
         IDataValidationHelper validationHelper = ws.GetDataValidationHelper();
@@ -914,7 +923,7 @@ public static class NpoiCommonHelpers
     /// </summary>
     /// <param name="fileStream">Stream of Excel file being read</param>
     /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
-    /// <returns></returns>
+    /// <returns>DataTable object containing the data read from Excel stream</returns>
     public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null)
     {
         DataTable dataTable = new();

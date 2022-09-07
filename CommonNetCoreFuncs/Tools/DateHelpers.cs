@@ -1,5 +1,8 @@
 ﻿namespace CommonNetCoreFuncs.Tools
 {
+    /// <summary>
+    /// Helpers for dealing with DateTimes
+    /// </summary>
     public static class DateHelpers
     {
         /// <summary>

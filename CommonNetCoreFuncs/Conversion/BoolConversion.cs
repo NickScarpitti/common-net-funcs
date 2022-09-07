@@ -1,5 +1,8 @@
 ﻿namespace CommonNetCoreFuncs.Conversion;
 
+/// <summary>
+/// Convert various values into a boolean value that would not work as a direct cast
+/// </summary>
 public static class BoolConversion
 {
     /// <summary>

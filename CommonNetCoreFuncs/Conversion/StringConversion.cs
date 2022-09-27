@@ -94,6 +94,21 @@ public static class StringConversion
     }
 
     /// <summary>
+    /// Converts nullable object to string
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns>String representation of the passed in nullable object</returns>
+    public static string? ToNString(this object? value)
+    {
+        string? output = null;
+        if (value != null)
+        {
+            output = value.ToString();
+        }
+        return output;
+    }
+
+    /// <summary>
     /// Converts value to select list item
     /// </summary>
     /// <param name="value"></param>

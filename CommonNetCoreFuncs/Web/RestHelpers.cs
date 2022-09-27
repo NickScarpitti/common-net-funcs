@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using System.Net.Http.Formatting;
+﻿using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using CommonNetCoreFuncs.Tools;
 using Microsoft.AspNetCore.JsonPatch;

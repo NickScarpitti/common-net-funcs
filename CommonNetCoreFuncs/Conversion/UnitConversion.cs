@@ -1,5 +1,8 @@
 ﻿namespace CommonNetCoreFuncs.Conversion;
 
+/// <summary>
+/// Helper methods for doing unit conversions
+/// </summary>
 public static class UnitConversion
 {
     public const double KgToLbsConst = 2.20462;
@@ -35,7 +38,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert mass in kg to lbs
     /// </summary>
-    /// <param name="massLbs"></param>
+    /// <param name="massKg"></param>
     /// <returns>Double representation of the mass in kg converted to lbs</returns>
     public static double KgToLbs(this double massKg)
     {
@@ -45,7 +48,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert mass in kg to lbs
     /// </summary>
-    /// <param name="massLbs"></param>
+    /// <param name="massKg"></param>
     /// <returns>Double representation of the mass in kg converted to lbs</returns>
     public static double KgToLbs(this double? massKg)
     {
@@ -62,7 +65,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert length in inches to feet
     /// </summary>
-    /// <param name="massLbs"></param>
+    /// <param name="lenIns"></param>
     /// <returns>Double representation of the length in inches converted to feet</returns>
     public static double InsToFt(this double lenIns)
     {
@@ -72,7 +75,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert length in inches to feet
     /// </summary>
-    /// <param name="massLbs"></param>
+    /// <param name="lenIns"></param>
     /// <returns>Double representation of the length in inches converted to feet</returns>
     public static double InsToFt(this double? lenIns)
     {
@@ -89,7 +92,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert length in feet to inches
     /// </summary>
-    /// <param name="massLbs"></param>
+    /// <param name="lenIns"></param>
     /// <returns>Double representation of the length in feet converted to inches</returns>
     public static double FtToIns(this double lenIns)
     {
@@ -99,7 +102,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert length in feet to inches
     /// </summary>
-    /// <param name="massLbs"></param>
+    /// <param name="lenIns"></param>
     /// <returns>Double representation of the length in feet converted to inches</returns>
     public static double FtToIns(this double? lenIns)
     {

@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 
 namespace CommonNetCoreFuncs.Tools;
 
+/// <summary>
+/// Helper methods for complex classes and lists
+/// </summary>
 public static class ObjectHelpers
 {
     /// <summary>
@@ -36,8 +39,8 @@ public static class ObjectHelpers
     /// Set values in an IEnumerable as an extension of linq
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="items"></param>
-    /// <param name="updateMethod"></param>
+    /// <param name="items">Items to have the updateMethod expression performed on</param>
+    /// <param name="updateMethod">Lambda expression of the action to perform</param>
     /// <returns>IEnumerable with values updated according to updateMethod</returns>
     public static IEnumerable<T> SetValue<T>(this IEnumerable<T> items, Action<T> updateMethod)
     {
@@ -85,6 +88,13 @@ public static class ObjectHelpers
         return JsonConvert.DeserializeObject<List<T>>(serialized);
     }
 
+    /// <summary>
+    /// Adds AddRange functionality to ConcurrentBag similar to a list
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="concurrentBag">ConcurrentBag to add list of items to</param>
+    /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
+    /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
     public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T> toAdd, ParallelOptions? parallelOptions = null)
     {
         Parallel.ForEach(toAdd, parallelOptions ?? new(), item =>

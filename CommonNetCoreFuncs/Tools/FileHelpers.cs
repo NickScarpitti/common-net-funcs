@@ -1,5 +1,8 @@
 ﻿namespace CommonNetCoreFuncs.Tools;
 
+/// <summary>
+/// Helpers for dealing with files
+/// </summary>
 public static class FileHelpers
 {
     /// <summary>
@@ -9,6 +12,10 @@ public static class FileHelpers
     /// <returns></returns>
     public static string GetSafeSaveName(this string originalFullFileName)
     {
+        //Remove invalid characters from 
+        originalFullFileName = originalFullFileName.Replace(Path.GetFileName(originalFullFileName), Path.GetFileName(originalFullFileName)
+            .Replace("/", "-").Replace(@"\", "-").Replace(":", ".").Replace("<", "_").Replace(">", "_").Replace(@"""", "'").Replace("|", "_").Replace("?", "_").Replace("*", "_"));
+
         string testPath = Path.GetFullPath(originalFullFileName);
         if (File.Exists(testPath))
         {

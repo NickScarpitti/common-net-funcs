@@ -1,5 +1,8 @@
 ﻿namespace CommonNetCoreFuncs.Tools;
 
+/// <summary>
+/// Helper functions for randomization
+/// </summary>
 public static class Randomizers
 {
     private static readonly Random rng = new();

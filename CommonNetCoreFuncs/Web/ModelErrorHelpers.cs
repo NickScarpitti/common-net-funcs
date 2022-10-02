@@ -3,8 +3,16 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CommonNetCoreFuncs.Web;
 
+/// <summary>
+/// For use with ASP.NET Core ModelStateDictionary
+/// </summary>
 public static class ModelErrorHelpers
 {
+    /// <summary>
+    /// Convert ModelStateDictionary used by ASP.NET Core into a standard dictionary
+    /// </summary>
+    /// <param name="modelState"></param>
+    /// <returns></returns>
     public static Dictionary<string, string?> ParseModelStateErrors(ModelStateDictionary modelState)
     {
         Dictionary<string, string?> errors = new();

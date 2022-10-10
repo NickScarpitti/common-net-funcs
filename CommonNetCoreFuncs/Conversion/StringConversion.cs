@@ -1,4 +1,6 @@
-﻿using CommonNetCoreFuncs.Tools;
+﻿using System.Security.Cryptography;
+using System.Text;
+using CommonNetCoreFuncs.Tools;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CommonNetCoreFuncs.Conversion;
@@ -332,5 +334,61 @@ public static class StringConversion
             i++;
         }
         return outputName;
+    }
+
+    public enum EHashAlgorithm
+    {
+        SHA1,
+        SHA256,
+        SHA384,
+        SHA512,
+        MD5,
+        RSA
+    }
+
+    public static string GetHash(this string originalString, EHashAlgorithm algorithm)
+    {
+        byte[] bytes;
+
+        switch (algorithm)
+        {
+            case EHashAlgorithm.SHA1:
+                using (SHA1 hasher = SHA1.Create())
+                {
+                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
+                }
+                break;
+            case EHashAlgorithm.SHA256:
+                using (SHA256 hasher = SHA256.Create())
+                {
+                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
+                }
+                break;
+            case EHashAlgorithm.SHA384:
+                using (SHA384 hasher = SHA384.Create())
+                {
+                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
+                }
+                break;
+            case EHashAlgorithm.MD5:
+                using (MD5 hasher = MD5.Create())
+                {
+                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
+                }
+                break;
+            case EHashAlgorithm.SHA512: default:
+                using (SHA512 hasher = SHA512.Create())
+                {
+                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
+                }
+                break;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            builder.Append(bytes[i].ToString("x2"));
+        }
+        return builder.ToString();
     }
 }

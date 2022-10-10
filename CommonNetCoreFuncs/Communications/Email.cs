@@ -32,6 +32,10 @@ public static class Email
     /// <param name="bccAddresses"></param>
     /// <param name="attachmentName"></param>
     /// <param name="fileData">Stream of file data you want to attach to the email</param>
+    /// <param name="readReceipt">Whether or not to add a read receipt request to the email</param>
+    /// <param name="readReceiptEmail">Email to send the read receipt to</param>
+    /// <param name="smtpUser">User name for the SMTP server, if required. Requires smtpPassword to be set to use</param>
+    /// <param name="smtpPassword">Password for the SMTP server, if required. Requires smtpUser to be set to use</param>
     /// <returns>Email sent success bool</returns>
     public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, List<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, List<MailAddress>? ccAddresses = null, List<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null, bool readReceipt = false, string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null)
     {

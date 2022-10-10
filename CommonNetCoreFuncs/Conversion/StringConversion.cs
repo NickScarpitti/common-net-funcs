@@ -346,6 +346,12 @@ public static class StringConversion
         RSA
     }
 
+    /// <summary>
+    /// Takes in a string and returns the hashed value of it using the passed in hashing algorithm
+    /// </summary>
+    /// <param name="originalString">String to be hashed</param>
+    /// <param name="algorithm">Which algorithm to use for the hash operation</param>
+    /// <returns>Hash string</returns>
     public static string GetHash(this string originalString, EHashAlgorithm algorithm)
     {
         byte[] bytes;

@@ -486,6 +486,114 @@ public static class NpoiCommonHelpers
     }
 
     /// <summary>
+    /// Generates a simple excel file containing the passed in data in a tabular format
+    /// </summary>
+    /// <param name="wb">Workbook to insert the data into</param>
+    /// <param name="ws">Worksheet to insert the data into</param>
+    /// <param name="data">Data as DataTable to be inserted into the workbook</param>
+    /// <param name="createTable">Turn the output into an Excel table (unused)</param>
+    /// <returns>True if excel file was created successfully</returns>
+    public static bool ExportFromTable(XSSFWorkbook wb, ISheet ws, DataTable data, bool createTable = false)
+    {
+        try
+        {
+            if (data != null)
+            {
+                if (data.Rows.Count > 0)
+                {
+                    ICellStyle headerStyle = GetStyle(EStyles.Header, wb);
+                    ICellStyle bodyStyle = GetStyle(EStyles.Body, wb);
+
+                    int x = 0;
+                    int y = 0;
+
+                    foreach (DataColumn column in data.Columns)
+                    {
+                        ICell? c = ws.GetCellFromCoordinates(x, y);
+                        if (c != null)
+                        {
+                            c.SetCellValue(column.ColumnName);
+                            c.CellStyle = headerStyle;
+                        }
+                        x++;
+                    }
+
+                    x = 0;
+                    y++;
+
+                    foreach (DataRow row in data.Rows)
+                    {
+                        foreach (var value in row.ItemArray)
+                        {
+                            if (value != null)
+                            {
+                                ICell? c = ws.GetCellFromCoordinates(x, y);
+                                if (c != null)
+                                {
+                                    c.SetCellValue(value.ToString());
+                                    c.CellStyle = bodyStyle;
+                                }
+                            }
+                            x++;
+                        }
+                        x = 0;
+                        y++;
+                    }
+
+                    if (!createTable)
+                    {
+                        ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, data.Columns.Count - 1));
+                    }
+                    else
+                    {
+                        //Based on code found here: https://stackoverflow.com/questions/65178752/format-a-excel-cell-range-as-a-table-using-npoi
+                        XSSFTable table = ((XSSFSheet)ws).CreateTable();
+                        CT_Table ctTable = table.GetCTTable();
+                        AreaReference dataRange = new(new CellReference(0, 0), new CellReference(y - 1, data.Rows.Count - 1));
+
+                        ctTable.@ref = dataRange.FormatAsString();
+                        ctTable.id = 1;
+                        ctTable.name = "Data";
+                        ctTable.displayName = "Data";
+                        ctTable.autoFilter = new() { @ref = dataRange.FormatAsString() };
+                        //ctTable.totalsRowShown = false;
+                        ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
+                        ctTable.tableColumns = new() { tableColumn = new() };
+
+
+                        uint i = 1;
+                        foreach (DataColumn column in data.Columns)
+                        {
+                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { id = i, name = column.ColumnName });
+                            i++;
+                        }
+                    }
+
+                    try
+                    {
+                        foreach (DataColumn row in data.Columns)
+                        {
+                            ws.AutoSizeColumn(x, true); //Requires LIBGDI+ to be installed in run environment to work correctly (not true for version 2.6.0+)
+                            x++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Error using NPOI AutoSizeColumn", ex);
+                        logger.Warn("libgdiplus library required to use NPOI AutoSizeColumn method");
+                    }
+                }
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "ExportFromTable Error");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Gets string value contained in cell
     /// </summary>
     /// <param name="cell"></param>

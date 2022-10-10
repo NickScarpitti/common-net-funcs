@@ -29,7 +29,6 @@ public static class RestHelpers<T> where T : class
     /// <param name="url">API Url</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
-    /// <returns>A Task with result object of type T</returns>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
@@ -71,7 +70,6 @@ public static class RestHelpers<T> where T : class
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
-    /// <returns>A Task with created item</returns>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
@@ -113,7 +111,6 @@ public static class RestHelpers<T> where T : class
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
-    /// <returns>A Task with created item</returns>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
@@ -154,7 +151,6 @@ public static class RestHelpers<T> where T : class
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
-    /// <returns>A Task with created item</returns>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
@@ -195,7 +191,6 @@ public static class RestHelpers<T> where T : class
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
-    /// <returns>A Task with created item</returns>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
@@ -254,7 +249,6 @@ public static class RestHelpers<T> where T : class
     /// <param name="patchDoc"></param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
-    /// <returns></returns>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
     public static async Task<T?> PatchRequest(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null)
@@ -310,9 +304,9 @@ public static class RestHelpers<T> where T : class
     /// Compares two JObjects together and populates a JsonPatchDocument with the differences
     /// From Source2
     /// </summary>
-    /// <param name="orig"></param>
-    /// <param name="mod"></param>
-    /// <param name="patch"></param>
+    /// <param name="orig">Original object to be compared to</param>
+    /// <param name="mod">Modified version of the original object</param>
+    /// <param name="patch">The json patch document to write the patch instructions to</param>
     /// <param name="path"></param>
     private static void FillPatchForObject(JObject orig, JObject mod, JsonPatchDocument patch, string path)
     {

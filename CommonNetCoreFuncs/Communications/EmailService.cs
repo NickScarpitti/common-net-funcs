@@ -20,7 +20,7 @@ public class EmailService : IEmailService
 {
     public async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress fromAddress, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null, bool readReceipt = false, string? readReceiptEmail = null)
     {
-        return await Email.SendEmail(smtpServer, smtpPort, fromAddress, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachmentName, fileData);
+        return await Email.SendEmail(smtpServer, smtpPort, fromAddress, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachmentName, fileData, readReceipt, readReceiptEmail, smtpUser, smtpPassword);
     }
 
     public async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress fromAddress, MailAddress toAddress, string? subject, string? body, bool bodyIsHtml = false, IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null, bool readReceipt = false, string? readReceiptEmail = null)
@@ -33,6 +33,6 @@ public class EmailService : IEmailService
     {
         IEnumerable<MailAddress> toAddresses = new List<MailAddress>() { new MailAddress { Name = toAddress, Email = toAddress } };
         MailAddress fromMailAddress = new() { Name = fromAddress, Email = fromAddress };
-        return await Email.SendEmail(smtpServer, smtpPort, fromMailAddress, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachmentName, fileData);
+        return await Email.SendEmail(smtpServer, smtpPort, fromMailAddress, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachmentName, fileData, readReceipt, readReceiptEmail, smtpUser, smtpPassword);
     }
 }

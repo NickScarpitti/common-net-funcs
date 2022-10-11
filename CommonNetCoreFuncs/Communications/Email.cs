@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Net;
+using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MimeKit;
 
@@ -31,6 +32,10 @@ public static class Email
     /// <param name="bccAddresses"></param>
     /// <param name="attachmentName"></param>
     /// <param name="fileData">Stream of file data you want to attach to the email</param>
+    /// <param name="readReceipt">Whether or not to add a read receipt request to the email</param>
+    /// <param name="readReceiptEmail">Email to send the read receipt to</param>
+    /// <param name="smtpUser">User name for the SMTP server, if required. Requires smtpPassword to be set to use</param>
+    /// <param name="smtpPassword">Password for the SMTP server, if required. Requires smtpUser to be set to use</param>
     /// <returns>Email sent success bool</returns>
     public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, 
         IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null, bool readReceipt = false, string? readReceiptEmail = null)
@@ -123,7 +128,15 @@ public static class Email
                     try
                     {
                         using SmtpClient smtpClient = new();
-                        await smtpClient.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.None);
+                        if (!string.IsNullOrWhiteSpace(smtpUser) && !string.IsNullOrWhiteSpace(smtpPassword))
+                        {
+                            await smtpClient.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
+                            await smtpClient.AuthenticateAsync(smtpUser, smtpPassword);
+                        }
+                        else
+                        {
+                            await smtpClient.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.None);
+                        }
                         await smtpClient.SendAsync(email);
                         await smtpClient.DisconnectAsync(true);
                         break;

@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MimeKit;
 
@@ -38,7 +37,8 @@ public static class Email
     /// <param name="smtpPassword">Password for the SMTP server, if required. Requires smtpUser to be set to use</param>
     /// <returns>Email sent success bool</returns>
     public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, 
-        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null, bool readReceipt = false, string? readReceiptEmail = null)
+        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null, bool readReceipt = false, 
+        string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null)
     {
         bool success = true;
         try

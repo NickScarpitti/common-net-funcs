@@ -23,13 +23,13 @@ public static class AsyncHelpers
     {
         try
         {
-            IEnumerable<PropertyInfo>? props = obj?.GetType().GetProperties();
+            PropertyInfo[] props = typeof(T).GetProperties();
             if (props != null && props.Any())
             {
                 PropertyInfo? prop = props.Where(x => x.Name.StrEq(propertyName)).FirstOrDefault();
                 if (prop != null)
                 {
-                    var value = await task;
+                    UT value = await task;
                     prop.SetValue(obj, value);
                 }
                 else
@@ -62,7 +62,7 @@ public static class AsyncHelpers
         {
             if (obj != null)
             {
-                var resultObject = await task;
+                UT resultObject = await task;
                 if (resultObject != null)
                 {
                     resultObject.CopyPropertiesTo(obj);
@@ -83,16 +83,17 @@ public static class AsyncHelpers
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
     /// <returns></returns>
-    public static async Task ObjectFill<T>(List<T>? obj, Task<List<T>?> task)
+    public static async Task ObjectFill<T>(List<T>? obj, Task<IEnumerable<T>?> task)
     {
         try
         {
             if (obj != null)
             {
-                var resultObject = await task;
+                IEnumerable<T>? resultObject = await task;
                 if (resultObject != null)
                 {
                     obj.AddRange(resultObject);
+                    resultObject = null;
                 }
             }
         }
@@ -112,7 +113,7 @@ public static class AsyncHelpers
     {
         try
         {
-            DataTable resultTable = await task;
+            using DataTable resultTable = await task;
             if (resultTable != null)
             {
                 DataTableReader reader = resultTable.CreateDataReader();
@@ -135,7 +136,7 @@ public static class AsyncHelpers
     {
         try
         {
-            var resultObject = await task;
+            using MemoryStream resultObject = await task;
             if (resultObject != null)
             {
                 resultObject.WriteTo(ms);

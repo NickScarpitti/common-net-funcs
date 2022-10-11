@@ -156,7 +156,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="values"></param>
     /// <returns>List of integers where the strings could be parsed to integers and not null</returns>
-    public static List<int> ToListInt(this List<string> values)
+    public static IEnumerable<int> ToListInt(this IEnumerable<string> values)
     {
         return values.Select(x => { return int.TryParse(x, out int i) ? i : (int?)null; }).Where(i => i.HasValue).Select(i => i!.Value).ToList();
     }
@@ -257,7 +257,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="values"></param>
     /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
-    public static List<string>? CleanQueryParam(this List<string>? values)
+    public static IEnumerable<string>? CleanQueryParam(this IEnumerable<string>? values)
     {
         if (values == null)
         {
@@ -273,7 +273,7 @@ public static class StringConversion
             }
         }
 
-        return (cleanValues ?? new()).Where(x => x != null).ToList()!;
+        return (cleanValues ?? new()).Where(x => x != null)!;
     }
 
     /// <summary>
@@ -283,7 +283,7 @@ public static class StringConversion
     /// <param name="parameters">List of a type that can be converted to string</param>
     /// <param name="queryParameterName">The name to be used in front of the equals sign for the query parameter string</param>
     /// <returns>String representation of the list passed in as query parameters with the name passed in as queryParameterName</returns>
-    public static string ListToQueryParameters<T>(this List<T>? parameters, string? queryParameterName)
+    public static string ListToQueryParameters<T>(this IEnumerable<T>? parameters, string? queryParameterName)
     {
         string queryString = string.Empty;
         bool firstItem = true;

@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using NPOI.HSSF.UserModel;
 using NPOI.OpenXmlFormats.Spreadsheet;
@@ -396,9 +397,8 @@ public static class NpoiCommonHelpers
                     int x = 0;
                     int y = 0;
 
-                    var header = data[0];
-                    var props = header!.GetType().GetProperties();
-                    foreach (var prop in props)
+                    PropertyInfo[] props = typeof(T).GetProperties();
+                    foreach (PropertyInfo prop in props)
                     {
                         ICell? c = ws.GetCellFromCoordinates(x, y);
                         if (c != null)
@@ -411,10 +411,9 @@ public static class NpoiCommonHelpers
                     x = 0;
                     y++;
 
-                    foreach (var item in data)
+                    foreach (T item in data)
                     {
-                        var props2 = item!.GetType().GetProperties();
-                        foreach (var prop in props2)
+                        foreach (PropertyInfo prop in props)
                         {
                             var val = prop.GetValue(item) ?? string.Empty;
                             ICell? c = ws.GetCellFromCoordinates(x, y);
@@ -449,12 +448,12 @@ public static class NpoiCommonHelpers
                         ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
                         ctTable.tableColumns = new() { tableColumn = new() };
                         
-                        var tableHeader = data[0];
+                        T tableHeader = data[0];
                         props = tableHeader!.GetType().GetProperties();
 
 
                         uint i = 1;
-                        foreach (var prop in props)
+                        foreach (PropertyInfo prop in props)
                         {
                             ctTable.tableColumns.tableColumn.Add(new CT_TableColumn {id = i, name = prop.Name.ToString() });
                             i++;
@@ -463,7 +462,7 @@ public static class NpoiCommonHelpers
 
                     try
                     {
-                        foreach (var prop in props)
+                        foreach (PropertyInfo prop in props)
                         {
                             ws.AutoSizeColumn(x, true); //Requires LIBGDI+ to be installed in run environment to work correctly (not true for version 2.6.0+)
                             x++;
@@ -523,7 +522,7 @@ public static class NpoiCommonHelpers
 
                     foreach (DataRow row in data.Rows)
                     {
-                        foreach (var value in row.ItemArray)
+                        foreach (object? value in row.ItemArray)
                         {
                             if (value != null)
                             {

@@ -30,7 +30,7 @@ public static class Randomizers
     /// <param name="list"></param>
     public static void LinqShuffle<T>(this IList<T> list)
     {
-        list = list.OrderBy(x => rng.Next()).ToList(); ;
+        list = list.OrderBy(x => rng.Next()).ToList();
     }
 
     /// <summary>

@@ -35,9 +35,9 @@ public class JWTManager : IJWTManager
 			return null;
 		}
 
-		//Generate JSON Web Token if valid request
-		var tokenHandler = new JwtSecurityTokenHandler();
-		var tokenKey = Encoding.UTF8.GetBytes(key);
+        //Generate JSON Web Token if valid request
+        JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+		byte[] tokenKey = Encoding.UTF8.GetBytes(key);
 		SecurityTokenDescriptor tokenDescriptor = new()
 		{
 			Subject = new ClaimsIdentity(new Claim[]

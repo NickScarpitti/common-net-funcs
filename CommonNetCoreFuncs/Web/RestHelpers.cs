@@ -8,6 +8,12 @@ using NLog;
 
 namespace CommonNetCoreFuncs.Web;
 
+public class RestObject<T> where T : class
+{
+    public T? Result { get; set; }
+    public HttpResponseMessage? Response { get; set; }
+}
+
 /// <summary>
 /// Helper functions that send requests to specified URI and return resulting values where applicable
 /// Source1: https://medium.com/@srikanth.gunnala/generic-wrapper-to-consume-asp-net-web-api-rest-service-641b50462c0
@@ -24,7 +30,6 @@ public static class RestHelpers<T> where T : class
 
     /// <summary>
     /// Executes a GET request against the specified URL and returns the result
-    /// From Source1
     /// </summary>
     /// <param name="url">API Url</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
@@ -63,8 +68,46 @@ public static class RestHelpers<T> where T : class
     }
 
     /// <summary>
+    /// Executes a GET request against the specified URL and returns the result RestObject
+    /// </summary>
+    /// <param name="url">API Url</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
+    public static async Task<RestObject<T>> GetRestOject(string url, string? bearerToken = null, double? timeout = null)
+    {
+        using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+        
+        RestObject<T> restObject = new();
+        try
+        {
+            logger.Info($"GET URL: {url}");
+            restObject.Response = client.GetAsync(new Uri(url), tokenSource.Token).Result;
+            if (restObject.Response.IsSuccessStatusCode)
+            {
+                await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                {
+                    if (x.IsFaulted) throw x.Exception ?? new();
+                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                });
+            }
+            else
+            {
+                logger.Warn($"GET request with URL {url} failed with the following response:\n\t{restObject.Response.StatusCode}: {restObject.Response.ReasonPhrase}\nContent:\n\t{restObject.Response.Content}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "Get Error" + $"URL:{url}");
+        }
+        return restObject;
+    }
+
+    /// <summary>
     /// Executes a POST request against the provided URL with the postObject in the body and returns the result
-    /// From Source1
     /// </summary>
     /// <param name="url">API Url</param>
     /// <param name="postObject">The object to be created</param>
@@ -104,8 +147,47 @@ public static class RestHelpers<T> where T : class
     }
 
     /// <summary>
+    /// Executes a POST request against the provided URL with the postObject in the body and returns the result RestObject
+    /// </summary>
+    /// <param name="url">API Url</param>
+    /// <param name="postObject">The object to be created</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
+    public static async Task<RestObject<T>> PostRestObjectRequest(string url, T? postObject, string? bearerToken = null, double? timeout = null)
+    {
+        using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
+        RestObject<T> restObject = new();
+        try
+        {
+            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
+            if (restObject.Response.IsSuccessStatusCode)
+            {
+                await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                {
+                    if (x.IsFaulted) throw x.Exception ?? new();
+                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                });
+            }
+            else
+            {
+                logger.Warn($"POST request with URL {url} failed with the following response:\n\t{restObject.Response.StatusCode}: {restObject.Response.ReasonPhrase}\nContent:\n\t{restObject.Response.Content}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "PostRequest Error" + $"URL:{url}");
+        }
+        return restObject;
+    }
+
+    /// <summary>
     /// Executes a POST request against the provided URL with the postObject in the body and returns the result
-    /// From Source1
     /// </summary>
     /// <param name="url">API Url</param>
     /// <param name="postObject">The object to be created</param>
@@ -142,6 +224,46 @@ public static class RestHelpers<T> where T : class
             logger.Error(ex, "GenericPostRequest Error" + $"URL:{url}");
         }
         return result;
+    }
+
+    /// <summary>
+    /// Executes a POST request against the provided URL with the postObject in the body and returns the result RestObject
+    /// </summary>
+    /// <param name="url">API Url</param>
+    /// <param name="postObject">The object to be created</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
+    public static async Task<RestObject<T>> GenericPostRestObjectRequest<UT>(string url, UT postObject, string? bearerToken = null, double? timeout = null)
+    {
+        using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
+        RestObject<T> restObject = new();
+        try
+        {
+            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
+            if (restObject.Response.IsSuccessStatusCode)
+            {
+                await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                {
+                    if (x.IsFaulted) throw x.Exception ?? new();
+                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                });
+            }
+            else
+            {
+                logger.Warn($"POST request with URL {url} failed with the following response:\n\t{restObject.Response.StatusCode}: {restObject.Response.ReasonPhrase}\nContent:\n\t{restObject.Response.Content}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "GenericPostRequest Error" + $"URL:{url}");
+        }
+        return restObject;
     }
 
     /// <summary>
@@ -185,6 +307,46 @@ public static class RestHelpers<T> where T : class
     }
 
     /// <summary>
+    /// Executes a POST request against the provided URL with the postObject in the body and returns the result in string format inside of a RestObject
+    /// </summary>
+    /// <param name="url">API Url</param>
+    /// <param name="postObject">The object to be created</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>String resulting from the POST request - Null if not success</returns>
+    public static async Task<RestObject<string>> StringPostRestObjectRequest(string url, T postObject, string? bearerToken = null, double? timeout = null)
+    {
+        using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
+        RestObject<string> restObject = new();
+        try
+        {
+            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
+            if (restObject.Response.IsSuccessStatusCode)
+            {
+                await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                {
+                    if (x.IsFaulted) throw x.Exception ?? new();
+                    restObject.Result = x.Result;
+                });
+            }
+            else
+            {
+                logger.Warn($"POST request with URL {url} failed with the following response:\n\t{restObject.Response.StatusCode}: {restObject.Response.ReasonPhrase}\nContent:\n\t{restObject.Response.Content}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "StringPostRequest Error" + $"URL:{url}");
+        }
+        return restObject;
+    }
+
+    /// <summary>
     /// Executes a DELETE request against the provided URL with the deleteObject in the body and returns the result
     /// </summary>
     /// <param name="url">API Url</param>
@@ -225,8 +387,47 @@ public static class RestHelpers<T> where T : class
     }
 
     /// <summary>
+    /// Executes a DELETE request against the provided URL with the deleteObject in the body and returns the result request RestObject
+    /// </summary>
+    /// <param name="url">API Url</param>
+    /// <param name="postObject">The object to be created</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
+    public static async Task<RestObject<T>> DeleteRestObjectRequest(string url, string? bearerToken = null, double? timeout = null)
+    {
+        using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
+        RestObject<T> restObject = new();
+        try
+        {
+            logger.Debug($"DELETE URL: {url}");
+            restObject.Response = await client.DeleteAsync(url, tokenSource.Token).ConfigureAwait(false);
+            if (restObject.Response.IsSuccessStatusCode)
+            {
+                await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                {
+                    if (x.IsFaulted) throw x.Exception ?? new();
+                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                });
+            }
+            else
+            {
+                logger.Warn($"DELETE request with URL {url} failed with the following response:\n\t{restObject.Response.StatusCode}: {restObject.Response.ReasonPhrase}\nContent:\n\t{restObject.Response.Content}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "DeleteRequest Error" + $"URL:{url}");
+        }
+        return restObject;
+    }
+
+    /// <summary>
     /// Executes a PUT request against the provided URL with the putObject in the body
-    /// From Source1
     /// </summary>
     /// <param name="url">API Url</param>
     /// <param name="putObject">The object to be edited</param>
@@ -283,6 +484,46 @@ public static class RestHelpers<T> where T : class
     }
 
     /// <summary>
+    /// Executes a PATCH request against the provided URL with the patchDoc in the body and returns the result
+    /// </summary>
+    /// <param name="url"></param>
+    /// <param name="patchDoc"></param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
+    public static async Task<RestObject<T>> PatchRestObjectRequest(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null)
+    {
+        using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
+        RestObject<T> restObject = new();
+        try
+        {
+            logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
+            restObject.Response = await client.PatchAsync(url, patchDoc, tokenSource.Token).ConfigureAwait(false);
+            //response.EnsureSuccessStatusCode();
+            if (restObject.Response.IsSuccessStatusCode)
+            {
+                await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                {
+                    if (x.IsFaulted) throw x.Exception ?? new();
+                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                });
+            }
+            else
+            {
+                logger.Warn($"PATCH request with URL {url} failed with the following response:\n\t{restObject.Response.StatusCode}: {restObject.Response.ReasonPhrase}\nContent:\n\t{restObject.Response.Content}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "PatchRequest Error" + $"URL:{url}");
+        }
+        return restObject;
+    }
+
+    /// <summary>
     /// Converts two like models to JObjects and passes them into the FillPatchForObject method to create a JSON patch document
     /// From Source2
     /// </summary>
@@ -310,28 +551,28 @@ public static class RestHelpers<T> where T : class
     /// <param name="path"></param>
     private static void FillPatchForObject(JObject orig, JObject mod, JsonPatchDocument patch, string path)
     {
-        var origNames = orig.Properties().Select(x => x.Name).ToArray();
-        var modNames = mod.Properties().Select(x => x.Name).ToArray();
+        string[] origNames = orig.Properties().Select(x => x.Name).ToArray();
+        string[] modNames = mod.Properties().Select(x => x.Name).ToArray();
 
         // Names removed in modified
         foreach (var k in origNames.Except(modNames))
         {
-            var prop = orig.Property(k);
+            JProperty? prop = orig.Property(k);
             patch.Remove(path + prop!.Name);
         }
 
         // Names added in modified
         foreach (var k in modNames.Except(origNames))
         {
-            var prop = mod.Property(k);
+            JProperty? prop = mod.Property(k);
             patch.Add(path + prop!.Name, prop.Value);
         }
 
         // Present in both
         foreach (var k in origNames.Intersect(modNames))
         {
-            var origProp = orig.Property(k);
-            var modProp = mod.Property(k);
+            JProperty? origProp = orig.Property(k);
+            JProperty? modProp = mod.Property(k);
 
             if (origProp?.Value.Type != modProp?.Value.Type)
             {

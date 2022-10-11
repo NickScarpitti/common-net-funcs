@@ -183,9 +183,8 @@ public static class ClosedXmlCommonHelpers
                     int x = 1;
                     int y = 1;
 
-                    var header = data[0];
-                    var props = header!.GetType().GetProperties();
-                    foreach (var prop in props)
+                    PropertyInfo[] props = typeof(T).GetProperties();
+                    foreach (PropertyInfo prop in props)
                     {
                         IXLCell c = ws.Cell(y, x);
                         c.Value = prop.Name.ToString();
@@ -207,10 +206,9 @@ public static class ClosedXmlCommonHelpers
                     x = 1;
                     y++;
 
-                    foreach (var item in data)
+                    foreach (T item in data)
                     {
-                        var props2 = item!.GetType().GetProperties();
-                        foreach (var prop in props2)
+                        foreach (PropertyInfo prop in props)
                         {
                             var val = prop.GetValue(item) ?? string.Empty;
                             IXLCell c = ws.Cell(y, x);
@@ -241,7 +239,7 @@ public static class ClosedXmlCommonHelpers
 
                     try
                     {
-                        foreach (var prop in props)
+                        foreach (PropertyInfo prop in props)
                         {
                             ws.Column(x).AdjustToContents();
                             x++;
@@ -271,7 +269,7 @@ public static class ClosedXmlCommonHelpers
     /// <returns></returns>
     public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, IXLWorkbook wb)
     {
-        MemoryStream tempStream = new();
+        using MemoryStream tempStream = new();
         SaveOptions options = new()
         {
             EvaluateFormulasBeforeSaving = true,

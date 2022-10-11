@@ -18,11 +18,11 @@ public static class ModelErrorHelpers
         Dictionary<string, string?> errors = new();
         foreach (string modelStateKey in modelState.Keys)
         {
-            var value = modelState[modelStateKey];
-            if (value!.Errors.Count > 0)
+            ModelStateEntry? value = modelState[modelStateKey];
+            if (value != null && value.Errors.Count > 0)
             {
                 string? errText = null;
-                foreach (var error in value.Errors)
+                foreach (ModelError error in value.Errors)
                 {
                     errText += error.ErrorMessage + "";
                 }

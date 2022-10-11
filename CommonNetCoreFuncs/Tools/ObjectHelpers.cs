@@ -19,14 +19,14 @@ public static class ObjectHelpers
     /// <param name="dest"></param>
     public static void CopyPropertiesTo<T, TU>(this T source, TU dest)
     {
-        var sourceProps = typeof(T).GetProperties().Where(x => x.CanRead).ToList();
-        var destProps = typeof(TU).GetProperties().Where(x => x.CanWrite).ToList();
+        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
+        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
 
-        foreach (var sourceProp in sourceProps)
+        foreach (PropertyInfo sourceProp in sourceProps)
         {
             if (destProps.Any(x => x.Name == sourceProp.Name))
             {
-                var p = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+                PropertyInfo? p = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
                 if (p != null)
                 {
                     p.SetValue(dest, sourceProp.GetValue(source, null), null);
@@ -58,7 +58,7 @@ public static class ObjectHelpers
     /// <param name="obj"></param>
     public static void TrimObjectStrings<T>(this T obj)
     {
-        List<PropertyInfo>? props = obj?.GetType().GetProperties().ToList();
+        PropertyInfo[] props = typeof(T).GetProperties();
         if (props != null)
         {
             foreach (PropertyInfo prop in props)

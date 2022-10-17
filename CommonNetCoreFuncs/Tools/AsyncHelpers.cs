@@ -83,7 +83,35 @@ public static class AsyncHelpers
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
     /// <returns></returns>
-    public static async Task ObjectFill<T>(List<T>? obj, Task<IEnumerable<T>?> task)
+    public static async Task ObjectFill<T>(this List<T>? obj, Task<List<T>?> task)
+    {
+        try
+        {
+            if (obj != null)
+            {
+                List<T>? resultObject = await task;
+                if (resultObject != null)
+                {
+                    obj.AddRange(resultObject);
+                    resultObject = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "ObjectFill Error");
+        }
+    }
+
+    /// <summary>
+    /// Task to fill list obj variable asynchronously
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="UT"></typeparam>
+    /// <param name="obj">List object to insert data into</param>
+    /// <param name="task">Async task that returns the list of values to insert into obj object</param>
+    /// <returns></returns>
+    public static async Task ObjectFill<T>(this List<T>? obj, Task<IEnumerable<T>?> task)
     {
         try
         {

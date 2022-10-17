@@ -383,13 +383,13 @@ public static class NpoiCommonHelpers
     /// <param name="data">Data to be inserted into the workbook</param>
     /// <param name="createTable">Turn the output into an Excel table (unused)</param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExportFromTable<T>(XSSFWorkbook wb, ISheet ws, List<T> data, bool createTable = false)
+    public static bool ExportFromTable<T>(XSSFWorkbook wb, ISheet ws, IEnumerable<T> data, bool createTable = false)
     {
         try
         {
             if (data != null)
             {
-                if (data.Count > 0)
+                if (data.Any())
                 {
                     ICellStyle headerStyle = GetStyle(EStyles.Header, wb);
                     ICellStyle bodyStyle = GetStyle(EStyles.Body, wb);
@@ -448,7 +448,7 @@ public static class NpoiCommonHelpers
                         ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
                         ctTable.tableColumns = new() { tableColumn = new() };
                         
-                        T tableHeader = data[0];
+                        T tableHeader = data.First();
                         props = tableHeader!.GetType().GetProperties();
 
 

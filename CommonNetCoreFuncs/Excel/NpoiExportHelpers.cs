@@ -19,7 +19,7 @@ public class NpoiExportHelpers
     /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
     /// <param name="createTable">If true, will format the exported data into an Excel table</param>
     /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
-    public static async Task<MemoryStream?> GenericExcelExport<T>(List<T> dataList, MemoryStream? memoryStream = null, bool createTable = false)
+    public static async Task<MemoryStream?> GenericExcelExport<T>(IEnumerable<T> dataList, MemoryStream? memoryStream = null, bool createTable = false)
     {
         try
         {
@@ -91,7 +91,7 @@ public class NpoiExportHelpers
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <returns>True if data was successfully added to the workbook</returns>
-    public static bool AddGenericTable<T>(XSSFWorkbook wb, List<T> dataList, string sheetName, bool createTable = false)
+    public static bool AddGenericTable<T>(XSSFWorkbook wb, IEnumerable<T> dataList, string sheetName, bool createTable = false)
     {
         bool success = false;
         try

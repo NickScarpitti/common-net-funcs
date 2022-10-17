@@ -34,17 +34,6 @@ public static class Randomizers
     }
 
     /// <summary>
-    /// Select a random object from a list of objects
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="list"></param>
-    /// <returns>Randomly selected object</returns>
-    public static T? RandomElement<T>(this IList<T> list)
-    {
-        return list.Skip(rng.Next(list.Count)).FirstOrDefault();
-    }
-
-    /// <summary>
     /// Select a random object from a IEnumerable of objects
     /// </summary>
     /// <typeparam name="T"></typeparam>

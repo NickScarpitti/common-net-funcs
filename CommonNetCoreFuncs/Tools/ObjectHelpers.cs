@@ -48,7 +48,7 @@ public static class ObjectHelpers
         {
             updateMethod(item);
         }
-        return items;
+        return items.ToList();
     }
 
     /// <summary>
@@ -77,12 +77,24 @@ public static class ObjectHelpers
     }
 
     /// <summary>
-    /// Clone one list into another without a reference linking the two
+    /// Clone one IEnumerable into another without a reference linking the two
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="list"></param>
     /// <returns></returns>
-    public static List<T>? Clone<T>(this List<T> list)
+    public static IEnumerable<T>? Clone<T>(this IEnumerable<T> list)
+    {
+        string serialized = JsonConvert.SerializeObject(list);
+        return JsonConvert.DeserializeObject<IEnumerable<T>>(serialized);
+    }
+
+    /// <summary>
+    /// Clone one List into another without a reference linking the two
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="list"></param>
+    /// <returns></returns>
+    public static List<T>? Clone<T>(this IList<T> list)
     {
         string serialized = JsonConvert.SerializeObject(list);
         return JsonConvert.DeserializeObject<List<T>>(serialized);

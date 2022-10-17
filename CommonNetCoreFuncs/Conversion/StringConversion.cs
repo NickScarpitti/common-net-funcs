@@ -160,6 +160,16 @@ public static class StringConversion
     /// <returns>List of integers where the strings could be parsed to integers and not null</returns>
     public static IEnumerable<int> ToListInt(this IEnumerable<string> values)
     {
+        return values.Select(x => { return int.TryParse(x, out int i) ? i : (int?)null; }).Where(i => i.HasValue).Select(i => i!.Value);
+    }
+
+    /// <summary>
+    /// Converts list of string representations of integers into list of integers
+    /// </summary>
+    /// <param name="values"></param>
+    /// <returns>List of integers where the strings could be parsed to integers and not null</returns>
+    public static List<int> ToListInt(this IList<string> values)
+    {
         return values.Select(x => { return int.TryParse(x, out int i) ? i : (int?)null; }).Where(i => i.HasValue).Select(i => i!.Value).ToList();
     }
 
@@ -276,6 +286,30 @@ public static class StringConversion
         }
 
         return (cleanValues ?? new()).Where(x => x != null)!;
+    }
+
+    /// <summary>
+    /// Cleans potential parsing issues out of a list of query parameters
+    /// </summary>
+    /// <param name="values"></param>
+    /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
+    public static List<string>? CleanQueryParam(this IList<string>? values)
+    {
+        if (values == null)
+        {
+            return null;
+        }
+
+        List<string?> cleanValues = new();
+        if (values.Any())
+        {
+            foreach (string? value in values)
+            {
+                cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim());
+            }
+        }
+
+        return (cleanValues ?? new()).Where(x => x != null).ToList()!;
     }
 
     /// <summary>

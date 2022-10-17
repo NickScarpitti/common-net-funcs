@@ -169,13 +169,13 @@ public static class ClosedXmlCommonHelpers
     /// <param name="data">Data to be exported</param>
     /// <param name="createTable">Make the exported data into an Excel table</param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, List<T> data, bool createTable = false)
+    public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, IEnumerable<T> data, bool createTable = false)
     {
         try
         {
             if (data != null)
             {
-                if (data.Count > 0)
+                if (data.Any())
                 {
                     IXLStyle? headerStyle = GetStyle(EStyles.Header, wb);
                     IXLStyle? bodyStyle = GetStyle(EStyles.Body, wb);

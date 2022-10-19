@@ -1016,6 +1016,11 @@ public static class NpoiCommonHelpers
                     }
                 }
             }
+
+            if (wb != null)
+            {
+                wb.Dispose();
+            }
         }
         catch(Exception ex)
         {
@@ -1041,7 +1046,7 @@ public static class NpoiCommonHelpers
             
             if (isXlsx) //Only .xlsx files can have tables
             {
-                XSSFWorkbook wb = new(fileStream);
+                using XSSFWorkbook wb = new(fileStream);
                 ISheet? ws = null;
                 ITable? table = null;
                 if (!string.IsNullOrWhiteSpace(tableName))

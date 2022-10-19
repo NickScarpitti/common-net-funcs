@@ -25,7 +25,7 @@ public class NpoiExportHelpers
         {
             memoryStream ??= new();
 
-            XSSFWorkbook wb = new();
+            using XSSFWorkbook wb = new();
             ISheet ws = wb.CreateSheet("Data");
             if (dataList != null)
             {
@@ -36,6 +36,7 @@ public class NpoiExportHelpers
             }
 
             await memoryStream.WriteFileToMemoryStreamAsync(wb);
+            wb.Close();
 
             return memoryStream;
         }
@@ -60,7 +61,7 @@ public class NpoiExportHelpers
         {
             memoryStream ??= new();
 
-            XSSFWorkbook wb = new();
+            using XSSFWorkbook wb = new();
             ISheet ws = wb.CreateSheet("Data");
             if (datatable != null)
             {
@@ -71,6 +72,7 @@ public class NpoiExportHelpers
             }
 
             await memoryStream.WriteFileToMemoryStreamAsync(wb);
+            wb.Close();
 
             return memoryStream;
         }

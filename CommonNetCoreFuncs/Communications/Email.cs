@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.IO.Compression;
+using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MimeKit;
 
@@ -11,6 +12,12 @@ public class MailAddress
 {
     public string? Name { get; set; }
     public string? Email { get; set; }
+}
+
+public class MailAttachment
+{
+    public string? AttachmentName { get; set; }
+    public Stream? AtttachmentStream { get; set; }
 }
 
 public static class Email
@@ -29,16 +36,16 @@ public static class Email
     /// <param name="bodyIsHtml">Will render body as HTML if true</param>
     /// <param name="ccAddresses"></param>
     /// <param name="bccAddresses"></param>
-    /// <param name="attachmentName"></param>
-    /// <param name="fileData">Stream of file data you want to attach to the email</param>
+    /// <param name="attachmentNames">Enumerable of names for the attachment files. Should be ordered in the same way as the fileData. If missing will use default file name "File #"</param>
+    /// <param name="fileData">Enumerable of Streams of file data you want to attach to the email. Should be ordered in the same way as attachmentNames</param>
     /// <param name="readReceipt">Whether or not to add a read receipt request to the email</param>
     /// <param name="readReceiptEmail">Email to send the read receipt to</param>
     /// <param name="smtpUser">User name for the SMTP server, if required. Requires smtpPassword to be set to use</param>
     /// <param name="smtpPassword">Password for the SMTP server, if required. Requires smtpUser to be set to use</param>
     /// <returns>Email sent success bool</returns>
     public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, 
-        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, string? attachmentName = null, Stream? fileData = null, bool readReceipt = false, 
-        string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null)
+        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, 
+        string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false)
     {
         bool success = true;
         try
@@ -110,11 +117,7 @@ public static class Email
                 if (bodyIsHtml) { bodyBuilder.HtmlBody = body; }
                 else { bodyBuilder.TextBody = body; }
 
-                if (!string.IsNullOrEmpty(attachmentName) && fileData != null)
-                {
-                    fileData.Position = 0; //Must have this to prevent errors writing data to the attachment
-                    bodyBuilder.Attachments.Add(attachmentName, fileData);
-                }
+                await AddAttachments(attachments, bodyBuilder, zipAttachments);
 
                 email.Body = bodyBuilder.ToMessageBody();
 
@@ -175,5 +178,55 @@ public static class Email
             logger.Error(ex, "ConfirmValidEmail Error");
         }
         return isValid;
+    }
+
+    private static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments)
+    {
+        try
+        {
+            if (attachments != null && attachments.Any())
+            {
+                if (!zipAttachments)
+                {
+                    List<Task> tasks = new();
+                    int i = 1;
+                    foreach (MailAttachment attachment in attachments)
+                    {
+                        if (attachment.AtttachmentStream != null)
+                        {
+                            attachment.AtttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
+                            tasks.Add(bodyBuilder.Attachments.AddAsync(attachment.AttachmentName ?? $"File {i}", attachment.AtttachmentStream));
+                            i++;
+                        }
+                    }
+                    await Task.WhenAll(tasks);
+                }
+                else
+                {
+                    int i = 1;
+                    using MemoryStream memoryStream = new();
+                    using ZipArchive archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
+                    foreach (MailAttachment attachment in attachments)
+                    {
+                        if (attachment.AtttachmentStream != null)
+                        {
+                            attachment.AtttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
+                            ZipArchiveEntry entry = archive.CreateEntry(attachment.AttachmentName ?? $"File {i}", CompressionLevel.SmallestSize);
+                            using Stream entryStream = entry.Open();
+                            await attachment.AtttachmentStream.CopyToAsync(entryStream);
+                            await entryStream.FlushAsync();
+                            i++;
+                        }
+                    }
+                    archive.Dispose();
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    await bodyBuilder.Attachments.AddAsync("Files.zip", memoryStream);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "AddAttachments Error");
+        }
     }
 }

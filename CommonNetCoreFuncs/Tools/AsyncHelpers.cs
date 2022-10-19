@@ -144,7 +144,7 @@ public static class AsyncHelpers
             using DataTable resultTable = await task;
             if (resultTable != null)
             {
-                DataTableReader reader = resultTable.CreateDataReader();
+                using DataTableReader reader = resultTable.CreateDataReader();
                 dt.Load(reader);
             }
         }

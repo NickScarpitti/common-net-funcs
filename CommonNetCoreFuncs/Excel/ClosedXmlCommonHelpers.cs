@@ -1,5 +1,7 @@
-﻿using System.Reflection;
+﻿using System.Data;
+using System.Reflection;
 using ClosedXML.Excel;
+using CommonNetCoreFuncs.Conversion;
 
 namespace CommonNetCoreFuncs.Excel;
 
@@ -240,6 +242,105 @@ public static class ClosedXmlCommonHelpers
                     try
                     {
                         foreach (PropertyInfo prop in props)
+                        {
+                            ws.Column(x).AdjustToContents();
+                            x++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Error using NPOI AutoSizeColumn", ex);
+                        logger.Warn("libgdiplus library required to use ClosedXML AutoSizeColumn method");
+                    }
+                }
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "ExportFromTable Error");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Generates a simple excel file containing the passed in data in a tabular format
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="wb">IXLWorkbook object to place data into</param>
+    /// <param name="ws">IXLWorksheet object to place data into</param>
+    /// <param name="data">Data to be exported</param>
+    /// <param name="createTable">Make the exported data into an Excel table</param>
+    /// <returns>True if excel file was created successfully</returns>
+    public static bool ExportFromTable(IXLWorkbook wb, IXLWorksheet ws, DataTable data, bool createTable = false)
+    {
+        try
+        {
+            if (data != null)
+            {
+                if (data.Rows.Count > 0)
+                {
+                    IXLStyle? headerStyle = GetStyle(EStyles.Header, wb);
+                    IXLStyle? bodyStyle = GetStyle(EStyles.Body, wb);
+
+                    int x = 1;
+                    int y = 1;
+
+                    foreach (DataColumn column in data.Columns)
+                    {
+                        IXLCell? c = ws.Cell(y, x);
+                        c.Value = column.ColumnName;
+                        if (!createTable)
+                        {
+                            c.Style = headerStyle;
+
+                            if (c.Style != null)
+                            {
+                                c.Style.Fill.BackgroundColor = headerStyle?.Fill.BackgroundColor;
+                            }
+                        }
+                        else
+                        {
+                            c.Style = bodyStyle; //Use body style since main characteristics will be determined by table style
+                        }
+                        x++;
+                    }
+
+                    x = 1;
+                    y++;
+
+                    foreach (DataRow row in data.Rows)
+                    {
+                        foreach (object? value in row.ItemArray)
+                        {
+                            string val = value.ToNString() ?? string.Empty;
+                            IXLCell c = ws.Cell(y, x);
+                            c.Value = val.ToString();
+                            c.Style = bodyStyle;
+                            x++;
+                        }
+                        x = 1;
+                        y++;
+                    }
+
+                    if (!createTable)
+                    {
+                        //Not compatible with table
+                        ws.Range(1, 1, 1, data.Columns.Count - 1).SetAutoFilter();
+                    }
+                    else
+                    {
+                        //Based on code found here: https://github.com/ClosedXML/ClosedXML/wiki/Using-Tables
+                        IXLTable table = ws.Range(1, 1, y - 1, data.Columns.Count).CreateTable();
+                        table.ShowTotalsRow = false;
+                        table.ShowRowStripes = true;
+                        table.Theme = XLTableTheme.TableStyleMedium1;
+                        table.ShowAutoFilter = true;
+                    }
+
+                    try
+                    {
+                        foreach (DataColumn column in data.Columns)
                         {
                             ws.Column(x).AdjustToContents();
                             x++;

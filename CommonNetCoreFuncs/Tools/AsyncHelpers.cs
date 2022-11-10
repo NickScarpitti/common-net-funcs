@@ -63,10 +63,7 @@ public static class AsyncHelpers
             if (obj != null)
             {
                 UT resultObject = await task;
-                if (resultObject != null)
-                {
-                    resultObject.CopyPropertiesTo(obj);
-                }
+                resultObject?.CopyPropertiesTo(obj);
             }
         }
         catch (Exception ex)
@@ -165,10 +162,7 @@ public static class AsyncHelpers
         try
         {
             using MemoryStream resultObject = await task;
-            if (resultObject != null)
-            {
-                resultObject.WriteTo(ms);
-            }
+            resultObject?.WriteTo(ms);
         }
         catch (Exception ex)
         {

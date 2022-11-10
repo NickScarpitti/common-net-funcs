@@ -721,10 +721,7 @@ public static class NpoiCommonHelpers
                         anchor.Dy2 = -yMargin;
 
                         int pictureIndex = wb.AddPicture(imageData[i], PictureType.PNG);
-                        if (drawing != null)
-                        {
-                            drawing.CreatePicture(anchor, pictureIndex);
-                        }
+                        drawing?.CreatePicture(anchor, pictureIndex);
                     }
                 }
             }
@@ -1017,10 +1014,7 @@ public static class NpoiCommonHelpers
                 }
             }
 
-            if (wb != null)
-            {
-                wb.Dispose();
-            }
+            wb?.Dispose();
         }
         catch(Exception ex)
         {

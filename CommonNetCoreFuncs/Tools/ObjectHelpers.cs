@@ -27,10 +27,7 @@ public static class ObjectHelpers
             if (destProps.Any(x => x.Name == sourceProp.Name))
             {
                 PropertyInfo? p = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
-                if (p != null)
-                {
-                    p.SetValue(dest, sourceProp.GetValue(source, null), null);
-                }
+                p?.SetValue(dest, sourceProp.GetValue(source, null), null);
             }
         }
     }

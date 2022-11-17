@@ -455,7 +455,7 @@ public static class NpoiCommonHelpers
                         uint i = 1;
                         foreach (PropertyInfo prop in props)
                         {
-                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn {id = i, name = prop.Name.ToString() });
+                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { id = i, name = prop.Name.ToString() });
                             i++;
                         }
                     }

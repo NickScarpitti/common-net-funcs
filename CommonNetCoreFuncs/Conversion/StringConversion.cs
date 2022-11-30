@@ -115,20 +115,19 @@ public static class StringConversion
     /// </summary>
     /// <param name="value"></param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
+    public static SelectListItem? ToSelectListItem(this string? value, bool selected)
+    {
+        return value != null ? new SelectListItem { Value= value , Text = value, Selected = selected} : null;
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     public static SelectListItem? ToSelectListItem(this string? value)
     {
-        if (value != null)
-        {
-            return new SelectListItem
-            {
-                Text = value,
-                Value = value
-            };
-        }
-        else
-        {
-            return null;
-        }
+        return value != null ? new SelectListItem { Value = value, Text = value } : null;
     }
 
     /// <summary>
@@ -136,21 +135,21 @@ public static class StringConversion
     /// </summary>
     /// <param name="value"></param>
     /// <param name="text"></param>
-    /// <returns>SelectListItem with text and value properties set to the passed in text and value</returns>
+    /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
+    public static SelectListItem? ToSelectListItem(this string? value, string? text, bool selected)
+    {
+        return value != null && text != null ? new SelectListItem { Value = value, Text = text, Selected = selected } : null;
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="text"></param>
+    /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
     public static SelectListItem? ToSelectListItem(this string? value, string? text)
     {
-        if (value != null && text != null)
-        {
-            return new SelectListItem
-            {
-                Text = text,
-                Value = value
-            };
-        }
-        else
-        {
-            return null;
-        }
+        return value != null && text != null ? new SelectListItem { Value = value, Text = text } : null;
     }
 
     /// <summary>

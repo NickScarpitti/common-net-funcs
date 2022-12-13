@@ -96,6 +96,21 @@ public static class StringConversion
     }
 
     /// <summary>
+    /// Converts nullable decimal to string
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns>String representation of the passed in nullable decimal</returns>
+    public static string? ToNString(this decimal? value)
+    {
+        string? output = null;
+        if (value != null)
+        {
+            output = value.ToString();
+        }
+        return output;
+    }
+
+    /// <summary>
     /// Converts nullable object to string
     /// </summary>
     /// <param name="value"></param>

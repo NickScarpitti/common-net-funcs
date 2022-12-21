@@ -36,6 +36,38 @@ public static class DataValidation
         return true;
     }
 
+
+    /// <summary>
+    /// Compare two class objects for value equality
+    /// </summary>
+    /// <param name="obj1"></param>
+    /// <param name="obj2"></param>
+    /// <param name="exemptProps">Names of properties to not include in the matching check</param>
+    /// <returns>True if both objects contain identical values for all properties except for the ones identified by exemptProps</returns>
+    public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string> exemptProps)
+    {
+        // They're both null.
+        if (obj1 == null && obj2 == null) return true;
+        // One is null, so they can't be the same.
+        if (obj1 == null || obj2 == null) return false;
+        // How can they be the same if they're different types?
+        if (obj1.GetType() != obj1.GetType()) return false;
+        PropertyInfo[] Props = obj1.GetType().GetProperties();
+        foreach (PropertyInfo prop in Props)
+        {
+            if (!exemptProps.Contains(prop.Name))
+            {
+                var aPropValue = prop.GetValue(obj1) ?? string.Empty;
+                var bPropValue = prop.GetValue(obj2) ?? string.Empty;
+                if (aPropValue.ToString() != bPropValue.ToString())
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     /// <summary>
     /// Validates file extension based on list of valid extensions
     /// </summary>

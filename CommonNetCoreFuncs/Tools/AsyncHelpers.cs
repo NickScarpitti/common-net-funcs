@@ -3,6 +3,16 @@ using System.Reflection;
 
 namespace CommonNetCoreFuncs.Tools;
 
+public class AsyncIntString
+{
+    public AsyncIntString()
+    {
+        AsyncString = string.Empty;
+    }
+    public int AsyncInt { get; set; }
+    public string AsyncString { get; set; }
+}
+
 /// <summary>
 /// Methods for making asynchronous programming easier
 /// </summary>

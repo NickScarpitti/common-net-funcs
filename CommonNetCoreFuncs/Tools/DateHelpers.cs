@@ -23,7 +23,7 @@
             DateTime sDate = (DateTime)startDate;
             DateTime eDate = (DateTime)endDate;
 
-            double calcBusinessDays = 1 + ((eDate - sDate).TotalDays * 5 - (sDate.DayOfWeek - eDate.DayOfWeek) * 2) / 7;
+            decimal calcBusinessDays = 1 + ((decimal)(eDate - sDate).TotalDays * 5m - (sDate.DayOfWeek - eDate.DayOfWeek) * 2m) / 7m;
 
             if (eDate.DayOfWeek == DayOfWeek.Saturday) calcBusinessDays--;
             if (sDate.DayOfWeek == DayOfWeek.Sunday) calcBusinessDays--;

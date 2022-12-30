@@ -97,6 +97,21 @@ public static class StringConversion
     }
 
     /// <summary>
+    /// Converts nullable decimal to string
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns>String representation of the passed in nullable decimal</returns>
+    public static string? ToNString(this decimal? value)
+    {
+        string? output = null;
+        if (value != null)
+        {
+            output = value.ToString();
+        }
+        return output;
+    }
+
+    /// <summary>
     /// Converts nullable object to string
     /// </summary>
     /// <param name="value"></param>
@@ -114,7 +129,7 @@ public static class StringConversion
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">Value to be used for both Value and Text properties</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     public static SelectListItem? ToSelectListItem(this string? value, bool selected)
     {
@@ -124,7 +139,7 @@ public static class StringConversion
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">Value to be used for both Value and Text properties</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     public static SelectListItem? ToSelectListItem(this string? value)
     {
@@ -134,8 +149,8 @@ public static class StringConversion
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value"></param>
-    /// <param name="text"></param>
+    /// <param name="value">Value to be used for the Value property</param>
+    /// <param name="text">Value to be used for the Text property</param>
     /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
     public static SelectListItem? ToSelectListItem(this string? value, string? text, bool selected)
     {
@@ -145,8 +160,8 @@ public static class StringConversion
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value"></param>
-    /// <param name="text"></param>
+    /// <param name="value">Value to be used for the Value property</param>
+    /// <param name="text">Value to be used for the Text property</param>
     /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
     public static SelectListItem? ToSelectListItem(this string? value, string? text)
     {

@@ -24,23 +24,34 @@ public static class FileHelpers
         if (File.Exists(testPath))
         {
             //Update name
-            string oldFileName = Path.GetFileName(originalFullFileName);
-            string ext = Path.GetExtension(oldFileName);
-            oldFileName = oldFileName.Replace(ext, null);
-            string newFullFileName = originalFullFileName;
             int i = 0;
+            string ext = Path.GetExtension(originalFullFileName);
+            string oldFileName = Path.GetFileName(originalFullFileName).Replace(ext, null);
             while (File.Exists(testPath))
             {
-                newFullFileName = originalFullFileName.Replace(oldFileName + ext, $"{oldFileName} ({i}){ext}");
-                testPath = Path.GetFullPath(newFullFileName);
+                testPath = Path.GetFullPath(originalFullFileName.Replace(oldFileName + ext, $"{oldFileName} ({i}){ext}"));
                 i++;
             }
-            return newFullFileName;
         }
-        else
+        return testPath;
+    }
+
+    public static string GetSafeSaveName(string path, string fileName)
+    {
+        fileName = fileName.Replace("/", "-").Replace(@"\", "-").Replace(":", ".").Replace("<", "_").Replace(">", "_").Replace(@"""", "'").Replace("|", "_").Replace("?", "_").Replace("*", "_");
+        
+        string testPath = Path.GetFullPath(Path.Combine(path, fileName));
+        if (File.Exists(testPath))
         {
-            return originalFullFileName;
+            int i = 0;
+            string extension = Path.GetExtension(fileName);
+            while (File.Exists(testPath))
+            {
+                testPath = Path.GetFullPath(Path.Combine(path, $"{fileName.Replace(extension, string.Empty)} ({i}){extension}"));
+                i++;
+            }
         }
+        return Path.GetFileName(testPath);
     }
 
     public static async Task AddFileToZip(this ZipArchive archive, ZipFile? zipFile, int fileCount)

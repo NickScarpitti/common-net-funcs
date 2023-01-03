@@ -1,4 +1,6 @@
-﻿namespace CommonNetCoreFuncs.Tools;
+﻿using System.Globalization;
+
+namespace CommonNetCoreFuncs.Tools;
 
 /// <summary>
 /// Helper functions for complex math operations
@@ -75,5 +77,31 @@ public static class MathHelpers
         }
 
         return Convert.ToDecimal(value);
+    }
+
+    /// <summary>
+    /// Get the number of decimal places of a decimal value
+    /// </summary>
+    /// <param name="value">Value to get the precision of</param>
+    /// <returns>The number of decimal places of the given double value</returns>
+    public static int GetPrecision(this decimal? value)
+    {
+        if (value == null) { return 0; }
+        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
+        int position = value.ToString()!.IndexOf(decimalSeparator);
+        return (position == -1) ? 0 : value.ToString()!.Length - position - 1;
+    }
+
+    /// <summary>
+    /// Get the number of decimal places of a double value
+    /// </summary>
+    /// <param name="value">Value to get the precision of</param>
+    /// <returns>The number of decimal places of the given double value</returns>
+    public static int GetPrecision(this double? value)
+    {
+        if (value == null) { return 0; }
+        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
+        int position = value.ToString()!.IndexOf(decimalSeparator);
+        return (position == -1) ? 0 : value.ToString()!.Length - position - 1;
     }
 }

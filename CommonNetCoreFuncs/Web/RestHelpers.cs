@@ -578,6 +578,33 @@ public static class RestHelpers<T> where T : class
             {
                 patch.Replace(path + modProp?.Name, modProp?.Value);
             }
+            else if(origProp?.Value.Type == JTokenType.Float)
+            {
+                decimal? origDec = null;
+                decimal? modDec = null;
+                if(decimal.TryParse(origProp?.Value.ToString(Formatting.None), out decimal origDecimal))
+                {
+                    origDec = origDecimal;
+                }
+                if (decimal.TryParse(modProp?.Value.ToString(Formatting.None), out decimal modDecimal))
+                {
+                    modDec = modDecimal;
+                }
+
+                if (modDec != origDec)
+                {
+                    if (origProp?.Value.Type == JTokenType.Object)
+                    {
+                        // Recurse into objects
+                        FillPatchForObject(origProp.Value as JObject ?? new(), modProp?.Value as JObject ?? new(), patch, path + modProp?.Name + "/");
+                    }
+                    else
+                    {
+                        // Replace values directly
+                        patch.Replace(path + modProp?.Name, modProp?.Value);
+                    }
+                }                
+            }
             else if ((!(origProp?.Value.ToString(Formatting.None) ?? null).StrEq(modProp?.Value.ToString(Formatting.None)) && origProp?.Value.Type != JTokenType.Date))
             {
                 if (origProp?.Value.Type == JTokenType.Object)

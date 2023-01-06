@@ -117,23 +117,113 @@ public static class UnitConversion
     }
 
     /// <summary>
-    /// Convert bits to Mb
+    /// Convert bytes to Kb
     /// </summary>
-    /// <param name="bits"></param>
-    /// <returns>Decimal representation of the number of bits in Mb</returns>
-    public static decimal BitsToMb(this int bits)
+    /// <param name="bytes"></param>
+    /// <returns>Decimal representation of the number of bytes in Kb</returns>
+    public static decimal BytesToKb(this int bytes)
     {
-        return Math.Round(bits / 1048576m, 1, MidpointRounding.AwayFromZero);
+        return Math.Round(bytes / 1024m, 1, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
-    /// Convert bits to Mb
+    /// Convert bytes to Kb
     /// </summary>
-    /// <param name="bits"></param>
-    /// <returns>Decimal representation of the number of bits in Mb</returns>
-    public static decimal BitsToMb(this long bits)
+    /// <param name="bytes"></param>
+    /// <returns>Decimal representation of the number of bytes in Kb</returns>
+    public static decimal BytesToKb(this long bytes)
     {
-        return Math.Round(bits / 1048576m, 1, MidpointRounding.AwayFromZero);
+        return Math.Round(bytes / 1024m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert bytes to Mb
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <returns>Decimal representation of the number of bytes in Mb</returns>
+    public static decimal BytesToMb(this int bytes)
+    {
+        return Math.Round(bytes / 1048576m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert bytes to Mb
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <returns>Decimal representation of the number of bytes in Mb</returns>
+    public static decimal BytesToMb(this long bytes)
+    {
+        return Math.Round(bytes / 1048576m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert bytes to Gb
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <returns>Decimal representation of the number of bytes in Gb</returns>
+    public static decimal BytesToGb(this int bytes)
+    {
+        return Math.Round(bytes / 1073741824m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert bytes to Gb
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <returns>Decimal representation of the number of bytes in Gb</returns>
+    public static decimal BytesToGb(this long bytes)
+    {
+        return Math.Round(bytes / 1073741824m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert bytes to Tb
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <returns>Decimal representation of the number of bytes in Tb</returns>
+    public static decimal BytesToTb(this int bytes)
+    {
+        return Math.Round(bytes / 1099511627776m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert bytes to Tb
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <returns>Decimal representation of the number of bytes in Tb</returns>
+    public static decimal BytesToTb(this long bytes)
+    {
+        return Math.Round(bytes / 1099511627776m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Kb to Mb
+    /// </summary>
+    /// <param name="kb"></param>
+    /// <returns>Decimal representation of the number of Kb in Mb</returns>
+    public static decimal KbToMb(this decimal kb)
+    {
+        return Math.Round(kb / 1024m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Kb to Gb
+    /// </summary>
+    /// <param name="kb"></param>
+    /// <returns>Decimal representation of the number of Kb in Gb</returns>
+    public static decimal KbToGb(this decimal kb)
+    {
+        return Math.Round(kb / 1048576m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Kb to Tb
+    /// </summary>
+    /// <param name="kb"></param>
+    /// <returns>Decimal representation of the number of Kb in Tb</returns>
+    public static decimal KbToTb(this decimal kb)
+    {
+        return Math.Round(kb / 1073741824m, 1, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -144,5 +234,51 @@ public static class UnitConversion
     public static decimal MbToGb(this decimal mb)
     {
         return Math.Round(mb / 1024m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Mb to Tb
+    /// </summary>
+    /// <param name="mb"></param>
+    /// <returns>Decimal representation of the number of Mb in Tb</returns>
+    public static decimal MbToTb(this decimal mb)
+    {
+        return Math.Round(mb / 1048576m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Mb to Tb
+    /// </summary>
+    /// <param name="Gb"></param>
+    /// <returns>Decimal representation of the number of Gb in Tb</returns>
+    public static decimal GbToTb(this decimal Gb)
+    {
+        return Math.Round(Gb / 1024m, 1, MidpointRounding.AwayFromZero);
+    }
+
+    public static string GetFileSizeFromBytesWithUnits(this long bytes)
+    {
+        bytes = Math.Abs(bytes);
+        return bytes > 1024 ? bytes.BytesToKb() > 1024 ? bytes.BytesToMb() > 1024 ? bytes.BytesToGb() > 1024 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" :  $"{bytes} B";
+    }
+
+    public static string GetFileSizeFromBytesWithUnits(this long? nullBytes)
+    {
+        if (nullBytes == null) { return "-0"; }
+        long bytes = Math.Abs((long)nullBytes);
+        return bytes > 1024 ? bytes.BytesToKb() > 1024 ? bytes.BytesToMb() > 1024 ? bytes.BytesToGb() > 1024 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
+    }
+
+    public static string GetFileSizeFromBytesWithUnits(this int bytes)
+    {
+        bytes = Math.Abs(bytes);
+        return bytes > 1024 ? bytes.BytesToKb() > 1024 ? bytes.BytesToMb() > 1024 ? bytes.BytesToGb() > 1024 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
+    }
+
+    public static string GetFileSizeFromBytesWithUnits(this int? nullBytes)
+    {
+        if (nullBytes == null) { return "-0"; }
+        int bytes = Math.Abs((int)nullBytes);
+        return bytes > 1024 ? bytes.BytesToKb() > 1024 ? bytes.BytesToMb() > 1024 ? bytes.BytesToGb() > 1024 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
     }
 }

@@ -259,26 +259,26 @@ public static class UnitConversion
     public static string GetFileSizeFromBytesWithUnits(this long bytes)
     {
         bytes = Math.Abs(bytes);
-        return bytes > 1024 ? bytes.BytesToKb() > 1024 ? bytes.BytesToMb() > 1024 ? bytes.BytesToGb() > 1024 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" :  $"{bytes} B";
+        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" :  $"{bytes} B";
     }
 
     public static string GetFileSizeFromBytesWithUnits(this long? nullBytes)
     {
         if (nullBytes == null) { return "-0"; }
         long bytes = Math.Abs((long)nullBytes);
-        return bytes > 1024 ? bytes.BytesToKb() > 1024 ? bytes.BytesToMb() > 1024 ? bytes.BytesToGb() > 1024 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
+        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
     }
 
     public static string GetFileSizeFromBytesWithUnits(this int bytes)
     {
         bytes = Math.Abs(bytes);
-        return bytes > 1024 ? bytes.BytesToKb() > 1024 ? bytes.BytesToMb() > 1024 ? bytes.BytesToGb() > 1024 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
+        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
     }
 
     public static string GetFileSizeFromBytesWithUnits(this int? nullBytes)
     {
         if (nullBytes == null) { return "-0"; }
         int bytes = Math.Abs((int)nullBytes);
-        return bytes > 1024 ? bytes.BytesToKb() > 1024 ? bytes.BytesToMb() > 1024 ? bytes.BytesToGb() > 1024 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
+        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
     }
 }

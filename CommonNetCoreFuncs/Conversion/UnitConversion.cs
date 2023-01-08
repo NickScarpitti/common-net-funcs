@@ -256,29 +256,50 @@ public static class UnitConversion
         return Math.Round(Gb / 1024m, 1, MidpointRounding.AwayFromZero);
     }
 
-    public static string GetFileSizeFromBytesWithUnits(this long bytes)
+    public static string GetFileSizeFromBytesWithUnits(this long inputBytes)
     {
-        bytes = Math.Abs(bytes);
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" :  $"{bytes} B";
+        long bytes = Math.Abs(inputBytes);
+        long multiplier = 1;
+        if (bytes > inputBytes)
+        {
+            multiplier = -1;
+        }
+        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" :  $"{bytes * multiplier} B";
     }
 
     public static string GetFileSizeFromBytesWithUnits(this long? nullBytes)
     {
         if (nullBytes == null) { return "-0"; }
         long bytes = Math.Abs((long)nullBytes);
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
+
+        long multiplier = 1;
+        if (bytes > nullBytes)
+        {
+            multiplier = -1;
+        }
+        return (bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B");
     }
 
-    public static string GetFileSizeFromBytesWithUnits(this int bytes)
+    public static string GetFileSizeFromBytesWithUnits(this int inputBytes)
     {
-        bytes = Math.Abs(bytes);
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
+        int bytes = Math.Abs(inputBytes);
+        int multiplier = 1;
+        if (bytes > inputBytes)
+        {
+            multiplier = -1;
+        }
+        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B";
     }
 
     public static string GetFileSizeFromBytesWithUnits(this int? nullBytes)
     {
         if (nullBytes == null) { return "-0"; }
         int bytes = Math.Abs((int)nullBytes);
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb()} TB" : $"{bytes.BytesToGb()} GB" : $"{bytes.BytesToMb()} MB" : $"{bytes.BytesToTb()} KB" : $"{bytes} B";
+        int multiplier = 1;
+        if (bytes > nullBytes)
+        {
+            multiplier = -1;
+        }
+        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B";
     }
 }

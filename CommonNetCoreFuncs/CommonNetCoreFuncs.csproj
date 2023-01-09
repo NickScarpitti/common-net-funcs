@@ -17,7 +17,7 @@
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
-    <FileVersion>1.1.0</FileVersion>
+    <FileVersion>1.2.0</FileVersion>
     <PackageReleaseNotes>BREAKING CHANGE:
 Email attachments now use an IEnumerable of the EmailAttachment class instead of separate single file name and Stream data object </PackageReleaseNotes>
   </PropertyGroup>

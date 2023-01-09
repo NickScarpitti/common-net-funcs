@@ -17,6 +17,11 @@ public static class MathHelpers
     {
         value ??= 0;
 
+        if (significance == 0)
+        {
+            return Math.Ceiling((double)value);
+        }
+
         if ((value % significance) != 0)
         {
             return ((int)(value / significance) * significance) + significance;
@@ -34,6 +39,11 @@ public static class MathHelpers
     public static decimal Ceiling(this decimal? value, decimal significance)
     {
         value ??= 0;
+
+        if (significance == 0)
+        {
+            return Math.Ceiling((decimal)value);
+        }
 
         if ((value % significance) != 0)
         {
@@ -53,6 +63,11 @@ public static class MathHelpers
     {
         value ??= 0;
 
+        if (significance == 0)
+        {
+            return Math.Floor((double)value);
+        }
+
         if ((value % significance) != 0)
         {
             return ((int)(value / significance) * significance);
@@ -70,6 +85,11 @@ public static class MathHelpers
     public static decimal Floor(this decimal? value, decimal significance)
     {
         value ??= 0;
+
+        if (significance == 0)
+        {
+            return Math.Floor((decimal)value);
+        }
 
         if ((value % significance) != 0)
         {

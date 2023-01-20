@@ -20,16 +20,16 @@ public static class CsvHelperExportHelpers
         memoryStream ??= new();
         using MemoryStream sourceMemoryStream = new();
         using StreamWriter streamWriter = new StreamWriter(sourceMemoryStream);
-        //headers    
+        //Headers    
         for (int i = 0; i < dataTable.Columns.Count; i++)
         {
-            streamWriter.Write(dataTable.Columns[i]);
+            await streamWriter.WriteAsync(dataTable.Columns[i].ToNString());
             if (i < dataTable.Columns.Count - 1)
             {
-                streamWriter.Write(",");
+                await streamWriter.WriteAsync(",");
             }
         }
-        streamWriter.Write(streamWriter.NewLine);
+        await streamWriter.WriteAsync(streamWriter.NewLine);
         foreach (DataRow row in dataTable.Rows)
         {
             for (int i = 0; i < dataTable.Columns.Count; i++)
@@ -40,19 +40,19 @@ public static class CsvHelperExportHelpers
                     if (value?.Contains(',') ?? false)
                     {
                         value = string.Format("\"{0}\"", value);
-                        streamWriter.Write(value);
+                        await streamWriter.WriteAsync(value);
                     }
                     else
                     {
-                        streamWriter.Write(row[i].ToNString());
+                        await streamWriter.WriteAsync(row[i].ToNString());
                     }
                 }
                 if (i < dataTable.Columns.Count - 1)
                 {
-                    streamWriter.Write(",");
+                    await streamWriter.WriteAsync(",");
                 }
             }
-            streamWriter.Write(streamWriter.NewLine);
+            await streamWriter.WriteAsync(streamWriter.NewLine);
         }
         
         await streamWriter.FlushAsync();

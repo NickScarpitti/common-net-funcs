@@ -73,7 +73,8 @@ public class GenericCompare<T> : IEqualityComparer<T>
         string? allProps = null;
         if (props != null)
         {
-            foreach (PropertyInfo prop in props)
+            //Order by here makes this consistent
+            foreach (PropertyInfo prop in props.OrderBy(x => x.Name))
             {
                 var propValue = prop.GetValue(obj) ?? string.Empty;
                 allProps += propValue;

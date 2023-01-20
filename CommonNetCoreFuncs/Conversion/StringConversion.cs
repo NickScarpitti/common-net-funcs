@@ -1,4 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
+﻿using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using CommonNetCoreFuncs.Tools;
@@ -291,13 +291,13 @@ public static class StringConversion
             return null;
         }
 
-        List<string?> cleanValues = new();
+        ConcurrentBag<string?> cleanValues = new();
         if (values.Any())
         {
-            foreach (string? value in values)
+            Parallel.ForEach(values, value =>
             {
                 cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim());
-            }
+            });
         }
 
         return (cleanValues ?? new()).Where(x => x != null)!;
@@ -315,13 +315,13 @@ public static class StringConversion
             return null;
         }
 
-        List<string?> cleanValues = new();
+        ConcurrentBag<string?> cleanValues = new();
         if (values.Any())
         {
-            foreach (string? value in values)
+            Parallel.ForEach(values, value =>
             {
                 cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim());
-            }
+            });
         }
 
         return (cleanValues ?? new()).Where(x => x != null).ToList()!;

@@ -20,7 +20,7 @@ public static class ObjectHelpers
     public static void CopyPropertiesTo<T, TU>(this T source, TU dest)
     {
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
+        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite).ToList();
 
         foreach (PropertyInfo sourceProp in sourceProps)
         {
@@ -29,7 +29,7 @@ public static class ObjectHelpers
                 PropertyInfo? p = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
                 p?.SetValue(dest, sourceProp.GetValue(source, null), null);
             }
-        }
+        };
     }
 
     /// <summary>
@@ -116,17 +116,17 @@ public static class ObjectHelpers
     }
 
     /// <summary>
-    /// Adds AddRange functionality to ConcurrentBag similar to a list
+    /// Adds AddRange functionality to ConcurrentBag similar to a list. Skips null items
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="concurrentBag">ConcurrentBag to add list of items to</param>
     /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
     /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
-    public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T> toAdd, ParallelOptions? parallelOptions = null)
+    public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null)
     {
-        Parallel.ForEach(toAdd, parallelOptions ?? new(), item =>
+        Parallel.ForEach(toAdd.Where(x => x != null), parallelOptions ?? new(), item =>
         {
-            concurrentBag.Add(item);
+            concurrentBag.Add(item!);
         });
     }
 }

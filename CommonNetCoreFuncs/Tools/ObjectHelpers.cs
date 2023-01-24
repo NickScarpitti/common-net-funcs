@@ -20,7 +20,7 @@ public static class ObjectHelpers
     public static void CopyPropertiesTo<T, TU>(this T source, TU dest)
     {
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite).ToList();
+        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
 
         foreach (PropertyInfo sourceProp in sourceProps)
         {

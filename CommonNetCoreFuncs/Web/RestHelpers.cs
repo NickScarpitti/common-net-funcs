@@ -40,13 +40,13 @@ public static class RestHelpers<T> where T : class
     public static async Task<T?> Get(string url, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         T? result = null;
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Info($"GET URL: {url}");
-            HttpResponseMessage response = client.GetAsync(new Uri(url), tokenSource.Token).Result;
+            HttpResponseMessage response = await client.GetAsync(new Uri(url), tokenSource.Token);
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -79,13 +79,13 @@ public static class RestHelpers<T> where T : class
     public static async Task<RestObject<T>> GetRestOject(string url, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
         
         RestObject<T> restObject = new();
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Info($"GET URL: {url}");
-            restObject.Response = client.GetAsync(new Uri(url), tokenSource.Token).Result;
+            restObject.Response = await client.GetAsync(new Uri(url), tokenSource.Token);
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -119,11 +119,11 @@ public static class RestHelpers<T> where T : class
     public static async Task<T?> PostRequest(string url, T? postObject, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         T? result = null;
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
@@ -159,11 +159,11 @@ public static class RestHelpers<T> where T : class
     public static async Task<RestObject<T>> PostRestObjectRequest(string url, T? postObject, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         RestObject<T> restObject = new();
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
             if (restObject.Response.IsSuccessStatusCode)
@@ -199,11 +199,11 @@ public static class RestHelpers<T> where T : class
     public static async Task<T?> GenericPostRequest<UT>(string url, UT postObject, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         T? result = null;
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
@@ -239,11 +239,11 @@ public static class RestHelpers<T> where T : class
     public static async Task<RestObject<T>> GenericPostRestObjectRequest<UT>(string url, UT postObject, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         RestObject<T> restObject = new();
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
             if (restObject.Response.IsSuccessStatusCode)
@@ -279,11 +279,11 @@ public static class RestHelpers<T> where T : class
     public static async Task<string?> StringPostRequest(string url, T postObject, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         string? result = null;
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
@@ -319,11 +319,11 @@ public static class RestHelpers<T> where T : class
     public static async Task<RestObject<string>> StringPostRestObjectRequest(string url, T postObject, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         RestObject<string> restObject = new();
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
             if (restObject.Response.IsSuccessStatusCode)
@@ -359,11 +359,11 @@ public static class RestHelpers<T> where T : class
     public static async Task<T?> DeleteRequest(string url, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         T? result = null;
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Debug($"DELETE URL: {url}");
             HttpResponseMessage response = await client.DeleteAsync(url, tokenSource.Token).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
@@ -399,11 +399,11 @@ public static class RestHelpers<T> where T : class
     public static async Task<RestObject<T>> DeleteRestObjectRequest(string url, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
 
         RestObject<T> restObject = new();
         try
         {
+            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             logger.Debug($"DELETE URL: {url}");
             restObject.Response = await client.DeleteAsync(url, tokenSource.Token).ConfigureAwait(false);
             if (restObject.Response.IsSuccessStatusCode)

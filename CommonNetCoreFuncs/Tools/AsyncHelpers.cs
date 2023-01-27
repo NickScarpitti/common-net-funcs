@@ -66,7 +66,7 @@ public static class AsyncHelpers
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
     /// <returns></returns>
-    public static async Task ObjectFill<T, UT>(T? obj, Task<UT> task)
+    public static async Task ObjectFill<T, UT>(this T? obj, Task<UT> task)
     {
         try
         {
@@ -144,7 +144,7 @@ public static class AsyncHelpers
     /// <param name="dt">DataTable to insert data into</param>
     /// <param name="task">Async task that returns a DataTable object to insert into dt</param>
     /// <returns></returns>
-    public static async Task ObjectFill(DataTable dt, Task<DataTable> task)
+    public static async Task ObjectFill(this DataTable dt, Task<DataTable> task)
     {
         try
         {
@@ -167,7 +167,7 @@ public static class AsyncHelpers
     /// <param name="ms">MemoryStream to insert data into</param>
     /// <param name="task">Async task that returns a MemoryStream object to insert into ms</param>
     /// <returns></returns>
-    public static async Task ObjectFill(MemoryStream ms, Task<MemoryStream> task)
+    public static async Task ObjectFill(this MemoryStream ms, Task<MemoryStream> task)
     {
         try
         {

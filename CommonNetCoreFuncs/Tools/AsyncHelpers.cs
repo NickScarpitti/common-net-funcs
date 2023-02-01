@@ -29,7 +29,7 @@ public static class AsyncHelpers
     /// <param name="propertyName">Name of property to update within obj object</param>
     /// <param name="task">Async task to run that returns the value to assign to the property indicated</param>
     /// <returns></returns>
-    public static async Task ObjectUpdate<T, UT>(T? obj, string propertyName, Task<UT> task)
+    public static async Task ObjectUpdate<T, UT>(this T? obj, string propertyName, Task<UT> task)
     {
         try
         {

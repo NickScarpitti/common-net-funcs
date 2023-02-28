@@ -17,7 +17,7 @@ public static class HtmlBuilder
         string text = "<html><body>";
 
         text += body.StringtoHtml();
-        text += "<br><br>";
+        text += tableData == null || !tableData.Any() ? string.Empty : "<br><br>";
         text += tableData.CreateHtmlTable();
         text += !string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty;
         text += footer.StringtoHtml();
@@ -93,7 +93,7 @@ public static class HtmlBuilder
                     "padding: 8px;" +
                 "}" +
                 "tr:nth-child(even) {" +
-                    "background - color: #dddddd;" +
+                    "background-color: #dddddd;" +
                 "}" +
             "</style>";
 

@@ -13,11 +13,11 @@
     <PackageProjectUrl>https://github.com/NickScarpitti/CommonNetCoreFuncs</PackageProjectUrl>
     <PackageTags>dotnet;web;email;conversion;convert;excel;npoi;odbc;async;datatables;rest;api</PackageTags>
     <Nullable>enable</Nullable>
-    <Version>1.3.4</Version>
+    <Version>1.3.5</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
-    <FileVersion>1.3.4</FileVersion>
+    <FileVersion>1.3.5</FileVersion>
     <PackageReleaseNotes></PackageReleaseNotes>
   </PropertyGroup>
 

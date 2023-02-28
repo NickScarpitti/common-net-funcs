@@ -8,9 +8,9 @@ using System.Web;
 
 namespace CommonNetCoreFuncs.Communications;
 
-static public class HtmlBuilder
+public static class HtmlBuilder
 {
-    static public string BuildHtmlString(string body, string footer, List<List<string>>? tableData = null)
+    public static string BuildHtmlString(string body, string footer, List<List<string>>? tableData = null)
     {
         string text = "<html><body>";
 
@@ -23,7 +23,7 @@ static public class HtmlBuilder
         return text;
     }
 
-    static public string StringtoHtml(string text)
+    public static string StringtoHtml(string text)
     {
         //replace linebreaks
         text = HttpUtility.HtmlEncode(text);
@@ -40,7 +40,7 @@ static public class HtmlBuilder
     }
 
 
-    static private void FormatAllUrlsToHtml(ref string text)
+    private static void FormatAllUrlsToHtml(ref string text)
     {
         // use regexpression to find all of URLs, ASSUMES URL ENDS WITH WHITESPACE
         Regex regx = new Regex(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase);
@@ -51,13 +51,13 @@ static public class HtmlBuilder
         }
     }
 
-    static private string CreateHtmlLink(string url, string linkText = "Click Here")
+    private static string CreateHtmlLink(string url, string linkText = "Click Here")
     {
         string text = $"<a href=\"{url}\">{linkText}</a>";
         return text;
     }
 
-    static private string CreateHtmlTable(List<List<string>>? tableData, bool applyFancyStyle = true)
+    private static string CreateHtmlTable(List<List<string>>? tableData, bool applyFancyStyle = true)
     {
         string text = "<br><br>";
         string tableStyle =

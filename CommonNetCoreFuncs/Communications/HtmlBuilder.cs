@@ -11,7 +11,7 @@ public static class HtmlBuilder
     /// <param name="body">Main text body of the email that goes before a table if there is one</param>
     /// <param name="footer">Any text to be displayed under the table or after the body</param>
     /// <param name="tableData">Data to be formatted into a table. First item should be the header data</param>
-    /// <returns></returns>
+    /// <returns>HTML Body of an email</returns>
     public static string BuildHtmlEmail(string body, string? footer = null, List<List<string>>? tableData = null)
     {
         string text = "<html><body>";
@@ -31,7 +31,7 @@ public static class HtmlBuilder
     /// Replace line breaks with <br> and tabs with &nbsp&nbsp&nbsp to be HTML compatible
     /// </summary>
     /// <param name="text">String to be formatted</param>
-    /// <returns></returns>
+    /// <returns>HTML compatible text</returns>
     public static string StringtoHtml(this string? text)
     {
         if (text != null) 
@@ -47,7 +47,7 @@ public static class HtmlBuilder
     /// </summary>
     /// <param name="text">Text to search for and format urls in</param>
     /// <param name="linkText">Text to display for link</param>
-    /// <returns></returns>
+    /// <returns>HTML Body with formatted HTML links</returns>
     private static string FormatAllUrlsToHtml(this string text, string? linkText = null)
     {
         Regex regx = new Regex(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase);
@@ -64,7 +64,7 @@ public static class HtmlBuilder
     /// </summary>
     /// <param name="url">Url to embed behind he text</param>
     /// <param name="linkText">Text to display for link</param>
-    /// <returns></returns>
+    /// <returns>Formatted HTML link</returns>
     private static string CreateHtmlLink(this string url, string linkText = "Click Here")
     {
         return $"<a href=\"{url}\">{linkText}</a>";
@@ -76,7 +76,7 @@ public static class HtmlBuilder
     /// <param name="tableData">Data to turn into an HTML table</param>
     /// <param name="applyTableCss">Apply CSS styling to table</param>
     /// <param name="customCss">Custom CSS to apply to the table. If not provided, default will be used.</param>
-    /// <returns></returns>
+    /// <returns>HTML table based on the data passed in</returns>
     private static string CreateHtmlTable(this List<List<string>>? tableData, bool applyTableCss = true, string? customCss = null)
     {
         string tableHtml = string.Empty;

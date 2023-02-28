@@ -49,6 +49,24 @@ public static class ObjectHelpers
     }
 
     /// <summary>
+    /// Set values in an IEnumerable as an extension of linq using a Parallel.ForEach loop
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="items">Items to have the updateMethod expression performed on</param>
+    /// <param name="updateMethod">Lambda expression of the action to perform</param>
+    /// <param name="maxDegreeOfParallelism">Integer setting the max number of parallel operations allowed. Default of -1 allows maximum possible.</param>
+    /// <returns>IEnumerable with values updated according to updateMethod</returns>
+    public static IEnumerable<T> SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1)
+    {
+        ConcurrentBag<T> concurrentBag = new(items);
+        Parallel.ForEach(concurrentBag, new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item =>
+        {
+            updateMethod(item);
+        });
+        return concurrentBag;
+    }
+
+    /// <summary>
     /// Removes excess spaces in string properties inside of an object
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -98,17 +116,17 @@ public static class ObjectHelpers
     }
 
     /// <summary>
-    /// Adds AddRange functionality to ConcurrentBag similar to a list
+    /// Adds AddRange functionality to ConcurrentBag similar to a list. Skips null items
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="concurrentBag">ConcurrentBag to add list of items to</param>
     /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
     /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
-    public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T> toAdd, ParallelOptions? parallelOptions = null)
+    public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null)
     {
-        Parallel.ForEach(toAdd, parallelOptions ?? new(), item =>
+        Parallel.ForEach(toAdd.Where(x => x != null), parallelOptions ?? new(), item =>
         {
-            concurrentBag.Add(item);
+            concurrentBag.Add(item!);
         });
     }
 }

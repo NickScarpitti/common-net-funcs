@@ -27,21 +27,21 @@ public static class Email
     /// <summary>
     /// Sends an email using the SMTP server specified in the parameters
     /// </summary>
-    /// <param name="smtpServer"></param>
-    /// <param name="smtpPort"></param>
-    /// <param name="from"></param>
-    /// <param name="toAddresses"></param>
-    /// <param name="subject"></param>
-    /// <param name="body"></param>
+    /// <param name="smtpServer">The address of the SMTP server to use to sent the email</param>
+    /// <param name="smtpPort">Port to use when connecting to the SMPT server</param>
+    /// <param name="from">The MailAddress indicating the email address to use in the From field (does not need to be an actual email address)</param>
+    /// <param name="toAddresses">List of MailAdresses that indicates who to add as direct recipients of the email</param>
+    /// <param name="subject">Text to be used as the subject of the email</param>
+    /// <param name="body">Text to be used for the body of the email. Can be HTML or plain text (see bodyIsHtml parameter)</param>
     /// <param name="bodyIsHtml">Will render body as HTML if true</param>
-    /// <param name="ccAddresses"></param>
-    /// <param name="bccAddresses"></param>
-    /// <param name="attachmentNames">Enumerable of names for the attachment files. Should be ordered in the same way as the fileData. If missing will use default file name "File #"</param>
-    /// <param name="fileData">Enumerable of Streams of file data you want to attach to the email. Should be ordered in the same way as attachmentNames</param>
+    /// <param name="ccAddresses">List of MailAdresses that indicates who to add as CC recipients of the email</param>
+    /// <param name="bccAddresses">List of MailAdresses that indicates who to add as BCC recipients of the email</param>
+    /// <param name="attachments">List of attachments with the name to give the file as well as the file data</param>
     /// <param name="readReceipt">Whether or not to add a read receipt request to the email</param>
     /// <param name="readReceiptEmail">Email to send the read receipt to</param>
     /// <param name="smtpUser">User name for the SMTP server, if required. Requires smtpPassword to be set to use</param>
     /// <param name="smtpPassword">Password for the SMTP server, if required. Requires smtpUser to be set to use</param>
+    /// <param name="zipAttachments">Will zip all attachments if true</param>
     /// <returns>Email sent success bool</returns>
     public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, 
         IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, 

@@ -3,6 +3,16 @@ using System.Reflection;
 
 namespace CommonNetCoreFuncs.Tools;
 
+public class AsyncIntString
+{
+    public AsyncIntString()
+    {
+        AsyncString = string.Empty;
+    }
+    public int AsyncInt { get; set; }
+    public string AsyncString { get; set; }
+}
+
 /// <summary>
 /// Methods for making asynchronous programming easier
 /// </summary>
@@ -19,7 +29,7 @@ public static class AsyncHelpers
     /// <param name="propertyName">Name of property to update within obj object</param>
     /// <param name="task">Async task to run that returns the value to assign to the property indicated</param>
     /// <returns></returns>
-    public static async Task ObjectUpdate<T, UT>(T? obj, string propertyName, Task<UT> task)
+    public static async Task ObjectUpdate<T, UT>(this T? obj, string propertyName, Task<UT> task)
     {
         try
         {
@@ -56,7 +66,7 @@ public static class AsyncHelpers
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
     /// <returns></returns>
-    public static async Task ObjectFill<T, UT>(T? obj, Task<UT> task)
+    public static async Task ObjectFill<T, UT>(this T? obj, Task<UT> task)
     {
         try
         {
@@ -134,7 +144,7 @@ public static class AsyncHelpers
     /// <param name="dt">DataTable to insert data into</param>
     /// <param name="task">Async task that returns a DataTable object to insert into dt</param>
     /// <returns></returns>
-    public static async Task ObjectFill(DataTable dt, Task<DataTable> task)
+    public static async Task ObjectFill(this DataTable dt, Task<DataTable> task)
     {
         try
         {
@@ -157,7 +167,7 @@ public static class AsyncHelpers
     /// <param name="ms">MemoryStream to insert data into</param>
     /// <param name="task">Async task that returns a MemoryStream object to insert into ms</param>
     /// <returns></returns>
-    public static async Task ObjectFill(MemoryStream ms, Task<MemoryStream> task)
+    public static async Task ObjectFill(this MemoryStream ms, Task<MemoryStream> task)
     {
         try
         {

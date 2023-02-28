@@ -1,4 +1,6 @@
-﻿namespace CommonNetCoreFuncs.Tools;
+﻿using System.Globalization;
+
+namespace CommonNetCoreFuncs.Tools;
 
 /// <summary>
 /// Helper functions for complex math operations
@@ -14,6 +16,11 @@ public static class MathHelpers
     public static double Ceiling(this double? value, double significance)
     {
         value ??= 0;
+
+        if (significance == 0)
+        {
+            return Math.Ceiling((double)value);
+        }
 
         if ((value % significance) != 0)
         {
@@ -33,6 +40,11 @@ public static class MathHelpers
     {
         value ??= 0;
 
+        if (significance == 0)
+        {
+            return Math.Ceiling((decimal)value);
+        }
+
         if ((value % significance) != 0)
         {
             return ((int)(value / significance) * significance) + significance;
@@ -50,6 +62,11 @@ public static class MathHelpers
     public static double Floor(this double? value, double significance)
     {
         value ??= 0;
+
+        if (significance == 0)
+        {
+            return Math.Floor((double)value);
+        }
 
         if ((value % significance) != 0)
         {
@@ -69,11 +86,42 @@ public static class MathHelpers
     {
         value ??= 0;
 
+        if (significance == 0)
+        {
+            return Math.Floor((decimal)value);
+        }
+
         if ((value % significance) != 0)
         {
             return ((int)(value / significance) * significance);
         }
 
         return Convert.ToDecimal(value);
+    }
+
+    /// <summary>
+    /// Get the number of decimal places of a decimal value
+    /// </summary>
+    /// <param name="value">Value to get the precision of</param>
+    /// <returns>The number of decimal places of the given double value</returns>
+    public static int GetPrecision(this decimal? value)
+    {
+        if (value == null) { return 0; }
+        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
+        int position = value.ToString()!.IndexOf(decimalSeparator);
+        return (position == -1) ? 0 : value.ToString()!.Length - position - 1;
+    }
+
+    /// <summary>
+    /// Get the number of decimal places of a double value
+    /// </summary>
+    /// <param name="value">Value to get the precision of</param>
+    /// <returns>The number of decimal places of the given double value</returns>
+    public static int GetPrecision(this double? value)
+    {
+        if (value == null) { return 0; }
+        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
+        int position = value.ToString()!.IndexOf(decimalSeparator);
+        return (position == -1) ? 0 : value.ToString()!.Length - position - 1;
     }
 }

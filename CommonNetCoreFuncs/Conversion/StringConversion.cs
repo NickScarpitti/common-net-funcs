@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Text;
 using CommonNetCoreFuncs.Tools;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -96,6 +97,21 @@ public static class StringConversion
     }
 
     /// <summary>
+    /// Converts nullable decimal to string
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns>String representation of the passed in nullable decimal</returns>
+    public static string? ToNString(this decimal? value)
+    {
+        string? output = null;
+        if (value != null)
+        {
+            output = value.ToString();
+        }
+        return output;
+    }
+
+    /// <summary>
     /// Converts nullable object to string
     /// </summary>
     /// <param name="value"></param>
@@ -113,44 +129,43 @@ public static class StringConversion
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">Value to be used for both Value and Text properties</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
-    public static SelectListItem? ToSelectListItem(this string? value)
+    public static SelectListItem? ToSelectListItem(this string? value, bool selected)
     {
-        if (value != null)
-        {
-            return new SelectListItem
-            {
-                Text = value,
-                Value = value
-            };
-        }
-        else
-        {
-            return null;
-        }
+        return value != null ? new SelectListItem { Value= value , Text = value, Selected = selected} : null;
     }
 
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value"></param>
-    /// <param name="text"></param>
-    /// <returns>SelectListItem with text and value properties set to the passed in text and value</returns>
+    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
+    public static SelectListItem? ToSelectListItem(this string? value)
+    {
+        return value != null ? new SelectListItem { Value = value, Text = value } : null;
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for the Value property</param>
+    /// <param name="text">Value to be used for the Text property</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
+    public static SelectListItem? ToSelectListItem(this string? value, string? text, bool selected)
+    {
+        return value != null && text != null ? new SelectListItem { Value = value, Text = text, Selected = selected } : null;
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for the Value property</param>
+    /// <param name="text">Value to be used for the Text property</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
     public static SelectListItem? ToSelectListItem(this string? value, string? text)
     {
-        if (value != null && text != null)
-        {
-            return new SelectListItem
-            {
-                Text = text,
-                Value = value
-            };
-        }
-        else
-        {
-            return null;
-        }
+        return value != null && text != null ? new SelectListItem { Value = value, Text = text } : null;
     }
 
     /// <summary>
@@ -276,13 +291,13 @@ public static class StringConversion
             return null;
         }
 
-        List<string?> cleanValues = new();
+        ConcurrentBag<string?> cleanValues = new();
         if (values.Any())
         {
-            foreach (string? value in values)
+            Parallel.ForEach(values, value =>
             {
                 cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim());
-            }
+            });
         }
 
         return (cleanValues ?? new()).Where(x => x != null)!;
@@ -300,13 +315,13 @@ public static class StringConversion
             return null;
         }
 
-        List<string?> cleanValues = new();
+        ConcurrentBag<string?> cleanValues = new();
         if (values.Any())
         {
-            foreach (string? value in values)
+            Parallel.ForEach(values, value =>
             {
                 cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim());
-            }
+            });
         }
 
         return (cleanValues ?? new()).Where(x => x != null).ToList()!;
@@ -430,5 +445,44 @@ public static class StringConversion
             builder.Append(bytes[i].ToString("x2"));
         }
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// Remove extra whitespace from a string preserving inner whitespace as a single space
+    /// </summary>
+    /// <param name="input">String to have whitespace normalized for</param>
+    /// <returns>String without excess whitespace</returns>
+    public static string NormalizeWhiteSpace(this string? input)
+    {
+        if (input == null) { return string.Empty; }
+
+        input = input.Trim();
+
+        int len = input.Length;
+        int index = 0;
+        int i = 0;
+
+        char[] src = input.ToCharArray();
+        bool skip = false;
+        char ch;
+        
+        for (; i < len; i++)
+        {
+            ch = src[i];
+            switch (ch)
+            {
+                case '\u0020':case '\u00A0':case '\u1680':case '\u2000':case '\u2001':case '\u2002':case '\u2003':case '\u2004':case '\u2005':case '\u2006':case '\u2007':case '\u2008':case '\u2009':
+                case '\u200A':case '\u202F':case '\u205F':case '\u3000':case '\u2028':case '\u2029':case '\u0009':case '\u000A':case '\u000B':case '\u000C':case '\u000D':case '\u0085':
+                    if (skip) continue;
+                    src[index++] = ch;
+                    skip = true;
+                    continue;
+                default:
+                    skip = false;
+                    src[index++] = ch;
+                    continue;
+            }
+        }
+        return new string(src, 0, index);
     }
 }

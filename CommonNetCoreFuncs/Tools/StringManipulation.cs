@@ -82,4 +82,14 @@ public static class StringManipulation
         }
         return s;
     }
+
+    /// <summary>
+    /// Parses a string that is using camel casing so that each word is separated by a space
+    /// </summary>
+    /// <param name="s">String to parse</param>
+    /// <returns>Original string with spaces between all words starting with a capital letter</returns>
+    public static string? ParseCamelCase(this string? s)
+    {
+        return !string.IsNullOrWhiteSpace(s) ? string.Concat(s.Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' ') : s;
+    }
 }

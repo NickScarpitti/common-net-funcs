@@ -455,7 +455,7 @@ public static class NpoiCommonHelpers
                         uint i = 1;
                         foreach (PropertyInfo prop in props)
                         {
-                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn {id = i, name = prop.Name.ToString() });
+                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { id = i, name = prop.Name.ToString() });
                             i++;
                         }
                     }
@@ -689,21 +689,21 @@ public static class NpoiCommonHelpers
                         imgWidth = image.Width;
                         imgHeight = image.Height;
 
-                        double imgAspect = (double)imgWidth / imgHeight;
+                        decimal imgAspect = (decimal)imgWidth / imgHeight;
 
                         int rangeWidth = ws.GetRangeWidthInPx(area.FirstColumn, area.LastColumn);
                         int rangeHeight = ws.GetRangeHeightInPx(area.FirstRow, area.LastRow);
-                        double rangeAspect = (double)rangeWidth / rangeHeight;
+                        decimal rangeAspect = (decimal)rangeWidth / rangeHeight;
 
-                        double scale;
+                        decimal scale;
 
                         if (rangeAspect < imgAspect)
                         {
-                            scale = (rangeWidth - 3.0) / imgWidth; //Set to width of cell -3px
+                            scale = (rangeWidth - 3m) / imgWidth; //Set to width of cell -3px
                         }
                         else
                         {
-                            scale = (rangeHeight - 3.0) / imgHeight; //Set to width of cell -3px
+                            scale = (rangeHeight - 3m) / imgHeight; //Set to width of cell -3px
                         }
                         int resizeWidth = (int)Math.Round(imgWidth * scale, 0, MidpointRounding.ToZero);
                         int resizeHeight = (int)Math.Round(imgHeight * scale, 0, MidpointRounding.ToZero);

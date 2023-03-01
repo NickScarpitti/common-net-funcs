@@ -1,10 +1,34 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Data;
+using System.Text.RegularExpressions;
 using System.Web;
+using CommonNetCoreFuncs.Conversion;
 
 namespace CommonNetCoreFuncs.Communications;
 
 public static class HtmlBuilder
 {
+    /// <summary>
+    /// Creates an HTML body for an email using the inputs provided
+    /// </summary>
+    /// <param name="body">Main text body of the email that goes before a table if there is one</param>
+    /// <param name="footer">Any text to be displayed under the table or after the body</param>
+    /// <param name="tableData">Data to be formatted into an HTML table</param>
+    /// <returns>HTML Body of an email</returns>
+    public static string BuildHtmlEmail(string body, string? footer = null, DataTable? tableData = null)
+    {
+        string text = "<html><body>";
+
+        text += body.StringtoHtml();
+        text += tableData == null || tableData.Rows.Count == 0 ? string.Empty : "<br><br>";
+        text += tableData.CreateHtmlTable();
+        text += !string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty;
+        text += footer.StringtoHtml();
+        text = text.FormatAllUrlsToHtml();
+
+        text += "</body></html>";
+        return text;
+    }
+
     /// <summary>
     /// Creates an HTML body for an email using the inputs provided
     /// </summary>
@@ -48,7 +72,7 @@ public static class HtmlBuilder
     /// <param name="text">Text to search for and format urls in</param>
     /// <param name="linkText">Text to display for link</param>
     /// <returns>HTML Body with formatted HTML links</returns>
-    private static string FormatAllUrlsToHtml(this string text, string? linkText = null)
+    public static string FormatAllUrlsToHtml(this string text, string? linkText = null)
     {
         Regex regx = new Regex(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase);
         MatchCollection matches = regx.Matches(text);
@@ -65,7 +89,7 @@ public static class HtmlBuilder
     /// <param name="url">Url to embed behind he text</param>
     /// <param name="linkText">Text to display for link</param>
     /// <returns>Formatted HTML link</returns>
-    private static string CreateHtmlLink(this string url, string linkText = "Click Here")
+    public static string CreateHtmlLink(this string url, string linkText = "Click Here")
     {
         return $"<a href=\"{url}\">{linkText}</a>";
     }
@@ -77,7 +101,69 @@ public static class HtmlBuilder
     /// <param name="applyTableCss">Apply CSS styling to table</param>
     /// <param name="customCss">Custom CSS to apply to the table. If not provided, default will be used.</param>
     /// <returns>HTML table based on the data passed in</returns>
-    private static string CreateHtmlTable(this List<List<string>>? tableData, bool applyTableCss = true, string? customCss = null)
+    public static string CreateHtmlTable(this DataTable? tableData, bool applyTableCss = true, string? customCss = null)
+    {
+        string tableHtml = string.Empty;
+        string tableStyle = !string.IsNullOrWhiteSpace(customCss) ? customCss :
+            "<style>" +
+                "table{" +
+                    "font-family: arial, sans-serif;" +
+                    "border-collapse: collapse;" +
+                    "width: 100%;" +
+                "}" +
+                "td, th {" +
+                    "border: 1px solid #dddddd;" +
+                    "text-align: left;" +
+                    "padding: 8px;" +
+                "}" +
+                "tr:nth-child(even) {" +
+                    "background-color: #dddddd;" +
+                "}" +
+            "</style>";
+
+        if (tableData != null && tableData.Rows.Count != 0)
+        {
+            tableHtml += applyTableCss ? tableStyle : string.Empty;
+
+            //Make headers
+            tableHtml += "<table><tr>";
+            foreach (DataColumn column in tableData.Columns)
+            {
+                tableHtml += $"<th>{column.ColumnName}</th>";
+            }
+            tableHtml += "</tr>";
+
+            //Add data rows
+            bool firstLoop = true;
+            foreach (DataRow rowData in tableData.Rows)
+            {
+                if (!firstLoop)
+                {
+                    tableHtml += "<tr>";
+                    foreach (object? rowItem in rowData.ItemArray)
+                    {
+                        tableHtml += $"<td>{rowItem.ToNString()}</td>";
+                    }
+                    tableHtml += "</tr>";
+                }
+                else
+                {
+                    firstLoop = false;
+                }
+            }
+            tableHtml += "</table>";
+        }
+        return tableHtml;
+    }
+
+    /// <summary>
+    /// Create an HTML table from given data
+    /// </summary>
+    /// <param name="tableData">Data to turn into an HTML table. The first item should contain the header values</param>
+    /// <param name="applyTableCss">Apply CSS styling to table</param>
+    /// <param name="customCss">Custom CSS to apply to the table. If not provided, default will be used.</param>
+    /// <returns>HTML table based on the data passed in</returns>
+    public static string CreateHtmlTable(this List<List<string>>? tableData, bool applyTableCss = true, string? customCss = null)
     {
         string tableHtml = string.Empty;
         string tableStyle = !string.IsNullOrWhiteSpace(customCss) ? customCss : 
@@ -97,45 +183,40 @@ public static class HtmlBuilder
                 "}" +
             "</style>";
 
-        if (tableData == null || !tableData.Any())
+        if (tableData != null && tableData.Any())
         {
-            return tableHtml;
-        }
+            tableHtml += applyTableCss ? tableStyle : string.Empty;
 
-        tableHtml += applyTableCss ? tableStyle : string.Empty;
+            List<string> tableHeaders = tableData[0];
 
-        List<string> tableHeaders = tableData[0];
-
-        //Make headers
-        tableHtml += "<table><tr>";
-        foreach (string header in tableHeaders)
-        {
-            tableHtml += $"<th>{header}</th>";
-        }
-        tableHtml += "</tr>";
-
-        //Add data rows
-        bool firstLoop = true;
-        foreach (List<string> rowData in tableData)
-        {
-            if (!firstLoop)
+            //Make headers
+            tableHtml += "<table><tr>";
+            foreach (string header in tableHeaders)
             {
-                tableHtml += "<tr>";
-                foreach (string rowItem in rowData)
+                tableHtml += $"<th>{header}</th>";
+            }
+            tableHtml += "</tr>";
+
+            //Add data rows
+            bool firstLoop = true;
+            foreach (List<string> rowData in tableData)
+            {
+                if (!firstLoop)
                 {
-                    tableHtml += $"<td>{rowItem}</td>";
+                    tableHtml += "<tr>";
+                    foreach (string rowItem in rowData)
+                    {
+                        tableHtml += $"<td>{rowItem}</td>";
+                    }
+                    tableHtml += "</tr>";
                 }
-                tableHtml += "</tr>";
+                else
+                {
+                    firstLoop= false;
+                }
             }
-            else
-            {
-                firstLoop= false;
-                continue;
-            }
-        }
-
-        tableHtml += "</table>";
-        
+            tableHtml += "</table>";
+        }        
         return tableHtml;
     }
 }

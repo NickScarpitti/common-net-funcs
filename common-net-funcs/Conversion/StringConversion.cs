@@ -385,6 +385,36 @@ public static class StringConversion
         return outputName;
     }
 
+    public static string TimespanToShortForm(this TimeSpan? t)
+    {
+
+        string shortForm = "";
+        if (t != null)
+        {
+            shortForm = ((TimeSpan)t).TimespanToShortForm();
+        }
+        return shortForm;
+    }
+
+    public static string TimespanToShortForm(this TimeSpan t)
+    {
+
+        string shortForm = "";
+        if (t.Hours > 0)
+        {
+            shortForm += string.Format($"{t.Hours}");
+        }
+        if (t.Minutes > 0)
+        {
+            shortForm += !string.IsNullOrWhiteSpace(shortForm) ? ":" : "" + string.Format($"{t.Minutes}");
+        }
+        if (t.Seconds > 0)
+        {
+            shortForm += string.Format($":{t.Seconds}");
+        }
+        return shortForm;
+    }
+
     public enum EHashAlgorithm
     {
         SHA1,

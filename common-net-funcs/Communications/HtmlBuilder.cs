@@ -134,22 +134,14 @@ public static class HtmlBuilder
             tableHtml += "</tr>";
 
             //Add data rows
-            bool firstLoop = true;
             foreach (DataRow rowData in tableData.Rows)
             {
-                if (!firstLoop)
+                tableHtml += "<tr>";
+                foreach (object? rowItem in rowData.ItemArray)
                 {
-                    tableHtml += "<tr>";
-                    foreach (object? rowItem in rowData.ItemArray)
-                    {
-                        tableHtml += $"<td>{rowItem.ToNString()}</td>";
-                    }
-                    tableHtml += "</tr>";
+                    tableHtml += $"<td>{rowItem.ToNString()}</td>";
                 }
-                else
-                {
-                    firstLoop = false;
-                }
+                tableHtml += "</tr>";
             }
             tableHtml += "</table>";
         }

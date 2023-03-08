@@ -7,6 +7,7 @@ public static class UnitConversion
 {
     public const decimal KgToLbsConst = 2.20462m;
     public const decimal FtToInConst = 12;
+    public const decimal MetersToMilesConst = 0.000621371m;
 
     /// <summary>
     /// Convert mass in lbs to kg
@@ -256,6 +257,11 @@ public static class UnitConversion
         return Math.Round(Gb / 1024m, 1, MidpointRounding.AwayFromZero);
     }
 
+    /// <summary>
+    /// Returns a human readable string representation of the number of bytes
+    /// </summary>
+    /// <param name="inputBytes">Number of bytes to be converted</param>
+    /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this long inputBytes)
     {
         long bytes = Math.Abs(inputBytes);
@@ -267,6 +273,11 @@ public static class UnitConversion
         return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" :  $"{bytes * multiplier} B";
     }
 
+    /// <summary>
+    /// Returns a human readable string representation of the number of bytes
+    /// </summary>
+    /// <param name="inputBytes">Number of bytes to be converted</param>
+    /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this long? nullBytes)
     {
         if (nullBytes == null) { return "-0"; }
@@ -280,6 +291,11 @@ public static class UnitConversion
         return (bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B");
     }
 
+    /// <summary>
+    /// Returns a human readable string representation of the number of bytes
+    /// </summary>
+    /// <param name="inputBytes">Number of bytes to be converted</param>
+    /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this int inputBytes)
     {
         int bytes = Math.Abs(inputBytes);
@@ -291,6 +307,11 @@ public static class UnitConversion
         return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B";
     }
 
+    /// <summary>
+    /// Returns a human readable string representation of the number of bytes
+    /// </summary>
+    /// <param name="inputBytes">Number of bytes to be converted</param>
+    /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this int? nullBytes)
     {
         if (nullBytes == null) { return "-0"; }
@@ -301,5 +322,113 @@ public static class UnitConversion
             multiplier = -1;
         }
         return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B";
+    }
+
+    /// <summary>
+    /// Convert meters to miles
+    /// </summary>
+    /// <param name="meters">Number of meters to be converted into miles</param>
+    /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
+    public static decimal MetersToMiles(this decimal meters)
+    {
+        return meters * MetersToMilesConst;
+    }
+
+    /// <summary>
+    /// Convert meters to miles
+    /// </summary>
+    /// <param name="meters">Number of meters to be converted into miles</param>
+    /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
+    public static decimal MetersToMiles(this decimal? meters)
+    {
+        if (meters != null)
+        {
+            return Convert.ToDecimal(meters) * MetersToMilesConst;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Convert meters to miles
+    /// </summary>
+    /// <param name="meters">Number of meters to be converted into miles</param>
+    /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
+    public static decimal MetersToMiles(this int meters)
+    {
+        return meters * MetersToMilesConst;
+    }
+
+    /// <summary>
+    /// Convert meters to miles
+    /// </summary>
+    /// <param name="meters">Number of meters to be converted into miles</param>
+    /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
+    public static decimal MetersToMiles(this int? meters)
+    {
+        if (meters != null)
+        {
+            return Convert.ToDecimal(meters) * MetersToMilesConst;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Convert miles to meters
+    /// </summary>
+    /// <param name="miles">Number of miles to be converted into meters</param>
+    /// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
+    public static decimal MilesToMeters(this decimal miles)
+    {
+        return miles / MetersToMilesConst;
+    }
+
+    /// <summary>
+    /// Convert miles to meters
+    /// </summary>
+    /// <param name="miles">Number of miles to be converted into meters</param>
+    /// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
+    public static decimal MilesToMeters(this decimal? miles)
+    {
+        if (miles != null)
+        {
+            return Convert.ToDecimal(miles) / MetersToMilesConst;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Convert miles to meters
+    /// </summary>
+    /// <param name="miles">Number of miles to be converted into meters</param>
+    /// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
+    public static decimal MilesToMeters(this int miles)
+    {
+        return miles / MetersToMilesConst;
+    }
+
+    /// <summary>
+    /// Convert miles to meters
+    /// </summary>
+    /// <param name="miles">Number of miles to be converted into meters</param>
+    /// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
+    public static decimal MilesToMeters(this int? miles)
+    {
+        if (miles != null)
+        {
+            return Convert.ToDecimal(miles) / MetersToMilesConst;
+        }
+        else
+        {
+            return 0;
+        }
     }
 }

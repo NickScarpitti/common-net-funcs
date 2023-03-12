@@ -398,29 +398,6 @@ public static class StringConversion
 
     public static string TimespanToShortForm(this TimeSpan t)
     {
-        //string shortForm = "";
-        //if (t.Hours > 0)
-        //{
-        //    shortForm += string.Format($"{t.Hours}");
-        //}
-        //if (t.Minutes > 0)
-        //{
-        //    shortForm += !string.IsNullOrWhiteSpace(shortForm) ? ":" : "" + string.Format($"{t.Minutes}");
-        //}
-        //else
-        //{
-        //    shortForm += !string.IsNullOrWhiteSpace(shortForm) ? ":00" : "0";
-        //}
-        //if (t.Seconds > 0)
-        //{
-        //    shortForm += string.Format($":{t.Seconds}");
-        //}
-        //else
-        //{
-        //    shortForm += ":00";
-        //}
-        //return shortForm;
-
         string stringForm = t.ToString().Split(".").Last();
         string days = string.Empty;
         if (t.Days > 0)

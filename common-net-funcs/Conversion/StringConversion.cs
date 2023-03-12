@@ -398,8 +398,16 @@ public static class StringConversion
 
     public static string TimespanToShortForm(this TimeSpan t)
     {
-        string stringForm = t.ToString().Split(".").Last();
+        string stringForm = t.ToString();
+
+        if (t.Milliseconds > 0)
+        {
+            stringForm = stringForm.Replace($".{stringForm.Split(".").Last()}", string.Empty); //Remove milliseconds component
+        }
+
+        stringForm = stringForm.Split(".").Last();
         string days = string.Empty;
+        
         if (t.Days > 0)
         {
             days = t.Days.ToString();
@@ -407,6 +415,10 @@ public static class StringConversion
             {
                 days = days[1..];
             }
+            //if (t.Milliseconds > 0)
+            //{
+            //    stringForm = stringForm.Replace($".{stringForm.Split(".").Last()}", string.Empty); //Remove milliseconds component
+            //}
         }
         else
         {
@@ -419,6 +431,7 @@ public static class StringConversion
                 }
             }
         }
+       
         return string.IsNullOrWhiteSpace(days) ? stringForm : days + ":" + stringForm;
     }
 

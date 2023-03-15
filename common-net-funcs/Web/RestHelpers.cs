@@ -151,7 +151,7 @@ public static class RestHelpers<T> where T : class
     }
 
 
-    public static async Task<T?> PostRequestWithCustomHeaders(string url, T? postObject, string? bearerToken = null, Dictionary<string,string> httpHeaders, double? timeout = null)
+    public static async Task<T?> PostRequestWithCustomHeaders(string url, T? postObject, Dictionary<string, string> httpHeaders, string? bearerToken = null,  double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 

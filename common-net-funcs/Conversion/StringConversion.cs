@@ -398,21 +398,41 @@ public static class StringConversion
 
     public static string TimespanToShortForm(this TimeSpan t)
     {
+        string stringForm = t.ToString();
 
-        string shortForm = "";
-        if (t.Hours > 0)
+        if (t.Milliseconds > 0)
         {
-            shortForm += string.Format($"{t.Hours}");
+            stringForm = stringForm.Replace($".{stringForm.Split(".").Last()}", string.Empty); //Remove milliseconds component
         }
-        if (t.Minutes > 0)
+
+        stringForm = stringForm.Split(".").Last();
+        string days = string.Empty;
+        
+        if (t.Days > 0)
         {
-            shortForm += !string.IsNullOrWhiteSpace(shortForm) ? ":" : "" + string.Format($"{t.Minutes}");
+            days = t.Days.ToString();
+            if (days.Left(1) == "0")
+            {
+                days = days[1..];
+            }
+            //if (t.Milliseconds > 0)
+            //{
+            //    stringForm = stringForm.Replace($".{stringForm.Split(".").Last()}", string.Empty); //Remove milliseconds component
+            //}
         }
-        if (t.Seconds > 0)
+        else
         {
-            shortForm += string.Format($":{t.Seconds}");
+            if (stringForm.Left(3) == "00:")
+            {
+                stringForm = stringForm[3..];  //Remove hours if there aren't any
+                if (stringForm.Left(1) == "0")
+                {
+                    stringForm = stringForm[1..]; //Remove leading 0 in minutes
+                }
+            }
         }
-        return shortForm;
+       
+        return string.IsNullOrWhiteSpace(days) ? stringForm : days + ":" + stringForm;
     }
 
     public enum EHashAlgorithm

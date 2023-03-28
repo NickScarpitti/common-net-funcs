@@ -151,14 +151,13 @@ public static class RestHelpers<T> where T : class
     }
 
 
-    public static async Task<T?> PostRequestWithCustomHeaders(string url, T? postObject, Dictionary<string, string> httpHeaders, string? bearerToken = null,  double? timeout = null)
+    public static async Task<T?> PostRequestWithCustomHeaders<UT>(string url, UT? postObject, Dictionary<string, string> httpHeaders, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         T? result = null;
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
             foreach (KeyValuePair<string,string> header in httpHeaders)
             {
                 client.DefaultRequestHeaders.Add(header.Key, header.Value);

@@ -99,6 +99,7 @@ public static class ObjectHelpers
     /// <returns></returns>
     public static IEnumerable<T>? Clone<T>(this IEnumerable<T> list)
     {
+        if (list == null) { return null; }
         string serialized = JsonConvert.SerializeObject(list);
         return JsonConvert.DeserializeObject<IEnumerable<T>>(serialized);
     }
@@ -111,6 +112,7 @@ public static class ObjectHelpers
     /// <returns></returns>
     public static List<T>? Clone<T>(this IList<T> list)
     {
+        if (list == null) { return null; }
         string serialized = JsonConvert.SerializeObject(list);
         return JsonConvert.DeserializeObject<List<T>>(serialized);
     }

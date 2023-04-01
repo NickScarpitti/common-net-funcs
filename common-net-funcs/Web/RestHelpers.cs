@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Formatting;
+﻿using System.Net.Http;
+using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
@@ -158,12 +159,36 @@ public static class RestHelpers<T> where T : class
         T? result = null;
         try
         {
-            foreach (KeyValuePair<string,string> header in httpHeaders)
+            //HttpRequestMessage httpRequestMessage = new HttpRequestMessage
+            //{
+            //    RequestUri = new Uri(url),
+            //    Method = HttpMethod.Post,
+            //    Headers =
+            //    {
+            //        { "hondaHeaderType.messageId", "8209894C-DDB9-4CCE-A9DC-8EDC91EBC728" },
+            //        { "hondaHeaderType.siteId", "honda.com" },
+            //        { "hondaHeaderType.businessId", "dennis_pappas@na.honda.com" },
+            //        { "hondaHeaderType.collectedTypestamp", "2023-03-31T14:54:46.1008217Z" },
+            //        { "Accept", "application/json" },
+            //        { "X-Honda-wl-authorization", "Basic " + "c2VydmljZV9jb3NfYXBpX3VzZXJfcWE6V2F0ZXJAMzA=" },
+            //        { "Authorization", "Basic " + "c2VydmljZV9jb3NfYXBpX3VzZXJfcWE6V2F0ZXJAMzA=" }
+            //    },
+            //    Content = new StringContent(JsonConvert.SerializeObject(postObject), System.Text.Encoding.UTF8, "application/json")
+            //};
+
+            //foreach(KeyValuePair<string,string> keyValuePair in httpHeaders)
+            //{
+            //    httpRequestMessage.Headers.Add(keyValuePair.Key, keyValuePair.Value);
+            //}
+
+            foreach (KeyValuePair<string, string> header in httpHeaders)
             {
                 client.DefaultRequestHeaders.Add(header.Key, header.Value);
+
             }
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
+            //HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -234,16 +259,31 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-    public static async Task<T?> GenericPostRequest<UT>(string url, UT postObject, string? bearerToken = null, double? timeout = null)
+    public static async Task<T?> GenericPostRequest<UT>(string url, UT postObject, Dictionary<string, string>? httpHeaders = null, string? bearerToken = null, double? timeout = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         T? result = null;
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            if (httpHeaders is not null)
+            {
+                foreach (KeyValuePair<string, string> header in httpHeaders)
+                {
+                    client.DefaultRequestHeaders.Add(header.Key, header.Value);
+
+                }
+            }
+            else
+            {
+                client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            }
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
+            if(httpHeaders is not null)
+            {
+                client.DefaultRequestHeaders.Clear();
+            }
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>

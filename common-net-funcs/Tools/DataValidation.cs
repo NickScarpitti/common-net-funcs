@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Globalization;
 using System.Reflection;
 
 namespace Common_Net_Funcs.Tools;
@@ -28,7 +29,12 @@ public static class DataValidation
             var aPropValue = Prop.GetValue(obj1) ?? string.Empty;
             var bPropValue = Prop.GetValue(obj2) ?? string.Empty;
 
-            if (aPropValue.ToString() != bPropValue.ToString())
+            bool aIsNumeric = aPropValue.IsNumeric();
+            bool bIsNumeric = bPropValue.IsNumeric();
+
+            //This will prevent issues with numbers with varying decimal places from being counted as a difference
+            if ((aIsNumeric && bIsNumeric && decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!)) ||
+                (!(aIsNumeric && bIsNumeric) && aPropValue.ToString() != bPropValue.ToString()))
             {
                 return false;
             }
@@ -141,5 +147,15 @@ public static class DataValidation
     public static bool IsValidOaDate(this double? oaDate)
     {
         return oaDate != null && oaDate >= 657435.0 && oaDate <= 2958465.99999999;
+    }
+
+    public static bool IsNumeric(this object? testObject)
+    {
+        bool isNumeric = false;
+        if (testObject != null && !string.IsNullOrWhiteSpace(testObject.ToString()))
+        {
+            isNumeric = decimal.TryParse(testObject.ToString(), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out _);
+        }
+        return isNumeric;
     }
 }

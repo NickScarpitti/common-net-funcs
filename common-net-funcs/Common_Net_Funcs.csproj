@@ -13,12 +13,13 @@
     <PackageProjectUrl>https://github.com/NickScarpitti/Common_Net_Funcs</PackageProjectUrl>
     <PackageTags>dotnet;web;email;conversion;convert;excel;npoi;odbc;async;datatables;rest;api</PackageTags>
     <Nullable>enable</Nullable>
-    <Version>1.4.3</Version>
+    <Version>1.4.4</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
-    <FileVersion>1.4.3</FileVersion>
+    <FileVersion>1.4.4</FileVersion>
     <PackageReleaseNotes></PackageReleaseNotes>
+    <Title>Common Net Funcs</Title>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -60,13 +61,13 @@
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="7.0.0" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.27.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.28.1" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.2.3" />
     <PackageReference Include="NPOI" Version="2.6.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
     <PackageReference Include="System.Data.Odbc" Version="7.0.0" />
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.27.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.28.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using System.Net.Http.Formatting;
+﻿using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
@@ -42,16 +41,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
-    public static async Task<T?> Get(string url, string? bearerToken = null, double? timeout = null)
+    public static async Task<T?> Get(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         T? result = null;
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Info($"GET URL: {url}");
             HttpResponseMessage response = await client.GetAsync(new Uri(url), tokenSource.Token);
+            ClearHeaders(httpHeaders);
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -81,16 +81,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
-    public static async Task<RestObject<T>> GetRestObject(string url, string? bearerToken = null, double? timeout = null)
+    public static async Task<RestObject<T>> GetRestObject(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
         
         RestObject<T> restObject = new();
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Info($"GET URL: {url}");
             restObject.Response = await client.GetAsync(new Uri(url), tokenSource.Token);
+            ClearHeaders(httpHeaders);
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -121,74 +122,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-    public static async Task<T?> PostRequest(string url, T? postObject, string? bearerToken = null, double? timeout = null)
+    public static async Task<T?> PostRequest(string url, T? postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         T? result = null;
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
-            if (response.IsSuccessStatusCode)
-            {
-                await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
-                {
-                    if (x.IsFaulted) throw x.Exception ?? new();
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
-                });
-            }
-            else
-            {
-                logger.Warn($"POST request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "PostRequest Error" + $"URL:{url}");
-        }
-        return result;
-    }
-
-
-    public static async Task<T?> PostRequestWithCustomHeaders<UT>(string url, UT? postObject, Dictionary<string, string> httpHeaders, double? timeout = null)
-    {
-        using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-
-        T? result = null;
-        try
-        {
-            //HttpRequestMessage httpRequestMessage = new HttpRequestMessage
-            //{
-            //    RequestUri = new Uri(url),
-            //    Method = HttpMethod.Post,
-            //    Headers =
-            //    {
-            //        { "hondaHeaderType.messageId", "8209894C-DDB9-4CCE-A9DC-8EDC91EBC728" },
-            //        { "hondaHeaderType.siteId", "honda.com" },
-            //        { "hondaHeaderType.businessId", "dennis_pappas@na.honda.com" },
-            //        { "hondaHeaderType.collectedTypestamp", "2023-03-31T14:54:46.1008217Z" },
-            //        { "Accept", "application/json" },
-            //        { "X-Honda-wl-authorization", "Basic " + "c2VydmljZV9jb3NfYXBpX3VzZXJfcWE6V2F0ZXJAMzA=" },
-            //        { "Authorization", "Basic " + "c2VydmljZV9jb3NfYXBpX3VzZXJfcWE6V2F0ZXJAMzA=" }
-            //    },
-            //    Content = new StringContent(JsonConvert.SerializeObject(postObject), System.Text.Encoding.UTF8, "application/json")
-            //};
-
-            //foreach(KeyValuePair<string,string> keyValuePair in httpHeaders)
-            //{
-            //    httpRequestMessage.Headers.Add(keyValuePair.Key, keyValuePair.Value);
-            //}
-
-            foreach (KeyValuePair<string, string> header in httpHeaders)
-            {
-                client.DefaultRequestHeaders.Add(header.Key, header.Value);
-
-            }
-            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
-            HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
-            //HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
+            ClearHeaders(httpHeaders);
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -219,16 +163,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-    public static async Task<RestObject<T>> PostRestObjectRequest(string url, T? postObject, string? bearerToken = null, double? timeout = null)
+    public static async Task<RestObject<T>> PostRestObjectRequest(string url, T? postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         RestObject<T> restObject = new();
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
+            ClearHeaders(httpHeaders);
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -259,31 +204,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-    public static async Task<T?> GenericPostRequest<UT>(string url, UT postObject, Dictionary<string, string>? httpHeaders = null, string? bearerToken = null, double? timeout = null)
+    public static async Task<T?> GenericPostRequest<UT>(string url, UT postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         T? result = null;
         try
         {
-            if (httpHeaders is not null)
-            {
-                foreach (KeyValuePair<string, string> header in httpHeaders)
-                {
-                    client.DefaultRequestHeaders.Add(header.Key, header.Value);
-
-                }
-            }
-            else
-            {
-                client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
-            }
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
-            if(httpHeaders is not null)
-            {
-                client.DefaultRequestHeaders.Clear();
-            }
+            ClearHeaders(httpHeaders);
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -314,16 +245,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-    public static async Task<RestObject<T>> GenericPostRestObjectRequest<UT>(string url, UT postObject, string? bearerToken = null, double? timeout = null)
+    public static async Task<RestObject<T>> GenericPostRestObjectRequest<UT>(string url, UT postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         RestObject<T> restObject = new();
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
+            ClearHeaders(httpHeaders);
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -354,16 +286,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
-    public static async Task<string?> StringPostRequest(string url, T postObject, string? bearerToken = null, double? timeout = null)
+    public static async Task<string?> StringPostRequest(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         string? result = null;
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
+            ClearHeaders(httpHeaders);
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -394,16 +327,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
-    public static async Task<RestObject<string>> StringPostRestObjectRequest(string url, T postObject, string? bearerToken = null, double? timeout = null)
+    public static async Task<RestObject<string>> StringPostRestObjectRequest(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         RestObject<string> restObject = new();
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
             restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false);
+            ClearHeaders(httpHeaders);
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -434,16 +368,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
-    public static async Task<T?> DeleteRequest(string url, string? bearerToken = null, double? timeout = null)
+    public static async Task<T?> DeleteRequest(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         T? result = null;
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Debug($"DELETE URL: {url}");
             HttpResponseMessage response = await client.DeleteAsync(url, tokenSource.Token).ConfigureAwait(false);
+            ClearHeaders(httpHeaders);
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -474,16 +409,17 @@ public static class RestHelpers<T> where T : class
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
-    public static async Task<RestObject<T>> DeleteRestObjectRequest(string url, string? bearerToken = null, double? timeout = null)
+    public static async Task<RestObject<T>> DeleteRestObjectRequest(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
 
         RestObject<T> restObject = new();
         try
         {
-            client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+            AttachHeaders(bearerToken, httpHeaders);
             logger.Debug($"DELETE URL: {url}");
             restObject.Response = await client.DeleteAsync(url, tokenSource.Token).ConfigureAwait(false);
+            ClearHeaders(httpHeaders);
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -512,12 +448,13 @@ public static class RestHelpers<T> where T : class
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
-    public static async Task PutRequest(string url, T putObject, string? bearerToken = null, double? timeout = null)
+    public static async Task PutRequest(string url, T putObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+        AttachHeaders(bearerToken, httpHeaders);
 
         HttpResponseMessage response = await client.PutAsync(url, putObject, new JsonMediaTypeFormatter()).ConfigureAwait(false);
+        ClearHeaders(httpHeaders);
         response.EnsureSuccessStatusCode();
     }
 
@@ -530,10 +467,10 @@ public static class RestHelpers<T> where T : class
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
-    public static async Task<T?> PatchRequest(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null)
+    public static async Task<T?> PatchRequest(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+        AttachHeaders(bearerToken, httpHeaders);
 
         T? result = null;
         try
@@ -541,6 +478,7 @@ public static class RestHelpers<T> where T : class
             logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
             HttpResponseMessage response = await client.PatchAsync(url, patchDoc, tokenSource.Token).ConfigureAwait(false);
             //response.EnsureSuccessStatusCode();
+            ClearHeaders(httpHeaders);
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -570,10 +508,10 @@ public static class RestHelpers<T> where T : class
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
-    public static async Task<RestObject<T>> PatchRestObjectRequest(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null)
+    public static async Task<RestObject<T>> PatchRestObjectRequest(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null)
     {
         using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+        AttachHeaders(bearerToken, httpHeaders);
 
         RestObject<T> restObject = new();
         try
@@ -581,6 +519,7 @@ public static class RestHelpers<T> where T : class
             logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
             restObject.Response = await client.PatchAsync(url, patchDoc, tokenSource.Token).ConfigureAwait(false);
             //response.EnsureSuccessStatusCode();
+            ClearHeaders(httpHeaders);
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -710,6 +649,34 @@ public static class RestHelpers<T> where T : class
                     patch.Replace(path + modProp.Name, modProp.Value);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Attaches headers to client from httpHeaders if applicable, else only attaches authorization.
+    /// </summary>
+    /// <param name="bearerToken">Token used for bearer authentication</param>
+    /// <param name="httpHeaders">Dictionary of headers</param>
+    private static void AttachHeaders(string? bearerToken, Dictionary<string, string>? httpHeaders)
+    {
+        if (httpHeaders != null)
+        {
+            foreach (KeyValuePair<string, string> header in httpHeaders)
+            {
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+            }
+        }
+        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+    }
+    /// <summary>
+    /// Clears headers from client
+    /// </summary>
+    /// <param name="httpHeaders">Dictionary of headers used for the request</param>
+    private static void ClearHeaders(Dictionary<string, string>? httpHeaders)
+    {
+        if (httpHeaders != null)
+        {
+            client.DefaultRequestHeaders.Clear();
         }
     }
 }

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Common_Net_Funcs.Web.JWT;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+﻿using Common_Net_Funcs.Web.JWT;
 
 namespace Common_Net_Funcs.Web;
 
@@ -41,7 +34,7 @@ public static class DataPowerHelper
 
         Dictionary<string, string> JsonPostObject = new() { { "ApiGuid", $"{dataPowerConnectionModel?.guid}" } };
 
-        TokenObject DataPowerToken = await RestHelpers<TokenObject>.GenericPostRequest(dataPowerConnectionModel?.authUrl ?? string.Empty, JsonPostObject, httpPostHeaders) ?? new();
+        TokenObject DataPowerToken = await RestHelpers<TokenObject>.GenericPostRequest(dataPowerConnectionModel?.authUrl ?? string.Empty, JsonPostObject, httpHeaders: httpPostHeaders) ?? new();
 
         return DataPowerToken;
     }

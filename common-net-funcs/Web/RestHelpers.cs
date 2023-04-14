@@ -666,7 +666,15 @@ public static class RestHelpers<T> where T : class
                 client.DefaultRequestHeaders.Add(header.Key, header.Value);
             }
         }
-        client.DefaultRequestHeaders.Authorization = !string.IsNullOrWhiteSpace(bearerToken) ? new AuthenticationHeaderValue("Bearer", bearerToken) : null;
+
+        //changed this from inline if due to setting .Authorization to null if bearerToken is empty/null
+        //resulting in an exception during the post request: "A task was cancelled"
+        if (bearerToken != null || bearerToken == string.Empty)
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+        }
+        
+        
     }
     /// <summary>
     /// Clears headers from client

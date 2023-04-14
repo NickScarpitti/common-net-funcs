@@ -61,6 +61,7 @@
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="7.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.27.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.2.2" />
     <PackageReference Include="NPOI" Version="2.6.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.0.0" />

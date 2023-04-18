@@ -1,17 +1,169 @@
-﻿// Made by Frantisek Konopecky, Prague, 2014 - 2016 (https://www.codeproject.com/Articles/1111658/Fast-Deep-Copy-by-Expression-Trees-C-Sharp)
-//
-// Code comes under MIT licence - Can be used without 
-// limitations for both personal and commercial purposes.
-
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
+using Newtonsoft.Json;
 
 namespace Common_Net_Funcs.Tools;
 
-/// <summary>
-/// Superfast deep copier class, which uses Expression trees.
-/// </summary>
-public static class DeepCopyByExpressionTrees
+public static class DeepCloneSerializationHelpers
+{
+
+    /// <summary>
+    /// Deep clone a class (cloned object doesn't retain memopry references) using refelction (slowest)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="list"></param>
+    /// <returns></returns>
+    public static IEnumerable<T>? SerializeClone<T>(this IEnumerable<T> list)
+    {
+        if (list == null) { return null; }
+        string serialized = JsonConvert.SerializeObject(list);
+        return JsonConvert.DeserializeObject<IEnumerable<T>>(serialized);
+    }
+
+    /// <summary>
+    /// Deep clone a class (cloned object doesn't retain memopry references) using serialization (slowest)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="list"></param>
+    /// <returns></returns>
+    public static List<T>? SerializeClone<T>(this IList<T> list)
+    {
+        if (list == null) { return null; }
+        string serialized = JsonConvert.SerializeObject(list);
+        return JsonConvert.DeserializeObject<List<T>>(serialized);
+    }
+}
+
+public static class DeepCloneReflectionHelpers
+{
+    private static readonly MethodInfo? CloneMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    /// <summary>
+    /// Deep clone a class (cloned object doesn't retain memopry references) using refelction (mid-tier speed)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="original"></param>
+    /// <returns></returns>
+    public static T? DeepCloneReflection<T>(this T? original)
+    {
+        return (T?)Copy(original);
+    }
+
+    public static bool IsPrimitive(this Type type)
+    {
+        if (type == typeof(string)) return true;
+        return type.IsValueType & type.IsPrimitive;
+    }
+
+    private static object? Copy(this object? originalObject)
+    {
+        return InternalCopy(originalObject, new Dictionary<object, object?>(new ReferenceEqualityComparer()));
+    }
+    private static object? InternalCopy(object? originalObject, IDictionary<object, object?> visited)
+    {
+        if (originalObject == null) return null;
+        Type typeToReflect = originalObject.GetType();
+        if (IsPrimitive(typeToReflect)) return originalObject;
+        if (visited.ContainsKey(originalObject)) return visited[originalObject];
+        if (typeof(Delegate).IsAssignableFrom(typeToReflect)) return null;
+        object? cloneObject = CloneMethod!.Invoke(originalObject, null);
+        if (typeToReflect.IsArray)
+        {
+            Type? arrayType = typeToReflect.GetElementType();
+            if (IsPrimitive(arrayType!) == false)
+            {
+                Array clonedArray = (Array)cloneObject!;
+                clonedArray.ForEach((array, indices) => array.SetValue(InternalCopy(clonedArray.GetValue(indices), visited), indices));
+            }
+
+        }
+        visited.Add(originalObject, cloneObject);
+        CopyFields(originalObject, visited, cloneObject, typeToReflect);
+        RecursiveCopyBaseTypePrivateFields(originalObject, visited, cloneObject, typeToReflect);
+        return cloneObject;
+    }
+
+    private static void RecursiveCopyBaseTypePrivateFields(object originalObject, IDictionary<object, object?> visited, object? cloneObject, Type typeToReflect)
+    {
+        if (typeToReflect.BaseType != null)
+        {
+            RecursiveCopyBaseTypePrivateFields(originalObject, visited, cloneObject, typeToReflect.BaseType);
+            CopyFields(originalObject, visited, cloneObject, typeToReflect.BaseType, BindingFlags.Instance | BindingFlags.NonPublic, info => info.IsPrivate);
+        }
+    }
+
+    private static void CopyFields(object originalObject, IDictionary<object, object?> visited, object? cloneObject, Type typeToReflect, BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy, Func<FieldInfo, bool>? filter = null)
+    {
+        foreach (FieldInfo fieldInfo in typeToReflect.GetFields(bindingFlags))
+        {
+            if (filter != null && filter(fieldInfo) == false) continue;
+            if (IsPrimitive(fieldInfo.FieldType)) continue;
+            var originalFieldValue = fieldInfo.GetValue(originalObject);
+            var clonedFieldValue = InternalCopy(originalFieldValue, visited);
+            fieldInfo.SetValue(cloneObject, clonedFieldValue);
+        }
+    }
+}
+
+public class ReferenceEqualityComparer : EqualityComparer<object>
+{
+    public override bool Equals(object? x, object? y)
+    {
+        return ReferenceEquals(x, y);
+    }
+    public override int GetHashCode(object obj)
+    {
+        if (obj == null) return 0;
+        return obj.GetHashCode();
+    }
+}
+
+public static class ArrayExtensions
+{
+    public static void ForEach(this Array array, Action<Array, int[]> action)
+    {
+        if (array.LongLength == 0) return;
+        ArrayTraverse walker = new(array);
+        do action(array, walker.Position);
+        while (walker.Step());
+    }
+}
+
+internal class ArrayTraverse
+{
+    public int[] Position;
+    private int[] maxLengths;
+
+    public ArrayTraverse(Array array)
+    {
+        maxLengths = new int[array.Rank];
+        for (int i = 0; i < array.Rank; ++i)
+        {
+            maxLengths[i] = array.GetLength(i) - 1;
+        }
+        Position = new int[array.Rank];
+    }
+
+    public bool Step()
+    {
+        for (int i = 0; i < Position.Length; ++i)
+        {
+            if (Position[i] < maxLengths[i])
+            {
+                Position[i]++;
+                for (int j = 0; j < i; j++)
+                {
+                    Position[j] = 0;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+
+public static class DeepCopyExpressionTreeHelpers
 {
     private static readonly object IsStructTypeToDeepCopyDictionaryLocker = new();
     private static Dictionary<Type, bool> IsStructTypeToDeepCopyDictionary = new();
@@ -19,22 +171,22 @@ public static class DeepCopyByExpressionTrees
     private static readonly object CompiledCopyFunctionsDictionaryLocker = new();
     private static Dictionary<Type, Func<object, Dictionary<object, object>, object>> CompiledCopyFunctionsDictionary = new();
 
-    private static readonly Type ObjectType = typeof(Object);
+    private static readonly Type ObjectType = typeof(object);
     private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
 
     /// <summary>
-    /// Creates a deep copy of an object.
+    /// Deep clone a class (cloned object doesn't retain memopry references) using Expression Trees (fastest)
     /// </summary>
     /// <typeparam name="T">Object type.</typeparam>
     /// <param name="original">Object to copy.</param>
     /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
     /// <returns></returns>
-    public static T? DeepCopyByExpressionTree<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
+    public static T? DeepCloneByExpressionTree<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
     {
-        return (T?)DeepCopyByExpressionTreeObj(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
+        return (T?)DeepCloneByExpressionTree(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
     }
-    
-    private static object? DeepCopyByExpressionTreeObj(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
+
+    private static object? DeepCloneByExpressionTree(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
     {
         if (original == null)
         {
@@ -67,11 +219,11 @@ public static class DeepCopyByExpressionTrees
         var compiledCopyFunction = GetOrCreateCompiledLambdaCopyFunction(type);
 
         object copy = compiledCopyFunction(original, copiedReferencesDict);
-        
+
         return copy;
     }
-    
-    private static Func<object, Dictionary<object,object>, object> GetOrCreateCompiledLambdaCopyFunction(Type type)
+
+    private static Func<object, Dictionary<object, object>, object> GetOrCreateCompiledLambdaCopyFunction(Type type)
     {
         // The following structure ensures that multiple threads can use the dictionary
         // even while dictionary is locked and being updated by other thread.
@@ -120,12 +272,12 @@ public static class DeepCopyByExpressionTrees
         }
 
         ///// COPY ALL NONVALUE OR NONPRIMITIVE FIELDS
-        FieldsCopyExpressions(type,inputParameter,inputDictionary,outputVariable,boxingVariable,expressions);
-        
+        FieldsCopyExpressions(type, inputParameter, inputDictionary, outputVariable, boxingVariable, expressions);
+
         ///// COPY ELEMENTS OF ARRAY
         if (IsArray(type) && IsTypeToDeepCopy(type.GetElementType()))
         {
-            CreateArrayCopyLoopExpression(type,inputParameter,inputDictionary,outputVariable,variables,expressions);
+            CreateArrayCopyLoopExpression(type, inputParameter, inputDictionary, outputVariable, variables, expressions);
         }
 
         ///// COMBINE ALL EXPRESSIONS INTO LAMBDA FUNCTION
@@ -133,7 +285,7 @@ public static class DeepCopyByExpressionTrees
 
         return lambda;
     }
-    
+
     private static void InitializeExpressions(Type type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable,
         out ParameterExpression boxingVariable, out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions)
     {
@@ -165,7 +317,7 @@ public static class DeepCopyByExpressionTrees
         /////     return null;
         ///// }
 
-        ConditionalExpression ifNullThenReturnNullExpression = Expression.IfThen(Expression.Equal(inputParameter,Expression.Constant(null, ObjectType)),Expression.Return(endLabel));
+        ConditionalExpression ifNullThenReturnNullExpression = Expression.IfThen(Expression.Equal(inputParameter, Expression.Constant(null, ObjectType)), Expression.Return(endLabel));
 
         expressions.Add(ifNullThenReturnNullExpression);
     }
@@ -175,21 +327,21 @@ public static class DeepCopyByExpressionTrees
         ///// Intended code:
         /////
         ///// var output = (<type>)input.MemberwiseClone();
-        
+
         MethodInfo memberwiseCloneMethod = ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
-        BinaryExpression memberwiseCloneInputExpression = Expression.Assign(outputVariable,Expression.Convert(Expression.Call(inputParameter,memberwiseCloneMethod),type));
+        BinaryExpression memberwiseCloneInputExpression = Expression.Assign(outputVariable, Expression.Convert(Expression.Call(inputParameter, memberwiseCloneMethod), type));
 
         expressions.Add(memberwiseCloneInputExpression);
     }
-    
+
     private static void StoreReferencesIntoDictionaryExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<Expression> expressions)
     {
         ///// Intended code:
         /////
         ///// inputDictionary[(Object)input] = (Object)output;
 
-        BinaryExpression storeReferencesExpression = Expression.Assign(Expression.Property(inputDictionary,ObjectDictionaryType.GetProperty("Item")!,inputParameter),Expression.Convert(outputVariable, ObjectType));
+        BinaryExpression storeReferencesExpression = Expression.Assign(Expression.Property(inputDictionary, ObjectDictionaryType.GetProperty("Item")!, inputParameter), Expression.Convert(outputVariable, ObjectType));
 
         expressions.Add(storeReferencesExpression);
     }
@@ -310,7 +462,7 @@ public static class DeepCopyByExpressionTrees
 
         bool forceDeepCopy = elementType != ObjectType;
 
-        UnaryExpression rightSide = Expression.Convert(Expression.Call( DeepCopyByExpressionTreeObjMethod!, Expression.Convert(indexFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary), elementType!);
+        UnaryExpression rightSide = Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(indexFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary), elementType!);
 
         BinaryExpression assignExpression = Expression.Assign(indexTo, rightSide);
 
@@ -353,7 +505,7 @@ public static class DeepCopyByExpressionTrees
 
         BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
 
-        return Expression.Block(new[] { lengthVariable }, lengthAssignment, indexAssignment, newLoop); 
+        return Expression.Block(new[] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
     }
 
     private static BinaryExpression GetLengthForDimensionExpression(ParameterExpression lengthVariable, ParameterExpression inputParameter, int i)
@@ -420,7 +572,7 @@ public static class DeepCopyByExpressionTrees
             }
         }
     }
-    
+
     private static FieldInfo[] GetAllRelevantFields(Type? type, bool forceAllFields = false)
     {
         List<FieldInfo> fieldsList = new();
@@ -455,12 +607,12 @@ public static class DeepCopyByExpressionTrees
         /////
         ///// fieldInfo.SetValue(boxing, <fieldtype>null);
 
-        var fieldToNullExpression = Expression.Call( Expression.Constant(field), SetValueMethod!, boxingVariable, Expression.Constant(null, field.FieldType));
+        var fieldToNullExpression = Expression.Call(Expression.Constant(field), SetValueMethod!, boxingVariable, Expression.Constant(null, field.FieldType));
 
         expressions.Add(fieldToNullExpression);
     }
 
-    private static readonly Type ThisType = typeof(DeepCopyByExpressionTrees);
+    private static readonly Type ThisType = typeof(DeepCopyExpressionTreeHelpers);
     private static readonly MethodInfo? DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static);
 
     private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions)
@@ -495,10 +647,10 @@ public static class DeepCopyByExpressionTrees
         ///// Intended code:
         /////
         ///// output.<field> = (<type>)null;
-        
+
         MemberExpression fieldTo = Expression.Field(outputVariable, field);
 
-        var fieldToNullExpression = Expression.Assign(fieldTo,Expression.Constant(null, field.FieldType));
+        var fieldToNullExpression = Expression.Assign(fieldTo, Expression.Constant(null, field.FieldType));
 
         expressions.Add(fieldToNullExpression);
     }
@@ -510,7 +662,7 @@ public static class DeepCopyByExpressionTrees
         ///// output.<field> = (<fieldType>)DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>);
 
         MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
-        
+
         Type fieldType = field.FieldType;
 
         MemberExpression fieldTo = Expression.Field(outputVariable, field);
@@ -579,12 +731,12 @@ public static class DeepCopyByExpressionTrees
 
         return isStructTypeToDeepCopy;
     }
-    
+
     private static bool IsStructWhichNeedsDeepCopy_NoDictionaryUsed(Type type)
     {
         return IsStructOtherThanBasicValueTypes(type) && HasInItsHierarchyFieldsWithClasses(type);
     }
-    
+
     private static bool IsStructOtherThanBasicValueTypes(Type type)
     {
         return type.IsValueType && !type.IsPrimitive && !type.IsEnum && type != typeof(decimal);
@@ -610,7 +762,7 @@ public static class DeepCopyByExpressionTrees
         IEnumerable<Type> notBasicStructsTypes = allFieldTypes.Where(IsStructOtherThanBasicValueTypes).ToList();
 
         IEnumerable<Type> typesToCheck = notBasicStructsTypes.Where(t => !alreadyCheckedTypes.Contains(t)).ToList();
-        
+
         foreach (var typeToCheck in typesToCheck)
         {
             if (HasInItsHierarchyFieldsWithClasses(typeToCheck, alreadyCheckedTypes))
@@ -621,7 +773,7 @@ public static class DeepCopyByExpressionTrees
 
         return false;
     }
-    
+
     public class ReferenceEqualityComparer : EqualityComparer<object>
     {
         public override bool Equals(object? x, object? y)

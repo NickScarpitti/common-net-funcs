@@ -92,56 +92,6 @@ public static class ObjectHelpers
     }
 
     /// <summary>
-    /// Clone one IEnumerable into another without a reference linking the two
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="list"></param>
-    /// <returns></returns>
-    public static IEnumerable<T>? SerializeClone<T>(this IEnumerable<T> list)
-    {
-        if (list == null) { return null; }
-        string serialized = JsonConvert.SerializeObject(list);
-        return JsonConvert.DeserializeObject<IEnumerable<T>>(serialized);
-    }
-
-    /// <summary>
-    /// Clone one List into another without a reference linking the two
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="list"></param>
-    /// <returns></returns>
-    public static List<T>? SerializeClone<T>(this IList<T> list)
-    {
-        if (list == null) { return null; }
-        string serialized = JsonConvert.SerializeObject(list);
-        return JsonConvert.DeserializeObject<List<T>>(serialized);
-    }
-
-    /// <summary>
-    /// Clone one IEnumerable into another without a reference linking the two
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="list"></param>
-    /// <returns></returns>
-    public static IEnumerable<T>? DeepClone<T>(this IEnumerable<T> list)
-    {
-        if (list == null) { return null; }
-        return list.DeepCopyByExpressionTree();
-    }
-
-    /// <summary>
-    /// Clone one List into another without a reference linking the two
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="list"></param>
-    /// <returns></returns>
-    public static List<T>? DeepClone<T>(this IList<T> list)
-    {
-        if (list == null) { return null; }
-        return list.DeepCopyByExpressionTree()?.ToList();
-    }
-
-    /// <summary>
     /// Adds AddRange functionality to ConcurrentBag similar to a list. Skips null items
     /// </summary>
     /// <typeparam name="T"></typeparam>

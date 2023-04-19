@@ -18,4 +18,14 @@ public static class BoolConversion
         }
         return EYesNo.No.ToString();
     }
+
+    /// <summary>
+    /// Convert bool to 1 or 0
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns>"Yes" if true, "No" if false</returns>
+    public static int BoolToInt(this bool value)
+    {
+        return Convert.ToInt32(value);
+    }
 }

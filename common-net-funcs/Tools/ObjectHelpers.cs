@@ -92,30 +92,6 @@ public static class ObjectHelpers
     }
 
     /// <summary>
-    /// Clone one IEnumerable into another without a reference linking the two
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="list"></param>
-    /// <returns></returns>
-    public static IEnumerable<T>? Clone<T>(this IEnumerable<T> list)
-    {
-        string serialized = JsonConvert.SerializeObject(list);
-        return JsonConvert.DeserializeObject<IEnumerable<T>>(serialized);
-    }
-
-    /// <summary>
-    /// Clone one List into another without a reference linking the two
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="list"></param>
-    /// <returns></returns>
-    public static List<T>? Clone<T>(this IList<T> list)
-    {
-        string serialized = JsonConvert.SerializeObject(list);
-        return JsonConvert.DeserializeObject<List<T>>(serialized);
-    }
-
-    /// <summary>
     /// Adds AddRange functionality to ConcurrentBag similar to a list. Skips null items
     /// </summary>
     /// <typeparam name="T"></typeparam>

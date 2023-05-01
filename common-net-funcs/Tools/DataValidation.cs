@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using NLog;
 
 namespace Common_Net_Funcs.Tools;
@@ -160,6 +161,11 @@ public static class DataValidation
         return oaDate != null && oaDate >= 657435.0 && oaDate <= 2958465.99999999;
     }
 
+    /// <summary>
+    /// Check if an object is a numeric type
+    /// </summary>
+    /// <param name="testObject"></param>
+    /// <returns></returns>
     public static bool IsNumeric(this object? testObject)
     {
         bool isNumeric = false;
@@ -168,5 +174,35 @@ public static class DataValidation
             isNumeric = decimal.TryParse(testObject.ToString(), NumberStyles.Number, NumberFormatInfo.InvariantInfo, out _);
         }
         return isNumeric;
+    }
+
+    /// <summary>
+    /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
+    /// </summary>
+    /// <param name="testString"></param>
+    /// <returns></returns>
+    public static bool IsAlphanumeric(this string? testString)
+    {
+        return testString != null && Regex.IsMatch(testString, "^[a-zA-Z0-9]*$");
+    }
+
+    /// <summary>
+    /// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
+    /// </summary>
+    /// <param name="testString"></param>
+    /// <returns></returns>
+    public static bool IsAlphaOnly(this string? testString)
+    {
+        return testString != null && Regex.IsMatch(testString, "^[a-zA-Z]*$");
+    }
+
+    /// <summary>
+    /// Check string to see if a string only contains numbers (0-9). Null returns false.
+    /// </summary>
+    /// <param name="testString"></param>
+    /// <returns></returns>
+    public static bool IsNumericOnly(this string? testString)
+    {
+        return testString != null && Regex.IsMatch(testString, "^[0-9]*$");
     }
 }

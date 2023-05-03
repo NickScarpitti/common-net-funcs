@@ -671,7 +671,6 @@ public static class RestHelpers<T> where T : class
         //resulting in an exception during the post request: "A task was cancelled"
         if (bearerToken != null || bearerToken == string.Empty)
         {
-            client.DefaultRequestHeaders.Authorization = null;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
         }
     }

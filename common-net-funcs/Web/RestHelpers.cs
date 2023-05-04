@@ -486,7 +486,6 @@ public static class RestHelpers<T> where T : class
             AttachHeaders(bearerToken, httpHeaders);
             logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
             HttpResponseMessage response = await client.PatchAsync(url, patchDoc, tokenSource.Token).ConfigureAwait(false);
-            //response.EnsureSuccessStatusCode();
             ClearHeaders(httpHeaders);
             if (response.IsSuccessStatusCode)
             {
@@ -526,7 +525,6 @@ public static class RestHelpers<T> where T : class
             AttachHeaders(bearerToken, httpHeaders);
             logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
             restObject.Response = await client.PatchAsync(url, patchDoc, tokenSource.Token).ConfigureAwait(false);
-            //response.EnsureSuccessStatusCode();
             ClearHeaders(httpHeaders);
             if (restObject.Response.IsSuccessStatusCode)
             {

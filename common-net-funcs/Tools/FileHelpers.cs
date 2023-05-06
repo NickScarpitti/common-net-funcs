@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Text.RegularExpressions;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -13,8 +14,9 @@ public static class FileHelpers
     /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same name exists already
     /// </summary>
     /// <param name="originalFullFileName">Full path and file name</param>
+    /// <param name="startFromZero">Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.</param>
     /// <returns></returns>
-    public static string GetSafeSaveName(this string originalFullFileName)
+    public static string GetSafeSaveName(this string originalFullFileName, bool startFromZero = true, bool supressLogging = false)
     {
         //Remove invalid characters from 
         originalFullFileName = originalFullFileName.Replace(Path.GetFileName(originalFullFileName), Path.GetFileName(originalFullFileName)
@@ -24,12 +26,42 @@ public static class FileHelpers
         if (File.Exists(testPath))
         {
             //Update name
-            int i = 0;
             string ext = Path.GetExtension(originalFullFileName);
             string oldFileName = Path.GetFileName(originalFullFileName).Replace(ext, null);
+            string incrementingPattern = $@"\([0-9]+\)\{ext}";
+            int i = 0;
+            string? lastTestPath = null;
+            if (!startFromZero)
+            {
+                i = int.TryParse(Regex.Match(oldFileName, $@"\(([^)]*)\){ext}").Groups[0].Value, out int startNumber) ? startNumber : 0; //Start at number present
+            }
             while (File.Exists(testPath))
             {
-                testPath = Path.GetFullPath(originalFullFileName.Replace(oldFileName + ext, $"{oldFileName} ({i}){ext}"));
+                if (!supressLogging)
+                {
+                    logger.Info($"[{testPath}] exists, checking with iterator [{i}]");
+                }
+                Regex regex = new Regex(incrementingPattern, RegexOptions.IgnoreCase);
+                if (regex.IsMatch(oldFileName + ext)) //File already has an iterator
+                {
+                    testPath = Regex.Replace(oldFileName + ext, incrementingPattern, $"({i}){ext}");
+                }
+                else
+                {
+                    testPath = Path.GetFullPath(originalFullFileName.Replace(oldFileName + ext, $"{oldFileName} ({i}){ext}"));
+                }
+
+                if (!supressLogging)
+                {
+                    logger.Info($"Checking new testPath [{testPath}] with iterator [{i}]]");
+                }
+
+                if (lastTestPath == testPath)
+                {
+                    logger.Warn($"File name [{testPath}] not changing, breaking out of loop.");
+                    break;
+                }
+                lastTestPath = testPath;
                 i++;
             }
         }
@@ -44,10 +76,10 @@ public static class FileHelpers
         if (File.Exists(testPath))
         {
             int i = 0;
-            string extension = Path.GetExtension(fileName);
+            string ext = Path.GetExtension(fileName);
             while (File.Exists(testPath))
             {
-                testPath = Path.GetFullPath(Path.Combine(path, $"{fileName.Replace(extension, string.Empty)} ({i}){extension}"));
+                testPath = Path.GetFullPath(Path.Combine(path, $"{fileName.Replace(ext, string.Empty)} ({i}){ext}"));
                 i++;
             }
         }

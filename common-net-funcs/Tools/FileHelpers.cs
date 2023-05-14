@@ -23,7 +23,7 @@ public static class FileHelpers
         string oldCleanFileName = originalFileName.Replace(Path.GetFileName(originalFullFileName), Path.GetFileName(originalFullFileName)
             .Replace("/", "-").Replace(@"\", "-").Replace(":", ".").Replace("<", "_").Replace(">", "_").Replace(@"""", "'").Replace("|", "_").Replace("?", "_").Replace("*", "_"));
 
-        string testPath = Path.Combine(Path.GetDirectoryName(originalFullFileName) ?? string.Empty, oldCleanFileName);
+        string testPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(originalFullFileName) ?? string.Empty, oldCleanFileName));
         if (File.Exists(testPath))
         {
             //Update name

@@ -19,21 +19,22 @@ public static class FileHelpers
     public static string GetSafeSaveName(this string originalFullFileName, bool startFromZero = true, bool supressLogging = false)
     {
         //Remove invalid characters from 
-        originalFullFileName = originalFullFileName.Replace(Path.GetFileName(originalFullFileName), Path.GetFileName(originalFullFileName)
+        string originalFileName = Path.GetFileName(originalFullFileName);
+        string oldCleanFileName = originalFileName.Replace(Path.GetFileName(originalFullFileName), Path.GetFileName(originalFullFileName)
             .Replace("/", "-").Replace(@"\", "-").Replace(":", ".").Replace("<", "_").Replace(">", "_").Replace(@"""", "'").Replace("|", "_").Replace("?", "_").Replace("*", "_"));
 
-        string testPath = Path.GetFullPath(originalFullFileName);
+        string testPath = Path.Combine(Path.GetDirectoryName(originalFullFileName) ?? string.Empty, oldCleanFileName);
         if (File.Exists(testPath))
         {
             //Update name
             string ext = Path.GetExtension(originalFullFileName);
-            string oldFileName = Path.GetFileName(originalFullFileName).Replace(ext, null);
+            oldCleanFileName = Path.GetFileName(originalFullFileName).Replace(ext, null);
             string incrementingPattern = $@"\([0-9]+\)\{ext}";
             int i = 0;
             string? lastTestPath = null;
             if (!startFromZero)
             {
-                i = int.TryParse(Regex.Match(oldFileName, $@"\(([^)]*)\){ext}").Groups[0].Value, out int startNumber) ? startNumber : 0; //Start at number present
+                i = int.TryParse(Regex.Match(oldCleanFileName, $@"\(([^)]*)\){ext}").Groups[0].Value, out int startNumber) ? startNumber : 0; //Start at number present
             }
             while (File.Exists(testPath))
             {
@@ -42,13 +43,13 @@ public static class FileHelpers
                     logger.Info($"[{testPath}] exists, checking with iterator [{i}]");
                 }
                 Regex regex = new Regex(incrementingPattern, RegexOptions.IgnoreCase);
-                if (regex.IsMatch(oldFileName + ext)) //File already has an iterator
+                if (regex.IsMatch(oldCleanFileName + ext)) //File already has an iterator
                 {
-                    testPath = Regex.Replace(oldFileName + ext, incrementingPattern, $"({i}){ext}");
+                    testPath = Regex.Replace(oldCleanFileName + ext, incrementingPattern, $"({i}){ext}");
                 }
                 else
                 {
-                    testPath = Path.GetFullPath(originalFullFileName.Replace(oldFileName + ext, $"{oldFileName} ({i}){ext}"));
+                    testPath = Path.GetFullPath(originalFullFileName.Replace(oldCleanFileName + ext, $"{oldCleanFileName} ({i}){ext}"));
                 }
 
                 if (!supressLogging)
@@ -64,6 +65,10 @@ public static class FileHelpers
                 lastTestPath = testPath;
                 i++;
             }
+        }
+        else
+        {
+            logger.Info($"Original path with cleaned file name [{testPath}] is unique");
         }
         return testPath;
     }

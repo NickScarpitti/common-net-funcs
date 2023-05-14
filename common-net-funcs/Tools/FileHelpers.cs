@@ -45,7 +45,7 @@ public static class FileHelpers
                 Regex regex = new Regex(incrementingPattern, RegexOptions.IgnoreCase);
                 if (regex.IsMatch(oldCleanFileName + ext)) //File already has an iterator
                 {
-                    testPath = Regex.Replace(oldCleanFileName + ext, incrementingPattern, $"({i}){ext}");
+                    testPath = Path.GetFullPath(Regex.Replace(oldCleanFileName + ext, incrementingPattern, $"({i}){ext}"));
                 }
                 else
                 {
@@ -73,7 +73,7 @@ public static class FileHelpers
         return testPath;
     }
 
-    public static string GetSafeSaveName(string path, string fileName)
+    public static string GetSafeSaveName(string path, string fileName, bool startFromZero = true)
     {
         fileName = fileName.Replace("/", "-").Replace(@"\", "-").Replace(":", ".").Replace("<", "_").Replace(">", "_").Replace(@"""", "'").Replace("|", "_").Replace("?", "_").Replace("*", "_");
         
@@ -82,11 +82,28 @@ public static class FileHelpers
         {
             int i = 0;
             string ext = Path.GetExtension(fileName);
+            string incrementingPattern = $@"\([0-9]+\)\{ext}";
+            if (!startFromZero)
+            {
+                i = int.TryParse(Regex.Match(fileName, $@"\(([^)]*)\){ext}").Groups[0].Value, out int startNumber) ? startNumber : 0; //Start at number present
+            }
             while (File.Exists(testPath))
             {
-                testPath = Path.GetFullPath(Path.Combine(path, $"{fileName.Replace(ext, string.Empty)} ({i}){ext}"));
-                i++;
+                Regex regex = new Regex(incrementingPattern, RegexOptions.IgnoreCase);
+                if (regex.IsMatch(fileName)) //File already has an iterator
+                {
+                    testPath = Path.GetFullPath(Path.Combine(path, Regex.Replace(fileName, incrementingPattern, $"({i}){ext}")));
+                }
+                else
+                {
+                    testPath = Path.GetFullPath(Path.Combine(path, $"{fileName.Replace(ext, string.Empty)} ({i}){ext}"));
+                    i++;
+                }
             }
+        }
+        else
+        {
+            logger.Info($"Original path with cleaned file name [{testPath}] is unique");
         }
         return Path.GetFileName(testPath);
     }

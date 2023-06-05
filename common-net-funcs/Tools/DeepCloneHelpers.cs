@@ -163,7 +163,7 @@ internal class ArrayTraverse
 }
 
 
-public static class DeepCopyExpressionTreeHelpers
+public static class DeepCloneExpressionTreeHelpers
 {
     private static readonly object IsStructTypeToDeepCopyDictionaryLocker = new();
     private static Dictionary<Type, bool> IsStructTypeToDeepCopyDictionary = new();
@@ -175,13 +175,13 @@ public static class DeepCopyExpressionTreeHelpers
     private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
 
     /// <summary>
-    /// Deep clone a class (cloned object doesn't retain memopry references) using Expression Trees (fastest)
+    /// Deep clone a class (cloned object doesn't retain memory references) using Expression Trees (fastest)
     /// </summary>
     /// <typeparam name="T">Object type.</typeparam>
     /// <param name="original">Object to copy.</param>
     /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
     /// <returns></returns>
-    public static T? DeepCloneByExpressionTree<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
+    public static T? DeepClone<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
     {
         return (T?)DeepCloneByExpressionTree(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
     }
@@ -612,7 +612,7 @@ public static class DeepCopyExpressionTreeHelpers
         expressions.Add(fieldToNullExpression);
     }
 
-    private static readonly Type ThisType = typeof(DeepCopyExpressionTreeHelpers);
+    private static readonly Type ThisType = typeof(DeepCloneExpressionTreeHelpers);
     private static readonly MethodInfo? DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static);
 
     private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions)

@@ -162,7 +162,9 @@ internal class ArrayTraverse
     }
 }
 
-
+/// <summary>
+/// Superfast deep copier class, which uses Expression trees.
+/// </summary>
 public static class DeepCloneExpressionTreeHelpers
 {
     private static readonly object IsStructTypeToDeepCopyDictionaryLocker = new();
@@ -171,7 +173,7 @@ public static class DeepCloneExpressionTreeHelpers
     private static readonly object CompiledCopyFunctionsDictionaryLocker = new();
     private static Dictionary<Type, Func<object, Dictionary<object, object>, object>> CompiledCopyFunctionsDictionary = new();
 
-    private static readonly Type ObjectType = typeof(object);
+    private static readonly Type ObjectType = typeof(Object);
     private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
 
     /// <summary>
@@ -183,10 +185,10 @@ public static class DeepCloneExpressionTreeHelpers
     /// <returns></returns>
     public static T? DeepClone<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
     {
-        return (T?)DeepCloneByExpressionTree(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
+        return (T?)DeepCopyByExpressionTreeObj(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
     }
 
-    private static object? DeepCloneByExpressionTree(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
+    private static object? DeepCopyByExpressionTreeObj(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
     {
         if (original == null)
         {
@@ -225,10 +227,8 @@ public static class DeepCloneExpressionTreeHelpers
 
     private static Func<object, Dictionary<object, object>, object> GetOrCreateCompiledLambdaCopyFunction(Type type)
     {
-        // The following structure ensures that multiple threads can use the dictionary
-        // even while dictionary is locked and being updated by other thread.
-        // That is why we do not modify the old dictionary instance but
-        // we replace it with a new instance everytime.
+        // The following structure ensures that multiple threads can use the dictionary even while dictionary is locked and being updated by other thread.
+        // That is why we do not modify the old dictionary instance but we replace it with a new instance every time.
 
         if (!CompiledCopyFunctionsDictionary.TryGetValue(type, out Func<object, Dictionary<object, object>, object>? compiledCopyFunction))
         {

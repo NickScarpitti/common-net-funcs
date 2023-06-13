@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Reflection;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 
@@ -42,7 +43,7 @@ public class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GenericExcelExport Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
 
         return new MemoryStream();
@@ -78,7 +79,7 @@ public class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GenericExcelExport Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
 
         return new MemoryStream();
@@ -114,7 +115,7 @@ public class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "AddGenericTable Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return success;
     }
@@ -148,7 +149,7 @@ public class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "AddGenericTable Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return success;
     }

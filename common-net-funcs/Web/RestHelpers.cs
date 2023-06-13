@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
+using System.Reflection;
 using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
@@ -66,7 +67,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Get Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return result;
     }
@@ -105,7 +106,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Get Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return restObject;
     }
@@ -145,7 +146,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "PostRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return result;
     }
@@ -185,7 +186,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "PostRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return restObject;
     }
@@ -225,7 +226,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GenericPostRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return result;
     }
@@ -265,7 +266,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GenericPostRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return restObject;
     }
@@ -305,7 +306,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "StringPostRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return result;
     }
@@ -345,7 +346,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "StringPostRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return restObject;
     }
@@ -385,7 +386,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "DeleteRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return result;
     }
@@ -425,7 +426,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "DeleteRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return restObject;
     }
@@ -462,8 +463,7 @@ public static class RestHelpers<T> where T : class
             }
         }
         catch (Exception ex)
-        {
-            logger.Error(ex, "PatchRequest Error" + $"URL:{url}");
+        {logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return result;
     }
@@ -502,7 +502,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "PatchRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return result;
     }
@@ -541,7 +541,7 @@ public static class RestHelpers<T> where T : class
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "PatchRequest Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
         }
         return restObject;
     }

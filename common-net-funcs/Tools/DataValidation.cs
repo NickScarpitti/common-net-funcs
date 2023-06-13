@@ -47,7 +47,7 @@ public static class DataValidation
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "IsEqual Error");
+                logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
                 return false;
             }
         }

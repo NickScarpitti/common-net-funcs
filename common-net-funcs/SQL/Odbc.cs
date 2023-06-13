@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Data.Odbc;
+using System.Reflection;
 
 namespace Common_Net_Funcs.SQL;
 
@@ -40,11 +41,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, "GetDataTable Error");
+            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error getting datatable: " + ex, "GetDataTable Error");
+            logger.Error("Error getting datatable: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return new DataTable();
     }
@@ -70,11 +71,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, "GetDataTableWithParms Error");
+            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error getting datatable: " + ex, "GetDataTableWithParms Error");
+            logger.Error("Error getting datatable: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return new DataTable();
     }
@@ -102,11 +103,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, "GetDataTableSynchronous Error");
+            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error getting datatable: " + ex, "GetDataTableSynchronous Error");
+            logger.Error("Error getting datatable: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return new DataTable();
     }
@@ -133,11 +134,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, "RunUpdateQuery Error");
+            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error executing update query: " + ex, "RunUpdateQuery Error");
+            logger.Error("Error executing update query: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return updateResult;
     }
@@ -164,11 +165,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, "RunUpdateQuerySynchronous Error");
+            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error executing update query: " + ex, "RunUpdateQuerySynchronous Error");
+            logger.Error("Error executing update query: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return updateResult;
     }

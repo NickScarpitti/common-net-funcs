@@ -55,7 +55,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ObjectUpdate Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 
@@ -79,7 +79,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ObjectFill Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 
@@ -107,7 +107,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ObjectFill Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 
@@ -136,7 +136,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ObjectFill Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 
@@ -164,7 +164,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ObjectFill Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 
@@ -192,7 +192,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ObjectFill Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 
@@ -215,7 +215,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ObjectFill Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 
@@ -234,7 +234,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ObjectFill Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 }

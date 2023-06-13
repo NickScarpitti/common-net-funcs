@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Reflection;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -69,7 +70,7 @@ public static class FileHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "AddFileToZip Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
     
@@ -104,7 +105,7 @@ public static class FileHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ZipFiles Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 }

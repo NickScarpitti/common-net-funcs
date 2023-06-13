@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MimeKit;
@@ -146,7 +147,7 @@ public static class Email
                     }
                     catch (Exception ex)
                     {
-                        logger.Warn(ex, "SendEmail Error");
+                        logger.Warn(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
                         if (i == 7) { success = false; } //Sets success to false when the email send fails on the last attempt
                     }
                     Thread.Sleep(500);
@@ -155,7 +156,7 @@ public static class Email
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "SendEmail Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             success = false;
         }
         return success;
@@ -175,7 +176,7 @@ public static class Email
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ConfirmValidEmail Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return isValid;
     }
@@ -226,7 +227,7 @@ public static class Email
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "AddAttachments Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 }

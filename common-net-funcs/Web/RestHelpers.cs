@@ -628,7 +628,7 @@ public static class RestHelpers<T> where T : class
                     }
                 }                
             }
-            else if ((!(origProp?.Value.ToString(Formatting.None) ?? null).StrEq(modProp?.Value.ToString(Formatting.None)) && origProp?.Value.Type != JTokenType.Date))
+            else if (((origProp?.Value.ToString(Formatting.None) ?? null) != modProp?.Value.ToString(Formatting.None)) && origProp?.Value.Type != JTokenType.Date)
             {
                 if (origProp?.Value.Type == JTokenType.Object)
                 {

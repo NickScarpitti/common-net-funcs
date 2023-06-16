@@ -63,13 +63,13 @@ public class DataTableConversion
     {
         ConcurrentBag<Tuple<DataColumn, PropertyInfo>> map = new ConcurrentBag<Tuple<DataColumn, PropertyInfo>>();
 
-        Parallel.ForEach(typeof(T).GetProperties(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, propertyInfo =>
+        foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
         {
             if (table.Columns.Contains(propertyInfo.Name))
             {
                 map.Add(new Tuple<DataColumn, PropertyInfo>(table.Columns[propertyInfo.Name]!, propertyInfo));
             }
-        });
+        }
 
         ConcurrentBag<T?> bag = new ConcurrentBag<T?>();
         Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row =>

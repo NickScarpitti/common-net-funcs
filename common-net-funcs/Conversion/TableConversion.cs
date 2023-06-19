@@ -10,44 +10,55 @@ public class DataTableConversion
     /// </summary>
     /// <typeparam name="T">Class to use in table conversion</typeparam>
     /// <param name="table">Table to convert to list</param>
+    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ConvertDataTableToList<T>(DataTable table) where T : class, new()
+    public static List<T?> ConvertDataTableToList<T>(DataTable table, bool convertShortToBool = false) where T : class, new()
     {
-        List<Tuple<DataColumn, PropertyInfo>> map = new List<Tuple<DataColumn, PropertyInfo>>();
-
-        foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
-        {
-            if (table.Columns.Contains(propertyInfo.Name))
-            {
-                map.Add(new Tuple<DataColumn, PropertyInfo>(table.Columns[propertyInfo.Name]!, propertyInfo));
-            }
-        }
+        List<Tuple<DataColumn, PropertyInfo, bool>> map = new List<Tuple<DataColumn, PropertyInfo, bool>>();
 
         List<T?> list = new List<T?>(table.Rows.Count);
-        foreach (DataRow row in table.Rows)
-        {
-            if (row == null)
-            {
-                list.Add(null);
-                continue;
-            }
-            T item = new T();
-            foreach (Tuple<DataColumn, PropertyInfo> pair in map)
-            {
-                object? value = row[pair.Value1!];
 
-                //Handle issue where DB returns Int16 for boolean values
-                if ((value.GetType() == typeof(short) || value.GetType() == typeof(short?)) && 
-                    (pair.Value2!.PropertyType == typeof(bool) || pair.Value2!.PropertyType == typeof(bool?)))
+        if (table.Rows.Count > 0)
+        {
+            DataRow firstRow = table.Rows[0];
+            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+            {
+                if (convertShortToBool)
                 {
-                    pair.Value2!.SetValue(item, value is not DBNull ? Convert.ToBoolean(value) : null);
+                    Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
+                    map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo,
+                        convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
                 }
                 else
                 {
-                    pair.Value2!.SetValue(item, value is not DBNull ? value : null);
+                    map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo, false));
                 }
             }
-            list.Add(item);
+
+            foreach (DataRow row in table.Rows)
+            {
+                if (row == null)
+                {
+                    list.Add(null);
+                    continue;
+                }
+                T item = new T();
+                foreach (Tuple<DataColumn, PropertyInfo, bool> pair in map)
+                {
+                    object? value = row[pair.DataColumn!];
+
+                    //Handle issue where DB returns Int16 for boolean values
+                    if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
+                    {
+                        pair.PropertyInfo!.SetValue(item, value is not DBNull ? Convert.ToBoolean(value) : null);
+                    }
+                    else
+                    {
+                        pair.PropertyInfo!.SetValue(item, value is not DBNull ? value : null);
+                    }
+                }
+                list.Add(item);
+            }
         }
         return list;
     }
@@ -58,55 +69,78 @@ public class DataTableConversion
     /// <typeparam name="T">Class to use in table conversion</typeparam>
     /// <param name="table">Table to convert to list</param>
     /// <param name="maxDegreeOfParallelism">Parallelism parameter to be used in Parallel.Foreach loop</param>
+    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ConvertDataTableToListParallel<T>(DataTable table, int maxDegreeOfParallelism = -1) where T : class, new()
+    public static List<T?> ConvertDataTableToListParallel<T>(DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false) where T : class, new()
     {
-        ConcurrentBag<Tuple<DataColumn, PropertyInfo>> map = new ConcurrentBag<Tuple<DataColumn, PropertyInfo>>();
-
-        foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
-        {
-            if (table.Columns.Contains(propertyInfo.Name))
-            {
-                map.Add(new Tuple<DataColumn, PropertyInfo>(table.Columns[propertyInfo.Name]!, propertyInfo));
-            }
-        }
+        ConcurrentBag<Tuple<DataColumn, PropertyInfo, bool>> map = new ConcurrentBag<Tuple<DataColumn, PropertyInfo, bool>>();
 
         ConcurrentBag<T?> bag = new ConcurrentBag<T?>();
-        Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row =>
+        
+        if (table.Rows.Count > 0)
         {
-            T? item = new T();
-            if (row != null) 
-            { 
-                foreach (Tuple<DataColumn, PropertyInfo> pair in map)
+            DataRow firstRow = table.Rows[0];
+            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+            {
+                if (table.Columns.Contains(propertyInfo.Name))
                 {
-                    object? value = row[pair.Value1!];
-
-                    //Handle issue where DB returns Int16 for boolean values
-                    if ((value.GetType() == typeof(short) || value.GetType() == typeof(short?)) &&
-                        (pair.Value2!.PropertyType == typeof(bool) || pair.Value2!.PropertyType == typeof(bool?)))
+                    if (convertShortToBool)
                     {
-                        pair.Value2!.SetValue(item, value is not DBNull ? Convert.ToBoolean(value) : null);
+                        Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
+                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo,
+                            convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
                     }
                     else
                     {
-                        pair.Value2!.SetValue(item, value is not DBNull ? value : null);
+                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo, false));
                     }
                 }
             }
-            else
+
+            Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row =>
             {
-                item = null;
-            }
-            bag.Add(item);
-        });
+                T? item = new T();
+                if (row != null)
+                {
+                    foreach (Tuple<DataColumn, PropertyInfo, bool> pair in map)
+                    {
+                        object? value = row[pair.DataColumn!];
+
+                        //Handle issue where DB returns Int16 for boolean values
+                        if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
+                        {
+                            pair.PropertyInfo!.SetValue(item, value is not DBNull ? Convert.ToBoolean(value) : null);
+                        }
+                        else
+                        {
+                            pair.PropertyInfo!.SetValue(item, value is not DBNull ? value : null);
+                        }
+                    }
+                }
+                else
+                {
+                    item = null;
+                }
+                bag.Add(item);
+            });
+        }
         return bag.ToList();
     }
 }
 
-sealed class Tuple<T1, T2>
+sealed class Tuple<T1, T2, T3>
 {
     public Tuple() { }
-    public Tuple(T1 value1, T2 value2) { Value1 = value1; Value2 = value2; }
-    public T1? Value1 { get; set; }
-    public T2? Value2 { get; set; }
+    public Tuple(T1 value1, T2 value2, T3 value3) { DataColumn = value1; PropertyInfo = value2; IsShort = value3; }
+    public T1? DataColumn { get; set; }
+    public T2? PropertyInfo { get; set; }
+    public T3? IsShort { get; set; }
 }
+
+//sealed class Tuple<T1, T2>
+//{
+//    public Tuple() { }
+//    public Tuple(T1 value1, T2 value2) { Value1 = value1; Value2 = value2; }
+//    public T1? Value1 { get; set; }
+//    public T2? Value2 { get; set; }
+//}

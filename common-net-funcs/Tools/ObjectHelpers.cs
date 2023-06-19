@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -15,8 +14,8 @@ public static class ObjectHelpers
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TU"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="dest"></param>
+    /// <param name="source">Object to copy common properties from</param>
+    /// <param name="dest">Object to copy common properties to</param>
     public static void CopyPropertiesTo<T, TU>(this T source, TU dest)
     {
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
@@ -30,6 +29,29 @@ public static class ObjectHelpers
                 p?.SetValue(dest, sourceProp.GetValue(source, null), null);
             }
         }
+    }
+
+    /// <summary>
+    /// Copy properties of the same name from one object to another
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TU"></typeparam>
+    /// <param name="source">Object to copy common properties from</param>
+    /// <param name="dest">New class of desired output type</param>
+    public static T CopyPropertiesToNew<T>(this T source, T dest)
+    {
+        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
+        IEnumerable<PropertyInfo> destProps = typeof(T).GetProperties().Where(x => x.CanWrite);
+
+        foreach (PropertyInfo sourceProp in sourceProps)
+        {
+            if (destProps.Any(x => x.Name == sourceProp.Name))
+            {
+                PropertyInfo? p = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+                p?.SetValue(dest, sourceProp.GetValue(source, null), null);
+            }
+        }
+        return dest;
     }
 
     /// <summary>
@@ -104,5 +126,16 @@ public static class ObjectHelpers
         {
             concurrentBag.Add(item!);
         });
+    }
+
+    /// <summary>
+    /// Create a single item list from an object
+    /// </summary>
+    /// <typeparam name="T">Type to use in list</typeparam>
+    /// <param name="obj">Object to turn into a single item list</param>
+    /// <returns></returns>
+    public static List<T> TolList<T>(this T obj)
+    {
+        return new List<T>() { obj };
     }
 }

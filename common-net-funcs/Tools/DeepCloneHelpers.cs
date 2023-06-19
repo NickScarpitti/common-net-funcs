@@ -162,8 +162,10 @@ internal class ArrayTraverse
     }
 }
 
-
-public static class DeepCopyExpressionTreeHelpers
+/// <summary>
+/// Superfast deep copier class, which uses Expression trees.
+/// </summary>
+public static class DeepCloneExpressionTreeHelpers
 {
     private static readonly object IsStructTypeToDeepCopyDictionaryLocker = new();
     private static Dictionary<Type, bool> IsStructTypeToDeepCopyDictionary = new();
@@ -171,22 +173,22 @@ public static class DeepCopyExpressionTreeHelpers
     private static readonly object CompiledCopyFunctionsDictionaryLocker = new();
     private static Dictionary<Type, Func<object, Dictionary<object, object>, object>> CompiledCopyFunctionsDictionary = new();
 
-    private static readonly Type ObjectType = typeof(object);
+    private static readonly Type ObjectType = typeof(Object);
     private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
 
     /// <summary>
-    /// Deep clone a class (cloned object doesn't retain memopry references) using Expression Trees (fastest)
+    /// Deep clone a class (cloned object doesn't retain memory references) using Expression Trees (fastest)
     /// </summary>
     /// <typeparam name="T">Object type.</typeparam>
     /// <param name="original">Object to copy.</param>
     /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
     /// <returns></returns>
-    public static T? DeepCloneByExpressionTree<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
+    public static T? DeepClone<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
     {
-        return (T?)DeepCloneByExpressionTree(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
+        return (T?)DeepCopyByExpressionTreeObj(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
     }
 
-    private static object? DeepCloneByExpressionTree(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
+    private static object? DeepCopyByExpressionTreeObj(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
     {
         if (original == null)
         {
@@ -225,10 +227,8 @@ public static class DeepCopyExpressionTreeHelpers
 
     private static Func<object, Dictionary<object, object>, object> GetOrCreateCompiledLambdaCopyFunction(Type type)
     {
-        // The following structure ensures that multiple threads can use the dictionary
-        // even while dictionary is locked and being updated by other thread.
-        // That is why we do not modify the old dictionary instance but
-        // we replace it with a new instance everytime.
+        // The following structure ensures that multiple threads can use the dictionary even while dictionary is locked and being updated by other thread.
+        // That is why we do not modify the old dictionary instance but we replace it with a new instance every time.
 
         if (!CompiledCopyFunctionsDictionary.TryGetValue(type, out Func<object, Dictionary<object, object>, object>? compiledCopyFunction))
         {
@@ -612,7 +612,7 @@ public static class DeepCopyExpressionTreeHelpers
         expressions.Add(fieldToNullExpression);
     }
 
-    private static readonly Type ThisType = typeof(DeepCopyExpressionTreeHelpers);
+    private static readonly Type ThisType = typeof(DeepCloneExpressionTreeHelpers);
     private static readonly MethodInfo? DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static);
 
     private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions)

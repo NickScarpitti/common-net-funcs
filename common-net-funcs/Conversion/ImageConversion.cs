@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp;
+﻿using System.Reflection;
+using SixLabors.ImageSharp;
 
 namespace Common_Net_Funcs.Conversion;
 
@@ -35,7 +36,7 @@ public static class ImageConversion
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ConvertImageFileToBase64 Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
 
         return null;
@@ -63,7 +64,7 @@ public static class ImageConversion
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ConvertImageFileToBase64 Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
 
         return null;

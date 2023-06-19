@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Reflection;
 using ClosedXML.Excel;
 using Common_Net_Funcs.Tools;
 
@@ -41,7 +42,7 @@ public class ClosedXmlExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GenericExcelExport Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
 
         return new MemoryStream();
@@ -75,7 +76,7 @@ public class ClosedXmlExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GenericExcelExport Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
 
         return new MemoryStream();
@@ -110,7 +111,7 @@ public class ClosedXmlExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "AddGenericTable Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return success;
     }
@@ -145,7 +146,7 @@ public class ClosedXmlExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "AddGenericTable Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return success;
     }

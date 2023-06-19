@@ -1,4 +1,5 @@
-﻿using Common_Net_Funcs.Conversion;
+﻿using System.Reflection;
+using Common_Net_Funcs.Conversion;
 using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
@@ -72,7 +73,7 @@ public static class DataTableHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GetDataTableRequest Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
         return dataTableRequest;
     }

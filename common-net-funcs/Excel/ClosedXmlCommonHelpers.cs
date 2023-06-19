@@ -60,7 +60,7 @@ public static class ClosedXmlCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "WriteExcelFile Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return false;
         }
     }
@@ -258,7 +258,7 @@ public static class ClosedXmlCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ExportFromTable Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return false;
         }
     }
@@ -357,7 +357,7 @@ public static class ClosedXmlCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ExportFromTable Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return false;
         }
     }

@@ -291,30 +291,6 @@ public static class NpoiCommonHelpers
         }
     }
 
-    /// <summary>
-    /// Writes an excel file to the specified path
-    /// </summary>
-    /// <param name="wb">HSSFWorkbook object to write to a file</param>
-    /// <param name="path">Full file path (including file name) to write wb object to</param>
-    /// <returns>True if write was successful</returns>
-    public static bool WriteExcelFile(HSSFWorkbook wb, string path)
-    {
-        try
-        {
-            using (FileStream fs = new(path, FileMode.Create, FileAccess.Write))
-            {
-                wb.Write(fs);
-            }
-            wb.Close();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "WriteExcelFile Error");
-            return false;
-        }
-    }
-
     /// <exception cref="Exception">Ignore.</exception>
     /// <summary>
     /// Get cell style based on enum EStyle options

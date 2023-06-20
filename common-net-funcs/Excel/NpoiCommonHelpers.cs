@@ -302,50 +302,50 @@ public static class NpoiCommonHelpers
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string? htmlColor = null, NPOI.SS.UserModel.IFont? font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
+    public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string? htmlColor = null, IFont? font = null, HorizontalAlignment? alignment = null)
     {
         ICellStyle cellStyle = wb.CreateCellStyle();
         switch (style)
         {
             case EStyles.Header:
-                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderTop = BorderStyle.Thin;
+                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 cellStyle.SetFont(GetFont(EFonts.Header, wb));
                 break;
 
             case EStyles.HeaderThickTop:
-                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Medium;
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderTop = BorderStyle.Medium;
+                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 cellStyle.SetFont(GetFont(EFonts.Header, wb));
                 break;
 
             case EStyles.Body:
-                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.COLOR_NORMAL;
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.FillForegroundColor = HSSFColor.COLOR_NORMAL;
                 cellStyle.SetFont(GetFont(EFonts.Default, wb));
                 break;
 
             case EStyles.Error:
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Red.Index;
+                cellStyle.FillForegroundColor = HSSFColor.Red.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 break;
 
             case EStyles.Custom:
                 XSSFCellStyle xStyle = (XSSFCellStyle)wb.CreateCellStyle();
-                if (alignment != null) { xStyle.Alignment = (NPOI.SS.UserModel.HorizontalAlignment)alignment; }
+                if (alignment != null) { xStyle.Alignment = (HorizontalAlignment)alignment; }
 
                 //Old version relies on System.Drawing
                 //byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
@@ -380,50 +380,50 @@ public static class NpoiCommonHelpers
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static ICellStyle GetStyle(EStyles style, HSSFWorkbook wb, bool cellLocked = false, HSSFColor? hssfColor = null, NPOI.SS.UserModel.IFont? font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
+    public static ICellStyle GetStyle(EStyles style, HSSFWorkbook wb, bool cellLocked = false, HSSFColor? hssfColor = null, IFont? font = null, HorizontalAlignment? alignment = null)
     {
         ICellStyle cellStyle = wb.CreateCellStyle();
         switch (style)
         {
             case EStyles.Header:
-                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderTop = BorderStyle.Thin;
+                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 cellStyle.SetFont(GetFont(EFonts.Header, wb));
                 break;
 
             case EStyles.HeaderThickTop:
-                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Medium;
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderTop = BorderStyle.Medium;
+                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 cellStyle.SetFont(GetFont(EFonts.Header, wb));
                 break;
 
             case EStyles.Body:
-                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.COLOR_NORMAL;
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.FillForegroundColor = HSSFColor.COLOR_NORMAL;
                 cellStyle.SetFont(GetFont(EFonts.Default, wb));
                 break;
 
             case EStyles.Error:
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Red.Index;
+                cellStyle.FillForegroundColor = HSSFColor.Red.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 break;
 
             case EStyles.Custom:
                 HSSFCellStyle xStyle = (HSSFCellStyle)wb.CreateCellStyle();
-                if (alignment != null) { xStyle.Alignment = (NPOI.SS.UserModel.HorizontalAlignment)alignment; }
+                if (alignment != null) { xStyle.Alignment = (HorizontalAlignment)alignment; }
 
                 //Old version relies on System.Drawing
                 //byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
@@ -451,9 +451,9 @@ public static class NpoiCommonHelpers
     /// <param name="font">Enum for preset fonts</param>
     /// <param name="wb">Workbook the font will be used in</param>
     /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
-    public static NPOI.SS.UserModel.IFont GetFont(EFonts font, IWorkbook wb)
+    public static IFont GetFont(EFonts font, IWorkbook wb)
     {
-        NPOI.SS.UserModel.IFont cellFont = wb.CreateFont();
+        IFont cellFont = wb.CreateFont();
         switch (font)
         {
             case EFonts.Default:

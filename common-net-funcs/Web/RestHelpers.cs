@@ -1,7 +1,6 @@
 ﻿using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Reflection;
-using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -68,6 +67,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -107,6 +107,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -147,6 +148,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -187,6 +189,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -227,6 +230,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -267,6 +271,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -307,6 +312,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -347,6 +353,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -387,6 +394,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -427,6 +435,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -463,7 +472,9 @@ public static class RestHelpers<T> where T : class
             }
         }
         catch (Exception ex)
-        {logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -503,6 +514,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -542,6 +554,7 @@ public static class RestHelpers<T> where T : class
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -674,7 +687,7 @@ public static class RestHelpers<T> where T : class
         }
 
         //changed this from inline if due to setting .Authorization to null if bearerToken is empty/null
-        //resulting in an exception during the post request: "A task was cancelled"
+        //resulting in an exception during the post request: "A task was canceled"
         if (bearerToken != null || bearerToken == string.Empty)
         {
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);

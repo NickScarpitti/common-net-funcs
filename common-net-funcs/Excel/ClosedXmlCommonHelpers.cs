@@ -82,12 +82,12 @@ public static class ClosedXmlCommonHelpers
         switch (style)
         {
             case EStyles.Header:
-                cellStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center; //Center
+                cellStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 cellStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.LeftBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.RightBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.TopBorder = XLBorderStyleValues.Thin;
-                cellStyle.Fill.BackgroundColor = XLColor.LightGray; //XLColor.FromArgb(140, 140, 140);
+                cellStyle.Fill.BackgroundColor = XLColor.LightGray;
                 cellStyle.Font = GetFont(EFonts.Header, wb);
                 break;
 
@@ -96,19 +96,19 @@ public static class ClosedXmlCommonHelpers
                 cellStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.LeftBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.RightBorder = XLBorderStyleValues.Thin;
-                cellStyle.Fill.BackgroundColor = XLColor.NoColor; //NPOI.HSSF.Util.HSSFColor.COLOR_NORMAL;
+                cellStyle.Fill.BackgroundColor = XLColor.NoColor;
                 cellStyle.Font = GetFont(EFonts.Default, wb);
                 break;
 
             case EStyles.Error:
-                cellStyle.Fill.BackgroundColor = XLColor.Red; //NPOI.HSSF.Util.HSSFColor.Red.Index;
-                cellStyle.Fill.PatternType = XLFillPatternValues.Solid; //FillPattern.SolidForeground;
+                cellStyle.Fill.BackgroundColor = XLColor.Red;
+                cellStyle.Fill.PatternType = XLFillPatternValues.Solid;
                 break;
 
             case EStyles.Custom:
                 IXLStyle xStyle = wb.Style;
                 if (alignment != null) { xStyle.Alignment.Horizontal = (XLAlignmentHorizontalValues)alignment; }
-                xStyle.Fill.BackgroundColor = XLColor.FromHtml(htmlColor);
+                if (htmlColor != null) { xStyle.Fill.BackgroundColor = XLColor.FromHtml(htmlColor); }
                 xStyle.Fill.PatternType = XLFillPatternValues.Solid;
                 if (font != null) { xStyle.Font = font; }
                 cellStyle = xStyle;

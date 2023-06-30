@@ -2,7 +2,6 @@
 using System.Data.Common;
 using System.Data.Odbc;
 using System.Reflection;
-using Common_Net_Funcs.Conversion;
 
 namespace Common_Net_Funcs.SQL;
 

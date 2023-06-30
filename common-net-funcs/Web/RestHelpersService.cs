@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Reflection;
+using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -66,7 +67,10 @@ public class RestHelpersService : IRestHelpersService
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -106,7 +110,10 @@ public class RestHelpersService : IRestHelpersService
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -147,7 +154,10 @@ public class RestHelpersService : IRestHelpersService
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -188,7 +198,10 @@ public class RestHelpersService : IRestHelpersService
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -229,7 +242,10 @@ public class RestHelpersService : IRestHelpersService
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -270,7 +286,10 @@ public class RestHelpersService : IRestHelpersService
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -393,7 +412,10 @@ public class RestHelpersService : IRestHelpersService
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -434,7 +456,10 @@ public class RestHelpersService : IRestHelpersService
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -473,7 +498,10 @@ public class RestHelpersService : IRestHelpersService
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -513,7 +541,10 @@ public class RestHelpersService : IRestHelpersService
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -553,7 +584,10 @@ public class RestHelpersService : IRestHelpersService
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    if (x.Result != default && x.Result.Length > 0)
+                    {
+                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                    }
                 });
             }
             else
@@ -688,30 +722,56 @@ public class RestHelpersService : IRestHelpersService
     /// <param name="httpHeaders">Dictionary of headers</param>
     private static void AttachHeaders(string? bearerToken, Dictionary<string, string>? httpHeaders)
     {
-        if (httpHeaders != null)
+        if (httpHeaders != null && httpHeaders.Any())
         {
             foreach (KeyValuePair<string, string> header in httpHeaders)
             {
-                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                try
+                {
+                    client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, $"Failed to add header {header.Key} with value {header.Value}.\nDefault headers = {client.DefaultRequestHeaders}\nNot validated headers = {client.DefaultRequestHeaders.NonValidated}");
+                }
             }
         }
 
         //changed this from inline if due to setting .Authorization to null if bearerToken is empty/null
         //resulting in an exception during the post request: "A task was canceled"
-        if (bearerToken != null || bearerToken == string.Empty)
+        if (bearerToken != null || bearerToken == string.Empty && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false))
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+            try
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, $"Failed to add bearer token.\nDefault headers = {client.DefaultRequestHeaders}\nNot validated headers = {client.DefaultRequestHeaders.NonValidated}");
+            }
         }
     }
+
     /// <summary>
     /// Clears headers from client
     /// </summary>
     /// <param name="httpHeaders">Dictionary of headers used for the request</param>
     private static void ClearHeaders(Dictionary<string, string>? httpHeaders)
     {
-        if (httpHeaders != null)
+        if (httpHeaders != null && httpHeaders.Any())
         {
-            client.DefaultRequestHeaders.Clear();
+            //client.DefaultRequestHeaders.Clear();
+            foreach (string header in httpHeaders.Keys)
+            {
+                try
+                {
+                    client.DefaultRequestHeaders.Remove(header);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, $"Unable to remove header '{header}' from client");
+                }
+            }
         }
     }
 }

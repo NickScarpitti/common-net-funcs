@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
+using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 
 namespace Common_Net_Funcs.Communications;
@@ -122,7 +123,7 @@ public static class Email
 
                 email.Body = bodyBuilder.ToMessageBody();
 
-                if (readReceipt && !string.IsNullOrEmpty(readReceiptEmail))
+                if (readReceipt && !readReceiptEmail.IsNullOrEmpty())
                 {
                     email.Headers[HeaderId.DispositionNotificationTo] = readReceiptEmail;
                 }

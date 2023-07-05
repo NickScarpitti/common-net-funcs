@@ -47,7 +47,7 @@ public static class DataValidation
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "IsEqual Error");
+                logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
                 return false;
             }
         }
@@ -179,30 +179,33 @@ public static class DataValidation
     /// <summary>
     /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
     /// </summary>
-    /// <param name="testString"></param>
+    /// <param name="testString">String to check if it only contains alphanumeric characters</param>
+    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
     /// <returns></returns>
-    public static bool IsAlphanumeric(this string? testString)
+    public static bool IsAlphanumeric(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && Regex.IsMatch(testString, "^[a-zA-Z0-9]*$");
+        return testString != null && Regex.IsMatch(testString, @$"^[a-zA-Z0-9{(allowSpaces ? @"\s" : string.Empty)}]*$");
     }
 
     /// <summary>
     /// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
     /// </summary>
-    /// <param name="testString"></param>
+    /// <param name="testString">String to check if it only contains alphabetical characters</param>
+    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
     /// <returns></returns>
-    public static bool IsAlphaOnly(this string? testString)
+    public static bool IsAlphaOnly(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && Regex.IsMatch(testString, "^[a-zA-Z]*$");
+        return testString != null && Regex.IsMatch(testString, @$"^[a-zA-Z{(allowSpaces ? @"\s" : string.Empty)}]*$");
     }
 
     /// <summary>
     /// Check string to see if a string only contains numbers (0-9). Null returns false.
     /// </summary>
-    /// <param name="testString"></param>
+    /// <param name="testString">String to check if it only contains numeric characters</param>
+    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
     /// <returns></returns>
-    public static bool IsNumericOnly(this string? testString)
+    public static bool IsNumericOnly(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && Regex.IsMatch(testString, "^[0-9]*$");
+        return testString != null && Regex.IsMatch(testString, @$"^[0-9{(allowSpaces ? @"\s" : string.Empty)}]*$");
     }
 }

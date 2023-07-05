@@ -2,13 +2,13 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using NPOI.HSSF.UserModel;
+using NPOI.HSSF.Util;
 using NPOI.OpenXmlFormats.Spreadsheet;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
-using SixLabors.ImageSharp;
 
 namespace Common_Net_Funcs.Excel;
 
@@ -69,7 +69,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GetCellFromReference Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return null;
         }
     }
@@ -93,7 +93,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GetCellOffset Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return null;
         }
     }
@@ -118,7 +118,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GetCellFromCoordinates Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return null;
         }
     }
@@ -131,7 +131,7 @@ public static class NpoiCommonHelpers
     /// <param name="colOffset">X axis offset from the named cell reference<</param>
     /// <param name="rowOffset">Y axis offset from the named cell reference<</param>
     /// <returns>ICell object of the specified offset of the cell with named reference cellName</returns>
-    public static ICell? GetCellFromName(this XSSFWorkbook wb, string cellName, int colOffset = 0, int rowOffset = 0)
+    public static ICell? GetCellFromName(this IWorkbook wb, string cellName, int colOffset = 0, int rowOffset = 0)
     {
         try
         {
@@ -180,7 +180,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "GetCellFromName Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return null;
         }
     }
@@ -190,7 +190,7 @@ public static class NpoiCommonHelpers
     /// </summary>
     /// <param name="wb">Workbook that cell is in</param>
     /// <param name="cellName">Name of cell to clear contents from</param>
-    public static void ClearAllFromName(this XSSFWorkbook wb, string cellName)
+    public static void ClearAllFromName(this IWorkbook wb, string cellName)
     {
         try
         {
@@ -228,7 +228,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ClearAllFromName Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
 
@@ -262,7 +262,31 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "WriteExcelFile Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Writes an excel file to the specified path
+    /// </summary>
+    /// <param name="wb">HSSFWorkbook object to write to a file</param>
+    /// <param name="path">Full file path (including file name) to write wb object to</param>
+    /// <returns>True if write was successful</returns>
+    public static bool WriteExcelFile(HSSFWorkbook wb, string path)
+    {
+        try
+        {
+            using (FileStream fs = new(path, FileMode.Create, FileAccess.Write))
+            {
+                wb.Write(fs);
+            }
+            wb.Close();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return false;
         }
     }
@@ -278,50 +302,50 @@ public static class NpoiCommonHelpers
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string? htmlColor = null, NPOI.SS.UserModel.IFont? font = null, NPOI.SS.UserModel.HorizontalAlignment? alignment = null)
+    public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string? htmlColor = null, IFont? font = null, HorizontalAlignment? alignment = null)
     {
         ICellStyle cellStyle = wb.CreateCellStyle();
         switch (style)
         {
             case EStyles.Header:
-                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderTop = BorderStyle.Thin;
+                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 cellStyle.SetFont(GetFont(EFonts.Header, wb));
                 break;
 
             case EStyles.HeaderThickTop:
-                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Medium;
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index;
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderTop = BorderStyle.Medium;
+                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 cellStyle.SetFont(GetFont(EFonts.Header, wb));
                 break;
 
             case EStyles.Body:
-                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.COLOR_NORMAL;
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.FillForegroundColor = HSSFColor.COLOR_NORMAL;
                 cellStyle.SetFont(GetFont(EFonts.Default, wb));
                 break;
 
             case EStyles.Error:
-                cellStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Red.Index;
+                cellStyle.FillForegroundColor = HSSFColor.Red.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 break;
 
             case EStyles.Custom:
                 XSSFCellStyle xStyle = (XSSFCellStyle)wb.CreateCellStyle();
-                if (alignment != null) { xStyle.Alignment = (NPOI.SS.UserModel.HorizontalAlignment)alignment; }
+                if (alignment != null) { xStyle.Alignment = (HorizontalAlignment)alignment; }
 
                 //Old version relies on System.Drawing
                 //byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
@@ -345,15 +369,91 @@ public static class NpoiCommonHelpers
         return cellStyle;
     }
 
+    /// <exception cref="Exception">Ignore.</exception>
+    /// <summary>
+    /// Get cell style based on enum EStyle options
+    /// </summary>
+    /// <param name="style">Name of preset defined styles to use</param>
+    /// <param name="wb">Workbook the style will be used in</param>
+    /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
+    /// <param name="htmlColor">Cell background color to be used (only used for custom font)</param>
+    /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
+    /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
+    /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
+    public static ICellStyle GetStyle(EStyles style, HSSFWorkbook wb, bool cellLocked = false, HSSFColor? hssfColor = null, IFont? font = null, HorizontalAlignment? alignment = null)
+    {
+        ICellStyle cellStyle = wb.CreateCellStyle();
+        switch (style)
+        {
+            case EStyles.Header:
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderTop = BorderStyle.Thin;
+                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
+                cellStyle.FillPattern = FillPattern.SolidForeground;
+                cellStyle.SetFont(GetFont(EFonts.Header, wb));
+                break;
+
+            case EStyles.HeaderThickTop:
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderTop = BorderStyle.Medium;
+                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
+                cellStyle.FillPattern = FillPattern.SolidForeground;
+                cellStyle.SetFont(GetFont(EFonts.Header, wb));
+                break;
+
+            case EStyles.Body:
+                cellStyle.Alignment = HorizontalAlignment.Center;
+                cellStyle.BorderBottom = BorderStyle.Thin;
+                cellStyle.BorderLeft = BorderStyle.Thin;
+                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.FillForegroundColor = HSSFColor.COLOR_NORMAL;
+                cellStyle.SetFont(GetFont(EFonts.Default, wb));
+                break;
+
+            case EStyles.Error:
+                cellStyle.FillForegroundColor = HSSFColor.Red.Index;
+                cellStyle.FillPattern = FillPattern.SolidForeground;
+                break;
+
+            case EStyles.Custom:
+                HSSFCellStyle xStyle = (HSSFCellStyle)wb.CreateCellStyle();
+                if (alignment != null) { xStyle.Alignment = (HorizontalAlignment)alignment; }
+
+                //Old version relies on System.Drawing
+                //byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
+
+                if (hssfColor != null)
+                {
+                    xStyle.FillForegroundColor = hssfColor.Indexed;
+                }
+
+                xStyle.FillPattern = FillPattern.SolidForeground;
+                if (font != null) { xStyle.SetFont(font); }
+                cellStyle = xStyle;
+                break;
+
+            default:
+                break;
+        }
+        cellStyle.IsLocked = cellLocked;
+        return cellStyle;
+    }
+
     /// <summary>
     /// Get font styling based on EFonts option
     /// </summary>
     /// <param name="font">Enum for preset fonts</param>
     /// <param name="wb">Workbook the font will be used in</param>
     /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
-    public static NPOI.SS.UserModel.IFont GetFont(EFonts font, XSSFWorkbook wb)
+    public static IFont GetFont(EFonts font, IWorkbook wb)
     {
-        NPOI.SS.UserModel.IFont cellFont = wb.CreateFont();
+        IFont cellFont = wb.CreateFont();
         switch (font)
         {
             case EFonts.Default:
@@ -479,7 +579,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ExportFromTable Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return false;
         }
     }
@@ -587,7 +687,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "ExportFromTable Error");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             return false;
         }
     }
@@ -632,7 +732,7 @@ public static class NpoiCommonHelpers
     /// <param name="memoryStream">MemoryStream object to write XSSFWorkbook object to</param>
     /// <param name="wb">XSSFWorkbook object to write into a MemoryStream</param>
     /// <returns></returns>
-    public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, XSSFWorkbook wb)
+    public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, IWorkbook wb)
     {
         using MemoryStream tempStream = new();
         wb.Write(tempStream, true);
@@ -650,7 +750,7 @@ public static class NpoiCommonHelpers
     /// <param name="wb">Workbook to insert images into</param>
     /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
     /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
-    public static void AddImages(this XSSFWorkbook wb, List<byte[]> imageData, List<string> cellNames)
+    public static void AddImages(this IWorkbook wb, List<byte[]> imageData, List<string> cellNames)
     {
         if (wb != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
         {

@@ -10,7 +10,7 @@ using NLog;
 namespace Common_Net_Funcs.Web;
 
 
-public interface IRestHelpersService 
+public interface IRestHelpersService
 {
     Task<T?> Get<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null);
     Task<RestObject<T>> GetRestObject<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null);
@@ -658,11 +658,11 @@ public class RestHelpersService : IRestHelpersService
             {
                 patch.Replace(path + modProp?.Name, modProp?.Value);
             }
-            else if(origProp?.Value.Type == JTokenType.Float)
+            else if (origProp?.Value.Type == JTokenType.Float)
             {
                 decimal? origDec = null;
                 decimal? modDec = null;
-                if(decimal.TryParse(origProp?.Value.ToString(Formatting.None), out decimal origDecimal))
+                if (decimal.TryParse(origProp?.Value.ToString(Formatting.None), out decimal origDecimal))
                 {
                     origDec = origDecimal;
                 }
@@ -683,7 +683,7 @@ public class RestHelpersService : IRestHelpersService
                         // Replace values directly
                         patch.Replace(path + modProp?.Name, modProp?.Value);
                     }
-                }                
+                }
             }
             else if (((origProp?.Value.ToString(Formatting.None) ?? null) != modProp?.Value.ToString(Formatting.None)) && origProp?.Value.Type != JTokenType.Date)
             {

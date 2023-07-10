@@ -1,5 +1,5 @@
-﻿using System.Net.Http.Formatting;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Reflection;
 using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
@@ -31,7 +31,8 @@ public static class RestHelpers
 
     //Use static client here instead of individual using statements to prevent maxing out the number of connections
     private const double DefaultRequestTimeout = 100; //Default timeout for HttpClient
-    private static readonly HttpClient client = new() { Timeout = Timeout.InfiniteTimeSpan }; //Use infinite timespan here to force using token specified timeout
+    private static readonly SocketsHttpHandler SocketsHttpHandler = new() { MaxConnectionsPerServer = 100, KeepAlivePingPolicy = HttpKeepAlivePingPolicy.Always, KeepAlivePingDelay = TimeSpan.FromSeconds(15), KeepAlivePingTimeout = TimeSpan.FromMinutes(60)};
+    private static readonly HttpClient Client = new(SocketsHttpHandler) { Timeout = Timeout.InfiniteTimeSpan }; //Use infinite timespan here to force using token specified timeout
 
     /// <summary>
     /// Executes a GET request against the specified URL and returns the result
@@ -48,10 +49,10 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Get, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"GET URL: {url}");
-            HttpResponseMessage response = await client.GetAsync(new Uri(url), tokenSource.Token) ?? new();
-            ClearHeaders(httpHeaders);
+            using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token) ?? new();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -71,7 +72,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -91,10 +91,10 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Get, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"GET URL: {url}");
-            restObject.Response = await client.GetAsync(new Uri(url), tokenSource.Token) ?? new();
-            ClearHeaders(httpHeaders);
+            restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -114,7 +114,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -135,10 +134,11 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
-            HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -158,7 +158,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -179,10 +178,11 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
-            restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -202,7 +202,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -223,10 +222,11 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
-            HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -246,7 +246,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -267,10 +266,11 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
-            restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -290,7 +290,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -311,10 +310,11 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
-            HttpResponseMessage response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -331,7 +331,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -352,10 +351,11 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
-            restObject.Response = await client.PostAsync(url, postObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -372,7 +372,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -393,10 +392,10 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Delete, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"DELETE URL: {url}");
-            HttpResponseMessage response = await client.DeleteAsync(url, tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -416,7 +415,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -437,10 +435,10 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Delete, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"DELETE URL: {url}");
-            restObject.Response = await client.DeleteAsync(url, tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -460,7 +458,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -479,10 +476,11 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Put, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"PUT URL: {url}");
-            HttpResponseMessage response = await client.PutAsync(url, putObject, new JsonMediaTypeFormatter(), tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            httpRequestMessage.Content = JsonContent.Create(putObject, new MediaTypeHeaderValue("application/json"));
+            using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -502,7 +500,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -522,10 +519,11 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Patch, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
-            HttpResponseMessage response = await client.PatchAsync(url, patchDoc, tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            httpRequestMessage.Content = patchDoc;
+            using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -545,7 +543,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return result;
     }
@@ -565,10 +562,11 @@ public static class RestHelpers
         try
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
-            AttachHeaders(bearerToken, httpHeaders);
+            using HttpRequestMessage httpRequestMessage = new(HttpMethod.Patch, url);
+            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
-            restObject.Response = await client.PatchAsync(url, patchDoc, tokenSource.Token).ConfigureAwait(false) ?? new();
-            ClearHeaders(httpHeaders);
+            httpRequestMessage.Content = patchDoc;
+            restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -588,7 +586,6 @@ public static class RestHelpers
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
-            ClearHeaders(httpHeaders);
         }
         return restObject;
     }
@@ -710,58 +707,35 @@ public static class RestHelpers
     /// </summary>
     /// <param name="bearerToken">Token used for bearer authentication</param>
     /// <param name="httpHeaders">Dictionary of headers</param>
-    private static void AttachHeaders(string? bearerToken, Dictionary<string, string>? httpHeaders)
+    private static void AttachHeaders(string? bearerToken, Dictionary<string, string>? httpHeaders, HttpRequestMessage httpRequestMessage)
     {
+        //Changed this from inline if due to setting .Authorization to null if bearerToken is empty/null resulting in an exception during the post request: "A task was canceled"
+        if (bearerToken != null || bearerToken == string.Empty && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false))
+        {
+            try
+            {
+                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, $"Failed to add bearer token.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
+            }
+        }
+
         if (httpHeaders != null && httpHeaders.Any())
         {
             foreach (KeyValuePair<string, string> header in httpHeaders)
             {
                 try
                 {
-                    client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                    httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
                 }
                 catch (Exception ex)
                 {
-                    logger.Warn(ex, $"Failed to add header {header.Key} with value {header.Value}.\nDefault headers = {client.DefaultRequestHeaders}\nNot validated headers = {client.DefaultRequestHeaders.NonValidated}");
+                    logger.Warn(ex, $"Failed to add header {header.Key} with value {header.Value}.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
                 }
             }
         }
 
-        //changed this from inline if due to setting .Authorization to null if bearerToken is empty/null
-        //resulting in an exception during the post request: "A task was canceled"
-        if (bearerToken != null || bearerToken == string.Empty && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false))
-        {
-            try
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
-            }
-            catch (Exception ex)
-            {
-                logger.Warn(ex, $"Failed to add bearer token.\nDefault headers = {client.DefaultRequestHeaders}\nNot validated headers = {client.DefaultRequestHeaders.NonValidated}");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Clears headers from client
-    /// </summary>
-    /// <param name="httpHeaders">Dictionary of headers used for the request</param>
-    private static void ClearHeaders(Dictionary<string, string>? httpHeaders)
-    {
-        if (httpHeaders != null && httpHeaders.Any())
-        {
-            //client.DefaultRequestHeaders.Clear();
-            foreach (string header in httpHeaders.Keys)
-            {
-                try
-                {
-                    client.DefaultRequestHeaders.Remove(header);
-                }
-                catch (Exception ex)
-                {
-                    logger.Warn(ex, $"Unable to remove header '{header}' from client");
-                }
-            }
-        }
     }
 }

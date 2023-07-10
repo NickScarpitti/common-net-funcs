@@ -111,7 +111,6 @@ public static class AsyncHelpers
         }
     }
 
-
     /// <summary>
     /// Task to fill list obj variable asynchronously
     /// </summary>

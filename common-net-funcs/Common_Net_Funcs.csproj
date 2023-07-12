@@ -17,7 +17,7 @@
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
-    <FileVersion>1.6.1</FileVersion>
+    <FileVersion>1.6.2</FileVersion>
     <PackageReleaseNotes>Breaking Change: Clone method has been renamed "SerializeClone" and moved to a new class called "DeepCloneSerializationHelpers".
 Deep clone by reflection and deep clone by expression tree methods have been added in the "DeepCloneReflectionHelpers" and "DeepCopyExpressionTreeHelpers" classes respectively.</PackageReleaseNotes>
     <Title>Common Net Funcs</Title>

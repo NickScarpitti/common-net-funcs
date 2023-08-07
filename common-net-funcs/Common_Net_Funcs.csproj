@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/NickScarpitti/Common_Net_Funcs</PackageProjectUrl>
     <PackageTags>dotnet;web;email;conversion;convert;excel;npoi;odbc;async;datatables;rest;api</PackageTags>
     <Nullable>enable</Nullable>
-    <Version>1.6.4</Version>
+    <Version>1.6.5</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -78,7 +78,7 @@ Deep clone by reflection and deep clone by expression tree methods have been add
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="7.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.32.1" />
-    <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.2" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NPOI" Version="2.6.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />

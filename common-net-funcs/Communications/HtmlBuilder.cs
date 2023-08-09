@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Text.RegularExpressions;
 using System.Web;
-using Common_Net_Funcs.Conversion;
+using static Common_Net_Funcs.Conversion.StringConversion;
 
 namespace Common_Net_Funcs.Communications;
 
@@ -41,7 +41,7 @@ public static class HtmlBuilder
         string text = "<html><body>";
 
         text += body.StringtoHtml();
-        text += tableData == null || !tableData.Any() ? string.Empty : "<br><br>";
+        text += tableData?.Any() != true ? string.Empty : "<br><br>";
         text += tableData.CreateHtmlTable();
         text += !string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty;
         text += footer.StringtoHtml();
@@ -58,8 +58,8 @@ public static class HtmlBuilder
     /// <returns>HTML compatible text</returns>
     public static string StringtoHtml(this string? text)
     {
-        if (text != null) 
-        { 
+        if (text != null)
+        {
             text = HttpUtility.HtmlEncode(text);
             text = text.Replace("\r\n", "\r").Replace("\n", "\r").Replace("\r", "<br>").Replace("\t", "&nbsp&nbsp&nbsp");
         }
@@ -158,7 +158,7 @@ public static class HtmlBuilder
     public static string CreateHtmlTable(this List<List<string>>? tableData, bool applyTableCss = true, string? customCss = null)
     {
         string tableHtml = string.Empty;
-        string tableStyle = !string.IsNullOrWhiteSpace(customCss) ? customCss : 
+        string tableStyle = !string.IsNullOrWhiteSpace(customCss) ? customCss :
             "<style>" +
                 "table{" +
                     "font-family: arial, sans-serif;" +
@@ -175,7 +175,7 @@ public static class HtmlBuilder
                 "}" +
             "</style>";
 
-        if (tableData != null && tableData.Any())
+        if (tableData?.Any() == true)
         {
             tableHtml += applyTableCss ? tableStyle : string.Empty;
 
@@ -208,7 +208,7 @@ public static class HtmlBuilder
                 }
             }
             tableHtml += "</table>";
-        }        
+        }
         return tableHtml;
     }
 }

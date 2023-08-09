@@ -70,7 +70,7 @@ public static class MathHelpers
 
         if ((value % significance) != 0)
         {
-            return ((int)(value / significance) * significance);
+            return (int)(value / significance) * significance;
         }
 
         return Convert.ToDouble(value);
@@ -93,7 +93,7 @@ public static class MathHelpers
 
         if ((value % significance) != 0)
         {
-            return ((int)(value / significance) * significance);
+            return (int)(value / significance) * significance;
         }
 
         return Convert.ToDecimal(value);

@@ -1,4 +1,4 @@
-﻿using Common_Net_Funcs.Tools;
+﻿using static Common_Net_Funcs.Tools.DataValidation;
 
 namespace Common_Net_Funcs.SQL;
 
@@ -12,16 +12,11 @@ public static class ParameterFilter
     public static bool IsClean(this string? parameter)
     {
         return string.IsNullOrWhiteSpace(parameter) || (!parameter.Contains(';') && !parameter.Contains('\'') && !parameter.Contains('[') && !parameter.Contains(']') &&
-            !parameter.Contains('"') && !parameter.Contains('`') && !parameter.Contains("/*") && !parameter.Contains("*/") && !parameter.Contains("xp_") && !parameter.Contains("--")); //&&
-            //!parameter.Contains("select ", StringComparison.InvariantCultureIgnoreCase) && !parameter.Contains("from ", StringComparison.InvariantCultureIgnoreCase) &&
-            //!parameter.Contains("where ", StringComparison.InvariantCultureIgnoreCase) && !parameter.Contains("having ", StringComparison.InvariantCultureIgnoreCase) &&
-            //!parameter.Contains("select ", StringComparison.InvariantCultureIgnoreCase) && !parameter.Contains("group by ", StringComparison.InvariantCultureIgnoreCase) &&
-            //!parameter.Contains("order by ", StringComparison.InvariantCultureIgnoreCase) && !parameter.Contains("join ", StringComparison.InvariantCultureIgnoreCase) &&
-            //!parameter.Contains("union ", StringComparison.InvariantCultureIgnoreCase) && !parameter.Contains("max(", StringComparison.InvariantCultureIgnoreCase));
+            !parameter.Contains('"') && !parameter.Contains('`') && !parameter.Contains("/*") && !parameter.Contains("*/") && !parameter.Contains("xp_") && !parameter.Contains("--"));
     }
 
     /// <summary>
-    /// Checks if value has any potentially malicious or invalid values, then escapes single quotes and removes % and * widcard characters.
+    /// Checks if value has any potentially malicious or invalid values, then escapes single quotes and removes % and * wild card characters.
     /// </summary>
     /// <param name="parameter">Parameter to check</param>
     /// <param name="onlyAlphanumeric">Only allow values with numbers or letters (a-z A-Z). Overrides onlyAlphaChars and onlyNumberChars</param>

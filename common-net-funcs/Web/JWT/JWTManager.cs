@@ -1,7 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Common_Net_Funcs.Tools;
+using static Common_Net_Funcs.Tools.DataValidation;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Common_Net_Funcs.Web.JWT;

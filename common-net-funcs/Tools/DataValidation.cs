@@ -54,7 +54,6 @@ public static class DataValidation
         return true;
     }
 
-
     /// <summary>
     /// Compare two class objects for value equality
     /// </summary>
@@ -95,11 +94,7 @@ public static class DataValidation
     public static bool ValidateFileExtention(this string fileName, string[] validExtensions)
     {
         string extension = Path.GetExtension(fileName);
-        if (!validExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase))
-        {
-            return false;
-        }
-        return true;
+        return validExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase);
     }
 
     /// <summary>
@@ -184,7 +179,7 @@ public static class DataValidation
     /// <returns></returns>
     public static bool IsAlphanumeric(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && Regex.IsMatch(testString, @$"^[a-zA-Z0-9{(allowSpaces ? @"\s" : string.Empty)}]*$");
+        return testString != null && Regex.IsMatch(testString, $"^[a-zA-Z0-9{(allowSpaces ? @"\s" : string.Empty)}]*$");
     }
 
     /// <summary>
@@ -195,7 +190,7 @@ public static class DataValidation
     /// <returns></returns>
     public static bool IsAlphaOnly(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && Regex.IsMatch(testString, @$"^[a-zA-Z{(allowSpaces ? @"\s" : string.Empty)}]*$");
+        return testString != null && Regex.IsMatch(testString, $"^[a-zA-Z{(allowSpaces ? @"\s" : string.Empty)}]*$");
     }
 
     /// <summary>
@@ -206,6 +201,6 @@ public static class DataValidation
     /// <returns></returns>
     public static bool IsNumericOnly(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && Regex.IsMatch(testString, @$"^[0-9{(allowSpaces ? @"\s" : string.Empty)}]*$");
+        return testString != null && Regex.IsMatch(testString, $"^[0-9{(allowSpaces ? @"\s" : string.Empty)}]*$");
     }
 }

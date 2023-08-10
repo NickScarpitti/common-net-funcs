@@ -35,7 +35,6 @@ public static class ObjectHelpers
     /// Copy properties of the same name from one object to another
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TU"></typeparam>
     /// <param name="source">Object to copy common properties from</param>
     /// <param name="dest">New class of desired output type</param>
     public static T CopyPropertiesToNew<T>(this T source, T dest)
@@ -81,10 +80,7 @@ public static class ObjectHelpers
     public static IEnumerable<T> SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1)
     {
         ConcurrentBag<T> concurrentBag = new(items);
-        Parallel.ForEach(concurrentBag, new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item =>
-        {
-            updateMethod(item);
-        });
+        Parallel.ForEach(concurrentBag, new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item => updateMethod(item));
         return concurrentBag;
     }
 
@@ -122,10 +118,7 @@ public static class ObjectHelpers
     /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
     public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null)
     {
-        Parallel.ForEach(toAdd.Where(x => x != null), parallelOptions ?? new(), item =>
-        {
-            concurrentBag.Add(item!);
-        });
+        Parallel.ForEach(toAdd.Where(x => x != null), parallelOptions ?? new(), item => concurrentBag.Add(item!));
     }
 
     /// <summary>

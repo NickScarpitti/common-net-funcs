@@ -1,7 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection;
-using Common_Net_Funcs.Tools;
+using static Common_Net_Funcs.Tools.DataValidation;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -58,7 +58,7 @@ public static class RestHelpers
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -71,7 +71,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return result;
     }
@@ -100,7 +100,7 @@ public static class RestHelpers
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -113,7 +113,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return restObject;
     }
@@ -144,7 +144,7 @@ public static class RestHelpers
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -157,7 +157,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return result;
     }
@@ -188,7 +188,7 @@ public static class RestHelpers
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -201,7 +201,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return restObject;
     }
@@ -232,7 +232,7 @@ public static class RestHelpers
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -245,7 +245,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return result;
     }
@@ -276,7 +276,7 @@ public static class RestHelpers
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -289,7 +289,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return restObject;
     }
@@ -330,7 +330,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return result;
     }
@@ -371,7 +371,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return restObject;
     }
@@ -401,7 +401,7 @@ public static class RestHelpers
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -414,7 +414,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return result;
     }
@@ -444,7 +444,7 @@ public static class RestHelpers
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -457,7 +457,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return restObject;
     }
@@ -486,7 +486,7 @@ public static class RestHelpers
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -499,7 +499,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return result;
     }
@@ -529,7 +529,7 @@ public static class RestHelpers
                 await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -542,7 +542,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return result;
     }
@@ -572,7 +572,7 @@ public static class RestHelpers
                 await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 {
                     if (x.IsFaulted) throw x.Exception ?? new();
-                    if (x.Result != default && x.Result.Length > 0)
+                    if (x.Result?.Length > 0)
                     {
                         restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
                     }
@@ -585,7 +585,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error" + $"URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
         }
         return restObject;
     }
@@ -670,7 +670,7 @@ public static class RestHelpers
                         // Replace values directly
                         patch.Replace(path + modProp?.Name, modProp?.Value);
                     }
-                }                
+                }
             }
             else if (((origProp?.Value.ToString(Formatting.None) ?? null) != modProp?.Value.ToString(Formatting.None)) && origProp?.Value.Type != JTokenType.Date)
             {
@@ -710,7 +710,7 @@ public static class RestHelpers
     private static void AttachHeaders(string? bearerToken, Dictionary<string, string>? httpHeaders, HttpRequestMessage httpRequestMessage)
     {
         //Changed this from inline if due to setting .Authorization to null if bearerToken is empty/null resulting in an exception during the post request: "A task was canceled"
-        if (bearerToken != null || bearerToken == string.Empty && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false))
+        if (bearerToken != null || bearerToken?.Length == 0 && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false))
         {
             try
             {
@@ -722,7 +722,7 @@ public static class RestHelpers
             }
         }
 
-        if (httpHeaders != null && httpHeaders.Any())
+        if (httpHeaders?.Any() == true)
         {
             foreach (KeyValuePair<string, string> header in httpHeaders)
             {
@@ -736,6 +736,5 @@ public static class RestHelpers
                 }
             }
         }
-
     }
 }

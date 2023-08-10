@@ -13,7 +13,7 @@ using NPOI.XSSF.UserModel;
 namespace Common_Net_Funcs.Excel;
 
 /// <summary>
-/// Methods to make reading and writing to an excel file easier using NPOI  
+/// Methods to make reading and writing to an excel file easier using NPOI
 /// </summary>
 public static class NpoiCommonHelpers
 {
@@ -42,11 +42,7 @@ public static class NpoiCommonHelpers
     /// <returns>True if cell is empty</returns>
     public static bool IsCellEmpty(this ICell cell)
     {
-        if (string.IsNullOrWhiteSpace(cell.GetStringValue()))
-        {
-            return true;
-        }
-        return false;
+        return string.IsNullOrWhiteSpace(cell.GetStringValue());
     }
 
     /// <summary>
@@ -350,8 +346,8 @@ public static class NpoiCommonHelpers
                 //Old version relies on System.Drawing
                 //byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
 
-                Regex regex = new(@"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
-                if (htmlColor != null && htmlColor.Length == 7 && regex.IsMatch(htmlColor))
+                Regex regex = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+                if (htmlColor?.Length == 7 && regex.IsMatch(htmlColor))
                 {
                     byte[] rgb = new byte[] { Convert.ToByte(htmlColor.Substring(1, 2), 16), Convert.ToByte(htmlColor.Substring(3, 2), 16), Convert.ToByte(htmlColor.Substring(5, 2), 16) };
                     xStyle.SetFillForegroundColor(new XSSFColor(rgb));
@@ -503,7 +499,7 @@ public static class NpoiCommonHelpers
                         ICell? c = ws.GetCellFromCoordinates(x, y);
                         if (c != null)
                         {
-                            c.SetCellValue(prop.Name.ToString());
+                            c.SetCellValue(prop.Name);
                             c.CellStyle = headerStyle;
                         }
                         x++;
@@ -532,13 +528,13 @@ public static class NpoiCommonHelpers
                     {
                         ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, props.Length - 1));
                     }
-                    else 
-                    { 
+                    else
+                    {
                         //Based on code found here: https://stackoverflow.com/questions/65178752/format-a-excel-cell-range-as-a-table-using-npoi
                         XSSFTable table = ((XSSFSheet)ws).CreateTable();
                         CT_Table ctTable = table.GetCTTable();
                         AreaReference dataRange = new(new CellReference(0, 0), new CellReference(y -1 , props.Length - 1));
-                        
+
                         ctTable.@ref = dataRange.FormatAsString();
                         ctTable.id = 1;
                         ctTable.name = "Data";
@@ -547,15 +543,14 @@ public static class NpoiCommonHelpers
                         //ctTable.totalsRowShown = false;
                         ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
                         ctTable.tableColumns = new() { tableColumn = new() };
-                        
+
                         T tableHeader = data.First();
                         props = tableHeader!.GetType().GetProperties();
-
 
                         uint i = 1;
                         foreach (PropertyInfo prop in props)
                         {
-                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { id = i, name = prop.Name.ToString() });
+                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { id = i, name = prop.Name });
                             i++;
                         }
                     }
@@ -658,7 +653,6 @@ public static class NpoiCommonHelpers
                         //ctTable.totalsRowShown = false;
                         ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
                         ctTable.tableColumns = new() { tableColumn = new() };
-
 
                         uint i = 1;
                         foreach (DataColumn column in data.Columns)
@@ -835,7 +829,7 @@ public static class NpoiCommonHelpers
     /// <returns>CellRangeAddress of merged cells</returns>
     public static CellRangeAddress? GetRangeOfMergedCells(this ICell? cell)
     {
-        if (cell != null && cell.IsMergedCell)
+        if (cell?.IsMergedCell == true)
         {
             ISheet sheet = cell.Sheet;
             for (int i = 0; i < sheet.NumMergedRegions; i++)
@@ -1036,13 +1030,11 @@ public static class NpoiCommonHelpers
                         else
                         {
                             string? currentCellVal = startCell.GetStringValue();
-                            int colIndex = 1;
-                            while (!string.IsNullOrWhiteSpace(currentCellVal))
+                            for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
                             {
                                 endColIndex = colIndex - 1;
                                 dataTable.Columns.Add(currentCellVal);
                                 currentCellVal = startCell.GetCellOffset(colIndex, 0).GetStringValue();
-                                colIndex++;
                             }
                         }
                     }
@@ -1058,13 +1050,11 @@ public static class NpoiCommonHelpers
                         else
                         {
                             string? currentCellVal = startCell.GetStringValue();
-                            int colIndex = 1;
-                            while (!string.IsNullOrWhiteSpace(currentCellVal))
+                            for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
                             {
                                 endColIndex = colIndex - 1;
                                 dataTable.Columns.Add($"Column{colIndex - 1}");
                                 currentCellVal = startCell.GetCellOffset(colIndex, 0).GetStringValue();
-                                colIndex++;
                             }
                         }
                     }
@@ -1137,7 +1127,7 @@ public static class NpoiCommonHelpers
         try
         {
             bool isXlsx = DocumentFactoryHelper.HasOOXMLHeader(fileStream);
-            
+
             if (isXlsx) //Only .xlsx files can have tables
             {
                 using XSSFWorkbook wb = new(fileStream);
@@ -1191,7 +1181,7 @@ public static class NpoiCommonHelpers
                         dataTable.Rows.Add(newRowData);
                     }
                 }
-            }           
+            }
         }
         catch (Exception ex)
         {

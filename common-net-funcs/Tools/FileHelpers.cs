@@ -19,7 +19,7 @@ public static class FileHelpers
     /// <returns></returns>
     public static string GetSafeSaveName(this string originalFullFileName, bool startFromZero = true, bool supressLogging = false)
     {
-        //Remove invalid characters from 
+        //Remove invalid characters from
         string originalFileName = Path.GetFileName(originalFullFileName);
         string oldCleanFileName = originalFileName.Replace(Path.GetFileName(originalFullFileName), Path.GetFileName(originalFullFileName)
             .Replace("/", "-").Replace(@"\", "-").Replace(":", ".").Replace("<", "_").Replace(">", "_").Replace(@"""", "'").Replace("|", "_").Replace("?", "_").Replace("*", "_"));
@@ -77,7 +77,7 @@ public static class FileHelpers
     public static string GetSafeSaveName(string path, string fileName, bool startFromZero = true)
     {
         fileName = fileName.Replace("/", "-").Replace(@"\", "-").Replace(":", ".").Replace("<", "_").Replace(">", "_").Replace(@"""", "'").Replace("|", "_").Replace("?", "_").Replace("*", "_");
-        
+
         string testPath = Path.GetFullPath(Path.Combine(path, fileName));
         if (File.Exists(testPath))
         {
@@ -127,14 +127,14 @@ public static class FileHelpers
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
     }
-    
+
     public static async Task ZipFiles(IEnumerable<ZipFile>? zipFiles, MemoryStream? zipFileStream = null)
     {
         try
         {
             zipFileStream ??= new();
 
-            if (zipFiles != null && zipFiles.Any())
+            if (zipFiles?.Any() == true)
             {
                 int i = 1;
                 using MemoryStream memoryStream = new();
@@ -163,7 +163,6 @@ public static class FileHelpers
         }
     }
 }
-
 
 public class ZipFile
 {

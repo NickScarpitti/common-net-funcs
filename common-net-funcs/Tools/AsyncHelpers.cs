@@ -29,15 +29,14 @@ public static class AsyncHelpers
     /// <param name="obj">Object to update</param>
     /// <param name="propertyName">Name of property to update within obj object</param>
     /// <param name="task">Async task to run that returns the value to assign to the property indicated</param>
-    /// <returns></returns>
     public static async Task ObjectUpdate<T, UT>(this T? obj, string propertyName, Task<UT> task)
     {
         try
         {
             PropertyInfo[] props = typeof(T).GetProperties();
-            if (props != null && props.Any())
+            if (props?.Any() == true)
             {
-                PropertyInfo? prop = props.Where(x => x.Name.StrEq(propertyName)).FirstOrDefault();
+                PropertyInfo? prop = Array.Find(props, x => x.Name.StrEq(propertyName));
                 if (prop != null)
                 {
                     UT value = await task;
@@ -66,7 +65,6 @@ public static class AsyncHelpers
     /// <typeparam name="UT"></typeparam>
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
-    /// <returns></returns>
     public static async Task ObjectFill<T, UT>(this T? obj, Task<UT> task)
     {
         try
@@ -87,10 +85,8 @@ public static class AsyncHelpers
     /// Task to fill list obj variable asynchronously
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <typeparam name="UT"></typeparam>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    /// <returns></returns>
     public static async Task ObjectFill<T>(this List<T>? obj, Task<List<T>?> task)
     {
         try
@@ -115,10 +111,8 @@ public static class AsyncHelpers
     /// Task to fill list obj variable asynchronously
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <typeparam name="UT"></typeparam>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    /// <returns></returns>
     public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>?> task)
     {
         try
@@ -143,10 +137,8 @@ public static class AsyncHelpers
     /// Task to fill list obj variable asynchronously
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <typeparam name="UT"></typeparam>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    /// <returns></returns>
     public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<ConcurrentBag<T>?> task)
     {
         try
@@ -171,10 +163,8 @@ public static class AsyncHelpers
     /// Task to fill list obj variable asynchronously
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <typeparam name="UT"></typeparam>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    /// <returns></returns>
     public static async Task ObjectFill<T>(this List<T>? obj, Task<IEnumerable<T>?> task)
     {
         try
@@ -200,7 +190,6 @@ public static class AsyncHelpers
     /// </summary>
     /// <param name="dt">DataTable to insert data into</param>
     /// <param name="task">Async task that returns a DataTable object to insert into dt</param>
-    /// <returns></returns>
     public static async Task ObjectFill(this DataTable dt, Task<DataTable> task)
     {
         try
@@ -223,7 +212,6 @@ public static class AsyncHelpers
     /// </summary>
     /// <param name="ms">MemoryStream to insert data into</param>
     /// <param name="task">Async task that returns a MemoryStream object to insert into ms</param>
-    /// <returns></returns>
     public static async Task ObjectFill(this MemoryStream ms, Task<MemoryStream> task)
     {
         try

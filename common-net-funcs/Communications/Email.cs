@@ -45,8 +45,8 @@ public static class Email
     /// <param name="smtpPassword">Password for the SMTP server, if required. Requires smtpUser to be set to use</param>
     /// <param name="zipAttachments">Will zip all attachments if true</param>
     /// <returns>Email sent success bool</returns>
-    public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false, 
-        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, 
+    public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false,
+        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false,
         string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false)
     {
         bool success = true;
@@ -105,11 +105,11 @@ public static class Email
                 MimeMessage email = new();
                 email.From.Add(new MailboxAddress(from?.Name, from?.Email));
                 email.To.AddRange(toAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
-                if (ccAddresses != null && ccAddresses.Any())
+                if (ccAddresses?.Any() == true)
                 {
                     email.Cc.AddRange(ccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
                 }
-                if (bccAddresses != null && bccAddresses.Any())
+                if (bccAddresses?.Any() == true)
                 {
                     email.Bcc.AddRange(bccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
                 }
@@ -186,7 +186,7 @@ public static class Email
     {
         try
         {
-            if (attachments != null && attachments.Any())
+            if (attachments?.Any() == true)
             {
                 if (!zipAttachments)
                 {

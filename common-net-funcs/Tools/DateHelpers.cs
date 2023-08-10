@@ -14,7 +14,6 @@ public static class DateHelpers
     /// <returns></returns>
     public static int GetBusinessDays(DateTime? startDate, DateTime? endDate, List<DateTime>? exceptionDates = null)
     {
-        
         if (startDate == null || endDate == null)
         {
             return 0;
@@ -30,7 +29,7 @@ public static class DateHelpers
 
         if (exceptionDates != null)
         {
-            int exceptionDays = exceptionDates.Where(x => x >= sDate && x <= eDate && x.DayOfWeek != DayOfWeek.Saturday && x.DayOfWeek != DayOfWeek.Sunday).Count();
+            int exceptionDays = exceptionDates.Count(x => x >= sDate && x <= eDate && x.DayOfWeek != DayOfWeek.Saturday && x.DayOfWeek != DayOfWeek.Sunday);
             calcBusinessDays -= exceptionDays;
         }
 

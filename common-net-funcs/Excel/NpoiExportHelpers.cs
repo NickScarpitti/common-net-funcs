@@ -6,9 +6,9 @@ using NPOI.XSSF.UserModel;
 namespace Common_Net_Funcs.Excel;
 
 /// <summary>
-/// Export data to an excel data using NPOI 
+/// Export data to an excel data using NPOI
 /// </summary>
-public class NpoiExportHelpers
+public static class NpoiExportHelpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -154,5 +154,3 @@ public class NpoiExportHelpers
         return success;
     }
 }
-
-

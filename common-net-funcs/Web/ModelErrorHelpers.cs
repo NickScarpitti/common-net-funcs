@@ -13,14 +13,13 @@ public static class ModelErrorHelpers
     /// Convert ModelStateDictionary used by ASP.NET Core into a standard dictionary
     /// </summary>
     /// <param name="modelState"></param>
-    /// <returns></returns>
     public static Dictionary<string, string?> ParseModelStateErrors(ModelStateDictionary modelState)
     {
         Dictionary<string, string?> errors = new();
         foreach (string modelStateKey in modelState.Keys)
         {
             ModelStateEntry? value = modelState[modelStateKey];
-            if (value != null && value.Errors.Count > 0)
+            if (value?.Errors.Count > 0)
             {
                 string? errText = null;
                 foreach (ModelError error in value.Errors)
@@ -42,14 +41,13 @@ public static class ModelErrorHelpers
     /// Convert ModelStateDictionary used by ASP.NET Core into a standard dictionary
     /// </summary>
     /// <param name="modelState"></param>
-    /// <returns></returns>
     public static ConcurrentDictionary<string, string?> ParseModelStateErrorsConcurrent(ModelStateDictionary modelState)
     {
         ConcurrentDictionary<string, string?> errors = new();
         foreach (string modelStateKey in modelState.Keys)
         {
             ModelStateEntry? value = modelState[modelStateKey];
-            if (value != null && value.Errors.Count > 0)
+            if (value?.Errors.Count > 0)
             {
                 string? errText = null;
                 foreach (ModelError error in value.Errors)

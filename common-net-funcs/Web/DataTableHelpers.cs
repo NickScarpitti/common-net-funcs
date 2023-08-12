@@ -26,15 +26,12 @@ public static class DataTableHelpers
         {
             dataTableRequest.Draw = request.Form.Where(x => x.Key.StrEq("draw")).Select(x => x.Value).FirstOrDefault();
 
-            int i = 0;
-
-            while (request.Form.Where(y => y.Key.StrEq($"order[{i}][column]")).Any())
+            for (int i = 0; request.Form.Any(y => y.Key.StrEq($"order[{i}][column]")); i++)
             {
                 dataTableRequest.SortColumns.Add(i, request.Form.Where(x => x.Key.StrEq("columns[" + request.Form.Where(y => y.Key.StrEq($"order[{i}][column]"))
                 .Select(z => z.Value).FirstOrDefault() + "][data]")).Select(x => x.Value).FirstOrDefault());
 
                 dataTableRequest.SortColumnDir.Add(i, request.Form.Where(x => x.Key.StrEq($"order[{i}][dir]")).Select(x => x.Value).FirstOrDefault());
-                i++;
             }
 
             string? start = request.Form.Where(x => x.Key.StrEq("start")).Select(x => x.Value).FirstOrDefault();
@@ -48,8 +45,7 @@ public static class DataTableHelpers
             //Get search value key pairs
             if (!string.IsNullOrEmpty(searchValue))
             {
-                List<string> vals = searchValue.ToString().Split(",").ToList();
-                foreach (string val in vals)
+                foreach (string val in searchValue.Split(",").ToList())
                 {
                     string cleanVal = val.CleanQueryParam()!;
                     int startPos = cleanVal.IndexOf("=") + 1;
@@ -60,7 +56,7 @@ public static class DataTableHelpers
                     string key = cleanVal[..(startPos - 1)];
                     if (startPos + 1 <= cleanVal.Length)
                     {
-                        int valLength = cleanVal.Length - (startPos);
+                        int valLength = cleanVal.Length - startPos;
                         string outVal = cleanVal.Substring(startPos, valLength);
                         dataTableRequest.SearchValues.Add(key, outVal);
                     }
@@ -93,7 +89,6 @@ public static class DataTableHelpers
             PageSize = request.PageSize
         };
     }
-
 }
 
 #region Classes

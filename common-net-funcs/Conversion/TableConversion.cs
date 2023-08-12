@@ -3,7 +3,7 @@ using System.Data;
 using System.Reflection;
 
 namespace Common_Net_Funcs.Conversion;
-public class DataTableConversion
+public static class DataTableConversion
 {
     /// <summary>
     /// Convert datatable to equivalent list of specified class
@@ -76,7 +76,7 @@ public class DataTableConversion
         ConcurrentBag<Tuple<DataColumn, PropertyInfo, bool>> map = new ConcurrentBag<Tuple<DataColumn, PropertyInfo, bool>>();
 
         ConcurrentBag<T?> bag = new ConcurrentBag<T?>();
-        
+
         if (table.Rows.Count > 0)
         {
             DataRow firstRow = table.Rows[0];

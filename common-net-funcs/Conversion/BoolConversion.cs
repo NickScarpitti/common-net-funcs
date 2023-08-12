@@ -14,9 +14,9 @@ public static class BoolConversion
     {
         if (value)
         {
-            return EYesNo.Yes.ToString();
+            return nameof(EYesNo.Yes);
         }
-        return EYesNo.No.ToString();
+        return nameof(EYesNo.No);
     }
 
     /// <summary>

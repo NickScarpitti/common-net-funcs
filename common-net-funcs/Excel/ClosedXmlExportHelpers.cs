@@ -6,9 +6,9 @@ using Common_Net_Funcs.Tools;
 namespace Common_Net_Funcs.Excel;
 
 /// <summary>
-/// Export data to an excel data using ClosedXml 
+/// Export data to an excel data using ClosedXml
 /// </summary>
-public class ClosedXmlExportHelpers
+public static class ClosedXmlExportHelpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -97,7 +97,7 @@ public class ClosedXmlExportHelpers
         {
             int i = 1;
             string actualSheetName = sheetName;
-            while (wb.Worksheets.Any() && wb.Worksheets.Where(x => x.Name.StrEq(actualSheetName)).Any())
+            while (wb.Worksheets.Any() && wb.Worksheets.Any(x => x.Name.StrEq(actualSheetName)))
             {
                 actualSheetName = sheetName + $" ({i})"; //Get safe new sheet name
                 i++;
@@ -132,7 +132,7 @@ public class ClosedXmlExportHelpers
             int i = 1;
             string actualSheetName = sheetName;
 
-            while (wb.Worksheets.Any() && wb.Worksheets.Where(x => x.Name.StrEq(actualSheetName)).Any())
+            while (wb.Worksheets.Any() && wb.Worksheets.Any(x => x.Name.StrEq(actualSheetName)))
             {
                 actualSheetName = sheetName + $" ({i})"; //Get safe new sheet name
                 i++;

@@ -6,13 +6,13 @@
 public interface IEmailService
 {
     Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress fromAddress, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false,
-        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null, 
+        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null,
         string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false);
     Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress fromAddress, MailAddress toAddress, string? subject, string? body, bool bodyIsHtml = false,
-        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null, 
+        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null,
         string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false);
     Task<bool> SendEmail(string? smtpServer, int smtpPort, string fromAddress, string toAddress, string? subject, string? body, bool bodyIsHtml = false,
-        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null, 
+        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null,
         string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false);
 }
 
@@ -22,14 +22,14 @@ public interface IEmailService
 public class EmailService : IEmailService
 {
     public async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress fromAddress, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false,
-        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null, 
+        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null,
         string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false)
     {
         return await Email.SendEmail(smtpServer, smtpPort, fromAddress, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachments, readReceipt, readReceiptEmail, smtpUser, smtpPassword, zipAttachments);
     }
 
     public async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress fromAddress, MailAddress toAddress, string? subject, string? body, bool bodyIsHtml = false, IEnumerable<MailAddress>? ccAddresses = null,
-        IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null, string? smtpUser = null, 
+        IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null, string? smtpUser = null,
         string? smtpPassword = null, bool zipAttachments = false)
     {
         IEnumerable<MailAddress> toAddresses = new List<MailAddress>() { new MailAddress { Name = toAddress.Name, Email = toAddress.Email } };

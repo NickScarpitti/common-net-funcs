@@ -175,7 +175,7 @@ public static class StringConversion
     /// <returns>List of integers where the strings could be parsed to integers and not null</returns>
     public static IEnumerable<int> ToListInt(this IEnumerable<string> values)
     {
-        return values.Select(x => { return int.TryParse(x, out int i) ? i : (int?)null; }).Where(i => i.HasValue).Select(i => i!.Value);
+        return values.Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value);
     }
 
     /// <summary>
@@ -185,7 +185,7 @@ public static class StringConversion
     /// <returns>List of integers where the strings could be parsed to integers and not null</returns>
     public static List<int> ToListInt(this IList<string> values)
     {
-        return values.Select(x => { return int.TryParse(x, out int i) ? i : (int?)null; }).Where(i => i.HasValue).Select(i => i!.Value).ToList();
+        return values.Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value).ToList();
     }
 
     /// <summary>
@@ -256,7 +256,7 @@ public static class StringConversion
     /// <returns>Bool representation of string value passed in</returns>
     public static bool YesNoToBool(this string? value)
     {
-        return value.StrEq(EYesNo.Yes.ToString());
+        return value.StrEq(nameof(EYesNo.Yes));
     }
 
     /// <summary>
@@ -294,10 +294,7 @@ public static class StringConversion
         ConcurrentBag<string?> cleanValues = new();
         if (values.Any())
         {
-            Parallel.ForEach(values, value =>
-            {
-                cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim());
-            });
+            Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim()));
         }
 
         return (cleanValues ?? new()).Where(x => x != null)!;
@@ -318,10 +315,7 @@ public static class StringConversion
         ConcurrentBag<string?> cleanValues = new();
         if (values.Any())
         {
-            Parallel.ForEach(values, value =>
-            {
-                cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim());
-            });
+            Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim()));
         }
 
         return (cleanValues ?? new()).Where(x => x != null).ToList()!;
@@ -338,7 +332,7 @@ public static class StringConversion
     {
         string queryString = string.Empty;
         bool firstItem = true;
-        if (parameters != null && parameters.Any() && !string.IsNullOrWhiteSpace(queryParameterName))
+        if (parameters?.Any() == true && !string.IsNullOrWhiteSpace(queryParameterName))
         {
             foreach (T parameter in parameters)
             {
@@ -387,7 +381,6 @@ public static class StringConversion
 
     public static string TimespanToShortForm(this TimeSpan? t)
     {
-
         string shortForm = "";
         if (t != null)
         {
@@ -407,7 +400,7 @@ public static class StringConversion
 
         stringForm = stringForm.Split(".").Last();
         string days = string.Empty;
-        
+
         if (t.Days > 0)
         {
             days = t.Days.ToString();
@@ -431,7 +424,7 @@ public static class StringConversion
                 }
             }
         }
-       
+
         return string.IsNullOrWhiteSpace(days) ? stringForm : days + ":" + stringForm;
     }
 
@@ -515,7 +508,7 @@ public static class StringConversion
         char[] src = input.ToCharArray();
         bool skip = false;
         char ch;
-        
+
         for (; i < len; i++)
         {
             ch = src[i];

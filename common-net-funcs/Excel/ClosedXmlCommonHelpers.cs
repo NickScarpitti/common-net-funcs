@@ -6,7 +6,7 @@ using Common_Net_Funcs.Conversion;
 namespace Common_Net_Funcs.Excel;
 
 /// <summary>
-/// Methods to make reading and writing to an excel file easier using NPOI  
+/// Methods to make reading and writing to an excel file easier using NPOI
 /// </summary>
 public static class ClosedXmlCommonHelpers
 {
@@ -34,11 +34,7 @@ public static class ClosedXmlCommonHelpers
     /// <returns>True if cell is empty</returns>
     public static bool IsCellEmpty(this IXLCell cell)
     {
-        if (string.IsNullOrWhiteSpace(cell.Value.ToString()))
-        {
-            return true;
-        }
-        return false;
+        return string.IsNullOrWhiteSpace(cell.Value.ToString());
     }
 
     /// <summary>
@@ -189,8 +185,8 @@ public static class ClosedXmlCommonHelpers
                     foreach (PropertyInfo prop in props)
                     {
                         IXLCell c = ws.Cell(y, x);
-                        c.Value = prop.Name.ToString();
-                        if (!createTable) 
+                        c.Value = prop.Name;
+                        if (!createTable)
                         {
                             c.Style = headerStyle;
 
@@ -222,7 +218,6 @@ public static class ClosedXmlCommonHelpers
                         y++;
                     }
 
-
                     if (!createTable)
                     {
                         //Not compatible with table
@@ -230,7 +225,6 @@ public static class ClosedXmlCommonHelpers
                     }
                     else
                     {
-                        
                         //Based on code found here: https://github.com/ClosedXML/ClosedXML/wiki/Using-Tables
                         IXLTable table = ws.Range(1, 1, y - 1, props.Length).CreateTable();
                         table.ShowTotalsRow = false;
@@ -315,7 +309,7 @@ public static class ClosedXmlCommonHelpers
                         {
                             string val = value.ToNString() ?? string.Empty;
                             IXLCell c = ws.Cell(y, x);
-                            c.Value = val.ToString();
+                            c.Value = val;
                             c.Style = bodyStyle;
                             x++;
                         }

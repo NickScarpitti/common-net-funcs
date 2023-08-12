@@ -20,7 +20,7 @@ public static class CsvHelperExportHelpers
         memoryStream ??= new();
         using MemoryStream sourceMemoryStream = new();
         using StreamWriter streamWriter = new StreamWriter(sourceMemoryStream);
-        //Headers    
+        //Headers
         for (int i = 0; i < dataTable.Columns.Count; i++)
         {
             await streamWriter.WriteAsync(dataTable.Columns[i].ToNString());
@@ -54,7 +54,7 @@ public static class CsvHelperExportHelpers
             }
             await streamWriter.WriteAsync(streamWriter.NewLine);
         }
-        
+
         await streamWriter.FlushAsync();
         sourceMemoryStream.Seek(0, SeekOrigin.Begin);
         await memoryStream.WriteFileToMemoryStreamAsync(sourceMemoryStream);

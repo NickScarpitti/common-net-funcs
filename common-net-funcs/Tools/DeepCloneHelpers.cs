@@ -6,13 +6,11 @@ namespace Common_Net_Funcs.Tools;
 
 public static class DeepCloneSerializationHelpers
 {
-
     /// <summary>
-    /// Deep clone a class (cloned object doesn't retain memopry references) using refelction (slowest)
+    /// Deep clone a class (cloned object doesn't retain memory references) using reflection (slowest)
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="list"></param>
-    /// <returns></returns>
     public static IEnumerable<T>? SerializeClone<T>(this IEnumerable<T> list)
     {
         if (list == null) { return null; }
@@ -21,11 +19,10 @@ public static class DeepCloneSerializationHelpers
     }
 
     /// <summary>
-    /// Deep clone a class (cloned object doesn't retain memopry references) using serialization (slowest)
+    /// Deep clone a class (cloned object doesn't retain memory references) using serialization (slowest)
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="list"></param>
-    /// <returns></returns>
     public static List<T>? SerializeClone<T>(this IList<T> list)
     {
         if (list == null) { return null; }
@@ -39,11 +36,10 @@ public static class DeepCloneReflectionHelpers
     private static readonly MethodInfo? CloneMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
 
     /// <summary>
-    /// Deep clone a class (cloned object doesn't retain memopry references) using refelction (mid-tier speed)
+    /// Deep clone a class (cloned object doesn't retain memory references) using reflection (mid-tier speed)
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="original"></param>
-    /// <returns></returns>
     public static T? DeepCloneReflection<T>(this T? original)
     {
         return (T?)Copy(original);
@@ -52,7 +48,7 @@ public static class DeepCloneReflectionHelpers
     public static bool IsPrimitive(this Type type)
     {
         if (type == typeof(string)) return true;
-        return type.IsValueType & type.IsPrimitive;
+        return type.IsValueType && type.IsPrimitive;
     }
 
     private static object? Copy(this object? originalObject)
@@ -70,12 +66,11 @@ public static class DeepCloneReflectionHelpers
         if (typeToReflect.IsArray)
         {
             Type? arrayType = typeToReflect.GetElementType();
-            if (IsPrimitive(arrayType!) == false)
+            if (!IsPrimitive(arrayType!))
             {
                 Array clonedArray = (Array)cloneObject!;
                 clonedArray.ForEach((array, indices) => array.SetValue(InternalCopy(clonedArray.GetValue(indices), visited), indices));
             }
-
         }
         visited.Add(originalObject, cloneObject);
         CopyFields(originalObject, visited, cloneObject, typeToReflect);
@@ -96,7 +91,7 @@ public static class DeepCloneReflectionHelpers
     {
         foreach (FieldInfo fieldInfo in typeToReflect.GetFields(bindingFlags))
         {
-            if (filter != null && filter(fieldInfo) == false) continue;
+            if (filter != null && !filter(fieldInfo)) continue;
             if (IsPrimitive(fieldInfo.FieldType)) continue;
             var originalFieldValue = fieldInfo.GetValue(originalObject);
             var clonedFieldValue = InternalCopy(originalFieldValue, visited);
@@ -163,7 +158,7 @@ internal class ArrayTraverse
 }
 
 /// <summary>
-/// Superfast deep copier class, which uses Expression trees.
+/// Super fast deep copier class, which uses Expression trees.
 /// </summary>
 public static class DeepCloneExpressionTreeHelpers
 {
@@ -206,7 +201,6 @@ public static class DeepCloneExpressionTreeHelpers
         {
             return original;
         }
-
 
         if (copiedReferencesDict.TryGetValue(original, out object? alreadyCopiedObject))
         {
@@ -254,7 +248,6 @@ public static class DeepCloneExpressionTreeHelpers
 
     private static Expression<Func<object, Dictionary<object, object>, object>> CreateCompiledLambdaCopyFunctionForType(Type type)
     {
-
         ///// INITIALIZATION OF EXPRESSIONS AND VARIABLES
         InitializeExpressions(type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable, out ParameterExpression boxingVariable,
                 out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions);
@@ -289,7 +282,6 @@ public static class DeepCloneExpressionTreeHelpers
     private static void InitializeExpressions(Type type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable,
         out ParameterExpression boxingVariable, out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions)
     {
-
         inputParameter = Expression.Parameter(ObjectType);
 
         inputDictionary = Expression.Parameter(ObjectDictionaryType);
@@ -364,18 +356,18 @@ public static class DeepCloneExpressionTreeHelpers
     {
         ///// Intended code:
         /////
-        ///// int i1, i2, ..., in; 
-        ///// 
-        ///// int length1 = inputarray.GetLength(0); 
-        ///// i1 = 0; 
+        ///// int i1, i2, ..., in;
+        /////
+        ///// int length1 = inputarray.GetLength(0);
+        ///// i1 = 0;
         ///// while (true)
         ///// {
         /////     if (i1 >= length1)
         /////     {
         /////         goto ENDLABELFORLOOP1;
         /////     }
-        /////     int length2 = inputarray.GetLength(1); 
-        /////     i2 = 0; 
+        /////     int length2 = inputarray.GetLength(1);
+        /////     i2 = 0;
         /////     while (true)
         /////     {
         /////         if (i2 >= length2)
@@ -385,27 +377,27 @@ public static class DeepCloneExpressionTreeHelpers
         /////         ...
         /////         ...
         /////         ...
-        /////         int lengthn = inputarray.GetLength(n); 
-        /////         in = 0; 
+        /////         int lengthn = inputarray.GetLength(n);
+        /////         in = 0;
         /////         while (true)
         /////         {
         /////             if (in >= lengthn)
         /////             {
         /////                 goto ENDLABELFORLOOPn;
         /////             }
-        /////             outputarray[i1, i2, ..., in] 
+        /////             outputarray[i1, i2, ..., in]
         /////                 = (<elementType>)DeepCopyByExpressionTreeObj(
         /////                        (Object)inputarray[i1, i2, ..., in])
-        /////             in++; 
+        /////             in++;
         /////         }
         /////         ENDLABELFORLOOPn:
         /////         ...
-        /////         ...  
         /////         ...
-        /////         i2++; 
+        /////         ...
+        /////         i2++;
         /////     }
         /////     ENDLABELFORLOOP2:
-        /////     i1++; 
+        /////     i1++;
         ///// }
         ///// ENDLABELFORLOOP1:
 
@@ -435,7 +427,7 @@ public static class DeepCloneExpressionTreeHelpers
     {
         ///// Intended code:
         /////
-        ///// int i1, i2, ..., in; 
+        ///// int i1, i2, ..., in;
 
         List<ParameterExpression> indices = new();
 
@@ -452,7 +444,7 @@ public static class DeepCloneExpressionTreeHelpers
     {
         ///// Intended code:
         /////
-        ///// outputarray[i1, i2, ..., in] 
+        ///// outputarray[i1, i2, ..., in]
         /////     = (<elementType>)DeepCopyByExpressionTreeObj(
         /////            (Object)inputarray[i1, i2, ..., in]);
 
@@ -464,17 +456,15 @@ public static class DeepCloneExpressionTreeHelpers
 
         UnaryExpression rightSide = Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(indexFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary), elementType!);
 
-        BinaryExpression assignExpression = Expression.Assign(indexTo, rightSide);
-
-        return assignExpression;
+        return Expression.Assign(indexTo, rightSide);
     }
 
     private static BlockExpression LoopIntoLoopExpression(ParameterExpression inputParameter, ParameterExpression indexVariable, Expression loopToEncapsulate, int dimension)
     {
         ///// Intended code:
         /////
-        ///// int length = inputarray.GetLength(dimension); 
-        ///// i = 0; 
+        ///// int length = inputarray.GetLength(dimension);
+        ///// i = 0;
         ///// while (true)
         ///// {
         /////     if (i >= length)
@@ -482,7 +472,7 @@ public static class DeepCloneExpressionTreeHelpers
         /////         goto ENDLABELFORLOOP;
         /////     }
         /////     loopToEncapsulate;
-        /////     i++; 
+        /////     i++;
         ///// }
         ///// ENDLABELFORLOOP:
 
@@ -512,7 +502,7 @@ public static class DeepCloneExpressionTreeHelpers
     {
         ///// Intended code:
         /////
-        ///// length = ((Array)input).GetLength(i); 
+        ///// length = ((Array)input).GetLength(i);
 
         MethodInfo? getLengthMethod = typeof(Array).GetMethod("GetLength", BindingFlags.Public | BindingFlags.Instance);
 
@@ -709,8 +699,7 @@ public static class DeepCloneExpressionTreeHelpers
         // The following structure ensures that multiple threads can use the dictionary
         // even while dictionary is locked and being updated by other thread.
         // That is why we do not modify the old dictionary instance but
-        // we replace it with a new instance everytime.
-
+        // we replace it with a new instance every time.
 
         if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out bool isStructTypeToDeepCopy))
         {

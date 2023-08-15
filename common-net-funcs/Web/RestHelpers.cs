@@ -24,7 +24,6 @@ public class RestObject<T>// where T : class
 /// Source1: https://medium.com/@srikanth.gunnala/generic-wrapper-to-consume-asp-net-web-api-rest-service-641b50462c0
 /// Source2: https://stackoverflow.com/questions/43692053/how-can-i-create-a-jsonpatchdocument-from-comparing-two-c-sharp-objects
 /// </summary>
-/// <typeparam name="T"></typeparam>
 public static class RestHelpers
 {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
@@ -380,7 +379,6 @@ public static class RestHelpers
     /// Executes a DELETE request against the provided URL with the deleteObject in the body and returns the result
     /// </summary>
     /// <param name="url">API Url</param>
-    /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
@@ -423,7 +421,6 @@ public static class RestHelpers
     /// Executes a DELETE request against the provided URL with the deleteObject in the body and returns the result request RestObject
     /// </summary>
     /// <param name="url">API Url</param>
-    /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>

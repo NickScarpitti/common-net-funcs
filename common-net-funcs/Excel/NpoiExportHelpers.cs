@@ -7,7 +7,7 @@ namespace Common_Net_Funcs.Excel;
 
 /// <summary>
 /// Export data to an excel data using NPOI
-/// /// </summary>
+/// </summary>
 public static class NpoiExportHelpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();

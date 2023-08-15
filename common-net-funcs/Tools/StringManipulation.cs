@@ -76,11 +76,7 @@ public static class StringManipulation
     /// <returns>Null is the string passed in is null or is the word null with no other text characters other than whitespace</returns>
     public static string? MakeNullNull(this string? s)
     {
-        if (s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", "")?.Length == 0 || s.Trim().StrEq("Null"))
-        {
-            return null;
-        }
-        return s;
+        return s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", "")?.Length == 0 || s.Trim().StrEq("Null") ? null : s;
     }
 
     /// <summary>

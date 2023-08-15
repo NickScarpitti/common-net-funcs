@@ -126,7 +126,6 @@ public static class ObjectHelpers
     /// </summary>
     /// <typeparam name="T">Type to use in list</typeparam>
     /// <param name="obj">Object to turn into a single item list</param>
-    /// <returns></returns>
     public static List<T> TolList<T>(this T obj)
     {
         return new List<T>() { obj };

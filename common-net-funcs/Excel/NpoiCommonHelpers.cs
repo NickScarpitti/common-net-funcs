@@ -40,10 +40,7 @@ public static class NpoiCommonHelpers
     /// </summary>
     /// <param name="cell"></param>
     /// <returns>True if cell is empty</returns>
-    public static bool IsCellEmpty(this ICell cell)
-    {
-        return string.IsNullOrWhiteSpace(cell.GetStringValue());
-    }
+    public static bool IsCellEmpty(this ICell cell) => string.IsNullOrWhiteSpace(cell.GetStringValue());
 
     /// <summary>
     /// Get ICell offset from cellReference

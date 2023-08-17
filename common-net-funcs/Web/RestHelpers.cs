@@ -70,7 +70,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return result;
     }
@@ -112,7 +112,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return restObject;
     }
@@ -156,7 +156,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return result;
     }
@@ -200,7 +200,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return restObject;
     }
@@ -244,7 +244,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return result;
     }
@@ -288,7 +288,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return restObject;
     }
@@ -329,7 +329,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return result;
     }
@@ -370,7 +370,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return restObject;
     }
@@ -412,7 +412,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return result;
     }
@@ -454,7 +454,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return restObject;
     }
@@ -496,7 +496,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return result;
     }
@@ -539,7 +539,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return result;
     }
@@ -582,7 +582,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL:{url}");
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
         }
         return restObject;
     }
@@ -707,7 +707,7 @@ public static class RestHelpers
     private static void AttachHeaders(string? bearerToken, Dictionary<string, string>? httpHeaders, HttpRequestMessage httpRequestMessage)
     {
         //Changed this from inline if due to setting .Authorization to null if bearerToken is empty/null resulting in an exception during the post request: "A task was canceled"
-        if (bearerToken != null || bearerToken?.Length == 0 && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false))
+        if (bearerToken != null || (bearerToken?.Length == 0 && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false)))
         {
             try
             {

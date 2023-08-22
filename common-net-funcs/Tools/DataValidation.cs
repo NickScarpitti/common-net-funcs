@@ -27,11 +27,11 @@ public static class DataValidation
         if (obj1 == null || obj2 == null) return false;
         // How can they be the same if they're different types?
         if (obj1.GetType() != obj1.GetType()) return false;
-        PropertyInfo[] Props = obj1.GetType().GetProperties();
-        foreach (PropertyInfo Prop in Props)
+
+        foreach (PropertyInfo prop in obj1.GetType().GetProperties())
         {
-            var aPropValue = Prop.GetValue(obj1) ?? string.Empty;
-            var bPropValue = Prop.GetValue(obj2) ?? string.Empty;
+            var aPropValue = prop.GetValue(obj1) ?? string.Empty;
+            var bPropValue = prop.GetValue(obj2) ?? string.Empty;
 
             bool aIsNumeric = aPropValue.IsNumeric();
             bool bIsNumeric = bPropValue.IsNumeric();
@@ -61,7 +61,7 @@ public static class DataValidation
     /// <param name="obj2"></param>
     /// <param name="exemptProps">Names of properties to not include in the matching check</param>
     /// <returns>True if both objects contain identical values for all properties except for the ones identified by exemptProps</returns>
-    public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string> exemptProps)
+    public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
     {
         // They're both null.
         if (obj1 == null && obj2 == null) return true;
@@ -69,17 +69,28 @@ public static class DataValidation
         if (obj1 == null || obj2 == null) return false;
         // How can they be the same if they're different types?
         if (obj1.GetType() != obj1.GetType()) return false;
-        PropertyInfo[] Props = obj1.GetType().GetProperties();
-        foreach (PropertyInfo prop in Props)
+
+        foreach (PropertyInfo prop in obj1.GetType().GetProperties().Where(x => exemptProps?.Contains(x.Name) != true))
         {
-            if (!exemptProps.Contains(prop.Name))
+            var aPropValue = prop.GetValue(obj1) ?? string.Empty;
+            var bPropValue = prop.GetValue(obj2) ?? string.Empty;
+
+            bool aIsNumeric = aPropValue.IsNumeric();
+            bool bIsNumeric = bPropValue.IsNumeric();
+
+            try
             {
-                var aPropValue = prop.GetValue(obj1) ?? string.Empty;
-                var bPropValue = prop.GetValue(obj2) ?? string.Empty;
-                if (aPropValue.ToString() != bPropValue.ToString())
+                //This will prevent issues with numbers with varying decimal places from being counted as a difference
+                if ((aIsNumeric && bIsNumeric && decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!)) ||
+                    (!(aIsNumeric && bIsNumeric) && aPropValue.ToString() != bPropValue.ToString()))
                 {
                     return false;
                 }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                return false;
             }
         }
         return true;

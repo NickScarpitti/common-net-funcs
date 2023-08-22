@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 
-namespace Common_Net_Funcs.Web.BaseActions;
+namespace Common_Net_Funcs.EFCore;
 public interface IBaseDbContextActions<T, UT> where T : class where UT : DbContext
 {
     #region Read

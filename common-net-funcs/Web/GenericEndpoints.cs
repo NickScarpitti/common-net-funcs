@@ -1,11 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using Common_Net_Funcs.EFCore;
 using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Common_Net_Funcs.Web.BaseActions;
+namespace Common_Net_Funcs.Web;
 public class GenericEndpoints : ControllerBase
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -68,7 +69,7 @@ public class GenericEndpoints : ControllerBase
     {
         try
         {
-            T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
+            var dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
             if (dbModel == null)
             {
                 return NoContent();
@@ -79,7 +80,7 @@ public class GenericEndpoints : ControllerBase
                 return Ok(dbModel);
             }
 
-            T? updateModel = dbModel.DeepClone();
+            var updateModel = dbModel.DeepClone();
 
             if (updateModel == null)
             {

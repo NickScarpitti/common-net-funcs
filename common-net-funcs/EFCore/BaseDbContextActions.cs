@@ -3,7 +3,7 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Common_Net_Funcs.Web.BaseActions;
+namespace Common_Net_Funcs.EFCore;
 
 /// <summary>
 /// Common EF Core interactions with a database. Must be using DI for this method to work

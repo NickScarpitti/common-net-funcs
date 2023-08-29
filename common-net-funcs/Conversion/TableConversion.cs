@@ -23,19 +23,22 @@ public static class DataTableConversion
             DataRow firstRow = table.Rows[0];
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
             {
-                if (convertShortToBool)
+                if (table.Columns.Contains(propertyInfo.Name))
                 {
-                    Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
-                    map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo,
-                        convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
-                }
-                else
-                {
-                    map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo, false));
+                    if (convertShortToBool)
+                    {
+                        Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
+                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo,
+                            convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
+                    }
+                    else
+                    {
+                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo, false));
+                    }
                 }
             }
 
-            foreach (DataRow row in table.Rows)
+            foreach (DataRow row in table.AsEnumerable())
             {
                 if (row == null)
                 {

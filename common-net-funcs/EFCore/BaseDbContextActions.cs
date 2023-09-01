@@ -1,7 +1,9 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
 
 namespace Common_Net_Funcs.EFCore;
 
@@ -44,6 +46,31 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
+    /// Get individual record by the primary key with all navigation properties. If using a compound primary key, use an object of the same class to be returned with the primary key fields populated
+    /// </summary>
+    /// <param name="primaryKey">Primary key of the record to be returned</param>
+    /// <returns>Record of type T corresponding to the primary key passed in</returns>
+    public async Task<T?> GetByKeyFull(object primaryKey)
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        T? model = null;
+        try
+        {
+            model = await GetByKey(primaryKey);
+            if (model != null)
+            {
+                IQueryable<T> query = context.Set<T>().AsQueryable().IncludeNestedNavigationProperties(context, typeof(T));
+                model = GetObjectByPartial(query, model);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    /// <summary>
     /// Gets all records from the corresponding table. Same as running a SELECT * query
     /// </summary>
     /// <returns>All records from the table corresponding to class T</returns>
@@ -74,6 +101,28 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         try
         {
             model = await context.Set<T>().Where(expression).AsNoTracking().ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    /// <summary>
+    /// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression. Same as running a SELECT * WHERE <condition> query
+    /// </summary>
+    /// <param name="expression">Linq expression to filter the records to be returned</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression</returns>
+    public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> expression)
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T>? model = null;
+        try
+        {
+            IQueryable<T> query = context.Set<T>();
+            query = query.IncludeNestedNavigationProperties(context, typeof(T));
+            model = await query.Where(expression).AsNoTracking().ToListAsync();
         }
         catch (Exception ex)
         {

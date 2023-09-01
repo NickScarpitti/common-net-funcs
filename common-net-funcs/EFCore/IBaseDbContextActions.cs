@@ -8,6 +8,7 @@ public interface IBaseDbContextActions<T, UT> where T : class where UT : DbConte
     Task<T?> GetByKey(object primaryKey);
     Task<T?> GetByKeyFull(object primaryKey);
     Task<List<T>?> GetAll();
+    Task<List<T>?> GetAllFull();
     Task<List<T>?> GetWithFilter(Expression<Func<T, bool>> expression);
     Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> expression);
     Task<T?> GetOneWithFilter(Expression<Func<T, bool>> expression);

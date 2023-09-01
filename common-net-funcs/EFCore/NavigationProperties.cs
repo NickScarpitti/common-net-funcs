@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 namespace Common_Net_Funcs.EFCore;
 public static class NavigationProperties
 {
-    public static IQueryable<T> IncludeNestedNavigationProperties<T>(this IQueryable<T> query, DbContext context, Type entityType, int depth = 0, int maxDepth = 100, Dictionary<int, string?>? parentProperties = null) where T : class
+    public static IQueryable<T> IncludeNavigationProperties<T>(this IQueryable<T> query, DbContext context, Type entityType, int depth = 0, int maxDepth = 100, Dictionary<int, string?>? parentProperties = null) where T : class
     {
         if (depth > maxDepth) return query;
 
@@ -25,7 +25,7 @@ public static class NavigationProperties
                 if (!parentProperties.Select(x => x.Value).Contains(navigationPropertyName))
                 {
                     parentProperties.AddDictionaryItem(depth, navigationPropertyName);
-                    query = query.IncludeNestedNavigationProperties(context, navigationProperty.ClrType, depth + 1, maxDepth, parentProperties.DeepClone());
+                    query = query.IncludeNavigationProperties(context, navigationProperty.ClrType, depth + 1, maxDepth, parentProperties.DeepClone());
                 }
             }
         }

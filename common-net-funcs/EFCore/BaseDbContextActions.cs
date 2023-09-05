@@ -93,6 +93,21 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
+    public async Task<List<T2>?> GetAll<T2>(Expression<Func<T, T2>> selectExpression) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T2>? model = null;
+        try
+        {
+            model = await context.Set<T>().Select(selectExpression).AsNoTracking().ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
     /// <summary>
     /// Gets all records with navigation properties from the corresponding table.
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
@@ -105,6 +120,21 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         try
         {
             model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).AsNoTracking().ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<List<T2>?> GetAllFull<T2>(Expression<Func<T, T2>> selectExpression) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T2>? model = null;
+        try
+        {
+            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Select(selectExpression).AsNoTracking().ToListAsync();
         }
         catch (Exception ex)
         {
@@ -126,6 +156,21 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         try
         {
             model = await context.Set<T>().Where(expression).AsNoTracking().ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<List<T2>?> GetWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T2>? model = null;
+        try
+        {
+            model = await context.Set<T>().Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
         }
         catch (Exception ex)
         {
@@ -156,6 +201,38 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
+    public async Task<List<T2>?> GetWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T2>? model = null;
+        try
+        {
+            IQueryable<T> query = context.Set<T>().IncludeNavigationProperties(context, typeof(T));
+            model = await query.Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<List<T>?> GetWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T>? model = null;
+        try
+        {
+            IQueryable<T2> query = context.Set<T2>().IncludeNavigationProperties(context, typeof(T));
+            model = await query.Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
     /// <summary>
     /// Gets first record from the corresponding table that satisfy the conditions of the linq query expression.
     /// Same as running a SELECT * WHERE <condition> LIMIT 1 or SELECT TOP 1 * WHERE <condition> LIMIT 1 query.
@@ -169,6 +246,21 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         try
         {
             model = await context.Set<T>().FirstOrDefaultAsync(expression);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<T2?> GetOneWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        T2? model = null;
+        try
+        {
+            model = await context.Set<T>().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
         }
         catch (Exception ex)
         {
@@ -191,6 +283,22 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         {
             IQueryable<T> query = context.Set<T>().IncludeNavigationProperties(context, typeof(T));
             model = await query.FirstOrDefaultAsync(expression);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<T2?> GetOneWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        T2? model = null;
+        try
+        {
+            IQueryable<T> query = context.Set<T>().IncludeNavigationProperties(context, typeof(T));
+            model = await query.Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
         }
         catch (Exception ex)
         {

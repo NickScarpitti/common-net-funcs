@@ -9,17 +9,17 @@ namespace Common_Net_Funcs.EFCore;
 public static class NavigationProperties
 {
     //Navigations are cached by type to prevent having to discover them every time they are needed
-    static readonly ConcurrentDictionary<string, Type> cachedNavigations = new();
-    static readonly ConcurrentDictionary<Type, bool> cachedTypeCompletionStatuses = new();
+    static readonly ConcurrentDictionary<string, Type> cachedEntityNavigations = new();
+    static readonly ConcurrentDictionary<Type, bool> completeCachedEntities = new();
 
     public static IQueryable<T> IncludeNavigationProperties<T>(this IQueryable<T> query, DbContext context, Type entityType, int depth = 0, int maxDepth = 100,
         Dictionary<int, string?>? parentProperties = null, Dictionary<string, Type>? foundNavigations = null, bool useCaching = true) where T : class
     {
         if (depth > maxDepth) return query;
 
-        if (depth == 0 && useCaching && cachedTypeCompletionStatuses.TryGetValue(typeof(T), out _))
+        if (depth == 0 && useCaching && completeCachedEntities.TryGetValue(typeof(T), out _))
         {
-            foreach (string includeStatement in cachedNavigations.Where(x => x.Value == typeof(T)).Select(x => x.Key))
+            foreach (string includeStatement in cachedEntityNavigations.Where(x => x.Value == typeof(T)).Select(x => x.Key))
             {
                 query = query.Include(includeStatement);
             }
@@ -55,14 +55,14 @@ public static class NavigationProperties
             }
         }
 
-        if (depth == 0 && useCaching && !cachedNavigations.Any(x => x.Value == typeof(T)) && foundNavigations?.Any() == true)
+        if (depth == 0 && useCaching && !cachedEntityNavigations.Any(x => x.Value == typeof(T)) && foundNavigations?.Any() == true)
         {
             foreach (KeyValuePair<string, Type> foundNavigation in foundNavigations)
             {
-                cachedNavigations.TryAdd(foundNavigation.Key, foundNavigation.Value);
+                cachedEntityNavigations.TryAdd(foundNavigation.Key, foundNavigation.Value);
             }
             //Only signal this is complete once all items have been added to avoid race conditions where cachedNavigations is accessed before all items have been added
-            cachedTypeCompletionStatuses.AddDictionaryItem(typeof(T), true);
+            completeCachedEntities.AddDictionaryItem(typeof(T), true);
         }
 
         return query;

@@ -132,7 +132,7 @@ public static class ObjectHelpers
         return new List<T>() { obj };
     }
 
-    public static T? GetObjectByPartial<T>(IQueryable<T> queryable, T partialObject) where T : class
+    public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject) where T : class
     {
         // Get the properties of the object using reflection
         PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);

@@ -62,8 +62,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             model = await GetByKey(primaryKey);
             if (model != null)
             {
-                IQueryable<T> query = context.Set<T>().IncludeNavigationProperties(context, typeof(T));
-                model = GetObjectByPartial(query, model);
+                model = context.Set<T>().IncludeNavigationProperties(context, typeof(T)).GetObjectByPartial(model);
             }
         }
         catch (Exception ex)
@@ -108,6 +107,21 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
+    public async Task<List<T2>?> GetAllNonRef<T2>(Expression<Func<T, T2>> selectExpression) where T2 : struct
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T2>? model = null;
+        try
+        {
+            model = await context.Set<T>().AsNoTracking().Select(selectExpression).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
     /// <summary>
     /// Gets all records with navigation properties from the corresponding table.
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
@@ -143,19 +157,33 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
+    public async Task<List<T2>?> GetAllNonRefFull<T2>(Expression<Func<T, T2>> selectExpression) where T2 : struct
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T2>? model = null;
+        try
+        {
+            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).AsNoTracking().Select(selectExpression).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
     /// <summary>
     /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression.
     /// Same as running a SELECT * WHERE <condition> query
     /// </summary>
-    /// <param name="expression">Linq expression to filter the records to be returned</param>
+    /// <param name="whereExpression">Linq expression to filter the records to be returned</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression</returns>
-    public async Task<List<T>?> GetWithFilter(Expression<Func<T, bool>> expression)
+    public async Task<List<T>?> GetWithFilter(Expression<Func<T, bool>> whereExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
         List<T>? model = null;
         try
         {
-            model = await context.Set<T>().Where(expression).AsNoTracking().ToListAsync();
+            model = await context.Set<T>().Where(whereExpression).AsNoTracking().ToListAsync();
         }
         catch (Exception ex)
         {
@@ -179,20 +207,34 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
+    public async Task<List<T2>?> GetNonRefWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : struct
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T2>? model = null;
+        try
+        {
+            model = await context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
     /// <summary>
     /// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression.
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
-    /// <param name="expression">Linq expression to filter the records to be returned</param>
+    /// <param name="whereExpression">Linq expression to filter the records to be returned</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression</returns>
-    public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> expression)
+    public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> whereExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
         List<T>? model = null;
         try
         {
-            IQueryable<T> query = context.Set<T>().IncludeNavigationProperties(context, typeof(T));
-            model = await query.Where(expression).AsNoTracking().ToListAsync();
+            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).AsNoTracking().ToListAsync();
         }
         catch (Exception ex)
         {
@@ -207,8 +249,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         List<T2>? model = null;
         try
         {
-            IQueryable<T> query = context.Set<T>().IncludeNavigationProperties(context, typeof(T));
-            model = await query.Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
+            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
         }
         catch (Exception ex)
         {
@@ -223,8 +264,22 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         List<T>? model = null;
         try
         {
-            IQueryable<T2> query = context.Set<T2>().IncludeNavigationProperties(context, typeof(T));
-            model = await query.Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
+            model = await context.Set<T2>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<List<T2>?> GetNonRefWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : struct
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        List<T2>? model = null;
+        try
+        {
+            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync();
         }
         catch (Exception ex)
         {
@@ -237,15 +292,15 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Gets first record from the corresponding table that satisfy the conditions of the linq query expression.
     /// Same as running a SELECT * WHERE <condition> LIMIT 1 or SELECT TOP 1 * WHERE <condition> LIMIT 1 query.
     /// </summary>
-    /// <param name="expression">Linq expression to filter the record to be returned</param>
+    /// <param name="whereExpression">Linq expression to filter the record to be returned</param>
     /// <returns>First record from the table corresponding to class T that also satisfy the conditions of the linq query expression</returns>
-    public async Task<T?> GetOneWithFilter(Expression<Func<T, bool>> expression)
+    public async Task<T?> GetOneWithFilter(Expression<Func<T, bool>> whereExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
         T? model = null;
         try
         {
-            model = await context.Set<T>().FirstOrDefaultAsync(expression);
+            model = await context.Set<T>().FirstOrDefaultAsync(whereExpression);
         }
         catch (Exception ex)
         {
@@ -273,16 +328,15 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Gets first record with navigation properties from the corresponding table that satisfy the conditions of the linq query expression.
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
-    /// <param name="expression">Linq expression to filter the record to be returned</param>
+    /// <param name="whereExpression">Linq expression to filter the record to be returned</param>
     /// <returns>First record from the table corresponding to class T that also satisfy the conditions of the linq query expression</returns>
-    public async Task<T?> GetOneWithFilterFull(Expression<Func<T, bool>> expression)
+    public async Task<T?> GetOneWithFilterFull(Expression<Func<T, bool>> whereExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
         T? model = null;
         try
         {
-            IQueryable<T> query = context.Set<T>().IncludeNavigationProperties(context, typeof(T));
-            model = await query.FirstOrDefaultAsync(expression);
+            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).FirstOrDefaultAsync(whereExpression);
         }
         catch (Exception ex)
         {
@@ -297,8 +351,97 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         T2? model = null;
         try
         {
-            IQueryable<T> query = context.Set<T>().IncludeNavigationProperties(context, typeof(T));
-            model = await query.Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression)
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        T? model = null;
+        try
+        {
+            model = await context.Set<T>().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression)
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        T? model = null;
+        try
+        {
+            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<T2?> GetMax<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        T2? model = null;
+        try
+        {
+            model = await context.Set<T>().Where(whereExpression).MaxAsync(maxExpression);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression)
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        T? model = null;
+        try
+        {
+            model = await context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression)
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        T? model = null;
+        try
+        {
+            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return model;
+    }
+
+    public async Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        T2? model = null;
+        try
+        {
+            model = await context.Set<T>().Where(whereExpression).MinAsync(maxExpression);
         }
         catch (Exception ex)
         {

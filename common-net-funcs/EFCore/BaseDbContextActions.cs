@@ -307,6 +307,21 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
+    public async Task<int> GetCount(Expression<Func<T, bool>> whereExpression)
+    {
+        using DbContext context = serviceProvider.GetService<UT>()!;
+        int count = 0;
+        try
+        {
+            count = await context.Set<T>().Where(whereExpression).AsNoTracking().CountAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+        }
+        return count;
+    }
+
     #endregion
 
     #region Write

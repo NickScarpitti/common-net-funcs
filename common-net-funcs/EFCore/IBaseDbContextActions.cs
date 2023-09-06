@@ -18,9 +18,10 @@ public interface IBaseDbContextActions<T, UT> where T : class where UT : DbConte
     Task<List<T>?> GetWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression) where T2 : class;
     Task<T?> GetOneWithFilter(Expression<Func<T, bool>> expression);
     Task<T2?> GetOneWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : class;
+    Task<int> GetCount(Expression<Func<T, bool>> whereExpression);
     #endregion
 
-        #region Write
+    #region Write
     Task Create(T model);
     Task CreateMany(IEnumerable<T> model);
     void DeleteByObject(T model);

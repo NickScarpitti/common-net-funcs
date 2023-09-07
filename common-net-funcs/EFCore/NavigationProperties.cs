@@ -13,7 +13,7 @@ public static class NavigationProperties
     static readonly ConcurrentDictionary<Type, bool> completeCachedEntities = new();
 
     public static IQueryable<T> IncludeNavigationProperties<T>(this IQueryable<T> query, DbContext context, Type entityType, int depth = 0, int maxDepth = 100,
-        Dictionary<int, string?>? parentProperties = null, Dictionary<string, Type>? foundNavigations = null, bool useCaching = true) where T : class
+        List<string>? topLevelProperties = null, Dictionary<int, string?>? parentProperties = null, Dictionary<string, Type>? foundNavigations = null, bool useCaching = true) where T : class
     {
         if (depth > maxDepth) return query;
 
@@ -28,9 +28,16 @@ public static class NavigationProperties
         {
             parentProperties ??= new();
             foundNavigations ??= new();
+            topLevelProperties ??= new();
 
             IEnumerable<INavigation> navigations = (context.Model.FindEntityType(entityType)?.GetNavigations()
                 .Where(x => entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length == 0)) ?? new List<INavigation>();
+
+            if (depth == 0)
+            {
+                topLevelProperties = navigations.Select(x => x.Name).ToList();
+            }
+
             if (navigations.Any() && parentProperties.Select(x => x.Value).Intersect(navigations.Select(x => x.Name)).Count() != navigations.Count())
             {
                 foreach (INavigation navigationProperty in navigations)
@@ -38,11 +45,14 @@ public static class NavigationProperties
                     if (parentProperties.Any() && (depth == 0 || parentProperties.Count > depth)) parentProperties.Remove(parentProperties.Keys.Last()); //Clear out every time this loop backs all the way out to the original class
                     string navigationPropertyName = navigationProperty.Name;
 
-                    //Prevent following circular references
-                    if (!parentProperties.Select(x => x.Value).Contains(navigationPropertyName))
+                    //Prevent following circular references or redundant branches
+                    if (!parentProperties.Select(x => x.Value).Contains(navigationPropertyName) && (depth == 0 || !topLevelProperties.Any(x => x == navigationPropertyName)))
                     {
                         parentProperties.AddDictionaryItem(depth, navigationPropertyName);
-                        query = query.IncludeNavigationProperties(context, navigationProperty.ClrType, depth + 1, maxDepth, parentProperties.DeepClone(), foundNavigations);
+                        //query = query.IncludeNavigationProperties(context, navigationProperty.ClrType, depth + 1, maxDepth, topLevelProperties, parentProperties.DeepClone(), foundNavigations);
+
+                        //No need to keep reasigning the query as nothing is changing through each iteration
+                        query.IncludeNavigationProperties(context, navigationProperty.ClrType, depth + 1, maxDepth, topLevelProperties, parentProperties.DeepClone(), foundNavigations);
                     }
                 }
             }
@@ -50,21 +60,24 @@ public static class NavigationProperties
             {
                 //Reached the deepest navigation property
                 string navigationString = string.Join(".", parentProperties.OrderBy(x => x.Key).Select(x => x.Value));
-                query = query.Include(navigationString);
+                //query = query.Include(navigationString); //Will add all navigations at the end once they're all found
                 foundNavigations.Add(navigationString, typeof(T));
             }
         }
 
         if (depth == 0 && useCaching && !cachedEntityNavigations.Any(x => x.Value == typeof(T)) && foundNavigations?.Any() == true)
         {
+            //Clean up found navigations here:
+            foundNavigations.
+
             foreach (KeyValuePair<string, Type> foundNavigation in foundNavigations)
             {
                 cachedEntityNavigations.TryAdd(foundNavigation.Key, foundNavigation.Value);
+                query.Include(foundNavigation.Key);
             }
             //Only signal this is complete once all items have been added to avoid race conditions where cachedNavigations is accessed before all items have been added
             completeCachedEntities.AddDictionaryItem(typeof(T), true);
         }
-
         return query;
     }
 }

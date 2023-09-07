@@ -1,9 +1,12 @@
 ﻿using System.Linq.Expressions;
+using System.Linq.Dynamic.Core;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
+using Common_Net_Funcs.Tools;
 
 namespace Common_Net_Funcs.EFCore;
 
@@ -14,6 +17,8 @@ namespace Common_Net_Funcs.EFCore;
 /// <typeparam name="UT">DB Context for the database you with to run these actions against</typeparam>
 public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T : class where UT : DbContext
 {
+    static readonly ConcurrentDictionary<Type, bool> circularReferencingEntities = new();
+
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     public IServiceProvider serviceProvider;
@@ -62,13 +67,42 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             model = await GetByKey(primaryKey);
             if (model != null)
             {
-                model = context.Set<T>().IncludeNavigationProperties(context, typeof(T)).GetObjectByPartial(model);
+                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().IncludeNavigationProperties(context, typeof(T)).AsNoTracking().GetObjectByPartial(model) :
+                    context.Set<T>().IncludeNavigationProperties(context, typeof(T)).GetObjectByPartial(model);
+            }
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await GetByKey(primaryKey);
+                    if (model != null)
+                    {
+                        model = context.Set<T>().IncludeNavigationProperties(context, typeof(T)).GetObjectByPartial(model);
+                    }
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
             }
         }
         catch (Exception ex)
         {
             logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
         }
+        //Microsoft.EntityFrameworkCore.Query.NavigationBaseIncludeIgnored
+
         return model;
     }
 
@@ -92,22 +126,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<List<T2>?> GetAll<T2>(Expression<Func<T, T2>> selectExpression) where T2 : class
-    {
-        using DbContext context = serviceProvider.GetService<UT>()!;
-        List<T2>? model = null;
-        try
-        {
-            model = await context.Set<T>().Select(selectExpression).AsNoTracking().ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
-        }
-        return model;
-    }
-
-    public async Task<List<T2>?> GetAllNonRef<T2>(Expression<Func<T, T2>> selectExpression) where T2 : struct
+    public async Task<List<T2>?> GetAll<T2>(Expression<Func<T, T2>> selectExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
         List<T2>? model = null;
@@ -133,7 +152,30 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         List<T>? model = null;
         try
         {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).AsNoTracking().ToListAsync();
+            model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ? model =
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).AsNoTracking().ToListAsync() :
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).ToListAsync();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).ToListAsync();
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            }
         }
         catch (Exception ex)
         {
@@ -142,13 +184,36 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<List<T2>?> GetAllFull<T2>(Expression<Func<T, T2>> selectExpression) where T2 : class
+    public async Task<List<T2>?> GetAllFull<T2>(Expression<Func<T, T2>> selectExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
         List<T2>? model = null;
         try
         {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Select(selectExpression).AsNoTracking().ToListAsync();
+            model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).AsNoTracking().Select(selectExpression).ToListAsync() :
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Select(selectExpression).ToListAsync();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Select(selectExpression).ToListAsync();
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            }
         }
         catch (Exception ex)
         {
@@ -157,20 +222,6 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<List<T2>?> GetAllNonRefFull<T2>(Expression<Func<T, T2>> selectExpression) where T2 : struct
-    {
-        using DbContext context = serviceProvider.GetService<UT>()!;
-        List<T2>? model = null;
-        try
-        {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).AsNoTracking().Select(selectExpression).ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
-        }
-        return model;
-    }
     /// <summary>
     /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression.
     /// Same as running a SELECT * WHERE <condition> query
@@ -192,13 +243,13 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<List<T2>?> GetWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : class
+    public async Task<List<T2>?> GetWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
         List<T2>? model = null;
         try
         {
-            model = await context.Set<T>().Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
+            model = await context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync();
         }
         catch (Exception ex)
         {
@@ -207,13 +258,19 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<List<T2>?> GetNonRefWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : struct
+    public async Task<GenericPagingModel<T2>> GetWithPagingFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, string? orderByString = null, int skip = 0, int pageSize = 0) where T2 : class
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
-        List<T2>? model = null;
+        GenericPagingModel<T2> model = new();
+
         try
         {
-            model = await context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync();
+            IQueryable<T2> qModel = context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression);
+            var results = await qModel.OrderBy(orderByString ?? string.Empty).Select(x => new { Entities = x, TotalCount = qModel.Count() })
+                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync();
+
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
+            model.Entities = results.ConvertAll(x => x.Entities);
         }
         catch (Exception ex)
         {
@@ -234,7 +291,30 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         List<T>? model = null;
         try
         {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).AsNoTracking().ToListAsync();
+            model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).AsNoTracking().ToListAsync() :
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).ToListAsync();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).ToListAsync();
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            }
         }
         catch (Exception ex)
         {
@@ -243,13 +323,36 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<List<T2>?> GetWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : class
+    public async Task<List<T2>?> GetWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
         List<T2>? model = null;
         try
         {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
+                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync() :
+                    await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            }
         }
         catch (Exception ex)
         {
@@ -264,22 +367,30 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         List<T>? model = null;
         try
         {
-            model = await context.Set<T2>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync();
+            model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                await context.Set<T2>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync() :
+                await context.Set<T2>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ioEx)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
-        }
-        return model;
-    }
-
-    public async Task<List<T2>?> GetNonRefWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : struct
-    {
-        using DbContext context = serviceProvider.GetService<UT>()!;
-        List<T2>? model = null;
-        try
-        {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync();
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await context.Set<T2>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            }
         }
         catch (Exception ex)
         {
@@ -309,10 +420,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<T2?> GetOneWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : class
+    public async Task<T2?> GetOneWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
-        T2? model = null;
+        T2? model = default;
         try
         {
             model = await context.Set<T>().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
@@ -336,7 +447,30 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         T? model = null;
         try
         {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).FirstOrDefaultAsync(whereExpression);
+            model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).AsNoTracking().FirstOrDefaultAsync(whereExpression) :
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).FirstOrDefaultAsync(whereExpression);
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).FirstOrDefaultAsync(whereExpression);
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            }
         }
         catch (Exception ex)
         {
@@ -345,13 +479,36 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<T2?> GetOneWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression) where T2 : class
+    public async Task<T2?> GetOneWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
-        T2? model = null;
+        T2? model = default;
         try
         {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+            model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync() :
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            }
         }
         catch (Exception ex)
         {
@@ -381,7 +538,30 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         T? model = null;
         try
         {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+            model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync() :
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            }
         }
         catch (Exception ex)
         {
@@ -390,10 +570,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<T2?> GetMax<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression) where T2 : class
+    public async Task<T2?> GetMax<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
-        T2? model = null;
+        T2? model = default;
         try
         {
             model = await context.Set<T>().Where(whereExpression).MaxAsync(maxExpression);
@@ -426,7 +606,30 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         T? model = null;
         try
         {
-            model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+            model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync() :
+                await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    model = await context.Set<T>().IncludeNavigationProperties(context, typeof(T)).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
+                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            }
         }
         catch (Exception ex)
         {
@@ -435,10 +638,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return model;
     }
 
-    public async Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression) where T2 : class
+    public async Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression)
     {
         using DbContext context = serviceProvider.GetService<UT>()!;
-        T2? model = null;
+        T2? model = default;
         try
         {
             model = await context.Set<T>().Where(whereExpression).MinAsync(maxExpression);
@@ -605,4 +808,15 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     #endregion
+}
+
+public class GenericPagingModel<T> where T : class
+{
+    public GenericPagingModel()
+    {
+        Entities = new();
+    }
+
+    public List<T> Entities { get; set; }
+    public int TotalRecords { get; set; }
 }

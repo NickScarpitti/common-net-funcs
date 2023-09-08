@@ -166,4 +166,29 @@ public static class ObjectHelpers
         }
         return model;
     }
+
+    /// <summary>
+    /// UNTESTED
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="instances"></param>
+    public static T MergeInstances<T>(IEnumerable<T> instances) where T : class
+    {
+        T merged = instances.First();
+        foreach (T instance in instances)
+        {
+            foreach (PropertyInfo property in typeof(T).GetProperties())
+            {
+                var value = property.GetValue(instance);
+                var mergedValue = property.GetValue(merged);
+
+                if (value != default && mergedValue == default)
+                {
+                    property.SetValue(merged, value);
+                }
+            }
+        }
+
+        return merged;
+    }
 }

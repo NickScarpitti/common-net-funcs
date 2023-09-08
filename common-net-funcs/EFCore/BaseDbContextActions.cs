@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
-using static Common_Net_Funcs.Tools.ObjectHelpers;
 using Common_Net_Funcs.Tools;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
 
 namespace Common_Net_Funcs.EFCore;
 

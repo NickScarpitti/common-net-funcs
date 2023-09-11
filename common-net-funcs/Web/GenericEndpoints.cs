@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Reflection;
 using Common_Net_Funcs.EFCore;
-using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Common_Net_Funcs.Tools.DeepCloneExpressionTreeHelpers;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
+using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace Common_Net_Funcs.Web;
 public class GenericEndpoints : ControllerBase
@@ -23,7 +24,7 @@ public class GenericEndpoints : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return NoContent();
     }
@@ -40,7 +41,7 @@ public class GenericEndpoints : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return NoContent();
     }
@@ -60,7 +61,7 @@ public class GenericEndpoints : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return NoContent();
     }
@@ -106,7 +107,7 @@ public class GenericEndpoints : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return NoContent();
     }

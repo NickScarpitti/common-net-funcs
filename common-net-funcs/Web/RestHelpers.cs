@@ -1,11 +1,12 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Reflection;
-using static Common_Net_Funcs.Tools.DataValidation;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
+using static Common_Net_Funcs.Tools.DataValidation;
+using static Common_Net_Funcs.Tools.DebugHelpers;
+using static Newtonsoft.Json.JsonConvert;
 
 namespace Common_Net_Funcs.Web;
 
@@ -59,7 +60,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                        result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -70,7 +71,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return result;
     }
@@ -101,7 +102,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                        restObject.Result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -112,7 +113,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return restObject;
     }
@@ -135,7 +136,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
             httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
@@ -145,7 +146,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                        result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -156,7 +157,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return result;
     }
@@ -179,7 +180,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
             httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
@@ -189,7 +190,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                        restObject.Result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -200,7 +201,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return restObject;
     }
@@ -223,7 +224,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
             httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
@@ -233,7 +234,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                        result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -244,7 +245,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return result;
     }
@@ -267,7 +268,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
             httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
@@ -277,7 +278,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                        restObject.Result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -288,7 +289,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return restObject;
     }
@@ -311,7 +312,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
             httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
@@ -329,7 +330,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return result;
     }
@@ -352,7 +353,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"POST URL: {url} | {JsonConvert.SerializeObject(postObject)}");
+            logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
             httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
@@ -370,7 +371,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return restObject;
     }
@@ -401,7 +402,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                        result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -412,7 +413,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return result;
     }
@@ -443,7 +444,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                        restObject.Result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -454,7 +455,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return restObject;
     }
@@ -485,7 +486,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                        result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -496,7 +497,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return result;
     }
@@ -518,7 +519,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Patch, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
+            logger.Debug($"PATCH URL: {url} | {SerializeObject(patchDoc)}");
             httpRequestMessage.Content = patchDoc;
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
@@ -528,7 +529,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        result = JsonConvert.DeserializeObject<T>(x.Result);
+                        result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -539,7 +540,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return result;
     }
@@ -561,7 +562,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Patch, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Debug($"PATCH URL: {url} | {JsonConvert.SerializeObject(patchDoc)}");
+            logger.Debug($"PATCH URL: {url} | {SerializeObject(patchDoc)}");
             httpRequestMessage.Content = patchDoc;
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
@@ -571,7 +572,7 @@ public static class RestHelpers
                     if (x.IsFaulted) throw x.Exception ?? new();
                     if (x.Result?.Length > 0)
                     {
-                        restObject.Result = JsonConvert.DeserializeObject<T>(x.Result);
+                        restObject.Result = DeserializeObject<T>(x.Result);
                     }
                 });
             }
@@ -582,7 +583,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error URL: {url}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return restObject;
     }

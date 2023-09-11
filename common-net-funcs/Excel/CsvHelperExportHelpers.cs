@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Globalization;
 using CsvHelper;
+using static System.Convert;
 using static Common_Net_Funcs.Conversion.StringConversion;
 
 namespace Common_Net_Funcs.Excel;
@@ -34,7 +35,7 @@ public static class CsvHelperExportHelpers
         {
             for (int i = 0; i < dataTable.Columns.Count; i++)
             {
-                if (!Convert.IsDBNull(row[i]))
+                if (!IsDBNull(row[i]))
                 {
                     string? value = row[i].ToString();
                     if (value?.Contains(',') ?? false)

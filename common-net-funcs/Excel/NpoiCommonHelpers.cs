@@ -10,6 +10,9 @@ using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
 using SixLabors.ImageSharp;
+using static System.Convert;
+using static Common_Net_Funcs.Tools.DebugHelpers;
+using static System.Math;
 
 namespace Common_Net_Funcs.Excel;
 
@@ -63,7 +66,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
             return null;
         }
     }
@@ -87,7 +90,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
             return null;
         }
     }
@@ -112,7 +115,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
             return null;
         }
     }
@@ -174,7 +177,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
             return null;
         }
     }
@@ -222,7 +225,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -256,7 +259,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
             return false;
         }
     }
@@ -280,7 +283,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
             return false;
         }
     }
@@ -347,7 +350,7 @@ public static class NpoiCommonHelpers
                 Regex regex = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
                 if (htmlColor?.Length == 7 && regex.IsMatch(htmlColor))
                 {
-                    byte[] rgb = new byte[] { Convert.ToByte(htmlColor.Substring(1, 2), 16), Convert.ToByte(htmlColor.Substring(3, 2), 16), Convert.ToByte(htmlColor.Substring(5, 2), 16) };
+                    byte[] rgb = new byte[] { ToByte(htmlColor.Substring(1, 2), 16), ToByte(htmlColor.Substring(3, 2), 16), ToByte(htmlColor.Substring(5, 2), 16) };
                     xStyle.SetFillForegroundColor(new XSSFColor(rgb));
                 }
 
@@ -572,7 +575,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
             return false;
         }
     }
@@ -679,7 +682,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
             return false;
         }
     }
@@ -797,10 +800,10 @@ public static class NpoiCommonHelpers
                         {
                             scale = (rangeHeight - 3m) / imgHeight; //Set to width of cell -3px
                         }
-                        int resizeWidth = (int)Math.Round(imgWidth * scale, 0, MidpointRounding.ToZero);
-                        int resizeHeight = (int)Math.Round(imgHeight * scale, 0, MidpointRounding.ToZero);
-                        int xMargin = (int)Math.Round((rangeWidth - resizeWidth) * XSSFShape.EMU_PER_PIXEL / 2.0, 0, MidpointRounding.ToZero);
-                        int yMargin = (int)Math.Round((rangeHeight - resizeHeight) * XSSFShape.EMU_PER_PIXEL * 1.75 / 2.0, 0, MidpointRounding.ToZero);
+                        int resizeWidth = (int)Round(imgWidth * scale, 0, MidpointRounding.ToZero);
+                        int resizeHeight = (int)Round(imgHeight * scale, 0, MidpointRounding.ToZero);
+                        int xMargin = (int)Round((rangeWidth - resizeWidth) * XSSFShape.EMU_PER_PIXEL / 2.0, 0, MidpointRounding.ToZero);
+                        int yMargin = (int)Round((rangeHeight - resizeHeight) * XSSFShape.EMU_PER_PIXEL * 1.75 / 2.0, 0, MidpointRounding.ToZero);
 
                         anchor.AnchorType = AnchorType.DontMoveAndResize;
                         anchor.Col1 = area.FirstColumn;
@@ -872,7 +875,7 @@ public static class NpoiCommonHelpers
             }
             totalWidth += ws.GetColumnWidthInPixels(i);
         }
-        int widthInt = (int)Math.Round(totalWidth, 0, MidpointRounding.ToZero);
+        int widthInt = (int)Round(totalWidth, 0, MidpointRounding.ToZero);
         return widthInt;
     }
 
@@ -895,7 +898,7 @@ public static class NpoiCommonHelpers
         {
             totaHeight += ws.GetRow(i).HeightInPoints;
         }
-        int heightInt = (int)Math.Round(totaHeight * XSSFShape.EMU_PER_POINT / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
+        int heightInt = (int)Round(totaHeight * XSSFShape.EMU_PER_POINT / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
         return heightInt;
     }
 

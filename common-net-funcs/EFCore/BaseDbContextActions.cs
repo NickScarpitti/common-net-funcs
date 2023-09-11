@@ -1,12 +1,12 @@
 ﻿using System.Linq.Expressions;
 using System.Linq.Dynamic.Core;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
-using Common_Net_Funcs.Tools;
+using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
+using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace Common_Net_Funcs.EFCore;
 
@@ -46,7 +46,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -88,18 +88,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         //Microsoft.EntityFrameworkCore.Query.NavigationBaseIncludeIgnored
 
@@ -121,7 +121,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -136,7 +136,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -168,18 +168,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -206,18 +206,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -238,7 +238,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -253,7 +253,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -274,7 +274,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -307,18 +307,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -345,18 +345,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -383,18 +383,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -415,7 +415,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -430,7 +430,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -463,18 +463,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -501,18 +501,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -527,7 +527,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -554,18 +554,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -580,7 +580,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -595,7 +595,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -622,18 +622,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error1");
-                    logger.Error(ex2, $"{MethodBase.GetCurrentMethod()?.Name} Error2");
+                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -648,7 +648,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -663,7 +663,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return count;
     }
@@ -685,7 +685,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -702,7 +702,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -720,7 +720,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -743,7 +743,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -760,7 +760,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -798,11 +798,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         }
         catch (DbUpdateException duex)
         {
-            logger.Error(duex, $"{MethodBase.GetCurrentMethod()?.Name} DBUpdate Error");
+            logger.Error(duex, $"{duex.GetLocationOfEexception()} DBUpdate Error");
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return result;
     }

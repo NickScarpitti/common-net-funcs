@@ -70,6 +70,31 @@ public static class StringManipulation
     }
 
     /// <summary>
+    /// Extract the string between two string values
+    /// </summary>
+    /// <param name="s">String value to extract value from</param>
+    /// <param name="sStart">Text that ends immediately before the end of the string you wish to extract</param>
+    /// <param name="sEnd">Text that starts immediately after the end of the string you wish to extract</param>
+    /// <returns>Extracted string found between the two given string values</returns>
+    public static string? ExtractBetween(this string? s, string sStart, string sEnd)
+    {
+        string? result = null;
+        if (s != null)
+        {
+            int sStartStartIndex = s.IndexOf(sStart);//Find the beginning index of the word1
+            int sStartEndIndex = sStartStartIndex + sStart.Length;//Add the length of the word1 to starting index to find the end of the word1
+            int sEndStartIndex = s.LastIndexOf(sEnd);//Find the beginning index of word2
+            int length = sEndStartIndex - sStartEndIndex;//Length of the sub string by subtracting index beginning of word2 from the end of word1
+            if (sStartStartIndex != -1 && sEndStartIndex != -1 && length > 0 && sStartEndIndex + length <= s.Length -1)
+            {
+                ReadOnlySpan<char> textToSlice = s.ToCharArray();
+                result = textToSlice.Slice(sStartEndIndex, length).ToString();//Get the substring based on the end of word1 and length
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
     /// Makes a string with of the word "null" into a null value
     /// </summary>
     /// <param name="s"></param>

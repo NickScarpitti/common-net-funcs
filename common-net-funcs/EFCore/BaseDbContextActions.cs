@@ -10,7 +10,7 @@ using static Common_Net_Funcs.Tools.DebugHelpers;
 namespace Common_Net_Funcs.EFCore;
 
 /// <summary>
-/// Common EF Core interactions with a database. Must be using DI for this method to work
+/// Common EF Core interactions with a database. Must be using dependency injection for this class to work
 /// </summary>
 /// <typeparam name="T">Entity class to be used with these methods</typeparam>
 /// <typeparam name="UT">DB Context for the database you with to run these actions against</typeparam>
@@ -34,6 +34,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// If using a compound primary key, use an object of the same class to be returned with the primary key fields populated.
     /// </summary>
     /// <param name="primaryKey">Primary key of the record to be returned</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
     /// <returns>Record of type T corresponding to the primary key passed in</returns>
     public async Task<T?> GetByKey(object primaryKey, TimeSpan? queryTimeout = null)
     {
@@ -58,6 +59,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="primaryKey">Primary key of the record to be returned</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
     /// <returns>Record of type T corresponding to the primary key passed in</returns>
     public async Task<T?> GetByKeyFull(object primaryKey, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
@@ -130,6 +133,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Gets all records from the corresponding table.
     /// Same as running a SELECT * query
     /// </summary>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
     /// <returns>All records from the table corresponding to class T</returns>
     public async Task<List<T>?> GetAll(TimeSpan? queryTimeout = null)
     {
@@ -153,6 +157,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Same as running a SELECT <SpecificFields> query
     /// </summary>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
     /// <returns>All records from the table corresponding to class T2</returns>
     public async Task<List<T2>?> GetAll<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
     {
@@ -175,6 +180,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Gets all records with navigation properties from the corresponding table.
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
     /// <returns>All records from the table corresponding to class T</returns>
     public async Task<List<T>?> GetAllFull(TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
@@ -239,6 +246,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
     /// <returns>All records from the table corresponding to class T2</returns>
     public async Task<List<T2>?> GetAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
@@ -302,6 +311,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Same as running a SELECT <SpecificFields> WHERE <condition> query
     /// </summary>
     /// <param name="whereExpression">Linq expression to filter the records to be returned</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression</returns>
     public async Task<List<T>?> GetWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null)
     {
@@ -326,6 +336,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// </summary>
     /// <param name="whereExpression">Linq expression to filter the records to be returned</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression</returns>
     public async Task<List<T2>?> GetWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
     {
@@ -350,10 +361,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// </summary>
     /// <param name="whereExpression">Linq expression to filter the records to be returned</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output</param>
-    /// <param name="orderByString"></param>
-    /// <param name="skip"></param>
-    /// <param name="pageSize"></param>
-    /// <param name="queryTimeout"></param>
+    /// <param name="orderByString">EF Core string representation of an order by statement to keep results consistent</param>
+    /// <param name="skip">How many records to skip before the ones that should be returned</param>
+    /// <param name="pageSize">How many records to take after the skipped records</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
     /// <returns>The records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2</returns>
     public async Task<GenericPagingModel<T2>> GetWithPagingFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
         string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null) where T2 : class
@@ -383,6 +394,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="whereExpression">Linq expression to filter the records to be returned</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression</returns>
     public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
@@ -443,14 +456,15 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2"></typeparam>
-    /// <param name="whereExpression"></param>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output</param>
-    /// <param name="queryTimeout"></param>
-    /// <param name="splitQueryOverride"></param>
-    /// <returns></returns>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression</returns>
     public async Task<List<T2>?> GetWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -510,14 +524,15 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    /// Gets the navigation property of a different class and outputs a class of type T
+    /// Gets the navigation property of a different class and outputs a class of type T using the select expression
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2">Class to return navigation property from</typeparam>
-    /// <param name="whereExpression"></param>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output</param>
-    /// <param name="queryTimeout"></param>
-    /// <param name="splitQueryOverride"></param>
-    /// <returns></returns>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
+    /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression</returns>
     public async Task<List<T>?> GetWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null) where T2 : class
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -580,7 +595,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Gets first record from the corresponding table that satisfy the conditions of the linq query expression.
     /// Same as running a SELECT * WHERE <condition> LIMIT 1 or SELECT TOP 1 * WHERE <condition> LIMIT 1 query.
     /// </summary>
-    /// <param name="whereExpression">Linq expression to filter the record to be returned</param>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
     /// <returns>First record from the table corresponding to class T that also satisfy the conditions of the linq query expression</returns>
     public async Task<T?> GetOneWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null)
     {
@@ -600,13 +616,13 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Gets first record from the corresponding table that satisfy the conditions of the linq query expression and transforms it into the T2 class with a select expression
     /// </summary>
     /// <typeparam name="T2"></typeparam>
-    /// <param name="whereExpression"></param>
-    /// <param name="selectExpression"></param>
-    /// <param name="queryTimeout"></param>
-    /// <returns></returns>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <returns>First record from the table corresponding to class T that also satisfy the conditions of the linq query expression that has been transformed into the T2 class with the select expression</returns>
     public async Task<T2?> GetOneWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -629,7 +645,9 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="whereExpression">Linq expression to filter the record to be returned</param>
-    /// <returns>First record from the table corresponding to class T that also satisfy the conditions of the linq query expression</returns>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
+    /// <returns>First record from the table corresponding to class T with its navigation properties that also satisfies the conditions of the linq query expression</returns>
     public async Task<T?> GetOneWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>();
@@ -689,14 +707,15 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Gets first record with navigation properties from the corresponding table that satisfy the conditions of the linq query expression and transforms it into the T2 class with the select expression.
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2"></typeparam>
-    /// <param name="whereExpression"></param>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output</param>
-    /// <param name="queryTimeout"></param>
-    /// <param name="splitQueryOverride"></param>
-    /// <returns></returns>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
+    /// <returns>First record from the table corresponding to class T with its navigation properties that also satisfies the conditions of the linq query expression and has been transformed into the T2 class</returns>
     public async Task<T2?> GetOneWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -756,13 +775,13 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Uses a descending order expression to return the record containing the maximum value according to that order.
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
-    /// <param name="whereExpression"></param>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
     /// <param name="descendingOrderEpression"></param>
-    /// <param name="queryTimeout"></param>
-    /// <returns></returns>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <returns>The record that contains the maximum value according to the ascending order expression</returns>
     public async Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -781,14 +800,15 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Uses a descending order expression to return the record and its navigation properties containing the maximum value according to that order.
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
-    /// <param name="whereExpression"></param>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
     /// <param name="descendingOrderEpression"></param>
-    /// <param name="queryTimeout"></param>
-    /// <param name="splitQueryOverride"></param>
-    /// <returns></returns>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
+    /// <returns>The record that contains the maximum value according to the ascending order expression with it's navigation properties</returns>
     public async Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -848,13 +868,13 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Uses a max expression to return the record containing the maximum value specified.
     /// </summary>
     /// <typeparam name="T2"></typeparam>
-    /// <param name="whereExpression"></param>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
     /// <param name="maxExpression"></param>
-    /// <param name="queryTimeout"></param>
-    /// <returns></returns>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <returns>The maximum value specified by the min expression</returns>
     public async Task<T2?> GetMax<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -873,13 +893,13 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Uses a ascending order expression to return the record containing the minimum value according to that order.
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
-    /// <param name="whereExpression"></param>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
     /// <param name="ascendingOrderEpression"></param>
-    /// <param name="queryTimeout"></param>
-    /// <returns></returns>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <returns>The record that contains the minimum value according to the ascending order expression</returns>
     public async Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -898,14 +918,15 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Uses a ascending order expression to return the record and its navigation properties containing the minimum value according to that order.
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
-    /// <param name="whereExpression"></param>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
     /// <param name="ascendingOrderEpression"></param>
-    /// <param name="queryTimeout"></param>
-    /// <param name="splitQueryOverride"></param>
-    /// <returns></returns>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting</param>
+    /// <returns>The record that contains the minimum value according to the ascending order expression with it's navigation properties</returns>
     public async Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -965,14 +986,14 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Uses a min expression to return the record containing the minimum value specified.
     /// </summary>
     /// <typeparam name="T2"></typeparam>
-    /// <param name="whereExpression"></param>
-    /// <param name="maxExpression"></param>
-    /// <param name="queryTimeout"></param>
-    /// <returns></returns>
-    public async Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null)
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
+    /// <param name="minExpression"></param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <returns>The minimum value specified by the min expression</returns>
+    public async Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -980,7 +1001,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         T2? model = default;
         try
         {
-            model = await context.Set<T>().Where(whereExpression).MinAsync(maxExpression);
+            model = await context.Set<T>().Where(whereExpression).MinAsync(minExpression);
         }
         catch (Exception ex)
         {
@@ -990,11 +1011,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
-    ///
+    /// Gets the number of records in the table represented by T that satisfy the where expression.
     /// </summary>
-    /// <param name="whereExpression"></param>
-    /// <param name="queryTimeout"></param>
-    /// <returns></returns>
+    /// <param name="whereExpression">A linq expression used to filter query results</param>
+    /// <param name="queryTimeout">Override the database default for query timeout</param>
+    /// <returns>The number of records that satisfy the where expression.</returns>
     public async Task<int> GetCount(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;

@@ -13,6 +13,14 @@ public static class NavigationProperties
     //Navigations are cached by type to prevent having to discover them every time they are needed
     static readonly ConcurrentDictionary<Type, List<string>> cachedEntityNavigations = new();
 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="query"></param>
+    /// <param name="context"></param>
+    /// <param name="entityType"></param>
+    /// <returns></returns>
     public static IQueryable<T> IncludeNavigationProperties<T>(this IQueryable<T> query, DbContext context, Type entityType) where T : class
     {
         foreach (string navigation in GetNavigations<T>(context, entityType) ?? new())
@@ -22,6 +30,19 @@ public static class NavigationProperties
         return query;
     }
 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="context"></param>
+    /// <param name="entityType"></param>
+    /// <param name="depth"></param>
+    /// <param name="maxDepth"></param>
+    /// <param name="topLevelProperties"></param>
+    /// <param name="parentProperties"></param>
+    /// <param name="foundNavigations"></param>
+    /// <param name="useCaching"></param>
+    /// <returns></returns>
     public static List<string>? GetNavigations<T>(DbContext context, Type entityType, int depth = 0, int maxDepth = 100, List<string>? topLevelProperties = null,
         Dictionary<int, string?>? parentProperties = null, Dictionary<string, Type>? foundNavigations = null, bool useCaching = true) where T : class
     {
@@ -82,6 +103,12 @@ public static class NavigationProperties
         return foundNavigations?.Select(x => x.Key).ToList();
     }
 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="entityType"></param>
+    /// <returns></returns>
     public static List<string> GetTopLevelNavigations(DbContext context, Type entityType)
     {
         List<string> topLevelNavigations = cachedEntityNavigations.Where(x => x.Key == entityType).SelectMany(x => x.Value).Where(x => !x.Contains('.')).ToList();
@@ -94,6 +121,12 @@ public static class NavigationProperties
         return topLevelNavigations;
     }
 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="obj"></param>
+    /// <param name="context"></param>
     public static void RemoveNavigationProperties<T>(this T obj, DbContext context) where T : class
     {
         foreach (PropertyInfo prop in obj.GetType().GetProperties().Where(x => GetTopLevelNavigations(context, typeof(T)).Contains(x.Name)))

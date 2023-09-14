@@ -1,4 +1,6 @@
-﻿namespace Common_Net_Funcs.Tools;
+﻿using System.Globalization;
+
+namespace Common_Net_Funcs.Tools;
 
 /// <summary>
 /// Methods for complex string manipulation
@@ -112,5 +114,15 @@ public static class StringManipulation
     public static string? ParseCamelCase(this string? s)
     {
         return !string.IsNullOrWhiteSpace(s) ? string.Concat(s.Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' ') : s;
+    }
+
+    public static string? ToTitleCase(this string? s, string cultureString = "en-US")
+    {
+        if (!string.IsNullOrWhiteSpace(s))
+        {
+            TextInfo textinfo = new CultureInfo(cultureString, false).TextInfo;
+            s = textinfo.ToTitleCase(s);
+        }
+        return s;
     }
 }

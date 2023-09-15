@@ -62,16 +62,15 @@ public static class AsyncHelpers
     /// Task to fill obj variable asynchronously
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <typeparam name="UT"></typeparam>
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
-    public static async Task ObjectFill<T, UT>(this T? obj, Task<UT> task)
+    public static async Task ObjectFill<T>(this T? obj, Task<T?> task)
     {
         try
         {
             if (obj != null)
             {
-                UT resultObject = await task;
+                T? resultObject = await task;
                 resultObject?.CopyPropertiesTo(obj);
             }
         }

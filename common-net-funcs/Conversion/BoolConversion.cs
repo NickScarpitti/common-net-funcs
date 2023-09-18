@@ -1,4 +1,6 @@
-﻿namespace Common_Net_Funcs.Conversion;
+﻿using static System.Convert;
+
+namespace Common_Net_Funcs.Conversion;
 
 /// <summary>
 /// Convert various values into a boolean value that would not work as a direct cast
@@ -26,6 +28,6 @@ public static class BoolConversion
     /// <returns>"Yes" if true, "No" if false</returns>
     public static int BoolToInt(this bool value)
     {
-        return Convert.ToInt32(value);
+        return ToInt32(value);
     }
 }

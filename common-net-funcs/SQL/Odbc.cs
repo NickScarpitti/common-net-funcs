@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Data.Odbc;
-using System.Reflection;
+using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace Common_Net_Funcs.SQL;
 
@@ -41,11 +41,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("DB Error: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error getting datatable: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("Error getting datatable: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return new DataTable();
     }
@@ -71,11 +71,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("DB Error: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error getting datatable: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("Error getting datatable: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return new DataTable();
     }
@@ -103,11 +103,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("DB Error: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error getting datatable: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("Error getting datatable: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return new DataTable();
     }
@@ -134,11 +134,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("DB Error: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error executing update query: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("Error executing update query: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return updateResult;
     }
@@ -165,11 +165,11 @@ public static class Odbc
         }
         catch (DbException ex)
         {
-            logger.Error("DB Error: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("DB Error: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         catch (Exception ex)
         {
-            logger.Error("Error executing update query: " + ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error("Error executing update query: " + ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return updateResult;
     }

@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using static System.Convert;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -27,7 +28,7 @@ public static class MathHelpers
             return ((int)(value / significance) * significance) + significance;
         }
 
-        return Convert.ToDouble(value);
+        return ToDouble(value);
     }
 
     /// <summary>
@@ -50,7 +51,7 @@ public static class MathHelpers
             return ((int)(value / significance) * significance) + significance;
         }
 
-        return Convert.ToDecimal(value);
+        return ToDecimal(value);
     }
 
     /// <summary>
@@ -73,7 +74,7 @@ public static class MathHelpers
             return (int)(value / significance) * significance;
         }
 
-        return Convert.ToDouble(value);
+        return ToDouble(value);
     }
 
     /// <summary>
@@ -96,7 +97,7 @@ public static class MathHelpers
             return (int)(value / significance) * significance;
         }
 
-        return Convert.ToDecimal(value);
+        return ToDecimal(value);
     }
 
     /// <summary>

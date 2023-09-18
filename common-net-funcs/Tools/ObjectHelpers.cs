@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -129,5 +130,65 @@ public static class ObjectHelpers
     public static List<T> TolList<T>(this T obj)
     {
         return new List<T>() { obj };
+    }
+
+    public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject) where T : class
+    {
+        // Get the properties of the object using reflection
+        PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        // Build the expression tree for the conditions
+        ParameterExpression parameter = Expression.Parameter(typeof(T), "x");
+        Expression? conditions = null;
+
+        foreach (PropertyInfo property in properties)
+        {
+            // Get the value of the property from the partial object
+            object? partialValue = property.GetValue(partialObject);
+
+            //Only compare non-null values since these are going to be the one's that matter
+            if (partialValue != null)
+            {
+                // Build the condition for this property
+                var condition = Expression.Equal(Expression.Property(parameter, property), Expression.Constant(partialValue, property.PropertyType));
+
+                // Combine the conditions using 'AndAlso' if this is not the first condition
+                conditions = conditions == null ? condition : Expression.AndAlso(conditions, condition);
+            }
+        }
+
+        T? model = null;
+        if (conditions != null)
+        {
+            // Build the final lambda expression and execute the query
+            Expression<Func<T, bool>> lambda = Expression.Lambda<Func<T, bool>>(conditions, parameter);
+            model = queryable.FirstOrDefault(lambda);
+        }
+        return model;
+    }
+
+    /// <summary>
+    /// UNTESTED
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="instances"></param>
+    public static T MergeInstances<T>(IEnumerable<T> instances) where T : class
+    {
+        T merged = instances.First();
+        foreach (T instance in instances)
+        {
+            foreach (PropertyInfo property in typeof(T).GetProperties())
+            {
+                var value = property.GetValue(instance);
+                var mergedValue = property.GetValue(merged);
+
+                if (value != default && mergedValue == default)
+                {
+                    property.SetValue(merged, value);
+                }
+            }
+        }
+
+        return merged;
     }
 }

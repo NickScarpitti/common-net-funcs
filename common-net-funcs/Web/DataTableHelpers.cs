@@ -1,9 +1,10 @@
-﻿using System.Reflection;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using NLog;
 using static Common_Net_Funcs.Conversion.StringConversion;
 using static Common_Net_Funcs.Tools.DataValidation;
+using static Common_Net_Funcs.Tools.DebugHelpers;
+using static System.Convert;
 
 namespace Common_Net_Funcs.Web;
 
@@ -39,8 +40,8 @@ public static class DataTableHelpers
             string? searchValue = request.Form.Where(x => x.Key.StrEq("search[value]")).Select(x => x.Value).FirstOrDefault();
 
             //Paging Size (10,20,50,100)
-            dataTableRequest.PageSize = length != StringValues.Empty ? Convert.ToInt32(length) : 0;
-            dataTableRequest.Skip = start != StringValues.Empty ? Convert.ToInt32(start) : 0;
+            dataTableRequest.PageSize = length != StringValues.Empty ? ToInt32(length) : 0;
+            dataTableRequest.Skip = start != StringValues.Empty ? ToInt32(start) : 0;
 
             //Get search value key pairs
             if (!string.IsNullOrEmpty(searchValue))
@@ -69,7 +70,7 @@ public static class DataTableHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return dataTableRequest;
     }

@@ -1,7 +1,7 @@
 ﻿using System.Data;
-using System.Reflection;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace Common_Net_Funcs.Excel;
 
@@ -43,7 +43,7 @@ public static class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
 
         return new MemoryStream();
@@ -79,7 +79,7 @@ public static class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
 
         return new MemoryStream();
@@ -115,7 +115,7 @@ public static class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return success;
     }
@@ -149,7 +149,7 @@ public static class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return success;
     }

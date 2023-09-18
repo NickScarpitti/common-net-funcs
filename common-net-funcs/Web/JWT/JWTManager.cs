@@ -1,14 +1,15 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using static Common_Net_Funcs.Tools.DataValidation;
 using Microsoft.IdentityModel.Tokens;
+using static Common_Net_Funcs.Tools.DataValidation;
 
 namespace Common_Net_Funcs.Web.JWT;
 
 public interface IJWTManager
 {
-    TokenObject? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan, TimeSpan stdTokenLifespan);
+    TokenObject? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan,
+        TimeSpan stdTokenLifespan, string? issuer = null, string? email = null);
 }
 
 /// <summary>
@@ -28,7 +29,8 @@ public class JWTManager : IJWTManager
     /// <param name="devTokenLifespan">How long the token should remain valid in development environment</param>
     /// <param name="stdTokenLifespan">How long the token should remain valid in a non-development environment</param>
     /// <returns>TokenObject if the credentials passed in are valid></returns>
-	public TokenObject? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan, TimeSpan stdTokenLifespan)
+	public TokenObject? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan,
+        TimeSpan stdTokenLifespan, string? issuer = null, string? email = null)
 	{
 		if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password) || userName != actualUserName || password != actualPassword)
 		{
@@ -42,7 +44,8 @@ public class JWTManager : IJWTManager
 		{
 			Subject = new ClaimsIdentity(new Claim[]
 			{
-				new Claim(ClaimTypes.Name, userName)
+				new Claim(ClaimTypes.Name, userName),
+                new Claim(ClaimTypes.Email, email ?? string.Empty)
 			}),
 			IssuedAt = DateTime.UtcNow,
 			SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)
@@ -57,10 +60,13 @@ public class JWTManager : IJWTManager
 			tokenDescriptor.Expires = DateTime.UtcNow.Add(devTokenLifespan);
 		}
 
+        if (!string.IsNullOrWhiteSpace(issuer))
+        {
+            tokenDescriptor.Issuer = issuer;
+        }
+
 		SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
 
-		TokenObject returnToken = new() { Token = tokenHandler.WriteToken(token), JwtExpireTime = tokenDescriptor.Expires };
-
-		return returnToken;
+		return new() { Token = tokenHandler.WriteToken(token), JwtExpireTime = tokenDescriptor.Expires };
 	}
 }

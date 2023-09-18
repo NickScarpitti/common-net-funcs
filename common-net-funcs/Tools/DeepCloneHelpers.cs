@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
-using Newtonsoft.Json;
+using static Newtonsoft.Json.JsonConvert;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -14,8 +14,8 @@ public static class DeepCloneSerializationHelpers
     public static IEnumerable<T>? SerializeClone<T>(this IEnumerable<T> list)
     {
         if (list == null) { return null; }
-        string serialized = JsonConvert.SerializeObject(list);
-        return JsonConvert.DeserializeObject<IEnumerable<T>>(serialized);
+        string serialized = SerializeObject(list);
+        return DeserializeObject<IEnumerable<T>>(serialized);
     }
 
     /// <summary>
@@ -26,8 +26,8 @@ public static class DeepCloneSerializationHelpers
     public static List<T>? SerializeClone<T>(this IList<T> list)
     {
         if (list == null) { return null; }
-        string serialized = JsonConvert.SerializeObject(list);
-        return JsonConvert.DeserializeObject<List<T>>(serialized);
+        string serialized = SerializeObject(list);
+        return DeserializeObject<List<T>>(serialized);
     }
 }
 

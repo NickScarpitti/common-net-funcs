@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
+using static System.Convert;
 
 namespace Common_Net_Funcs.Conversion;
 public static class DataTableConversion
@@ -23,19 +24,22 @@ public static class DataTableConversion
             DataRow firstRow = table.Rows[0];
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
             {
-                if (convertShortToBool)
+                if (table.Columns.Contains(propertyInfo.Name))
                 {
-                    Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
-                    map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo,
-                        convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
-                }
-                else
-                {
-                    map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo, false));
+                    if (convertShortToBool)
+                    {
+                        Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
+                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo,
+                            convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
+                    }
+                    else
+                    {
+                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo, false));
+                    }
                 }
             }
 
-            foreach (DataRow row in table.Rows)
+            foreach (DataRow row in table.AsEnumerable())
             {
                 if (row == null)
                 {
@@ -50,11 +54,11 @@ public static class DataTableConversion
                     //Handle issue where DB returns Int16 for boolean values
                     if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
                     {
-                        pair.PropertyInfo!.SetValue(item, value is not DBNull ? Convert.ToBoolean(value) : null);
+                        pair.PropertyInfo!.SetValue(item, value is not System.DBNull ? ToBoolean(value) : null);
                     }
                     else
                     {
-                        pair.PropertyInfo!.SetValue(item, value is not DBNull ? value : null);
+                        pair.PropertyInfo!.SetValue(item, value is not System.DBNull ? value : null);
                     }
                 }
                 list.Add(item);
@@ -109,11 +113,11 @@ public static class DataTableConversion
                         //Handle issue where DB returns Int16 for boolean values
                         if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
                         {
-                            pair.PropertyInfo!.SetValue(item, value is not DBNull ? Convert.ToBoolean(value) : null);
+                            pair.PropertyInfo!.SetValue(item, value is not System.DBNull ? ToBoolean(value) : null);
                         }
                         else
                         {
-                            pair.PropertyInfo!.SetValue(item, value is not DBNull ? value : null);
+                            pair.PropertyInfo!.SetValue(item, value is not System.DBNull ? value : null);
                         }
                     }
                 }

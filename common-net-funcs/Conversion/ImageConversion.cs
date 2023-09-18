@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using SixLabors.ImageSharp;
+using static System.Convert;
+using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace Common_Net_Funcs.Conversion;
 
@@ -27,14 +29,14 @@ public static class ImageConversion
                     if (image?.Height > 0 && image.Width > 0)
                     {
                         byte[] imageBytes = ms.ToArray();
-                        return Convert.ToBase64String(imageBytes);
+                        return ToBase64String(imageBytes);
                     }
                 }
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
 
         return null;
@@ -55,13 +57,13 @@ public static class ImageConversion
                 if (image?.Height > 0 && image.Width > 0)
                 {
                     byte[] imageBytes = ms.ToArray();
-                    return Convert.ToBase64String(imageBytes);
+                    return ToBase64String(imageBytes);
                 }
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{MethodBase.GetCurrentMethod()?.Name} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
 
         return null;

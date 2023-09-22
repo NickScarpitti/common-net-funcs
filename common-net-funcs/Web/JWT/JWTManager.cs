@@ -9,7 +9,7 @@ namespace Common_Net_Funcs.Web.JWT;
 public interface IJWTManager
 {
     TokenObject? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan,
-        TimeSpan stdTokenLifespan, string? issuer = null, string? email = null);
+        TimeSpan stdTokenLifespan, string? issuer = null, string? email = null, string? audience = null);
 }
 
 /// <summary>
@@ -30,7 +30,7 @@ public class JWTManager : IJWTManager
     /// <param name="stdTokenLifespan">How long the token should remain valid in a non-development environment</param>
     /// <returns>TokenObject if the credentials passed in are valid></returns>
 	public TokenObject? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan,
-        TimeSpan stdTokenLifespan, string? issuer = null, string? email = null)
+        TimeSpan stdTokenLifespan, string? issuer = null, string? email = null, string? audience = null)
 	{
 		if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password) || userName != actualUserName || password != actualPassword)
 		{
@@ -40,15 +40,16 @@ public class JWTManager : IJWTManager
         //Generate JSON Web Token if valid request
         JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
 		byte[] tokenKey = Encoding.UTF8.GetBytes(key);
+
 		SecurityTokenDescriptor tokenDescriptor = new()
 		{
 			Subject = new ClaimsIdentity(new Claim[]
 			{
 				new Claim(ClaimTypes.Name, userName),
-                new Claim(ClaimTypes.Email, email ?? string.Empty)
+                new Claim(ClaimTypes.Email, email ?? string.Empty),
 			}),
 			IssuedAt = DateTime.UtcNow,
-			SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)
+			SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha512Signature, SecurityAlgorithms.Sha512Digest)
 		};
 
         if (!environment.StrEq("Development"))
@@ -65,8 +66,13 @@ public class JWTManager : IJWTManager
             tokenDescriptor.Issuer = issuer;
         }
 
-		SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+        if (!string.IsNullOrWhiteSpace(audience))
+        {
+            tokenDescriptor.Audience = audience;
+        }
 
-		return new() { Token = tokenHandler.WriteToken(token), JwtExpireTime = tokenDescriptor.Expires };
+        SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+
+        return new() { Token = tokenHandler.WriteToken(token), JwtExpireTime = tokenDescriptor.Expires };
 	}
 }

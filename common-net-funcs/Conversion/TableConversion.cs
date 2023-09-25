@@ -15,7 +15,7 @@ public static class DataTableConversion
     /// <returns>List containing table values as the specified class</returns>
     public static List<T?> ConvertDataTableToList<T>(DataTable table, bool convertShortToBool = false) where T : class, new()
     {
-        List<Tuple<DataColumn, PropertyInfo, bool>> map = new List<Tuple<DataColumn, PropertyInfo, bool>>();
+        List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = new();
 
         List<T?> list = new List<T?>(table.Rows.Count);
 
@@ -29,12 +29,11 @@ public static class DataTableConversion
                     if (convertShortToBool)
                     {
                         Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
-                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo,
-                            convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
+                        map.Add(new (table.Columns[propertyInfo.Name]!, propertyInfo, convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
                     }
                     else
                     {
-                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo, false));
+                        map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, false));
                     }
                 }
             }
@@ -47,7 +46,7 @@ public static class DataTableConversion
                     continue;
                 }
                 T item = new T();
-                foreach (Tuple<DataColumn, PropertyInfo, bool> pair in map)
+                foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)
                 {
                     object? value = row[pair.DataColumn!];
 
@@ -77,7 +76,7 @@ public static class DataTableConversion
     /// <returns>List containing table values as the specified class</returns>
     public static List<T?> ConvertDataTableToListParallel<T>(DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false) where T : class, new()
     {
-        ConcurrentBag<Tuple<DataColumn, PropertyInfo, bool>> map = new ConcurrentBag<Tuple<DataColumn, PropertyInfo, bool>>();
+        ConcurrentBag<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = new();
 
         ConcurrentBag<T?> bag = new ConcurrentBag<T?>();
 
@@ -91,12 +90,11 @@ public static class DataTableConversion
                     if (convertShortToBool)
                     {
                         Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
-                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo,
-                            convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
+                        map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
                     }
                     else
                     {
-                        map.Add(new Tuple<DataColumn, PropertyInfo, bool>(table.Columns[propertyInfo.Name]!, propertyInfo, false));
+                        map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, false));
                     }
                 }
             }
@@ -106,7 +104,7 @@ public static class DataTableConversion
                 T? item = new T();
                 if (row != null)
                 {
-                    foreach (Tuple<DataColumn, PropertyInfo, bool> pair in map)
+                    foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)
                     {
                         object? value = row[pair.DataColumn!];
 
@@ -132,14 +130,14 @@ public static class DataTableConversion
     }
 }
 
-sealed class Tuple<T1, T2, T3>
-{
-    public Tuple() { }
-    public Tuple(T1 value1, T2 value2, T3 value3) { DataColumn = value1; PropertyInfo = value2; IsShort = value3; }
-    public T1? DataColumn { get; set; }
-    public T2? PropertyInfo { get; set; }
-    public T3? IsShort { get; set; }
-}
+//sealed class Tuple<T1, T2, T3>
+//{
+//    public Tuple() { }
+//    public Tuple(T1 value1, T2 value2, T3 value3) { DataColumn = value1; PropertyInfo = value2; IsShort = value3; }
+//    public T1? DataColumn { get; set; }
+//    public T2? PropertyInfo { get; set; }
+//    public T3? IsShort { get; set; }
+//}
 
 //sealed class Tuple<T1, T2>
 //{

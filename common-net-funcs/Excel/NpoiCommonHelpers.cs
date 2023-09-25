@@ -8,11 +8,12 @@ using NPOI.POIFS.FileSystem;
 using NPOI.SS;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
+using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
 using SixLabors.ImageSharp;
 using static System.Convert;
-using static Common_Net_Funcs.Tools.DebugHelpers;
 using static System.Math;
+using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace Common_Net_Funcs.Excel;
 
@@ -85,8 +86,7 @@ public static class NpoiCommonHelpers
             ISheet ws = startCell.Sheet;
             IRow? row = ws.GetRow(startCell.RowIndex + rowOffset);
             row ??= ws.CreateRow(startCell.RowIndex + rowOffset);
-            ICell cell = row.GetCell(startCell.ColumnIndex + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
-            return cell;
+            return row.GetCell(startCell.ColumnIndex + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
         {
@@ -110,8 +110,7 @@ public static class NpoiCommonHelpers
         {
             IRow row = ws.GetRow(y + rowOffset);
             row ??= ws.CreateRow(y + rowOffset);
-            ICell cell = row.GetCell(x + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
-            return cell;
+            return row.GetCell(x + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
         {
@@ -167,8 +166,7 @@ public static class NpoiCommonHelpers
             {
                 IRow row = ws.GetRow(rowNum + rowOffset);
                 row ??= ws.CreateRow(rowNum + rowOffset);
-                ICell cell = row.GetCell(colNum + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
-                return cell;
+                return row.GetCell(colNum + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
             }
             else
             {
@@ -243,10 +241,10 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Writes an excel file to the specified path
     /// </summary>
-    /// <param name="wb">XSSFWorkbook object to write to a file</param>
+    /// <param name="wb">SXSSFWorkbook object to write to a file</param>
     /// <param name="path">Full file path (including file name) to write wb object to</param>
     /// <returns>True if write was successful</returns>
-    public static bool WriteExcelFile(XSSFWorkbook wb, string path)
+    public static bool WriteExcelFile(SXSSFWorkbook wb, string path)
     {
         try
         {
@@ -299,7 +297,7 @@ public static class NpoiCommonHelpers
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static ICellStyle GetStyle(EStyles style, XSSFWorkbook wb, bool cellLocked = false, string? htmlColor = null, IFont? font = null, HorizontalAlignment? alignment = null)
+    public static ICellStyle GetStyle(EStyles style, IWorkbook wb, bool cellLocked = false, string? htmlColor = null, IFont? font = null, HorizontalAlignment? alignment = null)
     {
         ICellStyle cellStyle = wb.CreateCellStyle();
         switch (style)
@@ -358,9 +356,6 @@ public static class NpoiCommonHelpers
                 if (font != null) { xStyle.SetFont(font); }
                 cellStyle = xStyle;
                 break;
-
-            default:
-                break;
         }
         cellStyle.IsLocked = cellLocked;
         return cellStyle;
@@ -373,7 +368,7 @@ public static class NpoiCommonHelpers
     /// <param name="style">Name of preset defined styles to use</param>
     /// <param name="wb">Workbook the style will be used in</param>
     /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
-    /// <param name="htmlColor">Cell background color to be used (only used for custom font)</param>
+    /// <param name="hssfColor">Cell background color to be used (only used for custom font)</param>
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
@@ -434,9 +429,6 @@ public static class NpoiCommonHelpers
                 if (font != null) { xStyle.SetFont(font); }
                 cellStyle = xStyle;
                 break;
-
-            default:
-                break;
         }
         cellStyle.IsLocked = cellLocked;
         return cellStyle;
@@ -464,9 +456,6 @@ public static class NpoiCommonHelpers
                 cellFont.FontHeightInPoints = 10;
                 cellFont.FontName = "Calibri";
                 break;
-
-            default:
-                break;
         }
         return cellFont;
     }
@@ -480,7 +469,7 @@ public static class NpoiCommonHelpers
     /// <param name="data">Data to be inserted into the workbook</param>
     /// <param name="createTable">Turn the output into an Excel table (unused)</param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExportFromTable<T>(XSSFWorkbook wb, ISheet ws, IEnumerable<T> data, bool createTable = false)
+    public static bool ExportFromTable<T>(SXSSFWorkbook wb, ISheet ws, IEnumerable<T> data, bool createTable = false)
     {
         try
         {
@@ -560,6 +549,7 @@ public static class NpoiCommonHelpers
                     {
                         foreach (PropertyInfo prop in props)
                         {
+                            ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                             ws.AutoSizeColumn(x, true); //Requires LIBGDI+ to be installed in run environment to work correctly (not true for version 2.6.0+)
                             x++;
                         }
@@ -588,7 +578,7 @@ public static class NpoiCommonHelpers
     /// <param name="data">Data as DataTable to be inserted into the workbook</param>
     /// <param name="createTable">Turn the output into an Excel table (unused)</param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExportFromTable(XSSFWorkbook wb, ISheet ws, DataTable data, bool createTable = false)
+    public static bool ExportFromTable(SXSSFWorkbook wb, ISheet ws, DataTable data, bool createTable = false)
     {
         try
         {
@@ -667,6 +657,7 @@ public static class NpoiCommonHelpers
                     {
                         foreach (DataColumn row in data.Columns)
                         {
+                            ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                             ws.AutoSizeColumn(x, true); //Requires LIBGDI+ to be installed in run environment to work correctly (not true for version 2.6.0+)
                             x++;
                         }
@@ -724,9 +715,8 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Writes excel file to a MemoryStream object
     /// </summary>
-    /// <param name="memoryStream">MemoryStream object to write XSSFWorkbook object to</param>
+    /// <param name="memoryStream">MemoryStream object to write SXSSFWorkbook object to</param>
     /// <param name="wb">XSSFWorkbook object to write into a MemoryStream</param>
-    /// <returns></returns>
     public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, IWorkbook wb)
     {
         using MemoryStream tempStream = new();
@@ -875,8 +865,7 @@ public static class NpoiCommonHelpers
             }
             totalWidth += ws.GetColumnWidthInPixels(i);
         }
-        int widthInt = (int)Round(totalWidth, 0, MidpointRounding.ToZero);
-        return widthInt;
+        return (int)Round(totalWidth, 0, MidpointRounding.ToZero);
     }
 
     /// <summary>
@@ -898,8 +887,8 @@ public static class NpoiCommonHelpers
         {
             totaHeight += ws.GetRow(i).HeightInPoints;
         }
-        int heightInt = (int)Round(totaHeight * XSSFShape.EMU_PER_POINT / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
-        return heightInt;
+
+        return (int)Round(totaHeight * XSSFShape.EMU_PER_POINT / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
     }
 
     /// <summary>
@@ -959,7 +948,7 @@ public static class NpoiCommonHelpers
     /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
     /// <param name="startCellReference">Top left corner containing data to read. Will use A1 if not specified.</param>
     /// <param name="endCellReference">Bottom right cell containing data to read. Will read to first full empty row if not specified.</param>
-    /// <returns></returns>
+    /// <returns>DataTable representation of the data read from the excel file</returns>
     public static DataTable ReadExcelFileToDataTable(this Stream fileStream, bool hasHeaders = true, string? sheetName = null, string? startCellReference = null, string? endCellReference = null)
     {
         DataTable dataTable = new();
@@ -1146,8 +1135,7 @@ public static class NpoiCommonHelpers
                     for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex++)
                     {
                         ws = wb.GetSheetAt(sheetIndex);
-                        List<XSSFTable> tables = ((XSSFSheet)ws).GetTables();
-                        foreach (XSSFTable t in tables)
+                        foreach (XSSFTable t in (List<XSSFTable>)((XSSFSheet)ws).GetTables())
                         {
                             tableName = t.Name;
                         }

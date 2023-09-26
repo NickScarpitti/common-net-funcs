@@ -71,7 +71,7 @@ Deep clone by reflection and deep clone by expression tree methods have been add
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.204.1" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.204.2" />
     <PackageReference Include="CsvHelper" Version="30.0.1" />
     <PackageReference Include="MailKit" Version="4.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.11" />

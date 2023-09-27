@@ -207,7 +207,7 @@ public static class Email
                 {
                     int i = 1;
                     using MemoryStream memoryStream = new();
-                    using ZipArchive archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
+                    using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
                     foreach (MailAttachment attachment in attachments)
                     {
                         if (attachment.AtttachmentStream != null)

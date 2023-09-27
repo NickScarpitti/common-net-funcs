@@ -82,7 +82,7 @@ public static class DataTableHelpers
     /// <returns></returns>
     public static SortAndLimitPostModel GetSortAndLimitPostModel(DataTableRequest request)
     {
-        return new SortAndLimitPostModel()
+        return new()
         {
             SortColumns = request.SortColumns,
             SortColumnDir = request.SortColumnDir,

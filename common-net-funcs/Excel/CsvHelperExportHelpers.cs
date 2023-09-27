@@ -10,7 +10,7 @@ public static class CsvHelperExportHelpers
     public static async Task<MemoryStream?> ExportListToCsv<T>(List<T> dataList, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
-        using StreamWriter streamWriter = new StreamWriter(memoryStream);
+        using StreamWriter streamWriter = new(memoryStream);
         using CsvWriter csvWriter = new(streamWriter, CultureInfo.InvariantCulture);
         await csvWriter.WriteRecordsAsync(dataList);
         return memoryStream;
@@ -20,7 +20,7 @@ public static class CsvHelperExportHelpers
     {
         memoryStream ??= new();
         using MemoryStream sourceMemoryStream = new();
-        using StreamWriter streamWriter = new StreamWriter(sourceMemoryStream);
+        using StreamWriter streamWriter = new(sourceMemoryStream);
         //Headers
         for (int i = 0; i < dataTable.Columns.Count; i++)
         {

@@ -516,7 +516,7 @@ public static class NpoiCommonHelpers
 
                     if (!createTable)
                     {
-                        ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, props.Length - 1));
+                        ws.SetAutoFilter(new(0, 0, 0, props.Length - 1));
                     }
                     else
                     {
@@ -540,7 +540,7 @@ public static class NpoiCommonHelpers
                         uint i = 1;
                         foreach (PropertyInfo prop in props)
                         {
-                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { id = i, name = prop.Name });
+                            ctTable.tableColumns.tableColumn.Add(new() { id = i, name = prop.Name });
                             i++;
                         }
                     }
@@ -627,7 +627,7 @@ public static class NpoiCommonHelpers
 
                     if (!createTable)
                     {
-                        ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, data.Columns.Count - 1));
+                        ws.SetAutoFilter(new(0, 0, 0, data.Columns.Count - 1));
                     }
                     else
                     {
@@ -648,7 +648,7 @@ public static class NpoiCommonHelpers
                         uint i = 1;
                         foreach (DataColumn column in data.Columns)
                         {
-                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { id = i, name = column.ColumnName });
+                            ctTable.tableColumns.tableColumn.Add(new() { id = i, name = column.ColumnName });
                             i++;
                         }
                     }

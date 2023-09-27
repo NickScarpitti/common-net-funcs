@@ -17,7 +17,7 @@ public static class DataTableConversion
     {
         List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = new();
 
-        List<T?> list = new List<T?>(table.Rows.Count);
+        List<T?> list = new(table.Rows.Count);
 
         if (table.Rows.Count > 0)
         {
@@ -29,7 +29,7 @@ public static class DataTableConversion
                     if (convertShortToBool)
                     {
                         Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
-                        map.Add(new (table.Columns[propertyInfo.Name]!, propertyInfo, convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
+                        map.Add(new(table.Columns[propertyInfo.Name]!, propertyInfo, convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
                     }
                     else
                     {
@@ -45,7 +45,7 @@ public static class DataTableConversion
                     list.Add(null);
                     continue;
                 }
-                T item = new T();
+                T item = new();
                 foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)
                 {
                     object? value = row[pair.DataColumn!];
@@ -78,7 +78,7 @@ public static class DataTableConversion
     {
         ConcurrentBag<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = new();
 
-        ConcurrentBag<T?> bag = new ConcurrentBag<T?>();
+        ConcurrentBag<T?> bag = new();
 
         if (table.Rows.Count > 0)
         {
@@ -101,7 +101,7 @@ public static class DataTableConversion
 
             Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row =>
             {
-                T? item = new T();
+                T? item = new();
                 if (row != null)
                 {
                     foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)

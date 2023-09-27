@@ -45,7 +45,7 @@ public static class NpoiExportHelpers
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
 
-        return new MemoryStream();
+        return new();
     }
 
     /// <summary>
@@ -78,7 +78,7 @@ public static class NpoiExportHelpers
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
 
-        return new MemoryStream();
+        return new();
     }
 
     /// <summary>

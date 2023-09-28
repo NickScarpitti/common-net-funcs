@@ -53,7 +53,7 @@ public static class Email
         try
         {
             //Confirm emails
-            if (!ConfirmValidEmail(from?.Email ?? ""))
+            if (!from.Email.IsValidEmail())
             {
                 success = false;
             }
@@ -62,7 +62,7 @@ public static class Email
             {
                 foreach (MailAddress mailAddress in toAddresses)
                 {
-                    if (!ConfirmValidEmail(mailAddress?.Email ?? ""))
+                    if (!mailAddress.Email.IsValidEmail())
                     {
                         success = false;
                         break;
@@ -76,7 +76,7 @@ public static class Email
                 {
                     foreach (MailAddress mailAddress in ccAddresses)
                     {
-                        if (!ConfirmValidEmail(mailAddress?.Email ?? ""))
+                        if (!mailAddress.Email.IsValidEmail())
                         {
                             success = false;
                             break;
@@ -91,7 +91,7 @@ public static class Email
                 {
                     foreach (MailAddress mailAddress in bccAddresses)
                     {
-                        if (!ConfirmValidEmail(mailAddress?.Email ?? ""))
+                        if (!mailAddress.Email.IsValidEmail())
                         {
                             success = false;
                             break;
@@ -149,7 +149,11 @@ public static class Email
                     catch (Exception ex)
                     {
                         logger.Warn(ex, $"{ex.GetLocationOfEexception()} Error");
-                        if (i == 7) { success = false; } //Sets success to false when the email send fails on the last attempt
+                        if (i == 7)
+                        {
+                            logger.Error($"Failed to send email. \nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
+                            success = false; //Sets success to false when the email send fails on the last attempt
+                        }
                     }
                     Thread.Sleep(500);
                 }
@@ -168,7 +172,7 @@ public static class Email
     /// </summary>
     /// <param name="email"></param>
     /// <returns>True if email is valid</returns>
-    public static bool ConfirmValidEmail(string email)
+    public static bool IsValidEmail(this string? email)
     {
         bool isValid = false;
         try

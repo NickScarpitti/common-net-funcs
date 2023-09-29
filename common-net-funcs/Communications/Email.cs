@@ -151,7 +151,7 @@ public static class Email
                         logger.Warn(ex, $"{ex.GetLocationOfEexception()} Error");
                         if (i == 7)
                         {
-                            logger.Error($"Failed to send email. \nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
+                            logger.Error($"{ex.GetLocationOfEexception()} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
                             success = false; //Sets success to false when the email send fails on the last attempt
                         }
                     }
@@ -161,7 +161,7 @@ public static class Email
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
             success = false;
         }
         return success;

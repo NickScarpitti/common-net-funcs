@@ -582,7 +582,7 @@ public static class NpoiCommonHelpers
                     catch (Exception ex)
                     {
                         logger.Error("Error using NPOI AutoSizeColumn", ex);
-                        logger.Warn("libgdiplus library required to use NPOI AutoSizeColumn method");
+                        logger.Warn("Ensure that the mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using linux containers");
                     }
                 }
             }
@@ -690,7 +690,7 @@ public static class NpoiCommonHelpers
                     catch (Exception ex)
                     {
                         logger.Error("Error using NPOI AutoSizeColumn", ex);
-                        logger.Warn("libgdiplus library required to use NPOI AutoSizeColumn method");
+                        logger.Warn("Ensure that the mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using linux containers");
                     }
                 }
             }

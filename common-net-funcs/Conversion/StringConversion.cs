@@ -134,7 +134,7 @@ public static class StringConversion
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     public static SelectListItem? ToSelectListItem(this string? value, bool selected)
     {
-        return value != null ? new SelectListItem { Value= value , Text = value, Selected = selected} : null;
+        return value != null ? new() { Value= value , Text = value, Selected = selected} : null;
     }
 
     /// <summary>
@@ -144,7 +144,7 @@ public static class StringConversion
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     public static SelectListItem? ToSelectListItem(this string? value)
     {
-        return value != null ? new SelectListItem { Value = value, Text = value } : null;
+        return value != null ? new() { Value = value, Text = value } : null;
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public static class StringConversion
     /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
     public static SelectListItem? ToSelectListItem(this string? value, string? text, bool selected)
     {
-        return value != null && text != null ? new SelectListItem { Value = value, Text = text, Selected = selected } : null;
+        return value != null && text != null ? new() { Value = value, Text = text, Selected = selected } : null;
     }
 
     /// <summary>
@@ -166,7 +166,7 @@ public static class StringConversion
     /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
     public static SelectListItem? ToSelectListItem(this string? value, string? text)
     {
-        return value != null && text != null ? new SelectListItem { Value = value, Text = text } : null;
+        return value != null && text != null ? new() { Value = value, Text = text } : null;
     }
 
     /// <summary>
@@ -483,7 +483,7 @@ public static class StringConversion
                 break;
         }
 
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new();
         for (int i = 0; i < bytes.Length; i++)
         {
             builder.Append(bytes[i].ToString("x2"));
@@ -527,6 +527,6 @@ public static class StringConversion
                     continue;
             }
         }
-        return new string(src, 0, index);
+        return new(src, 0, index);
     }
 }

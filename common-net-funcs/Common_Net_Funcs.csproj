@@ -13,13 +13,12 @@
     <PackageProjectUrl>https://github.com/NickScarpitti/Common_Net_Funcs</PackageProjectUrl>
     <PackageTags>dotnet;web;email;conversion;convert;excel;npoi;odbc;async;datatables;rest;api</PackageTags>
     <Nullable>enable</Nullable>
-    <Version>1.7.3</Version>
+    <Version>1.8.0</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
     <FileVersion>$(Version)</FileVersion>
-    <PackageReleaseNotes>Breaking Change: Clone method has been renamed "SerializeClone" and moved to a new class called "DeepCloneSerializationHelpers".
-Deep clone by reflection and deep clone by expression tree methods have been added in the "DeepCloneReflectionHelpers" and "DeepCopyExpressionTreeHelpers" classes respectively.</PackageReleaseNotes>
+    <PackageReleaseNotes>Breaking Changes: GetStyle has been changed to GetCustomStyle and GetStandardCellStyle in NpoiCommonHelpers. ConfirmValidEmail was renamed to IsValidEmail and converted to an extension method</PackageReleaseNotes>
     <Title>Common Net Funcs</Title>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -71,7 +70,7 @@ Deep clone by reflection and deep clone by expression tree methods have been add
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.204.2" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.205.2" />
     <PackageReference Include="CsvHelper" Version="30.0.1" />
     <PackageReference Include="MailKit" Version="4.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.11" />
@@ -81,7 +80,7 @@ Deep clone by reflection and deep clone by expression tree methods have been add
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.4" />
     <PackageReference Include="NPOI" Version="2.6.2" />
     <PackageReference Include="System.Data.Odbc" Version="7.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.1" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.3.5" />
   </ItemGroup>
 

@@ -208,7 +208,7 @@ public static class DeepCloneExpressionTreeHelpers
 
         if (type == ObjectType)
         {
-            return new object();
+            return new();
         }
 
         var compiledCopyFunction = GetOrCreateCompiledLambdaCopyFunction(type);
@@ -289,9 +289,9 @@ public static class DeepCloneExpressionTreeHelpers
 
         endLabel = Expression.Label();
 
-        variables = new List<ParameterExpression>();
+        variables = new();
 
-        expressions = new List<Expression>();
+        expressions = new();
 
         variables.Add(outputVariable);
         variables.Add(boxingVariable);
@@ -656,7 +656,7 @@ public static class DeepCloneExpressionTreeHelpers
 
     private static bool HasInItsHierarchyFieldsWithClasses(Type type, HashSet<Type>? alreadyCheckedTypes = null)
     {
-        alreadyCheckedTypes ??= new HashSet<Type>();
+        alreadyCheckedTypes ??= new();
 
         alreadyCheckedTypes.Add(type);
 

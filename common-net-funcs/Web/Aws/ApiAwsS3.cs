@@ -134,7 +134,7 @@ public class ApiAwsS3 : IAwsS3
         {
             if (!string.IsNullOrWhiteSpace(fileName))
             {
-                GetObjectMetadataRequest request = new GetObjectMetadataRequest()
+                GetObjectMetadataRequest request = new()
                 {
                     BucketName = bucketName,
                     Key = fileName,
@@ -167,7 +167,7 @@ public class ApiAwsS3 : IAwsS3
             if (!string.IsNullOrWhiteSpace(bucketName))
             {
                 ListObjectsV2Response? response = new();
-                ListObjectsV2Request request = new ListObjectsV2Request()
+                ListObjectsV2Request request = new()
                 {
                     BucketName = bucketName,
                     MaxKeys = maxKeysPerQuery

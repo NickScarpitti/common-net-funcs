@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Common_Net_Funcs.Tools;
 using NPOI.HSSF.UserModel;
 using NPOI.HSSF.Util;
 using NPOI.OpenXmlFormats.Spreadsheet;
@@ -30,6 +31,8 @@ public static class NpoiCommonHelpers
         HeaderThickTop,
         Body,
         Error,
+        Blackout,
+        Whiteout,
         Custom
     }
 
@@ -62,8 +65,7 @@ public static class NpoiCommonHelpers
             CellReference cr = new(cellReference);
             IRow? row = ws.GetRow(cr.Row + rowOffset);
             row??= ws.CreateRow(cr.Row + rowOffset);
-            ICell cell = row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
-            return cell;
+            return row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
         {
@@ -290,73 +292,33 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Get cell style based on enum EStyle options
     /// </summary>
-    /// <param name="style">Name of preset defined styles to use</param>
     /// <param name="wb">Workbook the style will be used in</param>
     /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
-    /// <param name="htmlColor">Cell background color to be used (only used for custom font)</param>
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static ICellStyle GetStyle(EStyles style, IWorkbook wb, bool cellLocked = false, string? htmlColor = null, IFont? font = null, HorizontalAlignment? alignment = null)
+    public static ICellStyle GetCustomStyle(IWorkbook wb, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null)
     {
-        ICellStyle cellStyle = wb.CreateCellStyle();
-        switch (style)
+        ICellStyle cellStyle;
+        if (wb.IsXlsx())
         {
-            case EStyles.Header:
-                cellStyle.Alignment = HorizontalAlignment.Center;
-                cellStyle.BorderBottom = BorderStyle.Thin;
-                cellStyle.BorderLeft = BorderStyle.Thin;
-                cellStyle.BorderRight = BorderStyle.Thin;
-                cellStyle.BorderTop = BorderStyle.Thin;
-                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
-                cellStyle.FillPattern = FillPattern.SolidForeground;
-                cellStyle.SetFont(GetFont(EFonts.Header, wb));
-                break;
+            XSSFCellStyle xssfStyle = (XSSFCellStyle)wb.CreateCellStyle();
+            if (alignment != null) { xssfStyle.Alignment = (HorizontalAlignment)alignment; }
 
-            case EStyles.HeaderThickTop:
-                cellStyle.Alignment = HorizontalAlignment.Center;
-                cellStyle.BorderBottom = BorderStyle.Thin;
-                cellStyle.BorderLeft = BorderStyle.Thin;
-                cellStyle.BorderRight = BorderStyle.Thin;
-                cellStyle.BorderTop = BorderStyle.Medium;
-                cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
-                cellStyle.FillPattern = FillPattern.SolidForeground;
-                cellStyle.SetFont(GetFont(EFonts.Header, wb));
-                break;
-
-            case EStyles.Body:
-                cellStyle.Alignment = HorizontalAlignment.Center;
-                cellStyle.BorderBottom = BorderStyle.Thin;
-                cellStyle.BorderLeft = BorderStyle.Thin;
-                cellStyle.BorderRight = BorderStyle.Thin;
-                cellStyle.FillForegroundColor = HSSFColor.COLOR_NORMAL;
-                cellStyle.SetFont(GetFont(EFonts.Default, wb));
-                break;
-
-            case EStyles.Error:
-                cellStyle.FillForegroundColor = HSSFColor.Red.Index;
-                cellStyle.FillPattern = FillPattern.SolidForeground;
-                break;
-
-            case EStyles.Custom:
-                XSSFCellStyle xStyle = (XSSFCellStyle)wb.CreateCellStyle();
-                if (alignment != null) { xStyle.Alignment = (HorizontalAlignment)alignment; }
-
-                //Old version relies on System.Drawing
-                //byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
-
-                Regex regex = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
-                if (htmlColor?.Length == 7 && regex.IsMatch(htmlColor))
-                {
-                    byte[] rgb = new byte[] { ToByte(htmlColor.Substring(1, 2), 16), ToByte(htmlColor.Substring(3, 2), 16), ToByte(htmlColor.Substring(5, 2), 16) };
-                    xStyle.SetFillForegroundColor(new XSSFColor(rgb));
-                }
-
-                xStyle.FillPattern = FillPattern.SolidForeground;
-                if (font != null) { xStyle.SetFont(font); }
-                cellStyle = xStyle;
-                break;
+            xssfStyle.FillPattern = FillPattern.SolidForeground;
+            if (font != null) { xssfStyle.SetFont(font); }
+            cellStyle = xssfStyle;
         }
+        else
+        {
+            HSSFCellStyle hssfStyle = (HSSFCellStyle)wb.CreateCellStyle();
+            if (alignment != null) { hssfStyle.Alignment = (HorizontalAlignment)alignment; }
+
+            hssfStyle.FillPattern = FillPattern.SolidForeground;
+            if (font != null) { hssfStyle.SetFont(font); }
+            cellStyle = hssfStyle;
+        }
+
         cellStyle.IsLocked = cellLocked;
         return cellStyle;
     }
@@ -365,16 +327,80 @@ public static class NpoiCommonHelpers
     /// <summary>
     /// Get cell style based on enum EStyle options
     /// </summary>
-    /// <param name="style">Name of preset defined styles to use</param>
     /// <param name="wb">Workbook the style will be used in</param>
+    /// <param name="hexColor">Cell background color to be used (only used for custom font)</param>
     /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
-    /// <param name="hssfColor">Cell background color to be used (only used for custom font)</param>
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static ICellStyle GetStyle(EStyles style, HSSFWorkbook wb, bool cellLocked = false, HSSFColor? hssfColor = null, IFont? font = null, HorizontalAlignment? alignment = null)
+    public static ICellStyle GetCustomStyle(IWorkbook wb, string hexColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null)
+    {
+        ICellStyle cellStyle = GetCustomStyle(wb, cellLocked, font, alignment);
+        if (wb.IsXlsx())
+        {
+            Regex regex = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+            if (hexColor?.Length == 7 && regex.IsMatch(hexColor))
+            {
+                byte[] rgb = new byte[] { ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16) };
+                ((XSSFCellStyle)cellStyle).SetFillForegroundColor(new XSSFColor(rgb));
+            }
+        }
+        else
+        {
+            if (hexColor != null)
+            {
+                HSSFColor hssfColor = GetClosestHssfColor(hexColor);
+                if (hssfColor != null)
+                {
+                    ((HSSFCellStyle)cellStyle).FillForegroundColor = hssfColor.Indexed;
+                }
+            }
+        }
+
+        cellStyle.IsLocked = cellLocked;
+        return cellStyle;
+    }
+
+    /// <exception cref="Exception">Ignore.</exception>
+    /// <summary>
+    /// Get cell style based on enum EStyle options
+    /// </summary>
+    /// <param name="wb">Workbook the style will be used in</param>
+    /// <param name="hssfColor">Cell background color to be used (only used for custom font)</param>
+    /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
+    /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
+    /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
+    /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
+    public static ICellStyle GetCustomStyle(IWorkbook wb, HSSFColor hssfColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null)
+    {
+        ICellStyle cellStyle = GetCustomStyle(wb, cellLocked, font, alignment);
+        if (wb.IsXlsx())
+        {
+            if (hssfColor != null)
+            {
+                byte[] rgb = hssfColor.RGB;
+                ((XSSFCellStyle)cellStyle).SetFillForegroundColor(new XSSFColor(rgb));
+            }
+        }
+        else
+        {
+            if (hssfColor != null)
+            {
+                ((HSSFCellStyle)cellStyle).FillForegroundColor = hssfColor.Indexed;
+            }
+        }
+        return cellStyle;
+    }
+
+    /// <summary>
+    /// Gets the standard ICellStyle corresponding to the style enum passed in. Custom returns a new default style
+    /// </summary>
+    /// <param name="style"></param>
+    /// <param name="wb"></param>
+    public static ICellStyle GetStandardCellStyle(EStyles style, IWorkbook wb, bool cellLocked = false)
     {
         ICellStyle cellStyle = wb.CreateCellStyle();
+        IFont cellFont;
         switch (style)
         {
             case EStyles.Header:
@@ -413,21 +439,20 @@ public static class NpoiCommonHelpers
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 break;
 
-            case EStyles.Custom:
-                HSSFCellStyle xStyle = (HSSFCellStyle)wb.CreateCellStyle();
-                if (alignment != null) { xStyle.Alignment = (HorizontalAlignment)alignment; }
+            case EStyles.Blackout:
+                cellFont = wb.CreateFont();
+                cellFont.Color = HSSFColor.Black.Index;
+                cellStyle.SetFont(cellFont);
+                cellStyle.FillForegroundColor = HSSFColor.Black.Index;
+                cellStyle.FillPattern = FillPattern.SolidForeground;
+                break;
 
-                //Old version relies on System.Drawing
-                //byte[] rgb = new byte[] { ColorTranslator.FromHtml(htmlColor).R, ColorTranslator.FromHtml(htmlColor).G, ColorTranslator.FromHtml(htmlColor).B };
-
-                if (hssfColor != null)
-                {
-                    xStyle.FillForegroundColor = hssfColor.Indexed;
-                }
-
-                xStyle.FillPattern = FillPattern.SolidForeground;
-                if (font != null) { xStyle.SetFont(font); }
-                cellStyle = xStyle;
+            case EStyles.Whiteout:
+                cellFont = wb.CreateFont();
+                cellFont.Color = HSSFColor.White.Index;
+                cellStyle.SetFont(cellFont);
+                cellStyle.FillForegroundColor = HSSFColor.White.Index;
+                cellStyle.FillPattern = FillPattern.SolidForeground;
                 break;
         }
         cellStyle.IsLocked = cellLocked;
@@ -477,8 +502,8 @@ public static class NpoiCommonHelpers
             {
                 if (data.Any())
                 {
-                    ICellStyle headerStyle = GetStyle(EStyles.Header, wb);
-                    ICellStyle bodyStyle = GetStyle(EStyles.Body, wb);
+                    ICellStyle headerStyle = GetStandardCellStyle(EStyles.Header, wb);
+                    ICellStyle bodyStyle = GetStandardCellStyle(EStyles.Body, wb);
 
                     int x = 0;
                     int y = 0;
@@ -516,7 +541,7 @@ public static class NpoiCommonHelpers
 
                     if (!createTable)
                     {
-                        ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, props.Length - 1));
+                        ws.SetAutoFilter(new(0, 0, 0, props.Length - 1));
                     }
                     else
                     {
@@ -540,7 +565,7 @@ public static class NpoiCommonHelpers
                         uint i = 1;
                         foreach (PropertyInfo prop in props)
                         {
-                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { id = i, name = prop.Name });
+                            ctTable.tableColumns.tableColumn.Add(new() { id = i, name = prop.Name });
                             i++;
                         }
                     }
@@ -586,8 +611,8 @@ public static class NpoiCommonHelpers
             {
                 if (data.Rows.Count > 0)
                 {
-                    ICellStyle headerStyle = GetStyle(EStyles.Header, wb);
-                    ICellStyle bodyStyle = GetStyle(EStyles.Body, wb);
+                    ICellStyle headerStyle = GetStandardCellStyle(EStyles.Header, wb);
+                    ICellStyle bodyStyle = GetStandardCellStyle(EStyles.Body, wb);
 
                     int x = 0;
                     int y = 0;
@@ -627,7 +652,7 @@ public static class NpoiCommonHelpers
 
                     if (!createTable)
                     {
-                        ws.SetAutoFilter(new CellRangeAddress(0, 0, 0, data.Columns.Count - 1));
+                        ws.SetAutoFilter(new(0, 0, 0, data.Columns.Count - 1));
                     }
                     else
                     {
@@ -648,7 +673,7 @@ public static class NpoiCommonHelpers
                         uint i = 1;
                         foreach (DataColumn column in data.Columns)
                         {
-                            ctTable.tableColumns.tableColumn.Add(new CT_TableColumn { id = i, name = column.ColumnName });
+                            ctTable.tableColumns.tableColumn.Add(new() { id = i, name = column.ColumnName });
                             i++;
                         }
                     }
@@ -955,9 +980,8 @@ public static class NpoiCommonHelpers
 
         try
         {
-            bool isXlsx = DocumentFactoryHelper.HasOOXMLHeader(fileStream);
             IWorkbook? wb = null;
-            if (isXlsx) //Only .xlsx files can have tables
+            if (fileStream.IsXlsx()) //Only .xlsx files can have tables
             {
                 wb = new XSSFWorkbook(fileStream);
             }
@@ -1116,9 +1140,7 @@ public static class NpoiCommonHelpers
 
         try
         {
-            bool isXlsx = DocumentFactoryHelper.HasOOXMLHeader(fileStream);
-
-            if (isXlsx) //Only .xlsx files can have tables
+            if (fileStream.IsXlsx()) //Only .xlsx files can have tables
             {
                 using XSSFWorkbook wb = new(fileStream);
                 ISheet? ws = null;
@@ -1178,5 +1200,52 @@ public static class NpoiCommonHelpers
         }
 
         return dataTable;
+    }
+
+    /// <summary>
+    /// Gets whether or not the stream passed in represents an XLSX type file or not
+    /// </summary>
+    /// <param name="fileStream">Stream representation of a file</param>
+    /// <returns>True if stream is an XLSX file</returns>
+    public static bool IsXlsx (this Stream fileStream)
+    {
+        return DocumentFactoryHelper.HasOOXMLHeader(fileStream);
+    }
+
+    /// <summary>
+    /// Gets whether or not the stream passed in represents an XLSX type file or not
+    /// </summary>
+    /// <param name="workbook">NPOI Workbook Object</param>
+    /// <returns>True if stream is an XLSX file</returns>
+    public static bool IsXlsx (this IWorkbook workbook)
+    {
+        return workbook.GetType().Name != typeof(HSSFWorkbook).Name;
+    }
+
+    public static HSSFColor GetClosestHssfColor(string hexColor)
+    {
+        HSSFColor outputColor = new();
+        Regex regex = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+        if (hexColor?.Length == 7 && regex.IsMatch(hexColor))
+        {
+            byte[] rgb = new byte[] { ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16) };
+
+            int deviation = int.MaxValue;
+            foreach (HSSFColor hssfColor in HSSFColor.GetIndexHash().Select(x => x.Value))
+            {
+                byte[] hssfRgb = hssfColor.RGB;
+                int totalDeviation = (int)Pow((double)rgb[0] - hssfRgb[0], 2) + (int)Pow((double)rgb[1] - hssfRgb[1], 2) + (int)Pow((double)rgb[2] - hssfRgb[2], 2);
+                if (totalDeviation < deviation)
+                {
+                    outputColor = hssfColor;
+                    deviation = totalDeviation;
+                    if (deviation == 0)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        return outputColor;
     }
 }

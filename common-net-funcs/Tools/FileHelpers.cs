@@ -42,7 +42,7 @@ public static class FileHelpers
                 {
                     logger.Info($"[{testPath}] exists, checking with iterator [{i}]");
                 }
-                Regex regex = new Regex(incrementingPattern, RegexOptions.IgnoreCase);
+                Regex regex = new(incrementingPattern, RegexOptions.IgnoreCase);
                 if (regex.IsMatch(oldCleanFileName + ext)) //File already has an iterator
                 {
                     testPath = Path.GetFullPath(Regex.Replace(oldCleanFileName + ext, incrementingPattern, $"({i}){ext}"));
@@ -89,7 +89,7 @@ public static class FileHelpers
             }
             while (File.Exists(testPath))
             {
-                Regex regex = new Regex(incrementingPattern, RegexOptions.IgnoreCase);
+                Regex regex = new(incrementingPattern, RegexOptions.IgnoreCase);
                 if (regex.IsMatch(fileName)) //File already has an iterator
                 {
                     testPath = Path.GetFullPath(Path.Combine(path, Regex.Replace(fileName, incrementingPattern, $"({i}){ext}")));
@@ -137,7 +137,7 @@ public static class FileHelpers
             {
                 int i = 1;
                 using MemoryStream memoryStream = new();
-                using ZipArchive archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
+                using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
                 foreach (ZipFile file in zipFiles)
                 {
                     if (file.FileData != null)

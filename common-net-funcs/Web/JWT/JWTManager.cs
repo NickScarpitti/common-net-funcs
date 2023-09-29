@@ -38,18 +38,18 @@ public class JWTManager : IJWTManager
 		}
 
         //Generate JSON Web Token if valid request
-        JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+        JwtSecurityTokenHandler tokenHandler = new();
 		byte[] tokenKey = Encoding.UTF8.GetBytes(key);
 
 		SecurityTokenDescriptor tokenDescriptor = new()
 		{
 			Subject = new ClaimsIdentity(new Claim[]
 			{
-				new Claim(ClaimTypes.Name, userName),
-                new Claim(ClaimTypes.Email, email ?? string.Empty),
+				new(ClaimTypes.Name, userName),
+                new(ClaimTypes.Email, email ?? string.Empty)
 			}),
 			IssuedAt = DateTime.UtcNow,
-			SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha512Signature, SecurityAlgorithms.Sha512Digest)
+			SigningCredentials = new(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha512Signature, SecurityAlgorithms.Sha512Digest)
 		};
 
         if (!environment.StrEq("Development"))

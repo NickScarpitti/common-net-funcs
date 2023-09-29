@@ -44,12 +44,12 @@ public static class AsyncHelpers
                 }
                 else
                 {
-                    throw new Exception("Invalid property name for object update");
+                    throw new("Invalid property name for object update");
                 }
             }
             else
             {
-                throw new Exception("Unable to get properties of object to update");
+                throw new("Unable to get properties of object to update");
             }
         }
         catch (Exception ex)

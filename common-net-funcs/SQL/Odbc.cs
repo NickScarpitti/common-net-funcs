@@ -53,7 +53,7 @@ public static class Odbc
                 await conn.CloseAsync();
             }
         }
-        return new DataTable();
+        return new();
     }
 
     /// <summary>
@@ -89,7 +89,7 @@ public static class Odbc
                 await conn.CloseAsync();
             }
         }
-       return new DataTable();
+       return new();
     }
 
     /// <summary>
@@ -127,7 +127,7 @@ public static class Odbc
                 conn.Close();
             }
         }
-        return new DataTable();
+        return new();
     }
 
     /// <summary>

@@ -48,7 +48,7 @@ public static class RestHelpers
         T? result = default;
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Get, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"GET URL: {url}");
@@ -90,7 +90,7 @@ public static class RestHelpers
         RestObject<T> restObject = new();
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Get, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"GET URL: {url}");
@@ -133,11 +133,11 @@ public static class RestHelpers
         T? result = default;
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
-            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            httpRequestMessage.Content = JsonContent.Create(postObject, new("application/json"));
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
@@ -177,11 +177,11 @@ public static class RestHelpers
         RestObject<T> restObject = new();
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
-            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            httpRequestMessage.Content = JsonContent.Create(postObject, new("application/json"));
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
@@ -221,11 +221,11 @@ public static class RestHelpers
         T? result = default;
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
-            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            httpRequestMessage.Content = JsonContent.Create(postObject, new("application/json"));
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
@@ -265,11 +265,11 @@ public static class RestHelpers
         RestObject<T> restObject = new();
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
-            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            httpRequestMessage.Content = JsonContent.Create(postObject, new("application/json"));
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
@@ -309,11 +309,11 @@ public static class RestHelpers
         string? result = null;
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
-            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            httpRequestMessage.Content = JsonContent.Create(postObject, new("application/json"));
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
@@ -350,11 +350,11 @@ public static class RestHelpers
         RestObject<string> restObject = new();
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Info($"POST URL: {url} | {SerializeObject(postObject)}");
-            httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue("application/json"));
+            httpRequestMessage.Content = JsonContent.Create(postObject, new("application/json"));
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
@@ -390,7 +390,7 @@ public static class RestHelpers
         T? result = default;
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Delete, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"DELETE URL: {url}");
@@ -432,7 +432,7 @@ public static class RestHelpers
         RestObject<T> restObject = new();
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Delete, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"DELETE URL: {url}");
@@ -473,11 +473,11 @@ public static class RestHelpers
         T? result = default;
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Put, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"PUT URL: {url}");
-            httpRequestMessage.Content = JsonContent.Create(putObject, new MediaTypeHeaderValue("application/json"));
+            httpRequestMessage.Content = JsonContent.Create(putObject, new("application/json"));
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
@@ -516,7 +516,7 @@ public static class RestHelpers
         T? result = default;
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Patch, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"PATCH URL: {url} | {SerializeObject(patchDoc)}");
@@ -559,7 +559,7 @@ public static class RestHelpers
         RestObject<T> restObject = new();
         try
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(HttpMethod.Patch, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
             logger.Debug($"PATCH URL: {url} | {SerializeObject(patchDoc)}");
@@ -712,7 +712,7 @@ public static class RestHelpers
         {
             try
             {
-                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+                httpRequestMessage.Headers.Authorization = new("Bearer", bearerToken);
             }
             catch (Exception ex)
             {

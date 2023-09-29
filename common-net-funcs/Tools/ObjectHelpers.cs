@@ -81,7 +81,7 @@ public static class ObjectHelpers
     public static IEnumerable<T> SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1)
     {
         ConcurrentBag<T> concurrentBag = new(items);
-        Parallel.ForEach(concurrentBag, new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item => updateMethod(item));
+        Parallel.ForEach(concurrentBag, new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item => updateMethod(item));
         return concurrentBag;
     }
 
@@ -129,7 +129,7 @@ public static class ObjectHelpers
     /// <param name="obj">Object to turn into a single item list</param>
     public static List<T> TolList<T>(this T obj)
     {
-        return new List<T>() { obj };
+        return new() { obj };
     }
 
     public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject) where T : class

@@ -74,7 +74,7 @@ public static class HtmlBuilder
     /// <returns>HTML Body with formatted HTML links</returns>
     public static string FormatAllUrlsToHtml(this string text, string? linkText = null)
     {
-        Regex regx = new Regex(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase);
+        Regex regx = new(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase);
         MatchCollection matches = regx.Matches(text);
         foreach (Match url in matches.AsEnumerable())
         {

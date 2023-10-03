@@ -582,7 +582,7 @@ public static class NpoiCommonHelpers
                     catch (Exception ex)
                     {
                         logger.Error("Error using NPOI AutoSizeColumn", ex);
-                        logger.Warn("Ensure that the mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using linux containers");
+                        logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
                     }
                 }
             }
@@ -690,7 +690,7 @@ public static class NpoiCommonHelpers
                     catch (Exception ex)
                     {
                         logger.Error("Error using NPOI AutoSizeColumn", ex);
-                        logger.Warn("Ensure that the mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using linux containers");
+                        logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
                     }
                 }
             }

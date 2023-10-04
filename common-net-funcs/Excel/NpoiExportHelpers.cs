@@ -22,15 +22,16 @@ public static class NpoiExportHelpers
     /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
     /// <param name="createTable">If true, will format the exported data into an Excel table</param>
     /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
-    public static async Task<MemoryStream?> GenericExcelExport<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, bool createTable = false)
+    public static async Task<MemoryStream?> GenericExcelExport<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, bool createTable = false,
+        string sheetName = "Data", string tableName = "Data")
     {
         try
         {
             memoryStream ??= new();
 
             using SXSSFWorkbook wb = new();
-            ISheet ws = wb.CreateSheet("Data");
-            if (!ExportFromTable(wb, ws, dataList, createTable))
+            ISheet ws = wb.CreateSheet(sheetName);
+            if (!ExportFromTable(wb, ws, dataList, createTable, tableName))
             {
                 return null;
             }
@@ -55,15 +56,16 @@ public static class NpoiExportHelpers
     /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
     /// <param name="createTable">If true, will format the exported data into an Excel table</param>
     /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
-    public static async Task<MemoryStream?> GenericExcelExport(this DataTable datatable, MemoryStream? memoryStream = null, bool createTable = false)
+    public static async Task<MemoryStream?> GenericExcelExport(this DataTable datatable, MemoryStream? memoryStream = null, bool createTable = false,
+        string sheetName = "Data", string tableName = "Data")
     {
         try
         {
             memoryStream ??= new();
 
             using SXSSFWorkbook wb = new();
-            ISheet ws = wb.CreateSheet("Data");
-            if (!ExportFromTable(wb, ws, datatable, createTable))
+            ISheet ws = wb.CreateSheet(sheetName);
+            if (!ExportFromTable(wb, ws, datatable, createTable, tableName))
             {
                 return null;
             }
@@ -90,7 +92,7 @@ public static class NpoiExportHelpers
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <returns>True if data was successfully added to the workbook</returns>
-    public static bool AddGenericTable<T>(this SXSSFWorkbook wb, IEnumerable<T> dataList, string sheetName, bool createTable = false)
+    public static bool AddGenericTable<T>(this SXSSFWorkbook wb, IEnumerable<T> dataList, string sheetName, bool createTable = false, string tableName = "Data")
     {
         bool success = false;
         try
@@ -106,7 +108,7 @@ public static class NpoiExportHelpers
             ISheet ws = wb.CreateSheet(actualSheetName);
             if (dataList != null)
             {
-                success = ExportFromTable(wb, ws, dataList, createTable);
+                success = ExportFromTable(wb, ws, dataList, createTable, tableName);
             }
         }
         catch (Exception ex)
@@ -125,7 +127,7 @@ public static class NpoiExportHelpers
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <returns>True if data was successfully added to the workbook</returns>
-    public static bool AddGenericTable<T>(this XSSFWorkbook wb, IEnumerable<T> dataList, string sheetName, bool createTable = false)
+    public static bool AddGenericTable<T>(this XSSFWorkbook wb, IEnumerable<T> dataList, string sheetName, bool createTable = false, string tableName = "Data")
     {
         bool success = false;
         try
@@ -142,7 +144,7 @@ public static class NpoiExportHelpers
             if (dataList != null)
             {
                 using SXSSFWorkbook workbook = new(wb);
-                success = ExportFromTable(workbook, ws, dataList, createTable);
+                success = ExportFromTable(workbook, ws, dataList, createTable, tableName);
             }
         }
         catch (Exception ex)
@@ -160,7 +162,7 @@ public static class NpoiExportHelpers
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <returns></returns>
-    public static bool AddGenericTable(this SXSSFWorkbook wb, DataTable dataTable, string sheetName, bool createTable = false)
+    public static bool AddGenericTable(this SXSSFWorkbook wb, DataTable dataTable, string sheetName, bool createTable = false, string tableName = "Data")
     {
         bool success = false;
         try
@@ -176,7 +178,7 @@ public static class NpoiExportHelpers
             ISheet ws = wb.CreateSheet(actualSheetName);
             if (dataTable != null)
             {
-                success = ExportFromTable(wb, ws, dataTable, createTable);
+                success = ExportFromTable(wb, ws, dataTable, createTable, tableName);
             }
         }
         catch (Exception ex)
@@ -194,7 +196,7 @@ public static class NpoiExportHelpers
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <returns></returns>
-    public static bool AddGenericTable(this XSSFWorkbook wb, DataTable dataTable, string sheetName, bool createTable = false)
+    public static bool AddGenericTable(this XSSFWorkbook wb, DataTable dataTable, string sheetName, bool createTable = false, string tableName = "Data")
     {
         bool success = false;
         try
@@ -211,7 +213,7 @@ public static class NpoiExportHelpers
             if (dataTable != null)
             {
                 SXSSFWorkbook workbook = new(wb);
-                success = ExportFromTable(workbook, ws, dataTable, createTable);
+                success = ExportFromTable(workbook, ws, dataTable, createTable, tableName);
             }
         }
         catch (Exception ex)

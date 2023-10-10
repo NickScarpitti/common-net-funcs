@@ -509,6 +509,7 @@ public static class NpoiCommonHelpers
                 PropertyInfo[] props = typeof(T).GetProperties();
                 foreach (PropertyInfo prop in props)
                 {
+                    ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                     ICell? c = ws.GetCellFromCoordinates(x, y);
                     if (c != null)
                     {
@@ -572,7 +573,6 @@ public static class NpoiCommonHelpers
                 {
                     foreach (PropertyInfo prop in props)
                     {
-                        ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                         ws.AutoSizeColumn(x, true);
                         x++;
                     }
@@ -614,6 +614,7 @@ public static class NpoiCommonHelpers
 
                 foreach (DataColumn column in data.Columns)
                 {
+                    ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                     ICell? c = ws.GetCellFromCoordinates(x, y);
                     if (c != null)
                     {
@@ -675,9 +676,8 @@ public static class NpoiCommonHelpers
 
                 try
                 {
-                    foreach (DataColumn row in data.Columns)
+                    foreach (DataColumn column in data.Columns)
                     {
-                        ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                         ws.AutoSizeColumn(x, true);
                         x++;
                     }

@@ -43,6 +43,8 @@ public static class NpoiCommonHelpers
         BigWhiteHeader
     }
 
+    private const int MaxCellWidthInExcelUnits = 65280;
+
     /// <summary>
     /// Checks if cell is empty
     /// </summary>
@@ -506,15 +508,19 @@ public static class NpoiCommonHelpers
                 int x = 0;
                 int y = 0;
 
+                Dictionary<int, int> maxColumnWidths = new();
+
                 PropertyInfo[] props = typeof(T).GetProperties();
                 foreach (PropertyInfo prop in props)
                 {
+                    //((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                     ICell? c = ws.GetCellFromCoordinates(x, y);
                     if (c != null)
                     {
                         c.SetCellValue(prop.Name);
                         c.CellStyle = headerStyle;
                     }
+                    maxColumnWidths.Add(x, (prop.Name.Length + 5) * 256);
                     x++;
                 }
                 x = 0;
@@ -524,12 +530,17 @@ public static class NpoiCommonHelpers
                 {
                     foreach (PropertyInfo prop in props)
                     {
-                        var val = prop.GetValue(item) ?? string.Empty;
+                        var value = prop.GetValue(item) ?? string.Empty;
                         ICell? c = ws.GetCellFromCoordinates(x, y);
                         if (c != null)
                         {
-                            c.SetCellValue(val.ToString());
+                            c.SetCellValue(value.ToString());
                             c.CellStyle = bodyStyle;
+                            int newVal = (value.ToString()?.Length ?? 1) * 256;
+                            if (maxColumnWidths[x] < newVal)
+                            {
+                                maxColumnWidths[x] = newVal;
+                            }
                         }
                         x++;
                     }
@@ -572,14 +583,14 @@ public static class NpoiCommonHelpers
                 {
                     foreach (PropertyInfo prop in props)
                     {
-                        ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
-                        ws.AutoSizeColumn(x, true);
+                        //ws.AutoSizeColumn(x, true);
+                        ws.SetColumnWidth(x, maxColumnWidths[x] <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] : MaxCellWidthInExcelUnits);
                         x++;
                     }
                 }
                 catch (Exception ex)
                 {
-                    logger.Error("Error using NPOI AutoSizeColumn", ex);
+                    logger.Error(ex, $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfEexception()}");
                     logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
                 }
             }
@@ -612,14 +623,18 @@ public static class NpoiCommonHelpers
                 int x = 0;
                 int y = 0;
 
+                Dictionary<int, int> maxColumnWidths = new();
+
                 foreach (DataColumn column in data.Columns)
                 {
+                    //((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                     ICell? c = ws.GetCellFromCoordinates(x, y);
                     if (c != null)
                     {
                         c.SetCellValue(column.ColumnName);
                         c.CellStyle = headerStyle;
                     }
+                    maxColumnWidths.Add(x, (column.ColumnName.Length + 5) * 256);
                     x++;
                 }
 
@@ -637,6 +652,11 @@ public static class NpoiCommonHelpers
                             {
                                 c.SetCellValue(value.ToString());
                                 c.CellStyle = bodyStyle;
+                                int newVal = (value.ToString()?.Length ?? 1) * 256;
+                                if (maxColumnWidths[x] < newVal)
+                                {
+                                    maxColumnWidths[x] = newVal;
+                                }
                             }
                         }
                         x++;
@@ -675,16 +695,16 @@ public static class NpoiCommonHelpers
 
                 try
                 {
-                    foreach (DataColumn row in data.Columns)
+                    foreach (DataColumn column in data.Columns)
                     {
-                        ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
-                        ws.AutoSizeColumn(x, true);
+                        //ws.AutoSizeColumn(x, true);
+                        ws.SetColumnWidth(x, maxColumnWidths[x] <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] : MaxCellWidthInExcelUnits);
                         x++;
                     }
                 }
                 catch (Exception ex)
                 {
-                    logger.Error("Error using NPOI AutoSizeColumn", ex);
+                    logger.Error(ex, $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfEexception()}");
                     logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
                 }
             }
@@ -1116,7 +1136,7 @@ public static class NpoiCommonHelpers
         }
         catch(Exception ex)
         {
-            logger.Error("Unable to read excel data.", ex);
+            logger.Error(ex, $"Unable to read excel data. Location: {ex.GetLocationOfEexception()}");
         }
 
         return dataTable;
@@ -1190,7 +1210,7 @@ public static class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error("Unable to read excel table data.", ex);
+            logger.Error(ex, $"Unable to read excel table data. Location {ex.GetLocationOfEexception()}");
         }
 
         return dataTable;

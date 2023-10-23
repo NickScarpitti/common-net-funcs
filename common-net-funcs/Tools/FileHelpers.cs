@@ -16,7 +16,7 @@ public static class FileHelpers
     /// <param name="originalFullFileName">Full path and file name</param>
     /// <param name="startFromZero">Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.</param>
     /// <returns></returns>
-    public static string GetSafeSaveName(this string originalFullFileName, bool startFromZero = true, bool supressLogging = false)
+    public static string GetSafeSaveName(this string originalFullFileName, bool startFromZero = true, bool supressLogging = false, bool createPathIfMissing = false)
     {
         //Remove invalid characters from
         string originalFileName = Path.GetFileName(originalFullFileName);
@@ -24,6 +24,25 @@ public static class FileHelpers
             .Replace("/", "-").Replace(@"\", "-").Replace(":", ".").Replace("<", "_").Replace(">", "_").Replace(@"""", "'").Replace("|", "_").Replace("?", "_").Replace("*", "_"));
 
         string testPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(originalFullFileName) ?? string.Empty, oldCleanFileName));
+
+        string? directory = Path.GetDirectoryName(testPath);
+        if (!Directory.Exists(directory) && directory != null)
+        {
+            if(createPathIfMissing)
+            {
+                if (!supressLogging)
+                {
+                    logger.Warn($"[{directory}] does not exist! Creating new directory...");
+                }
+                Directory.CreateDirectory(directory);
+            }
+            else if(!supressLogging)
+            {
+                logger.Warn($"[{directory}] does not exist! Unable to continue...");
+                return string.Empty;
+            }
+        }
+
         if (File.Exists(testPath))
         {
             //Update name
@@ -73,11 +92,30 @@ public static class FileHelpers
         return testPath;
     }
 
-    public static string GetSafeSaveName(string path, string fileName, bool startFromZero = true)
+    public static string GetSafeSaveName(string path, string fileName, bool startFromZero = true, bool supressLogging = false, bool createPathIfMissing = false)
     {
         fileName = fileName.Replace("/", "-").Replace(@"\", "-").Replace(":", ".").Replace("<", "_").Replace(">", "_").Replace(@"""", "'").Replace("|", "_").Replace("?", "_").Replace("*", "_");
 
         string testPath = Path.GetFullPath(Path.Combine(path, fileName));
+
+        string? directory = Path.GetDirectoryName(testPath);
+        if (!Directory.Exists(directory) && directory != null)
+        {
+            if (createPathIfMissing)
+            {
+                if (!supressLogging)
+                {
+                    logger.Warn($"[{directory}] does not exist! Creating new directory...");
+                }
+                Directory.CreateDirectory(directory);
+            }
+            else if (!supressLogging)
+            {
+                logger.Warn($"[{directory}] does not exist! Unable to continue...");
+                return string.Empty;
+            }
+        }
+
         if (File.Exists(testPath))
         {
             int i = 0;

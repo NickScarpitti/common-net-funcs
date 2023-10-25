@@ -135,8 +135,8 @@ public static class FileHelpers
                 else
                 {
                     testPath = Path.GetFullPath(Path.Combine(path, $"{fileName.Replace(ext, string.Empty)} ({i}){ext}"));
-                    i++;
                 }
+                i++;
             }
         }
         else

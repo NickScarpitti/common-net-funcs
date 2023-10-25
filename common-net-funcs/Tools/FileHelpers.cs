@@ -121,6 +121,8 @@ public static class FileHelpers
             int i = 0;
             string ext = Path.GetExtension(fileName);
             string incrementingPattern = $@"\([0-9]+\)\{ext}";
+            string? lastTestPath = null;
+
             if (!startFromZero)
             {
                 i = int.TryParse(Regex.Match(fileName, $@"\(([^)]*)\){ext}").Groups[0].Value, out int startNumber) ? startNumber : 0; //Start at number present
@@ -136,6 +138,18 @@ public static class FileHelpers
                 {
                     testPath = Path.GetFullPath(Path.Combine(path, $"{fileName.Replace(ext, string.Empty)} ({i}){ext}"));
                 }
+
+                if (!supressLogging)
+                {
+                    logger.Info($"Checking new testPath [{testPath}] with iterator [{i}]]");
+                }
+
+                if (lastTestPath == testPath)
+                {
+                    logger.Warn($"File name [{testPath}] not changing, breaking out of loop.");
+                    break;
+                }
+                lastTestPath = testPath;
                 i++;
             }
         }

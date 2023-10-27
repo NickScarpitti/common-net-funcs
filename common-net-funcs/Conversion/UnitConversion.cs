@@ -279,7 +279,7 @@ public static class UnitConversion
     /// <summary>
     /// Returns a human readable string representation of the number of bytes
     /// </summary>
-    /// <param name="inputBytes">Number of bytes to be converted</param>
+    /// <param name="nullBytes">Number of bytes to be converted</param>
     /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this long? nullBytes)
     {
@@ -301,30 +301,17 @@ public static class UnitConversion
     /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this int inputBytes)
     {
-        int bytes = Abs(inputBytes);
-        int multiplier = 1;
-        if (bytes > inputBytes)
-        {
-            multiplier = -1;
-        }
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B";
+        return ((long)inputBytes).GetFileSizeFromBytesWithUnits();
     }
 
     /// <summary>
     /// Returns a human readable string representation of the number of bytes
     /// </summary>
-    /// <param name="inputBytes">Number of bytes to be converted</param>
+    /// <param name="nullBytes">Number of bytes to be converted</param>
     /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this int? nullBytes)
     {
-        if (nullBytes == null) { return "-0"; }
-        int bytes = Abs((int)nullBytes);
-        int multiplier = 1;
-        if (bytes > nullBytes)
-        {
-            multiplier = -1;
-        }
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B";
+        return ((long?)nullBytes).GetFileSizeFromBytesWithUnits();
     }
 
     /// <summary>

@@ -21,37 +21,7 @@ public static class DataValidation
     /// <returns>True if the two objects have the same value for all elements</returns>
     public static bool IsEqual(this object? obj1, object? obj2)
     {
-        // They're both null.
-        if (obj1 == null && obj2 == null) return true;
-        // One is null, so they can't be the same.
-        if (obj1 == null || obj2 == null) return false;
-        // How can they be the same if they're different types?
-        if (obj1.GetType() != obj1.GetType()) return false;
-
-        foreach (PropertyInfo prop in obj1.GetType().GetProperties())
-        {
-            var aPropValue = prop.GetValue(obj1) ?? string.Empty;
-            var bPropValue = prop.GetValue(obj2) ?? string.Empty;
-
-            bool aIsNumeric = aPropValue.IsNumeric();
-            bool bIsNumeric = bPropValue.IsNumeric();
-
-            try
-            {
-                //This will prevent issues with numbers with varying decimal places from being counted as a difference
-                if ((aIsNumeric && bIsNumeric && decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!)) ||
-                    (!(aIsNumeric && bIsNumeric) && aPropValue.ToString() != bPropValue.ToString()))
-                {
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
-                return false;
-            }
-        }
-        return true;
+       return IsEqual(obj1, obj2, null);
     }
 
     /// <summary>
@@ -70,7 +40,12 @@ public static class DataValidation
         // How can they be the same if they're different types?
         if (obj1.GetType() != obj1.GetType()) return false;
 
-        foreach (PropertyInfo prop in obj1.GetType().GetProperties().Where(x => exemptProps?.Contains(x.Name) != true))
+        IEnumerable<PropertyInfo> props = obj1.GetType().GetProperties();
+        if (exemptProps?.Any() == true)
+        {
+            props = props.Where(x => exemptProps?.Contains(x.Name) != true);
+        }
+        foreach (PropertyInfo prop in props)
         {
             var aPropValue = prop.GetValue(obj1) ?? string.Empty;
             var bPropValue = prop.GetValue(obj2) ?? string.Empty;

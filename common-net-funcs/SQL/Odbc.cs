@@ -27,33 +27,9 @@ public static class Odbc
     /// <returns>DataTable containing the results of the SQL query</returns>
     public static async Task<DataTable> GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
-        for (int i = 0; i < maxRetry; i++)
-        {
-            using OdbcConnection conn = new(connStr);
-            try
-            {
-                using OdbcCommand cmd = new(sql, conn);
-                cmd.CommandTimeout = commandTimeoutSeconds;
-                await conn.OpenAsync();
-                using DbDataReader reader = await cmd.ExecuteReaderAsync();
-                using DataTable dt = new();
-                dt.Load(reader);
-                return dt;
-            }
-            catch (DbException ex)
-            {
-                logger.Error("DB Error: " + ex, $"{ex.GetLocationOfEexception()} Error");
-            }
-            catch (Exception ex)
-            {
-                logger.Error("Error getting datatable: " + ex, $"{ex.GetLocationOfEexception()} Error");
-            }
-            finally
-            {
-                await conn.CloseAsync();
-            }
-        }
-        return new();
+        using OdbcConnection conn = new(connStr);
+        using OdbcCommand cmd = new(sql, conn);
+        return await GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry);
     }
 
     /// <summary>
@@ -63,8 +39,14 @@ public static class Odbc
     /// <param name="cmd">Command to use with parameters</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public static async Task<DataTable> GetDataTableWithParms(OdbcConnection conn, OdbcCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
+    public static async Task<DataTable> GetDataTable(OdbcConnection conn, OdbcCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
+        return await GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry);
+    }
+
+    public static async Task<DataTable> GetDataTableInternal(OdbcConnection conn, OdbcCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
+    {
+        using DataTable dt = new();
         for (int i = 0; i < maxRetry; i++)
         {
             try
@@ -72,9 +54,7 @@ public static class Odbc
                 cmd.CommandTimeout = commandTimeoutSeconds;
                 await conn.OpenAsync();
                 using DbDataReader reader = await cmd.ExecuteReaderAsync();
-                using DataTable dt = new();
                 dt.Load(reader);
-                return dt;
             }
             catch (DbException ex)
             {
@@ -89,7 +69,7 @@ public static class Odbc
                 await conn.CloseAsync();
             }
         }
-       return new();
+        return dt;
     }
 
     /// <summary>

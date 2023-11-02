@@ -68,9 +68,20 @@ public class GenericEndpoints : ControllerBase
 
     public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
+        T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
+        return await PatchInternal(dbModel, patch, baseAppDbContextActions);
+    }
+
+    public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+    {
+        T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
+        return await PatchInternal(dbModel, patch, baseAppDbContextActions);
+    }
+
+    private async Task<ActionResult<T>> PatchInternal<T, UT>(T? dbModel, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+    {
         try
         {
-            var dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
             if (dbModel == null)
             {
                 return NoContent();
@@ -81,7 +92,7 @@ public class GenericEndpoints : ControllerBase
                 return Ok(dbModel);
             }
 
-            var updateModel = dbModel.DeepClone();
+            T? updateModel = dbModel.DeepClone();
 
             if (updateModel == null)
             {

@@ -30,13 +30,36 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     #region Read
 
     /// <summary>
-    /// Get individual record by the primary key.
-    /// If using a compound primary key, use an object of the same class to be returned with the primary key fields populated.
+    /// Get individual record by the single field primary key.
     /// </summary>
     /// <param name="primaryKey">Primary key of the record to be returned.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
     public async Task<T?> GetByKey(object primaryKey, TimeSpan? queryTimeout = null)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+
+        T? model = null;
+        try
+        {
+            model = await context.Set<T>().FindAsync(primaryKey);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+        }
+        return model;
+    }
+
+    /// <summary>
+    /// Get individual record by a compound primary key.
+    /// The values in the primaryKey array need to be ordered in the same order they are declared in AppDbContext
+    /// </summary>
+    /// <param name="primaryKey">Primary key of the record to be returned.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <returns>Record of type T corresponding to the primary key passed in.</returns>
+    public async Task<T?> GetByKey(object[] primaryKey, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);

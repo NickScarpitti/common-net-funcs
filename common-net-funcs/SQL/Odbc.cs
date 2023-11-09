@@ -55,14 +55,17 @@ public static class Odbc
                 await conn.OpenAsync();
                 using DbDataReader reader = await cmd.ExecuteReaderAsync();
                 dt.Load(reader);
+                break;
             }
             catch (DbException ex)
             {
                 logger.Error("DB Error: " + ex, $"{ex.GetLocationOfEexception()} Error");
+                dt.Clear();
             }
             catch (Exception ex)
             {
                 logger.Error("Error getting datatable: " + ex, $"{ex.GetLocationOfEexception()} Error");
+                dt.Clear();
             }
             finally
             {
@@ -81,6 +84,7 @@ public static class Odbc
     /// <returns>DataTable containing the results of the SQL query</returns>
     public static DataTable GetDataTableSynchronous(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
+        using DataTable dt = new();
         for (int i = 0; i < maxRetry; i++)
         {
             using OdbcConnection conn = new(connStr);
@@ -89,25 +93,26 @@ public static class Odbc
                 using OdbcCommand cmd = new(sql, conn);
                 cmd.CommandTimeout = commandTimeoutSeconds;
                 conn.Open();
-                using OdbcDataAdapter da = new(cmd);
-                using DataTable dt = new();
-                da.Fill(dt);
-                return dt;
+                using DbDataReader reader = cmd.ExecuteReader();
+                dt.Load(reader);
+                break;
             }
             catch (DbException ex)
             {
                 logger.Error("DB Error: " + ex, $"{ex.GetLocationOfEexception()} Error");
+                dt.Clear();
             }
             catch (Exception ex)
             {
                 logger.Error("Error getting datatable: " + ex, $"{ex.GetLocationOfEexception()} Error");
+                dt.Clear();
             }
             finally
             {
                 conn.Close();
             }
         }
-        return new();
+        return dt;
     }
 
     /// <summary>

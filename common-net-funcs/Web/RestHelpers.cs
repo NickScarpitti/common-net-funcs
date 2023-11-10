@@ -1,5 +1,5 @@
-﻿using System.Net.Http.Headers;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
+using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -452,5 +452,20 @@ public static class RestHelpers
                 }
             }
         }
+    }
+
+    public static (int itemsPerChunk, int numberOfChunks) GetChunkingParameters(int itemCount, int startingitemsPerChunk = 10000)
+    {
+        //IAsyncEnumerable is limited to MvcOptions.MaxIAsyncEnumerableBufferLimit which is 8192 by default
+        int itemsPerChunk = startingitemsPerChunk;
+        int numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
+
+        while (numberOfChunks >= 8192)
+        {
+            itemsPerChunk += 1000;
+            numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
+        }
+
+        return (itemsPerChunk, numberOfChunks);
     }
 }

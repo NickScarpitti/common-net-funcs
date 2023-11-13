@@ -160,19 +160,30 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// <returns>All records from the table corresponding to class T.</returns>
     public async Task<List<T>?> GetAll(TimeSpan? queryTimeout = null)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-
+        IQueryable<T> query = GetQueryAll(queryTimeout);
         List<T>? model = null;
         try
         {
-            model = await context.Set<T>().AsNoTracking().ToListAsync();
+            model = await query.ToListAsync();
         }
         catch (Exception ex)
         {
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets query to get all records from the corresponding table.
+    /// Same as running a SELECT * query.
+    /// </summary>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <returns>All records from the table corresponding to class T.</returns>
+    public IQueryable<T> GetQueryAll(TimeSpan? queryTimeout = null)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        return context.Set<T>().AsNoTracking();
     }
 
     /// <summary>
@@ -185,19 +196,32 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// <returns>All records from the table corresponding to class T2.</returns>
     public async Task<List<T2>?> GetAll<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-
+        IQueryable<T2> query = GetQueryAll(selectExpression, queryTimeout);
         List<T2>? model = null;
         try
         {
-            model = await context.Set<T>().AsNoTracking().Select(selectExpression).ToListAsync();
+            model = await query.ToListAsync();
         }
         catch (Exception ex)
         {
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets query to get all records from the corresponding table and transforms them into the type T2.
+    /// Same as running a SELECT <SpecificFields> query.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <returns>All records from the table corresponding to class T2.</returns>
+    public IQueryable<T2> GetQueryAll<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        return context.Set<T>().AsNoTracking().Select(selectExpression);
     }
 
     /// <summary>
@@ -209,30 +233,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// <returns>All records from the table corresponding to class T.</returns>
     public async Task<List<T>?> GetAllFull(TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-
+        IQueryable<T> query = GetQueryAllFull(queryTimeout, splitQueryOverride);
         List<T>? model = null;
         try
         {
-            if (splitQueryOverride == null)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ? model =
-                    await context.Set<T>().IncludeNavigationProperties(context).AsNoTracking().ToListAsync() :
-                    await context.Set<T>().IncludeNavigationProperties(context).ToListAsync();
-            }
-            else if (splitQueryOverride == true)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ? model =
-                   await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).AsNoTracking().ToListAsync() :
-                   await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).ToListAsync();
-            }
-            else
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ? model =
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).AsNoTracking().ToListAsync() :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).ToListAsync();
-            }
+            model = await query.ToListAsync();
         }
         catch (InvalidOperationException ioEx)
         {
@@ -240,10 +245,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             {
                 try
                 {
-                    if(splitQueryOverride == null) model = await context.Set<T>().IncludeNavigationProperties(context).ToListAsync();
-                    else if(splitQueryOverride == true) model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).ToListAsync();
-                    else model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).ToListAsync();
-
+                    query = GetQueryAllFull(queryTimeout, splitQueryOverride, true);
+                    model = await query.ToListAsync();
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
@@ -263,6 +266,45 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets query to get all records with navigation properties from the corresponding table.
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
+    /// <returns>All records from the table corresponding to class T.</returns>
+    public IQueryable<T> GetQueryAllFull(TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+
+        if (!handlingCircularRefException)
+        {
+            return splitQueryOverride switch
+            {
+                null => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().IncludeNavigationProperties(context).AsNoTracking() :
+                    context.Set<T>().IncludeNavigationProperties(context),
+                true => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                   context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).AsNoTracking() :
+                   context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context),
+                _ => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).AsNoTracking() :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context)
+            };
+        }
+        else
+        {
+            return splitQueryOverride switch
+            {
+                null => context.Set<T>().IncludeNavigationProperties(context),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context)
+            };
+        }
     }
 
     /// <summary>
@@ -276,30 +318,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// <returns>All records from the table corresponding to class T2.</returns>
     public async Task<List<T2>?> GetAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-
+        IQueryable<T2> query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride);
         List<T2>? model = null;
         try
         {
-            if (splitQueryOverride == null)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context).AsNoTracking().Select(selectExpression).ToListAsync() :
-                    await context.Set<T>().IncludeNavigationProperties(context).Select(selectExpression).ToListAsync();
-            }
-            else if (splitQueryOverride == true)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).AsNoTracking().Select(selectExpression).ToListAsync() :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Select(selectExpression).ToListAsync();
-            }
-            else
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).AsNoTracking().Select(selectExpression).ToListAsync() :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Select(selectExpression).ToListAsync();
-            }
+            model = await query.ToListAsync();
         }
         catch (InvalidOperationException ioEx)
         {
@@ -307,9 +330,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             {
                 try
                 {
-                    if (splitQueryOverride == null) model = await context.Set<T>().IncludeNavigationProperties(context).Select(selectExpression).ToListAsync();
-                    else if (splitQueryOverride == true) model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Select(selectExpression).ToListAsync();
-                    else model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Select(selectExpression).ToListAsync();
+                    query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, true);
+                    model = await query.ToListAsync();
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
@@ -332,6 +354,47 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
+    /// Gets query to get all records with navigation properties from the corresponding table and transforms them into the type T2.
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
+    /// <returns>All records from the table corresponding to class T2.</returns>
+    public IQueryable<T2> GetQueryAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+
+        if (!handlingCircularRefException)
+        {
+            return splitQueryOverride switch
+            {
+                null => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().IncludeNavigationProperties(context).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().IncludeNavigationProperties(context).Select(selectExpression),
+                true => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Select(selectExpression),
+                _ => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Select(selectExpression)
+            };
+        }
+        else
+        {
+            return splitQueryOverride switch
+            {
+                null => context.Set<T>().IncludeNavigationProperties(context).Select(selectExpression),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Select(selectExpression),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Select(selectExpression)
+            };
+        }
+    }
+
+    /// <summary>
     /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression and transforms them into the type T2.
     /// Same as running a SELECT <SpecificFields> WHERE <condition> query.
     /// </summary>
@@ -340,19 +403,31 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
     public async Task<List<T>?> GetWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-
+        IQueryable<T> query = GetQueryWithFilter(whereExpression, queryTimeout);
         List<T>? model = null;
         try
         {
-            model = await context.Set<T>().Where(whereExpression).AsNoTracking().ToListAsync();
+            model = await query.ToListAsync();
         }
         catch (Exception ex)
         {
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets query to get all records from the corresponding table that satisfy the conditions of the linq query expression and transforms them into the type T2.
+    /// Same as running a SELECT <SpecificFields> WHERE <condition> query.
+    /// </summary>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
+    public IQueryable<T> GetQueryWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        return context.Set<T>().Where(whereExpression).AsNoTracking();
     }
 
     /// <summary>
@@ -366,19 +441,33 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
     public async Task<List<T2>?> GetWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-
+        IQueryable<T2> query = GetQueryWithFilter(whereExpression, selectExpression, queryTimeout);
         List<T2>? model = null;
         try
         {
-            model = await context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync();
+            model = await query.ToListAsync();
         }
         catch (Exception ex)
         {
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets query to get all records from the corresponding table that satisfy the conditions of the linq query expression.
+    /// Same as running a SELECT * WHERE <condition> query.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
+    public IQueryable<T2> GetQueryWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        return context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct();
     }
 
     /// <summary>
@@ -426,30 +515,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
     public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-
+        IQueryable<T> query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride);
         List<T>? model = null;
         try
         {
-            if (splitQueryOverride == null)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().ToListAsync() :
-                    await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).ToListAsync();
-            }
-            else if (splitQueryOverride == true)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().ToListAsync() :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).ToListAsync();
-            }
-            else
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().ToListAsync() :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).ToListAsync();
-            }
+            model = await query.ToListAsync();
         }
         catch (InvalidOperationException ioEx)
         {
@@ -457,10 +527,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             {
                 try
                 {
-                    if (splitQueryOverride == null) model = await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).ToListAsync();
-                    else if (splitQueryOverride == true) model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).ToListAsync();
-                    else model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).ToListAsync();
-
+                    query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, true);
+                    model = await query.ToListAsync();
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
@@ -480,6 +548,46 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets query to get all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression.
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
+    public IQueryable<T> GetQueryWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+
+        if (!handlingCircularRefException)
+        {
+            return splitQueryOverride switch
+            {
+                null => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking() :
+                    context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression),
+                true => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking() :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression),
+                _ => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking() :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression)
+            };
+        }
+        else
+        {
+            return splitQueryOverride switch
+            {
+                null => context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression)
+            };
+        }
     }
 
     /// <summary>
@@ -494,30 +602,12 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
     public async Task<List<T2>?> GetWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-
+        IQueryable<T2> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride);
         List<T2>? model = null;
+
         try
         {
-            if (splitQueryOverride == null)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync() :
-                    await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-            }
-            else if (splitQueryOverride == true)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync() :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-            }
-            else
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct().ToListAsync() :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-            }
+            model = await query.ToListAsync();
         }
         catch (InvalidOperationException ioEx)
         {
@@ -525,10 +615,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             {
                 try
                 {
-                    if (splitQueryOverride == null) model = await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-                    else if (splitQueryOverride == true) model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-                    else model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-
+                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                    model = await query.ToListAsync();
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
@@ -551,6 +639,48 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     }
 
     /// <summary>
+    /// Gets query to get all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
+    public IQueryable<T2> GetQueryWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+
+        if (!handlingCircularRefException)
+        {
+            return splitQueryOverride switch
+            {
+                null => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+                    context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                true => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                _ => !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct()
+            };
+        }
+        else
+        {
+            return splitQueryOverride switch
+            {
+                null => context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct()
+            };
+        }
+    }
+
+    /// <summary>
     /// Gets the navigation property of a different class and outputs a class of type T using the select expression.
     /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
@@ -562,30 +692,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
     public async Task<List<T>?> GetWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null) where T2 : class
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-
+        IQueryable<T> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride);
         List<T>? model = null;
         try
         {
-            if (splitQueryOverride == null)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
-                    await context.Set<T2>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync() :
-                    await context.Set<T2>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-            }
-            else if (splitQueryOverride == true)
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
-                    await context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync() :
-                    await context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-            }
-            else
-            {
-                model = !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
-                    await context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking().ToListAsync() :
-                    await context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-            }
+            model = await query.ToListAsync();
         }
         catch (InvalidOperationException ioEx)
         {
@@ -593,10 +704,8 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             {
                 try
                 {
-                    if (splitQueryOverride == null) model = await context.Set<T2>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-                    else if (splitQueryOverride == true) model = await context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-                    else model = await context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().ToListAsync();
-
+                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                    model = await query.ToListAsync();
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T2), true);
                 }
@@ -616,6 +725,48 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets query to get the navigation property of a different class and outputs a class of type T using the select expression.
+    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class to return navigation property from.</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
+    /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
+    public IQueryable<T> GetQueryWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false) where T2 : class
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+
+        if (!handlingCircularRefException)
+        {
+            return splitQueryOverride switch
+            {
+                null => !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
+                    context.Set<T2>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
+                    context.Set<T2>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                true => !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
+                    context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
+                    context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                _ => !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
+                    context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
+                    context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct()
+            };
+        }
+        else
+        {
+            return splitQueryOverride switch
+            {
+                null => context.Set<T2>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                true => context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                _ => context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct()
+            };
+        }
     }
 
     /// <summary>

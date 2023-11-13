@@ -18,8 +18,7 @@ public class GenericCompare<T> : IEqualityComparer<T>
         if (obj1 == null || obj2 == null) return false;
         // How can they be the same if they're different types?
         if (obj1.GetType() != obj1.GetType()) return false;
-        PropertyInfo[] Props = obj1.GetType().GetProperties();
-        foreach (PropertyInfo prop in Props)
+        foreach (PropertyInfo prop in obj1.GetType().GetProperties())
         {
             var aPropValue = prop.GetValue(obj1) ?? string.Empty;
             var bPropValue = prop.GetValue(obj2) ?? string.Empty;
@@ -46,8 +45,7 @@ public class GenericCompare<T> : IEqualityComparer<T>
         if (obj1 == null || obj2 == null) return false;
         // How can they be the same if they're different types?
         if (obj1.GetType() != obj1.GetType()) return false;
-        PropertyInfo[] Props = obj1.GetType().GetProperties();
-        foreach (PropertyInfo prop in Props)
+        foreach (PropertyInfo prop in obj1.GetType().GetProperties())
         {
             if (!exemptProps.Contains(prop.Name))
             {

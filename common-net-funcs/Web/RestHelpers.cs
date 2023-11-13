@@ -150,20 +150,29 @@ public static class RestHelpers
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
-                await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
-                {
-                    if (x.IsFaulted) throw x.Exception ?? new();
+                //Deserialize as stream - More memory efficient than string deserialization
+                using Stream responseStream = await response.Content.ReadAsStreamAsync();
+                using StreamReader streamReader = new StreamReader(responseStream);
+                using JsonTextReader jsonReader = new JsonTextReader(streamReader);
+                JsonSerializer serializer = new JsonSerializer();
 
-                    Type returnType = typeof(T);
-                    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
-                    {
-                        result = (T)Convert.ChangeType(x.Result, typeof(T)); //Makes it so the result will be accepted as a string in generic terms
-                    }
-                    else if(x.Result?.Length > 0)
-                    {
-                        result = DeserializeObject<T>(x.Result);
-                    }
-                });
+                result = serializer.Deserialize<T>(jsonReader);
+
+                //Deserialize as string - Legacy
+                //await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                //{
+                //    if (x.IsFaulted) throw x.Exception ?? new();
+
+                //    Type returnType = typeof(T);
+                //    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
+                //    {
+                //        result = (T)Convert.ChangeType(x.Result, typeof(T)); //Makes it so the result will be accepted as a string in generic terms
+                //    }
+                //    else if (x.Result?.Length > 0)
+                //    {
+                //        result = DeserializeObject<T>(x.Result);
+                //    }
+                //});
             }
             else
             {
@@ -454,18 +463,24 @@ public static class RestHelpers
         }
     }
 
-    public static (int itemsPerChunk, int numberOfChunks) GetChunkingParameters(int itemCount, int startingitemsPerChunk = 10000)
+    /// <summary>
+    /// Gets the number of chunks and items per chunk to return with yield return to fit within MvcOptions.MaxIAsyncEnumerableBufferLimit
+    /// </summary>
+    /// <param name="itemCount">Total number of items to transmit</param>
+    /// <param name="startingitemsPerChunk">Minimum chunk size to see if it fits within the buffer limit.<br/>Will increase from initial value until the number of chunks fits within the buffer limit</param>
+    /// <param name="bufferLimit">Maximum number of buffer operations allowed by IAsyncEnumerable. Default = 8192</param>
+    /// <returns>itemsPerChunk and numberOfChunks</returns>
+    public static (int itemsPerChunk, int numberOfChunks) GetChunkingParameters(int itemCount, int startingitemsPerChunk = 10000, int bufferLimit = 8192)
     {
         //IAsyncEnumerable is limited to MvcOptions.MaxIAsyncEnumerableBufferLimit which is 8192 by default
         int itemsPerChunk = startingitemsPerChunk;
         int numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
 
-        while (numberOfChunks >= 8192)
+        while (numberOfChunks >= bufferLimit)
         {
             itemsPerChunk += 1000;
             numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
         }
-
         return (itemsPerChunk, numberOfChunks);
     }
 }

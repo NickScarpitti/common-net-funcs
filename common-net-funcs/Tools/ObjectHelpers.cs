@@ -191,4 +191,30 @@ public static class ObjectHelpers
 
         return merged;
     }
+
+    /// <summary>
+    /// Returns whether a Type has the specified attribute or not
+    /// </summary>
+    /// <param name="type">The type to check for the specified attribute</param>
+    /// <param name="attributeName">The name of the attribute you are checking the provided type for</param>
+    /// <returns></returns>
+    public static bool ObjectHasProperty(this Type type, string attributeName)
+    {
+        bool hasAttribute = false;
+        foreach (object item in type.GetCustomAttributes(true))
+        {
+            object? typeIdObject = item.GetType().GetProperty("TypeId")?.GetValue(item, null);
+
+            if (typeIdObject != null)
+            {
+                string? attrName = typeIdObject.GetType().GetProperty("Name")?.GetValue(typeIdObject, null)?.ToString();
+                if (attrName?.StrEq(attributeName) == true)
+                {
+                    hasAttribute = true;
+                    break;
+                }
+            }
+        }
+        return hasAttribute;
+    }
 }

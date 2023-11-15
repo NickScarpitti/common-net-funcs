@@ -217,4 +217,29 @@ public static class ObjectHelpers
         }
         return hasAttribute;
     }
+
+    public static bool AnyFast<T>(this IList<T>? list)
+    {
+        return list?.Count > 0;
+    }
+
+    public static bool AnyFast<T>(this ConcurrentBag<T>? list)
+    {
+        return list?.Count > 0;
+    }
+
+    public static bool AnyFast<T>(this T[]? array)
+    {
+        return array?.Length > 0;
+    }
+
+    public static bool AnyFast<TKey, T>(this IDictionary<TKey, T>? dict) where TKey : notnull
+    {
+        return dict?.Count > 0;
+    }
+
+    public static bool AnyFast<TKey, T>(this ConcurrentDictionary<TKey, T>? dict) where TKey : notnull
+    {
+        return dict?.Count > 0;
+    }
 }

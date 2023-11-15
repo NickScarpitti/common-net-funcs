@@ -1,11 +1,11 @@
 ﻿using System.Net.Http.Json;
-using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using MessagePack;
 using MemoryPack;
+using Common_Net_Funcs.Tools;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
 using static Newtonsoft.Json.JsonConvert;
@@ -293,7 +293,20 @@ public static class RestHelpers
             logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? SerializeObject(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
             if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
             {
-                httpRequestMessage.Content = JsonContent.Create(postObject, new(ContentTypes.Json));
+                if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
+                {
+                    httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
+                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MemPack);
+                }
+                else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MsgPack)) ?? false)
+                {
+                    httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
+                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MsgPack);
+                }
+                else
+                {
+                    httpRequestMessage.Content = JsonContent.Create(postObject, new(ContentTypes.Json));
+                }
             }
             else if (httpMethod == HttpMethod.Patch)
             {
@@ -307,11 +320,11 @@ public static class RestHelpers
                 using Stream responseStream = await restObject.Response.Content.ReadAsStreamAsync();
                 if (contentType == ContentTypes.MsgPack)
                 {
-                    restObject.Result = await MessagePackSerializer.DeserializeAsync<T>(responseStream);
+                    restObject.Result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
                 }
                 else if (contentType == ContentTypes.MemPack)
                 {
-                    restObject.Result = await MemoryPackSerializer.DeserializeAsync<T>(responseStream);
+                    restObject.Result = responseStream.Length > 1 ? await MemoryPackSerializer.DeserializeAsync<T>(responseStream) : default;
                 }
                 else //Assume JSON
                 {

@@ -143,7 +143,20 @@ public static class RestHelpers
             logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? SerializeObject(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
             if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
             {
-                httpRequestMessage.Content = JsonContent.Create(postObject, new(ContentTypes.Json));
+                if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
+                {
+                    httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
+                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MemPack);
+                }
+                else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MsgPack)) ?? false)
+                {
+                    httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
+                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MsgPack);
+                }
+                else
+                {
+                    httpRequestMessage.Content = JsonContent.Create(postObject, new(ContentTypes.Json));
+                }
             }
             else if (httpMethod == HttpMethod.Patch)
             {

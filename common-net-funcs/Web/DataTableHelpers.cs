@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using MemoryPack;
+using MessagePack;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using NLog;
 using static Common_Net_Funcs.Conversion.StringConversion;
@@ -110,7 +112,9 @@ public class DataTableRequest
     public Dictionary<string, string?> SearchValues { get; set; }
 }
 
-public class SortAndLimitPostModel
+[MemoryPackable]
+[MessagePackObject(true)]
+public partial class SortAndLimitPostModel
 {
     public SortAndLimitPostModel()
     {

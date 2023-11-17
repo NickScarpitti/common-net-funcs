@@ -5,9 +5,10 @@ using static System.Convert;
 using static Common_Net_Funcs.Conversion.StringConversion;
 
 namespace Common_Net_Funcs.Excel;
+
 public static class CsvHelperExportHelpers
 {
-    public static async Task<MemoryStream?> ExportListToCsv<T>(List<T> dataList, MemoryStream? memoryStream = null)
+    public static async Task<MemoryStream?> ExportListToCsv<T>(this List<T> dataList, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
         using StreamWriter streamWriter = new(memoryStream);
@@ -16,7 +17,7 @@ public static class CsvHelperExportHelpers
         return memoryStream;
     }
 
-    public static async Task<MemoryStream?> ExportListToCsv(DataTable dataTable, MemoryStream? memoryStream = null)
+    public static async Task<MemoryStream?> ExportListToCsv(this DataTable dataTable, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
         using MemoryStream sourceMemoryStream = new();

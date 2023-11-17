@@ -1,6 +1,11 @@
-﻿namespace Common_Net_Funcs.Web.JWT;
+﻿using MemoryPack;
+using MessagePack;
 
-public class TokenObject
+namespace Common_Net_Funcs.Web.JWT;
+
+[MemoryPackable]
+[MessagePackObject(true)]
+public partial class TokenObject
 {
 	public string? Token { get; set; }
 	public string? RefreshToken { get; set; }

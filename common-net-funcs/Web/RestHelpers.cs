@@ -1,9 +1,11 @@
 ﻿using System.Net.Http.Json;
-using Common_Net_Funcs.Tools;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
+using MessagePack;
+using MemoryPack;
+using Common_Net_Funcs.Tools;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
 using static Newtonsoft.Json.JsonConvert;
@@ -141,7 +143,20 @@ public static class RestHelpers
             logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? SerializeObject(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
             if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
             {
-                httpRequestMessage.Content = JsonContent.Create(postObject, new("application/json"));
+                if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
+                {
+                    httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
+                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MemPack);
+                }
+                else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MsgPack)) ?? false)
+                {
+                    httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
+                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MsgPack);
+                }
+                else
+                {
+                    httpRequestMessage.Content = JsonContent.Create(postObject, new(ContentTypes.Json));
+                }
             }
             else if (httpMethod == HttpMethod.Patch)
             {
@@ -150,13 +165,25 @@ public static class RestHelpers
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (response.IsSuccessStatusCode)
             {
-                //Deserialize as stream - More memory efficient than string deserialization
-                using Stream responseStream = await response.Content.ReadAsStreamAsync();
-                using StreamReader streamReader = new StreamReader(responseStream);
-                using JsonTextReader jsonReader = new JsonTextReader(streamReader);
-                JsonSerializer serializer = new JsonSerializer();
+                string? contentType = response.Content.Headers.ContentType?.ToString();
 
-                result = serializer.Deserialize<T>(jsonReader);
+                using Stream responseStream = await response.Content.ReadAsStreamAsync();
+                if (contentType == ContentTypes.MsgPack)
+                {
+                    result = await MessagePackSerializer.DeserializeAsync<T>(responseStream);
+                }
+                else if (contentType == ContentTypes.MemPack)
+                {
+                    result = await MemoryPackSerializer.DeserializeAsync<T>(responseStream);
+                }
+                else //Assume JSON
+                {
+                    //Deserialize as stream - More memory efficient than string deserialization
+                    using StreamReader streamReader = new StreamReader(responseStream);
+                    using JsonTextReader jsonReader = new JsonTextReader(streamReader);
+                    JsonSerializer serializer = new JsonSerializer();
+                    result = serializer.Deserialize<T>(jsonReader);
+                }
 
                 //Deserialize as string - Legacy
                 //await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
@@ -279,7 +306,20 @@ public static class RestHelpers
             logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? SerializeObject(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
             if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
             {
-                httpRequestMessage.Content = JsonContent.Create(postObject, new("application/json"));
+                if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
+                {
+                    httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
+                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MemPack);
+                }
+                else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MsgPack)) ?? false)
+                {
+                    httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
+                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MsgPack);
+                }
+                else
+                {
+                    httpRequestMessage.Content = JsonContent.Create(postObject, new(ContentTypes.Json));
+                }
             }
             else if (httpMethod == HttpMethod.Patch)
             {
@@ -288,20 +328,39 @@ public static class RestHelpers
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             if (restObject.Response.IsSuccessStatusCode)
             {
-                await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
-                {
-                    if (x.IsFaulted) throw x.Exception ?? new();
+                string? contentType = restObject.Response.Content.Headers.ContentType?.ToString();
 
-                    Type returnType = typeof(T);
-                    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
-                    {
-                        restObject.Result = (T)Convert.ChangeType(x.Result, typeof(T));
-                    }
-                    else if (x.Result?.Length > 0)
-                    {
-                        restObject.Result = DeserializeObject<T>(x.Result);
-                    }
-                });
+                using Stream responseStream = await restObject.Response.Content.ReadAsStreamAsync();
+                if (contentType == ContentTypes.MsgPack)
+                {
+                    restObject.Result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
+                }
+                else if (contentType == ContentTypes.MemPack)
+                {
+                    restObject.Result = responseStream.Length > 1 ? await MemoryPackSerializer.DeserializeAsync<T>(responseStream) : default;
+                }
+                else //Assume JSON
+                {
+                    //Deserialize as stream - More memory efficient than string deserialization
+                    using StreamReader streamReader = new StreamReader(responseStream);
+                    using JsonTextReader jsonReader = new JsonTextReader(streamReader);
+                    JsonSerializer serializer = new JsonSerializer();
+                    restObject.Result = serializer.Deserialize<T>(jsonReader);
+                }
+                //await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                //{
+                //    if (x.IsFaulted) throw x.Exception ?? new();
+
+                //    Type returnType = typeof(T);
+                //    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
+                //    {
+                //        restObject.Result = (T)Convert.ChangeType(x.Result, typeof(T));
+                //    }
+                //    else if (x.Result?.Length > 0)
+                //    {
+                //        restObject.Result = DeserializeObject<T>(x.Result);
+                //    }
+                //});
             }
             else
             {

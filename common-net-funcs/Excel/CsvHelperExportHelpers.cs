@@ -5,6 +5,7 @@ using static System.Convert;
 using static Common_Net_Funcs.Conversion.StringConversion;
 
 namespace Common_Net_Funcs.Excel;
+
 public static class CsvHelperExportHelpers
 {
     public static async Task<MemoryStream?> ExportListToCsv<T>(this List<T> dataList, MemoryStream? memoryStream = null)

@@ -9,16 +9,10 @@ using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace RAPID_Data.ServerOps;
-public class ApiAwsS3 : IAwsS3
+public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
 {
-    private readonly IAmazonS3 s3Client;
-    private readonly ILogger<ApiAwsS3> logger;
-
-    public ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger)
-    {
-        this.s3Client = s3Client;
-        this.logger = logger;
-    }
+    private readonly IAmazonS3 s3Client = s3Client;
+    private readonly ILogger<ApiAwsS3> logger = logger;
 
     public async Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null)
     {

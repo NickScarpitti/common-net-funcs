@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <UserSecretsId>38f0aeb6-a91f-4aae-8929-3617eb0bb530</UserSecretsId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -76,8 +76,8 @@
     <PackageReference Include="MemoryPack" Version="1.10.0" />
     <PackageReference Include="MessagePack" Version="2.5.129" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.14" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.5" />
     <PackageReference Include="NPOI" Version="2.6.2" />

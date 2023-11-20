@@ -103,7 +103,7 @@ public class GenericEndpoints : ControllerBase
 
             List<ValidationResult> failedValidations = new();
             Validator.TryValidateObject(updateModel, new(updateModel), failedValidations);
-            if (failedValidations.Any())
+            if (failedValidations.AnyFast())
             //if (!TryValidateModel(updateModel)) //Only works when this method is the controller endpoint being called
             {
                 return ValidationProblem(ModelState);

@@ -9,6 +9,7 @@ using Common_Net_Funcs.Tools;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
 using static Newtonsoft.Json.JsonConvert;
+using System.Net.Http.Headers;
 
 namespace Common_Net_Funcs.Web;
 
@@ -155,7 +156,7 @@ public static class RestHelpers
                 }
                 else
                 {
-                    httpRequestMessage.Content = JsonContent.Create(postObject, new(ContentTypes.Json));
+                    httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue(ContentTypes.Json));
                 }
             }
             else if (httpMethod == HttpMethod.Patch)
@@ -318,7 +319,7 @@ public static class RestHelpers
                 }
                 else
                 {
-                    httpRequestMessage.Content = JsonContent.Create(postObject, new(ContentTypes.Json));
+                    httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue(ContentTypes.Json));
                 }
             }
             else if (httpMethod == HttpMethod.Patch)
@@ -506,9 +507,9 @@ public static class RestHelpers
             }
         }
 
-        if (httpHeaders?.Any() == true)
+        if (httpHeaders.AnyFast())
         {
-            foreach (KeyValuePair<string, string> header in httpHeaders)
+            foreach (KeyValuePair<string, string> header in httpHeaders!)
             {
                 try
                 {

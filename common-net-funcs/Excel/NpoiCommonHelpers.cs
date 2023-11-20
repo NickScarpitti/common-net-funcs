@@ -20,8 +20,11 @@ namespace Common_Net_Funcs.Excel;
 /// <summary>
 /// Methods to make reading and writing to an excel file easier using NPOI
 /// </summary>
-public static class NpoiCommonHelpers
+public static partial class NpoiCommonHelpers
 {
+    [GeneratedRegex("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")]
+    private static partial Regex HexColorRegex();
+
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     public enum EStyles
@@ -339,7 +342,7 @@ public static class NpoiCommonHelpers
         ICellStyle cellStyle = GetCustomStyle(wb, cellLocked, font, alignment);
         if (wb.IsXlsx())
         {
-            Regex regex = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+            Regex regex = HexColorRegex();
             if (hexColor?.Length == 7 && regex.IsMatch(hexColor))
             {
                 byte[] rgb = new byte[] { ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16) };
@@ -1238,7 +1241,7 @@ public static class NpoiCommonHelpers
     public static HSSFColor GetClosestHssfColor(string hexColor)
     {
         HSSFColor outputColor = new();
-        Regex regex = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+        Regex regex = HexColorRegex();
         if (hexColor?.Length == 7 && regex.IsMatch(hexColor))
         {
             byte[] rgb = new byte[] { ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16) };

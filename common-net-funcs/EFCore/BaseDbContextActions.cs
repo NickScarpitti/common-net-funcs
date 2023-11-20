@@ -14,18 +14,13 @@ namespace Common_Net_Funcs.EFCore;
 /// </summary>
 /// <typeparam name="T">Entity class to be used with these methods.</typeparam>
 /// <typeparam name="UT">DB Context for the database you with to run these actions against.</typeparam>
-public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T : class where UT : DbContext
+public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBaseDbContextActions<T, UT> where T : class where UT : DbContext
 {
     static readonly ConcurrentDictionary<Type, bool> circularReferencingEntities = new();
 
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-    public IServiceProvider serviceProvider;
-
-    public BaseDbContextActions(IServiceProvider serviceProvider)
-    {
-        this.serviceProvider = serviceProvider;
-    }
+    public IServiceProvider serviceProvider = serviceProvider;
 
     #region Read
 

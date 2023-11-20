@@ -11,7 +11,7 @@ namespace Common_Net_Funcs.Tools;
 /// </summary>
 public static class DataValidation
 {
-    private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     /// <summary>
     /// Compares two like objects against each other to check to see if they contain the same values
@@ -102,10 +102,7 @@ public static class DataValidation
     /// <param name="value">Value of new item to add to dict</param>
     public static void AddDictionaryItem<K, V>(this Dictionary<K, V?> dict, K key, V? value = default) where K : notnull
     {
-        if (!dict.ContainsKey(key))
-        {
-            dict.Add(key, value);
-        }
+        dict.TryAdd(key, value);
     }
 
     /// <summary>

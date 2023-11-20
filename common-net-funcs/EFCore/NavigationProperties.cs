@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DeepCloneExpressionTreeHelpers;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
 
 namespace Common_Net_Funcs.EFCore;
 
@@ -73,7 +74,7 @@ public static class NavigationProperties
         {
             foreach (INavigation navigationProperty in navigations)
             {
-                if (parentNavigations.Any() && (depth == 0 || parentNavigations.Count > depth)) parentNavigations.Remove(parentNavigations.Keys.Last()); //Clear out every time this loop backs all the way out to the original class
+                if (parentNavigations.AnyFast() && (depth == 0 || parentNavigations.Count > depth)) parentNavigations.Remove(parentNavigations.Keys.Last()); //Clear out every time this loop backs all the way out to the original class
                 string navigationPropertyName = navigationProperty.Name;
 
                 //Prevent following circular references or redundant branches
@@ -85,7 +86,7 @@ public static class NavigationProperties
                     //No need to keep reassigning the query as nothing is changing through each iteration
                     //query.IncludeNavigationProperties(context, navigationProperty.ClrType, depth + 1, maxDepth, topLevelProperties, parentProperties.DeepClone(), foundNavigations);
                     foundNavigations!.AddDictionaryItem(string.Join(".", parentNavigations.OrderBy(x => x.Key).Select(x => x.Value)), typeof(T)); //Ensure that every step is called out in case the end navigation is null to ensure prior values are loaded
-                    GetNavigations<T>(context, !navigationProperty.ClrType.GenericTypeArguments.Any() ? navigationProperty.ClrType : navigationProperty.ClrType.GenericTypeArguments[0],
+                    GetNavigations<T>(context, !navigationProperty.ClrType.GenericTypeArguments.AnyFast() ? navigationProperty.ClrType : navigationProperty.ClrType.GenericTypeArguments[0],
                         depth + 1, maxDepth, topLevelNavigations, parentNavigations.DeepClone(), foundNavigations);
                 }
             }
@@ -97,7 +98,7 @@ public static class NavigationProperties
             foundNavigations!.AddDictionaryItem(string.Join(".", parentNavigations.OrderBy(x => x.Key).Select(x => x.Value)), typeof(T));
         }
 
-        if (depth == 0 && useCaching && !cachedEntityNavigations.Any(x => x.Key == typeof(T)) && foundNavigations?.Any() == true)
+        if (depth == 0 && useCaching && !cachedEntityNavigations.Any(x => x.Key == typeof(T)) && foundNavigations?.AnyFast() == true)
         {
             cachedEntityNavigations.TryAdd(typeof(T), foundNavigations.Select(x => x.Key).ToList());
         }
@@ -114,7 +115,7 @@ public static class NavigationProperties
     {
         Type entityType = typeof(T);
         List<string> topLevelNavigations = cachedEntityNavigations.Where(x => x.Key == entityType).SelectMany(x => x.Value).Where(x => !x.Contains('.')).ToList();
-        if (!topLevelNavigations.Any())
+        if (!topLevelNavigations.AnyFast())
         {
             IEnumerable<INavigation> navigations = (context.Model.FindEntityType(entityType)?.GetNavigations()
                 .Where(x => entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length == 0)) ?? new List<INavigation>();

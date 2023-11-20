@@ -48,10 +48,10 @@ public static class DataTableHelpers
             //Get search value key pairs
             if (!string.IsNullOrEmpty(searchValue))
             {
-                foreach (string val in searchValue.Split(",").ToList())
+                foreach (string val in searchValue.Split(',').ToList())
                 {
                     string cleanVal = val.CleanQueryParam()!;
-                    int startPos = cleanVal.IndexOf("=") + 1;
+                    int startPos = cleanVal.IndexOf('=') + 1;
                     if (startPos == 0)
                     {
                         continue;

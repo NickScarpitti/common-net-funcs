@@ -4,6 +4,7 @@ using MailKit.Net.Smtp;
 using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using static Common_Net_Funcs.Tools.DebugHelpers;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
 
 namespace Common_Net_Funcs.Communications;
 

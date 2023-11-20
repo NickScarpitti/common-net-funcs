@@ -1,12 +1,16 @@
 ﻿using System.Data;
 using System.Text.RegularExpressions;
 using System.Web;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
 using static Common_Net_Funcs.Conversion.StringConversion;
 
 namespace Common_Net_Funcs.Communications;
 
-public static class HtmlBuilder
+public static partial class HtmlBuilder
 {
+    [GeneratedRegex(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex UrlRegex();
+
     /// <summary>
     /// Creates an HTML body for an email using the inputs provided
     /// </summary>
@@ -41,7 +45,7 @@ public static class HtmlBuilder
         string text = "<html><body>";
 
         text += body.StringtoHtml();
-        text += tableData?.Any() != true ? string.Empty : "<br><br>";
+        text += tableData?.AnyFast() != true ? string.Empty : "<br><br>";
         text += tableData.CreateHtmlTable();
         text += !string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty;
         text += footer.StringtoHtml();
@@ -74,7 +78,7 @@ public static class HtmlBuilder
     /// <returns>HTML Body with formatted HTML links</returns>
     public static string FormatAllUrlsToHtml(this string text, string? linkText = null)
     {
-        Regex regx = new(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase);
+        Regex regx = UrlRegex();
         MatchCollection matches = regx.Matches(text);
         foreach (Match url in matches.AsEnumerable())
         {
@@ -175,7 +179,7 @@ public static class HtmlBuilder
                 "}" +
             "</style>";
 
-        if (tableData?.Any() == true)
+        if (tableData?.AnyFast() == true)
         {
             tableHtml += applyTableCss ? tableStyle : string.Empty;
 

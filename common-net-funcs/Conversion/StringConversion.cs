@@ -3,8 +3,8 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using static Common_Net_Funcs.Tools.DataValidation;
-using static Common_Net_Funcs.Tools.StringManipulation;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
+using static Common_Net_Funcs.Tools.StringManipulation;
 
 namespace Common_Net_Funcs.Conversion;
 

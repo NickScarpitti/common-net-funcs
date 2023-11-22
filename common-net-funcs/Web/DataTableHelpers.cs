@@ -3,10 +3,10 @@ using MessagePack;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using NLog;
+using static System.Convert;
 using static Common_Net_Funcs.Conversion.StringConversion;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
-using static System.Convert;
 
 namespace Common_Net_Funcs.Web;
 
@@ -48,10 +48,10 @@ public static class DataTableHelpers
             //Get search value key pairs
             if (!string.IsNullOrEmpty(searchValue))
             {
-                foreach (string val in searchValue.Split(",").ToList())
+                foreach (string val in searchValue.Split(',').ToList())
                 {
                     string cleanVal = val.CleanQueryParam()!;
-                    int startPos = cleanVal.IndexOf("=") + 1;
+                    int startPos = cleanVal.IndexOf('=') + 1;
                     if (startPos == 0)
                     {
                         continue;
@@ -95,13 +95,14 @@ public static class DataTableHelpers
 }
 
 #region Classes
+
 public class DataTableRequest
 {
     public DataTableRequest()
     {
-        SearchValues = new();
-        SortColumnDir = new();
-        SortColumns = new();
+        SearchValues = [];
+        SortColumnDir = [];
+        SortColumns = [];
     }
 
     public int PageSize { get; set; }
@@ -118,8 +119,8 @@ public partial class SortAndLimitPostModel
 {
     public SortAndLimitPostModel()
     {
-        SortColumns = new();
-        SortColumnDir = new();
+        SortColumns = [];
+        SortColumnDir = [];
     }
     public Dictionary<int, string?> SortColumns { get; set; }
     public Dictionary<int, string?> SortColumnDir { get; set; }
@@ -127,4 +128,4 @@ public partial class SortAndLimitPostModel
     public int PageSize { get; set; }
 }
 
-#endregion
+#endregion Classes

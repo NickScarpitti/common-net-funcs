@@ -3,9 +3,9 @@ using Common_Net_Funcs.EFCore;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Common_Net_Funcs.Tools.DebugHelpers;
 using static Common_Net_Funcs.Tools.DeepCloneExpressionTreeHelpers;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
-using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace Common_Net_Funcs.Web;
 public class GenericEndpoints : ControllerBase
@@ -101,9 +101,9 @@ public class GenericEndpoints : ControllerBase
 
             patch.ApplyTo(updateModel);
 
-            List<ValidationResult> failedValidations = new();
+            List<ValidationResult> failedValidations = [];
             Validator.TryValidateObject(updateModel, new(updateModel), failedValidations);
-            if (failedValidations.Any())
+            if (failedValidations.AnyFast())
             //if (!TryValidateModel(updateModel)) //Only works when this method is the controller endpoint being called
             {
                 return ValidationProblem(ModelState);

@@ -1,9 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
-using static Common_Net_Funcs.Tools.DataValidation;
-using static Common_Net_Funcs.Tools.StringManipulation;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using static Common_Net_Funcs.Tools.DataValidation;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
+using static Common_Net_Funcs.Tools.StringManipulation;
 
 namespace Common_Net_Funcs.Conversion;
 
@@ -292,13 +293,13 @@ public static class StringConversion
             return null;
         }
 
-        ConcurrentBag<string?> cleanValues = new();
+        ConcurrentBag<string?> cleanValues = [];
         if (values.Any())
         {
             Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim()));
         }
 
-        return (cleanValues ?? new()).Where(x => x != null)!;
+        return (cleanValues ?? []).Where(x => x != null)!;
     }
 
     /// <summary>
@@ -313,13 +314,13 @@ public static class StringConversion
             return null;
         }
 
-        ConcurrentBag<string?> cleanValues = new();
-        if (values.Any())
+        ConcurrentBag<string?> cleanValues = [];
+        if (values.AnyFast())
         {
             Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim()));
         }
 
-        return (cleanValues ?? new()).Where(x => x != null).ToList()!;
+        return (cleanValues ?? []).Where(x => x != null).ToList()!;
     }
 
     /// <summary>
@@ -390,7 +391,7 @@ public static class StringConversion
         return shortForm;
     }
 
-    public static string TimespanToShortForm(this TimeSpan t)
+    public static string TimespanToShortForm(this in TimeSpan t)
     {
         string stringForm = t.ToString();
 
@@ -447,42 +448,15 @@ public static class StringConversion
     /// <returns>Hash string</returns>
     public static string GetHash(this string originalString, EHashAlgorithm algorithm)
     {
-        byte[] bytes;
-
-        switch (algorithm)
+        var bytes = algorithm switch
         {
-            case EHashAlgorithm.SHA1:
-                using (SHA1 hasher = SHA1.Create())
-                {
-                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
-                }
-                break;
-            case EHashAlgorithm.SHA256:
-                using (SHA256 hasher = SHA256.Create())
-                {
-                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
-                }
-                break;
-            case EHashAlgorithm.SHA384:
-                using (SHA384 hasher = SHA384.Create())
-                {
-                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
-                }
-                break;
-            case EHashAlgorithm.MD5:
-                using (MD5 hasher = MD5.Create())
-                {
-                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
-                }
-                break;
-            case EHashAlgorithm.SHA512: default:
-                using (SHA512 hasher = SHA512.Create())
-                {
-                    bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(originalString));
-                }
-                break;
-        }
-
+            EHashAlgorithm.SHA1 => SHA1.HashData(Encoding.UTF8.GetBytes(originalString)),
+            EHashAlgorithm.SHA256 => SHA256.HashData(Encoding.UTF8.GetBytes(originalString)),
+            EHashAlgorithm.SHA384 => SHA384.HashData(Encoding.UTF8.GetBytes(originalString)),
+            EHashAlgorithm.MD5 => MD5.HashData(Encoding.UTF8.GetBytes(originalString)),
+            //case EHashAlgorithm.SHA512:
+            _ => SHA512.HashData(Encoding.UTF8.GetBytes(originalString)),
+        };
         StringBuilder builder = new();
         for (int i = 0; i < bytes.Length; i++)
         {
@@ -517,10 +491,15 @@ public static class StringConversion
             {
                 case '\u0020':case '\u00A0':case '\u1680':case '\u2000':case '\u2001':case '\u2002':case '\u2003':case '\u2004':case '\u2005':case '\u2006':case '\u2007':case '\u2008':case '\u2009':
                 case '\u200A':case '\u202F':case '\u205F':case '\u3000':case '\u2028':case '\u2029':case '\u0009':case '\u000A':case '\u000B':case '\u000C':case '\u000D':case '\u0085':
-                    if (skip) continue;
+                    if (skip)
+                    {
+                        continue;
+                    }
+
                     src[index++] = ch;
                     skip = true;
                     continue;
+
                 default:
                     skip = false;
                     src[index++] = ch;

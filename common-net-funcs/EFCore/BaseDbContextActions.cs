@@ -1,31 +1,28 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Concurrent;
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Concurrent;
 using static Common_Net_Funcs.Tools.DataValidation;
-using static Common_Net_Funcs.Tools.ObjectHelpers;
 using static Common_Net_Funcs.Tools.DebugHelpers;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
 
 namespace Common_Net_Funcs.EFCore;
+
+//TODO:: Investigate if circularReferencingEntities can be removed due to EF8 Lay Loading for no-tracking queries
 
 /// <summary>
 /// Common EF Core interactions with a database. Must be using dependency injection for this class to work.
 /// </summary>
 /// <typeparam name="T">Entity class to be used with these methods.</typeparam>
 /// <typeparam name="UT">DB Context for the database you with to run these actions against.</typeparam>
-public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T : class where UT : DbContext
+public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBaseDbContextActions<T, UT> where T : class where UT : DbContext
 {
     static readonly ConcurrentDictionary<Type, bool> circularReferencingEntities = new();
 
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-    public IServiceProvider serviceProvider;
-
-    public BaseDbContextActions(IServiceProvider serviceProvider)
-    {
-        this.serviceProvider = serviceProvider;
-    }
+    public IServiceProvider serviceProvider = serviceProvider;
 
     #region Read
 
@@ -38,7 +35,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T?> GetByKey(object primaryKey, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T? model = null;
         try
@@ -62,7 +62,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T?> GetByKey(object[] primaryKey, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T? model = null;
         try
@@ -88,7 +91,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T?> GetByKeyFull(object primaryKey, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T? model = null;
         try
@@ -125,9 +131,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
                     model = await GetByKey(primaryKey);
                     if (model != null)
                     {
-                        if (splitQueryOverride == null) model = context.Set<T>().IncludeNavigationProperties(context).GetObjectByPartial(model);
-                        else if (splitQueryOverride == true) model = context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).GetObjectByPartial(model);
-                        else  model = context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).GetObjectByPartial(model);
+                        if (splitQueryOverride == null)
+                        {
+                            model = context.Set<T>().IncludeNavigationProperties(context).GetObjectByPartial(model);
+                        }
+                        else if (splitQueryOverride == true)
+                        {
+                            model = context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).GetObjectByPartial(model);
+                        }
+                        else
+                        {
+                            model = context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).GetObjectByPartial(model);
+                        }
                     }
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
@@ -182,7 +197,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public IQueryable<T> GetQueryAll(TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
+
         return context.Set<T>().AsNoTracking();
     }
 
@@ -220,7 +239,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public IQueryable<T2> GetQueryAll<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
+
         return context.Set<T>().AsNoTracking().Select(selectExpression);
     }
 
@@ -279,7 +302,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public IQueryable<T> GetQueryAllFull(TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         if (!handlingCircularRefException)
         {
@@ -366,7 +392,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public IQueryable<T2> GetQueryAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         if (!handlingCircularRefException)
         {
@@ -426,7 +455,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public IQueryable<T> GetQueryWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
+
         return context.Set<T>().Where(whereExpression).AsNoTracking();
     }
 
@@ -466,7 +499,11 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public IQueryable<T2> GetQueryWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
+
         return context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct();
     }
 
@@ -486,7 +523,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null) where T2 : class
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         GenericPagingModel<T2> model = new();
         try
@@ -521,7 +561,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null) where T2 : class
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         GenericPagingModel<T2> model = new();
         try
@@ -603,7 +646,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         if (!handlingCircularRefException)
         {
@@ -688,7 +734,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public IQueryable<T> GetQueryWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         if (!handlingCircularRefException)
         {
@@ -778,7 +827,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public IQueryable<T2> GetQueryWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         if (!handlingCircularRefException)
         {
@@ -867,7 +919,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public IQueryable<T> GetQueryWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false) where T2 : class
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         if (!handlingCircularRefException)
         {
@@ -905,7 +960,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T?> GetOneWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T? model = null;
         try
@@ -930,7 +988,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T2?> GetOneWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T2? model = default;
         try
@@ -955,7 +1016,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T?> GetOneWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>();
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T? model = null;
         try
@@ -985,9 +1049,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             {
                 try
                 {
-                    if (splitQueryOverride == null) model = await context.Set<T>().IncludeNavigationProperties(context).FirstOrDefaultAsync(whereExpression);
-                    else if (splitQueryOverride == true) model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).FirstOrDefaultAsync(whereExpression);
-                    else model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).FirstOrDefaultAsync(whereExpression);
+                    if (splitQueryOverride == null)
+                    {
+                        model = await context.Set<T>().IncludeNavigationProperties(context).FirstOrDefaultAsync(whereExpression);
+                    }
+                    else if (splitQueryOverride == true)
+                    {
+                        model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).FirstOrDefaultAsync(whereExpression);
+                    }
+                    else
+                    {
+                        model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).FirstOrDefaultAsync(whereExpression);
+                    }
 
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
@@ -1023,7 +1096,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T2?> GetOneWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T2? model = default;
         try
@@ -1053,9 +1129,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             {
                 try
                 {
-                    if (splitQueryOverride == null) model = await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
-                    else if (splitQueryOverride == true) model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
-                    else model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+                    if (splitQueryOverride == null)
+                    {
+                        model = await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+                    }
+                    else if (splitQueryOverride == true)
+                    {
+                        model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+                    }
+                    else
+                    {
+                        model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+                    }
 
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
@@ -1089,7 +1174,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T? model = null;
         try
@@ -1116,7 +1204,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T? model = null;
         try
@@ -1146,9 +1237,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             {
                 try
                 {
-                    if (splitQueryOverride == null) model = await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
-                    else if (splitQueryOverride == true) model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
-                    else model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+                    if (splitQueryOverride == null)
+                    {
+                        model = await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+                    }
+                    else if (splitQueryOverride == true)
+                    {
+                        model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+                    }
+                    else
+                    {
+                        model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+                    }
 
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
@@ -1182,7 +1282,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T2?> GetMax<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T2? model = default;
         try
@@ -1207,7 +1310,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T? model = null;
         try
@@ -1234,7 +1340,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T? model = null;
         try
@@ -1264,9 +1373,18 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
             {
                 try
                 {
-                    if (splitQueryOverride == null) model = await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
-                    else if (splitQueryOverride == true) model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
-                    else model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+                    if (splitQueryOverride == null)
+                    {
+                        model = await context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+                    }
+                    else if (splitQueryOverride == true)
+                    {
+                        model = await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+                    }
+                    else
+                    {
+                        model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+                    }
 
                     logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
@@ -1300,7 +1418,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null) { context.Database.SetCommandTimeout((TimeSpan)queryTimeout); }
 
         T2? model = default;
         try
@@ -1323,7 +1441,10 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
     public async Task<int> GetCount(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         int count = 0;
         try
@@ -1337,7 +1458,7 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return count;
     }
 
-    #endregion
+    #endregion Read
 
     #region Write
 
@@ -1476,14 +1597,14 @@ public class BaseDbContextActions<T, UT> : IBaseDbContextActions<T, UT> where T 
         return result;
     }
 
-    #endregion
+    #endregion Write
 }
 
 public class GenericPagingModel<T> where T : class
 {
     public GenericPagingModel()
     {
-        Entities = new();
+        Entities = [];
     }
 
     public List<T> Entities { get; set; }

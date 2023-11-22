@@ -15,7 +15,7 @@ public static class DataTableConversion
     /// <returns>List containing table values as the specified class</returns>
     public static List<T?> ConvertDataTableToList<T>(DataTable table, bool convertShortToBool = false) where T : class, new()
     {
-        List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = new();
+        List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
 
         List<T?> list = new(table.Rows.Count);
 
@@ -76,9 +76,9 @@ public static class DataTableConversion
     /// <returns>List containing table values as the specified class</returns>
     public static List<T?> ConvertDataTableToListParallel<T>(DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false) where T : class, new()
     {
-        ConcurrentBag<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = new();
+        ConcurrentBag<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
 
-        ConcurrentBag<T?> bag = new();
+        ConcurrentBag<T?> bag = [];
 
         if (table.Rows.Count > 0)
         {

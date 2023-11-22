@@ -1,24 +1,18 @@
-﻿using System.Net;
+﻿using System.Collections.Concurrent;
+using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.S3.Util;
 using Microsoft.Extensions.Logging;
 using RAPID_Data.ServerOps.Interfaces;
-using Amazon.S3.Util;
-using System.Collections.Concurrent;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace RAPID_Data.ServerOps;
-public class ApiAwsS3 : IAwsS3
+public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
 {
-    private readonly IAmazonS3 s3Client;
-    private readonly ILogger<ApiAwsS3> logger;
-
-    public ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger)
-    {
-        this.s3Client = s3Client;
-        this.logger = logger;
-    }
+    private readonly IAmazonS3 s3Client = s3Client;
+    private readonly ILogger<ApiAwsS3> logger = logger;
 
     public async Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null)
     {
@@ -161,7 +155,7 @@ public class ApiAwsS3 : IAwsS3
 
     public async Task<List<string>?> GetAllS3BucketFiles(string bucketName, int maxKeysPerQuery = 1000)
     {
-        List<string> fileNames = new();
+        List<string> fileNames = [];
         try
         {
             if (!string.IsNullOrWhiteSpace(bucketName))
@@ -176,7 +170,7 @@ public class ApiAwsS3 : IAwsS3
                 do
                 {
                     response = await s3Client.ListObjectsV2Async(request);
-                    fileNames.AddRange(response?.S3Objects.ConvertAll(x => x.Key)?? new());
+                    fileNames.AddRange(response?.S3Objects.ConvertAll(x => x.Key)?? []);
                     request.ContinuationToken = response?.NextContinuationToken;
                 } while (response?.IsTruncated ?? false);
             }

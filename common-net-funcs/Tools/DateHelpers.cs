@@ -24,8 +24,15 @@ public static class DateHelpers
 
         decimal calcBusinessDays = 1 + ((((decimal)(eDate - sDate).TotalDays * 5m) - ((sDate.DayOfWeek - eDate.DayOfWeek) * 2m)) / 7m);
 
-        if (eDate.DayOfWeek == DayOfWeek.Saturday) calcBusinessDays--;
-        if (sDate.DayOfWeek == DayOfWeek.Sunday) calcBusinessDays--;
+        if (eDate.DayOfWeek == DayOfWeek.Saturday)
+        {
+            calcBusinessDays--;
+        }
+
+        if (sDate.DayOfWeek == DayOfWeek.Sunday)
+        {
+            calcBusinessDays--;
+        }
 
         if (exceptionDates != null)
         {
@@ -42,7 +49,7 @@ public static class DateHelpers
     /// <param name="dateTime">Date to search for the day of the week for</param>
     /// <param name="dayOfWeek">The day of the indicated week to return the date for</param>
     /// <returns></returns>
-    public static DateTime GetDayOfWeek(this DateTime dateTime, DayOfWeek dayOfWeek = DayOfWeek.Monday)
+    public static DateTime GetDayOfWeek(this in DateTime dateTime, DayOfWeek dayOfWeek = DayOfWeek.Monday)
     {
         int diff = (7 + (dateTime.DayOfWeek - dayOfWeek)) % 7;
         return dateTime.AddDays(-1 * diff).Date;

@@ -20,8 +20,11 @@ namespace Common_Net_Funcs.Excel;
 /// <summary>
 /// Methods to make reading and writing to an excel file easier using NPOI
 /// </summary>
-public static class NpoiCommonHelpers
+public static partial class NpoiCommonHelpers
 {
+    [GeneratedRegex("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")]
+    private static partial Regex HexColorRegex();
+
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     public enum EStyles
@@ -339,10 +342,10 @@ public static class NpoiCommonHelpers
         ICellStyle cellStyle = GetCustomStyle(wb, cellLocked, font, alignment);
         if (wb.IsXlsx())
         {
-            Regex regex = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+            Regex regex = HexColorRegex();
             if (hexColor?.Length == 7 && regex.IsMatch(hexColor))
             {
-                byte[] rgb = new byte[] { ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16) };
+                byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
                 ((XSSFCellStyle)cellStyle).SetFillForegroundColor(new XSSFColor(rgb));
             }
         }
@@ -507,7 +510,7 @@ public static class NpoiCommonHelpers
                 int x = 0;
                 int y = 0;
 
-                Dictionary<int, int> maxColumnWidths = new();
+                Dictionary<int, int> maxColumnWidths = [];
 
                 PropertyInfo[] props = typeof(T).GetProperties();
                 foreach (PropertyInfo prop in props)
@@ -565,7 +568,7 @@ public static class NpoiCommonHelpers
                     ctTable.autoFilter = new() { @ref = dataRange.FormatAsString() };
                     //ctTable.totalsRowShown = false;
                     ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
-                    ctTable.tableColumns = new() { tableColumn = new() };
+                    ctTable.tableColumns = new() { tableColumn = [] };
 
                     T tableHeader = data.First();
                     props = tableHeader!.GetType().GetProperties();
@@ -622,7 +625,7 @@ public static class NpoiCommonHelpers
                 int x = 0;
                 int y = 0;
 
-                Dictionary<int, int> maxColumnWidths = new();
+                Dictionary<int, int> maxColumnWidths = [];
 
                 foreach (DataColumn column in data.Columns)
                 {
@@ -682,7 +685,7 @@ public static class NpoiCommonHelpers
                     ctTable.autoFilter = new() { @ref = dataRange.FormatAsString() };
                     //ctTable.totalsRowShown = false;
                     ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
-                    ctTable.tableColumns = new() { tableColumn = new() };
+                    ctTable.tableColumns = new() { tableColumn = [] };
 
                     uint i = 1;
                     foreach (DataColumn column in data.Columns)
@@ -1238,10 +1241,10 @@ public static class NpoiCommonHelpers
     public static HSSFColor GetClosestHssfColor(string hexColor)
     {
         HSSFColor outputColor = new();
-        Regex regex = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+        Regex regex = HexColorRegex();
         if (hexColor?.Length == 7 && regex.IsMatch(hexColor))
         {
-            byte[] rgb = new byte[] { ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16) };
+            byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
 
             int deviation = int.MaxValue;
             foreach (HSSFColor hssfColor in HSSFColor.GetIndexHash().Select(x => x.Value))

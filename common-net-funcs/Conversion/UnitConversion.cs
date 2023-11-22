@@ -1,5 +1,5 @@
-﻿using static System.Math;
-using static System.Convert;
+﻿using static System.Convert;
+using static System.Math;
 
 namespace Common_Net_Funcs.Conversion;
 

@@ -13,11 +13,21 @@ public class GenericCompare<T> : IEqualityComparer<T>
     public bool Equals(T? obj1, T? obj2)
     {
         // They're both null.
-        if (obj1 == null && obj2 == null) return true;
+        if (obj1 == null && obj2 == null)
+        {
+            return true;
+        }
         // One is null, so they can't be the same.
-        if (obj1 == null || obj2 == null) return false;
+        if (obj1 == null || obj2 == null)
+        {
+            return false;
+        }
         // How can they be the same if they're different types?
-        if (obj1.GetType() != obj1.GetType()) return false;
+        if (obj1.GetType() != obj1.GetType())
+        {
+            return false;
+        }
+
         foreach (PropertyInfo prop in obj1.GetType().GetProperties())
         {
             var aPropValue = prop.GetValue(obj1) ?? string.Empty;
@@ -40,11 +50,21 @@ public class GenericCompare<T> : IEqualityComparer<T>
     public bool Equals(T? obj1, T? obj2, IEnumerable<string> exemptProps)
     {
         // They're both null.
-        if (obj1 == null && obj2 == null) return true;
+        if (obj1 == null && obj2 == null)
+        {
+            return true;
+        }
         // One is null, so they can't be the same.
-        if (obj1 == null || obj2 == null) return false;
+        if (obj1 == null || obj2 == null)
+        {
+            return false;
+        }
         // How can they be the same if they're different types?
-        if (obj1.GetType() != obj1.GetType()) return false;
+        if (obj1.GetType() != obj1.GetType())
+        {
+            return false;
+        }
+
         foreach (PropertyInfo prop in obj1.GetType().GetProperties())
         {
             if (!exemptProps.Contains(prop.Name))

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -8,8 +9,11 @@ namespace Common_Net_Funcs.Tools;
 /// <summary>
 /// Helper methods for complex classes and lists
 /// </summary>
-public static class ObjectHelpers
+public static partial class ObjectHelpers
 {
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex MultiSpaceRegex();
+
     /// <summary>
     /// Copy properties of the same name from one object to another
     /// </summary>
@@ -102,7 +106,7 @@ public static class ObjectHelpers
                     string? value = (string)(prop.GetValue(obj) ?? string.Empty);
                     if (!string.IsNullOrEmpty(value))
                     {
-                        value = Regex.Replace(value.Trim(), @"\s+", " "); //Replaces any multiples of spacing with a single space
+                        value = MultiSpaceRegex().Replace(value.Trim(), " "); //Replaces any multiples of spacing with a single space
                         prop.SetValue(obj, value.Trim());
                     }
                 }
@@ -129,7 +133,7 @@ public static class ObjectHelpers
     /// <param name="obj">Object to turn into a single item list</param>
     public static List<T> SingleToList<T>(this T obj)
     {
-        return new() { obj };
+        return [obj];
     }
 
     public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject) where T : class
@@ -218,27 +222,32 @@ public static class ObjectHelpers
         return hasAttribute;
     }
 
-    public static bool AnyFast<T>(this IList<T>? list)
-    {
-        return list?.Count > 0;
-    }
-
-    public static bool AnyFast<T>(this ConcurrentBag<T>? list)
-    {
-        return list?.Count > 0;
-    }
-
-    public static bool AnyFast<T>(this T[]? array)
-    {
-        return array?.Length > 0;
-    }
-
-    public static bool AnyFast<TKey, T>(this IDictionary<TKey, T>? dict) where TKey : notnull
+    public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? dict)
     {
         return dict?.Count > 0;
     }
 
-    public static bool AnyFast<TKey, T>(this ConcurrentDictionary<TKey, T>? dict) where TKey : notnull
+    public static bool AnyFast<T>([NotNullWhen(true)] this IList<T>? list)
+    {
+        return list?.Count > 0;
+    }
+
+    public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? list)
+    {
+        return list?.Count > 0;
+    }
+
+    public static bool AnyFast<T>([NotNullWhen(true)] this T[]? array)
+    {
+        return array?.Length > 0;
+    }
+
+    public static bool AnyFast<TKey, T>([NotNullWhen(true)] this IDictionary<TKey, T>? dict) where TKey : notnull
+    {
+        return dict?.Count > 0;
+    }
+
+    public static bool AnyFast<TKey, T>([NotNullWhen(true)] this ConcurrentDictionary<TKey, T>? dict) where TKey : notnull
     {
         return dict?.Count > 0;
     }

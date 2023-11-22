@@ -34,7 +34,7 @@ public static class AsyncHelpers
         try
         {
             PropertyInfo[] props = typeof(T).GetProperties();
-            if (props?.Any() == true)
+            if (props?.AnyFast() == true)
             {
                 PropertyInfo? prop = Array.Find(props, x => x.Name.StrEq(propertyName));
                 if (prop != null)

@@ -133,7 +133,7 @@ public static partial class ObjectHelpers
     /// <param name="obj">Object to turn into a single item list</param>
     public static List<T> SingleToList<T>(this T obj)
     {
-        return new() { obj };
+        return [obj];
     }
 
     public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject) where T : class

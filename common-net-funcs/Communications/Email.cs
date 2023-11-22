@@ -195,7 +195,7 @@ public static class Email
             {
                 if (!zipAttachments)
                 {
-                    List<Task> tasks = new();
+                    List<Task> tasks = [];
                     int i = 1;
                     foreach (MailAttachment attachment in attachments)
                     {

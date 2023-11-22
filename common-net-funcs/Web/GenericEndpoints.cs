@@ -101,7 +101,7 @@ public class GenericEndpoints : ControllerBase
 
             patch.ApplyTo(updateModel);
 
-            List<ValidationResult> failedValidations = new();
+            List<ValidationResult> failedValidations = [];
             Validator.TryValidateObject(updateModel, new(updateModel), failedValidations);
             if (failedValidations.AnyFast())
             //if (!TryValidateModel(updateModel)) //Only works when this method is the controller endpoint being called

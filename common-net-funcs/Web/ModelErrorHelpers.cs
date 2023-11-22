@@ -16,7 +16,7 @@ public static class ModelErrorHelpers
     /// <param name="modelState"></param>
     public static Dictionary<string, string?> ParseModelStateErrors(ModelStateDictionary modelState)
     {
-        Dictionary<string, string?> errors = new();
+        Dictionary<string, string?> errors = [];
         foreach (string modelStateKey in modelState.Keys)
         {
             ModelStateEntry? value = modelState[modelStateKey];

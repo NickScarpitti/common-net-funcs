@@ -5,6 +5,7 @@ namespace Common_Net_Funcs.EFCore;
 public interface IBaseDbContextActions<T, UT> where T : class where UT : DbContext
 {
     #region Read
+
     Task<T?> GetByKey(object primaryKey, TimeSpan? queryTimeout = null);
     Task<T?> GetByKey(object[] primaryKey, TimeSpan? queryTimeout = null);
     Task<T?> GetByKeyFull(object primaryKey, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null);
@@ -29,9 +30,11 @@ public interface IBaseDbContextActions<T, UT> where T : class where UT : DbConte
     Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null);
     Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null);
     Task<int> GetCount(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null);
-    #endregion
+
+    #endregion Read
 
     #region Write
+
     Task Create(T model);
     Task CreateMany(IEnumerable<T> model);
     void DeleteByObject(T model);
@@ -40,5 +43,6 @@ public interface IBaseDbContextActions<T, UT> where T : class where UT : DbConte
     void Update(T model);
     void UpdateMany(List<T> models);
     Task<bool> SaveChanges();
-    #endregion
+
+    #endregion Write
 }

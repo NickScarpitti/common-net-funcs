@@ -155,7 +155,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
 
     public async Task<List<string>?> GetAllS3BucketFiles(string bucketName, int maxKeysPerQuery = 1000)
     {
-        List<string> fileNames = new();
+        List<string> fileNames = [];
         try
         {
             if (!string.IsNullOrWhiteSpace(bucketName))
@@ -170,7 +170,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                 do
                 {
                     response = await s3Client.ListObjectsV2Async(request);
-                    fileNames.AddRange(response?.S3Objects.ConvertAll(x => x.Key)?? new());
+                    fileNames.AddRange(response?.S3Objects.ConvertAll(x => x.Key)?? []);
                     request.ContinuationToken = response?.NextContinuationToken;
                 } while (response?.IsTruncated ?? false);
             }

@@ -47,7 +47,11 @@ public static class DeepCloneReflectionHelpers
 
     public static bool IsPrimitive(this Type type)
     {
-        if (type == typeof(string)) return true;
+        if (type == typeof(string))
+        {
+            return true;
+        }
+
         return type.IsValueType && type.IsPrimitive;
     }
 
@@ -57,11 +61,27 @@ public static class DeepCloneReflectionHelpers
     }
     private static object? InternalCopy(object? originalObject, IDictionary<object, object?> visited)
     {
-        if (originalObject == null) return null;
+        if (originalObject == null)
+        {
+            return null;
+        }
+
         Type typeToReflect = originalObject.GetType();
-        if (IsPrimitive(typeToReflect)) return originalObject;
-        if (visited.TryGetValue(originalObject, out var value)) return value;
-        if (typeof(Delegate).IsAssignableFrom(typeToReflect)) return null;
+        if (IsPrimitive(typeToReflect))
+        {
+            return originalObject;
+        }
+
+        if (visited.TryGetValue(originalObject, out var value))
+        {
+            return value;
+        }
+
+        if (typeof(Delegate).IsAssignableFrom(typeToReflect))
+        {
+            return null;
+        }
+
         object? cloneObject = CloneMethod!.Invoke(originalObject, null);
         if (typeToReflect.IsArray)
         {
@@ -91,8 +111,16 @@ public static class DeepCloneReflectionHelpers
     {
         foreach (FieldInfo fieldInfo in typeToReflect.GetFields(bindingFlags))
         {
-            if (filter != null && !filter(fieldInfo)) continue;
-            if (IsPrimitive(fieldInfo.FieldType)) continue;
+            if (filter != null && !filter(fieldInfo))
+            {
+                continue;
+            }
+
+            if (IsPrimitive(fieldInfo.FieldType))
+            {
+                continue;
+            }
+
             var originalFieldValue = fieldInfo.GetValue(originalObject);
             var clonedFieldValue = InternalCopy(originalFieldValue, visited);
             fieldInfo.SetValue(cloneObject, clonedFieldValue);
@@ -108,7 +136,11 @@ public class ReferenceEqualityComparer : EqualityComparer<object>
     }
     public override int GetHashCode(object obj)
     {
-        if (obj == null) return 0;
+        if (obj == null)
+        {
+            return 0;
+        }
+
         return obj.GetHashCode();
     }
 }
@@ -117,9 +149,9 @@ public static class ArrayExtensions
 {
     public static void ForEach(this Array array, Action<Array, int[]> action)
     {
-        if (array.LongLength == 0) return;
+        if (array.LongLength == 0) { return; }
         ArrayTraverse walker = new(array);
-        do action(array, walker.Position);
+        do { action(array, walker.Position); }
         while (walker.Step());
     }
 }
@@ -163,12 +195,12 @@ internal class ArrayTraverse
 public static class DeepCloneExpressionTreeHelpers
 {
     private static readonly object IsStructTypeToDeepCopyDictionaryLocker = new();
-    private static Dictionary<Type, bool> IsStructTypeToDeepCopyDictionary = new();
+    private static Dictionary<Type, bool> IsStructTypeToDeepCopyDictionary = [];
 
     private static readonly object CompiledCopyFunctionsDictionaryLocker = new();
-    private static Dictionary<Type, Func<object, Dictionary<object, object>, object>> CompiledCopyFunctionsDictionary = new();
+    private static Dictionary<Type, Func<object, Dictionary<object, object>, object>> CompiledCopyFunctionsDictionary = [];
 
-    private static readonly Type ObjectType = typeof(Object);
+    private static readonly Type ObjectType = typeof(object);
     private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
 
     /// <summary>
@@ -289,9 +321,9 @@ public static class DeepCloneExpressionTreeHelpers
 
         endLabel = Expression.Label();
 
-        variables = new();
+        variables = [];
 
-        expressions = new();
+        expressions = [];
 
         variables.Add(outputVariable);
         variables.Add(boxingVariable);
@@ -377,7 +409,7 @@ public static class DeepCloneExpressionTreeHelpers
         /////
         ///// int i1, i2, ..., in;
 
-        List<ParameterExpression> indices = new();
+        List<ParameterExpression> indices = [];
 
         for (int i = 0; i < arrayRank; i++)
         {
@@ -488,7 +520,7 @@ public static class DeepCloneExpressionTreeHelpers
 
     private static FieldInfo[] GetAllRelevantFields(Type? type, bool forceAllFields = false)
     {
-        List<FieldInfo> fieldsList = new();
+        List<FieldInfo> fieldsList = [];
 
         Type? typeCache = type;
 
@@ -509,7 +541,7 @@ public static class DeepCloneExpressionTreeHelpers
     }
 
     private static readonly Type FieldInfoType = typeof(FieldInfo);
-    private static readonly MethodInfo? SetValueMethod = FieldInfoType.GetMethod("SetValue", new[] { ObjectType, ObjectType });
+    private static readonly MethodInfo? SetValueMethod = FieldInfoType.GetMethod("SetValue", [ObjectType, ObjectType]);
 
     private static void ReadonlyFieldToNullExpression(FieldInfo field, ParameterExpression boxingVariable, List<Expression> expressions)
     {
@@ -656,7 +688,7 @@ public static class DeepCloneExpressionTreeHelpers
 
     private static bool HasInItsHierarchyFieldsWithClasses(Type type, HashSet<Type>? alreadyCheckedTypes = null)
     {
-        alreadyCheckedTypes ??= new();
+        alreadyCheckedTypes ??= [];
 
         alreadyCheckedTypes.Add(type);
 
@@ -695,7 +727,10 @@ public static class DeepCloneExpressionTreeHelpers
 
         public override int GetHashCode(object obj)
         {
-            if (obj == null) return 0;
+            if (obj == null)
+            {
+                return 0;
+            }
 
             return obj.GetHashCode();
         }

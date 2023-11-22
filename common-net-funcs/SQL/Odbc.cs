@@ -39,9 +39,9 @@ public static class Odbc
     /// <param name="cmd">Command to use with parameters</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public static async Task<DataTable> GetDataTable(OdbcConnection conn, OdbcCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
+    public static Task<DataTable> GetDataTable(OdbcConnection conn, OdbcCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
-        return await GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry);
+        return GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry);
     }
 
     public static async Task<DataTable> GetDataTableInternal(OdbcConnection conn, OdbcCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)

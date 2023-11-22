@@ -95,13 +95,14 @@ public static class DataTableHelpers
 }
 
 #region Classes
+
 public class DataTableRequest
 {
     public DataTableRequest()
     {
-        SearchValues = new();
-        SortColumnDir = new();
-        SortColumns = new();
+        SearchValues = [];
+        SortColumnDir = [];
+        SortColumns = [];
     }
 
     public int PageSize { get; set; }
@@ -118,8 +119,8 @@ public partial class SortAndLimitPostModel
 {
     public SortAndLimitPostModel()
     {
-        SortColumns = new();
-        SortColumnDir = new();
+        SortColumns = [];
+        SortColumnDir = [];
     }
     public Dictionary<int, string?> SortColumns { get; set; }
     public Dictionary<int, string?> SortColumnDir { get; set; }
@@ -127,4 +128,4 @@ public partial class SortAndLimitPostModel
     public int PageSize { get; set; }
 }
 
-#endregion
+#endregion Classes

@@ -24,7 +24,7 @@ public static class NavigationProperties
     /// <returns>IQueryable object with include statements for its navigation properties.</returns>
     public static IQueryable<T> IncludeNavigationProperties<T>(this IQueryable<T> query, DbContext context, int maxDepth = 100) where T : class
     {
-        foreach (string navigation in GetNavigations<T>(context, typeof(T), maxDepth: maxDepth) ?? new())
+        foreach (string navigation in GetNavigations<T>(context, typeof(T), maxDepth: maxDepth) ?? [])
         {
             query = query.Include(navigation);
         }
@@ -48,11 +48,14 @@ public static class NavigationProperties
     public static List<string>? GetNavigations<T>(DbContext context, Type entityType, int depth = 0, int maxDepth = 100, List<string>? topLevelNavigations = null,
         Dictionary<int, string?>? parentNavigations = null, Dictionary<string, Type>? foundNavigations = null, bool useCaching = true) where T : class
     {
-        if (depth > maxDepth) return null;
+        if (depth > maxDepth)
+        {
+            return null;
+        }
 
-        parentNavigations ??= new();
-        foundNavigations ??= new();
-        topLevelNavigations ??= new();
+        parentNavigations ??= [];
+        foundNavigations ??= [];
+        topLevelNavigations ??= [];
 
         if (depth == 0)
         {
@@ -74,7 +77,11 @@ public static class NavigationProperties
         {
             foreach (INavigation navigationProperty in navigations)
             {
-                if (parentNavigations.AnyFast() && (depth == 0 || parentNavigations.Count > depth)) parentNavigations.Remove(parentNavigations.Keys.Last()); //Clear out every time this loop backs all the way out to the original class
+                if (parentNavigations.AnyFast() && (depth == 0 || parentNavigations.Count > depth))
+                {
+                    parentNavigations.Remove(parentNavigations.Keys.Last()); //Clear out every time this loop backs all the way out to the original class
+                }
+
                 string navigationPropertyName = navigationProperty.Name;
 
                 //Prevent following circular references or redundant branches

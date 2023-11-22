@@ -80,6 +80,10 @@ dotnet_code_quality_unused_parameters = all:suggestion
 ###############################
 # C# Coding Conventions       #
 ###############################
+
+# IDE0305: Simplify collection initialization
+dotnet_diagnostic.IDE0305.severity = none
+
 [*.cs]
 # var preferences
 csharp_style_var_for_built_in_types = true:silent
@@ -167,6 +171,75 @@ dotnet_diagnostic.RCS1123.severity = none
 
 # CA2254: Template should be a static expression
 dotnet_diagnostic.CA2254.severity = none
+
+# RCS0045: Use linefeed as new line.
+dotnet_diagnostic.RCS0045.severity = none
+
+# RCS0008: Add blank line between closing brace and next statement.
+dotnet_diagnostic.RCS0008.severity = none
+
+# RCS0021: Format block's braces on a single line or multiple lines.
+dotnet_diagnostic.RCS0021.severity = none
+
+# RCS1002: Remove braces.
+dotnet_diagnostic.RCS1002.severity = none
+
+# RCS0022: Add new line after opening brace of empty block.
+dotnet_diagnostic.RCS0022.severity = none
+
+# RCS1100: Format documentation summary on a single line.
+dotnet_diagnostic.RCS1100.severity = none
+
+# RCS0056: A line is too long.
+dotnet_diagnostic.RCS0056.severity = none
+
+# RCS1198: Avoid unnecessary boxing of value type.
+dotnet_diagnostic.RCS1198.severity = none
+
+# RCS1046: Asynchronous method name should end with 'Async'.
+dotnet_diagnostic.RCS1046.severity = none
+
+# RCS0047: Wrap and indent each node in list.
+dotnet_diagnostic.RCS0047.severity = none
+
+# RCS0053: Fix formatting of a list.
+dotnet_diagnostic.RCS0053.severity = none
+
+# RCS0010: Add blank line between declarations.
+dotnet_diagnostic.RCS0010.severity = none
+
+# RCS1223: Mark publicly visible type with DebuggerDisplay attribute.
+dotnet_diagnostic.RCS1223.severity = none
+
+# RCS0012: Add blank line between single-line declarations.
+dotnet_diagnostic.RCS0012.severity = none
+
+# RCS0034: Put type parameter constraint on its own line.
+dotnet_diagnostic.RCS0034.severity = none
+
+# RCS1111: Add braces to switch section with multiple statements.
+dotnet_diagnostic.RCS1111.severity = none
+
+# RCS0013: Add blank line between single-line declarations of different kind.
+dotnet_diagnostic.RCS0013.severity = none
+
+# RCS0054: Fix formatting of a call chain.
+dotnet_diagnostic.RCS0054.severity = none
+
+# ROS0003: Analyzer requires config option to be specified
+dotnet_diagnostic.ROS0003.severity = none
+
+# RCS0055: Fix formatting of a binary expression chain.
+dotnet_diagnostic.RCS0055.severity = none
+
+# RCS0046: Use spaces instead of tab.
+dotnet_diagnostic.RCS0046.severity = none
+
+# RCS1208: Reduce 'if' nesting.
+dotnet_diagnostic.RCS1208.severity = none
+
+# RCS0036: Remove blank line between single-line declarations of same kind.
+dotnet_diagnostic.RCS0036.severity = none
 
 [*.vb]
 # Modifier preferences

@@ -34,11 +34,20 @@ public static class DataValidation
     public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
     {
         // They're both null.
-        if (obj1 == null && obj2 == null) return true;
+        if (obj1 == null && obj2 == null)
+        {
+            return true;
+        }
         // One is null, so they can't be the same.
-        if (obj1 == null || obj2 == null) return false;
+        if (obj1 == null || obj2 == null)
+        {
+            return false;
+        }
         // How can they be the same if they're different types?
-        if (obj1.GetType() != obj1.GetType()) return false;
+        if (obj1.GetType() != obj1.GetType())
+        {
+            return false;
+        }
 
         IEnumerable<PropertyInfo> props = obj1.GetType().GetProperties();
         if (exemptProps?.Any() == true)

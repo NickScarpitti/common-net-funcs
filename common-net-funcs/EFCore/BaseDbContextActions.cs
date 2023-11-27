@@ -82,7 +82,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <summary>
     /// Get individual record by the primary key with all navigation properties.
     /// If using a compound primary key, use an object of the same class to be returned with the primary key fields populated.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="primaryKey">Primary key of the record to be returned.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
@@ -249,7 +249,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets all records with navigation properties from the corresponding table.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
@@ -293,7 +293,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets query to get all records with navigation properties from the corresponding table.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
@@ -335,7 +335,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets all records with navigation properties from the corresponding table and transforms them into the type T2.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
@@ -381,7 +381,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets query to get all records with navigation properties from the corresponding table and transforms them into the type T2.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
@@ -679,7 +679,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
@@ -724,7 +724,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets query to get all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
@@ -767,7 +767,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
@@ -815,7 +815,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets query to get all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
@@ -860,7 +860,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets the navigation property of a different class and outputs a class of type T using the select expression.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2">Class to return navigation property from.</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
@@ -907,7 +907,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets query to get the navigation property of a different class and outputs a class of type T using the select expression.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2">Class to return navigation property from.</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
@@ -1007,7 +1007,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets first record with navigation properties from the corresponding table that satisfy the conditions of the linq query expression.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
@@ -1085,7 +1085,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Gets first record with navigation properties from the corresponding table that satisfy the conditions of the linq query expression and transforms it into the T2 class with the select expression.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
@@ -1193,7 +1193,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Uses a descending order expression to return the record and its navigation properties containing the maximum value according to that order.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="TKey">Type being used to order records with in the descendingOrderEpression</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
@@ -1329,7 +1329,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
     /// <summary>
     /// Uses a ascending order expression to return the record and its navigation properties containing the minimum value according to that order.
-    /// Navigation properties using Newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>

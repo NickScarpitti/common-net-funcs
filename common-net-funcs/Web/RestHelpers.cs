@@ -1,15 +1,13 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Common_Net_Funcs.Tools;
 using MemoryPack;
 using MessagePack;
-using Microsoft.AspNetCore.JsonPatch;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
-using static Newtonsoft.Json.JsonConvert;
+////using static Newtonsoft.Json.JsonConvert;
 
 namespace Common_Net_Funcs.Web;
 
@@ -141,7 +139,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? SerializeObject(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
+            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
             if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
             {
                 if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
@@ -171,19 +169,20 @@ public static class RestHelpers
                 using Stream responseStream = await response.Content.ReadAsStreamAsync();
                 if (contentType == ContentTypes.MsgPack)
                 {
-                    result = await MessagePackSerializer.DeserializeAsync<T>(responseStream);
+                    result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
                 }
                 else if (contentType == ContentTypes.MemPack)
                 {
-                    result = await MemoryPackSerializer.DeserializeAsync<T>(responseStream);
+                    result = responseStream.Length > 1 ? await MemoryPackSerializer.DeserializeAsync<T>(responseStream) : default;
                 }
                 else //Assume JSON
                 {
                     //Deserialize as stream - More memory efficient than string deserialization
-                    using StreamReader streamReader = new StreamReader(responseStream);
-                    using JsonTextReader jsonReader = new JsonTextReader(streamReader);
-                    JsonSerializer serializer = new JsonSerializer();
-                    result = serializer.Deserialize<T>(jsonReader);
+                    //using StreamReader streamReader = new StreamReader(responseStream);
+                    //using JsonTextReader jsonReader = new JsonTextReader(streamReader); //Newtonsoft
+                    //JsonSerializer serializer = new JsonSerializer(); //Newtonsoft
+                    //result = JsonSerializer.Deserialize<T>(jsonReader); //Newtonsoft
+                    result = responseStream.Length > 1 ? await JsonSerializer.DeserializeAsync<T>(responseStream) : default;
                 }
 
                 //Deserialize as string - Legacy
@@ -304,7 +303,7 @@ public static class RestHelpers
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
             AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? SerializeObject(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
+            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
             if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
             {
                 if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
@@ -343,10 +342,11 @@ public static class RestHelpers
                 else //Assume JSON
                 {
                     //Deserialize as stream - More memory efficient than string deserialization
-                    using StreamReader streamReader = new StreamReader(responseStream);
-                    using JsonTextReader jsonReader = new JsonTextReader(streamReader);
-                    JsonSerializer serializer = new JsonSerializer();
-                    restObject.Result = serializer.Deserialize<T>(jsonReader);
+                    //using StreamReader streamReader = new StreamReader(responseStream); //Newtonsoft
+                    //using JsonTextReader jsonReader = new JsonTextReader(streamReader); //Newtonsoft
+                    //JsonSerializer serializer = new JsonSerializer(); //Newtonsoft
+                    //restObject.Result = serializer.Deserialize<T>(jsonReader); //Newtonsoft
+                    restObject.Result = responseStream.Length > 1 ? await JsonSerializer.DeserializeAsync<T>(responseStream) : default;
                 }
                 //await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
                 //{
@@ -373,118 +373,6 @@ public static class RestHelpers
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return restObject;
-    }
-
-    /// <summary>
-    /// Converts two like models to JObjects and passes them into the FillPatchForObject method to create a JSON patch document
-    /// From Source2
-    /// </summary>
-    /// <param name="originalObject"></param>
-    /// <param name="modifiedObject"></param>
-    /// <returns>JsonPatchDocument document of changes from originalObject to modifiedObject</returns>
-    public static JsonPatchDocument CreatePatch(object originalObject, object modifiedObject)
-    {
-        JObject original = JObject.FromObject(originalObject);
-        JObject modified = JObject.FromObject(modifiedObject);
-
-        JsonPatchDocument patch = new();
-        FillPatchForObject(original, modified, patch, "/");
-
-        return patch;
-    }
-
-    /// <summary>
-    /// Compares two JObjects together and populates a JsonPatchDocument with the differences
-    /// From Source2
-    /// </summary>
-    /// <param name="orig">Original object to be compared to</param>
-    /// <param name="mod">Modified version of the original object</param>
-    /// <param name="patch">The json patch document to write the patch instructions to</param>
-    /// <param name="path"></param>
-    private static void FillPatchForObject(JObject orig, JObject mod, JsonPatchDocument patch, string path)
-    {
-        string[] origNames = orig.Properties().Select(x => x.Name).ToArray();
-        string[] modNames = mod.Properties().Select(x => x.Name).ToArray();
-
-        // Names removed in modified
-        foreach (var k in origNames.Except(modNames))
-        {
-            JProperty? prop = orig.Property(k);
-            patch.Remove(path + prop!.Name);
-        }
-
-        // Names added in modified
-        foreach (var k in modNames.Except(origNames))
-        {
-            JProperty? prop = mod.Property(k);
-            patch.Add(path + prop!.Name, prop.Value);
-        }
-
-        // Present in both
-        foreach (var k in origNames.Intersect(modNames))
-        {
-            JProperty? origProp = orig.Property(k);
-            JProperty? modProp = mod.Property(k);
-
-            if (origProp?.Value.Type != modProp?.Value.Type)
-            {
-                patch.Replace(path + modProp?.Name, modProp?.Value);
-            }
-            else if(origProp?.Value.Type == JTokenType.Float)
-            {
-                decimal? origDec = null;
-                decimal? modDec = null;
-                if(decimal.TryParse(origProp?.Value.ToString(Formatting.None), out decimal origDecimal))
-                {
-                    origDec = origDecimal;
-                }
-                if (decimal.TryParse(modProp?.Value.ToString(Formatting.None), out decimal modDecimal))
-                {
-                    modDec = modDecimal;
-                }
-
-                if (modDec != origDec)
-                {
-                    if (origProp?.Value.Type == JTokenType.Object)
-                    {
-                        // Recurse into objects
-                        FillPatchForObject(origProp.Value as JObject ?? [], modProp?.Value as JObject ?? [], patch, path + modProp?.Name + "/");
-                    }
-                    else
-                    {
-                        // Replace values directly
-                        patch.Replace(path + modProp?.Name, modProp?.Value);
-                    }
-                }
-            }
-            else if (((origProp?.Value.ToString(Formatting.None) ?? null) != modProp?.Value.ToString(Formatting.None)) && origProp?.Value.Type != JTokenType.Date)
-            {
-                if (origProp?.Value.Type == JTokenType.Object)
-                {
-                    // Recurse into objects
-                    FillPatchForObject(origProp.Value as JObject ?? [], modProp?.Value as JObject ?? [], patch, path + modProp?.Name + "/");
-                }
-                else
-                {
-                    // Replace values directly
-                    patch.Replace(path + modProp?.Name, modProp?.Value);
-                }
-            }
-            else if (origProp?.Value.Type == JTokenType.Date && modProp?.Value.Type == JTokenType.Date)
-            {
-                string originalDts = origProp.Value.ToString(Formatting.None).Replace(@"""", "").Replace(@"\", "");
-                string modDts = modProp.Value.ToString(Formatting.None).Replace(@"""", "").Replace(@"\", "");
-
-                bool originalSucceed = DateTime.TryParse(originalDts, out DateTime originalDate);
-                bool modSucceed = DateTime.TryParse(modDts, out DateTime modDate);
-
-                if (modSucceed && originalDate != modDate)
-                {
-                    // Replace values directly
-                    patch.Replace(path + modProp.Name, modProp.Value);
-                }
-            }
-        }
     }
 
     /// <summary>

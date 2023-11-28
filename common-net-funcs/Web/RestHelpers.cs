@@ -136,75 +136,14 @@ public static class RestHelpers
         T? result = default;
         try
         {
+            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
-            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
-            if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
-            {
-                if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
-                {
-                    httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
-                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MemPack);
-                }
-                else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MsgPack)) ?? false)
-                {
-                    httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
-                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MsgPack);
-                }
-                else
-                {
-                    httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue(ContentTypes.Json));
-                }
-            }
-            else if (httpMethod == HttpMethod.Patch)
-            {
-                httpRequestMessage.Content = patchDoc;
-            }
+            httpRequestMessage.AttachHeaders(bearerToken, httpHeaders);
+            httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
+
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
-            if (response.IsSuccessStatusCode)
-            {
-                string? contentType = response.Content.Headers.ContentType?.ToString();
-
-                using Stream responseStream = await response.Content.ReadAsStreamAsync();
-                if (contentType == ContentTypes.MsgPack)
-                {
-                    result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
-                }
-                else if (contentType == ContentTypes.MemPack)
-                {
-                    result = responseStream.Length > 1 ? await MemoryPackSerializer.DeserializeAsync<T>(responseStream) : default;
-                }
-                else //Assume JSON
-                {
-                    //Deserialize as stream - More memory efficient than string deserialization
-                    //using StreamReader streamReader = new StreamReader(responseStream);
-                    //using JsonTextReader jsonReader = new JsonTextReader(streamReader); //Newtonsoft
-                    //JsonSerializer serializer = new JsonSerializer(); //Newtonsoft
-                    //result = JsonSerializer.Deserialize<T>(jsonReader); //Newtonsoft
-                    result = responseStream.Length > 1 ? await JsonSerializer.DeserializeAsync<T>(responseStream) : default;
-                }
-
-                //Deserialize as string - Legacy
-                //await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
-                //{
-                //    if (x.IsFaulted) throw x.Exception ?? new();
-
-                //    Type returnType = typeof(T);
-                //    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
-                //    {
-                //        result = (T)Convert.ChangeType(x.Result, typeof(T)); //Makes it so the result will be accepted as a string in generic terms
-                //    }
-                //    else if (x.Result?.Length > 0)
-                //    {
-                //        result = DeserializeObject<T>(x.Result);
-                //    }
-                //});
-            }
-            else
-            {
-                logger.Warn($"{httpMethod.ToString().ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
-            }
+            result = await HandleResponse<T>(response, httpMethod.ToString(), url);
         }
         catch (Exception ex)
         {
@@ -300,73 +239,14 @@ public static class RestHelpers
         RestObject<T> restObject = new();
         try
         {
+            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
-            AttachHeaders(bearerToken, httpHeaders, httpRequestMessage);
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
-            if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
-            {
-                if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
-                {
-                    httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
-                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MemPack);
-                }
-                else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MsgPack)) ?? false)
-                {
-                    httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
-                    httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MsgPack);
-                }
-                else
-                {
-                    httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue(ContentTypes.Json));
-                }
-            }
-            else if (httpMethod == HttpMethod.Patch)
-            {
-                httpRequestMessage.Content = patchDoc;
-            }
+            httpRequestMessage.AttachHeaders(bearerToken, httpHeaders);
+            httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
+
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
-            if (restObject.Response.IsSuccessStatusCode)
-            {
-                string? contentType = restObject.Response.Content.Headers.ContentType?.ToString();
-
-                using Stream responseStream = await restObject.Response.Content.ReadAsStreamAsync();
-                if (contentType == ContentTypes.MsgPack)
-                {
-                    restObject.Result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
-                }
-                else if (contentType == ContentTypes.MemPack)
-                {
-                    restObject.Result = responseStream.Length > 1 ? await MemoryPackSerializer.DeserializeAsync<T>(responseStream) : default;
-                }
-                else //Assume JSON
-                {
-                    //Deserialize as stream - More memory efficient than string deserialization
-                    //using StreamReader streamReader = new StreamReader(responseStream); //Newtonsoft
-                    //using JsonTextReader jsonReader = new JsonTextReader(streamReader); //Newtonsoft
-                    //JsonSerializer serializer = new JsonSerializer(); //Newtonsoft
-                    //restObject.Result = serializer.Deserialize<T>(jsonReader); //Newtonsoft
-                    restObject.Result = responseStream.Length > 1 ? await JsonSerializer.DeserializeAsync<T>(responseStream) : default;
-                }
-                //await restObject.Response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
-                //{
-                //    if (x.IsFaulted) throw x.Exception ?? new();
-
-                //    Type returnType = typeof(T);
-                //    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
-                //    {
-                //        restObject.Result = (T)Convert.ChangeType(x.Result, typeof(T));
-                //    }
-                //    else if (x.Result?.Length > 0)
-                //    {
-                //        restObject.Result = DeserializeObject<T>(x.Result);
-                //    }
-                //});
-            }
-            else
-            {
-                logger.Warn($"{httpMethod.ToString().ToUpper()} request with URL {url} failed with the following response:\n\t{restObject.Response.StatusCode}: {restObject.Response.ReasonPhrase}\nContent:\n\t{restObject.Response.Content}");
-            }
+            restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url);
         }
         catch (Exception ex)
         {
@@ -375,12 +255,87 @@ public static class RestHelpers
         return restObject;
     }
 
+    private static async Task<T?> HandleResponse<T> (HttpResponseMessage response, string httpMethod, string url)
+    {
+        T? result = default;
+        if (response.IsSuccessStatusCode)
+        {
+            string? contentType = response.Content.Headers.ContentType?.ToString();
+
+            using Stream responseStream = await response.Content.ReadAsStreamAsync();
+            if (contentType == ContentTypes.MsgPack)
+            {
+                result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
+            }
+            else if (contentType == ContentTypes.MemPack)
+            {
+                result = responseStream.Length > 1 ? await MemoryPackSerializer.DeserializeAsync<T>(responseStream) : default;
+            }
+            else //Assume JSON
+            {
+                //Deserialize as stream - More memory efficient than string deserialization
+                //using StreamReader streamReader = new StreamReader(responseStream);
+                //using JsonTextReader jsonReader = new JsonTextReader(streamReader); //Newtonsoft
+                //JsonSerializer serializer = new JsonSerializer(); //Newtonsoft
+                //result = JsonSerializer.Deserialize<T>(jsonReader); //Newtonsoft
+                result = responseStream.Length > 1 ? await JsonSerializer.DeserializeAsync<T>(responseStream) : default;
+            }
+
+            //Deserialize as string - Legacy
+            //await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+            //{
+            //    if (x.IsFaulted) throw x.Exception ?? new();
+
+            //    Type returnType = typeof(T);
+            //    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
+            //    {
+            //        result = (T)Convert.ChangeType(x.Result, typeof(T)); //Makes it so the result will be accepted as a string in generic terms
+            //    }
+            //    else if (x.Result?.Length > 0)
+            //    {
+            //        result = DeserializeObject<T>(x.Result);
+            //    }
+            //});
+        }
+        else
+        {
+            logger.Warn($"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
+        }
+        return result;
+    }
+
+    private static void AddContent<T>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, Dictionary<string, string>? httpHeaders = null, T? postObject = default, HttpContent? patchDoc = null)
+    {
+        if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
+        {
+            if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
+            {
+                httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
+                httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MemPack);
+            }
+            else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MsgPack)) ?? false)
+            {
+                httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
+                httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MsgPack);
+            }
+            else
+            {
+                httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue(ContentTypes.Json));
+            }
+        }
+        else if (httpMethod == HttpMethod.Patch && patchDoc != null)
+        {
+            httpRequestMessage.Content = patchDoc;
+            httpRequestMessage.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json-patch+json");
+        }
+    }
+
     /// <summary>
     /// Attaches headers to client from httpHeaders if applicable, else only attaches authorization.
     /// </summary>
     /// <param name="bearerToken">Token used for bearer authentication</param>
     /// <param name="httpHeaders">Dictionary of headers</param>
-    private static void AttachHeaders(string? bearerToken, Dictionary<string, string>? httpHeaders, HttpRequestMessage httpRequestMessage)
+    private static void AttachHeaders(this HttpRequestMessage httpRequestMessage, string? bearerToken, Dictionary<string, string>? httpHeaders)
     {
         //Changed this from inline if due to setting .Authorization to null if bearerToken is empty/null resulting in an exception during the post request: "A task was canceled"
         if (bearerToken != null || (bearerToken?.Length == 0 && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false)))

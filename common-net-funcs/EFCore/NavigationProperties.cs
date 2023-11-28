@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Newtonsoft.Json;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DeepCloneExpressionTreeHelpers;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
@@ -66,7 +66,8 @@ public static class NavigationProperties
         }
 
         IEnumerable<INavigation> navigations = (context.Model.FindEntityType(entityType)?.GetNavigations()
-            .Where(x => entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length == 0)) ?? new List<INavigation>();
+            .Where(x => entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), true).Length == 0 &&
+                entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(Newtonsoft.Json.JsonIgnoreAttribute), true).Length == 0)) ?? new List<INavigation>();
 
         if (depth == 0)
         {
@@ -125,7 +126,9 @@ public static class NavigationProperties
         if (!topLevelNavigations.AnyFast())
         {
             IEnumerable<INavigation> navigations = (context.Model.FindEntityType(entityType)?.GetNavigations()
-                .Where(x => entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length == 0)) ?? new List<INavigation>();
+                .Where(x => entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), true).Length == 0 &&
+                    entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(Newtonsoft.Json.JsonIgnoreAttribute), true).Length == 0)) ?? new List<INavigation>();
+
             topLevelNavigations = navigations.Select(x => x.Name).ToList();
         }
         return topLevelNavigations;

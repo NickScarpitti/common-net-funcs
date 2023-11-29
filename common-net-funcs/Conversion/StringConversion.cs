@@ -381,6 +381,11 @@ public static class StringConversion
         return outputName;
     }
 
+    /// <summary>
+    /// Remove unnecessary characters and components of a timespan to make it more readable
+    /// </summary>
+    /// <param name="t">Timespan to convert to shortened string</param>
+    /// <returns>Shortened string representation of the timespan</returns>
     public static string TimespanToShortForm(this TimeSpan? t)
     {
         string shortForm = "";
@@ -391,6 +396,11 @@ public static class StringConversion
         return shortForm;
     }
 
+    /// <summary>
+    /// Remove unnecessary characters and components of a timespan to make it more readable
+    /// </summary>
+    /// <param name="t">Timespan to convert to shortened string</param>
+    /// <returns>Shortened string representation of the timespan</returns>
     public static string TimespanToShortForm(this in TimeSpan t)
     {
         string stringForm = t.ToString();

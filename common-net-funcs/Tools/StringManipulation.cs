@@ -116,6 +116,12 @@ public static class StringManipulation
         return !string.IsNullOrWhiteSpace(s) ? string.Concat(s.Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' ') : s;
     }
 
+    /// <summary>
+    /// Converts string to title case using the specified culture
+    /// </summary>
+    /// <param name="s">String to convert to title case</param>
+    /// <param name="cultureString">String representation of the culture to use when converting string to title case</param>
+    /// <returns>String converted to title case</returns>
     public static string? ToTitleCase(this string? s, string cultureString = "en-US")
     {
         if (!string.IsNullOrWhiteSpace(s))

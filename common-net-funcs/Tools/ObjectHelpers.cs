@@ -136,6 +136,13 @@ public static partial class ObjectHelpers
         return [obj];
     }
 
+    /// <summary>
+    /// Select object from a collection by matching all non-null fields to an object of the same time comprising the collection
+    /// </summary>
+    /// <typeparam name="T">Object type</typeparam>
+    /// <param name="queryable">Queryable collection to select from</param>
+    /// <param name="partialObject">Object with fields to match with objects in the queryable collection</param>
+    /// <returns>First object that matches all non-null fields in partialObject</returns>
     public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject) where T : class
     {
         // Get the properties of the object using reflection
@@ -150,11 +157,11 @@ public static partial class ObjectHelpers
             // Get the value of the property from the partial object
             object? partialValue = property.GetValue(partialObject);
 
-            //Only compare non-null values since these are going to be the one's that matter
+            //Only compare non-null values since these are going to be the ones that matter
             if (partialValue != null)
             {
                 // Build the condition for this property
-                var condition = Expression.Equal(Expression.Property(parameter, property), Expression.Constant(partialValue, property.PropertyType));
+                BinaryExpression? condition = Expression.Equal(Expression.Property(parameter, property), Expression.Constant(partialValue, property.PropertyType));
 
                 // Combine the conditions using 'AndAlso' if this is not the first condition
                 conditions = conditions == null ? condition : Expression.AndAlso(conditions, condition);
@@ -172,10 +179,10 @@ public static partial class ObjectHelpers
     }
 
     /// <summary>
-    /// UNTESTED
+    /// UNTESTED - Merge the field values from multiple instances of the same object
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="instances"></param>
+    /// <typeparam name="T">Object type</typeparam>
+    /// <param name="instances">Objects to merge fields from</param>
     public static T MergeInstances<T>(IEnumerable<T> instances) where T : class
     {
         T merged = instances.First();
@@ -201,8 +208,8 @@ public static partial class ObjectHelpers
     /// </summary>
     /// <param name="type">The type to check for the specified attribute</param>
     /// <param name="attributeName">The name of the attribute you are checking the provided type for</param>
-    /// <returns></returns>
-    public static bool ObjectHasProperty(this Type type, string attributeName)
+    /// <returns>True if the object has the specified attribute</returns>
+    public static bool ObjectHasAttribute(this Type type, string attributeName)
     {
         bool hasAttribute = false;
         foreach (object item in type.GetCustomAttributes(true))
@@ -222,31 +229,69 @@ public static partial class ObjectHelpers
         return hasAttribute;
     }
 
-    public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? dict)
+    /// <summary>
+    /// Faster alternative to using the .Any() linq method
+    /// </summary>
+    /// <typeparam name="T">Object type</typeparam>
+    /// <param name="collection">Collection being checked for having elements</param>
+    /// <returns>True if collection has any objects in it</returns>
+    public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? collection)
     {
-        return dict?.Count > 0;
+        return collection?.Count > 0;
     }
 
+    /// <summary>
+    /// Faster alternative to using the .Any() linq method
+    /// </summary>
+    /// <typeparam name="T">Object type</typeparam>
+    /// <param name="list">Collection being checked for having elements</param>
+    /// <returns>True if collection has any objects in it</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this IList<T>? list)
     {
         return list?.Count > 0;
     }
 
-    public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? list)
+    /// <summary>
+    /// Faster alternative to using the .Any() linq method
+    /// </summary>
+    /// <typeparam name="T">Object type</typeparam>
+    /// <param name="bag">Collection being checked for having elements</param>
+    /// <returns>True if collection has any objects in it</returns>
+    public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? bag)
     {
-        return list?.Count > 0;
+        return bag?.Count > 0;
     }
 
+    /// <summary>
+    /// Faster alternative to using the .Any() linq method
+    /// </summary>
+    /// <typeparam name="T">Object type</typeparam>
+    /// <param name="array">Collection being checked for having elements</param>
+    /// <returns>True if collection has any objects in it</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this T[]? array)
     {
         return array?.Length > 0;
     }
 
+    /// <summary>
+    /// Faster alternative to using the .Any() linq method
+    /// </summary>
+    /// <typeparam name="TKey">Dictionary key type</typeparam>
+    /// <typeparam name="T">Dictionary value type</typeparam>
+    /// <param name="dict">Collection being checked for having elements</param>
+    /// <returns>True if collection has any objects in it</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this IDictionary<TKey, T>? dict) where TKey : notnull
     {
         return dict?.Count > 0;
     }
 
+    /// <summary>
+    /// Faster alternative to using the .Any() linq method
+    /// </summary>
+    /// <typeparam name="TKey">Dictionary key type</typeparam>
+    /// <typeparam name="T">Dictionary value type</typeparam>
+    /// <param name="dict">Collection being checked for having elements</param>
+    /// <returns>True if collection has any objects in it</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this ConcurrentDictionary<TKey, T>? dict) where TKey : notnull
     {
         return dict?.Count > 0;

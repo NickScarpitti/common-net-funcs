@@ -1238,6 +1238,11 @@ public static partial class NpoiCommonHelpers
         return workbook.GetType().Name != typeof(HSSFWorkbook).Name;
     }
 
+    /// <summary>
+    /// Converts a hex color to the closest available HSSFColor
+    /// </summary>
+    /// <param name="hexColor">Hex color to convert</param>
+    /// <returns>The closest HSSFColor to the provided hex color</returns>
     public static HSSFColor GetClosestHssfColor(string hexColor)
     {
         HSSFColor outputColor = new();

@@ -9,8 +9,26 @@ namespace Common_Net_Funcs.Tools;
 /// <summary>
 /// Methods for validating data
 /// </summary>
-public static class DataValidation
+public static partial class DataValidation
 {
+    [GeneratedRegex("^[a-zA-Z0-9]*$")]
+    private static partial Regex AlphanumericRegex();
+
+    [GeneratedRegex(@"^[a-zA-Z0-9\s]*$")]
+    private static partial Regex AlphanumericWithSpacesRegex();
+
+    [GeneratedRegex("^[a-zA-Z]*$")]
+    private static partial Regex AlphaOnlyRegex();
+
+    [GeneratedRegex(@"^[a-zA-Z\s]*$")]
+    private static partial Regex AlphaOnlyWithSpacesRegex();
+
+    [GeneratedRegex("^[0-9]*$")]
+    private static partial Regex NumericOnlyRegex();
+
+    [GeneratedRegex(@"^[0-9\s]*$")]
+    private static partial Regex NumericOnlyWithSpacesRegex();
+
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     /// <summary>
@@ -95,12 +113,23 @@ public static class DataValidation
     /// <summary>
     /// Compare two strings ignoring culture and case
     /// </summary>
-    /// <param name="s1"></param>
-    /// <param name="s2"></param>
+    /// <param name="s1">First string to compare</param>
+    /// <param name="s2">Second string to compare</param>
     /// <returns>True if the strings are equal when ignoring culture and case</returns>
     public static bool StrEq(this string? s1, string? s2)
     {
         return string.Equals(s1?.Trim() ?? "", s2?.Trim() ?? "", StringComparison.InvariantCultureIgnoreCase);
+    }
+
+    /// <summary>
+    /// Check to see if one string is contained within another
+    /// </summary>
+    /// <param name="s1">String to search for s2 in</param>
+    /// <param name="s2">String to search for in s1</param>
+    /// <returns>True if the strings are equal when ignoring culture and case</returns>
+    public static bool ContainsInvariant(this string? s1, string? s2)
+    {
+        return s2 != null && (s1?.Contains(s2, StringComparison.InvariantCultureIgnoreCase) ?? false);
     }
 
     /// <summary>
@@ -132,7 +161,7 @@ public static class DataValidation
     /// Returns whether or not the provided double value is a valid OADate
     /// </summary>
     /// <param name="oaDate">Double to check as OADate</param>
-    /// <returns></returns>
+    /// <returns>True if double passed in represents a valid OA Date</returns>
     public static bool IsValidOaDate(this double oaDate)
     {
         return oaDate >= 657435.0 && oaDate <= 2958465.99999999;
@@ -142,7 +171,7 @@ public static class DataValidation
     /// Returns whether or not the provided double value is a valid OADate
     /// </summary>
     /// <param name="oaDate">Double to check as OADate</param>
-    /// <returns></returns>
+    /// <returns>True if double passed in represents a valid OA Date</returns>
     public static bool IsValidOaDate(this double? oaDate)
     {
         return oaDate != null && oaDate >= 657435.0 && oaDate <= 2958465.99999999;
@@ -152,7 +181,7 @@ public static class DataValidation
     /// Check if an object is a numeric type
     /// </summary>
     /// <param name="testObject"></param>
-    /// <returns></returns>
+    /// <returns>True if object is a numeric type</returns>
     public static bool IsNumeric(this object? testObject)
     {
         bool isNumeric = false;
@@ -168,10 +197,10 @@ public static class DataValidation
     /// </summary>
     /// <param name="testString">String to check if it only contains alphanumeric characters</param>
     /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
-    /// <returns></returns>
+    /// <returns>True if testString contains only letters and numbers and optionally spaces</returns>
     public static bool IsAlphanumeric(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && Regex.IsMatch(testString, $"^[a-zA-Z0-9{(allowSpaces ? @"\s" : string.Empty)}]*$");
+        return testString != null && (!allowSpaces ? AlphanumericRegex().IsMatch(testString) : AlphanumericWithSpacesRegex().IsMatch(testString));
     }
 
     /// <summary>
@@ -179,10 +208,10 @@ public static class DataValidation
     /// </summary>
     /// <param name="testString">String to check if it only contains alphabetical characters</param>
     /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
-    /// <returns></returns>
+    /// <returns>True if testString only contains letters and optionally spaces</returns>
     public static bool IsAlphaOnly(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && Regex.IsMatch(testString, $"^[a-zA-Z{(allowSpaces ? @"\s" : string.Empty)}]*$");
+        return testString != null && (!allowSpaces ? AlphaOnlyRegex().IsMatch(testString) : AlphaOnlyWithSpacesRegex().IsMatch(testString));
     }
 
     /// <summary>
@@ -190,9 +219,9 @@ public static class DataValidation
     /// </summary>
     /// <param name="testString">String to check if it only contains numeric characters</param>
     /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
-    /// <returns></returns>
+    /// <returns>True if testString only contains numbers and optionally spaces</returns>
     public static bool IsNumericOnly(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && Regex.IsMatch(testString, $"^[0-9{(allowSpaces ? @"\s" : string.Empty)}]*$");
+        return testString != null && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
     }
 }

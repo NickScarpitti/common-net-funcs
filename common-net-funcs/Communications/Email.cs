@@ -187,6 +187,12 @@ public static class Email
         return isValid;
     }
 
+    /// <summary>
+    /// Adds attachments to email
+    /// </summary>
+    /// <param name="attachments">Attachments to add to the email</param>
+    /// <param name="bodyBuilder">Builder for the email to add attachments to</param>
+    /// <param name="zipAttachments">If true, will perform zip compression on the attachment files before adding them to the email</param>
     private static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments)
     {
         try

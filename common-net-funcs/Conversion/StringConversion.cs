@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -25,6 +26,7 @@ public static class StringConversion
     /// <param name="value"></param>
     /// <param name="format">Date time format</param>
     /// <returns>Formatted string representation of the passed in nullable DateTime</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this DateTime? value, string? format = null)
     {
         string? output = null;
@@ -42,6 +44,7 @@ public static class StringConversion
     /// <param name="value"></param>
     /// <param name="format">Timespan format</param>
     /// <returns>Formatted string representation of the passed in nullable Timespan</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this TimeSpan? value, string? format = null)
     {
         string? output = null;
@@ -58,6 +61,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="value"></param>
     /// <returns>String representation of the passed in nullable int</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this int? value)
     {
         string? output = null;
@@ -73,6 +77,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="value"></param>
     /// <returns>String representation of the passed in nullable long</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this long? value)
     {
         string? output = null;
@@ -88,6 +93,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="value"></param>
     /// <returns>String representation of the passed in nullable double</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this double? value)
     {
         string? output = null;
@@ -103,6 +109,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="value"></param>
     /// <returns>String representation of the passed in nullable decimal</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this decimal? value)
     {
         string? output = null;
@@ -118,6 +125,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="value"></param>
     /// <returns>String representation of the passed in nullable object</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this object? value)
     {
         string? output = null;
@@ -133,6 +141,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="value">Value to be used for both Value and Text properties</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static SelectListItem? ToSelectListItem(this string? value, bool selected)
     {
         return value != null ? new() { Value= value , Text = value, Selected = selected} : null;
@@ -143,6 +152,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="value">Value to be used for both Value and Text properties</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static SelectListItem? ToSelectListItem(this string? value)
     {
         return value != null ? new() { Value = value, Text = value } : null;
@@ -154,6 +164,7 @@ public static class StringConversion
     /// <param name="value">Value to be used for the Value property</param>
     /// <param name="text">Value to be used for the Text property</param>
     /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static SelectListItem? ToSelectListItem(this string? value, string? text, bool selected)
     {
         return value != null && text != null ? new() { Value = value, Text = text, Selected = selected } : null;
@@ -165,6 +176,7 @@ public static class StringConversion
     /// <param name="value">Value to be used for the Value property</param>
     /// <param name="text">Value to be used for the Text property</param>
     /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
+    [return: NotNullIfNotNull(nameof(value))]
     public static SelectListItem? ToSelectListItem(this string? value, string? text)
     {
         return value != null && text != null ? new() { Value = value, Text = text } : null;
@@ -286,6 +298,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="values"></param>
     /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
+    [return: NotNullIfNotNull(nameof(values))]
     public static IEnumerable<string>? CleanQueryParam(this IEnumerable<string>? values)
     {
         if (values == null)
@@ -307,6 +320,7 @@ public static class StringConversion
     /// </summary>
     /// <param name="values"></param>
     /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
+    [return: NotNullIfNotNull(nameof(values))]
     public static List<string>? CleanQueryParam(this IList<string>? values)
     {
         if (values == null)

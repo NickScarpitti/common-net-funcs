@@ -118,7 +118,7 @@ public static partial class DataValidation
     /// <returns>True if the strings are equal when ignoring culture and case</returns>
     public static bool StrEq(this string? s1, string? s2)
     {
-        return string.Equals(s1?.Trim() ?? "", s2?.Trim() ?? "", StringComparison.InvariantCultureIgnoreCase);
+        return string.Equals(s1?.Trim() ?? string.Empty, s2?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
     }
 
     /// <summary>

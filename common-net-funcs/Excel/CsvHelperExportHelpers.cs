@@ -15,7 +15,7 @@ public static class CsvHelperExportHelpers
     /// <param name="dataList">Data to be inserted into the CSV file</param>
     /// <param name="memoryStream">Stream to contain the CSV file data</param>
     /// <returns>MemoryStream containing the CSV file data</returns>
-    public static async Task<MemoryStream?> ExportListToCsv<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null)
+    public static async Task<MemoryStream> ExportListToCsv<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
         using StreamWriter streamWriter = new(memoryStream);
@@ -30,7 +30,7 @@ public static class CsvHelperExportHelpers
     /// <param name="dataTable">Data to be inserted into the CSV file</param>
     /// <param name="memoryStream">Stream to contain the CSV file data</param>
     /// <returns>MemoryStream containing the CSV file data</returns>
-    public static async Task<MemoryStream?> ExportListToCsv(this DataTable dataTable, MemoryStream? memoryStream = null)
+    public static async Task<MemoryStream> ExportListToCsv(this DataTable dataTable, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
         using MemoryStream sourceMemoryStream = new();

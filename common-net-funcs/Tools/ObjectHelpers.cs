@@ -2,18 +2,15 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Common_Net_Funcs.Tools;
 
 /// <summary>
 /// Helper methods for complex classes and lists
 /// </summary>
-public static partial class ObjectHelpers
+public static class ObjectHelpers
 {
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex MultiSpaceRegex();
-
     /// <summary>
     /// Copy properties of the same name from one object to another
     /// </summary>
@@ -94,7 +91,7 @@ public static partial class ObjectHelpers
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="obj"></param>
-    public static void TrimObjectStrings<T>(this T obj)
+    public static T TrimObjectStrings<T>(this T obj)
     {
         PropertyInfo[] props = typeof(T).GetProperties();
         if (props != null)
@@ -103,15 +100,47 @@ public static partial class ObjectHelpers
             {
                 if (prop.PropertyType == typeof(string))
                 {
-                    string? value = (string)(prop.GetValue(obj) ?? string.Empty);
+                    string? value = (string?)prop.GetValue(obj);
                     if (!string.IsNullOrEmpty(value))
                     {
-                        value = MultiSpaceRegex().Replace(value.Trim(), " "); //Replaces any multiples of spacing with a single space
-                        prop.SetValue(obj, value.Trim());
+                        prop.SetValue(obj, value.TrimFull());
                     }
                 }
             }
         }
+        return obj;
+    }
+
+    /// <summary>
+    /// Removes excess spaces in string properties inside of an object
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="obj"></param>
+    public static T NormalizeObjectStrings<T>(this T obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD)
+    {
+        PropertyInfo[] props = typeof(T).GetProperties();
+        if (props != null)
+        {
+            foreach (PropertyInfo prop in props)
+            {
+                if (prop.PropertyType == typeof(string))
+                {
+                    string? value = (string?)prop.GetValue(obj);
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        if (enableTrim)
+                        {
+                            prop.SetValue(obj, value.TrimFull().Normalize(normalizationForm));
+                        }
+                        else
+                        {
+                            prop.SetValue(obj, value.Normalize(normalizationForm));
+                        }
+                    }
+                }
+            }
+        }
+        return obj;
     }
 
     /// <summary>

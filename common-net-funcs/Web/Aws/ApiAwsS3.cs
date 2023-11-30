@@ -105,7 +105,8 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
             }
             else
             {
-                logger.LogWarning(awsEx, $"Unable to get file {fileName} from {bucketName} bucket Error");
+                logger.LogTrace(awsEx, $"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfEexception()}");
+                logger.LogWarning($"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfEexception()}");
             }
         }
         catch (Exception ex)

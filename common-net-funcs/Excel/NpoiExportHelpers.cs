@@ -87,58 +87,73 @@ public static class NpoiExportHelpers
     /// Add data to a new sheet in a workbook
     /// </summary>
     /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
-    /// <param name="wb">Workbook to add sheet to</param>
-    /// <param name="dataList">Data to insert into workbook</param>
+    /// <param name="wb">Workbook to add table to</param>
+    /// <param name="data">Data to insert into workbook</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="tableName">Name of the table in Excel</param>
     /// <returns>True if data was successfully added to the workbook</returns>
-    public static bool AddGenericTable<T>(this SXSSFWorkbook wb, IEnumerable<T> dataList, string sheetName, bool createTable = false, string tableName = "Data")
+    public static bool AddGenericTable<T>(this SXSSFWorkbook wb, IEnumerable<T> data, string sheetName, bool createTable = false, string tableName = "Data")
     {
-        return wb.AddGenericTableInternal<T>(dataList, typeof(IEnumerable<T>), sheetName, createTable, tableName);
+        return wb.AddGenericTableInternal<T>(data, typeof(IEnumerable<T>), sheetName, createTable, tableName);
     }
 
     /// <summary>
     /// Add data to a new sheet in a workbook
     /// </summary>
-    /// <param name="wb">Workbook to add sheet to</param>
-    /// <param name="dataTable">Data to insert into workbook</param>
+    /// <param name="wb">Workbook to add table to</param>
+    /// <param name="data">Data to insert into workbook</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="tableName">Name of the table in Excel</param>
     /// <returns>True if data was successfully added to the workbook</returns>
-    public static bool AddGenericTable(this SXSSFWorkbook wb, DataTable dataTable, string sheetName, bool createTable = false, string tableName = "Data")
+    public static bool AddGenericTable(this SXSSFWorkbook wb, DataTable data, string sheetName, bool createTable = false, string tableName = "Data")
     {
-        return wb.AddGenericTableInternal<char>(dataTable, typeof(DataTable), sheetName, createTable, tableName);
+        return wb.AddGenericTableInternal<char>(data, typeof(DataTable), sheetName, createTable, tableName);
     }
 
     /// <summary>
-        /// Add data to a new sheet in a workbook
-        /// </summary>
-        /// <param name="wb">Workbook to add sheet to</param>
-        /// <param name="dataTable">Data to insert into workbook</param>
-        /// <param name="sheetName">Name of sheet to add data into</param>
-        /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
-        /// <returns>True if data was successfully added to the workbook</returns>
-    public static bool AddGenericTable(this XSSFWorkbook wb, DataTable dataTable, string sheetName, bool createTable = false, string tableName = "Data")
+    /// Add data to a new sheet in a workbook
+    /// </summary>
+    /// <param name="wb">Workbook to add table to</param>
+    /// <param name="data">Data to insert into workbook</param>
+    /// <param name="sheetName">Name of sheet to add data into</param>
+    /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="tableName">Name of the table in Excel</param>
+    /// <returns>True if data was successfully added to the workbook</returns>
+    public static bool AddGenericTable(this XSSFWorkbook wb, DataTable data, string sheetName, bool createTable = false, string tableName = "Data")
     {
         using SXSSFWorkbook workbook = new(wb);
-        return workbook.AddGenericTable(dataTable, sheetName, createTable, tableName);
+        return workbook.AddGenericTable(data, sheetName, createTable, tableName);
     }
 
     /// <summary>
     /// Add data to a new sheet in a workbook
     /// </summary>
     /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
-    /// <param name="wb">Workbook to add sheet to</param>
-    /// <param name="dataList">Data to insert into workbook</param>
+    /// <param name="wb">Workbook to add table to</param>
+    /// <param name="data">Data to insert into workbook</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="tableName">Name of the table in Excel</param>
     /// <returns>True if data was successfully added to the workbook</returns>
-    public static bool AddGenericTable<T>(this XSSFWorkbook wb, IEnumerable<T> dataList, string sheetName, bool createTable = false, string tableName = "Data")
+    public static bool AddGenericTable<T>(this XSSFWorkbook wb, IEnumerable<T> data, string sheetName, bool createTable = false, string tableName = "Data")
     {
         using SXSSFWorkbook workbook = new(wb);
-        return workbook.AddGenericTable(dataList, sheetName, createTable, tableName);
+        return workbook.AddGenericTable(data, sheetName, createTable, tableName);
     }
 
+    /// <summary>
+    /// Add data to a new sheet in a workbook
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="wb">Workbook to add sheet table to</param>
+    /// <param name="data">Data to populate table with (only accepts IEnumerable </param>
+    /// <param name="dataType">Type of the data parameter</param>
+    /// <param name="sheetName">Name of sheet to add data into</param>
+    /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="tableName">Name of the table in Excel</param>
+    /// <returns>True if data was successfully added to the workbook</returns>
     private static bool AddGenericTableInternal<T>(this SXSSFWorkbook wb, object? data, Type dataType, string sheetName, bool createTable = false, string tableName = "Data")
     {
         bool success = false;
@@ -165,7 +180,7 @@ public static class NpoiExportHelpers
                 }
                 else
                 {
-                    logger.Error($"{dataType} is not a valid data type for this method. Please only use IEnumerable<T> or DataTable types to pass in data.");
+                    throw new("Invalid type for data parameter. Parameter must be either an IEnumerable or DataTable class");
                 }
             }
         }

@@ -1,13 +1,18 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Common_Net_Funcs.Tools;
 
 /// <summary>
 /// Methods for complex string manipulation
 /// </summary>
-public static class StringManipulation
+public static partial class StringManipulation
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex MultiSpaceRegex();
 
     /// <summary>
     /// Clone of VBA Left() function
@@ -78,6 +83,7 @@ public static class StringManipulation
     /// <param name="sStart">Text that ends immediately before the end of the string you wish to extract</param>
     /// <param name="sEnd">Text that starts immediately after the end of the string you wish to extract</param>
     /// <returns>Extracted string found between the two given string values</returns>
+    [return: NotNullIfNotNull(nameof(s))]
     public static string? ExtractBetween(this string? s, string sStart, string sEnd)
     {
         string? result = null;
@@ -111,11 +117,19 @@ public static class StringManipulation
     /// </summary>
     /// <param name="s">String to parse</param>
     /// <returns>Original string with spaces between all words starting with a capital letter</returns>
+    [return: NotNullIfNotNull(nameof(s))]
     public static string? ParseCamelCase(this string? s)
     {
         return !string.IsNullOrWhiteSpace(s) ? string.Concat(s.Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' ') : s;
     }
 
+    /// <summary>
+    /// Converts string to title case using the specified culture
+    /// </summary>
+    /// <param name="s">String to convert to title case</param>
+    /// <param name="cultureString">String representation of the culture to use when converting string to title case</param>
+    /// <returns>String converted to title case</returns>
+    [return: NotNullIfNotNull(nameof(s))]
     public static string? ToTitleCase(this string? s, string cultureString = "en-US")
     {
         if (!string.IsNullOrWhiteSpace(s))
@@ -124,5 +138,15 @@ public static class StringManipulation
             s = textinfo.ToTitleCase(s);
         }
         return s;
+    }
+
+    [return: NotNullIfNotNull(nameof(s))]
+    public static string? TrimFull(this string? s)
+    {
+        if (!string.IsNullOrWhiteSpace(s))
+        {
+            s = MultiSpaceRegex().Replace(s.Trim(), " ");
+        }
+        return s?.Trim();
     }
 }

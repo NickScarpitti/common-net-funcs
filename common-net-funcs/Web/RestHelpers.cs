@@ -254,6 +254,14 @@ public static class RestHelpers
         return restObject;
     }
 
+    /// <summary>
+    /// Checks if the HTTP request was successful and then parses the response if it is
+    /// </summary>
+    /// <typeparam name="T">Type of expected response content</typeparam>
+    /// <param name="response">Response message from the HTTP request</param>
+    /// <param name="httpMethod">HTTP method used to make the HTTP request</param>
+    /// <param name="url">URL HTTP request was made against</param>
+    /// <returns>Response content if HTTP request was successful</returns>
     private static async Task<T?> HandleResponse<T> (HttpResponseMessage response, string httpMethod, string url)
     {
         T? result = default;
@@ -303,6 +311,15 @@ public static class RestHelpers
         return result;
     }
 
+    /// <summary>
+    /// Adds content to HTTP request if not using GET HTTP request method
+    /// </summary>
+    /// <typeparam name="T">Type of the post object being added to the HTTP request content</typeparam>
+    /// <param name="httpRequestMessage">HTTP request to add content to</param>
+    /// <param name="httpMethod">HTTP request method</param>
+    /// <param name="httpHeaders">Headers used in the HTTP request</param>
+    /// <param name="postObject">Object to add as the content (POST and PUT only)</param>
+    /// <param name="patchDoc">Patch document for PATCH requests</param>
     private static void AddContent<T>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, Dictionary<string, string>? httpHeaders = null, T? postObject = default, HttpContent? patchDoc = null)
     {
         if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)

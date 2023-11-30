@@ -22,7 +22,7 @@ public static class ParameterFilter
     /// <param name="onlyAlphanumeric">Only allow values with numbers or letters (a-z A-Z). Overrides onlyAlphaChars and onlyNumberChars</param>
     /// <param name="onlyAlphaChars">Only allow values with letters (a-z A-Z). Overrides onlyNumberChars</param>
     /// <param name="onlyNumberChars">Only allow values with numbers (0-9).</param>
-    /// <returns></returns>
+    /// <returns>A string that is safe to use as a parameter in a SQL query</returns>
     public static string? SanitizeSqlParameter(this string? parameter, bool onlyAlphanumeric = false, bool onlyAlphaChars = false, bool onlyNumberChars = false)
     {
         string? result = null;

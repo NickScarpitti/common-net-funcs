@@ -11,7 +11,7 @@ public static class DateHelpers
     /// <param name="startDate">First date of range to get business days for</param>
     /// <param name="endDate">Last date of range to get business days for</param>
     /// <param name="exceptionDates">Days that will not be counted as a business day such as holidays</param>
-    /// <returns></returns>
+    /// <returns>The number of business days between the start and end date</returns>
     public static int GetBusinessDays(DateTime? startDate, DateTime? endDate, List<DateTime>? exceptionDates = null)
     {
         if (startDate == null || endDate == null)
@@ -48,7 +48,7 @@ public static class DateHelpers
     /// </summary>
     /// <param name="dateTime">Date to search for the day of the week for</param>
     /// <param name="dayOfWeek">The day of the indicated week to return the date for</param>
-    /// <returns></returns>
+    /// <returns>The date of the day of the week indicated by dayOfWeek</returns>
     public static DateTime GetDayOfWeek(this in DateTime dateTime, DayOfWeek dayOfWeek = DayOfWeek.Monday)
     {
         int diff = (7 + (dateTime.DayOfWeek - dayOfWeek)) % 7;

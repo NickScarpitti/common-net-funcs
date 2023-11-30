@@ -590,7 +590,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-    /// <param name="orderByString">EF Core string representation of an order by statement to keep results consistent.</param>
+    /// <param name="ascendingOrderEpression">EF Core string representation of an order by statement to keep results consistent.</param>
     /// <param name="skip">How many records to skip before the ones that should be returned.</param>
     /// <param name="pageSize">How many records to take after the skipped records.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
@@ -642,6 +642,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         return model;
     }
 
+    /// <summary>
+    /// Gets query to get the records specified by the skip and take parameters from the corresponding table that satisfy the conditions of the linq query expression.
+    /// </summary>
+    /// <typeparam name="T2"></typeparam>
+    /// <typeparam name="TKey"></typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="ascendingOrderEpression">EF Core string representation of an order by statement to keep results consistent.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
+    /// <returns>The query to get the records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
     public IQueryable<T2> GetQueryPagingWithFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
         Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false)
     {

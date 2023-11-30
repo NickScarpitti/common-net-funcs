@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using NPOI.HSSF.UserModel;
@@ -68,7 +69,7 @@ public static partial class NpoiCommonHelpers
         {
             CellReference cr = new(cellReference);
             IRow? row = ws.GetRow(cr.Row + rowOffset);
-            row??= ws.CreateRow(cr.Row + rowOffset);
+            row ??= ws.CreateRow(cr.Row + rowOffset);
             return row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
@@ -724,6 +725,7 @@ public static partial class NpoiCommonHelpers
     /// </summary>
     /// <param name="cell"></param>
     /// <returns>String representation of the value in cell</returns>
+    [return: NotNullIfNotNull(nameof(cell))]
     public static string? GetStringValue(this ICell? cell)
     {
         if (cell == null)
@@ -1238,6 +1240,11 @@ public static partial class NpoiCommonHelpers
         return workbook.GetType().Name != typeof(HSSFWorkbook).Name;
     }
 
+    /// <summary>
+    /// Converts a hex color to the closest available HSSFColor
+    /// </summary>
+    /// <param name="hexColor">Hex color to convert</param>
+    /// <returns>The closest HSSFColor to the provided hex color</returns>
     public static HSSFColor GetClosestHssfColor(string hexColor)
     {
         HSSFColor outputColor = new();

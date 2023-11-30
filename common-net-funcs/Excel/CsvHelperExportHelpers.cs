@@ -8,7 +8,14 @@ namespace Common_Net_Funcs.Excel;
 
 public static class CsvHelperExportHelpers
 {
-    public static async Task<MemoryStream?> ExportListToCsv<T>(this List<T> dataList, MemoryStream? memoryStream = null)
+    /// <summary>
+    /// Writes collection of values to a CSV file in a MemoryStream
+    /// </summary>
+    /// <typeparam name="T">Object type</typeparam>
+    /// <param name="dataList">Data to be inserted into the CSV file</param>
+    /// <param name="memoryStream">Stream to contain the CSV file data</param>
+    /// <returns>MemoryStream containing the CSV file data</returns>
+    public static async Task<MemoryStream> ExportListToCsv<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
         using StreamWriter streamWriter = new(memoryStream);
@@ -17,7 +24,13 @@ public static class CsvHelperExportHelpers
         return memoryStream;
     }
 
-    public static async Task<MemoryStream?> ExportListToCsv(this DataTable dataTable, MemoryStream? memoryStream = null)
+    /// <summary>
+    /// Writes contents of a DataTable object to a CSV file in a MemoryStream
+    /// </summary>
+    /// <param name="dataTable">Data to be inserted into the CSV file</param>
+    /// <param name="memoryStream">Stream to contain the CSV file data</param>
+    /// <returns>MemoryStream containing the CSV file data</returns>
+    public static async Task<MemoryStream> ExportListToCsv(this DataTable dataTable, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
         using MemoryStream sourceMemoryStream = new();
@@ -64,6 +77,11 @@ public static class CsvHelperExportHelpers
         return memoryStream;
     }
 
+    /// <summary>
+    /// Copy local MemoryStream to passed in MemoryStream
+    /// </summary>
+    /// <param name="memoryStream">MemoryStream to copy from</param>
+    /// <param name="sourceMmoryStream">MemoryStream to copy to</param>
     public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, MemoryStream sourceMmoryStream)
     {
         using MemoryStream tempStream = new();

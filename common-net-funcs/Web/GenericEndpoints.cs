@@ -12,6 +12,14 @@ public class GenericEndpoints : ControllerBase
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+    /// <summary>
+    /// Basic endpoint to create more than one entity at a time
+    /// </summary>
+    /// <typeparam name="T">Type of entity being created</typeparam>
+    /// <typeparam name="UT">DB Context to use for this operation</typeparam>
+    /// <param name="models">Entities to create</param>
+    /// <param name="baseAppDbContextActions"></param>
+    /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<List<T>>> CreateMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
         try
@@ -29,6 +37,14 @@ public class GenericEndpoints : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Basic endpoint to delete one entity
+    /// </summary>
+    /// <typeparam name="T">Type of entity being deleted</typeparam>
+    /// <typeparam name="UT">DB Context to use for this operation</typeparam>
+    /// <param name="model">Entity to delete</param>
+    /// <param name="baseAppDbContextActions"></param>
+    /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
         try
@@ -46,6 +62,14 @@ public class GenericEndpoints : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Basic endpoint to delete more than one entity at a time
+    /// </summary>
+    /// <typeparam name="T">Type of entity being deleted</typeparam>
+    /// <typeparam name="UT">DB Context to use for this operation</typeparam>
+    /// <param name="models"></param>
+    /// <param name="baseAppDbContextActions"></param>
+    /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
         try
@@ -66,18 +90,45 @@ public class GenericEndpoints : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Basic endpoint to update an entity with a single field primary key
+    /// </summary>
+    /// <typeparam name="T">Type of entity being updated</typeparam>
+    /// <typeparam name="UT">DB Context to use for this operation</typeparam>
+    /// <param name="primaryKey">Primary key of the entity to update</param>
+    /// <param name="patch">Patch document containing the updates to be made to the entity</param>
+    /// <param name="baseAppDbContextActions"></param>
+    /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
         T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
         return await PatchInternal(dbModel, patch, baseAppDbContextActions);
     }
 
+    /// <summary>
+    /// Basic endpoint to update an entity with a multi-field primary key
+    /// </summary>
+    /// <typeparam name="T">Type of entity being updated</typeparam>
+    /// <typeparam name="UT">DB Context to use for this operation</typeparam>
+    /// <param name="primaryKey">Ordered values comprising the key of the entity to update</param>
+    /// <param name="patch">Patch document containing the updates to be made to the entity</param>
+    /// <param name="baseAppDbContextActions"></param>
+    /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
         T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
         return await PatchInternal(dbModel, patch, baseAppDbContextActions);
     }
 
+    /// <summary>
+    /// Helper method to update an entity
+    /// </summary>
+    /// <typeparam name="T">Type of entity being updated</typeparam>
+    /// <typeparam name="UT">DB Context to use for this operation</typeparam>
+    /// <param name="dbModel"></param>
+    /// <param name="patch"></param>
+    /// <param name="baseAppDbContextActions"></param>
+    /// <returns>Ok if successful, otherwise NoContent</returns>
     private async Task<ActionResult<T>> PatchInternal<T, UT>(T? dbModel, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
         try

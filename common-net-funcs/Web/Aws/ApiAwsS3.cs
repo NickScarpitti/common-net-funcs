@@ -14,11 +14,22 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
     private readonly IAmazonS3 s3Client = s3Client;
     private readonly ILogger<ApiAwsS3> logger = logger;
 
+    private readonly ConcurrentDictionary<string, bool> ValidatedBuckets = new();
+
+    /// <summary>
+    /// Upload a file to S3 bucket
+    /// </summary>
+    /// <param name="bucketName">Name of the S3 bucket to upload file to</param>
+    /// <param name="fileName">Name to save the file as in the S3 bucket</param>
+    /// <param name="fileData">Stream containing the data for the file to be uploaded</param>
+    /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
+    /// <returns>True if file was successfully uploaded</returns>
     public async Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null)
     {
         bool success = false;
         try
         {
+            validatedBuckets ??= ValidatedBuckets;
             if (!string.IsNullOrWhiteSpace(fileName) && await IsBucketValid(bucketName, validatedBuckets))
             {
                 if (await S3FileExists(bucketName, fileName))
@@ -55,10 +66,18 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         return success;
     }
 
+    /// <summary>
+    /// Retrieve a file from the specified S3 bucket
+    /// </summary>
+    /// <param name="bucketName">Name of the S3 bucket to get the file from</param>
+    /// <param name="fileName">Name of the file to retrieve from the S3 bucket</param>
+    /// <param name="fileData">Stream to receive the file data retrieved from the S3 bucket</param>
+    /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
     public async Task GetS3File(string bucketName, string? fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null)
     {
         try
         {
+            validatedBuckets ??= ValidatedBuckets;
             if (!string.IsNullOrWhiteSpace(fileName) && await IsBucketValid(bucketName, validatedBuckets))
             {
                 GetObjectRequest request = new()
@@ -86,7 +105,8 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
             }
             else
             {
-                logger.LogWarning(awsEx, $"Unable to get file {fileName} from {bucketName} bucket Error");
+                logger.LogTrace(awsEx, $"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfEexception()}");
+                logger.LogWarning($"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfEexception()}");
             }
         }
         catch (Exception ex)
@@ -95,13 +115,23 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         }
     }
 
-    public async Task DeleteS3File(string bucketName, string fileName, ConcurrentDictionary<string, bool>? validatedBuckets = null)
+    /// <summary>
+    /// Deletes a file from the specified S3 bucket
+    /// </summary>
+    /// <param name="bucketName">Name of the S3 bucket to delete the file from</param>
+    /// <param name="fileName">Name of the file to delete from the S3 bucket</param>
+    /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
+    /// <returns>True if file was deleted successfully</returns>
+    public async Task<bool> DeleteS3File(string bucketName, string fileName, ConcurrentDictionary<string, bool>? validatedBuckets = null)
     {
+        bool success = false;
         try
         {
+            validatedBuckets ??= ValidatedBuckets;
             if (!string.IsNullOrWhiteSpace(fileName) && await IsBucketValid(bucketName, validatedBuckets) && await S3FileExists(bucketName, fileName))
             {
                 await s3Client.DeleteObjectAsync(bucketName, fileName);
+                success = true;
             }
         }
         catch (AmazonS3Exception awsEx)
@@ -119,8 +149,16 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         {
             logger.LogError(ex, $"{ex.GetLocationOfEexception()} Error");
         }
+        return success;
     }
 
+    /// <summary>
+    /// Check to see if a file exists within the given S3 bucket
+    /// </summary>
+    /// <param name="bucketName">Name of the S3 bucket to check for the file</param>
+    /// <param name="fileName">Name of the file to look for in the S3 bucket</param>
+    /// <param name="versionId">Optional: Version ID for the file being searched for</param>
+    /// <returns>True if the file exists within the given S3 bucket</returns>
     public async Task<bool> S3FileExists(string bucketName, string fileName, string? versionId = null)
     {
         bool success = false;
@@ -153,6 +191,12 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         return success;
     }
 
+    /// <summary>
+    /// Get a list containing the names of every file within an S3 bucket
+    /// </summary>
+    /// <param name="bucketName">Name of the S3 bucket to get file list from</param>
+    /// <param name="maxKeysPerQuery">Number of records to return per request</param>
+    /// <returns>List containing the names of every file within the given S3 bucket</returns>
     public async Task<List<string>?> GetAllS3BucketFiles(string bucketName, int maxKeysPerQuery = 1000)
     {
         List<string> fileNames = [];
@@ -189,11 +233,19 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         return fileNames;
     }
 
+    /// <summary>
+    /// Get the URL corresponding to a single file within an S3 bucket
+    /// </summary>
+    /// <param name="bucketName">Name of the S3 bucket to get the file URL from</param>
+    /// <param name="fileName">Name of the file to retrieve the URL for</param>
+    /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
+    /// <returns>String containing the URL for the specified file</returns>
     public async Task<string?> GetS3Url(string bucketName, string fileName, ConcurrentDictionary<string, bool>? validatedBuckets = null)
     {
         string? url = null;
         try
         {
+            validatedBuckets ??= ValidatedBuckets;
             if (await IsBucketValid(bucketName, validatedBuckets))
             {
                 GetPreSignedUrlRequest request = new()
@@ -224,11 +276,18 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         return url;
     }
 
+    /// <summary>
+    /// Checks whether an S3 bucket exists and is reachable or not
+    /// </summary>
+    /// <param name="bucketName">Name of the S3 bucket to validate exists and is reachable</param>
+    /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
+    /// <returns>True if the S# bucket exists and is reachable</returns>
     public async Task<bool> IsBucketValid(string bucketName, ConcurrentDictionary<string, bool>? validatedBuckets = null)
     {
         bool isValid = false;
         try
         {
+            validatedBuckets ??= ValidatedBuckets;
             if (validatedBuckets != null)
             {
                 if (validatedBuckets.Any(x => x.Key.StrEq(bucketName)))

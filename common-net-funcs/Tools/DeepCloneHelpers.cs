@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 
@@ -7,27 +8,16 @@ namespace Common_Net_Funcs.Tools;
 public static class DeepCloneSerializationHelpers
 {
     /// <summary>
-    /// Deep clone a class (cloned object doesn't retain memory references) using reflection (slowest)
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="list"></param>
-    public static IEnumerable<T>? SerializeClone<T>(this IEnumerable<T> list)
-    {
-        if (list == null) { return null; }
-        string serialized = JsonSerializer.Serialize(list);
-        return JsonSerializer.Deserialize<IEnumerable<T>>(serialized);
-    }
-
-    /// <summary>
     /// Deep clone a class (cloned object doesn't retain memory references) using serialization (slowest)
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="list"></param>
-    public static List<T>? SerializeClone<T>(this IList<T> list)
+    /// <typeparam name="T">Type of objects to clone</typeparam>
+    /// <param name="original">Object to clone</param>
+    /// <returns>Clone of the original object</returns>
+    public static T? SerializeClone<T>(this T? original) where T : class
     {
-        if (list == null) { return null; }
-        string serialized = JsonSerializer.Serialize(list);
-        return JsonSerializer.Deserialize<List<T>>(serialized);
+        if (original == null) { return null; }
+        string serialized = JsonSerializer.Serialize(original);
+        return JsonSerializer.Deserialize<T>(serialized);
     }
 }
 
@@ -38,8 +28,9 @@ public static class DeepCloneReflectionHelpers
     /// <summary>
     /// Deep clone a class (cloned object doesn't retain memory references) using reflection (mid-tier speed)
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="original"></param>
+    /// <typeparam name="T">Type of object to clone</typeparam>
+    /// <param name="original">Object to clone</param>
+    /// <returns>Clone of the original object</returns>
     public static T? DeepCloneReflection<T>(this T? original)
     {
         return (T?)Copy(original);
@@ -59,6 +50,7 @@ public static class DeepCloneReflectionHelpers
     {
         return InternalCopy(originalObject, new Dictionary<object, object?>(new ReferenceEqualityComparer()));
     }
+
     private static object? InternalCopy(object? originalObject, IDictionary<object, object?> visited)
     {
         if (originalObject == null)

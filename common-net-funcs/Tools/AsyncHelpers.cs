@@ -196,7 +196,7 @@ public static class AsyncHelpers
             using DataTable resultTable = await task;
             if (resultTable != null)
             {
-                using DataTableReader reader = resultTable.CreateDataReader();
+                await using DataTableReader reader = resultTable.CreateDataReader();
                 dt.Load(reader);
             }
         }
@@ -215,7 +215,7 @@ public static class AsyncHelpers
     {
         try
         {
-            using MemoryStream resultObject = await task;
+            await using MemoryStream resultObject = await task;
             resultObject?.WriteTo(ms);
         }
         catch (Exception ex)

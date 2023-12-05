@@ -27,8 +27,8 @@ public static class Odbc
     /// <returns>DataTable containing the results of the SQL query</returns>
     public static async Task<DataTable> GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
-        using OdbcConnection conn = new(connStr);
-        using OdbcCommand cmd = new(sql, conn);
+        await using OdbcConnection conn = new(connStr);
+        await using OdbcCommand cmd = new(sql, conn);
         return await GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry);
     }
 
@@ -53,7 +53,7 @@ public static class Odbc
             {
                 cmd.CommandTimeout = commandTimeoutSeconds;
                 await conn.OpenAsync();
-                using DbDataReader reader = await cmd.ExecuteReaderAsync();
+                await using DbDataReader reader = await cmd.ExecuteReaderAsync();
                 dt.Load(reader);
                 break;
             }
@@ -126,11 +126,11 @@ public static class Odbc
     {
         for (int i = 0; i < maxRetry; i++)
         {
-            using OdbcConnection conn = new(connStr);
+            await using OdbcConnection conn = new(connStr);
             try
             {
                 UpdateResult updateResult = new();
-                using OdbcCommand cmd = new(sql, conn);
+                await using OdbcCommand cmd = new(sql, conn);
                 cmd.CommandTimeout = commandTimeoutSeconds;
                 await conn.OpenAsync();
                 updateResult.RecordsChanged = await cmd.ExecuteNonQueryAsync();

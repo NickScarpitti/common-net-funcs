@@ -101,7 +101,7 @@ public class GenericEndpoints : ControllerBase
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
-        T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
+        T? dbModel = await baseAppDbContextActions.GetScvScenarioTypeByKey(primaryKey);
         return await PatchInternal(dbModel, patch, baseAppDbContextActions);
     }
 

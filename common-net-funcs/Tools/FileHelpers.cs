@@ -185,7 +185,7 @@ public static class FileHelpers
             {
                 zipFile.FileData.Position = 0; //Must have this to prevent errors writing data to the attachment
                 ZipArchiveEntry entry = archive.CreateEntry(zipFile.FileName ?? $"File {fileCount}", CompressionLevel.SmallestSize);
-                using Stream entryStream = entry.Open();
+                await using Stream entryStream = entry.Open();
                 await zipFile.FileData.CopyToAsync(entryStream);
                 await entryStream.FlushAsync();
             }
@@ -210,7 +210,7 @@ public static class FileHelpers
             if (zipFiles?.Any() == true)
             {
                 int i = 1;
-                using MemoryStream memoryStream = new();
+                await using MemoryStream memoryStream = new();
                 using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
                 foreach (ZipFile file in zipFiles)
                 {
@@ -218,7 +218,7 @@ public static class FileHelpers
                     {
                         file.FileData.Position = 0; //Must have this to prevent errors writing data to the attachment
                         ZipArchiveEntry entry = archive.CreateEntry(file.FileName ?? $"File {i}", CompressionLevel.SmallestSize);
-                        using Stream entryStream = entry.Open();
+                        await using Stream entryStream = entry.Open();
                         await file.FileData.CopyToAsync(entryStream);
                         await entryStream.FlushAsync();
                         i++;

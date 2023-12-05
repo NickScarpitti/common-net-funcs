@@ -6,7 +6,7 @@ public interface IBaseDbContextActions<T, UT> where T : class where UT : DbConte
 {
     #region Read
 
-    Task<T?> GetByKey(object primaryKey, TimeSpan? queryTimeout = null);
+    Task<T?> GetScvScenarioTypeByKey(object primaryKey, TimeSpan? queryTimeout = null);
     Task<T?> GetByKey(object[] primaryKey, TimeSpan? queryTimeout = null);
     Task<T?> GetByKeyFull(object primaryKey, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null);
     Task<List<T>?> GetAll(TimeSpan? queryTimeout = null);

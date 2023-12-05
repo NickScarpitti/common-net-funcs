@@ -762,7 +762,7 @@ public static partial class NpoiCommonHelpers
     /// <param name="wb">XSSFWorkbook object to write into a MemoryStream</param>
     public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, IWorkbook wb)
     {
-        using MemoryStream tempStream = new();
+        await using MemoryStream tempStream = new();
         wb.Write(tempStream, true);
         await tempStream.FlushAsync();
         tempStream.Seek(0, SeekOrigin.Begin);

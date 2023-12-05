@@ -89,7 +89,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                 GetObjectResponse? response = await s3Client.GetObjectAsync(request);
                 if (response != null)
                 {
-                    using Stream responseStream = response.ResponseStream;
+                    await using Stream responseStream = response.ResponseStream;
                     //responseStream.Seek(0, SeekOrigin.Begin);
                     await responseStream.CopyToAsync(fileData);
                     await fileData.FlushAsync();

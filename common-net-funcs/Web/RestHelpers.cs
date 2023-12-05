@@ -269,7 +269,7 @@ public static class RestHelpers
         {
             string? contentType = response.Content.Headers.ContentType?.ToString();
 
-            using Stream responseStream = await response.Content.ReadAsStreamAsync();
+            await using Stream responseStream = await response.Content.ReadAsStreamAsync();
             if (contentType == ContentTypes.MsgPack)
             {
                 result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;

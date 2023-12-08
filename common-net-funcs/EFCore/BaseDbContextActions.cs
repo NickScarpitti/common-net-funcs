@@ -32,7 +32,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="primaryKey">Primary key of the record to be returned.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
-    public async Task<T?> GetScvScenarioTypeByKey(object primaryKey, TimeSpan? queryTimeout = null)
+    public async Task<T?> GetByKey(object primaryKey, TimeSpan? queryTimeout = null)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -99,7 +99,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = await GetScvScenarioTypeByKey(primaryKey);
+            model = await GetByKey(primaryKey);
             if (model != null)
             {
                 if (splitQueryOverride == null)
@@ -128,7 +128,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = await GetScvScenarioTypeByKey(primaryKey);
+                    model = await GetByKey(primaryKey);
                     if (model != null)
                     {
                         if (splitQueryOverride == null)

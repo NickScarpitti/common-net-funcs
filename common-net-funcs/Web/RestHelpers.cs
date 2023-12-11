@@ -277,54 +277,61 @@ public static class RestHelpers
     private static async Task<T?> HandleResponse<T> (HttpResponseMessage response, string httpMethod, string url, bool useNewtonsoftDeserializer)
     {
         T? result = default;
-        if (response.IsSuccessStatusCode)
+        try
         {
-            string? contentType = response.Content.Headers.ContentType?.ToString();
+            if (response.IsSuccessStatusCode)
+            {
+                string? contentType = response.Content.Headers.ContentType?.ToString();
 
-            await using Stream responseStream = await response.Content.ReadAsStreamAsync();
-            if (contentType == ContentTypes.MsgPack)
-            {
-                result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
-            }
-            else if (contentType == ContentTypes.MemPack)
-            {
-                result = responseStream.Length > 1 ? await MemoryPackSerializer.DeserializeAsync<T>(responseStream) : default;
-            }
-            else //Assume JSON
-            {
-                //Deserialize as stream - More memory efficient than string deserialization
-                if (useNewtonsoftDeserializer)
+                await using Stream responseStream = await response.Content.ReadAsStreamAsync();
+                if (contentType == ContentTypes.MsgPack)
                 {
-                    using StreamReader streamReader = new StreamReader(responseStream);
-                    await using JsonTextReader jsonReader = new JsonTextReader(streamReader); //Newtonsoft
-                    Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer(); //Newtonsoft
-                    result = responseStream.Length > 1 ? serializer.Deserialize<T>(jsonReader) : default; //using static Newtonsoft.Json.JsonSerializer;
+                    result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
                 }
-                else
+                else if (contentType == ContentTypes.MemPack)
                 {
-                    result = responseStream.Length > 1 ? await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream) : default;
+                    result = responseStream.Length > 1 ? await MemoryPackSerializer.DeserializeAsync<T>(responseStream) : default;
                 }
+                else //Assume JSON
+                {
+                    //Deserialize as stream - More memory efficient than string deserialization
+                    if (useNewtonsoftDeserializer)
+                    {
+                        using StreamReader streamReader = new StreamReader(responseStream);
+                        await using JsonTextReader jsonReader = new JsonTextReader(streamReader); //Newtonsoft
+                        JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer(); //Newtonsoft
+                        result = responseStream.Length > 1 ? serializer.Deserialize<T>(jsonReader) : default; //using static Newtonsoft.Json.JsonSerializer;
+                    }
+                    else
+                    {
+                        result = responseStream.Length > 1 ? await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream) : default;
+                    }
 
-                //Deserialize as string - Legacy
-                //await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
-                //{
-                //    if (x.IsFaulted) throw x.Exception ?? new();
+                    //Deserialize as string - Legacy
+                    //await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
+                    //{
+                    //    if (x.IsFaulted) throw x.Exception ?? new();
 
-                //    Type returnType = typeof(T);
-                //    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
-                //    {
-                //        result = (T)Convert.ChangeType(x.Result, typeof(T)); //Makes it so the result will be accepted as a string in generic terms
-                //    }
-                //    else if (x.Result?.Length > 0)
-                //    {
-                //        result = DeserializeObject<T>(x.Result); //using static Newtonsoft.Json.JsonConvert;
-                //    }
-                //});
+                    //    Type returnType = typeof(T);
+                    //    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
+                    //    {
+                    //        result = (T)Convert.ChangeType(x.Result, typeof(T)); //Makes it so the result will be accepted as a string in generic terms
+                    //    }
+                    //    else if (x.Result?.Length > 0)
+                    //    {
+                    //        result = DeserializeObject<T>(x.Result); //using static Newtonsoft.Json.JsonConvert;
+                    //    }
+                    //});
+                }
+            }
+            else
+            {
+                logger.Warn($"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
             }
         }
-        else
+        catch (Exception ex)
         {
-            logger.Warn($"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return result;
     }

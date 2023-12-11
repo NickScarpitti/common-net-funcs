@@ -18,8 +18,8 @@ public static class CsvHelperExportHelpers
     public static async Task<MemoryStream> ExportListToCsv<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
-        using StreamWriter streamWriter = new(memoryStream);
-        using CsvWriter csvWriter = new(streamWriter, CultureInfo.InvariantCulture);
+        await using StreamWriter streamWriter = new(memoryStream);
+        await using CsvWriter csvWriter = new(streamWriter, CultureInfo.InvariantCulture);
         await csvWriter.WriteRecordsAsync(dataList);
         return memoryStream;
     }
@@ -33,8 +33,8 @@ public static class CsvHelperExportHelpers
     public static async Task<MemoryStream> ExportListToCsv(this DataTable dataTable, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
-        using MemoryStream sourceMemoryStream = new();
-        using StreamWriter streamWriter = new(sourceMemoryStream);
+        await using MemoryStream sourceMemoryStream = new();
+        await using StreamWriter streamWriter = new(sourceMemoryStream);
         //Headers
         for (int i = 0; i < dataTable.Columns.Count; i++)
         {
@@ -84,7 +84,7 @@ public static class CsvHelperExportHelpers
     /// <param name="sourceMmoryStream">MemoryStream to copy to</param>
     public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, MemoryStream sourceMmoryStream)
     {
-        using MemoryStream tempStream = new();
+        await using MemoryStream tempStream = new();
 
         sourceMmoryStream.Seek(0, SeekOrigin.Begin);
 

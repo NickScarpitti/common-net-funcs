@@ -346,6 +346,33 @@ public static class UnitConversion
     /// </summary>
     /// <param name="meters">Number of meters to be converted into miles</param>
     /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
+    public static decimal MetersToMiles(this double meters)
+    {
+        return ToDecimal(meters) * MetersToMilesConst;
+    }
+
+    /// <summary>
+    /// Convert meters to miles
+    /// </summary>
+    /// <param name="meters">Number of meters to be converted into miles</param>
+    /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
+    public static decimal MetersToMiles(this double? meters)
+    {
+        if (meters != null)
+        {
+            return ToDecimal(meters) * MetersToMilesConst;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Convert meters to miles
+    /// </summary>
+    /// <param name="meters">Number of meters to be converted into miles</param>
+    /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
     public static decimal MetersToMiles(this int meters)
     {
         return meters * MetersToMilesConst;

@@ -217,7 +217,7 @@ public static class Email
                 else
                 {
                     int i = 1;
-                    using MemoryStream memoryStream = new();
+                    await using MemoryStream memoryStream = new();
                     using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
                     foreach (MailAttachment attachment in attachments)
                     {
@@ -225,7 +225,7 @@ public static class Email
                         {
                             attachment.AtttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
                             ZipArchiveEntry entry = archive.CreateEntry(attachment.AttachmentName ?? $"File {i}", CompressionLevel.SmallestSize);
-                            using Stream entryStream = entry.Open();
+                            await using Stream entryStream = entry.Open();
                             await attachment.AtttachmentStream.CopyToAsync(entryStream);
                             await entryStream.FlushAsync();
                             i++;

@@ -1533,11 +1533,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     public async Task DeleteByKey(object id)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        var table = context.Set<T>();
+        DbSet<T> table = context.Set<T>();
 
         try
         {
-            var deleteItem = await table.FindAsync(id);
+            T? deleteItem = await table.FindAsync(id);
             if (deleteItem != null)
             {
                 table.Remove(deleteItem);
@@ -1593,7 +1593,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     public async Task<bool> SaveChanges()
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        var result = false;
+        bool result = false;
         try
         {
             result = await context.SaveChangesAsync() > 0;

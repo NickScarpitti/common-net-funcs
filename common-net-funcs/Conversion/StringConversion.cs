@@ -472,7 +472,7 @@ public static class StringConversion
     /// <returns>Hash string</returns>
     public static string GetHash(this string originalString, EHashAlgorithm algorithm)
     {
-        var bytes = algorithm switch
+        byte[] bytes = algorithm switch
         {
             EHashAlgorithm.SHA1 => SHA1.HashData(Encoding.UTF8.GetBytes(originalString)),
             EHashAlgorithm.SHA256 => SHA256.HashData(Encoding.UTF8.GetBytes(originalString)),

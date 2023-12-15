@@ -297,9 +297,9 @@ public static class RestHelpers
                     //Deserialize as stream - More memory efficient than string deserialization
                     if (useNewtonsoftDeserializer)
                     {
-                        using StreamReader streamReader = new StreamReader(responseStream);
-                        await using JsonTextReader jsonReader = new JsonTextReader(streamReader); //Newtonsoft
-                        JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer(); //Newtonsoft
+                        using StreamReader streamReader = new(responseStream);
+                        await using JsonTextReader jsonReader = new(streamReader); //Newtonsoft
+                        JsonSerializer serializer = new(); //Newtonsoft
                         result = responseStream.Length > 1 ? serializer.Deserialize<T>(jsonReader) : default; //using static Newtonsoft.Json.JsonSerializer;
                     }
                     else

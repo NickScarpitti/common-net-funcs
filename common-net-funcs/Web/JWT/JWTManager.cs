@@ -32,34 +32,34 @@ public class JWTManager : IJWTManager
 	public TokenObject? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan,
         TimeSpan stdTokenLifespan, string? issuer = null, string? email = null, string? audience = null)
 	{
-		if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password) || userName != actualUserName || password != actualPassword)
-		{
-			return null;
-		}
+        if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password) || userName != actualUserName || password != actualPassword)
+        {
+            return null;
+        }
 
         //Generate JSON Web Token if valid request
         JwtSecurityTokenHandler tokenHandler = new();
-		byte[] tokenKey = Encoding.UTF8.GetBytes(key);
+        byte[] tokenKey = Encoding.UTF8.GetBytes(key);
 
-		SecurityTokenDescriptor tokenDescriptor = new()
-		{
-			Subject = new ClaimsIdentity(new Claim[]
-			{
-				new(ClaimTypes.Name, userName),
+        SecurityTokenDescriptor tokenDescriptor = new()
+        {
+            Subject = new ClaimsIdentity(new Claim[]
+            {
+                new(ClaimTypes.Name, userName),
                 new(ClaimTypes.Email, email ?? string.Empty)
-			}),
-			IssuedAt = DateTime.UtcNow,
-			SigningCredentials = new(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha512Signature, SecurityAlgorithms.Sha512Digest)
-		};
+            }),
+            IssuedAt = DateTime.UtcNow,
+            SigningCredentials = new(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha512Signature, SecurityAlgorithms.Sha512Digest)
+        };
 
         if (!environment.StrEq("Development"))
         {
-			tokenDescriptor.Expires = DateTime.UtcNow.Add(stdTokenLifespan);
+            tokenDescriptor.Expires = DateTime.UtcNow.Add(stdTokenLifespan);
         }
         else
         {
-			tokenDescriptor.Expires = DateTime.UtcNow.Add(devTokenLifespan);
-		}
+            tokenDescriptor.Expires = DateTime.UtcNow.Add(devTokenLifespan);
+        }
 
         if (!string.IsNullOrWhiteSpace(issuer))
         {
@@ -74,5 +74,5 @@ public class JWTManager : IJWTManager
         SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
 
         return new() { Token = tokenHandler.WriteToken(token), JwtExpireTime = tokenDescriptor.Expires };
-	}
+    }
 }

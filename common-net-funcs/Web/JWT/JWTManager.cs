@@ -1,6 +1,6 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using static Common_Net_Funcs.Tools.DataValidation;
 
@@ -37,9 +37,8 @@ public class JWTManager : IJWTManager
 			return null;
 		}
 
-        //Generate JSON Web Token if valid request
-        JwtSecurityTokenHandler tokenHandler = new();
-		byte[] tokenKey = Encoding.UTF8.GetBytes(key);
+        JsonWebTokenHandler tokenHandler = new();
+        byte[] tokenKey = Encoding.UTF8.GetBytes(key);
 
 		SecurityTokenDescriptor tokenDescriptor = new()
 		{
@@ -71,8 +70,6 @@ public class JWTManager : IJWTManager
             tokenDescriptor.Audience = audience;
         }
 
-        SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-
-        return new() { Token = tokenHandler.WriteToken(token), JwtExpireTime = tokenDescriptor.Expires };
+        return new() { Token = tokenHandler.CreateToken(tokenDescriptor), JwtExpireTime = tokenDescriptor.Expires };
 	}
 }

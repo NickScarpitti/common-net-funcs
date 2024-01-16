@@ -1,7 +1,6 @@
 ﻿using System.IO.Compression;
 using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
-using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using static Common_Net_Funcs.Tools.DebugHelpers;
 using static Common_Net_Funcs.Communications.EmailConstants;
@@ -130,7 +129,7 @@ public static class Email
 
                 email.Body = bodyBuilder.ToMessageBody();
 
-                if (readReceipt && !readReceiptEmail.IsNullOrEmpty())
+                if (readReceipt && !string.IsNullOrEmpty(readReceiptEmail))
                 {
                     email.Headers[HeaderId.DispositionNotificationTo] = readReceiptEmail;
                 }

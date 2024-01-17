@@ -1,12 +1,17 @@
 ﻿using System.IO.Compression;
 using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
-using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using static Common_Net_Funcs.Tools.DebugHelpers;
-using static Common_Net_Funcs.Tools.ObjectHelpers;
+using static Common_Net_Funcs.Communications.EmailConstants;
 
 namespace Common_Net_Funcs.Communications;
+
+public static class EmailConstants
+{
+    public const string EmailRegex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+    public const int MaxEmailLength = 320;
+}
 
 /// <summary>
 /// Class that stores both fields of a Mail Address
@@ -124,7 +129,7 @@ public static class Email
 
                 email.Body = bodyBuilder.ToMessageBody();
 
-                if (readReceipt && !readReceiptEmail.IsNullOrEmpty())
+                if (readReceipt && !string.IsNullOrEmpty(readReceiptEmail))
                 {
                     email.Headers[HeaderId.DispositionNotificationTo] = readReceiptEmail;
                 }
@@ -171,14 +176,14 @@ public static class Email
     /// <summary>
     /// Checks email string with simple regex to confirm that it is a properly formatted address
     /// </summary>
-    /// <param name="email"></param>
+    /// <param name="email">Email address to validate</param>
     /// <returns>True if email is valid</returns>
     public static bool IsValidEmail(this string? email)
     {
         bool isValid = false;
         try
         {
-            isValid = Regex.IsMatch(email ?? "", @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+            isValid = Regex.IsMatch(email ?? "", EmailRegex, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
         }
         catch (Exception ex)
         {

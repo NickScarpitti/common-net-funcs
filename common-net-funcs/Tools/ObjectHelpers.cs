@@ -68,7 +68,7 @@ public static class ObjectHelpers
         {
             updateMethod(item);
         }
-        return items.ToList();
+        return items;
     }
 
     /// <summary>

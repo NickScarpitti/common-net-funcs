@@ -9,8 +9,6 @@ using static Common_Net_Funcs.Tools.ObjectHelpers;
 
 namespace Common_Net_Funcs.EFCore;
 
-//TODO:: Investigate if circularReferencingEntities can be removed due to EF8 Lay Loading for no-tracking queries
-
 /// <summary>
 /// Common EF Core interactions with a database. Must be using dependency injection for this class to work.
 /// </summary>

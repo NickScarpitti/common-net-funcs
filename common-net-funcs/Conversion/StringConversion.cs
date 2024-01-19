@@ -123,7 +123,7 @@ public static class StringConversion
     /// <summary>
     /// Converts nullable object to string
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">Object to turn into a string</param>
     /// <returns>String representation of the passed in nullable object</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this object? value)
@@ -164,10 +164,10 @@ public static class StringConversion
     /// <param name="value">Value to be used for the Value property</param>
     /// <param name="text">Value to be used for the Text property</param>
     /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
-    [return: NotNullIfNotNull(nameof(value))]
+    [return: NotNullIfNotNull(nameof(value)),  NotNullIfNotNull(nameof(text))]
     public static SelectListItem? ToSelectListItem(this string? value, string? text, bool selected)
     {
-        return value != null && text != null ? new() { Value = value, Text = text, Selected = selected } : null;
+        return value != null ? new() { Value = value, Text = text ?? string.Empty, Selected = selected } : null;
     }
 
     /// <summary>
@@ -179,13 +179,101 @@ public static class StringConversion
     [return: NotNullIfNotNull(nameof(value))]
     public static SelectListItem? ToSelectListItem(this string? value, string? text)
     {
-        return value != null && text != null ? new() { Value = value, Text = text } : null;
+        return value != null ? new() { Value = value, Text = text ?? string.Empty } : null;
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
+    [return: NotNullIfNotNull(nameof(value))]
+    public static SelectListItem? ToSelectListItem(this int? value, bool selected)
+    {
+        return value != null ? new() { Value = value.ToString(), Text = value.ToString(), Selected = selected } : null;
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
+    [return: NotNullIfNotNull(nameof(value))]
+    public static SelectListItem? ToSelectListItem(this int? value)
+    {
+        return value != null ? new() { Value = value.ToString(), Text = value.ToString() } : null;
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for the Value property</param>
+    /// <param name="text">Value to be used for the Text property</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
+    [return: NotNullIfNotNull(nameof(value))]
+    public static SelectListItem? ToSelectListItem(this int? value, string? text, bool selected)
+    {
+        return value != null ? new() { Value = value.ToString(), Text = text ?? string.Empty, Selected = selected } : null;
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for the Value property</param>
+    /// <param name="text">Value to be used for the Text property</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
+    [return: NotNullIfNotNull(nameof(value))]
+    public static SelectListItem? ToSelectListItem(this int? value, string? text)
+    {
+        return value != null ? new() { Value = value.ToString(), Text = text ?? string.Empty } : null;
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
+    public static SelectListItem ToSelectListItem(this int value, bool selected)
+    {
+        return new() { Value = value.ToString(), Text = value.ToString(), Selected = selected };
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
+    public static SelectListItem ToSelectListItem(this int value)
+    {
+        return new() { Value = value.ToString(), Text = value.ToString() };
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for the Value property</param>
+    /// <param name="text">Value to be used for the Text property</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
+    public static SelectListItem ToSelectListItem(this int value, string? text, bool selected)
+    {
+        return new() { Value = value.ToString(), Text = text ?? string.Empty, Selected = selected };
+    }
+
+    /// <summary>
+    /// Converts value to select list item
+    /// </summary>
+    /// <param name="value">Value to be used for the Value property</param>
+    /// <param name="text">Value to be used for the Text property</param>
+    /// <returns>SelectListItem with text and value properties set to the passed in text and value. Will use value for text if text is null</returns>
+    public static SelectListItem ToSelectListItem(this int value, string? text)
+    {
+        return new() { Value = value.ToString(), Text = text ?? string.Empty };
     }
 
     /// <summary>
     /// Converts list of string representations of integers into list of integers
     /// </summary>
-    /// <param name="values"></param>
+    /// <param name="values">Collection of strings to be converted to integers</param>
     /// <returns>List of integers where the strings could be parsed to integers and not null</returns>
     public static IEnumerable<int> ToListInt(this IEnumerable<string> values)
     {
@@ -195,7 +283,7 @@ public static class StringConversion
     /// <summary>
     /// Converts list of string representations of integers into list of integers
     /// </summary>
-    /// <param name="values"></param>
+    /// <param name="values">Collection of strings to be converted to integers</param>
     /// <returns>List of integers where the strings could be parsed to integers and not null</returns>
     public static List<int> ToListInt(this IList<string> values)
     {

@@ -9,6 +9,9 @@ namespace Common_Net_Funcs.Web;
 /// </summary>
 public static class PatchCreator
 {
+    private static readonly JsonSerializerSettings settings = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
+    private static readonly JsonSerializer serializer = JsonSerializer.Create(settings);
+
     /// <summary>
     /// Converts two like models to JObjects and passes them into the FillPatchForObject method to create a JSON patch document
     /// From Source2
@@ -18,8 +21,8 @@ public static class PatchCreator
     /// <returns>JsonPatchDocument document of changes from originalObject to modifiedObject</returns>
     public static JsonPatchDocument CreatePatch(object originalObject, object modifiedObject)
     {
-        JObject original = JObject.FromObject(originalObject);
-        JObject modified = JObject.FromObject(modifiedObject);
+        JObject original = JObject.FromObject(originalObject, serializer);
+        JObject modified = JObject.FromObject(modifiedObject, serializer);
 
         JsonPatchDocument patch = new();
         FillPatchForObject(original, modified, patch, "/");

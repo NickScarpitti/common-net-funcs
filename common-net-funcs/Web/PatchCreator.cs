@@ -9,17 +9,21 @@ namespace Common_Net_Funcs.Web;
 /// </summary>
 public static class PatchCreator
 {
+    private static readonly JsonSerializerSettings settings = new() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
+    private static readonly JsonSerializer serializer = JsonSerializer.Create(settings);
+
     /// <summary>
     /// Converts two like models to JObjects and passes them into the FillPatchForObject method to create a JSON patch document
     /// From Source2
     /// </summary>
-    /// <param name="originalObject"></param>
-    /// <param name="modifiedObject"></param>
+    /// <param name="originalObject">Object state being changed FROM</param>
+    /// <param name="modifiedObject">Object state being changed TO</param>
+    /// <param name="jsonSerializer">Custom Newtonsoft serializer to override default</param>
     /// <returns>JsonPatchDocument document of changes from originalObject to modifiedObject</returns>
-    public static JsonPatchDocument CreatePatch(object originalObject, object modifiedObject)
+    public static JsonPatchDocument CreatePatch(object originalObject, object modifiedObject, JsonSerializer? jsonSerializer = null)
     {
-        JObject original = JObject.FromObject(originalObject);
-        JObject modified = JObject.FromObject(modifiedObject);
+        JObject original = JObject.FromObject(originalObject, jsonSerializer ?? serializer);
+        JObject modified = JObject.FromObject(modifiedObject, jsonSerializer ?? serializer);
 
         JsonPatchDocument patch = new();
         FillPatchForObject(original, modified, patch, "/");

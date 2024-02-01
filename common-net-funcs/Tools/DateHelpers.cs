@@ -54,4 +54,29 @@ public static class DateHelpers
         int diff = (7 + (dateTime.DayOfWeek - dayOfWeek)) % 7;
         return dateTime.AddDays(-1 * diff).Date;
     }
+
+    /// <summary>
+    /// Gets the first and last day of the month provided
+    /// </summary>
+    /// <returns>Tuple containing the first and last date of the specified month</returns>
+    public static (DateTime firstDay, DateTime lastDay) GetMonthBoundaries(int month, int year)
+    {
+        // Get the 1st day of the month (always day 1)
+        DateTime firstDay = new(year, month, 1);
+
+        // Calculate the last day of the month
+        DateTime lastDay = firstDay.AddMonths(1).AddSeconds(-1);
+
+        // Set the out parameters
+        return (firstDay, lastDay);
+    }
+
+    /// <summary>
+    /// Gets the first and last day of the month provided
+    /// </summary>
+    /// <returns>Tuple containing the first and last date of the specified month</returns>
+    public static (DateTime firstDay, DateTime lastDay) GetMonthBoundaries(DateTime date)
+    {
+        return GetMonthBoundaries(date.Month, date.Year);
+    }
 }

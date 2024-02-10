@@ -40,6 +40,19 @@ public static class Randomizers
     }
 
     /// <summary>
+    /// Randomly shuffle a collection of objects using the Random.Shared.Shuffle method
+    /// </summary>
+    /// <typeparam name="T">Type of objects being shuffled</typeparam>
+    /// <param name="items">Items to shuffle</param>
+    /// <returns>Shuffled IEnumerable of items</returns>
+    public static List<T> Shuffle<T>(this IList<T> items)
+    {
+        T[] arr = items.ToArray();
+        Shared.Shuffle(arr);
+        return arr.ToList();
+    }
+
+    /// <summary>
     /// Randomly shuffle an array of objects in place using the Random.Shared.Shuffle method
     /// </summary>
     /// <typeparam name="T">Type of objects being shuffled</typeparam>

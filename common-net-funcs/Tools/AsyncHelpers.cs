@@ -1,10 +1,14 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
+using MemoryPack;
+using MessagePack;
 
 namespace Common_Net_Funcs.Tools;
 
-public class AsyncIntString
+[MemoryPackable]
+[MessagePackObject(true)]
+public partial class AsyncIntString
 {
     public AsyncIntString()
     {

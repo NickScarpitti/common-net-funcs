@@ -425,6 +425,8 @@ public static class DeepCloneExpressionTreeHelpers
         return Expression.Assign(indexTo, rightSide);
     }
 
+#pragma warning disable IDE0300 // Simplify collection initialization
+#pragma warning disable IDE0301 // Simplify collection initialization
     private static BlockExpression LoopIntoLoopExpression(ParameterExpression inputParameter, ParameterExpression indexVariable, Expression loopToEncapsulate, int dimension)
     {
         ParameterExpression lengthVariable = Expression.Variable(typeof(int));
@@ -446,8 +448,10 @@ public static class DeepCloneExpressionTreeHelpers
 
         BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
 
-        return Expression.Block(new[] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
+        return Expression.Block(new [] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
     }
+#pragma warning restore IDE0300 // Simplify collection initialization
+#pragma warning restore IDE0301 // Simplify collection initialization
 
     private static BinaryExpression GetLengthForDimensionExpression(ParameterExpression lengthVariable, ParameterExpression inputParameter, int i)
     {

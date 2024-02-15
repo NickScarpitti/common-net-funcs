@@ -66,7 +66,7 @@ public static class NavigationProperties
 
         IEnumerable<INavigation> navigations = (context.Model.FindEntityType(entityType)?.GetNavigations()
             .Where(x => entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), true).Length == 0 &&
-                entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(Newtonsoft.Json.JsonIgnoreAttribute), true).Length == 0)) ?? new List<INavigation>();
+                entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(Newtonsoft.Json.JsonIgnoreAttribute), true).Length == 0)) ?? [];
 
         if (depth == 0)
         {
@@ -126,7 +126,7 @@ public static class NavigationProperties
         {
             IEnumerable<INavigation> navigations = (context.Model.FindEntityType(entityType)?.GetNavigations()
                 .Where(x => entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), true).Length == 0 &&
-                    entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(Newtonsoft.Json.JsonIgnoreAttribute), true).Length == 0)) ?? new List<INavigation>();
+                    entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(Newtonsoft.Json.JsonIgnoreAttribute), true).Length == 0)) ?? [];
 
             topLevelNavigations = navigations.Select(x => x.Name).ToList();
         }

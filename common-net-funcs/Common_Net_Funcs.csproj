@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/NickScarpitti/Common_Net_Funcs</PackageProjectUrl>
     <PackageTags>dotnet;web;email;conversion;convert;excel;npoi;odbc;async;datatables;rest;api</PackageTags>
     <Nullable>enable</Nullable>
-    <Version>2.2.23</Version>
+    <Version>2.2.24</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -84,7 +84,7 @@
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.8" />
     <PackageReference Include="NPOI" Version="2.6.2" />
     <PackageReference Include="System.Data.Odbc" Version="8.0.0" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.3.8" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.3.9" />
   </ItemGroup>
 
   <ItemGroup>

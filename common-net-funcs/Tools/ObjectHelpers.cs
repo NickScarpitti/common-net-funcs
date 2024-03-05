@@ -352,6 +352,11 @@ public static class ObjectHelpers
 
         return combined;
     }
+
+    public static int CountDefaultProps<T>(this T obj) where T : class
+    {
+        return typeof(T).GetProperties().Count(x => x.CanWrite && x.GetValue(obj, null) == default);
+    }
 }
 
 public class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor

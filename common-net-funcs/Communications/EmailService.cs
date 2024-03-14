@@ -34,7 +34,7 @@ public class EmailService : IEmailService
         IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null, string? smtpUser = null,
         string? smtpPassword = null, bool zipAttachments = false)
     {
-        IEnumerable<MailAddress> toAddresses = (new MailAddress() { Name = toAddress.Name, Email = toAddress.Email }).SingleToList();
+        IEnumerable<MailAddress> toAddresses = new MailAddress() { Name = toAddress.Name, Email = toAddress.Email }.SingleToList();
         return Email.SendEmail(smtpServer, smtpPort, fromAddress, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachments, readReceipt, readReceiptEmail, smtpUser, smtpPassword, zipAttachments);
     }
 

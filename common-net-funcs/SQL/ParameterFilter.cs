@@ -1,4 +1,5 @@
-﻿using static Common_Net_Funcs.Tools.DataValidation;
+﻿using System.Diagnostics.CodeAnalysis;
+using static Common_Net_Funcs.Tools.DataValidation;
 
 namespace Common_Net_Funcs.SQL;
 
@@ -23,7 +24,8 @@ public static class ParameterFilter
     /// <param name="onlyAlphaChars">Only allow values with letters (a-z A-Z). Overrides onlyNumberChars</param>
     /// <param name="onlyNumberChars">Only allow values with numbers (0-9).</param>
     /// <returns>A string that is safe to use as a parameter in a SQL query</returns>
-    public static string? SanitizeSqlParameter(this string? parameter, bool onlyAlphanumeric = false, bool onlyAlphaChars = false, bool onlyNumberChars = false, int? maxLength = null, int? minLength = null)
+    [return: NotNullIfNotNull(nameof(defaultValue))]
+    public static string? SanitizeSqlParameter(this string? parameter, bool onlyAlphanumeric = false, bool onlyAlphaChars = false, bool onlyNumberChars = false, int? maxLength = null, int? minLength = null, string? defaultValue = "")
     {
         string? result = null;
         if (parameter.IsClean() && (maxLength == null || (parameter?.Length ?? 0) <= maxLength) && (minLength == null || (parameter?.Length ?? 0) >= minLength))
@@ -37,6 +39,7 @@ public static class ParameterFilter
                 result = parameter;
             }
         }
-        return result?.Replace("'", "''").Replace("%", "").Replace("*", "");
+
+        return result?.Replace("'", "''").Replace("%", "").Replace("*", "") ?? defaultValue;
     }
 }

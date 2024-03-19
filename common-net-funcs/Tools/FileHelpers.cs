@@ -50,12 +50,12 @@ public static class FileHelpers
             //Update name
             string ext = Path.GetExtension(originalFullFileName);
             oldCleanFileName = Path.GetFileName(originalFullFileName).Replace(ext, null);
-            string incrementingPattern = $@"\([0-9]+\)\{ext}";
+            string incrementingPattern = @$"\([0-9]+\)\{ext}";
             int i = 0;
             string? lastTestPath = null;
             if (!startFromZero)
             {
-                i = int.TryParse(Regex.Match(oldCleanFileName, $@"\(([^)]*)\){ext}").Groups[0].Value, out int startNumber) ? startNumber : 0; //Start at number present
+                i = int.TryParse(Regex.Match(oldCleanFileName, @$"\(([^)]*)\){ext}").Groups[0].Value, out int startNumber) ? startNumber : 0; //Start at number present
             }
             while (File.Exists(testPath))
             {
@@ -131,12 +131,12 @@ public static class FileHelpers
         {
             int i = 0;
             string ext = Path.GetExtension(fileName);
-            string incrementingPattern = $@"\([0-9]+\)\{ext}";
+            string incrementingPattern = @$"\([0-9]+\)\{ext}";
             string? lastTestPath = null;
 
             if (!startFromZero)
             {
-                i = int.TryParse(Regex.Match(fileName, $@"\(([^)]*)\){ext}").Groups[0].Value, out int startNumber) ? startNumber : 0; //Start at number present
+                i = int.TryParse(Regex.Match(fileName, @$"\(([^)]*)\){ext}").Groups[0].Value, out int startNumber) ? startNumber : 0; //Start at number present
             }
             while (File.Exists(testPath))
             {

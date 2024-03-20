@@ -2,6 +2,7 @@
 public static class ContentTypes
 {
     public const string Json = "application/json";
+    public const string JsonProblem = "application/problem+json";
     public const string MemPack = "application/x-memorypack";
     public const string MsgPack = "application/x-msgpack";
 }

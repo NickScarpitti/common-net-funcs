@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -15,11 +16,23 @@ public enum EYesNo
     No
 }
 
+public enum EHashAlgorithm
+{
+    SHA1,
+    SHA256,
+    SHA384,
+    SHA512,
+    MD5,
+    RSA
+}
+
 /// <summary>
 /// Methods for converting various variable types to string and vice versa
 /// </summary>
 public static class StringConversion
 {
+    public const string TimestampUrlFormat = "yyyyMMddHHmmssFFF";
+
     /// <summary>
     /// Converts Nullable DateTime to string using the passed in formatting
     /// </summary>
@@ -454,6 +467,26 @@ public static class StringConversion
         return queryString;
     }
 
+    [return: NotNullIfNotNull(nameof(dateTime))]
+    public static string? ToUrlSafeString(this DateTime? dateTime)
+    {
+        return dateTime.ToNString(TimestampUrlFormat);
+    }
+
+    public static string ToUrlSafeString(this DateTime dateTime)
+    {
+        return dateTime.ToString(TimestampUrlFormat);
+    }
+
+    public static DateTime? ParseUrlSafeDateTime(this string? urlSafeDateTime, string? dateFormat = null)
+    {
+        if (DateTime.TryParseExact(urlSafeDateTime, dateFormat ?? TimestampUrlFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime))
+        {
+            return dateTime;
+        }
+        return null;
+    }
+
     /// <summary>
     /// Get file name safe date in the chosen format
     /// </summary>
@@ -540,16 +573,6 @@ public static class StringConversion
         }
 
         return string.IsNullOrWhiteSpace(days) ? stringForm : days + ":" + stringForm;
-    }
-
-    public enum EHashAlgorithm
-    {
-        SHA1,
-        SHA256,
-        SHA384,
-        SHA512,
-        MD5,
-        RSA
     }
 
     /// <summary>

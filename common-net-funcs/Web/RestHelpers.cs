@@ -1,9 +1,11 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Common_Net_Funcs.Conversion;
 using Common_Net_Funcs.Tools;
 using MemoryPack;
 using MessagePack;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
@@ -326,7 +328,10 @@ public static class RestHelpers
             }
             else
             {
-                logger.Warn($"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n\t{response.Content}");
+                string errorMessage = response.Content.Headers.ContentType.ToNString().ContainsInvariant("json") ?
+                    JToken.Parse(await response.Content.ReadAsStringAsync()).ToString(Formatting.Indented) :
+                    await response.Content.ReadAsStringAsync();
+                logger.Warn($"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n{errorMessage}");
             }
         }
         catch (Exception ex)

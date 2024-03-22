@@ -468,14 +468,14 @@ public static class StringConversion
     }
 
     [return: NotNullIfNotNull(nameof(dateTime))]
-    public static string? ToUrlSafeString(this DateTime? dateTime)
+    public static string? ToUrlSafeString(this DateTime? dateTime, string? dateFormat = null)
     {
-        return dateTime.ToNString(TimestampUrlFormat);
+        return dateTime.ToNString(dateFormat ?? TimestampUrlFormat);
     }
 
-    public static string ToUrlSafeString(this DateTime dateTime)
+    public static string ToUrlSafeString(this DateTime dateTime, string? dateFormat = null)
     {
-        return dateTime.ToString(TimestampUrlFormat);
+        return dateTime.ToString(dateFormat ?? TimestampUrlFormat);
     }
 
     public static DateTime? ParseUrlSafeDateTime(this string? urlSafeDateTime, string? dateFormat = null)

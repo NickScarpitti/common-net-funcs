@@ -898,10 +898,10 @@ public static partial class NpoiCommonHelpers
             (endCol, startCol) = (startCol, endCol);
         }
 
-        float totalWidth = 0;
+        double totalWidth = 0;
         for (int i = startCol; i < endCol + 1; i++)
         {
-            float columnWidth = ws.GetColumnWidthInPixels(i);
+            double columnWidth = ws.GetColumnWidthInPixels(i);
             if (columnWidth == 0.0)
             {
                 logger.Warn($"Width of Column {i} is 0! Check referenced excel sheet: {ws.SheetName}");

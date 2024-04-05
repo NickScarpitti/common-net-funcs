@@ -143,12 +143,7 @@ public class GenericEndpoints : ControllerBase
                 return Ok(dbModel);
             }
 
-            T? updateModel = dbModel.DeepClone();
-
-            if (updateModel == null)
-            {
-                return NoContent();
-            }
+            T updateModel = dbModel.DeepClone();
 
             patch.ApplyTo(updateModel);
 

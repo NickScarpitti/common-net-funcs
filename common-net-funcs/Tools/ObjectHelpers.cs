@@ -357,6 +357,21 @@ public static class ObjectHelpers
     {
         return typeof(T).GetProperties().Count(x => x.CanWrite && x.GetValue(obj, null) == default);
     }
+
+    public static bool IsDelegate(this Type type)
+    {
+        return typeof(Delegate).IsAssignableFrom(type);
+    }
+
+    public static bool IsArray(this Type type)
+    {
+        return type.IsArray;
+    }
+
+    public static bool IsClassOtherThanString(this Type? type)
+    {
+        return type == null || (!type.IsValueType && type != typeof(string)); //Added type == null || - Nick
+    }
 }
 
 public class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor

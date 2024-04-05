@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -13,11 +14,12 @@ public static class DeepCloneSerializationHelpers
     /// <typeparam name="T">Type of objects to clone</typeparam>
     /// <param name="original">Object to clone</param>
     /// <returns>Clone of the original object</returns>
+    [return: NotNullIfNotNull(nameof(original))]
     public static T? SerializeClone<T>(this T? original) where T : class
     {
         if (original == null) { return null; }
         string serialized = JsonSerializer.Serialize(original);
-        return JsonSerializer.Deserialize<T>(serialized);
+        return JsonSerializer.Deserialize<T>(serialized) ?? throw new JsonException("Unable to deserialize cloned object");
     }
 }
 
@@ -26,11 +28,12 @@ public static class DeepCloneReflectionHelpers
     private static readonly MethodInfo? CloneMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
 
     /// <summary>
-    /// Deep clone a class (cloned object doesn't retain memory references) using reflection (mid-tier speed)
+    /// Deep clone a non-delegate type class (cloned object doesn't retain memory references) using reflection (mid-tier speed)
     /// </summary>
     /// <typeparam name="T">Type of object to clone</typeparam>
     /// <param name="original">Object to clone</param>
     /// <returns>Clone of the original object</returns>
+    [return: NotNullIfNotNull(nameof(original))]
     public static T? DeepCloneReflection<T>(this T? original)
     {
         return (T?)Copy(original);
@@ -69,9 +72,9 @@ public static class DeepCloneReflectionHelpers
             return value;
         }
 
-        if (typeof(Delegate).IsAssignableFrom(typeToReflect))
+        if (typeToReflect.IsDelegate())
         {
-            return null;
+            throw new ArgumentException($"Type {typeToReflect.FullName} is a delegate type which is unsupported.", nameof(originalObject));
         }
 
         object? cloneObject = CloneMethod!.Invoke(originalObject, null);
@@ -196,11 +199,12 @@ public static class DeepCloneExpressionTreeHelpers
     private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
 
     /// <summary>
-    /// Deep clone a class (cloned object doesn't retain memory references) using Expression Trees (fastest)
+    /// Deep clone a non-delegate type class (cloned object doesn't retain memory references) using Expression Trees (fastest)
     /// </summary>
     /// <typeparam name="T">Object type.</typeparam>
     /// <param name="original">Object to copy.</param>
     /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
+    [return: NotNullIfNotNull(nameof(original))]
     public static T? DeepClone<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
     {
         return (T?)DeepCopyByExpressionTreeObj(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
@@ -213,14 +217,15 @@ public static class DeepCloneExpressionTreeHelpers
             return null;
         }
 
-        var type = original.GetType();
+        Type type = original.GetType();
 
-        if (IsDelegate(type))
+        if (type.IsDelegate())
         {
-            return null;
+            throw new ArgumentException($"Type {type.FullName} is a delegate type which is unsupported.", nameof(original));
+            //return null;
         }
 
-        if (!forceDeepCopy && !IsTypeToDeepCopy(type))
+        if (!forceDeepCopy && !type.IsTypeToDeepCopy())
         {
             return original;
         }
@@ -235,7 +240,7 @@ public static class DeepCloneExpressionTreeHelpers
             return new();
         }
 
-        var compiledCopyFunction = GetOrCreateCompiledLambdaCopyFunction(type);
+        Func<object, Dictionary<object, object>, object> compiledCopyFunction = GetOrCreateCompiledLambdaCopyFunction(type);
 
         return compiledCopyFunction(original, copiedReferencesDict);
     }
@@ -280,7 +285,7 @@ public static class DeepCloneExpressionTreeHelpers
         MemberwiseCloneInputToOutputExpression(type, inputParameter, outputVariable, expressions);
 
         ///// STORE COPIED OBJECT TO REFERENCES DICTIONARY
-        if (IsClassOtherThanString(type))
+        if (type.IsClassOtherThanString())
         {
             StoreReferencesIntoDictionaryExpression(inputParameter, inputDictionary, outputVariable, expressions);
         }
@@ -289,7 +294,7 @@ public static class DeepCloneExpressionTreeHelpers
         FieldsCopyExpressions(type, inputParameter, inputDictionary, outputVariable, boxingVariable, expressions);
 
         ///// COPY ELEMENTS OF ARRAY
-        if (IsArray(type) && IsTypeToDeepCopy(type.GetElementType()))
+        if (type.IsArray() && type.GetElementType().IsTypeToDeepCopy())
         {
             CreateArrayCopyLoopExpression(type, inputParameter, inputDictionary, outputVariable, variables, expressions);
         }
@@ -482,7 +487,7 @@ public static class DeepCloneExpressionTreeHelpers
 
         foreach (FieldInfo field in readonlyFields)
         {
-            if (IsDelegate(field.FieldType))
+            if (field.FieldType.IsDelegate())
             {
                 ReadonlyFieldToNullExpression(field, boxingVariable, expressions);
             }
@@ -503,7 +508,7 @@ public static class DeepCloneExpressionTreeHelpers
 
         foreach (var field in writableFields)
         {
-            if (IsDelegate(field.FieldType))
+            if (field.FieldType.IsDelegate())
             {
                 WritableFieldToNullExpression(field, outputVariable, expressions);
             }
@@ -523,7 +528,7 @@ public static class DeepCloneExpressionTreeHelpers
         while (typeCache != null)
         {
             fieldsList.AddRange(typeCache.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy)
-                    .Where(field => forceAllFields || IsTypeToDeepCopy(field.FieldType)));
+                    .Where(field => forceAllFields || field.FieldType.IsTypeToDeepCopy()));
 
             typeCache = typeCache.BaseType;
         }
@@ -624,28 +629,12 @@ public static class DeepCloneExpressionTreeHelpers
         expressions.Add(fieldDeepCopyExpression);
     }
 
-    private static bool IsArray(Type type)
+    private static bool IsTypeToDeepCopy(this Type? type)
     {
-        return type.IsArray;
+        return type.IsClassOtherThanString() || type.IsStructWhichNeedsDeepCopy();
     }
 
-    private static bool IsDelegate(Type type)
-    {
-        return typeof(Delegate).IsAssignableFrom(type);
-    }
-
-    private static bool IsTypeToDeepCopy(Type? type)
-    {
-        return IsClassOtherThanString(type)
-               || IsStructWhichNeedsDeepCopy(type);
-    }
-
-    private static bool IsClassOtherThanString(Type? type)
-    {
-        return type == null || (!type.IsValueType && type != typeof(string)); //Added type == null || - Nick
-    }
-
-    private static bool IsStructWhichNeedsDeepCopy(Type? type)
+    private static bool IsStructWhichNeedsDeepCopy(this Type? type)
     {
         // The following structure ensures that multiple threads can use the dictionary
         // even while dictionary is locked and being updated by other thread.
@@ -658,7 +647,7 @@ public static class DeepCloneExpressionTreeHelpers
             {
                 if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out isStructTypeToDeepCopy))
                 {
-                    isStructTypeToDeepCopy = IsStructWhichNeedsDeepCopy_NoDictionaryUsed(type!);
+                    isStructTypeToDeepCopy = type!.IsStructWhichNeedsDeepCopy_NoDictionaryUsed();
 
                     var newDictionary = IsStructTypeToDeepCopyDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
 
@@ -672,17 +661,17 @@ public static class DeepCloneExpressionTreeHelpers
         return isStructTypeToDeepCopy;
     }
 
-    private static bool IsStructWhichNeedsDeepCopy_NoDictionaryUsed(Type type)
+    private static bool IsStructWhichNeedsDeepCopy_NoDictionaryUsed(this Type type)
     {
-        return IsStructOtherThanBasicValueTypes(type) && HasInItsHierarchyFieldsWithClasses(type);
+        return type.IsStructOtherThanBasicValueTypes() && type.HasInItsHierarchyFieldsWithClasses();
     }
 
-    private static bool IsStructOtherThanBasicValueTypes(Type type)
+    private static bool IsStructOtherThanBasicValueTypes(this Type type)
     {
         return type.IsValueType && !type.IsPrimitive && !type.IsEnum && type != typeof(decimal);
     }
 
-    private static bool HasInItsHierarchyFieldsWithClasses(Type type, HashSet<Type>? alreadyCheckedTypes = null)
+    private static bool HasInItsHierarchyFieldsWithClasses(this Type type, HashSet<Type>? alreadyCheckedTypes = null)
     {
         alreadyCheckedTypes ??= [];
 
@@ -692,20 +681,18 @@ public static class DeepCloneExpressionTreeHelpers
 
         IEnumerable<Type> allFieldTypes = allFields.Select(f => f.FieldType).Distinct().ToList();
 
-        bool hasFieldsWithClasses = allFieldTypes.Any(IsClassOtherThanString);
+        bool hasFieldsWithClasses = allFieldTypes.Any(x => x.IsClassOtherThanString());
 
         if (hasFieldsWithClasses)
         {
             return true;
         }
 
-        IEnumerable<Type> notBasicStructsTypes = allFieldTypes.Where(IsStructOtherThanBasicValueTypes).ToList();
+        IEnumerable<Type> notBasicStructsTypes = allFieldTypes.Where(x => x.IsStructOtherThanBasicValueTypes()).ToList();
 
-        IEnumerable<Type> typesToCheck = notBasicStructsTypes.Where(t => !alreadyCheckedTypes.Contains(t)).ToList();
-
-        foreach (var typeToCheck in typesToCheck)
+        foreach (var typeToCheck in (IEnumerable<Type>)notBasicStructsTypes.Where(t => !alreadyCheckedTypes.Contains(t)).ToList())
         {
-            if (HasInItsHierarchyFieldsWithClasses(typeToCheck, alreadyCheckedTypes))
+            if (typeToCheck.HasInItsHierarchyFieldsWithClasses(alreadyCheckedTypes))
             {
                 return true;
             }

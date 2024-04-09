@@ -22,6 +22,21 @@ public class RestObject<T>// where T : class
     public HttpResponseMessage? Response { get; set; }
 }
 
+public static class RestHelperConstants
+{
+    public static readonly KeyValuePair<string, string> MemPackContentHeader = new("Content-Type", ContentTypes.MemPack);
+    public static readonly KeyValuePair<string, string> MsgPackContentHeader = new("Content-Type", ContentTypes.MsgPack);
+    public static readonly KeyValuePair<string, string> JsonContentHeader = new("Content-Type", ContentTypes.Json);
+
+    public static readonly KeyValuePair<string, string> MemPackAcceptHeader = new("Accept", ContentTypes.MemPack);
+    public static readonly KeyValuePair<string, string> MsgPackAcceptHeader = new("Accept", ContentTypes.MsgPack);
+    public static readonly KeyValuePair<string, string> JsonAcceptHeader = new("Accept", ContentTypes.Json);
+
+    public static readonly Dictionary<string, string> MemPackHeaders = new([MemPackContentHeader, MemPackAcceptHeader]);
+    public static readonly Dictionary<string, string> MsgPackHeaders = new([MsgPackContentHeader, MsgPackAcceptHeader]);
+    public static readonly Dictionary<string, string> JsonHeaders = new([JsonContentHeader, JsonAcceptHeader]);
+}
+
 /// <summary>
 /// Helper functions that send requests to specified URI and return resulting values where applicable
 /// Source1: https://medium.com/@srikanth.gunnala/generic-wrapper-to-consume-asp-net-web-api-rest-service-641b50462c0

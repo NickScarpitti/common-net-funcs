@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Common_Net_Funcs.Tools;
@@ -355,7 +356,12 @@ public static class ObjectHelpers
 
     public static int CountDefaultProps<T>(this T obj) where T : class
     {
-        return typeof(T).GetProperties().Count(x => x.CanWrite && x.GetValue(obj, null) == default);
+        return typeof(T).GetProperties().Count(x => x.CanWrite && x.GetValue(obj) == x.PropertyType.GetDefaultValue());
+    }
+
+    public static object? GetDefaultValue(this Type type)
+    {
+        return type.IsValueType ? RuntimeHelpers.GetUninitializedObject(type) : null;
     }
 
     public static bool IsDelegate(this Type type)

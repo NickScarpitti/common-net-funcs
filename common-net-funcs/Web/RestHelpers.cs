@@ -55,9 +55,9 @@ public static class RestHelpers
     /// <summary>
     /// Executes a GET request against the specified URL and returns the result
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
@@ -69,10 +69,10 @@ public static class RestHelpers
     /// <summary>
     /// Executes a POST request against the provided URL with the postObject in the body and returns the result
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
@@ -85,10 +85,10 @@ public static class RestHelpers
     /// <summary>
     /// Executes a POST request against the provided URL with the postObject in the body and returns the result in string format
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
@@ -101,9 +101,9 @@ public static class RestHelpers
     /// <summary>
     /// Executes a DELETE request against the provided URL with the deleteObject in the body and returns the result
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
@@ -116,10 +116,10 @@ public static class RestHelpers
     /// <summary>
     /// Executes a PUT request against the provided URL with the putObject in the body
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="putObject">The object to be edited</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     public static Task<T?> PutRequest<T>(string url, T putObject, string? bearerToken = null, double? timeout = null,
         Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
@@ -130,10 +130,10 @@ public static class RestHelpers
     /// <summary>
     /// Executes a PATCH request against the provided URL with the patchDoc in the body and returns the result
     /// </summary>
-    /// <param name="url"></param>
-    /// <param name="patchDoc"></param>
+    /// <param name="url">API URL</param>
+    /// <param name="patchDoc">Patch document for PATCH requests</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
     public static Task<T?> PatchRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null,
@@ -145,10 +145,10 @@ public static class RestHelpers
     /// <summary>
     /// Executes a POST request against the provided URL with the postObject in the body and returns the result RestObject
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
@@ -177,9 +177,9 @@ public static class RestHelpers
     /// <summary>
     /// Executes a GET request against the specified URL and returns the result RestObject
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
@@ -192,10 +192,10 @@ public static class RestHelpers
     /// <summary>
     /// Executes a POST request against the provided URL with the postObject in the body and returns the result RestObject
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
@@ -208,10 +208,10 @@ public static class RestHelpers
     /// <summary>
     /// Executes a POST request against the provided URL with the postObject in the body and returns the result in string format inside of a RestObject
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
@@ -224,9 +224,9 @@ public static class RestHelpers
     /// <summary>
     /// Executes a DELETE request against the provided URL with the deleteObject in the body and returns the result request RestObject
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
@@ -239,10 +239,10 @@ public static class RestHelpers
     /// <summary>
     /// Executes a PATCH request against the provided URL with the patchDoc in the body and returns the result
     /// </summary>
-    /// <param name="url"></param>
-    /// <param name="patchDoc"></param>
+    /// <param name="url">API URL</param>
+    /// <param name="patchDoc">Patch document for PATCH requests</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
     public static Task<RestObject<T>> PatchRestObjectRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null,
@@ -254,10 +254,10 @@ public static class RestHelpers
     /// <summary>
     /// Executes a POST request against the provided URL with the postObject in the body and returns the result RestObject
     /// </summary>
-    /// <param name="url">API Url</param>
+    /// <param name="url">API URL</param>
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
-    /// <param name="timeout">Timeout setting for the request. Defaults to 100s if not provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>

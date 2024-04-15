@@ -643,4 +643,16 @@ public static class StringConversion
         }
         return new(src, 0, index);
     }
+
+    /// <summary>
+    /// Take any format of a date time string and convert it to a different format
+    /// </summary>
+    /// <param name="dateString">Input date string to be converted</param>
+    /// <param name="sourceFormat">Format of dateString string</param>
+    /// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
+    [return: NotNullIfNotNull(nameof(dateString))]
+    public static string? FormatDateString(this string? dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
+    {
+        return dateString == null ? null : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrEmpty(outputFormat) ? "MM/dd/yyyy" : outputFormat);
+    }
 }

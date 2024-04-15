@@ -16,6 +16,9 @@ public interface IEmailService
     Task<bool> SendEmail(string? smtpServer, int smtpPort, string fromAddress, string toAddress, string? subject, string? body, bool bodyIsHtml = false,
         IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null,
         string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false);
+    Task<bool> SendEmail(string? smtpServer, int smtpPort, string fromAddress, IEnumerable<string> toAddress, string? subject, string? body, bool bodyIsHtml = false,
+        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null,
+        string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false);
 }
 
 /// <summary>
@@ -42,6 +45,14 @@ public class EmailService : IEmailService
         IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false)
     {
         IEnumerable<MailAddress> toAddresses = (new MailAddress() { Name = toAddress, Email = toAddress }).SingleToList();
+        MailAddress fromMailAddress = new() { Name = fromAddress, Email = fromAddress };
+        return Email.SendEmail(smtpServer, smtpPort, fromMailAddress, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachments, readReceipt, readReceiptEmail, smtpUser, smtpPassword, zipAttachments);
+    }
+
+    public Task<bool> SendEmail(string? smtpServer, int smtpPort, string fromAddress, IEnumerable<string> toAddress, string? subject, string? body, bool bodyIsHtml = false, IEnumerable<MailAddress>? ccAddresses = null,
+    IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false)
+    {
+        IEnumerable<MailAddress> toAddresses = toAddress.Select(x => new MailAddress() { Name = x, Email = x });
         MailAddress fromMailAddress = new() { Name = fromAddress, Email = fromAddress };
         return Email.SendEmail(smtpServer, smtpPort, fromMailAddress, toAddresses, subject, body, bodyIsHtml, ccAddresses, bccAddresses, attachments, readReceipt, readReceiptEmail, smtpUser, smtpPassword, zipAttachments);
     }

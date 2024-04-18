@@ -7,7 +7,7 @@ namespace Common_Net_Funcs.Tools;
 /// <summary>
 /// Methods for complex string manipulation
 /// </summary>
-public static partial class StringManipulation
+public static partial class StringHelpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -15,10 +15,10 @@ public static partial class StringManipulation
     private static partial Regex MultiSpaceRegex();
 
     /// <summary>
-    /// Clone of VBA Left() function
+    /// Clone of VBA Left() function that gets n characters from the left side of the string
     /// </summary>
-    /// <param name="s"></param>
-    /// <param name="numChars"></param>
+    /// <param name="s">String to get left substring from</param>
+    /// <param name="numChars">Number of characters to take from the right side of the string</param>
     /// <returns>String of the length indicated from the left side of the source string</returns>
     public static string? Left(this string? s, int numChars)
     {
@@ -46,10 +46,10 @@ public static partial class StringManipulation
     }
 
     /// <summary>
-    /// Clone of VBA Right() function
+    /// Clone of VBA Right() function that gets n characters from the right side of the string
     /// </summary>
-    /// <param name="s"></param>
-    /// <param name="numChars"></param>
+    /// <param name="s">String to extract right substring from</param>
+    /// <param name="numChars">Number of characters to take from the right side of the string</param>
     /// <returns>String of the length indicated from the right side of the source string</returns>
     public static string? Right(this string? s, int numChars)
     {
@@ -105,7 +105,7 @@ public static partial class StringManipulation
     /// <summary>
     /// Makes a string with of the word "null" into a null value
     /// </summary>
-    /// <param name="s"></param>
+    /// <param name="s">String to change to null if it contains the word "null"</param>
     /// <returns>Null is the string passed in is null or is the word null with no other text characters other than whitespace</returns>
     public static string? MakeNullNull(this string? s)
     {
@@ -148,5 +148,25 @@ public static partial class StringManipulation
             s = MultiSpaceRegex().Replace(s.Trim(), " ");
         }
         return s?.Trim();
+    }
+
+    /// <summary>
+    /// Indicates whether a specified string is null, a zero length string, or consists only of white-space characters
+    /// </summary>
+    /// <param name="s">The string to test</param>
+    /// <returns>True if s is null, a zero length string, or consists only of white-space characters</returns>
+    public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? s)
+    {
+        return string.IsNullOrWhiteSpace(s);
+    }
+
+    /// <summary>
+    /// Indicates whether a specified string is null or a zero length string
+    /// </summary>
+    /// <param name="s">The string to test</param>
+    /// <returns>True if s is null or a zero length string</returns>
+    public static bool IsNullOrEmpty([NotNullWhen(false)] this string? s)
+    {
+        return string.IsNullOrEmpty(s);
     }
 }

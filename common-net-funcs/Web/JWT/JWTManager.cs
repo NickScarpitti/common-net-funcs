@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using static Common_Net_Funcs.Tools.DataValidation;
+using static Common_Net_Funcs.Tools.StringHelpers;
 
 namespace Common_Net_Funcs.Web.JWT;
 
@@ -32,7 +33,7 @@ public class JWTManager : IJWTManager
 	public TokenObject? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan,
         TimeSpan stdTokenLifespan, string? issuer = null, string? email = null, string? audience = null)
 	{
-		if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password) || userName != actualUserName || password != actualPassword)
+		if (userName.IsNullOrWhiteSpace() || password.IsNullOrWhiteSpace() || userName != actualUserName || password != actualPassword)
 		{
 			return null;
 		}
@@ -60,12 +61,12 @@ public class JWTManager : IJWTManager
 			tokenDescriptor.Expires = DateTime.UtcNow.Add(devTokenLifespan);
 		}
 
-        if (!string.IsNullOrWhiteSpace(issuer))
+        if (!issuer.IsNullOrWhiteSpace())
         {
             tokenDescriptor.Issuer = issuer;
         }
 
-        if (!string.IsNullOrWhiteSpace(audience))
+        if (!audience.IsNullOrWhiteSpace())
         {
             tokenDescriptor.Audience = audience;
         }

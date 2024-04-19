@@ -30,7 +30,7 @@ public static partial class StringHelpers
     {
         try
         {
-            if (string.IsNullOrEmpty(s))
+            if (s.IsNullOrEmpty())
             {
                 return null;
             }
@@ -61,7 +61,7 @@ public static partial class StringHelpers
     {
         try
         {
-            if (string.IsNullOrEmpty(s))
+            if (s.IsNullOrEmpty())
             {
                 return null;
             }
@@ -126,7 +126,7 @@ public static partial class StringHelpers
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ParseCamelCase(this string? s)
     {
-        return !string.IsNullOrWhiteSpace(s) ? string.Concat(s.Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' ') : s;
+        return !s.IsNullOrWhiteSpace() ? string.Concat(s.Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' ') : s;
     }
 
     /// <summary>
@@ -138,7 +138,7 @@ public static partial class StringHelpers
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ToTitleCase(this string? s, string cultureString = "en-US")
     {
-        if (!string.IsNullOrWhiteSpace(s))
+        if (!s.IsNullOrWhiteSpace())
         {
             TextInfo textinfo = new CultureInfo(cultureString, false).TextInfo;
             s = textinfo.ToTitleCase(s);
@@ -149,7 +149,7 @@ public static partial class StringHelpers
     [return: NotNullIfNotNull(nameof(s))]
     public static string? TrimFull(this string? s)
     {
-        if (!string.IsNullOrWhiteSpace(s))
+        if (!s.IsNullOrWhiteSpace())
         {
             s = MultiSpaceRegex().Replace(s.Trim(), " ");
         }

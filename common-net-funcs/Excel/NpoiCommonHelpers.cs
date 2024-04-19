@@ -15,6 +15,7 @@ using SixLabors.ImageSharp;
 using static System.Convert;
 using static System.Math;
 using static Common_Net_Funcs.Tools.DebugHelpers;
+using static Common_Net_Funcs.Tools.StringHelpers;
 
 namespace Common_Net_Funcs.Excel;
 
@@ -53,7 +54,7 @@ public static partial class NpoiCommonHelpers
     /// </summary>
     /// <param name="cell"></param>
     /// <returns>True if cell is empty</returns>
-    public static bool IsCellEmpty(this ICell cell) => string.IsNullOrWhiteSpace(cell.GetStringValue());
+    public static bool IsCellEmpty(this ICell cell) => cell.GetStringValue().IsNullOrWhiteSpace();
 
     /// <summary>
     /// Get ICell offset from cellReference
@@ -1012,7 +1013,7 @@ public static partial class NpoiCommonHelpers
             {
                 ISheet? ws = null;
 
-                if (!string.IsNullOrWhiteSpace(sheetName))
+                if (!sheetName.IsNullOrWhiteSpace())
                 {
                     ws = wb.GetSheet(sheetName);
                 }
@@ -1030,7 +1031,7 @@ public static partial class NpoiCommonHelpers
                     ICell? startCell;
                     ICell? endCell;
 
-                    if (string.IsNullOrWhiteSpace(startCellReference))
+                    if (startCellReference.IsNullOrWhiteSpace())
                     {
                         startCellReference = "A1";
                     }
@@ -1039,7 +1040,7 @@ public static partial class NpoiCommonHelpers
                     startColIndex = startCell!.ColumnIndex;
                     startRowIndex = startCell!.RowIndex;
 
-                    if (!string.IsNullOrWhiteSpace(endCellReference))
+                    if (!endCellReference.IsNullOrWhiteSpace())
                     {
                         endCell = ws.GetCellFromReference(endCellReference);
                         if (endCell != null)
@@ -1062,7 +1063,7 @@ public static partial class NpoiCommonHelpers
                         else
                         {
                             string? currentCellVal = startCell.GetStringValue();
-                            for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
+                            for (int colIndex = 1; !currentCellVal.IsNullOrWhiteSpace(); colIndex++)
                             {
                                 endColIndex = colIndex - 1;
                                 dataTable.Columns.Add(currentCellVal);
@@ -1082,7 +1083,7 @@ public static partial class NpoiCommonHelpers
                         else
                         {
                             string? currentCellVal = startCell.GetStringValue();
-                            for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
+                            for (int colIndex = 1; !currentCellVal.IsNullOrWhiteSpace(); colIndex++)
                             {
                                 endColIndex = colIndex - 1;
                                 dataTable.Columns.Add($"Column{colIndex - 1}");
@@ -1121,7 +1122,7 @@ public static partial class NpoiCommonHelpers
                                 for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
                                 {
                                     string? cellValue = GetStringValue(GetCellFromCoordinates(ws, colIndex, rowIndex));
-                                    rowIsNotNull = rowIsNotNull ? rowIsNotNull : !string.IsNullOrWhiteSpace(cellValue);
+                                    rowIsNotNull = rowIsNotNull ? rowIsNotNull : !cellValue.IsNullOrWhiteSpace();
                                     newRowData[colIndex - startColIndex] = cellValue;
                                 }
 
@@ -1163,13 +1164,13 @@ public static partial class NpoiCommonHelpers
                 using XSSFWorkbook wb = new(fileStream);
                 ISheet? ws = null;
                 ITable? table = null;
-                if (!string.IsNullOrWhiteSpace(tableName))
+                if (!tableName.IsNullOrWhiteSpace())
                 {
                     table = wb.GetTable(tableName);
                 }
 
                 //Get first table name if not specified or not found
-                if (string.IsNullOrWhiteSpace(tableName) || table == null)
+                if (tableName.IsNullOrWhiteSpace() || table == null)
                 {
                     int numberOfSheets = wb.NumberOfSheets;
                     for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex++)
@@ -1181,7 +1182,7 @@ public static partial class NpoiCommonHelpers
                         }
                     }
 
-                    if (!string.IsNullOrWhiteSpace(tableName))
+                    if (!tableName.IsNullOrWhiteSpace())
                     {
                         table = wb.GetTable(tableName);
                     }

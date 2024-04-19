@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using static Common_Net_Funcs.Tools.DataValidation;
+using static Common_Net_Funcs.Tools.StringHelpers;
 
 namespace Common_Net_Funcs.SQL;
 
@@ -12,7 +13,7 @@ public static class ParameterFilter
     /// <returns>True if there are no suspect characters or strings in the parameter</returns>
     public static bool IsClean(this string? parameter)
     {
-        return string.IsNullOrWhiteSpace(parameter) || (!parameter.Contains(';') && !parameter.Contains('\'') && !parameter.Contains('[') && !parameter.Contains(']') &&
+        return parameter.IsNullOrWhiteSpace() || (!parameter.Contains(';') && !parameter.Contains('\'') && !parameter.Contains('[') && !parameter.Contains(']') &&
             !parameter.Contains('"') && !parameter.Contains('`') && !parameter.Contains("/*") && !parameter.Contains("*/") && !parameter.Contains("xp_") && !parameter.Contains("--"));
     }
 

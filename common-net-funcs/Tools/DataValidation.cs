@@ -169,12 +169,12 @@ public static partial class DataValidation
     /// <summary>
     /// Check if an object is a numeric type
     /// </summary>
-    /// <param name="testObject"></param>
+    /// <param name="testObject">Object to check to see if it's numeric</param>
     /// <returns>True if object is a numeric type</returns>
     public static bool IsNumeric(this object? testObject)
     {
         bool isNumeric = false;
-        if (testObject != null && !string.IsNullOrWhiteSpace(testObject.ToString()))
+        if (testObject?.ToString().IsNullOrWhiteSpace() == false)
         {
             isNumeric = decimal.TryParse(testObject.ToString(), NumberStyles.Number, NumberFormatInfo.InvariantInfo, out _);
         }

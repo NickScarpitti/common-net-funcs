@@ -2,8 +2,9 @@
 using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MimeKit;
-using static Common_Net_Funcs.Tools.DebugHelpers;
 using static Common_Net_Funcs.Communications.EmailConstants;
+using static Common_Net_Funcs.Tools.DebugHelpers;
+using static Common_Net_Funcs.Tools.StringHelpers;
 
 namespace Common_Net_Funcs.Communications;
 
@@ -129,7 +130,7 @@ public static class Email
 
                 email.Body = bodyBuilder.ToMessageBody();
 
-                if (readReceipt && !string.IsNullOrEmpty(readReceiptEmail))
+                if (readReceipt && readReceiptEmail.IsNullOrEmpty())
                 {
                     email.Headers[HeaderId.DispositionNotificationTo] = readReceiptEmail;
                 }
@@ -139,7 +140,7 @@ public static class Email
                     try
                     {
                         using SmtpClient smtpClient = new();
-                        if (!string.IsNullOrWhiteSpace(smtpUser) && !string.IsNullOrWhiteSpace(smtpPassword))
+                        if (!smtpUser.IsNullOrWhiteSpace() && !smtpPassword.IsNullOrWhiteSpace())
                         {
                             await smtpClient.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
                             await smtpClient.AuthenticateAsync(smtpUser, smtpPassword);

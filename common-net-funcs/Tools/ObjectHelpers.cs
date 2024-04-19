@@ -102,7 +102,7 @@ public static class ObjectHelpers
                 if (prop.PropertyType == typeof(string))
                 {
                     string? value = (string?)prop.GetValue(obj);
-                    if (!string.IsNullOrEmpty(value))
+                    if (!value.IsNullOrEmpty())
                     {
                         prop.SetValue(obj, value.TrimFull());
                     }
@@ -127,7 +127,7 @@ public static class ObjectHelpers
                 if (prop.PropertyType == typeof(string))
                 {
                     string? value = (string?)prop.GetValue(obj);
-                    if (!string.IsNullOrEmpty(value))
+                    if (!value.IsNullOrEmpty())
                     {
                         if (enableTrim)
                         {

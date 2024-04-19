@@ -1,4 +1,5 @@
 ﻿using static System.Random;
+
 namespace Common_Net_Funcs.Tools;
 
 /// <summary>

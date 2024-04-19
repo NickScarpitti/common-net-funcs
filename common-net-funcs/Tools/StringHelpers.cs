@@ -4,6 +4,12 @@ using System.Text.RegularExpressions;
 
 namespace Common_Net_Funcs.Tools;
 
+public enum EComparisonType
+{
+    OR,
+    AND
+}
+
 /// <summary>
 /// Methods for complex string manipulation
 /// </summary>
@@ -168,5 +174,58 @@ public static partial class StringHelpers
     public static bool IsNullOrEmpty([NotNullWhen(false)] this string? s)
     {
         return string.IsNullOrEmpty(s);
+    }
+
+    /// <summary>
+    /// Checks if the given string contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns>True if s contains the string textToFind in any form</returns>
+    public static bool InvariantContains(this string? s, string textToFind)
+    {
+        return s?.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false;
+    }
+
+    /// <summary>
+    /// Checks if the given string contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textsToFind">Strings to find in s</param>
+    /// <param name="comparisonType">Value to specify whether to do an AND or and OR check for all values of textsToFind</param>
+    /// <returns>
+    /// <para>True if s contains any of the strings in textsToFind in any form when comparisonType = OR</para>
+    /// <para>True if s contains all of the strings in textsToFind when comparisonType = AND</para>
+    /// </returns>
+    public static bool InvariantContains(this string? s, IEnumerable<string> textsToFind, EComparisonType comparisonType)
+    {
+        if (s.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        switch (comparisonType)
+        {
+            case EComparisonType.OR:
+                foreach (string textToFind in textsToFind)
+                {
+                    if(s.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            case EComparisonType.AND:
+                foreach (string textToFind in textsToFind)
+                {
+                    if (!s.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            default:
+                return false;
+        }
     }
 }

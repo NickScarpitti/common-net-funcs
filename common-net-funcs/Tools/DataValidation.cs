@@ -107,7 +107,7 @@ public static partial class DataValidation
     public static bool ValidateFileExtention(this string fileName, string[] validExtensions)
     {
         string extension = Path.GetExtension(fileName);
-        return validExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase);
+        return validExtensions.ContainsInvariant(extension);
     }
 
     /// <summary>
@@ -119,17 +119,6 @@ public static partial class DataValidation
     public static bool StrEq(this string? s1, string? s2)
     {
         return string.Equals(s1?.Trim() ?? string.Empty, s2?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
-    }
-
-    /// <summary>
-    /// Check to see if one string is contained within another
-    /// </summary>
-    /// <param name="s1">String to search for s2 in</param>
-    /// <param name="s2">String to search for in s1</param>
-    /// <returns>True if the strings are equal when ignoring culture and case</returns>
-    public static bool ContainsInvariant(this string? s1, string? s2)
-    {
-        return s2 != null && (s1?.Contains(s2, StringComparison.InvariantCultureIgnoreCase) ?? false);
     }
 
     /// <summary>

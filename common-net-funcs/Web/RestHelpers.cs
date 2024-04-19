@@ -343,7 +343,7 @@ public static class RestHelpers
             }
             else
             {
-                string errorMessage = response.Content.Headers.ContentType.ToNString().ContainsInvariant("json") ?
+                string errorMessage = DataValidation.ContainsInvariant(response.Content.Headers.ContentType.ToNString(), "json") ?
                     JToken.Parse(await response.Content.ReadAsStringAsync()).ToString(Formatting.Indented) :
                     await response.Content.ReadAsStringAsync();
                 logger.Warn($"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n{errorMessage}");

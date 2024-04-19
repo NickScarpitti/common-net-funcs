@@ -182,9 +182,20 @@ public static partial class StringHelpers
     /// <param name="s">String to search</param>
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
-    public static bool InvariantContains(this string? s, string textToFind)
+    public static bool ContainsInvariant(this string? s, string? textToFind)
     {
-        return s?.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false;
+        return textToFind != null && (s?.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
+    }
+
+    /// <summary>
+    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns>True if s contains the string textToFind in any form</returns>
+    public static bool ContainsInvariant(this IEnumerable<string?>? s, string? textToFind)
+    {
+        return s?.Contains(textToFind, StringComparer.InvariantCultureIgnoreCase) ?? false;
     }
 
     /// <summary>
@@ -197,7 +208,7 @@ public static partial class StringHelpers
     /// <para>True if s contains any of the strings in textsToFind in any form when comparisonType = OR</para>
     /// <para>True if s contains all of the strings in textsToFind when comparisonType = AND</para>
     /// </returns>
-    public static bool InvariantContains(this string? s, IEnumerable<string> textsToFind, EComparisonType comparisonType)
+    public static bool ContainsInvariant(this string? s, IEnumerable<string> textsToFind, EComparisonType comparisonType)
     {
         if (s.IsNullOrWhiteSpace())
         {
@@ -209,7 +220,7 @@ public static partial class StringHelpers
             case EComparisonType.OR:
                 foreach (string textToFind in textsToFind)
                 {
-                    if(s.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase))
+                    if(s.ContainsInvariant(textToFind))
                     {
                         return true;
                     }
@@ -218,7 +229,7 @@ public static partial class StringHelpers
             case EComparisonType.AND:
                 foreach (string textToFind in textsToFind)
                 {
-                    if (!s.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase))
+                    if (!s.ContainsInvariant(textToFind))
                     {
                         return false;
                     }

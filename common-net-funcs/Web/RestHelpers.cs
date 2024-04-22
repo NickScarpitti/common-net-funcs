@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
+using static Common_Net_Funcs.Tools.StringHelpers;
 
 namespace Common_Net_Funcs.Web;
 
@@ -343,7 +344,7 @@ public static class RestHelpers
             }
             else
             {
-                string errorMessage = DataValidation.ContainsInvariant(response.Content.Headers.ContentType.ToNString(), "json") ?
+                string errorMessage = response.Content.Headers.ContentType.ToNString().ContainsInvariant("json") ?
                     JToken.Parse(await response.Content.ReadAsStringAsync()).ToString(Formatting.Indented) :
                     await response.Content.ReadAsStringAsync();
                 logger.Warn($"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n{errorMessage}");

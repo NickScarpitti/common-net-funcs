@@ -2,7 +2,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
-using static Common_Net_Funcs.Tools.ObjectHelpers;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -67,7 +66,7 @@ public static class DeepCloneReflectionHelpers
             return originalObject;
         }
 
-        if (visited.TryGetValue(originalObject, out var value))
+        if (visited.TryGetValue(originalObject, out object? value))
         {
             return value;
         }
@@ -116,8 +115,8 @@ public static class DeepCloneReflectionHelpers
                 continue;
             }
 
-            var originalFieldValue = fieldInfo.GetValue(originalObject);
-            var clonedFieldValue = InternalCopy(originalFieldValue, visited);
+            object? originalFieldValue = fieldInfo.GetValue(originalObject);
+            object? clonedFieldValue = InternalCopy(originalFieldValue, visited);
             fieldInfo.SetValue(cloneObject, clonedFieldValue);
         }
     }
@@ -260,7 +259,7 @@ public static class DeepCloneExpressionTreeHelpers
 
                     compiledCopyFunction = uncompiledCopyFunction.Compile();
 
-                    var dictionaryCopy = CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
+                    Dictionary<Type, Func<object, Dictionary<object, object>, object>> dictionaryCopy = CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
 
                     dictionaryCopy.Add(type, compiledCopyFunction);
 
@@ -506,7 +505,7 @@ public static class DeepCloneExpressionTreeHelpers
 
         ///// NOT-READONLY FIELDS COPY
 
-        foreach (var field in writableFields)
+        foreach (FieldInfo field in writableFields)
         {
             if (field.FieldType.IsDelegate())
             {
@@ -553,7 +552,7 @@ public static class DeepCloneExpressionTreeHelpers
         /////
         ///// fieldInfo.SetValue(boxing, <fieldtype>null);
 
-        var fieldToNullExpression = Expression.Call(Expression.Constant(field), SetValueMethod!, boxingVariable, Expression.Constant(null, field.FieldType));
+        MethodCallExpression fieldToNullExpression = Expression.Call(Expression.Constant(field), SetValueMethod!, boxingVariable, Expression.Constant(null, field.FieldType));
 
         expressions.Add(fieldToNullExpression);
     }
@@ -596,7 +595,7 @@ public static class DeepCloneExpressionTreeHelpers
 
         MemberExpression fieldTo = Expression.Field(outputVariable, field);
 
-        var fieldToNullExpression = Expression.Assign(fieldTo, Expression.Constant(null, field.FieldType));
+        BinaryExpression fieldToNullExpression = Expression.Assign(fieldTo, Expression.Constant(null, field.FieldType));
 
         expressions.Add(fieldToNullExpression);
     }
@@ -649,7 +648,7 @@ public static class DeepCloneExpressionTreeHelpers
                 {
                     isStructTypeToDeepCopy = type!.IsStructWhichNeedsDeepCopy_NoDictionaryUsed();
 
-                    var newDictionary = IsStructTypeToDeepCopyDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
+                    Dictionary<Type, bool> newDictionary = IsStructTypeToDeepCopyDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
 
                     newDictionary[type!] = isStructTypeToDeepCopy;
 
@@ -690,7 +689,7 @@ public static class DeepCloneExpressionTreeHelpers
 
         IEnumerable<Type> notBasicStructsTypes = allFieldTypes.Where(x => x.IsStructOtherThanBasicValueTypes()).ToList();
 
-        foreach (var typeToCheck in (IEnumerable<Type>)notBasicStructsTypes.Where(t => !alreadyCheckedTypes.Contains(t)).ToList())
+        foreach (Type typeToCheck in (IEnumerable<Type>)notBasicStructsTypes.Where(t => !alreadyCheckedTypes.Contains(t)).ToList())
         {
             if (typeToCheck.HasInItsHierarchyFieldsWithClasses(alreadyCheckedTypes))
             {

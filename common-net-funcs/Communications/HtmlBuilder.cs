@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using static Common_Net_Funcs.Conversion.StringConversion;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
+using static Common_Net_Funcs.Tools.StringHelpers;
 
 namespace Common_Net_Funcs.Communications;
 
@@ -25,7 +26,7 @@ public static partial class HtmlBuilder
         text += body.StringtoHtml();
         text += tableData == null || tableData.Rows.Count == 0 ? string.Empty : "<br><br>";
         text += tableData.CreateHtmlTable();
-        text += !string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty;
+        text += !footer.IsNullOrWhiteSpace() ? "<br><br>" : string.Empty;
         text += footer.StringtoHtml();
         text = text.FormatAllUrlsToHtml();
 
@@ -47,7 +48,7 @@ public static partial class HtmlBuilder
         text += body.StringtoHtml();
         text += tableData?.AnyFast() != true ? string.Empty : "<br><br>";
         text += tableData.CreateHtmlTable();
-        text += !string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty;
+        text += !footer.IsNullOrWhiteSpace() ? "<br><br>" : string.Empty;
         text += footer.StringtoHtml();
         text = text.FormatAllUrlsToHtml();
 
@@ -108,7 +109,7 @@ public static partial class HtmlBuilder
     public static string CreateHtmlTable(this DataTable? tableData, bool applyTableCss = true, string? customCss = null)
     {
         string tableHtml = string.Empty;
-        string tableStyle = !string.IsNullOrWhiteSpace(customCss) ? customCss :
+        string tableStyle = !customCss.IsNullOrWhiteSpace() ? customCss :
             "<style>" +
                 "table{" +
                     "font-family: arial, sans-serif;" +
@@ -162,7 +163,7 @@ public static partial class HtmlBuilder
     public static string CreateHtmlTable(this List<List<string>>? tableData, bool applyTableCss = true, string? customCss = null)
     {
         string tableHtml = string.Empty;
-        string tableStyle = !string.IsNullOrWhiteSpace(customCss) ? customCss :
+        string tableStyle = !customCss.IsNullOrWhiteSpace() ? customCss :
             "<style>" +
                 "table{" +
                     "font-family: arial, sans-serif;" +

@@ -5,10 +5,12 @@ using Amazon.S3.Model;
 using Amazon.S3.Util;
 using Microsoft.Extensions.Logging;
 using RAPID_Data.ServerOps.Interfaces;
-using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.DebugHelpers;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
+using static Common_Net_Funcs.Tools.StringHelpers;
 
 namespace RAPID_Data.ServerOps;
+
 public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
 {
     private readonly IAmazonS3 s3Client = s3Client;
@@ -30,7 +32,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         try
         {
             validatedBuckets ??= ValidatedBuckets;
-            if (!string.IsNullOrWhiteSpace(fileName) && await IsBucketValid(bucketName, validatedBuckets))
+            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets))
             {
                 if (await S3FileExists(bucketName, fileName))
                 {
@@ -78,7 +80,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         try
         {
             validatedBuckets ??= ValidatedBuckets;
-            if (!string.IsNullOrWhiteSpace(fileName) && await IsBucketValid(bucketName, validatedBuckets))
+            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets))
             {
                 GetObjectRequest request = new()
                 {
@@ -128,7 +130,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         try
         {
             validatedBuckets ??= ValidatedBuckets;
-            if (!string.IsNullOrWhiteSpace(fileName) && await IsBucketValid(bucketName, validatedBuckets) && await S3FileExists(bucketName, fileName))
+            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets) && await S3FileExists(bucketName, fileName))
             {
                 await s3Client.DeleteObjectAsync(bucketName, fileName);
                 success = true;
@@ -164,13 +166,13 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         bool success = false;
         try
         {
-            if (!string.IsNullOrWhiteSpace(fileName))
+            if (!fileName.IsNullOrWhiteSpace())
             {
                 GetObjectMetadataRequest request = new()
                 {
                     BucketName = bucketName,
                     Key = fileName,
-                    VersionId = !string.IsNullOrEmpty(versionId) ? versionId : null
+                    VersionId = !versionId.IsNullOrEmpty() ? versionId : null
                 };
 
                 GetObjectMetadataResponse? response = await s3Client.GetObjectMetadataAsync(request);
@@ -202,7 +204,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         List<string> fileNames = [];
         try
         {
-            if (!string.IsNullOrWhiteSpace(bucketName))
+            if (!bucketName.IsNullOrWhiteSpace())
             {
                 ListObjectsV2Response? response = new();
                 ListObjectsV2Request request = new()

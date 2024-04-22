@@ -1,7 +1,7 @@
 ﻿//using System.Data;
 //using System.Reflection;
 //using ClosedXML.Excel;
-//using static Common_Net_Funcs.Tools.DataValidation;
+//
 
 namespace Common_Net_Funcs.Excel;
 

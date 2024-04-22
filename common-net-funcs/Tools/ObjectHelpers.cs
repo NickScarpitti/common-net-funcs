@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using NLog;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -12,6 +14,8 @@ namespace Common_Net_Funcs.Tools;
 /// </summary>
 public static class ObjectHelpers
 {
+    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
     /// <summary>
     /// Copy properties of the same name from one object to another
     /// </summary>
@@ -102,7 +106,7 @@ public static class ObjectHelpers
                 if (prop.PropertyType == typeof(string))
                 {
                     string? value = (string?)prop.GetValue(obj);
-                    if (!string.IsNullOrEmpty(value))
+                    if (!value.IsNullOrEmpty())
                     {
                         prop.SetValue(obj, value.TrimFull());
                     }
@@ -127,7 +131,7 @@ public static class ObjectHelpers
                 if (prop.PropertyType == typeof(string))
                 {
                     string? value = (string?)prop.GetValue(obj);
-                    if (!string.IsNullOrEmpty(value))
+                    if (!value.IsNullOrEmpty())
                     {
                         if (enableTrim)
                         {
@@ -220,8 +224,8 @@ public static class ObjectHelpers
         {
             foreach (PropertyInfo property in typeof(T).GetProperties())
             {
-                var value = property.GetValue(instance);
-                var mergedValue = property.GetValue(merged);
+                object? value = property.GetValue(instance);
+                object? mergedValue = property.GetValue(merged);
 
                 if (value != default && mergedValue == default)
                 {
@@ -327,11 +331,16 @@ public static class ObjectHelpers
         return dict?.Count > 0;
     }
 
+    /// <summary>
+    /// Combine multiple expressions into a single expression
+    /// </summary>
+    /// <param name="expressions">Enumerable containing at least one expression</param>
+    /// <returns>A single expression equivalent of the enumerated expressions passed in</returns>
     public static Expression<Func<T, bool>>? CombineExpressions<T>(IEnumerable<Expression<Func<T, bool>>> expressions)
     {
         Expression<Func<T, bool>>? combined = null;
 
-        foreach (var expression in expressions)
+        foreach (Expression<Func<T, bool>> expression in expressions)
         {
             if (combined == null)
             {
@@ -339,13 +348,13 @@ public static class ObjectHelpers
             }
             else
             {
-                var parameter = Expression.Parameter(typeof(T), "x");
+                ParameterExpression parameter = Expression.Parameter(typeof(T), "x");
 
-                var leftVisitor = new ReplaceParameterVisitor(expression.Parameters[0], parameter);
-                var left = leftVisitor.Visit(expression.Body);
+                ReplaceParameterVisitor leftVisitor = new(expression.Parameters[0], parameter);
+                Expression left = leftVisitor.Visit(expression.Body);
 
-                var rightVisitor = new ReplaceParameterVisitor(combined.Parameters[0], parameter);
-                var right = rightVisitor.Visit(combined.Body);
+                ReplaceParameterVisitor rightVisitor = new(combined.Parameters[0], parameter);
+                Expression right = rightVisitor.Visit(combined.Body);
 
                 combined = Expression.Lambda<Func<T, bool>>(Expression.AndAlso(left, right), parameter);
             }
@@ -354,29 +363,161 @@ public static class ObjectHelpers
         return combined;
     }
 
+    /// <summary>
+    /// Get the number of properties in a class that are set to their default value
+    /// </summary>
+    /// <param name="obj">Object to count default properties in</param>
+    /// <returns>Number of properties in a class that are set to their default value</returns>
     public static int CountDefaultProps<T>(this T obj) where T : class
     {
         return typeof(T).GetProperties().Count(x => x.CanWrite && x.GetValue(obj) == x.PropertyType.GetDefaultValue());
     }
 
+    /// <summary>
+    /// Gets the default value of the provided type
+    /// </summary>
+    /// <param name="type">Type to get the default value of</param>
+    /// <returns>The default value of the provided type</returns>
     public static object? GetDefaultValue(this Type type)
     {
         return type.IsValueType ? RuntimeHelpers.GetUninitializedObject(type) : null;
     }
 
+    /// <summary>
+    /// Checks to see if a type is a delegate
+    /// </summary>
+    /// <param name="type">Type to check to see if it's a delegate</param>
+    /// <returns>True if type parameter is a delegate</returns>
     public static bool IsDelegate(this Type type)
     {
         return typeof(Delegate).IsAssignableFrom(type);
     }
 
+    /// <summary>
+    /// Checks to see if a type is an array
+    /// </summary>
+    /// <param name="type">Type to check if it's an array</param>
+    /// <returns>True if type parameter is an array</returns>
     public static bool IsArray(this Type type)
     {
         return type.IsArray;
     }
 
+    /// <summary>
+    /// Checks to see if a type is a class other than a string
+    /// </summary>
+    /// <param name="type">Type to check to see if it's a class other than a string</param>
+    /// <returns>True if type parameter is a class other than a string</returns>
     public static bool IsClassOtherThanString(this Type? type)
     {
         return type == null || (!type.IsValueType && type != typeof(string)); //Added type == null || - Nick
+    }
+
+    /// <summary>
+    /// Provides a safe way to add a new Dictionary key without having to worry about duplication
+    /// </summary>
+    /// <param name="dict">Dictionary to add item to</param>
+    /// <param name="key">Key of new item to add to dict</param>
+    /// <param name="value">Value of new item to add to dict</param>
+    public static void AddDictionaryItem<K, V>(this Dictionary<K, V?> dict, K key, V? value = default) where K : notnull
+    {
+        dict.TryAdd(key, value);
+    }
+
+    /// <summary>
+    /// Provides a safe way to add a new ConcurrentDictionary key without having to worry about duplication
+    /// </summary>
+    /// <param name="dict">ConcurrentDictionary to add item to</param>
+    /// <param name="key">Key of new item to add to dict</param>
+    /// <param name="value">Value of new item to add to dict</param>
+    public static void AddDictionaryItem<K, V>(this ConcurrentDictionary<K, V?> dict, K key, V? value = default) where K : notnull
+    {
+        if (!dict.ContainsKey(key))
+        {
+            dict.TryAdd(key, value);
+        }
+    }
+
+    /// <summary>
+    /// Compares two like objects against each other to check to see if they contain the same values
+    /// </summary>
+    /// <param name="obj1">First object to compare for value equality</param>
+    /// <param name="obj2">Second object to compare for value equality</param>
+    /// <returns>True if the two objects have the same value for all elements</returns>
+    public static bool IsEqual(this object? obj1, object? obj2)
+    {
+        return IsEqual(obj1, obj2, null);
+    }
+
+    /// <summary>
+    /// Compare two class objects for value equality
+    /// </summary>
+    /// <param name="obj1">First object to compare for value equality</param>
+    /// <param name="obj2">First object to compare for value equality</param>
+    /// <param name="exemptProps">Names of properties to not include in the matching check</param>
+    /// <returns>True if both objects contain identical values for all properties except for the ones identified by exemptProps</returns>
+    public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
+    {
+        // They're both null.
+        if (obj1 == null && obj2 == null)
+        {
+            return true;
+        }
+        // One is null, so they can't be the same.
+        if (obj1 == null || obj2 == null)
+        {
+            return false;
+        }
+        // How can they be the same if they're different types?
+        if (obj1.GetType() != obj1.GetType())
+        {
+            return false;
+        }
+
+        IEnumerable<PropertyInfo> props = obj1.GetType().GetProperties();
+        if (exemptProps?.Any() == true)
+        {
+            props = props.Where(x => exemptProps?.Contains(x.Name) != true);
+        }
+        foreach (PropertyInfo prop in props)
+        {
+            object aPropValue = prop.GetValue(obj1) ?? string.Empty;
+            object bPropValue = prop.GetValue(obj2) ?? string.Empty;
+
+            bool aIsNumeric = aPropValue.IsNumeric();
+            bool bIsNumeric = bPropValue.IsNumeric();
+
+            try
+            {
+                //This will prevent issues with numbers with varying decimal places from being counted as a difference
+                if ((aIsNumeric && bIsNumeric && decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!)) ||
+                    (!(aIsNumeric && bIsNumeric) && aPropValue.ToString() != bPropValue.ToString()))
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Check if an object is a numeric type
+    /// </summary>
+    /// <param name="testObject">Object to check to see if it's numeric</param>
+    /// <returns>True if testObject is a numeric type</returns>
+    public static bool IsNumeric(this object? testObject)
+    {
+        bool isNumeric = false;
+        if (!testObject.IsNullOrWhiteSpace())
+        {
+            isNumeric = decimal.TryParse(testObject.ToString(), NumberStyles.Number, NumberFormatInfo.InvariantInfo, out _);
+        }
+        return isNumeric;
     }
 }
 

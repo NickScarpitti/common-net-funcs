@@ -30,8 +30,8 @@ public class GenericCompare<T> : IEqualityComparer<T>
 
         foreach (PropertyInfo prop in obj1.GetType().GetProperties())
         {
-            var aPropValue = prop.GetValue(obj1) ?? string.Empty;
-            var bPropValue = prop.GetValue(obj2) ?? string.Empty;
+            object aPropValue = prop.GetValue(obj1) ?? string.Empty;
+            object bPropValue = prop.GetValue(obj2) ?? string.Empty;
             if (aPropValue.ToString() != bPropValue.ToString())
             {
                 return false;
@@ -43,8 +43,8 @@ public class GenericCompare<T> : IEqualityComparer<T>
     /// <summary>
     /// Compare two class objects for value equality
     /// </summary>
-    /// <param name="obj1"></param>
-    /// <param name="obj2"></param>
+    /// <param name="obj1">First object to compare values from</param>
+    /// <param name="obj2">Second object to compare values from</param>
     /// <param name="exemptProps">Names of properties to not include in the matching check</param>
     /// <returns>True if both objects contain identical values for all properties except for the ones identified by exemptProps</returns>
     public bool Equals(T? obj1, T? obj2, IEnumerable<string> exemptProps)
@@ -69,8 +69,8 @@ public class GenericCompare<T> : IEqualityComparer<T>
         {
             if (!exemptProps.Contains(prop.Name))
             {
-                var aPropValue = prop.GetValue(obj1) ?? string.Empty;
-                var bPropValue = prop.GetValue(obj2) ?? string.Empty;
+                object aPropValue = prop.GetValue(obj1) ?? string.Empty;
+                object bPropValue = prop.GetValue(obj2) ?? string.Empty;
                 if (aPropValue.ToString() != bPropValue.ToString())
                 {
                     return false;
@@ -94,7 +94,7 @@ public class GenericCompare<T> : IEqualityComparer<T>
             //Order by here makes this consistent
             foreach (PropertyInfo prop in props.OrderBy(x => x.Name))
             {
-                var propValue = prop.GetValue(obj) ?? string.Empty;
+                object propValue = prop.GetValue(obj) ?? string.Empty;
                 allProps += propValue;
             }
         }

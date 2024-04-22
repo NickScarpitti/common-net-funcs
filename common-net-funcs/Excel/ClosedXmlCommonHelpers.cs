@@ -34,7 +34,7 @@ public static class ClosedXmlCommonHelpers
     //    /// <returns>True if cell is empty</returns>
     //    public static bool IsCellEmpty(this IXLCell cell)
     //    {
-    //        return string.IsNullOrWhiteSpace(cell.Value.ToString());
+    //        return cell.Value.ToString().IsNullOrWhiteSpace();
     //    }
 
     //    /// <summary>

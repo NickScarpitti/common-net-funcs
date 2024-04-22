@@ -1,12 +1,10 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using static Common_Net_Funcs.Tools.DataValidation;
-using static Common_Net_Funcs.Tools.ObjectHelpers;
-using static Common_Net_Funcs.Tools.StringManipulation;
+using static System.Convert;
+using static Common_Net_Funcs.Tools.StringHelpers;
 
 namespace Common_Net_Funcs.Conversion;
 
@@ -54,7 +52,7 @@ public static class StringConversion
     /// <summary>
     /// Converts Nullable DateTime to string using the passed in formatting
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">Timespan to convert to string</param>
     /// <param name="format">Timespan format</param>
     /// <returns>Formatted string representation of the passed in nullable Timespan</returns>
     [return: NotNullIfNotNull(nameof(value))]
@@ -72,7 +70,7 @@ public static class StringConversion
     /// <summary>
     /// Converts nullable int to string
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">Integer to convert to string</param>
     /// <returns>String representation of the passed in nullable int</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this int? value)
@@ -88,7 +86,7 @@ public static class StringConversion
     /// <summary>
     /// Converts nullable long to string
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">Long to convert to string</param>
     /// <returns>String representation of the passed in nullable long</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this long? value)
@@ -104,7 +102,7 @@ public static class StringConversion
     /// <summary>
     /// Converts nullable double to string
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">Double to convert to string</param>
     /// <returns>String representation of the passed in nullable double</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this double? value)
@@ -120,7 +118,7 @@ public static class StringConversion
     /// <summary>
     /// Converts nullable decimal to string
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">Decimal to convert to string</param>
     /// <returns>String representation of the passed in nullable decimal</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this decimal? value)
@@ -310,7 +308,7 @@ public static class StringConversion
     /// <returns>Nullable int parsed from a string</returns>
     public static int? ToNInt(this string? value)
     {
-        if (!string.IsNullOrEmpty(value) && int.TryParse(value, out int i))
+        if (!value.IsNullOrEmpty() && int.TryParse(value, out int i))
         {
             return i;
         }
@@ -324,7 +322,7 @@ public static class StringConversion
     /// <returns>Nullable double parsed from a string</returns>
     public static double? ToNDouble(this string? value)
     {
-        if (!string.IsNullOrEmpty(value) && double.TryParse(value, out double i))
+        if (!value.IsNullOrEmpty() && double.TryParse(value, out double i))
         {
             return i;
         }
@@ -338,7 +336,7 @@ public static class StringConversion
     /// <returns>Nullable decimal parsed from a string</returns>
     public static decimal? ToNDecimal (this string? value)
     {
-        if (!string.IsNullOrEmpty(value) && decimal.TryParse(value, out decimal i))
+        if (!value.IsNullOrEmpty() && decimal.TryParse(value, out decimal i))
         {
             return i;
         }
@@ -348,7 +346,7 @@ public static class StringConversion
     /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">String to parse into a DateTime</param>
     /// <returns>Nullable DateTime parsed from a string</returns>
     public static DateTime? ToNDateTime(this string? value)
     {
@@ -367,7 +365,7 @@ public static class StringConversion
     /// <summary>
     /// Convert string "Yes"/"No" value into bool
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">"Yes"/"No" string to convert into a boolean</param>
     /// <returns>Bool representation of string value passed in</returns>
     public static bool YesNoToBool(this string? value)
     {
@@ -377,7 +375,7 @@ public static class StringConversion
     /// <summary>
     /// Convert string "Y"/"N" value into bool
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">"Y"/"N" string to convert into a boolean</param>
     /// <returns>Bool representation of string value passed in</returns>
     public static bool YNToBool(this string? value)
     {
@@ -385,112 +383,33 @@ public static class StringConversion
     }
 
     /// <summary>
-    /// Cleans potential parsing issues out of a query parameter
+    /// Convert bool to "Yes" or "No"
     /// </summary>
-    /// <param name="value"></param>
-    /// <returns>String equivalent of value passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
-    public static string? CleanQueryParam(this string? value)
+    /// <param name="value">Boolean to convert to "Yes" or "No"</param>
+    /// <returns>"Yes" if true, "No" if false</returns>
+    public static string BoolToYesNo(this bool value)
     {
-        return value.MakeNullNull()?.Replace("\n", "").Trim();
+        if (value)
+        {
+            return nameof(EYesNo.Yes);
+        }
+        return nameof(EYesNo.No);
     }
 
     /// <summary>
-    /// Cleans potential parsing issues out of a list of query parameters
+    /// Convert bool to 1 or 0
     /// </summary>
-    /// <param name="values"></param>
-    /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
-    [return: NotNullIfNotNull(nameof(values))]
-    public static IEnumerable<string>? CleanQueryParam(this IEnumerable<string>? values)
+    /// <param name="value">Integer to conver to "Yes" or "No"</param>
+    /// <returns>"Yes" if true, "No" if false</returns>
+    public static int BoolToInt(this bool value)
     {
-        if (values == null)
-        {
-            return null;
-        }
-
-        ConcurrentBag<string?> cleanValues = [];
-        if (values.Any())
-        {
-            Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim()));
-        }
-
-        return (cleanValues ?? []).Where(x => x != null)!;
-    }
-
-    /// <summary>
-    /// Cleans potential parsing issues out of a list of query parameters
-    /// </summary>
-    /// <param name="values"></param>
-    /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
-    [return: NotNullIfNotNull(nameof(values))]
-    public static List<string>? CleanQueryParam(this IList<string>? values)
-    {
-        if (values == null)
-        {
-            return null;
-        }
-
-        ConcurrentBag<string?> cleanValues = [];
-        if (values.AnyFast())
-        {
-            Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim()));
-        }
-
-        return (cleanValues ?? []).Where(x => x != null).ToList()!;
-    }
-
-    /// <summary>
-    /// Converts list of query parameters into a query parameter string
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="parameters">List of a type that can be converted to string</param>
-    /// <param name="queryParameterName">The name to be used in front of the equals sign for the query parameter string</param>
-    /// <returns>String representation of the list passed in as query parameters with the name passed in as queryParameterName</returns>
-    public static string ListToQueryParameters<T>(this IEnumerable<T>? parameters, string? queryParameterName)
-    {
-        string queryString = string.Empty;
-        bool firstItem = true;
-        if (parameters?.Any() == true && !string.IsNullOrWhiteSpace(queryParameterName))
-        {
-            foreach (T parameter in parameters)
-            {
-                if (!firstItem)
-                {
-                    queryString += $"&{queryParameterName}={parameter}";
-                }
-                else
-                {
-                    queryString = $"{queryParameterName}={parameter}";
-                    firstItem = false;
-                }
-            }
-        }
-        return queryString;
-    }
-
-    [return: NotNullIfNotNull(nameof(dateTime))]
-    public static string? ToUrlSafeString(this DateTime? dateTime, string? dateFormat = null)
-    {
-        return dateTime.ToNString(dateFormat ?? TimestampUrlFormat);
-    }
-
-    public static string ToUrlSafeString(this DateTime dateTime, string? dateFormat = null)
-    {
-        return dateTime.ToString(dateFormat ?? TimestampUrlFormat);
-    }
-
-    public static DateTime? ParseUrlSafeDateTime(this string? urlSafeDateTime, string? dateFormat = null)
-    {
-        if (DateTime.TryParseExact(urlSafeDateTime, dateFormat ?? TimestampUrlFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime))
-        {
-            return dateTime;
-        }
-        return null;
+        return ToInt32(value);
     }
 
     /// <summary>
     /// Get file name safe date in the chosen format
     /// </summary>
-    /// <param name="dateFormat"></param>
+    /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
     /// <returns>File name safe formatted date</returns>
     public static string GetSafeDate(string dateFormat)
     {
@@ -572,7 +491,7 @@ public static class StringConversion
             }
         }
 
-        return string.IsNullOrWhiteSpace(days) ? stringForm : days + ":" + stringForm;
+        return days.IsNullOrWhiteSpace() ? stringForm : days + ":" + stringForm;
     }
 
     /// <summary>
@@ -642,5 +561,17 @@ public static class StringConversion
             }
         }
         return new(src, 0, index);
+    }
+
+    /// <summary>
+    /// Take any format of a date time string and convert it to a different format
+    /// </summary>
+    /// <param name="dateString">Input date string to be converted</param>
+    /// <param name="sourceFormat">Format of dateString string</param>
+    /// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
+    [return: NotNullIfNotNull(nameof(dateString))]
+    public static string? FormatDateString(this string? dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
+    {
+        return dateString == null ? null : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(outputFormat.IsNullOrEmpty() ? "MM/dd/yyyy" : outputFormat);
     }
 }

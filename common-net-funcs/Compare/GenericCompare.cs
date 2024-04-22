@@ -30,8 +30,8 @@ public class GenericCompare<T> : IEqualityComparer<T>
 
         foreach (PropertyInfo prop in obj1.GetType().GetProperties())
         {
-            var aPropValue = prop.GetValue(obj1) ?? string.Empty;
-            var bPropValue = prop.GetValue(obj2) ?? string.Empty;
+            object aPropValue = prop.GetValue(obj1) ?? string.Empty;
+            object bPropValue = prop.GetValue(obj2) ?? string.Empty;
             if (aPropValue.ToString() != bPropValue.ToString())
             {
                 return false;
@@ -69,8 +69,8 @@ public class GenericCompare<T> : IEqualityComparer<T>
         {
             if (!exemptProps.Contains(prop.Name))
             {
-                var aPropValue = prop.GetValue(obj1) ?? string.Empty;
-                var bPropValue = prop.GetValue(obj2) ?? string.Empty;
+                object aPropValue = prop.GetValue(obj1) ?? string.Empty;
+                object bPropValue = prop.GetValue(obj2) ?? string.Empty;
                 if (aPropValue.ToString() != bPropValue.ToString())
                 {
                     return false;
@@ -94,7 +94,7 @@ public class GenericCompare<T> : IEqualityComparer<T>
             //Order by here makes this consistent
             foreach (PropertyInfo prop in props.OrderBy(x => x.Name))
             {
-                var propValue = prop.GetValue(obj) ?? string.Empty;
+                object propValue = prop.GetValue(obj) ?? string.Empty;
                 allProps += propValue;
             }
         }

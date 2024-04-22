@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using static Common_Net_Funcs.Conversion.StringConversion;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -19,6 +20,24 @@ public static partial class StringHelpers
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex MultiSpaceRegex();
+
+    [GeneratedRegex("^[a-zA-Z0-9]*$")]
+    private static partial Regex AlphanumericRegex();
+
+    [GeneratedRegex(@"^[a-zA-Z0-9\s]*$")]
+    private static partial Regex AlphanumericWithSpacesRegex();
+
+    [GeneratedRegex("^[a-zA-Z]*$")]
+    private static partial Regex AlphaOnlyRegex();
+
+    [GeneratedRegex(@"^[a-zA-Z\s]*$")]
+    private static partial Regex AlphaOnlyWithSpacesRegex();
+
+    [GeneratedRegex("^[0-9]*$")]
+    private static partial Regex NumericOnlyRegex();
+
+    [GeneratedRegex(@"^[0-9\s]*$")]
+    private static partial Regex NumericOnlyWithSpacesRegex();
 
     /// <summary>
     /// Clone of VBA Left() function that gets n characters from the left side of the string
@@ -146,6 +165,11 @@ public static partial class StringHelpers
         return s;
     }
 
+    /// <summary>
+    /// Trims a string removing all extra leading and trailing spaces as well as reducing multiple consecutive spaces to only 1 space
+    /// </summary>
+    /// <param name="s">String to remove extra spaces from</param>
+    /// <returns>String without leading, trailing or multiple consecutive spaces</returns>
     [return: NotNullIfNotNull(nameof(s))]
     public static string? TrimFull(this string? s)
     {
@@ -177,6 +201,26 @@ public static partial class StringHelpers
     }
 
     /// <summary>
+    /// Indicates whether a specified string is null, a zero length string, or consists only of white-space characters
+    /// </summary>
+    /// <param name="s">The string to test</param>
+    /// <returns>True if s is null, a zero length string, or consists only of white-space characters</returns>
+    public static bool IsNullOrWhiteSpace<T>([NotNullWhen(false)] this T? s)
+    {
+        return string.IsNullOrWhiteSpace(s.ToNString());
+    }
+
+    /// <summary>
+    /// Indicates whether a specified string is null or a zero length string
+    /// </summary>
+    /// <param name="s">The string to test</param>
+    /// <returns>True if s is null or a zero length string</returns>
+    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T? s)
+    {
+        return string.IsNullOrEmpty(s.ToNString());
+    }
+
+    /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
     /// </summary>
     /// <param name="s">String to search</param>
@@ -196,6 +240,28 @@ public static partial class StringHelpers
     public static bool ContainsInvariant(this IEnumerable<string?>? s, string? textToFind)
     {
         return s?.Contains(textToFind, StringComparer.InvariantCultureIgnoreCase) ?? false;
+    }
+
+    /// <summary>
+    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns>True if s contains the string textToFind in any form</returns>
+    public static int IndexOfInvariant(this string? s, string? textToFind)
+    {
+        return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
+    }
+
+    /// <summary>
+    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns>True if s contains the string textToFind in any form</returns>
+    public static int IndexOfInvariant(this string? s, char? textToFind)
+    {
+        return textToFind != null && textToFind != null ? s?.IndexOf((char)textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
     }
 
     /// <summary>
@@ -238,5 +304,49 @@ public static partial class StringHelpers
             default:
                 return false;
         }
+    }
+
+    /// <summary>
+    /// Compare two strings ignoring culture and case
+    /// </summary>
+    /// <param name="s1">First string to compare</param>
+    /// <param name="s2">Second string to compare</param>
+    /// <returns>True if the strings are equal when ignoring culture and case</returns>
+    public static bool StrEq(this string? s1, string? s2)
+    {
+        return string.Equals(s1?.Trim() ?? string.Empty, s2?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
+    }
+
+    /// <summary>
+    /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
+    /// </summary>
+    /// <param name="testString">String to check if it only contains alphanumeric characters</param>
+    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+    /// <returns>True if testString contains only letters and numbers and optionally spaces</returns>
+    public static bool IsAlphanumeric(this string? testString, bool allowSpaces = false)
+    {
+        return testString != null && (!allowSpaces ? AlphanumericRegex().IsMatch(testString) : AlphanumericWithSpacesRegex().IsMatch(testString));
+    }
+
+    /// <summary>
+    /// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
+    /// </summary>
+    /// <param name="testString">String to check if it only contains alphabetical characters</param>
+    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+    /// <returns>True if testString only contains letters and optionally spaces</returns>
+    public static bool IsAlphaOnly(this string? testString, bool allowSpaces = false)
+    {
+        return testString != null && (!allowSpaces ? AlphaOnlyRegex().IsMatch(testString) : AlphaOnlyWithSpacesRegex().IsMatch(testString));
+    }
+
+    /// <summary>
+    /// Check string to see if a string only contains numbers (0-9). Null returns false.
+    /// </summary>
+    /// <param name="testString">String to check if it only contains numeric characters</param>
+    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+    /// <returns>True if testString only contains numbers and optionally spaces</returns>
+    public static bool IsNumericOnly(this string? testString, bool allowSpaces = false)
+    {
+        return testString != null && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
     }
 }

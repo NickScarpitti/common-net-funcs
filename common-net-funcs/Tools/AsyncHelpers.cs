@@ -28,8 +28,6 @@ public static class AsyncHelpers
     /// <summary>
     /// Task to update obj property asynchronously
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="UT"></typeparam>
     /// <param name="obj">Object to update</param>
     /// <param name="propertyName">Name of property to update within obj object</param>
     /// <param name="task">Async task to run that returns the value to assign to the property indicated</param>
@@ -65,7 +63,6 @@ public static class AsyncHelpers
     /// <summary>
     /// Task to fill obj variable asynchronously
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
     public static async Task ObjectFill<T>(this T? obj, Task<T?> task)
@@ -87,7 +84,6 @@ public static class AsyncHelpers
     /// <summary>
     /// Task to fill list obj variable asynchronously
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
     public static async Task ObjectFill<T>(this List<T>? obj, Task<List<T>?> task)
@@ -113,7 +109,6 @@ public static class AsyncHelpers
     /// <summary>
     /// Task to fill list obj variable asynchronously
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
     public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>?> task)
@@ -139,7 +134,6 @@ public static class AsyncHelpers
     /// <summary>
     /// Task to fill list obj variable asynchronously
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
     public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<ConcurrentBag<T>?> task)
@@ -165,7 +159,6 @@ public static class AsyncHelpers
     /// <summary>
     /// Task to fill list obj variable asynchronously
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
     public static async Task ObjectFill<T>(this List<T>? obj, Task<IEnumerable<T>?> task)

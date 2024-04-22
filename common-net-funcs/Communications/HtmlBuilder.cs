@@ -48,7 +48,7 @@ public static partial class HtmlBuilder
         text += body.StringtoHtml();
         text += tableData?.AnyFast() != true ? string.Empty : "<br><br>";
         text += tableData.CreateHtmlTable();
-        text += !string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty;
+        text += !footer.IsNullOrWhiteSpace() ? "<br><br>" : string.Empty;
         text += footer.StringtoHtml();
         text = text.FormatAllUrlsToHtml();
 

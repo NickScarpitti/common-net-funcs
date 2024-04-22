@@ -15,7 +15,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert mass in lbs to kg
     /// </summary>
-    /// <param name="massLbs"></param>
+    /// <param name="massLbs">Mass in lbs to convert to kg</param>
     /// <returns>Decimal representation of the mass in lbs converted to kg</returns>
     public static decimal LbsToKg(this decimal massLbs)
     {
@@ -25,7 +25,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert mass in lbs to kg
     /// </summary>
-    /// <param name="massLbs"></param>
+    /// <param name="massLbs">Mass in lbs to convert to kg</param>
     /// <returns>Decimal representation of the mass in lbs converted to kg</returns>
     public static decimal LbsToKg(this decimal? massLbs)
     {
@@ -42,7 +42,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert mass in kg to lbs
     /// </summary>
-    /// <param name="massKg"></param>
+    /// <param name="massKg">Mass in kg to convert to lbs</param>
     /// <returns>Decimal representation of the mass in kg converted to lbs</returns>
     public static decimal KgToLbs(this decimal massKg)
     {
@@ -52,7 +52,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert mass in kg to lbs
     /// </summary>
-    /// <param name="massKg"></param>
+    /// <param name="massKg">Mass in kg to convert to lbs</param>
     /// <returns>Decimal representation of the mass in kg converted to lbs</returns>
     public static decimal KgToLbs(this decimal? massKg)
     {
@@ -69,7 +69,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert length in inches to feet
     /// </summary>
-    /// <param name="lenIns"></param>
+    /// <param name="lenIns">Length in inches to convert to feet</param>
     /// <returns>Decimal representation of the length in inches converted to feet</returns>
     public static decimal InsToFt(this decimal lenIns)
     {
@@ -79,7 +79,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert length in inches to feet
     /// </summary>
-    /// <param name="lenIns"></param>
+    /// <param name="lenIns">Length in inches to convert to feet</param>
     /// <returns>Decimal representation of the length in inches converted to feet</returns>
     public static decimal InsToFt(this decimal? lenIns)
     {
@@ -96,23 +96,23 @@ public static class UnitConversion
     /// <summary>
     /// Convert length in feet to inches
     /// </summary>
-    /// <param name="lenIns"></param>
+    /// <param name="lenFt">Length in feet to convert to inches</param>
     /// <returns>Decimal representation of the length in feet converted to inches</returns>
-    public static decimal FtToIns(this decimal lenIns)
+    public static decimal FtToIns(this decimal lenFt)
     {
-        return lenIns * FtToInConst;
+        return lenFt * FtToInConst;
     }
 
     /// <summary>
     /// Convert length in feet to inches
     /// </summary>
-    /// <param name="lenIns"></param>
+    /// <param name="lenFt">Length in feet to convert to inches</param>
     /// <returns>Decimal representation of the length in feet converted to inches</returns>
-    public static decimal FtToIns(this decimal? lenIns)
+    public static decimal FtToIns(this decimal? lenFt)
     {
-        if (lenIns != null)
+        if (lenFt != null)
         {
-            return ToDecimal(lenIns) * FtToInConst;
+            return ToDecimal(lenFt) * FtToInConst;
         }
         else
         {
@@ -123,7 +123,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert bytes to Kb
     /// </summary>
-    /// <param name="bytes"></param>
+    /// <param name="bytes">Number of bytes to convert to Kb</param>
     /// <returns>Decimal representation of the number of bytes in Kb</returns>
     public static decimal BytesToKb(this int bytes)
     {
@@ -133,7 +133,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert bytes to Kb
     /// </summary>
-    /// <param name="bytes"></param>
+    /// <param name="bytes">Number of bytes to convert to Kb</param>
     /// <returns>Decimal representation of the number of bytes in Kb</returns>
     public static decimal BytesToKb(this long bytes)
     {
@@ -143,7 +143,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert bytes to Mb
     /// </summary>
-    /// <param name="bytes"></param>
+    /// <param name="bytes">Number of bytes to convert to Mb</param>
     /// <returns>Decimal representation of the number of bytes in Mb</returns>
     public static decimal BytesToMb(this int bytes)
     {
@@ -153,7 +153,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert bytes to Mb
     /// </summary>
-    /// <param name="bytes"></param>
+    /// <param name="bytes">Number of bytes to convert to Mb</param>
     /// <returns>Decimal representation of the number of bytes in Mb</returns>
     public static decimal BytesToMb(this long bytes)
     {
@@ -163,7 +163,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert bytes to Gb
     /// </summary>
-    /// <param name="bytes"></param>
+    /// <param name="bytes">Number of bytes to convert to Gb</param>
     /// <returns>Decimal representation of the number of bytes in Gb</returns>
     public static decimal BytesToGb(this int bytes)
     {
@@ -173,7 +173,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert bytes to Gb
     /// </summary>
-    /// <param name="bytes"></param>
+    /// <param name="bytes">Number of bytes to convert to Gb</param>
     /// <returns>Decimal representation of the number of bytes in Gb</returns>
     public static decimal BytesToGb(this long bytes)
     {
@@ -183,7 +183,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert bytes to Tb
     /// </summary>
-    /// <param name="bytes"></param>
+    /// <param name="bytes">Number of bytes to convert to Tb</param>
     /// <returns>Decimal representation of the number of bytes in Tb</returns>
     public static decimal BytesToTb(this int bytes)
     {
@@ -193,7 +193,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert bytes to Tb
     /// </summary>
-    /// <param name="bytes"></param>
+    /// <param name="bytes">Number of bytes to convert to Tb</param>
     /// <returns>Decimal representation of the number of bytes in Tb</returns>
     public static decimal BytesToTb(this long bytes)
     {
@@ -203,7 +203,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert Kb to Mb
     /// </summary>
-    /// <param name="kb"></param>
+    /// <param name="kb">Number of Kb to convert to Mb</param>
     /// <returns>Decimal representation of the number of Kb in Mb</returns>
     public static decimal KbToMb(this decimal kb)
     {
@@ -213,7 +213,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert Kb to Gb
     /// </summary>
-    /// <param name="kb"></param>
+    /// <param name="kb">Number of Kb to convert to Gb</param>
     /// <returns>Decimal representation of the number of Kb in Gb</returns>
     public static decimal KbToGb(this decimal kb)
     {
@@ -223,7 +223,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert Kb to Tb
     /// </summary>
-    /// <param name="kb"></param>
+    /// <param name="kb">Number of Kb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Kb in Tb</returns>
     public static decimal KbToTb(this decimal kb)
     {
@@ -233,7 +233,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert Mb to Gb
     /// </summary>
-    /// <param name="mb"></param>
+    /// <param name="mb">Number of Mb to convert to Gb</param>
     /// <returns>Decimal representation of the number of Mb in Gb</returns>
     public static decimal MbToGb(this decimal mb)
     {
@@ -243,7 +243,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert Mb to Tb
     /// </summary>
-    /// <param name="mb"></param>
+    /// <param name="mb">Number of Mb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Mb in Tb</returns>
     public static decimal MbToTb(this decimal mb)
     {
@@ -253,7 +253,7 @@ public static class UnitConversion
     /// <summary>
     /// Convert Mb to Tb
     /// </summary>
-    /// <param name="Gb"></param>
+    /// <param name="Gb">Number of Gb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Gb in Tb</returns>
     public static decimal GbToTb(this decimal Gb)
     {

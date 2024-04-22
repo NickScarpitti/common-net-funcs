@@ -14,7 +14,7 @@ public static class ImageConversion
     /// <summary>
     /// Read local image file and convert it to a base 64 string
     /// </summary>
-    /// <param name="filePath"></param>
+    /// <param name="filePath">Path to image file to convert into a base 64 string</param>
     /// <returns>Base 64 string representation of image</returns>
     public static string? ConvertImageFileToBase64(this string filePath)
     {
@@ -45,7 +45,7 @@ public static class ImageConversion
     /// <summary>
     /// Convert memory stream of an image to a base 64 string
     /// </summary>
-    /// <param name="ms"></param>
+    /// <param name="ms">Memory stream containing image data to convert into a base 64 string</param>
     /// <returns>Base 64 string representation of image</returns>
     public static string? ConvertImageFileToBase64(this MemoryStream ms)
     {

@@ -534,7 +534,7 @@ public static partial class NpoiCommonHelpers
                 {
                     foreach (PropertyInfo prop in props)
                     {
-                        var value = prop.GetValue(item) ?? string.Empty;
+                        object value = prop.GetValue(item) ?? string.Empty;
                         ICell? c = ws.GetCellFromCoordinates(x, y);
                         if (c != null)
                         {

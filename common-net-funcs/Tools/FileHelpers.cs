@@ -235,6 +235,18 @@ public static class FileHelpers
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
     }
+
+    /// <summary>
+    /// Validates file extension based on list of valid extensions
+    /// </summary>
+    /// <param name="fileName">Full file name (with extension) to check for a valid file extension</param>
+    /// <param name="validExtensions">Array of valid file extensions</param>
+    /// <returns>True if the file has a valid extension</returns>
+    public static bool ValidateFileExtention(this string fileName, string[] validExtensions)
+    {
+        string extension = Path.GetExtension(fileName);
+        return validExtensions.ContainsInvariant(extension);
+    }
 }
 
 public class ZipFile

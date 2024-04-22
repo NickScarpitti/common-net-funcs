@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using static Common_Net_Funcs.Tools.DataValidation;
 using static Common_Net_Funcs.Tools.StringHelpers;
 
 namespace Common_Net_Funcs.SQL;

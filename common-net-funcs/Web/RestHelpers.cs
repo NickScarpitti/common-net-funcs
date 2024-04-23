@@ -61,9 +61,10 @@ public static class RestHelpers
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
-    public static Task<T?> Get<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
+    public static Task<T?> Get<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false,
+        bool expectTaskCancellation = false)
     {
-        return GenericRestRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer);
+        return GenericRestRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -77,9 +78,9 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     public static Task<T?> PostRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false) where T : class
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false) where T : class
     {
-        return GenericRestRequest<T?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer);
+        return GenericRestRequest<T?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -93,9 +94,9 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
     public static Task<string?> StringPostRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false) where T : class
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false) where T : class
     {
-        return GenericRestRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer);
+        return GenericRestRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -108,9 +109,9 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
     public static Task<T?> DeleteRequest<T>(string url, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
-        return GenericRestRequest<T?, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer);
+        return GenericRestRequest<T?, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -122,9 +123,9 @@ public static class RestHelpers
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     public static Task<T?> PutRequest<T>(string url, T putObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
-        return GenericRestRequest<T?, T>(url, HttpMethod.Put, putObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer);
+        return GenericRestRequest<T?, T>(url, HttpMethod.Put, putObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -137,9 +138,9 @@ public static class RestHelpers
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
     public static Task<T?> PatchRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
-        return GenericRestRequest<T?, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer);
+        return GenericRestRequest<T?, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -153,12 +154,13 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     public static async Task<T?> GenericRestRequest<T, UT>(string url, HttpMethod httpMethod, UT? postObject = default, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
         T? result = default;
         try
         {
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
+            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}" + (RequestsWithBody.Contains(httpMethod) ?
+                $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
             httpRequestMessage.AttachHeaders(bearerToken, httpHeaders);
@@ -166,6 +168,18 @@ public static class RestHelpers
 
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             result = await HandleResponse<T>(response, httpMethod.ToString(), url, useNewtonsoftDeserializer);
+        }
+        catch (TaskCanceledException tcex)
+        {
+            string exceptionLocation = tcex.GetLocationOfEexception();
+            if (expectTaskCancellation)
+            {
+                logger.Info($"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
+            }
+            else
+            {
+                logger.Error(tcex, $"{exceptionLocation} Error URL: {url}");
+            }
         }
         catch (Exception ex)
         {
@@ -184,9 +198,9 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
     public static Task<RestObject<T>> GetRestObject<T>(string url, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
-        return GenericRestObjectRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer);
+        return GenericRestObjectRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -200,9 +214,9 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     public static Task<RestObject<T>> PostRestObjectRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
-        return GenericRestObjectRequest<T, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer);
+        return GenericRestObjectRequest<T, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -216,9 +230,9 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
     public static Task<RestObject<string?>> StringPostRestObjectRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
-        return GenericRestObjectRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer);
+        return GenericRestObjectRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -231,9 +245,9 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
     public static Task<RestObject<T>> DeleteRestObjectRequest<T>(string url, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
-        return GenericRestObjectRequest<T, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer);
+        return GenericRestObjectRequest<T, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
     }
 
     /// <summary>
@@ -246,9 +260,9 @@ public static class RestHelpers
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
     public static Task<RestObject<T>> PatchRestObjectRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
-        return GenericRestObjectRequest<T, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer);
+        return GenericRestObjectRequest<T, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer, expectTaskCancellation);
     }
 
     /// <summary>
@@ -262,12 +276,13 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     public static async Task<RestObject<T>> GenericRestObjectRequest<T, UT>(string url, HttpMethod httpMethod, UT? postObject = default, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false)
+        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
     {
         RestObject<T> restObject = new();
         try
         {
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}{(RequestsWithBody.Contains(httpMethod) ? $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty)}");
+            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}" + (RequestsWithBody.Contains(httpMethod) ?
+                $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
             httpRequestMessage.AttachHeaders(bearerToken, httpHeaders);
@@ -275,6 +290,18 @@ public static class RestHelpers
 
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
             restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url, useNewtonsoftDeserializer);
+        }
+        catch (TaskCanceledException tcex)
+        {
+            string exceptionLocation = tcex.GetLocationOfEexception();
+            if (expectTaskCancellation)
+            {
+                logger.Info($"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
+            }
+            else
+            {
+                logger.Error(tcex, $"{exceptionLocation} Error URL: {url}");
+            }
         }
         catch (Exception ex)
         {

@@ -243,6 +243,9 @@ dotnet_diagnostic.RCS0036.severity = none
 csharp_style_prefer_top_level_statements = false:silent
 csharp_style_prefer_primary_constructors = true:suggestion
 
+# IDE0005: Using directive is unnecessary.
+dotnet_diagnostic.IDE0005.severity = suggestion
+
 [*.vb]
 # Modifier preferences
 visual_basic_preferred_modifier_order = Partial,Default,Private,Protected,Public,Friend,NotOverridable,Overridable,MustOverride,Overloads,Overrides,MustInherit,NotInheritable,Static,Shared,Shadows,ReadOnly,WriteOnly,Dim,Const,WithEvents,Widening,Narrowing,Custom,Async:suggestion

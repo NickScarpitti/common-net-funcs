@@ -397,6 +397,20 @@ public static class StringConversion
     }
 
     /// <summary>
+    /// Convert bool to "Y" or "N"
+    /// </summary>
+    /// <param name="value">Boolean to convert to "Yes" or "No"</param>
+    /// <returns>"Y" if true, "N" if false</returns>
+    public static string BoolToYN(this bool value)
+    {
+        if (value)
+        {
+            return "Y";
+        }
+        return "N";
+    }
+
+    /// <summary>
     /// Convert bool to 1 or 0
     /// </summary>
     /// <param name="value">Integer to conver to "Yes" or "No"</param>

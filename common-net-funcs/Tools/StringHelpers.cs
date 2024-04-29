@@ -307,6 +307,19 @@ public static partial class StringHelpers
     }
 
     /// <summary>
+    /// Replace a substring with another string, ignoring the case and culture when finding the substring to replace
+    /// </summary>
+    /// <param name="s">String to search for substring to replace</param>
+    /// <param name="oldValue">Substring to search for in string s, ignoring culture and case</param>
+    /// <param name="newValue">String to replace any substrings matching oldValue with</param>
+    /// <returns></returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static string? ReplaceInvariant(this string? s, string oldValue, string newValue)
+    {
+        return s?.Replace(oldValue, newValue);
+    }
+
+    /// <summary>
     /// Compare two strings ignoring culture and case
     /// </summary>
     /// <param name="s1">First string to compare</param>

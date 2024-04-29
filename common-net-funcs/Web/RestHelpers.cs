@@ -58,13 +58,18 @@ public static class RestHelpers
     /// <param name="url">API URL</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
     public static Task<T?> Get<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false,
-        bool expectTaskCancellation = false)
+        bool expectTaskCancellation = false, bool logQuery = true)
     {
-        return GenericRestRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
     }
 
     /// <summary>
@@ -74,13 +79,19 @@ public static class RestHelpers
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-    public static Task<T?> PostRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false) where T : class
+    public static Task<T?> PostRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true) where T : class
     {
-        return GenericRestRequest<T?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestRequest<T?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
     }
 
     /// <summary>
@@ -90,13 +101,19 @@ public static class RestHelpers
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
-    public static Task<string?> StringPostRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false) where T : class
+    public static Task<string?> StringPostRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true) where T : class
     {
-        return GenericRestRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
     }
 
     /// <summary>
@@ -105,13 +122,18 @@ public static class RestHelpers
     /// <param name="url">API URL</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
-    public static Task<T?> DeleteRequest<T>(string url, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+    public static Task<T?> DeleteRequest<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true)
     {
-        return GenericRestRequest<T?, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestRequest<T?, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
     }
 
     /// <summary>
@@ -121,11 +143,17 @@ public static class RestHelpers
     /// <param name="putObject">The object to be edited</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     public static Task<T?> PutRequest<T>(string url, T putObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
     {
-        return GenericRestRequest<T?, T>(url, HttpMethod.Put, putObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestRequest<T?, T>(url, HttpMethod.Put, putObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
     }
 
     /// <summary>
@@ -135,12 +163,18 @@ public static class RestHelpers
     /// <param name="patchDoc">Patch document for PATCH requests</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
-    public static Task<T?> PatchRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+    public static Task<T?> PatchRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
     {
-        return GenericRestRequest<T?, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestRequest<T?, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer,
+            expectTaskCancellation, logQuery, logBody);
     }
 
     /// <summary>
@@ -150,16 +184,22 @@ public static class RestHelpers
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="patchDoc">Patch document for making PATCH requests</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
+    /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
-    /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     public static async Task<T?> GenericRestRequest<T, UT>(string url, HttpMethod httpMethod, UT? postObject = default, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
     {
         T? result = default;
         try
         {
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}" + (RequestsWithBody.Contains(httpMethod) ?
+            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && RequestsWithBody.Contains(httpMethod) ?
                 $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
@@ -194,13 +234,18 @@ public static class RestHelpers
     /// <param name="url">API URL</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
-    public static Task<RestObject<T>> GetRestObject<T>(string url, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+    public static Task<RestObject<T>> GetRestObject<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true)
     {
-        return GenericRestObjectRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestObjectRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
     }
 
     /// <summary>
@@ -210,13 +255,19 @@ public static class RestHelpers
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
-    public static Task<RestObject<T>> PostRestObjectRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+    public static Task<RestObject<T>> PostRestObjectRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
     {
-        return GenericRestObjectRequest<T, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestObjectRequest<T, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
     }
 
     /// <summary>
@@ -226,13 +277,19 @@ public static class RestHelpers
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
-    public static Task<RestObject<string?>> StringPostRestObjectRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+    public static Task<RestObject<string?>> StringPostRestObjectRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
     {
-        return GenericRestObjectRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestObjectRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
     }
 
     /// <summary>
@@ -241,13 +298,18 @@ public static class RestHelpers
     /// <param name="url">API URL</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
-    public static Task<RestObject<T>> DeleteRestObjectRequest<T>(string url, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+    public static Task<RestObject<T>> DeleteRestObjectRequest<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true)
     {
-        return GenericRestObjectRequest<T, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer, expectTaskCancellation: expectTaskCancellation);
+        return GenericRestObjectRequest<T, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
     }
 
     /// <summary>
@@ -257,12 +319,17 @@ public static class RestHelpers
     /// <param name="patchDoc">Patch document for PATCH requests</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
-    public static Task<RestObject<T>> PatchRestObjectRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+    public static Task<RestObject<T>> PatchRestObjectRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
     {
-        return GenericRestObjectRequest<T, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer, expectTaskCancellation);
+        return GenericRestObjectRequest<T, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer, expectTaskCancellation, logQuery, logBody);
     }
 
     /// <summary>
@@ -272,16 +339,22 @@ public static class RestHelpers
     /// <param name="postObject">The object to be created</param>
     /// <param name="bearerToken">Bearer token to add to the request if provided</param>
     /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="patchDoc">Patch document for making PATCH requests</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     public static async Task<RestObject<T>> GenericRestObjectRequest<T, UT>(string url, HttpMethod httpMethod, UT? postObject = default, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false)
+        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
     {
         RestObject<T> restObject = new();
         try
         {
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {url}" + (RequestsWithBody.Contains(httpMethod) ?
+            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && RequestsWithBody.Contains(httpMethod) ?
                 $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
@@ -317,6 +390,7 @@ public static class RestHelpers
     /// <param name="response">Response message from the HTTP request</param>
     /// <param name="httpMethod">HTTP method used to make the HTTP request</param>
     /// <param name="url">URL HTTP request was made against</param>
+    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
     /// <returns>Response content if HTTP request was successful</returns>
     private static async Task<T?> HandleResponse<T> (HttpResponseMessage response, string httpMethod, string url, bool useNewtonsoftDeserializer)
     {

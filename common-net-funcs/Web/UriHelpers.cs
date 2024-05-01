@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using static Common_Net_Funcs.Conversion.StringConversion;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
 using static Common_Net_Funcs.Tools.StringHelpers;
+using static System.Web.HttpUtility;
 
 namespace Common_Net_Funcs.Web;
 
@@ -109,5 +111,32 @@ public static class UriHelpers
             return dateTime;
         }
         return null;
+    }
+
+    [return: NotNullIfNotNull(nameof(url))]
+    public static string? GetRedactedUri(this string? url, string redactedString = "<REDACTED>")
+    {
+        if (url.IsNullOrWhiteSpace())
+        {
+            return null;
+        }
+
+        // Parse the URL to get the base part and the query string
+        Uri uri = new(url);
+        NameValueCollection queryParameters = ParseQueryString(uri.Query);
+
+        if (queryParameters.Count > 0)
+        {
+            for (int i = 0; i < queryParameters.Count; i++)
+            {
+                queryParameters.Set(queryParameters.GetKey(i), redactedString); //Replace values with redactedString value
+            }
+
+            return uri.GetLeftPart(UriPartial.Path) + "?" + queryParameters;
+        }
+        else
+        {
+            return url;
+        }
     }
 }

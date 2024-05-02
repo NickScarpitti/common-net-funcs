@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.AspNetCore.Http;
+using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -138,5 +139,10 @@ public static class UriHelpers
         {
             return url;
         }
+    }
+
+    public static string GetUriFromRequest(HttpRequest request)
+    {
+        return $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}{request.QueryString}";
     }
 }

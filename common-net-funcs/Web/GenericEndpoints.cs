@@ -25,7 +25,7 @@ public class GenericEndpoints : ControllerBase
         try
         {
             await baseAppDbContextActions.CreateMany(models);
-            if (await baseAppDbContextActions.SaveChanges())
+            if (await baseAppDbContextActions.SaveManyChanges())
             {
                 return Ok(models);
             }
@@ -74,13 +74,13 @@ public class GenericEndpoints : ControllerBase
     {
         try
         {
-            if (models.Any())
+            if (models.Any() && await baseAppDbContextActions.DeleteMany(models))
             {
-                baseAppDbContextActions.DeleteMany(models);
-                if (await baseAppDbContextActions.SaveChanges())
-                {
-                    return Ok(models);
-                }
+                return Ok(models);
+                //if (await baseAppDbContextActions.SaveManyChanges())
+                //{
+                //    return Ok(models);
+                //}
             }
         }
         catch (Exception ex)

@@ -39,10 +39,11 @@ public interface IBaseDbContextActions<T, UT> where T : class where UT : DbConte
     Task CreateMany(IEnumerable<T> model);
     void DeleteByObject(T model);
     Task DeleteByKey(object id);
-    void DeleteMany(IEnumerable<T> model);
+    Task<bool> DeleteMany(IEnumerable<T> model);
     void Update(T model);
-    void UpdateMany(List<T> models);
+    Task<bool> UpdateMany(List<T> models);
     Task<bool> SaveChanges();
+    Task<bool> SaveManyChanges();
 
     #endregion Write
 }

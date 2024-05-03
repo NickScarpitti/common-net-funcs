@@ -1495,8 +1495,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     public async Task CreateMany(IEnumerable<T> model)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+
         try
         {
+            //await context.Set<T>().BulkInsertAsync(model); //Doesn't give updated identity values
             await context.Set<T>().AddRangeAsync(model);
         }
         catch (Exception ex)
@@ -1550,17 +1552,20 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Delete records in the table corresponding to type T matching the enumerable objects of type T passed in
     /// </summary>
     /// <param name="model">Records of type T to delete</param>
-    public void DeleteMany(IEnumerable<T> model)
+    public async Task<bool> DeleteMany(IEnumerable<T> model)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         try
         {
-            context.Set<T>().RemoveRange(model);
+            //context.Set<T>().RemoveRange(model); //Requires separate save
+            await context.Set<T>().BulkDeleteAsync(model);
+            return true;
         }
         catch (Exception ex)
         {
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
+        return false;
     }
 
     /// <summary>
@@ -1577,10 +1582,26 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Mark an entity as modified in order to be able to persist changes to the database upon calling context.SaveChanges()
     /// </summary>
     /// <param name="models">The modified entity</param>
-    public void UpdateMany(List<T> models) //Send in modified objects
+    public async Task<bool> UpdateMany(List<T> models) //Send in modified objects
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        context.UpdateRange(models);
+        bool result = true;
+        try
+        {
+            using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+            await context.BulkUpdateAsync(models);
+            //context.UpdateRange(models);
+        }
+        catch (DbUpdateException duex)
+        {
+            result = false;
+            logger.Error(duex, $"{duex.GetLocationOfEexception()} DBUpdate Error");
+        }
+        catch (Exception ex)
+        {
+            result = false;
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+        }
+        return result;
     }
 
     /// <summary>
@@ -1601,6 +1622,27 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+        }
+        return result;
+    }
+
+    public async Task<bool> SaveManyChanges()
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        bool result = true;
+        try
+        {
+            await context.BulkSaveChangesAsync();
+        }
+        catch (DbUpdateException duex)
+        {
+            result = false;
+            logger.Error(duex, $"{duex.GetLocationOfEexception()} DBUpdate Error");
+        }
+        catch (Exception ex)
+        {
+            result = false;
             logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
         }
         return result;

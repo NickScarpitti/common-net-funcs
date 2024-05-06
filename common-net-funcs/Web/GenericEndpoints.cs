@@ -11,21 +11,20 @@ namespace Common_Net_Funcs.Web;
 public class GenericEndpoints : ControllerBase
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
     /// <summary>
     /// Basic endpoint to create more than one entity at a time
     /// </summary>
     /// <typeparam name="T">Type of entity being created</typeparam>
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
     /// <param name="models">Entities to create</param>
-    /// <param name="baseAppDbContextActions"></param>
+    /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<List<T>>> CreateMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
         try
         {
             await baseAppDbContextActions.CreateMany(models);
-            if (await baseAppDbContextActions.SaveManyChanges())
+            if (await baseAppDbContextActions.SaveChanges())
             {
                 return Ok(models);
             }
@@ -43,7 +42,7 @@ public class GenericEndpoints : ControllerBase
     /// <typeparam name="T">Type of entity being deleted</typeparam>
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
     /// <param name="model">Entity to delete</param>
-    /// <param name="baseAppDbContextActions"></param>
+    /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
@@ -67,20 +66,40 @@ public class GenericEndpoints : ControllerBase
     /// </summary>
     /// <typeparam name="T">Type of entity being deleted</typeparam>
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
-    /// <param name="models"></param>
-    /// <param name="baseAppDbContextActions"></param>
+    /// <param name="models">Entities to delete</param>
+    /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
         try
         {
-            if (models.Any() && await baseAppDbContextActions.DeleteMany(models))
+            if (models.Any() && baseAppDbContextActions.DeleteMany(models) && await baseAppDbContextActions.SaveChanges())
             {
                 return Ok(models);
-                //if (await baseAppDbContextActions.SaveManyChanges())
-                //{
-                //    return Ok(models);
-                //}
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+        }
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Basic endpoint to delete more than one entity at a time
+    /// </summary>
+    /// <typeparam name="T">Type of entity being deleted</typeparam>
+    /// <typeparam name="UT">DB Context to use for this operation</typeparam>
+    /// <param name="models">Entities to delete</param>
+    /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
+    /// <returns>Ok if successful, otherwise NoContent</returns>
+    public async Task<ActionResult<List<T>>> DeleteManyByKeys<T, UT>(IEnumerable<object> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+    {
+        try
+        {
+            if (models.Any() && await baseAppDbContextActions.DeleteManyByKeys(models)) //Does not work with PostgreSQL
+            {
+                return Ok(models);
             }
         }
         catch (Exception ex)
@@ -97,7 +116,7 @@ public class GenericEndpoints : ControllerBase
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
     /// <param name="primaryKey">Primary key of the entity to update</param>
     /// <param name="patch">Patch document containing the updates to be made to the entity</param>
-    /// <param name="baseAppDbContextActions"></param>
+    /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
@@ -112,7 +131,7 @@ public class GenericEndpoints : ControllerBase
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
     /// <param name="primaryKey">Ordered values comprising the key of the entity to update</param>
     /// <param name="patch">Patch document containing the updates to be made to the entity</param>
-    /// <param name="baseAppDbContextActions"></param>
+    /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
@@ -127,7 +146,7 @@ public class GenericEndpoints : ControllerBase
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
     /// <param name="dbModel"></param>
     /// <param name="patch"></param>
-    /// <param name="baseAppDbContextActions"></param>
+    /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     private async Task<ActionResult<T>> PatchInternal<T, UT>(T? dbModel, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {

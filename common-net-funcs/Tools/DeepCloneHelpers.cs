@@ -463,7 +463,9 @@ public static class DeepCloneExpressionTreeHelpers
 
         ConstantExpression dimensionConstant = Expression.Constant(i);
 
+#pragma warning disable IDE0300 // Simplify collection initialization
         return Expression.Assign(lengthVariable, Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, new[] { dimensionConstant }));
+#pragma warning restore IDE0300 // Simplify collection initialization
     }
 
     private static void FieldsCopyExpressions(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, ParameterExpression boxingVariable, List<Expression> expressions)

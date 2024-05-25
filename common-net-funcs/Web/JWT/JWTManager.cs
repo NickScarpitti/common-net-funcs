@@ -42,11 +42,11 @@ public class JWTManager : IJWTManager
 
 		SecurityTokenDescriptor tokenDescriptor = new()
 		{
-			Subject = new ClaimsIdentity(new Claim[]
-			{
-				new(ClaimTypes.Name, userName),
+			Subject = new ClaimsIdentity(
+            [
+                new(ClaimTypes.Name, userName),
                 new(ClaimTypes.Email, email ?? string.Empty)
-			}),
+			]),
 			IssuedAt = DateTime.UtcNow,
 			SigningCredentials = new(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha512Signature, SecurityAlgorithms.Sha512Digest)
 		};

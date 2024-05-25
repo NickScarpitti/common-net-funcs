@@ -454,8 +454,6 @@ public static class DeepCloneExpressionTreeHelpers
 
         return Expression.Block(new [] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
     }
-#pragma warning restore IDE0300 // Simplify collection initialization
-#pragma warning restore IDE0301 // Simplify collection initialization
 
     private static BinaryExpression GetLengthForDimensionExpression(ParameterExpression lengthVariable, ParameterExpression inputParameter, int i)
     {
@@ -465,6 +463,8 @@ public static class DeepCloneExpressionTreeHelpers
 
         return Expression.Assign(lengthVariable, Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, new[] { dimensionConstant }));
     }
+#pragma warning restore IDE0300 // Simplify collection initialization
+#pragma warning restore IDE0301 // Simplify collection initialization
 
     private static void FieldsCopyExpressions(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, ParameterExpression boxingVariable, List<Expression> expressions)
     {

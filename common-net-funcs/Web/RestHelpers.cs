@@ -22,6 +22,12 @@ public class RestObject<T>// where T : class
     public HttpResponseMessage? Response { get; set; }
 }
 
+public class MsgPackOptions
+{
+    public bool UseMsgPackCompression { get; set; } = false;
+    public bool UseMsgPackUntrusted { get; set; } = false;
+}
+
 public static class RestHelperConstants
 {
     public static readonly KeyValuePair<string, string> MemPackContentHeader = new("Content-Type", ContentTypes.MemPack);
@@ -66,10 +72,10 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
     public static Task<T?> Get<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false,
-        bool expectTaskCancellation = false, bool logQuery = true)
+        bool expectTaskCancellation = false, bool logQuery = true, MsgPackOptions? msgPackOptions = null)
     {
         return GenericRestRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
-            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false, msgPackOptions: msgPackOptions);
     }
 
     /// <summary>
@@ -88,10 +94,10 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     public static Task<T?> PostRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
-        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true) where T : class
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true, MsgPackOptions? msgPackOptions = null) where T : class
     {
         return GenericRestRequest<T?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
-            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody, msgPackOptions: msgPackOptions);
     }
 
     /// <summary>
@@ -110,10 +116,10 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
     public static Task<string?> StringPostRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
-        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true) where T : class
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true, MsgPackOptions? msgPackOptions = null) where T : class
     {
         return GenericRestRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
-            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody, msgPackOptions: msgPackOptions);
     }
 
     /// <summary>
@@ -130,10 +136,10 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
     public static Task<T?> DeleteRequest<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
-        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true)
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, MsgPackOptions? msgPackOptions = null)
     {
         return GenericRestRequest<T?, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
-            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false, msgPackOptions: msgPackOptions);
     }
 
     /// <summary>
@@ -149,11 +155,11 @@ public static class RestHelpers
     /// <param name="logQuery">If true, logger will display the query string of request.</param>
     /// <param name="logBody">If true, logger will display the body of the request.</param>
     /// <exception cref="HttpRequestException">Ignore.</exception>
-    public static Task<T?> PutRequest<T>(string url, T putObject, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+    public static Task<T?> PutRequest<T>(string url, T putObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true, MsgPackOptions? msgPackOptions = null)
     {
         return GenericRestRequest<T?, T>(url, HttpMethod.Put, putObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
-            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody, msgPackOptions: msgPackOptions);
     }
 
     /// <summary>
@@ -171,10 +177,10 @@ public static class RestHelpers
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
     public static Task<T?> PatchRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
-        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true, MsgPackOptions? msgPackOptions = null)
     {
         return GenericRestRequest<T?, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer,
-            expectTaskCancellation, logQuery, logBody);
+            expectTaskCancellation, logQuery, logBody, msgPackOptions);
     }
 
     /// <summary>
@@ -194,7 +200,8 @@ public static class RestHelpers
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     public static async Task<T?> GenericRestRequest<T, UT>(string url, HttpMethod httpMethod, UT? postObject = default, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true,
+        bool logBody = true, MsgPackOptions? msgPackOptions = null)
     {
         T? result = default;
         try
@@ -207,7 +214,7 @@ public static class RestHelpers
             httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
 
             using HttpResponseMessage response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
-            result = await HandleResponse<T>(response, httpMethod.ToString(), url, useNewtonsoftDeserializer);
+            result = await HandleResponse<T>(response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions);
         }
         catch (TaskCanceledException tcex)
         {
@@ -242,10 +249,10 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
     public static Task<RestObject<T>> GetRestObject<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
-        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true)
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, MsgPackOptions? msgPackOptions = null)
     {
         return GenericRestObjectRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
-            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false, msgPackOptions: msgPackOptions);
     }
 
     /// <summary>
@@ -264,10 +271,10 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     public static Task<RestObject<T>> PostRestObjectRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
-        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true, MsgPackOptions? msgPackOptions = null)
     {
         return GenericRestObjectRequest<T, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
-            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody, msgPackOptions: msgPackOptions);
     }
 
     /// <summary>
@@ -286,10 +293,10 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>String resulting from the POST request - Null if not success</returns>
     public static Task<RestObject<string?>> StringPostRestObjectRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
-        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true, MsgPackOptions? msgPackOptions = null)
     {
         return GenericRestObjectRequest<string?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
-            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody, msgPackOptions: msgPackOptions);
     }
 
     /// <summary>
@@ -306,10 +313,10 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
     public static Task<RestObject<T>> DeleteRestObjectRequest<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
-        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true)
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, MsgPackOptions? msgPackOptions = null)
     {
         return GenericRestObjectRequest<T, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
-            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
+            expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false, msgPackOptions: msgPackOptions);
     }
 
     /// <summary>
@@ -327,9 +334,9 @@ public static class RestHelpers
     /// <exception cref="HttpRequestException">Ignore.</exception>
     /// <returns>Object of type T resulting from the PATCH request - Null if not success</returns>
     public static Task<RestObject<T>> PatchRestObjectRequest<T>(string url, HttpContent patchDoc, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
-        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+        bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true, MsgPackOptions? msgPackOptions = null)
     {
-        return GenericRestObjectRequest<T, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer, expectTaskCancellation, logQuery, logBody);
+        return GenericRestObjectRequest<T, HttpContent>(url, HttpMethod.Patch, default, bearerToken, timeout, httpHeaders, patchDoc, useNewtonsoftDeserializer, expectTaskCancellation, logQuery, logBody, msgPackOptions);
     }
 
     /// <summary>
@@ -349,7 +356,8 @@ public static class RestHelpers
     /// <exception cref="ObjectDisposedException">Ignore.</exception>
     /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
     public static async Task<RestObject<T>> GenericRestObjectRequest<T, UT>(string url, HttpMethod httpMethod, UT? postObject = default, string? bearerToken = null, double? timeout = null,
-        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool useNewtonsoftDeserializer = false, bool expectTaskCancellation = false, bool logQuery = true,
+        bool logBody = true, MsgPackOptions? msgPackOptions = null)
     {
         RestObject<T> restObject = new();
         try
@@ -362,7 +370,7 @@ public static class RestHelpers
             httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
 
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
-            restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url, useNewtonsoftDeserializer);
+            restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions);
         }
         catch (TaskCanceledException tcex)
         {
@@ -392,7 +400,7 @@ public static class RestHelpers
     /// <param name="url">URL HTTP request was made against</param>
     /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
     /// <returns>Response content if HTTP request was successful</returns>
-    private static async Task<T?> HandleResponse<T> (HttpResponseMessage response, string httpMethod, string url, bool useNewtonsoftDeserializer)
+    private static async Task<T?> HandleResponse<T> (HttpResponseMessage response, string httpMethod, string url, bool useNewtonsoftDeserializer, MsgPackOptions? msgPackOptions = null)
     {
         T? result = default;
         try
@@ -404,7 +412,24 @@ public static class RestHelpers
                 await using Stream responseStream = await response.Content.ReadAsStreamAsync();
                 if (contentType == ContentTypes.MsgPack)
                 {
-                    result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
+                    if (msgPackOptions?.UseMsgPackCompression == true || msgPackOptions?.UseMsgPackUntrusted == true)
+                    {
+                        MessagePackSerializerOptions messagePackOptions = MessagePackSerializerOptions.Standard;
+                        if (msgPackOptions.UseMsgPackCompression)
+                        {
+                            messagePackOptions = messagePackOptions.WithCompression(MessagePackCompression.Lz4BlockArray);
+                        }
+
+                        if (msgPackOptions.UseMsgPackUntrusted)
+                        {
+                            messagePackOptions = messagePackOptions.WithSecurity(MessagePackSecurity.UntrustedData);
+                        }
+                        result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream, messagePackOptions) : default;
+                    }
+                    else
+                    {
+                        result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
+                    }
                 }
                 else if (contentType == ContentTypes.MemPack)
                 {

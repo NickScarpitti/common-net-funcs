@@ -35,14 +35,14 @@ public interface IBaseDbContextActions<T, UT> where T : class where UT : DbConte
 
     #region Write
 
-    Task Create(T model);
-    Task CreateMany(IEnumerable<T> model);
+    Task Create(T model, bool removeNavigationProps = false);
+    Task CreateMany(IEnumerable<T> model, bool removeNavigationProps = false);
     void DeleteByObject(T model);
     Task<bool> DeleteByKey(object id);
     bool DeleteMany(IEnumerable<T> model);
     Task<bool> DeleteManyByKeys(IEnumerable<object> keys);
-    void Update(T model);
-    bool UpdateMany(List<T> models);
+    void Update(T model, bool removeNavigationProps = false);
+    bool UpdateMany(List<T> models, bool removeNavigationProps = false);
     Task<bool> SaveChanges();
 
     #endregion Write

@@ -1527,9 +1527,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Creates a new record in the table corresponding to type T
     /// </summary>
     /// <param name="model">Record of type T to be added to the table</param>
-    public async Task Create(T model)
+    public async Task Create(T model, bool removeNavigationProps = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (removeNavigationProps)
+        {
+            model.RemoveNavigationProperties(context);
+        }
+
         try
         {
             await context.Set<T>().AddAsync(model);
@@ -1544,9 +1549,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Creates new records in the table corresponding to type T
     /// </summary>
     /// <param name="model">Records of type T to be added to the table</param>
-    public async Task CreateMany(IEnumerable<T> model)
+    public async Task CreateMany(IEnumerable<T> model, bool removeNavigationProps = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (removeNavigationProps)
+        {
+            model.SetValue(x => x.RemoveNavigationProperties(context));
+        }
 
         try
         {
@@ -1664,9 +1673,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Mark an entity as modified in order to be able to persist changes to the database upon calling context.SaveChanges()
     /// </summary>
     /// <param name="model">The modified entity</param>
-    public void Update(T model) //Send in modified object
+    public void Update(T model, bool removeNavigationProps = false) //Send in modified object
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (removeNavigationProps)
+        {
+            model.RemoveNavigationProperties(context);
+        }
         context.Entry(model).State = EntityState.Modified;
     }
 
@@ -1674,12 +1687,16 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Mark an entity as modified in order to be able to persist changes to the database upon calling context.SaveChanges()
     /// </summary>
     /// <param name="models">The modified entity</param>
-    public bool UpdateMany(List<T> models) //Send in modified objects
+    public bool UpdateMany(List<T> models, bool removeNavigationProps = false) //Send in modified objects
     {
         bool result = true;
         try
         {
             using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+            if (removeNavigationProps)
+            {
+                models.SetValue(x => x.RemoveNavigationProperties(context));
+            }
             //await context.BulkUpdateAsync(models); EF Core Extensions (Paid)
             context.UpdateRange(models);
         }

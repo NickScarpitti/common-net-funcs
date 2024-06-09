@@ -273,7 +273,15 @@ public static class UnitConversion
         {
             multiplier = -1;
         }
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" :  $"{bytes * multiplier} B";
+        return bytes > 1025 ?
+                bytes.BytesToKb() > 1025 ?
+                    bytes.BytesToMb() > 1025 ?
+                        bytes.BytesToGb() > 1025 ?
+                            $"{bytes.BytesToTb() * multiplier} TB" :
+                        $"{bytes.BytesToGb() * multiplier} GB" :
+                    $"{bytes.BytesToMb() * multiplier} MB" :
+                $"{bytes.BytesToKb() * multiplier} KB" :
+            $"{bytes * multiplier} B";
     }
 
     /// <summary>
@@ -291,7 +299,15 @@ public static class UnitConversion
         {
             multiplier = -1;
         }
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B";
+        return bytes > 1025 ?
+                bytes.BytesToKb() > 1025 ?
+                    bytes.BytesToMb() > 1025 ?
+                        bytes.BytesToGb() > 1025 ?
+                            $"{bytes.BytesToTb() * multiplier * multiplier} TB" :
+                        $"{bytes.BytesToGb() * multiplier} GB" :
+                    $"{bytes.BytesToMb() * multiplier} MB" :
+                $"{bytes.BytesToKb() * multiplier} KB" :
+            $"{bytes * multiplier} B";
     }
 
     /// <summary>

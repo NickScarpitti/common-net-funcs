@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Z.EntityFramework.Plus;
@@ -1541,7 +1542,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
     }
 
@@ -1564,7 +1565,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
     }
 
@@ -1582,32 +1583,32 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
     }
 
     /// <summary>
     /// Delete record in the table corresponding to type T matching the primary key passed in
     /// </summary>
-    /// <param name="id">Key of the record of type T to delete</param>
-    public async Task<bool> DeleteByKey(object id)
+    /// <param name="key">Key of the record of type T to delete</param>
+    public async Task<bool> DeleteByKey(object key)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         DbSet<T> table = context.Set<T>();
         bool success = false;
         try
         {
-            T? deleteItem = await table.FindAsync(id);
+            T? deleteItem = await table.FindAsync(key);
             if (deleteItem != null)
             {
                 table.Remove(deleteItem);
                 success = true;
             }
-            //changes = await table.DeleteByKeyAsync(id); //EF Core +, Does not require save changes, Does not work with PostgreSQL
+            //changes = await table.DeleteByKeyAsync(key); //EF Core +, Does not require save changes, Does not work with PostgreSQL
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error\n\tKey: {JsonSerializer.Serialize(key)}");
         }
         return success;
     }
@@ -1626,7 +1627,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
         return false;
     }
@@ -1645,7 +1646,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
         return false;
     }
@@ -1664,7 +1665,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error\n\tKeys: {JsonSerializer.Serialize(keys)}");
         }
         return false;
     }
@@ -1703,12 +1704,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         catch (DbUpdateException duex)
         {
             result = false;
-            logger.Error(duex, $"{duex.GetLocationOfEexception()} DBUpdate Error");
+            logger.Error(duex, $"{duex.GetLocationOfEexception()} DBUpdate Error\n\tModels: {JsonSerializer.Serialize(models)}");
         }
         catch (Exception ex)
         {
             result = false;
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error\n\tModels: {JsonSerializer.Serialize(models)}");
         }
         return result;
     }

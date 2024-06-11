@@ -1,14 +1,18 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Buffers;
+using System.IO.Compression;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Common_Net_Funcs.Conversion;
 using Common_Net_Funcs.Tools;
 using MemoryPack;
+using MemoryPack.Compression;
 using MessagePack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using static Common_Net_Funcs.Tools.DebugHelpers;
 using static Common_Net_Funcs.Tools.StringHelpers;
+using static Common_Net_Funcs.Tools.ObjectHelpers;
 
 namespace Common_Net_Funcs.Web;
 
@@ -30,6 +34,9 @@ public class MsgPackOptions
 
 public static class RestHelperConstants
 {
+    public static readonly KeyValuePair<string, string> BrotliEncodingHeader = new("Accept-Encoding", EncodingTypes.Brotli);
+    public static readonly KeyValuePair<string, string> GzipEncodingHeader = new("Accept-Encoding", EncodingTypes.GZip);
+
     public static readonly KeyValuePair<string, string> MemPackContentHeader = new("Content-Type", ContentTypes.MemPack);
     public static readonly KeyValuePair<string, string> MsgPackContentHeader = new("Content-Type", ContentTypes.MsgPack);
     public static readonly KeyValuePair<string, string> JsonContentHeader = new("Content-Type", ContentTypes.Json);
@@ -408,9 +415,10 @@ public static class RestHelpers
             if (response.IsSuccessStatusCode)
             {
                 string? contentType = response.Content.Headers.ContentType?.ToString();
+                string? contentEncoding = response.Content.Headers.ContentEncoding?.ToString();
 
                 await using Stream responseStream = await response.Content.ReadAsStreamAsync();
-                if (contentType == ContentTypes.MsgPack)
+                if (contentType.StrEq(ContentTypes.MsgPack))
                 {
                     if (msgPackOptions?.UseMsgPackCompression == true || msgPackOptions?.UseMsgPackUntrusted == true)
                     {
@@ -431,9 +439,34 @@ public static class RestHelpers
                         result = responseStream.Length > 1 ? await MessagePackSerializer.DeserializeAsync<T>(responseStream) : default;
                     }
                 }
-                else if (contentType == ContentTypes.MemPack)
+                else if (contentType.StrEq(ContentTypes.MemPack))
                 {
-                    result = responseStream.Length > 1 ? await MemoryPackSerializer.DeserializeAsync<T>(responseStream) : default;
+                    if (responseStream.Length > 1)
+                    {
+                        if (contentEncoding.StrEq(EncodingTypes.GZip))
+                        {
+                            //TODO:: Figure out why this is failing when API is calling itself
+                            await using GZipStream gzipStream = new(responseStream, CompressionMode.Decompress);
+                            await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
+                            gzipStream.CopyTo(outputStream);
+                            outputStream.Position = 0;
+                            result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
+                        }
+                        else if (contentEncoding.StrEq(EncodingTypes.Brotli))
+                        {
+                            BrotliDecompressor decompressor = new();
+                            ReadOnlySequence<byte> decompressedBuffer = decompressor.Decompress(new ReadOnlySpan<byte>(await ReadStreamAsync(responseStream)));
+                            result = MemoryPackSerializer.Deserialize<T>(decompressedBuffer);
+                        }
+                        else
+                        {
+                            result = await MemoryPackSerializer.DeserializeAsync<T>(responseStream);
+                        }
+                    }
+                    else
+                    {
+                        result = default;
+                    }
                 }
                 else //Assume JSON
                 {

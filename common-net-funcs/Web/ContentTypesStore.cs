@@ -6,3 +6,9 @@ public static class ContentTypes
     public const string MemPack = "application/x-memorypack";
     public const string MsgPack = "application/x-msgpack";
 }
+
+public static class EncodingTypes
+{
+    public const string Brotli = "br";
+    public const string GZip = "gzip";
+}

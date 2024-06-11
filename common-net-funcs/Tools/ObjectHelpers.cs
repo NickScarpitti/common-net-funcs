@@ -425,6 +425,16 @@ public static class ObjectHelpers
     }
 
     /// <summary>
+    /// Provides a safe way to add a new Dictionary key without having to worry about duplication
+    /// </summary>
+    /// <param name="dict">Dictionary to add item to</param>
+    /// <param name="keyValuePair">Key value pair to add to dict</param>
+    public static void AddDictionaryItem<K, V>(this Dictionary<K, V> dict, KeyValuePair<K, V> keyValuePair) where K : notnull
+    {
+        dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
+    }
+
+    /// <summary>
     /// Provides a safe way to add a new ConcurrentDictionary key without having to worry about duplication
     /// </summary>
     /// <param name="dict">ConcurrentDictionary to add item to</param>
@@ -435,6 +445,19 @@ public static class ObjectHelpers
         if (!dict.ContainsKey(key))
         {
             dict.TryAdd(key, value);
+        }
+    }
+
+    /// <summary>
+    /// Provides a safe way to add a new ConcurrentDictionary key without having to worry about duplication
+    /// </summary>
+    /// <param name="dict">ConcurrentDictionary to add item to</param>
+    /// <param name="keyValuePair">Key value pair to add to dict</param>
+    public static void AddDictionaryItem<K, V>(this ConcurrentDictionary<K, V> dict, KeyValuePair<K, V> keyValuePair) where K : notnull
+    {
+        if (!dict.ContainsKey(keyValuePair.Key))
+        {
+            dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
         }
     }
 
@@ -518,6 +541,18 @@ public static class ObjectHelpers
             isNumeric = decimal.TryParse(testObject.ToString(), NumberStyles.Number, NumberFormatInfo.InvariantInfo, out _);
         }
         return isNumeric;
+    }
+
+    public static async Task<byte[]> ReadStreamAsync(Stream stream, int bufferSize = 4096)
+    {
+        int read;
+        await using MemoryStream ms = new();
+        byte[] buffer = new byte[bufferSize];
+        while ((read = await stream.ReadAsync(buffer)) > 0)
+        {
+            ms.Write(buffer, 0, read);
+        }
+        return ms.ToArray();
     }
 }
 

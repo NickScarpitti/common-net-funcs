@@ -7,9 +7,9 @@ namespace Common_Net_Funcs.Web.RequestHelpers;
 /// <summary>
 /// Logging to highlight long wait times for responses
 /// </summary>
-public class LoggingFilter(ILogger<LoggingFilter> logger, IResponseLoggingConfig config) : IActionFilter
+public class ResponseLoggingFilter(ILogger<ResponseLoggingFilter> logger, IResponseLoggingConfig config) : IActionFilter
 {
-    private readonly ILogger<LoggingFilter> logger = logger;
+    private readonly ILogger<ResponseLoggingFilter> logger = logger;
     private readonly IResponseLoggingConfig config = config;
     private readonly Stopwatch stopwatch = new();
 

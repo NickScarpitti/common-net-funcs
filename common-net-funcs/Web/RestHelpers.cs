@@ -445,7 +445,7 @@ public static class RestHelpers
                             result = await MessagePackSerializer.DeserializeAsync<T>(responseStream);
                         }
                     }
-                    else if (contentType.StrEq(ContentTypes.MemPack)) //NOTE:: Will fail if trying to deserialize null value, ensure no content is sent back for nulls
+                    else if (contentType.StrEq(ContentTypes.MemPack)) //NOTE:: Will fail if trying to deserialize null value, ensure NoContent is sent back for nulls
                     {
                         if (contentEncoding.StrEq(EncodingTypes.GZip))
                         {

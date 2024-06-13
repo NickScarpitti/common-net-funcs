@@ -92,10 +92,10 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                 if (response != null)
                 {
                     await using Stream responseStream = response.ResponseStream;
-                    //responseStream.Seek(0, SeekOrigin.Begin);
+                    //responseStream.Position = 0;
                     await responseStream.CopyToAsync(fileData);
                     await fileData.FlushAsync();
-                    fileData.Seek(0, SeekOrigin.Begin);
+                    fileData.Position = 0;
                 }
             }
         }

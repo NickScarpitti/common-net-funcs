@@ -766,11 +766,11 @@ public static partial class NpoiCommonHelpers
         await using MemoryStream tempStream = new();
         wb.Write(tempStream, true);
         await tempStream.FlushAsync();
-        tempStream.Seek(0, SeekOrigin.Begin);
+        tempStream.Position = 0;
         await tempStream.CopyToAsync(memoryStream);
         await tempStream.DisposeAsync();
         await memoryStream.FlushAsync();
-        memoryStream.Seek(0, SeekOrigin.Begin);
+        memoryStream.Position = 0;
     }
 
     /// <summary>

@@ -1,5 +1,4 @@
-﻿using System.IO.Compression;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -172,71 +171,6 @@ public static class FileHelpers
     }
 
     /// <summary>
-    /// Adds a zipped file to an existing ZipArchive
-    /// </summary>
-    /// <param name="archive">ZipArchive to add zipped file to</param>
-    /// <param name="zipFile">File to add to archive</param>
-    /// <param name="fileCount">Number to use as part of the default file name "File {fileCount}"</param>
-    public static async Task AddFileToZip(this ZipArchive archive, ZipFile? zipFile, int fileCount)
-    {
-        try
-        {
-            if (zipFile?.FileData != null)
-            {
-                zipFile.FileData.Position = 0; //Must have this to prevent errors writing data to the attachment
-                ZipArchiveEntry entry = archive.CreateEntry(zipFile.FileName ?? $"File {fileCount}", CompressionLevel.SmallestSize);
-                await using Stream entryStream = entry.Open();
-                await zipFile.FileData.CopyToAsync(entryStream);
-                await entryStream.FlushAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
-        }
-    }
-
-    /// <summary>
-    /// Zips passed in files directly to a stream object
-    /// </summary>
-    /// <param name="zipFiles">Files to zip</param>
-    /// <param name="zipFileStream">Stream to contain resulting zip archive</param>
-    public static async Task ZipFiles(IEnumerable<ZipFile>? zipFiles, MemoryStream? zipFileStream = null)
-    {
-        try
-        {
-            zipFileStream ??= new();
-
-            if (zipFiles?.Any() == true)
-            {
-                int i = 1;
-                await using MemoryStream memoryStream = new();
-                using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
-                foreach (ZipFile file in zipFiles)
-                {
-                    if (file.FileData != null)
-                    {
-                        file.FileData.Position = 0; //Must have this to prevent errors writing data to the attachment
-                        ZipArchiveEntry entry = archive.CreateEntry(file.FileName ?? $"File {i}", CompressionLevel.SmallestSize);
-                        await using Stream entryStream = entry.Open();
-                        await file.FileData.CopyToAsync(entryStream);
-                        await entryStream.FlushAsync();
-                        i++;
-                    }
-                }
-                archive.Dispose();
-                memoryStream.Seek(0, SeekOrigin.Begin);
-                await memoryStream.CopyToAsync(zipFileStream); //Copy to output stream
-                zipFileStream.Seek(0, SeekOrigin.Begin);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
-        }
-    }
-
-    /// <summary>
     /// Validates file extension based on list of valid extensions
     /// </summary>
     /// <param name="fileName">Full file name (with extension) to check for a valid file extension</param>
@@ -247,10 +181,4 @@ public static class FileHelpers
         string extension = Path.GetExtension(fileName);
         return validExtensions.ContainsInvariant(extension);
     }
-}
-
-public class ZipFile
-{
-    public Stream? FileData { get; set; }
-    public string? FileName { get; set; }
 }

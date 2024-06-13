@@ -374,11 +374,11 @@ public static class ClosedXmlCommonHelpers
 
     //        wb.SaveAs(tempStream, options);
     //        await tempStream.FlushAsync();
-    //        tempStream.Seek(0, SeekOrigin.Begin);
+    //        tempStream.Position = 0;
     //        await tempStream.CopyToAsync(memoryStream);
     //        await tempStream.DisposeAsync();
     //        await memoryStream.FlushAsync();
-    //        memoryStream.Seek(0, SeekOrigin.Begin);
+    //        memoryStream.Position = 0;
     //    }
 
     //    //Corrupts excel file as is

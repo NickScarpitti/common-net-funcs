@@ -71,7 +71,7 @@ public static class CsvHelperExportHelpers
         }
 
         await streamWriter.FlushAsync();
-        sourceMemoryStream.Seek(0, SeekOrigin.Begin);
+        sourceMemoryStream.Position = 0;
         await memoryStream.WriteFileToMemoryStreamAsync(sourceMemoryStream);
 
         return memoryStream;
@@ -86,15 +86,15 @@ public static class CsvHelperExportHelpers
     {
         await using MemoryStream tempStream = new();
 
-        sourceMmoryStream.Seek(0, SeekOrigin.Begin);
+        sourceMmoryStream.Position = 0;
 
         //wb.SaveAs(tempStream, options);
         await tempStream.WriteAsync(sourceMmoryStream.ToArray());
         await tempStream.FlushAsync();
-        tempStream.Seek(0, SeekOrigin.Begin);
+        tempStream.Position = 0;
         await tempStream.CopyToAsync(memoryStream);
         await tempStream.DisposeAsync();
         await memoryStream.FlushAsync();
-        memoryStream.Seek(0, SeekOrigin.Begin);
+        memoryStream.Position = 0;
     }
 }

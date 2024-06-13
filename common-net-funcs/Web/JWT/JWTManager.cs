@@ -44,8 +44,8 @@ public class JWTManager : IJWTManager
         {
 			Subject = new ClaimsIdentity(
             [
-                new(ClaimTypes.Name, userName),
-                new(ClaimTypes.Email, email ?? string.Empty)
+                new Claim(ClaimTypes.Name, userName),
+                new Claim(ClaimTypes.Email, email ?? string.Empty)
             ]),
 			IssuedAt = DateTime.UtcNow,
 			SigningCredentials = new(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha512Signature, SecurityAlgorithms.Sha512Digest)

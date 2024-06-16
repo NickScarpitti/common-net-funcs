@@ -253,11 +253,11 @@ public static class UnitConversion
     /// <summary>
     /// Convert Mb to Tb
     /// </summary>
-    /// <param name="Gb">Number of Gb to convert to Tb</param>
+    /// <param name="gb">Number of Gb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Gb in Tb</returns>
-    public static decimal GbToTb(this decimal Gb, int decimalPlaces = 1)
+    public static decimal GbToTb(this decimal gb, int decimalPlaces = 1)
     {
-        return Round(Gb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
+        return Round(gb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>

@@ -303,7 +303,7 @@ public static class UnitConversion
             bytes.BytesToKb(decimalPlaces) > 1025 ?
                 bytes.BytesToMb(decimalPlaces) > 1025 ?
                     bytes.BytesToGb(decimalPlaces) > 1025 ?
-                        $"{bytes.BytesToTb(decimalPlaces) * multiplier * multiplier} TB" :
+                        $"{bytes.BytesToTb(decimalPlaces) * multiplier} TB" :
                     $"{bytes.BytesToGb(decimalPlaces) * multiplier} GB" :
                 $"{bytes.BytesToMb(decimalPlaces) * multiplier} MB" :
             $"{bytes.BytesToKb(decimalPlaces) * multiplier} KB" :

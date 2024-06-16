@@ -243,6 +243,28 @@ public static partial class StringHelpers
     }
 
     /// <summary>
+    /// Checks if the given string contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns>True if s contains the string textToFind in any form</returns>
+    public static bool StartsWithInvariant(this string? s, string? textToFind)
+    {
+        return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
+    }
+
+    /// <summary>
+    /// Checks if the given string contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns>True if s contains the string textToFind in any form</returns>
+    public static bool EndsWithInvariant(this string? s, string? textToFind)
+    {
+        return textToFind != null && (s?.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
+    }
+
+    /// <summary>
     /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
     /// </summary>
     /// <param name="s">String to search</param>

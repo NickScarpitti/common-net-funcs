@@ -134,6 +134,22 @@ public static class StringConversion
     /// <summary>
     /// Converts nullable object to string
     /// </summary>
+    /// <param name="value">Boolean to turn into a string</param>
+    /// <returns>String representation of the passed in nullable object</returns>
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? ToNString(this bool? value)
+    {
+        string? output = null;
+        if (value != null)
+        {
+            output = value.ToString();
+        }
+        return output;
+    }
+
+    /// <summary>
+    /// Converts nullable object to string
+    /// </summary>
     /// <param name="value">Object to turn into a string</param>
     /// <returns>String representation of the passed in nullable object</returns>
     [return: NotNullIfNotNull(nameof(value))]

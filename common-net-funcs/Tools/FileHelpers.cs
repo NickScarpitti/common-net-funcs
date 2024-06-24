@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -180,5 +182,28 @@ public static class FileHelpers
     {
         string extension = Path.GetExtension(fileName);
         return validExtensions.ContainsInvariant(extension);
+    }
+
+    public static async Task<string> GetHashFromFile(this string fileName)
+    {
+        string hash;
+        await using (FileStream fileStream = new(fileName, FileMode.Open, FileAccess.Read))
+        {
+            hash = await GetSha256Hash(fileStream);
+        }
+        return hash;
+    }
+
+    public static async Task<string> GetSha256Hash(this FileStream fileStream)
+    {
+        using HashAlgorithm hashAlgorithm = SHA256.Create();
+        byte[] data = await hashAlgorithm.ComputeHashAsync(fileStream);
+        StringBuilder stringBuilder = new();
+
+        for (int i = 0; i < data.Length; i++)
+        {
+            stringBuilder.Append(data[i].ToString("x2"));
+        }
+        return stringBuilder.ToString();
     }
 }

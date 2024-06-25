@@ -19,11 +19,11 @@ public class GenericEndpoints : ControllerBase
     /// <param name="models">Entities to create</param>
     /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
-    public async Task<ActionResult<List<T>>> CreateMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+    public async Task<ActionResult<List<T>>> CreateMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class where UT : DbContext
     {
         try
         {
-            await baseAppDbContextActions.CreateMany(models);
+            await baseAppDbContextActions.CreateMany(models, removeNavigationProps);
             if (await baseAppDbContextActions.SaveChanges())
             {
                 return Ok(models);

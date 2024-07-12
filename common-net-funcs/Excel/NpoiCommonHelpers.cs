@@ -75,7 +75,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
             return null;
         }
     }
@@ -98,7 +98,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
             return null;
         }
     }
@@ -122,7 +122,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
             return null;
         }
     }
@@ -147,7 +147,7 @@ public static partial class NpoiCommonHelpers
             }
             catch (Exception ex)
             {
-                logger.Warn($"Unable to locate cell with name {cellName}");
+                logger.Warn("{msg}", $"Unable to locate cell with name {cellName}");
                 logger.Warn(ex);
                 return null;
             }
@@ -183,7 +183,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
             return null;
         }
     }
@@ -205,7 +205,7 @@ public static partial class NpoiCommonHelpers
             }
             catch (Exception ex)
             {
-                logger.Warn($"Unable to locate cell with name {cellName}");
+                logger.Warn("{msg}", $"Unable to locate cell with name {cellName}");
                 logger.Warn(ex);
                 return;
             }
@@ -231,7 +231,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -265,7 +265,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
             return false;
         }
     }
@@ -289,7 +289,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
             return false;
         }
     }
@@ -594,7 +594,7 @@ public static partial class NpoiCommonHelpers
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfEexception()}");
+                    logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfEexception()}");
                     logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
                 }
             }
@@ -602,7 +602,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
             return false;
         }
     }
@@ -708,7 +708,7 @@ public static partial class NpoiCommonHelpers
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfEexception()}");
+                    logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfEexception()}");
                     logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
                 }
             }
@@ -716,7 +716,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
             return false;
         }
     }
@@ -905,7 +905,7 @@ public static partial class NpoiCommonHelpers
             double columnWidth = ws.GetColumnWidthInPixels(i);
             if (columnWidth == 0.0)
             {
-                logger.Warn($"Width of Column {i} is 0! Check referenced excel sheet: {ws.SheetName}");
+                logger.Warn("{msg}", $"Width of Column {i} is 0! Check referenced excel sheet: {ws.SheetName}");
             }
             totalWidth += ws.GetColumnWidthInPixels(i);
         }
@@ -1141,7 +1141,7 @@ public static partial class NpoiCommonHelpers
         }
         catch(Exception ex)
         {
-            logger.Error(ex, $"Unable to read excel data. Location: {ex.GetLocationOfEexception()}");
+            logger.Error(ex, "{msg}", $"Unable to read excel data. Location: {ex.GetLocationOfEexception()}");
         }
 
         return dataTable;
@@ -1215,7 +1215,7 @@ public static partial class NpoiCommonHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"Unable to read excel table data. Location {ex.GetLocationOfEexception()}");
+            logger.Error(ex, "{msg}", $"Unable to read excel table data. Location {ex.GetLocationOfEexception()}");
         }
 
         return dataTable;

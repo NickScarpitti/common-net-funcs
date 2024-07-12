@@ -19,7 +19,7 @@ public class ResponseLoggingFilter(ILogger<ResponseLoggingFilter> logger, IRespo
         TimeSpan elapsedTime = stopwatch.Elapsed;
         if (elapsedTime >= TimeSpan.FromSeconds(config.ThresholdInSeconds))
         {
-            logger.LogWarning($"Method {context.ActionDescriptor.DisplayName} took {elapsedTime} to complete with result: {context.Result}");
+            logger.LogWarning("{msg}", $"Method {context.ActionDescriptor.DisplayName} took {elapsedTime} to complete with result: {context.Result}");
         }
     }
 

@@ -42,7 +42,7 @@ public static class ClosedXmlExportHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //        }
 
     //        return new MemoryStream();
@@ -76,7 +76,7 @@ public static class ClosedXmlExportHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //        }
 
     //        return new MemoryStream();
@@ -111,7 +111,7 @@ public static class ClosedXmlExportHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //        }
     //        return success;
     //    }
@@ -146,7 +146,7 @@ public static class ClosedXmlExportHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //        }
     //        return success;
     //    }

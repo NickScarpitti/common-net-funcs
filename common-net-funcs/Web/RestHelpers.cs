@@ -217,7 +217,7 @@ public static class RestHelpers
         T? result = default;
         try
         {
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && RequestsWithBody.Contains(httpMethod) ?
+            logger.Info("{msg}", $"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && RequestsWithBody.Contains(httpMethod) ?
                 $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
@@ -232,16 +232,16 @@ public static class RestHelpers
             string exceptionLocation = tcex.GetLocationOfEexception();
             if (expectTaskCancellation)
             {
-                logger.Info($"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
+                logger.Info("{msg}", $"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
             }
             else
             {
-                logger.Error(tcex, $"{exceptionLocation} Error URL: {url}");
+                logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {url}");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return result;
     }
@@ -373,7 +373,7 @@ public static class RestHelpers
         RestObject<T> restObject = new();
         try
         {
-            logger.Info($"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && RequestsWithBody.Contains(httpMethod) ?
+            logger.Info("{msg}", $"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && RequestsWithBody.Contains(httpMethod) ?
                 $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
@@ -388,16 +388,16 @@ public static class RestHelpers
             string exceptionLocation = tcex.GetLocationOfEexception();
             if (expectTaskCancellation)
             {
-                logger.Info($"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
+                logger.Info("{msg}", $"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
             }
             else
             {
-                logger.Error(tcex, $"{exceptionLocation} Error URL: {url}");
+                logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {url}");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error URL: {url}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error URL: {url}");
         }
         return restObject;
     }
@@ -517,12 +517,12 @@ public static class RestHelpers
                 string errorMessage = response.Content.Headers.ContentType.ToNString().ContainsInvariant("json") ?
                     JToken.Parse(await response.Content.ReadAsStringAsync()).ToString(Formatting.Indented) :
                     await response.Content.ReadAsStringAsync();
-                logger.Warn($"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n{errorMessage}");
+                logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n{errorMessage}");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return result;
     }
@@ -578,7 +578,7 @@ public static class RestHelpers
             }
             catch (Exception ex)
             {
-                logger.Warn(ex, $"Failed to add bearer token.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
+                logger.Warn(ex, "{msg}", $"Failed to add bearer token.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
             }
         }
 
@@ -592,7 +592,7 @@ public static class RestHelpers
                 }
                 catch (Exception ex)
                 {
-                    logger.Warn(ex, $"Failed to add header {header.Key} with value {header.Value}.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
+                    logger.Warn(ex, "{msg}", $"Failed to add header {header.Key} with value {header.Value}.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
                 }
             }
         }

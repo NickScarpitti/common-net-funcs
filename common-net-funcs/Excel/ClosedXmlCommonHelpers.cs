@@ -56,7 +56,7 @@ public static class ClosedXmlCommonHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //            return false;
     //        }
     //    }
@@ -252,7 +252,7 @@ public static class ClosedXmlCommonHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //            return false;
     //        }
     //    }
@@ -351,7 +351,7 @@ public static class ClosedXmlCommonHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //            return false;
     //        }
     //    }

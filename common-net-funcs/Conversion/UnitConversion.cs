@@ -125,9 +125,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Kb</param>
     /// <returns>Decimal representation of the number of bytes in Kb</returns>
-    public static decimal BytesToKb(this int bytes)
+    public static decimal BytesToKb(this int bytes, int decimalPlaces = 1)
     {
-        return Round(bytes / 1024m, 1, MidpointRounding.AwayFromZero);
+        return Round(bytes / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -135,9 +135,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Kb</param>
     /// <returns>Decimal representation of the number of bytes in Kb</returns>
-    public static decimal BytesToKb(this long bytes)
+    public static decimal BytesToKb(this long bytes, int decimalPlaces = 1)
     {
-        return Round(bytes / 1024m, 1, MidpointRounding.AwayFromZero);
+        return Round(bytes / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -145,9 +145,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Mb</param>
     /// <returns>Decimal representation of the number of bytes in Mb</returns>
-    public static decimal BytesToMb(this int bytes)
+    public static decimal BytesToMb(this int bytes, int decimalPlaces = 1)
     {
-        return Round(bytes / 1048576m, 1, MidpointRounding.AwayFromZero);
+        return Round(bytes / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -155,9 +155,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Mb</param>
     /// <returns>Decimal representation of the number of bytes in Mb</returns>
-    public static decimal BytesToMb(this long bytes)
+    public static decimal BytesToMb(this long bytes, int decimalPlaces = 1)
     {
-        return Round(bytes / 1048576m, 1, MidpointRounding.AwayFromZero);
+        return Round(bytes / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -165,9 +165,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Gb</param>
     /// <returns>Decimal representation of the number of bytes in Gb</returns>
-    public static decimal BytesToGb(this int bytes)
+    public static decimal BytesToGb(this int bytes, int decimalPlaces = 1)
     {
-        return Round(bytes / 1073741824m, 1, MidpointRounding.AwayFromZero);
+        return Round(bytes / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -175,9 +175,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Gb</param>
     /// <returns>Decimal representation of the number of bytes in Gb</returns>
-    public static decimal BytesToGb(this long bytes)
+    public static decimal BytesToGb(this long bytes, int decimalPlaces = 1)
     {
-        return Round(bytes / 1073741824m, 1, MidpointRounding.AwayFromZero);
+        return Round(bytes / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -185,9 +185,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Tb</param>
     /// <returns>Decimal representation of the number of bytes in Tb</returns>
-    public static decimal BytesToTb(this int bytes)
+    public static decimal BytesToTb(this int bytes, int decimalPlaces = 1)
     {
-        return Round(bytes / 1099511627776m, 1, MidpointRounding.AwayFromZero);
+        return Round(bytes / 1099511627776m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -195,9 +195,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Tb</param>
     /// <returns>Decimal representation of the number of bytes in Tb</returns>
-    public static decimal BytesToTb(this long bytes)
+    public static decimal BytesToTb(this long bytes, int decimalPlaces = 1)
     {
-        return Round(bytes / 1099511627776m, 1, MidpointRounding.AwayFromZero);
+        return Round(bytes / 1099511627776m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -205,9 +205,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="kb">Number of Kb to convert to Mb</param>
     /// <returns>Decimal representation of the number of Kb in Mb</returns>
-    public static decimal KbToMb(this decimal kb)
+    public static decimal KbToMb(this decimal kb, int decimalPlaces = 1)
     {
-        return Round(kb / 1024m, 1, MidpointRounding.AwayFromZero);
+        return Round(kb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -215,9 +215,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="kb">Number of Kb to convert to Gb</param>
     /// <returns>Decimal representation of the number of Kb in Gb</returns>
-    public static decimal KbToGb(this decimal kb)
+    public static decimal KbToGb(this decimal kb, int decimalPlaces = 1)
     {
-        return Round(kb / 1048576m, 1, MidpointRounding.AwayFromZero);
+        return Round(kb / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -225,9 +225,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="kb">Number of Kb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Kb in Tb</returns>
-    public static decimal KbToTb(this decimal kb)
+    public static decimal KbToTb(this decimal kb, int decimalPlaces = 1)
     {
-        return Round(kb / 1073741824m, 1, MidpointRounding.AwayFromZero);
+        return Round(kb / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -235,9 +235,9 @@ public static class UnitConversion
     /// </summary>
     /// <param name="mb">Number of Mb to convert to Gb</param>
     /// <returns>Decimal representation of the number of Mb in Gb</returns>
-    public static decimal MbToGb(this decimal mb)
+    public static decimal MbToGb(this decimal mb, int decimalPlaces = 1)
     {
-        return Round(mb / 1024m, 1, MidpointRounding.AwayFromZero);
+        return Round(mb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -245,19 +245,19 @@ public static class UnitConversion
     /// </summary>
     /// <param name="mb">Number of Mb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Mb in Tb</returns>
-    public static decimal MbToTb(this decimal mb)
+    public static decimal MbToTb(this decimal mb, int decimalPlaces = 1)
     {
-        return Round(mb / 1048576m, 1, MidpointRounding.AwayFromZero);
+        return Round(mb / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
     /// Convert Mb to Tb
     /// </summary>
-    /// <param name="Gb">Number of Gb to convert to Tb</param>
+    /// <param name="gb">Number of Gb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Gb in Tb</returns>
-    public static decimal GbToTb(this decimal Gb)
+    public static decimal GbToTb(this decimal gb, int decimalPlaces = 1)
     {
-        return Round(Gb / 1024m, 1, MidpointRounding.AwayFromZero);
+        return Round(gb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -265,7 +265,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="inputBytes">Number of bytes to be converted</param>
     /// <returns>Human readable string representation of the number of bytes</returns>
-    public static string GetFileSizeFromBytesWithUnits(this long inputBytes)
+    public static string GetFileSizeFromBytesWithUnits(this long inputBytes, int decimalPlaces = 1)
     {
         long bytes = Abs(inputBytes);
         long multiplier = 1;
@@ -273,7 +273,15 @@ public static class UnitConversion
         {
             multiplier = -1;
         }
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" :  $"{bytes * multiplier} B";
+        return bytes > 1025 ?
+            bytes.BytesToKb(decimalPlaces) > 1025 ? +
+                bytes.BytesToMb(decimalPlaces) > 1025 ?
+                    bytes.BytesToGb(decimalPlaces) > 1025 ?
+                        $"{bytes.BytesToTb(decimalPlaces) * multiplier} TB" :
+                    $"{bytes.BytesToGb(decimalPlaces) * multiplier} GB" :
+                $"{bytes.BytesToMb(decimalPlaces) * multiplier} MB" :
+            $"{bytes.BytesToKb(decimalPlaces) * multiplier} KB" :
+        $"{bytes * multiplier} B";
     }
 
     /// <summary>
@@ -281,7 +289,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="nullBytes">Number of bytes to be converted</param>
     /// <returns>Human readable string representation of the number of bytes</returns>
-    public static string GetFileSizeFromBytesWithUnits(this long? nullBytes)
+    public static string GetFileSizeFromBytesWithUnits(this long? nullBytes, int decimalPlaces = 1)
     {
         if (nullBytes == null) { return "-0"; }
         long bytes = Abs((long)nullBytes);
@@ -291,7 +299,15 @@ public static class UnitConversion
         {
             multiplier = -1;
         }
-        return bytes > 1025 ? bytes.BytesToKb() > 1025 ? bytes.BytesToMb() > 1025 ? bytes.BytesToGb() > 1025 ? $"{bytes.BytesToTb() * multiplier * multiplier} TB" : $"{bytes.BytesToGb() * multiplier} GB" : $"{bytes.BytesToMb() * multiplier} MB" : $"{bytes.BytesToTb() * multiplier} KB" : $"{bytes * multiplier} B";
+        return bytes > 1025 ?
+            bytes.BytesToKb(decimalPlaces) > 1025 ?
+                bytes.BytesToMb(decimalPlaces) > 1025 ?
+                    bytes.BytesToGb(decimalPlaces) > 1025 ?
+                        $"{bytes.BytesToTb(decimalPlaces) * multiplier} TB" :
+                    $"{bytes.BytesToGb(decimalPlaces) * multiplier} GB" :
+                $"{bytes.BytesToMb(decimalPlaces) * multiplier} MB" :
+            $"{bytes.BytesToKb(decimalPlaces) * multiplier} KB" :
+        $"{bytes * multiplier} B";
     }
 
     /// <summary>

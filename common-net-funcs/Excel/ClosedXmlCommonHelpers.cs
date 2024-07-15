@@ -56,7 +56,7 @@ public static class ClosedXmlCommonHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //            return false;
     //        }
     //    }
@@ -252,7 +252,7 @@ public static class ClosedXmlCommonHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //            return false;
     //        }
     //    }
@@ -351,7 +351,7 @@ public static class ClosedXmlCommonHelpers
     //        }
     //        catch (Exception ex)
     //        {
-    //            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
     //            return false;
     //        }
     //    }
@@ -374,11 +374,11 @@ public static class ClosedXmlCommonHelpers
 
     //        wb.SaveAs(tempStream, options);
     //        await tempStream.FlushAsync();
-    //        tempStream.Seek(0, SeekOrigin.Begin);
+    //        tempStream.Position = 0;
     //        await tempStream.CopyToAsync(memoryStream);
     //        await tempStream.DisposeAsync();
     //        await memoryStream.FlushAsync();
-    //        memoryStream.Seek(0, SeekOrigin.Begin);
+    //        memoryStream.Position = 0;
     //    }
 
     //    //Corrupts excel file as is

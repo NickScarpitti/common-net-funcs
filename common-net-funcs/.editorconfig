@@ -170,7 +170,7 @@ dotnet_diagnostic.VSSpell001.severity = none
 dotnet_diagnostic.RCS1123.severity = none
 
 # CA2254: Template should be a static expression
-dotnet_diagnostic.CA2254.severity = none
+dotnet_diagnostic.CA2254.severity = suggestion
 
 # RCS0045: Use linefeed as new line.
 dotnet_diagnostic.RCS0045.severity = none
@@ -245,6 +245,9 @@ csharp_style_prefer_primary_constructors = true:suggestion
 
 # IDE0005: Using directive is unnecessary.
 dotnet_diagnostic.IDE0005.severity = suggestion
+
+# CA1848: Use the LoggerMessage delegates
+dotnet_diagnostic.CA1848.severity = none
 
 [*.vb]
 # Modifier preferences

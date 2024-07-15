@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Z.EntityFramework.Plus;
@@ -45,7 +46,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -72,7 +73,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -143,23 +144,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                             model = context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).GetObjectByPartial(model);
                         }
                     }
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         //Microsoft.EntityFrameworkCore.Query.NavigationBaseIncludeIgnored
 
@@ -183,7 +184,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -225,7 +226,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -274,23 +275,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     query = GetQueryAllFull(queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -364,23 +365,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -449,7 +450,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -493,7 +494,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -555,7 +556,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -597,7 +598,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -642,23 +643,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
                     model.Entities = results.ConvertAll(x => x.Entities);
 
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -736,23 +737,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -831,23 +832,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -927,23 +928,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T2), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1018,7 +1019,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1048,7 +1049,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1111,23 +1112,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                         model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).FirstOrDefaultAsync(whereExpression);
                     }
 
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1193,23 +1194,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                         model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
                     }
 
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1239,7 +1240,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1305,23 +1306,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                         model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
                     }
 
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1350,7 +1351,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1380,7 +1381,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1446,23 +1447,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                         model = await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
                     }
 
-                    logger.Warn($"Adding {typeof(T).Name} to circularReferencingEntities");
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.AddDictionaryItem(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1488,7 +1489,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return model;
     }
@@ -1514,7 +1515,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return count;
     }
@@ -1527,16 +1528,21 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Creates a new record in the table corresponding to type T
     /// </summary>
     /// <param name="model">Record of type T to be added to the table</param>
-    public async Task Create(T model)
+    public async Task Create(T model, bool removeNavigationProps = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (removeNavigationProps)
+        {
+            model.RemoveNavigationProperties(context);
+        }
+
         try
         {
             await context.Set<T>().AddAsync(model);
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
     }
 
@@ -1544,9 +1550,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Creates new records in the table corresponding to type T
     /// </summary>
     /// <param name="model">Records of type T to be added to the table</param>
-    public async Task CreateMany(IEnumerable<T> model)
+    public async Task CreateMany(IEnumerable<T> model, bool removeNavigationProps = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (removeNavigationProps)
+        {
+            model.SetValue(x => x.RemoveNavigationProperties(context));
+        }
 
         try
         {
@@ -1555,7 +1565,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
     }
 
@@ -1573,32 +1583,32 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
     }
 
     /// <summary>
     /// Delete record in the table corresponding to type T matching the primary key passed in
     /// </summary>
-    /// <param name="id">Key of the record of type T to delete</param>
-    public async Task<bool> DeleteByKey(object id)
+    /// <param name="key">Key of the record of type T to delete</param>
+    public async Task<bool> DeleteByKey(object key)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         DbSet<T> table = context.Set<T>();
         bool success = false;
         try
         {
-            T? deleteItem = await table.FindAsync(id);
+            T? deleteItem = await table.FindAsync(key);
             if (deleteItem != null)
             {
                 table.Remove(deleteItem);
                 success = true;
             }
-            //changes = await table.DeleteByKeyAsync(id); //EF Core +, Does not require save changes, Does not work with PostgreSQL
+            //changes = await table.DeleteByKeyAsync(key); //EF Core +, Does not require save changes, Does not work with PostgreSQL
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tKey: {JsonSerializer.Serialize(key)}");
         }
         return success;
     }
@@ -1617,7 +1627,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
         return false;
     }
@@ -1636,7 +1646,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
         return false;
     }
@@ -1655,7 +1665,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tKeys: {JsonSerializer.Serialize(keys)}");
         }
         return false;
     }
@@ -1664,9 +1674,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Mark an entity as modified in order to be able to persist changes to the database upon calling context.SaveChanges()
     /// </summary>
     /// <param name="model">The modified entity</param>
-    public void Update(T model) //Send in modified object
+    public void Update(T model, bool removeNavigationProps = false) //Send in modified object
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (removeNavigationProps)
+        {
+            model.RemoveNavigationProperties(context);
+        }
         context.Entry(model).State = EntityState.Modified;
     }
 
@@ -1674,24 +1688,28 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Mark an entity as modified in order to be able to persist changes to the database upon calling context.SaveChanges()
     /// </summary>
     /// <param name="models">The modified entity</param>
-    public bool UpdateMany(List<T> models) //Send in modified objects
+    public bool UpdateMany(List<T> models, bool removeNavigationProps = false) //Send in modified objects
     {
         bool result = true;
         try
         {
             using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+            if (removeNavigationProps)
+            {
+                models.SetValue(x => x.RemoveNavigationProperties(context));
+            }
             //await context.BulkUpdateAsync(models); EF Core Extensions (Paid)
             context.UpdateRange(models);
         }
         catch (DbUpdateException duex)
         {
             result = false;
-            logger.Error(duex, $"{duex.GetLocationOfEexception()} DBUpdate Error");
+            logger.Error(duex, "{msg}", $"{duex.GetLocationOfEexception()} DBUpdate Error\n\tModels: {JsonSerializer.Serialize(models)}");
         }
         catch (Exception ex)
         {
             result = false;
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModels: {JsonSerializer.Serialize(models)}");
         }
         return result;
     }
@@ -1710,11 +1728,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (DbUpdateException duex)
         {
-            logger.Error(duex, $"{duex.GetLocationOfEexception()} DBUpdate Error");
+            logger.Error(duex, "{msg}", $"{duex.GetLocationOfEexception()} DBUpdate Error");
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return result;
     }

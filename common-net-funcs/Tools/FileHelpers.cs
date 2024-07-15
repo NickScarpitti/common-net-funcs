@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Common_Net_Funcs.Tools;
@@ -34,13 +35,13 @@ public static class FileHelpers
             {
                 if (!supressLogging)
                 {
-                    logger.Warn($"[{directory}] does not exist! Creating new directory...");
+                    logger.Warn("{msg}", $"[{directory}] does not exist! Creating new directory...");
                 }
                 Directory.CreateDirectory(directory);
             }
             else if (!supressLogging)
             {
-                logger.Warn($"[{directory}] does not exist! Unable to continue...");
+                logger.Warn("{msg}", $"[{directory}] does not exist! Unable to continue...");
                 return string.Empty;
             }
         }
@@ -61,7 +62,7 @@ public static class FileHelpers
             {
                 if (!supressLogging)
                 {
-                    logger.Info($"[{testPath}] exists, checking with iterator [{i}]");
+                    logger.Info("{msg}", $"[{testPath}] exists, checking with iterator [{i}]");
                 }
                 Regex regex = new(incrementingPattern, RegexOptions.IgnoreCase);
                 if (regex.IsMatch(oldCleanFileName + ext)) //File already has an iterator
@@ -75,12 +76,12 @@ public static class FileHelpers
 
                 if (!supressLogging)
                 {
-                    logger.Info($"Checking new testPath [{testPath}] with iterator [{i}]]");
+                    logger.Info("{msg}", $"Checking new testPath [{testPath}] with iterator [{i}]]");
                 }
 
                 if (lastTestPath == testPath)
                 {
-                    logger.Warn($"File name [{testPath}] not changing, breaking out of loop.");
+                    logger.Warn("{msg}", $"File name [{testPath}] not changing, breaking out of loop.");
                     break;
                 }
                 lastTestPath = testPath;
@@ -89,7 +90,7 @@ public static class FileHelpers
         }
         else
         {
-            logger.Info($"Original path with cleaned file name [{testPath}] is unique");
+            logger.Info("{msg}", $"Original path with cleaned file name [{testPath}] is unique");
         }
         return testPath;
     }
@@ -116,13 +117,13 @@ public static class FileHelpers
             {
                 if (!supressLogging)
                 {
-                    logger.Warn($"[{directory}] does not exist! Creating new directory...");
+                    logger.Warn("{msg}", $"[{directory}] does not exist! Creating new directory...");
                 }
                 Directory.CreateDirectory(directory);
             }
             else if (!supressLogging)
             {
-                logger.Warn($"[{directory}] does not exist! Unable to continue...");
+                logger.Warn("{msg}", $"[{directory}] does not exist! Unable to continue...");
                 return string.Empty;
             }
         }
@@ -152,12 +153,12 @@ public static class FileHelpers
 
                 if (!supressLogging)
                 {
-                    logger.Info($"Checking new testPath [{testPath}] with iterator [{i}]]");
+                    logger.Info("{msg}", $"Checking new testPath [{testPath}] with iterator [{i}]]");
                 }
 
                 if (lastTestPath == testPath)
                 {
-                    logger.Warn($"File name [{testPath}] not changing, breaking out of loop.");
+                    logger.Warn("{msg}", $"File name [{testPath}] not changing, breaking out of loop.");
                     break;
                 }
                 lastTestPath = testPath;
@@ -166,74 +167,9 @@ public static class FileHelpers
         }
         else
         {
-            logger.Info($"Original path with cleaned file name [{testPath}] is unique");
+            logger.Info("{msg}", $"Original path with cleaned file name [{testPath}] is unique");
         }
         return Path.GetFileName(testPath);
-    }
-
-    /// <summary>
-    /// Adds a zipped file to an existing ZipArchive
-    /// </summary>
-    /// <param name="archive">ZipArchive to add zipped file to</param>
-    /// <param name="zipFile">File to add to archive</param>
-    /// <param name="fileCount">Number to use as part of the default file name "File {fileCount}"</param>
-    public static async Task AddFileToZip(this ZipArchive archive, ZipFile? zipFile, int fileCount)
-    {
-        try
-        {
-            if (zipFile?.FileData != null)
-            {
-                zipFile.FileData.Position = 0; //Must have this to prevent errors writing data to the attachment
-                ZipArchiveEntry entry = archive.CreateEntry(zipFile.FileName ?? $"File {fileCount}", CompressionLevel.SmallestSize);
-                await using Stream entryStream = entry.Open();
-                await zipFile.FileData.CopyToAsync(entryStream);
-                await entryStream.FlushAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
-        }
-    }
-
-    /// <summary>
-    /// Zips passed in files directly to a stream object
-    /// </summary>
-    /// <param name="zipFiles">Files to zip</param>
-    /// <param name="zipFileStream">Stream to contain resulting zip archive</param>
-    public static async Task ZipFiles(IEnumerable<ZipFile>? zipFiles, MemoryStream? zipFileStream = null)
-    {
-        try
-        {
-            zipFileStream ??= new();
-
-            if (zipFiles?.Any() == true)
-            {
-                int i = 1;
-                await using MemoryStream memoryStream = new();
-                using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
-                foreach (ZipFile file in zipFiles)
-                {
-                    if (file.FileData != null)
-                    {
-                        file.FileData.Position = 0; //Must have this to prevent errors writing data to the attachment
-                        ZipArchiveEntry entry = archive.CreateEntry(file.FileName ?? $"File {i}", CompressionLevel.SmallestSize);
-                        await using Stream entryStream = entry.Open();
-                        await file.FileData.CopyToAsync(entryStream);
-                        await entryStream.FlushAsync();
-                        i++;
-                    }
-                }
-                archive.Dispose();
-                memoryStream.Seek(0, SeekOrigin.Begin);
-                await memoryStream.CopyToAsync(zipFileStream); //Copy to output stream
-                zipFileStream.Seek(0, SeekOrigin.Begin);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
-        }
     }
 
     /// <summary>
@@ -247,10 +183,27 @@ public static class FileHelpers
         string extension = Path.GetExtension(fileName);
         return validExtensions.ContainsInvariant(extension);
     }
-}
 
-public class ZipFile
-{
-    public Stream? FileData { get; set; }
-    public string? FileName { get; set; }
+    public static async Task<string> GetHashFromFile(this string fileName)
+    {
+        string hash;
+        await using (FileStream fileStream = new(fileName, FileMode.Open, FileAccess.Read))
+        {
+            hash = await GetSha256Hash(fileStream);
+        }
+        return hash;
+    }
+
+    public static async Task<string> GetSha256Hash(this FileStream fileStream)
+    {
+        using HashAlgorithm hashAlgorithm = SHA256.Create();
+        byte[] data = await hashAlgorithm.ComputeHashAsync(fileStream);
+        StringBuilder stringBuilder = new();
+
+        for (int i = 0; i < data.Length; i++)
+        {
+            stringBuilder.Append(data[i].ToString("x2"));
+        }
+        return stringBuilder.ToString();
+    }
 }

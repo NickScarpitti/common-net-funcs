@@ -56,7 +56,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -77,7 +77,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -102,7 +102,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -120,14 +120,14 @@ public static class AsyncHelpers
                 List<T>? resultObject = await task;
                 if (resultObject != null)
                 {
-                    obj.AddRange(resultObject);
+                    obj.AddRangeParallel(resultObject);
                     resultObject = null;
                 }
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -145,14 +145,14 @@ public static class AsyncHelpers
                 ConcurrentBag<T>? resultObject = await task;
                 if (resultObject != null)
                 {
-                    obj.AddRange(resultObject);
+                    obj.AddRangeParallel(resultObject);
                     resultObject = null;
                 }
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -177,7 +177,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -199,7 +199,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -217,7 +217,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 }

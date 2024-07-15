@@ -155,9 +155,23 @@ public static class ObjectHelpers
     /// <param name="concurrentBag">ConcurrentBag to add list of items to</param>
     /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
     /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
-    public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null)
+    public static void AddRangeParallel<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null)
     {
         Parallel.ForEach(toAdd.Where(x => x != null), parallelOptions ?? new(), item => concurrentBag.Add(item!));
+    }
+
+    /// <summary>
+    /// Adds AddRange functionality to ConcurrentBag similar to a list. Skips null items
+    /// </summary>
+    /// <typeparam name="T">Type of object being added</typeparam>
+    /// <param name="concurrentBag">ConcurrentBag to add list of items to</param>
+    /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
+    public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd)
+    {
+        foreach (T? item in toAdd.Where(x => x != null))
+        {
+            concurrentBag.Add(item!);
+        }
     }
 
     /// <summary>
@@ -419,22 +433,34 @@ public static class ObjectHelpers
     /// <param name="dict">Dictionary to add item to</param>
     /// <param name="key">Key of new item to add to dict</param>
     /// <param name="value">Value of new item to add to dict</param>
-    public static void AddDictionaryItem<K, V>(this Dictionary<K, V?> dict, K key, V? value = default) where K : notnull
+    public static void AddDictionaryItem<K, V>(this IDictionary<K, V?> dict, K key, V? value = default) where K : notnull
     {
         dict.TryAdd(key, value);
     }
 
     /// <summary>
-    /// Provides a safe way to add a new ConcurrentDictionary key without having to worry about duplication
+    /// Provides a safe way to add a new Dictionary key without having to worry about duplication
     /// </summary>
-    /// <param name="dict">ConcurrentDictionary to add item to</param>
-    /// <param name="key">Key of new item to add to dict</param>
-    /// <param name="value">Value of new item to add to dict</param>
-    public static void AddDictionaryItem<K, V>(this ConcurrentDictionary<K, V?> dict, K key, V? value = default) where K : notnull
+    /// <param name="dict">Dictionary to add item to</param>
+    /// <param name="keyValuePair">Key value pair to add to dict</param>
+    public static void AddDictionaryItem<K, V>(this IDictionary<K, V> dict, KeyValuePair<K, V> keyValuePair) where K : notnull
     {
-        if (!dict.ContainsKey(key))
+        dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
+    }
+
+    /// <summary>
+    /// Provides a safe way to add a new Dictionary key without having to worry about duplication
+    /// </summary>
+    /// <param name="dict">Dictionary to add item to</param>
+    /// <param name="keyValuePairs">Enumerable of items to add to dict</param>
+    public static void AddDictionaryItems<K, V>(this IDictionary<K, V> dict, IEnumerable<KeyValuePair<K, V>> keyValuePairs) where K : notnull
+    {
+        foreach (KeyValuePair<K, V> keyValuePair in keyValuePairs)
         {
-            dict.TryAdd(key, value);
+            if (!dict.ContainsKey(keyValuePair.Key))
+            {
+                dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
+            }
         }
     }
 
@@ -498,7 +524,7 @@ public static class ObjectHelpers
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+                logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
                 return false;
             }
         }
@@ -518,6 +544,18 @@ public static class ObjectHelpers
             isNumeric = decimal.TryParse(testObject.ToString(), NumberStyles.Number, NumberFormatInfo.InvariantInfo, out _);
         }
         return isNumeric;
+    }
+
+    public static async Task<byte[]> ReadStreamAsync(Stream stream, int bufferSize = 4096)
+    {
+        int read;
+        await using MemoryStream ms = new();
+        byte[] buffer = new byte[bufferSize];
+        while ((read = await stream.ReadAsync(buffer)) > 0)
+        {
+            ms.Write(buffer, 0, read);
+        }
+        return ms.ToArray();
     }
 }
 

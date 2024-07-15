@@ -53,17 +53,17 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
 
                 if (!success)
                 {
-                    logger.LogInformation(response?.HttpStatusCode.ToString());
+                    logger.LogInformation("{msg}", response?.HttpStatusCode.ToString());
                 }
             }
         }
         catch (AmazonS3Exception awsEx)
         {
-            logger.LogError(awsEx, $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
+            logger.LogError(awsEx, "{msg}", $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.LogError(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return success;
     }
@@ -103,17 +103,17 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         {
             if (awsEx.StatusCode != HttpStatusCode.NotFound)
             {
-                logger.LogError(awsEx, $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
+                logger.LogError(awsEx, "{msg}", $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
             }
             else
             {
-                logger.LogTrace(awsEx, $"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfEexception()}");
-                logger.LogWarning($"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfEexception()}");
+                logger.LogTrace(awsEx, "{msg}", $"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfEexception()}");
+                logger.LogWarning("{msg}", $"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfEexception()}");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.LogError(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -140,16 +140,16 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         {
             if (awsEx.StatusCode == HttpStatusCode.NotFound)
             {
-                logger.LogWarning($"{fileName} not found for deletion");
+                logger.LogWarning("{msg}", $"{fileName} not found for deletion");
             }
             else
             {
-                logger.LogError(awsEx, $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
+                logger.LogError(awsEx, "{msg}", $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.LogError(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return success;
     }
@@ -183,12 +183,12 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         {
             if (awsEx.StatusCode != HttpStatusCode.NotFound)
             {
-                logger.LogError(awsEx, $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
+                logger.LogError(awsEx, "{msg}", $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.LogError(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return success;
     }
@@ -225,12 +225,12 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         {
             if (awsEx.StatusCode != HttpStatusCode.NotFound)
             {
-                logger.LogError(awsEx, $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
+                logger.LogError(awsEx, "{msg}", $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.LogError(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return fileNames;
     }
@@ -264,16 +264,16 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         {
             if (awsEx.StatusCode != HttpStatusCode.NotFound)
             {
-                logger.LogError(awsEx, $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
+                logger.LogError(awsEx, "{msg}", $"{awsEx.GetLocationOfEexception()} AWS S3 Error");
             }
             else
             {
-                logger.LogWarning($"Unable to get URL for {fileName} from {bucketName}");
+                logger.LogWarning("{msg}", $"Unable to get URL for {fileName} from {bucketName}");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.LogError(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return url;
     }
@@ -314,7 +314,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.LogError(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return isValid;
     }

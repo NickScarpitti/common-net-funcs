@@ -36,7 +36,7 @@ public static class ImageConversion
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
 
         return null;
@@ -63,7 +63,7 @@ public static class ImageConversion
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
 
         return null;

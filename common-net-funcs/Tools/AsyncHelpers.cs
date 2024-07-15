@@ -56,7 +56,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -77,7 +77,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -102,7 +102,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -127,7 +127,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -152,7 +152,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -177,7 +177,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -199,7 +199,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 
@@ -217,7 +217,7 @@ public static class AsyncHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
     }
 }

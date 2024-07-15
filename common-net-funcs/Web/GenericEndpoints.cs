@@ -19,11 +19,11 @@ public class GenericEndpoints : ControllerBase
     /// <param name="models">Entities to create</param>
     /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
-    public async Task<ActionResult<List<T>>> CreateMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+    public async Task<ActionResult<List<T>>> CreateMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class where UT : DbContext
     {
         try
         {
-            await baseAppDbContextActions.CreateMany(models);
+            await baseAppDbContextActions.CreateMany(models, removeNavigationProps);
             if (await baseAppDbContextActions.SaveChanges())
             {
                 return Ok(models);
@@ -31,7 +31,7 @@ public class GenericEndpoints : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return NoContent();
     }
@@ -56,7 +56,7 @@ public class GenericEndpoints : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return NoContent();
     }
@@ -80,7 +80,7 @@ public class GenericEndpoints : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return NoContent();
     }
@@ -104,7 +104,7 @@ public class GenericEndpoints : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return NoContent();
     }
@@ -183,7 +183,7 @@ public class GenericEndpoints : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
         }
         return NoContent();
     }

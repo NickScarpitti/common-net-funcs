@@ -35,13 +35,13 @@ public static class FileHelpers
             {
                 if (!supressLogging)
                 {
-                    logger.Warn($"[{directory}] does not exist! Creating new directory...");
+                    logger.Warn("{msg}", $"[{directory}] does not exist! Creating new directory...");
                 }
                 Directory.CreateDirectory(directory);
             }
             else if (!supressLogging)
             {
-                logger.Warn($"[{directory}] does not exist! Unable to continue...");
+                logger.Warn("{msg}", $"[{directory}] does not exist! Unable to continue...");
                 return string.Empty;
             }
         }
@@ -62,7 +62,7 @@ public static class FileHelpers
             {
                 if (!supressLogging)
                 {
-                    logger.Info($"[{testPath}] exists, checking with iterator [{i}]");
+                    logger.Info("{msg}", $"[{testPath}] exists, checking with iterator [{i}]");
                 }
                 Regex regex = new(incrementingPattern, RegexOptions.IgnoreCase);
                 if (regex.IsMatch(oldCleanFileName + ext)) //File already has an iterator
@@ -76,12 +76,12 @@ public static class FileHelpers
 
                 if (!supressLogging)
                 {
-                    logger.Info($"Checking new testPath [{testPath}] with iterator [{i}]]");
+                    logger.Info("{msg}", $"Checking new testPath [{testPath}] with iterator [{i}]]");
                 }
 
                 if (lastTestPath == testPath)
                 {
-                    logger.Warn($"File name [{testPath}] not changing, breaking out of loop.");
+                    logger.Warn("{msg}", $"File name [{testPath}] not changing, breaking out of loop.");
                     break;
                 }
                 lastTestPath = testPath;
@@ -90,7 +90,7 @@ public static class FileHelpers
         }
         else
         {
-            logger.Info($"Original path with cleaned file name [{testPath}] is unique");
+            logger.Info("{msg}", $"Original path with cleaned file name [{testPath}] is unique");
         }
         return testPath;
     }
@@ -117,13 +117,13 @@ public static class FileHelpers
             {
                 if (!supressLogging)
                 {
-                    logger.Warn($"[{directory}] does not exist! Creating new directory...");
+                    logger.Warn("{msg}", $"[{directory}] does not exist! Creating new directory...");
                 }
                 Directory.CreateDirectory(directory);
             }
             else if (!supressLogging)
             {
-                logger.Warn($"[{directory}] does not exist! Unable to continue...");
+                logger.Warn("{msg}", $"[{directory}] does not exist! Unable to continue...");
                 return string.Empty;
             }
         }
@@ -153,12 +153,12 @@ public static class FileHelpers
 
                 if (!supressLogging)
                 {
-                    logger.Info($"Checking new testPath [{testPath}] with iterator [{i}]]");
+                    logger.Info("{msg}", $"Checking new testPath [{testPath}] with iterator [{i}]]");
                 }
 
                 if (lastTestPath == testPath)
                 {
-                    logger.Warn($"File name [{testPath}] not changing, breaking out of loop.");
+                    logger.Warn("{msg}", $"File name [{testPath}] not changing, breaking out of loop.");
                     break;
                 }
                 lastTestPath = testPath;
@@ -167,7 +167,7 @@ public static class FileHelpers
         }
         else
         {
-            logger.Info($"Original path with cleaned file name [{testPath}] is unique");
+            logger.Info("{msg}", $"Original path with cleaned file name [{testPath}] is unique");
         }
         return Path.GetFileName(testPath);
     }

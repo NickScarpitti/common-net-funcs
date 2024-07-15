@@ -27,7 +27,7 @@ public class ResponseSizeLoggingMiddleware(RequestDelegate next, ILogger<Respons
         await next(context);
 
         //Log the response size
-        logger.LogWarning($"Response to {context.Request.Path} [{context.Request.Method}] of type [{context.Request.Headers.Accept}{(string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + { context.Request.Headers.AcceptEncoding }")}] " +
+        logger.LogWarning("{msg}", $"Response to {context.Request.Path} [{context.Request.Method}] of type [{context.Request.Headers.Accept}{(string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + { context.Request.Headers.AcceptEncoding }")}] " +
             $"with Size: {responseBodyStream.Length.GetFileSizeFromBytesWithUnits(2)}");
 
         //Copy the contents of the new memory stream to the original response stream

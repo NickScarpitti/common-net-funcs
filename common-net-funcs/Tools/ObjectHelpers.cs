@@ -524,7 +524,7 @@ public static class ObjectHelpers
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"{ex.GetLocationOfEexception()} Error");
+                logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
                 return false;
             }
         }

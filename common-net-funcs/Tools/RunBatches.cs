@@ -28,7 +28,7 @@ public static class RunBatches
             List<T> items = itemsToProcess.Skip(i * batchInterval).Take(batchInterval).ToList();
             success = await batchedProcess(items) && success; //Allow for success to fail while still continuing
             if (!success && breakOnFail) { break; }
-            if (logProgress) { logger.Info($"Process {i + 1}/{totalProcesses} complete"); }
+            if (logProgress) { logger.Info("{msg}", $"Process {i + 1}/{totalProcesses} complete"); }
         }
         return success;
     }
@@ -52,7 +52,7 @@ public static class RunBatches
             List<T> items = itemsToProcess.Skip(i * batchInterval).Take(batchInterval).ToList();
             success = batchedProcess(items) && success; //Allow for success to fail while still continuing
             if (!success && breakOnFail) { break; }
-            if (logProgress) { logger.Info($"Process {i + 1}/{totalProcesses} complete"); }
+            if (logProgress) { logger.Info("{msg}", $"Process {i + 1}/{totalProcesses} complete"); }
         }
         return success;
     }

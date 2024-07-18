@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.ComponentModel.DataAnnotations;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MimeKit;
@@ -21,6 +22,10 @@ public static class EmailConstants
 public class MailAddress
 {
     public string? Name { get; set; }
+
+    [MaxLength(MaxEmailLength, ErrorMessage = "Invalid email format")]
+    [RegularExpression(EmailRegex, ErrorMessage = "Invalid email format")]
+    [EmailAddress(ErrorMessage = "Invalid email format")]
     public string? Email { get; set; }
 }
 

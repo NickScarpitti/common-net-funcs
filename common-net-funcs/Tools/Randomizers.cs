@@ -62,7 +62,6 @@ public static class Randomizers
     //    return output;
     //}
 
-
     public static decimal GetRandomDecimal()
     {
         using RandomNumberGenerator rng = RandomNumberGenerator.Create();

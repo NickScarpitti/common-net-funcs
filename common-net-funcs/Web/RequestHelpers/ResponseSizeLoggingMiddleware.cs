@@ -40,7 +40,7 @@ public class ResponseSizeLoggingMiddleware(RequestDelegate next, ILogger<Respons
 /// <summary>
 /// Extension method used to add the middleware to the HTTP request pipeline
 /// </summary>
-public static class ResponseSizeLoggingMiddlewareExtensions
+public static class ResponseSizeLoggingMiddlewareExtension
 {
     public static IApplicationBuilder UseResponseSizeLogging(this IApplicationBuilder builder)
     {

@@ -43,12 +43,34 @@ public static class ObjectHelpers
     /// </summary>
     /// <typeparam name="T">Type of object being copied</typeparam>
     /// <param name="source">Object to copy common properties from</param>
-    /// <param name="dest">New class of desired output type</param>
-    public static T CopyPropertiesToNew<T>(this T source, T dest)
+    public static TU CopyPropertiesToNew<T, TU>(this T source) where TU : new()
+    {
+        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
+        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
+
+        TU dest = new();
+        foreach (PropertyInfo sourceProp in sourceProps)
+        {
+            if (destProps.Any(x => x.Name == sourceProp.Name))
+            {
+                PropertyInfo? p = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+                p?.SetValue(dest, sourceProp.GetValue(source, null), null);
+            }
+        }
+        return dest;
+    }
+
+    /// <summary>
+    /// Copy properties of the same name from one object to another
+    /// </summary>
+    /// <typeparam name="T">Type of object being copied</typeparam>
+    /// <param name="source">Object to copy common properties from</param>
+    public static T CopyPropertiesToNew<T>(this T source) where T : new()
     {
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
         IEnumerable<PropertyInfo> destProps = typeof(T).GetProperties().Where(x => x.CanWrite);
 
+        T dest = new();
         foreach (PropertyInfo sourceProp in sourceProps)
         {
             if (destProps.Any(x => x.Name == sourceProp.Name))

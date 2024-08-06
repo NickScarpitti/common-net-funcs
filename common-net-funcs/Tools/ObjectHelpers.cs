@@ -28,36 +28,42 @@ public static class ObjectHelpers
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
         IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
 
-        foreach (PropertyInfo sourceProp in sourceProps)
+        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
         {
-            if (destProps.Any(x => x.Name == sourceProp.Name))
-            {
-                PropertyInfo? p = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
-                p?.SetValue(dest, sourceProp.GetValue(source, null), null);
-            }
+            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+            destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
         }
     }
 
     /// <summary>
-    /// Copy properties of the same name from one object to another
+    /// Copy properties of the same name from one object to another, recursively navigating classes if they are not the same type
     /// </summary>
-    /// <typeparam name="T">Type of object being copied</typeparam>
+    /// <typeparam name="T">Type of source object</typeparam>
+    /// <typeparam name="TU">Type of destination object</typeparam>
     /// <param name="source">Object to copy common properties from</param>
-    public static TU CopyPropertiesToNew<T, TU>(this T source) where TU : new()
+    /// <param name="dest">Object to copy common properties to</param>
+    public static void CopyPropertiesToRecursive<T, TU>(this T source, TU dest, int maxDepth = -1)
     {
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
         IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
 
-        TU dest = new();
-        foreach (PropertyInfo sourceProp in sourceProps)
+        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
         {
-            if (destProps.Any(x => x.Name == sourceProp.Name))
+            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+            object? value = sourceProp.GetValue(source, null);
+
+            //Only need to do this if the source and destination types are not the same, otherwise a direct copy will alwyas work
+            if (value != null && destProp != null && destProp.GetType() != sourceProp.GetType() && sourceProp.PropertyType.IsClass && sourceProp.PropertyType != typeof(string))
             {
-                PropertyInfo? p = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
-                p?.SetValue(dest, sourceProp.GetValue(source, null), null);
+                object? nestedProperty = Activator.CreateInstance(sourceProp.PropertyType);
+                nestedProperty = CopyRecursiveProperties(nestedProperty, value, 1, maxDepth);
+                destProp?.SetValue(dest, nestedProperty, null);
+            }
+            else
+            {
+                destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
             }
         }
-        return dest;
     }
 
     /// <summary>
@@ -71,12 +77,95 @@ public static class ObjectHelpers
         IEnumerable<PropertyInfo> destProps = typeof(T).GetProperties().Where(x => x.CanWrite);
 
         T dest = new();
-        foreach (PropertyInfo sourceProp in sourceProps)
+        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
         {
-            if (destProps.Any(x => x.Name == sourceProp.Name))
+            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+            destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
+        }
+        return dest;
+    }
+
+    /// <summary>
+    /// Copy properties of the same name from one object to another
+    /// </summary>
+    /// <typeparam name="T">Type of object being copied</typeparam>
+    /// <param name="source">Object to copy common properties from</param>
+    public static TU CopyPropertiesToNew<T, TU>(this T source) where TU : new()
+    {
+        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
+        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
+
+        TU dest = new();
+        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+        {
+            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+            destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
+        }
+        return dest;
+    }
+
+    /// <summary>
+    /// Copy properties of the same name from one object to another, recursively navigating classes if they are not the same type
+    /// </summary>
+    /// <typeparam name="T">Type of object being copied</typeparam>
+    /// <param name="source">Object to copy common properties from</param>
+    public static TU CopyPropertiesToNewRecursive<T, TU>(this T source, int maxDepth = -1) where TU : new()
+    {
+        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
+        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
+
+        TU dest = new();
+        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+        {
+            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+            object? value = sourceProp.GetValue(source, null);
+
+            //Only need to do this if the source and destination types are not the same, otherwise a direct copy will always work
+            if (value != null && destProp != null && destProp.PropertyType.AssemblyQualifiedName != sourceProp.PropertyType.AssemblyQualifiedName &&
+                sourceProp.PropertyType.IsClass && sourceProp.PropertyType != typeof(string))
             {
-                PropertyInfo? p = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
-                p?.SetValue(dest, sourceProp.GetValue(source, null), null);
+                object? nestedProperty = Activator.CreateInstance(destProp.PropertyType);
+                nestedProperty = CopyRecursiveProperties(nestedProperty, value, 1, maxDepth);
+                destProp?.SetValue(dest, nestedProperty, null);
+            }
+            else
+            {
+                destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
+            }
+        }
+        return dest;
+    }
+
+    /// <summary>
+    /// Recursively copies properties for nested classes
+    /// </summary>
+    /// <param name="dest">Object to have same name properties copied to</param>
+    /// <param name="source">Source data to copy same name properties from</param>
+    /// <param name="depth">The number of nested objects deep the code is working at. 0 is the top level of the class</param>
+    /// <param name="maxDepth">Sets limit on number of nested objects deep to copy</param>
+    private static object CopyRecursiveProperties(object? dest, object source, int depth, int maxDepth = -1)
+    {
+        Type sourceType = source.GetType();
+        Type destType = dest!.GetType();
+
+        IEnumerable<PropertyInfo> sourceProps = sourceType.GetProperties().Where(x => x.CanRead);
+        IEnumerable<PropertyInfo> destProps = destType.GetProperties().Where(x => x.CanWrite);
+
+        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+        {
+            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+            object? value = sourceProp.GetValue(source, null);
+            if (value != null && destProp != null && (maxDepth == -1 || maxDepth <= depth) && destProp.PropertyType.AssemblyQualifiedName != sourceProp.PropertyType.AssemblyQualifiedName &&
+                sourceProp.PropertyType.IsClass && sourceProp.PropertyType != typeof(string))
+            {
+                // Create a new instance of the nested class and copy properties recursively
+                object? nestedProperty = Activator.CreateInstance(destProp.PropertyType);
+                nestedProperty = CopyRecursiveProperties(nestedProperty, value, depth + 1, maxDepth);
+                destProp?.SetValue(dest, nestedProperty, null);
+            }
+            else
+            {
+                destProp?.SetValue(dest, value, null);
             }
         }
         return dest;

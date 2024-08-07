@@ -779,7 +779,7 @@ public static partial class NpoiCommonHelpers
     /// <param name="wb">Workbook to insert images into</param>
     /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
     /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
-    public static void AddImages(this IWorkbook wb, List<byte[]> imageData, List<string> cellNames)
+    public static void AddImages(this IWorkbook wb, List<byte[]> imageData, List<string> cellNames, AnchorType anchorType = AnchorType.MoveAndResize)
     {
         if (wb != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
         {
@@ -839,7 +839,7 @@ public static partial class NpoiCommonHelpers
                         int xMargin = (int)Round((rangeWidth - resizeWidth) * XSSFShape.EMU_PER_PIXEL / 2.0, 0, MidpointRounding.ToZero);
                         int yMargin = (int)Round((rangeHeight - resizeHeight) * XSSFShape.EMU_PER_PIXEL * 1.75 / 2.0, 0, MidpointRounding.ToZero);
 
-                        anchor.AnchorType = AnchorType.DontMoveAndResize;
+                        anchor.AnchorType = anchorType;
                         anchor.Col1 = area.FirstColumn;
                         anchor.Row1 = area.FirstRow;
                         anchor.Col2 = area.LastColumn + 1;

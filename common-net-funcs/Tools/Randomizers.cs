@@ -44,7 +44,7 @@ public static class Randomizers
         {
             throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "decimalPlaces must be greater than 0.");
         }
-        decimalPlaces = decimalPlaces <= 17 ? decimalPlaces : 17;
+        decimalPlaces = decimalPlaces <= 15 ? decimalPlaces : 15;
         double result = GetRandomDouble();
         return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
     }

@@ -1,198 +1,21 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.Json;
+using System.Text;
+using System.Threading.Tasks;
+using Common_Net_Funcs.Tools;
 
-namespace Common_Net_Funcs.Tools;
-
-public static class DeepCloneSerializationHelpers
-{
-    /// <summary>
-    /// Deep clone a class (cloned object doesn't retain memory references) using serialization (slowest)
-    /// </summary>
-    /// <typeparam name="T">Type of objects to clone</typeparam>
-    /// <param name="original">Object to clone</param>
-    /// <returns>Clone of the original object</returns>
-    [return: NotNullIfNotNull(nameof(original))]
-    public static T? SerializeClone<T>(this T? original) where T : class
-    {
-        if (original == null) { return null; }
-        string serialized = JsonSerializer.Serialize(original);
-        return JsonSerializer.Deserialize<T>(serialized) ?? throw new JsonException("Unable to deserialize cloned object");
-    }
-}
-
-public static class DeepCloneReflectionHelpers
-{
-    private static readonly MethodInfo? CloneMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
-
-    /// <summary>
-    /// Deep clone a non-delegate type class (cloned object doesn't retain memory references) using reflection (mid-tier speed)
-    /// </summary>
-    /// <typeparam name="T">Type of object to clone</typeparam>
-    /// <param name="original">Object to clone</param>
-    /// <returns>Clone of the original object</returns>
-    [return: NotNullIfNotNull(nameof(original))]
-    public static T? DeepCloneReflection<T>(this T? original)
-    {
-        return (T?)Copy(original);
-    }
-
-    public static bool IsPrimitive(this Type type)
-    {
-        if (type == typeof(string))
-        {
-            return true;
-        }
-
-        return type.IsValueType && type.IsPrimitive;
-    }
-
-    private static object? Copy(this object? originalObject)
-    {
-        return InternalCopy(originalObject, new Dictionary<object, object?>(new ReferenceEqualityComparer()));
-    }
-
-    private static object? InternalCopy(object? originalObject, IDictionary<object, object?> visited)
-    {
-        if (originalObject == null)
-        {
-            return null;
-        }
-
-        Type typeToReflect = originalObject.GetType();
-        if (IsPrimitive(typeToReflect))
-        {
-            return originalObject;
-        }
-
-        if (visited.TryGetValue(originalObject, out object? value))
-        {
-            return value;
-        }
-
-        if (typeToReflect.IsDelegate())
-        {
-            throw new ArgumentException($"Type {typeToReflect.FullName} is a delegate type which is unsupported.", nameof(originalObject));
-        }
-
-        object? cloneObject = CloneMethod!.Invoke(originalObject, null);
-        if (typeToReflect.IsArray)
-        {
-            Type? arrayType = typeToReflect.GetElementType();
-            if (!IsPrimitive(arrayType!))
-            {
-                Array clonedArray = (Array)cloneObject!;
-                clonedArray.ForEach((array, indices) => array.SetValue(InternalCopy(clonedArray.GetValue(indices), visited), indices));
-            }
-        }
-        visited.Add(originalObject, cloneObject);
-        CopyFields(originalObject, visited, cloneObject, typeToReflect);
-        RecursiveCopyBaseTypePrivateFields(originalObject, visited, cloneObject, typeToReflect);
-        return cloneObject;
-    }
-
-    private static void RecursiveCopyBaseTypePrivateFields(object originalObject, IDictionary<object, object?> visited, object? cloneObject, Type typeToReflect)
-    {
-        if (typeToReflect.BaseType != null)
-        {
-            RecursiveCopyBaseTypePrivateFields(originalObject, visited, cloneObject, typeToReflect.BaseType);
-            CopyFields(originalObject, visited, cloneObject, typeToReflect.BaseType, BindingFlags.Instance | BindingFlags.NonPublic, info => info.IsPrivate);
-        }
-    }
-
-    private static void CopyFields(object originalObject, IDictionary<object, object?> visited, object? cloneObject, Type typeToReflect, BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy, Func<FieldInfo, bool>? filter = null)
-    {
-        foreach (FieldInfo fieldInfo in typeToReflect.GetFields(bindingFlags))
-        {
-            if (filter != null && !filter(fieldInfo))
-            {
-                continue;
-            }
-
-            if (IsPrimitive(fieldInfo.FieldType))
-            {
-                continue;
-            }
-
-            object? originalFieldValue = fieldInfo.GetValue(originalObject);
-            object? clonedFieldValue = InternalCopy(originalFieldValue, visited);
-            fieldInfo.SetValue(cloneObject, clonedFieldValue);
-        }
-    }
-}
-
-public class ReferenceEqualityComparer : EqualityComparer<object>
-{
-    public override bool Equals(object? x, object? y)
-    {
-        return ReferenceEquals(x, y);
-    }
-    public override int GetHashCode(object obj)
-    {
-        if (obj == null)
-        {
-            return 0;
-        }
-
-        return obj.GetHashCode();
-    }
-}
-
-public static class ArrayExtensions
-{
-    public static void ForEach(this Array array, Action<Array, int[]> action)
-    {
-        if (array.LongLength == 0) { return; }
-        ArrayTraverse walker = new(array);
-        do { action(array, walker.Position); }
-        while (walker.Step());
-    }
-}
-
-internal class ArrayTraverse
-{
-    public int[] Position;
-    private readonly int[] maxLengths;
-
-    public ArrayTraverse(Array array)
-    {
-        maxLengths = new int[array.Rank];
-        for (int i = 0; i < array.Rank; ++i)
-        {
-            maxLengths[i] = array.GetLength(i) - 1;
-        }
-        Position = new int[array.Rank];
-    }
-
-    public bool Step()
-    {
-        for (int i = 0; i < Position.Length; ++i)
-        {
-            if (Position[i] < maxLengths[i])
-            {
-                Position[i]++;
-                for (int j = 0; j < i; j++)
-                {
-                    Position[j] = 0;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-}
-
-/// <summary>
-/// Super fast deep copier class, which uses Expression trees.
-/// </summary>
+namespace Common_Net_Funcs.ToolsX.Experimental;
 public static class DeepCloneExpressionTreeHelpers
 {
     private static readonly object IsStructTypeToDeepCopyDictionaryLocker = new();
     private static Dictionary<Type, bool> IsStructTypeToDeepCopyDictionary = [];
 
     private static readonly object CompiledCopyFunctionsDictionaryLocker = new();
-    private static Dictionary<Type, Func<object, Dictionary<object, object>, object>> CompiledCopyFunctionsDictionary = [];
+    private static Dictionary<(Type, Type), Func<object, Dictionary<object, object>, object>> CompiledCopyFunctionsDictionary = [];
 
     private static readonly Type ObjectType = typeof(object);
     private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
@@ -204,19 +27,25 @@ public static class DeepCloneExpressionTreeHelpers
     /// <param name="original">Object to copy.</param>
     /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
     [return: NotNullIfNotNull(nameof(original))]
-    public static T? DeepClone<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
+    public static UT? DeepCloneX<T, UT>(this T original, UT destination, Dictionary<object, object>? copiedReferencesDict = null)
     {
-        return (T?)DeepCopyByExpressionTreeObj(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
+        return (UT?)DeepCopyByExpressionTreeObj(original, destination, false, copiedReferencesDict ?? new Dictionary<object, object>(new Tools.ReferenceEqualityComparer()));
     }
 
-    private static object? DeepCopyByExpressionTreeObj(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
+    private static object? DeepCopyByExpressionTreeObj(object? original, object? destination, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
     {
-        if (original == null)
+        if (original == null || destination == null)
         {
             return null;
         }
 
         Type type = original.GetType();
+        Type outputType = destination.GetType();
+
+        if (type == outputType) //If types are the same, short circuit to regular DeepClone
+        {
+            return original.DeepClone();
+        }
 
         if (type.IsDelegate())
         {
@@ -224,40 +53,52 @@ public static class DeepCloneExpressionTreeHelpers
             //return null;
         }
 
-        if (!forceDeepCopy && !type.IsTypeToDeepCopy())
+        if (outputType.IsDelegate())
         {
-            return original;
+            throw new ArgumentException($"Output type {outputType.FullName} is a delegate type which is unsupported.", nameof(original));
+            //return null;
         }
 
-        if (copiedReferencesDict.TryGetValue(original, out object? alreadyCopiedObject))
+        if (!type.IsTypeToDeepCopy())
         {
-            return alreadyCopiedObject;
+            throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(original));
+            //return original;
         }
+
+        if (!outputType.IsTypeToDeepCopy())
+        {
+            throw new ArgumentException($"Type {outputType.FullName} is not supported.", nameof(destination));
+        }
+
+        //if (copiedReferencesDict.TryGetValue(original, out object? alreadyCopiedObject))
+        //{
+        //    return alreadyCopiedObject;
+        //}
 
         if (type == ObjectType)
         {
             return new();
         }
 
-        Func<object, Dictionary<object, object>, object> compiledCopyFunction = GetOrCreateCompiledLambdaCopyFunction(type);
+        Func<object, Dictionary<object, object>, object> compiledCopyFunction = GetOrCreateCompiledLambdaCopyFunction(type, outputType);
         return compiledCopyFunction(original, copiedReferencesDict);
     }
 
-    private static Func<object, Dictionary<object, object>, object> GetOrCreateCompiledLambdaCopyFunction(Type type)
+    private static Func<object, Dictionary<object, object>, object> GetOrCreateCompiledLambdaCopyFunction(Type type, Type outputType)
     {
         // The following structure ensures that multiple threads can use the dictionary even while dictionary is locked and being updated by other thread.
         // That is why we do not modify the old dictionary instance but we replace it with a new instance every time.
-        if (!CompiledCopyFunctionsDictionary.TryGetValue(type, out Func<object, Dictionary<object, object>, object>? compiledCopyFunction))
+        if (!CompiledCopyFunctionsDictionary.TryGetValue((type, outputType), out Func<object, Dictionary<object, object>, object>? compiledCopyFunction))
         {
             lock (CompiledCopyFunctionsDictionaryLocker)
             {
-                if (!CompiledCopyFunctionsDictionary.TryGetValue(type, out compiledCopyFunction))
+                if (!CompiledCopyFunctionsDictionary.TryGetValue((type, outputType), out compiledCopyFunction))
                 {
-                    Expression<Func<object, Dictionary<object, object>, object>> uncompiledCopyFunction = CreateCompiledLambdaCopyFunctionForType(type);
+                    Expression<Func<object, Dictionary<object, object>, object>> uncompiledCopyFunction = CreateCompiledLambdaCopyFunctionForType(type); //TODO:: Continue from here
                     compiledCopyFunction = uncompiledCopyFunction.Compile();
 
-                    Dictionary<Type, Func<object, Dictionary<object, object>, object>> dictionaryCopy = CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
-                    dictionaryCopy.Add(type, compiledCopyFunction);
+                    Dictionary<(Type, Type), Func<object, Dictionary<object, object>, object>> dictionaryCopy = CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
+                    dictionaryCopy.Add((type, outputType), compiledCopyFunction);
                     CompiledCopyFunctionsDictionary = dictionaryCopy;
                 }
             }
@@ -415,7 +256,7 @@ public static class DeepCloneExpressionTreeHelpers
         BinaryExpression lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
         BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
 #pragma warning disable IDE0300 // Simplify collection initialization
-        return Expression.Block(new [] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
+        return Expression.Block(new[] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
 #pragma warning restore IDE0300 // Simplify collection initialization
     }
 

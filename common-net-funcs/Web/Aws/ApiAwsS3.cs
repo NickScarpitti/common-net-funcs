@@ -16,7 +16,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
     private readonly IAmazonS3 s3Client = s3Client;
     private readonly ILogger<ApiAwsS3> logger = logger;
 
-    private readonly ConcurrentDictionary<string, bool> ValidatedBuckets = new();
+    private static readonly ConcurrentDictionary<string, bool> ValidatedBuckets = new();
 
     /// <summary>
     /// Upload a file to S3 bucket

@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using static System.Random;
 using static System.Math;
+using System.Text;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -15,7 +16,7 @@ public static class Randomizers
     /// <param name="maxValue">Max value (non-inclusive) to return</param>
     /// <returns>Random number between 0 and maxValue - 1</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static int GetRandomInt(int maxValue = int.MaxValue)
+    public static int GetRandomInt(int minValue = 0, int maxValue = int.MaxValue)
     {
         if (maxValue <= 0)
         {
@@ -26,7 +27,8 @@ public static class Randomizers
         byte[] randomNumber = new byte[4]; // 4 bytes for an integer
         rng.GetBytes(randomNumber);
         int result = BitConverter.ToInt32(randomNumber, 0) & 0x7FFFFFFF; // Ensure it's non-negative
-        return result % maxValue; // Return a value between 0 and maxValue - 1
+        //return result % maxValue; // Return a value between 0 and maxValue - 1
+        return minValue + (result % (maxValue - minValue));
     }
 
     public static double GetRandomDouble()
@@ -44,7 +46,7 @@ public static class Randomizers
         {
             throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "decimalPlaces must be greater than 0.");
         }
-        decimalPlaces = decimalPlaces <= 17 ? decimalPlaces : 17;
+        decimalPlaces = decimalPlaces <= 15 ? decimalPlaces : 15;
         double result = GetRandomDouble();
         return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
     }
@@ -197,5 +199,62 @@ public static class Randomizers
     public static IEnumerable<T> GetRandomElements<T>(this IEnumerable<T> items, int selectQuantity = 1)
     {
         return Shared.GetItems(items.ToArray(), selectQuantity);
+    }
+
+    public static string GenerateRandomString(int length, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null)
+    {
+        if (lowerAsciiBound < 0 || upperAsciiBound > 127 || lowerAsciiBound >= upperAsciiBound)
+        {
+            throw new ArgumentOutOfRangeException(nameof(upperAsciiBound), "Bounds must be between 0 and 127, and lowerBound must be less than upperBound.");
+        }
+
+        StringBuilder result = new(length);
+
+        if (blacklistedCharacters?.AnyFast() != true)
+        {
+            for (int i = 0; i < length; i++)
+            {
+                result.Append((char)GetRandomInt(lowerAsciiBound, upperAsciiBound + 1));
+            }
+        }
+        else
+        {
+            for (int i = 0; i < length; i++)
+            {
+                List<int> blackListCharVals = blacklistedCharacters.Select(x => (int)x).ToList();
+                List<int> whiteListCharVals = Enumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound).ToList();
+                if (whiteListCharVals.Intersect(blackListCharVals).Count() == whiteListCharVals.Count)
+                {
+                    throw new Exception("Black list contains all available values");
+                }
+
+                int randomInt = GetRandomInt(lowerAsciiBound, upperAsciiBound + 1);
+                if (!blackListCharVals.Contains(randomInt))
+                {
+                    result.Append((char)randomInt);
+                }
+            }
+        }
+
+        return result.ToString();
+    }
+
+    public static string GenerateRandomStringByCharSet(int length, char[]? charSet = null)
+    {
+        // Use a default character set if none is provided
+        if (charSet?.AnyFast() != true)
+        {
+            charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
+        }
+
+        StringBuilder result = new(length);
+
+        for (int i = 0; i < length; i++)
+        {
+            char randomChar = charSet[GetRandomInt(0, charSet.Length)];
+            result.Append(randomChar);
+        }
+
+        return result.ToString();
     }
 }

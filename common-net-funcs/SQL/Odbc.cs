@@ -59,12 +59,12 @@ public static class Odbc
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
                 dt.Clear();
             }
             catch (Exception ex)
             {
-                logger.Error("Error getting datatable: " + ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+                logger.Error("Error getting datatable: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
                 dt.Clear();
             }
             finally
@@ -99,12 +99,12 @@ public static class Odbc
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
                 dt.Clear();
             }
             catch (Exception ex)
             {
-                logger.Error("Error getting datatable: " + ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+                logger.Error("Error getting datatable: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
                 dt.Clear();
             }
             finally
@@ -139,11 +139,11 @@ public static class Odbc
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error executing update query: " + ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+                logger.Error("Error executing update query: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             finally
             {
@@ -177,11 +177,11 @@ public static class Odbc
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error executing update query: " + ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+                logger.Error("Error executing update query: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             finally
             {

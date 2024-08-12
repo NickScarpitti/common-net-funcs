@@ -8,14 +8,21 @@ namespace Common_Net_Funcs.Tools;
 
 public static class ExpressionTreeMapper
 {
-    private static readonly ConcurrentDictionary<(Type, Type), Delegate> _cachedMappers = [];
+    private static readonly ConcurrentDictionary<(Type, Type), Delegate> cachedMappers = [];
 
+    /// <summary>
+    /// Method that maps one object onto another by property name using expression trees
+    /// </summary>
+    /// <typeparam name="T">Type to map data from</typeparam>
+    /// <typeparam name="UT">Type to map data to</typeparam>
+    /// <param name="source">Object to map data from</param>
+    /// <returns>New instance of type UT with values populated from source object</returns>
     [return: NotNullIfNotNull(nameof(source))]
     public static UT? FastMap<T, UT>(this T source)
     {
-        if (source == null) return default;
+        if (source == null) { return default; }
 
-        Func<T, UT> mapper = (Func<T, UT>)_cachedMappers.GetOrAdd((typeof(T), typeof(UT)), _ => CreateMapper<T, UT>());
+        Func<T, UT> mapper = (Func<T, UT>)cachedMappers.GetOrAdd((typeof(T), typeof(UT)), _ => CreateMapper<T, UT>());
         return mapper(source)!;
     }
 
@@ -88,20 +95,106 @@ public static class ExpressionTreeMapper
         {
             return Expression.Assign(destAccess, Expression.Call(typeof(Enumerable), "ToList", [sourceElementType], sourceAccess));
         }
+        else if (sourceType.IsDictionary() || destType.IsDictionary())
+        {
+            if (!(sourceType.IsDictionary() && destType.IsDictionary()))
+            {
+                throw new InvalidOperationException("Both source and destination must be a dictionary in order to be mapped");
+            }
+
+            Type sourceKeyType = sourceType.GetGenericArguments()[0];
+            Type sourceValueType = sourceType.GetGenericArguments()[1];
+            Type destKeyType = destType.GetGenericArguments()[0];
+            Type destValueType = destType.GetGenericArguments()[1];
+
+            if (sourceKeyType != destKeyType)
+            {
+                throw new InvalidOperationException("Source and destination dictionary key types must match.");
+            }
+
+            Type kvpType = typeof(KeyValuePair<,>).MakeGenericType(sourceKeyType, sourceValueType);
+            Type destKvpType = typeof(KeyValuePair<,>).MakeGenericType(destKeyType, destValueType);
+
+            ParameterExpression kvpParam = Expression.Parameter(kvpType, "kvp");
+            PropertyInfo keyProp = kvpType.GetProperty("Key")!;
+            PropertyInfo valueProp = kvpType.GetProperty("Value")!;
+
+            Expression keyAccess = Expression.Property(kvpParam, keyProp);
+            Expression valueAccess = Expression.Property(kvpParam, valueProp);
+
+            MethodInfo mapMethod = typeof(ExpressionTreeMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(sourceValueType, destValueType);
+            Expression mappedValue = Expression.Call(null, mapMethod, valueAccess);
+
+            NewExpression newKvp = Expression.New(destKvpType.GetConstructor([destKeyType, destValueType])!, keyAccess, mappedValue);
+            LambdaExpression selectLambda = Expression.Lambda(newKvp, kvpParam);
+
+            MethodInfo selectMethod = typeof(Enumerable).GetMethods().First(m => m.Name == "Select" && m.GetParameters().Length == 2).MakeGenericMethod(kvpType, destKvpType);
+
+            MethodInfo toDictionaryMethod = typeof(Enumerable).GetMethods()
+                .First(m => m.Name == "ToDictionary" && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)
+                .MakeGenericMethod(destKvpType, destKeyType, destValueType);
+
+            ParameterExpression destKvpParam = Expression.Parameter(destKvpType, "destKvp");
+            LambdaExpression keySelector = Expression.Lambda(Expression.Property(destKvpParam, "Key"), destKvpParam);
+            LambdaExpression valueSelector = Expression.Lambda(Expression.Property(destKvpParam, "Value"), destKvpParam);
+
+            MethodCallExpression selectCall = Expression.Call(null, selectMethod, sourceAccess, selectLambda);
+            MethodCallExpression toDictionaryCall = Expression.Call(null, toDictionaryMethod, selectCall, keySelector, valueSelector);
+
+            return Expression.Assign(destAccess, toDictionaryCall);
+        }
         else
         {
             MethodInfo mapMethod = typeof(ExpressionTreeMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(sourceElementType, destElementType);
             MethodInfo selectMethod = typeof(Enumerable).GetMethods().First(m => m.Name == "Select" && m.GetParameters().Length == 2).MakeGenericMethod(sourceElementType, destElementType);
-            MethodInfo toListMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))!.MakeGenericMethod(destElementType);
 
             ParameterExpression itemParam = Expression.Parameter(sourceElementType, "item");
             MethodCallExpression mapCall = Expression.Call(null, mapMethod, itemParam);
             LambdaExpression selectLambda = Expression.Lambda(mapCall, itemParam);
 
             MethodCallExpression selectCall = Expression.Call(null, selectMethod, sourceAccess, selectLambda);
-            MethodCallExpression toListCall = Expression.Call(null, toListMethod, selectCall);
 
-            return Expression.Assign(destAccess, toListCall);
+            Expression finalExpression;
+            if (destType.IsGenericType)
+            {
+                Type genericTypeDef = destType.GetGenericTypeDefinition();
+                if (genericTypeDef == typeof(HashSet<>))
+                {
+                    MethodInfo toHashSetMethod = typeof(Enumerable).GetMethods().First(m => m.Name == "ToHashSet" && m.GetParameters().Length == 1).MakeGenericMethod(destElementType);
+                    finalExpression = Expression.Call(null, toHashSetMethod, selectCall);
+                }
+                else if (genericTypeDef == typeof(Stack<>))
+                {
+                    //Must reverse order before inserting values into Stack to preserve original order
+                    MethodInfo reverseMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!.MakeGenericMethod(destElementType);
+                    MethodCallExpression reverseCall = Expression.Call(null, reverseMethod, selectCall);
+                    MethodInfo toArrayMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!.MakeGenericMethod(destElementType);
+                    MethodCallExpression toArrayCall = Expression.Call(null, toArrayMethod, reverseCall);
+                    finalExpression = Expression.New(destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(destElementType)])!, toArrayCall);
+                }
+                else if (genericTypeDef == typeof(Queue<>))
+                {
+                    MethodInfo toArrayMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!.MakeGenericMethod(destElementType);
+                    MethodCallExpression toArrayCall = Expression.Call(null, toArrayMethod, selectCall);
+                    finalExpression = Expression.New(destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(destElementType)])!, toArrayCall);
+                }
+                else // Assume List<> or other IEnumerable<> types
+                {
+                    MethodInfo toListMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))!.MakeGenericMethod(destElementType);
+                    finalExpression = Expression.Call(null, toListMethod, selectCall);
+                }
+            }
+            else if (destType.IsArray)
+            {
+                MethodInfo toArrayMethod = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!.MakeGenericMethod(destElementType);
+                finalExpression = Expression.Call(null, toArrayMethod, selectCall);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unsupported collection type: {destType.FullName}");
+            }
+
+            return Expression.Assign(destAccess, finalExpression);
         }
     }
 

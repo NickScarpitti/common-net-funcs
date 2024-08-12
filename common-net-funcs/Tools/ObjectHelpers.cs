@@ -198,38 +198,45 @@ public static class ObjectHelpers
         Type sourceType = source.GetType();
         object? dest = Activator.CreateInstance(destType);
 
-        IEnumerable<PropertyInfo> sourceProps = sourceType.GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = destType.GetProperties().Where(x => x.CanWrite);
-
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+        if (sourceType == destType)
         {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
-            if (destProp == null) continue;
+            dest = source;
+        }
+        else
+        {
+            IEnumerable<PropertyInfo> sourceProps = sourceType.GetProperties().Where(x => x.CanRead);
+            IEnumerable<PropertyInfo> destProps = destType.GetProperties().Where(x => x.CanWrite);
 
-            object? value = sourceProp.GetValue(source, null);
-            if (value == null)
+            foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
             {
-                destProp.SetValue(dest, null, null);
-                continue;
-            }
+                PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+                if (destProp == null) continue;
 
-            if (IsSimpleType(sourceProp.PropertyType))
-            {
-                destProp.SetValue(dest, value, null);
-            }
-            else if (typeof(IEnumerable).IsAssignableFrom(sourceProp.PropertyType) && typeof(IEnumerable).IsAssignableFrom(destProp.PropertyType))
-            {
-                object? collectionValue = CopyCollection(value, destProp.PropertyType, maxDepth);
-                destProp.SetValue(dest, collectionValue, null);
-            }
-            else if ((maxDepth == -1 || depth < maxDepth) && sourceProp.PropertyType.IsClass)
-            {
-                object? nestedValue = CopyObject(value, destProp.PropertyType, depth + 1, maxDepth);
-                destProp.SetValue(dest, nestedValue, null);
-            }
-            else
-            {
-                destProp.SetValue(dest, value, null);
+                object? value = sourceProp.GetValue(source, null);
+                if (value == null)
+                {
+                    destProp.SetValue(dest, null, null);
+                    continue;
+                }
+
+                if (IsSimpleType(sourceProp.PropertyType))
+                {
+                    destProp.SetValue(dest, value, null);
+                }
+                else if (typeof(IEnumerable).IsAssignableFrom(sourceProp.PropertyType) && typeof(IEnumerable).IsAssignableFrom(destProp.PropertyType))
+                {
+                    object? collectionValue = CopyCollection(value, destProp.PropertyType, maxDepth);
+                    destProp.SetValue(dest, collectionValue, null);
+                }
+                else if ((maxDepth == -1 || depth < maxDepth) && sourceProp.PropertyType.IsClass)
+                {
+                    object? nestedValue = CopyObject(value, destProp.PropertyType, depth + 1, maxDepth);
+                    destProp.SetValue(dest, nestedValue, null);
+                }
+                else
+                {
+                    destProp.SetValue(dest, value, null);
+                }
             }
         }
 
@@ -241,40 +248,74 @@ public static class ObjectHelpers
         if (source == null) return null;
 
         IEnumerable sourceCollection = (IEnumerable)source;
-        Type elementType = destType.IsArray ? destType.GetElementType() ?? typeof(object) : destType.GetGenericArguments()[0];
-        Type listType = typeof(List<>).MakeGenericType(elementType);
-        IList list = (IList)Activator.CreateInstance(listType)!;
 
-        foreach (object item in sourceCollection)
+        // Check if the destination type is a dictionary
+        if (destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
         {
-            object? copiedItem = CopyObject(item, elementType, 0, maxDepth);
+            Type[] sourceGenericArgs = source.GetType().GetGenericArguments();
+            Type sourceKeyType = sourceGenericArgs[0];
+            Type sourceValueType = sourceGenericArgs[1];
 
-            list.Add(copiedItem);
-        }
+            Type[] destGenericArgs = destType.GetGenericArguments();
+            Type destKeyType = destGenericArgs[0];
+            Type destValueType = destGenericArgs[1];
 
-        if (destType.IsArray)
-        {
-            Array array = Array.CreateInstance(elementType, list.Count);
-            list.CopyTo(array, 0);
-            return array;
-        }
+            // Create a new dictionary
+            IDictionary destDictionary = (IDictionary)Activator.CreateInstance(destType)!;
 
-        if (destType.IsInterface || destType == listType)
-        {
-            return list;
-        }
+            // Create a generic type for KeyValuePair<TKey, TValue>
+            Type kvpType = typeof(KeyValuePair<,>).MakeGenericType(sourceKeyType, sourceValueType);
 
-        object? destCollection = Activator.CreateInstance(destType);
-        MethodInfo? addMethod = destType.GetMethod("Add");
-        if (addMethod != null)
-        {
-            foreach (object? item in list)
+            // Copy key-value pairs
+            foreach (object item in sourceCollection)
             {
-                addMethod.Invoke(destCollection, [item]);
-            }
-        }
+                object key = kvpType.GetProperty("Key")!.GetValue(item, null)!;
+                object? value = kvpType.GetProperty("Value")!.GetValue(item, null);
 
-        return destCollection;
+                object copiedKey = CopyObject(key, destKeyType, 1, maxDepth)!;
+                object? copiedValue = value == null ? null : CopyObject(value, destValueType, 0, maxDepth);
+                destDictionary.Add(copiedKey, copiedValue);
+            }
+
+            return destDictionary;
+        }
+        else
+        {
+            Type elementType = destType.IsArray ? destType.GetElementType() ?? typeof(object) : destType.GetGenericArguments()[0];
+            Type listType = typeof(List<>).MakeGenericType(elementType);
+            IList list = (IList)Activator.CreateInstance(listType)!;
+
+            foreach (object item in sourceCollection)
+            {
+                object? copiedItem = CopyObject(item, elementType, 0, maxDepth);
+
+                list.Add(copiedItem);
+            }
+
+            if (destType.IsInterface || destType == listType)
+            {
+                return list;
+            }
+
+            if (destType.IsArray)
+            {
+                Array array = Array.CreateInstance(elementType, list.Count);
+                list.CopyTo(array, 0);
+                return array;
+            }
+
+            object? destCollection = Activator.CreateInstance(destType);
+            MethodInfo? addMethod = destType.GetMethod("Add");
+            if (addMethod != null)
+            {
+                foreach (object? item in list)
+                {
+                    addMethod.Invoke(destCollection, [item]);
+                }
+            }
+
+            return destCollection;
+        }
     }
 
     private static bool IsSimpleType(Type type)
@@ -644,6 +685,26 @@ public static class ObjectHelpers
     public static bool IsArray(this Type type)
     {
         return type.IsArray;
+    }
+
+    /// <summary>
+    /// Checks to see if a type implements IDictionary
+    /// </summary>
+    /// <param name="type">Type to check if it implements IDictionary</param>
+    /// <returns>True if type parameter implements IDictionary</returns>
+    public static bool IsDictionary(this Type type)
+    {
+        return typeof(IDictionary).IsAssignableFrom(type);
+    }
+
+    /// <summary>
+    /// Checks to see if a type implements IEnumerable and is not a string
+    /// </summary>
+    /// <param name="type">Type to check if it implements IEnumerable</param>
+    /// <returns>True if type parameter implements IEnumerable and is not a string</returns>
+    public static bool IsEnumerable(this Type type)
+    {
+        return typeof(IEnumerable).IsAssignableFrom(type) && type != typeof(string);
     }
 
     /// <summary>

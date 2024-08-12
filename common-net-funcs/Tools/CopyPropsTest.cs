@@ -94,7 +94,7 @@ public static class DeepCloneExpressionTreeHelpers
             {
                 if (!CompiledCopyFunctionsDictionary.TryGetValue((type, outputType), out compiledCopyFunction))
                 {
-                    Expression<Func<object, Dictionary<object, object>, object>> uncompiledCopyFunction = CreateCompiledLambdaCopyFunctionForType(type); //TODO:: Continue from here
+                    Expression<Func<object, Dictionary<object, object>, object>> uncompiledCopyFunction = CreateCompiledLambdaCopyFunctionForType(type, outputType); //TODO:: Continue from here
                     compiledCopyFunction = uncompiledCopyFunction.Compile();
 
                     Dictionary<(Type, Type), Func<object, Dictionary<object, object>, object>> dictionaryCopy = CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
@@ -106,174 +106,48 @@ public static class DeepCloneExpressionTreeHelpers
         return compiledCopyFunction;
     }
 
-    private static Expression<Func<object, Dictionary<object, object>, object>> CreateCompiledLambdaCopyFunctionForType(Type type)
+    private static Expression<Func<object, Dictionary<object, object>, object>> CreateCompiledLambdaCopyFunctionForType(Type type, Type outputType)
     {
         ///// INITIALIZATION OF EXPRESSIONS AND VARIABLES
-        InitializeExpressions(type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable, out ParameterExpression boxingVariable,
-                out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions);
+        //InitializeExpressions(type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable, out ParameterExpression boxingVariable,
+        //        out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions);
+        ParameterExpression inputParameter = Expression.Parameter(ObjectType);
+        ParameterExpression inputDictionary = Expression.Parameter(ObjectDictionaryType);
+        //ParameterExpression outputVariable = Expression.Variable(type); // Original
+        ParameterExpression outputVariable = Expression.Variable(outputType);
+        ParameterExpression boxingVariable = Expression.Variable(ObjectType);
+        LabelTarget endLabel = Expression.Label();
+        List<ParameterExpression> variables = [];
+        List<Expression> expressions= [];
+
+        variables.Add(outputVariable);
+        variables.Add(boxingVariable);
+
 
         ///// RETURN NULL IF ORIGINAL IS NULL
-        IfNullThenReturnNullExpression(inputParameter, endLabel, expressions);
+        //IfNullThenReturnNullExpression(inputParameter, endLabel, expressions);
+        ConditionalExpression ifNullThenReturnNullExpression = Expression.IfThen(Expression.Equal(inputParameter, Expression.Constant(null, ObjectType)), Expression.Return(endLabel));
+        expressions.Add(ifNullThenReturnNullExpression);
 
         ///// MEMBERWISE CLONE ORIGINAL OBJECT
-        MemberwiseCloneInputToOutputExpression(type, inputParameter, outputVariable, expressions);
+        //MemberwiseCloneInputToOutputExpression(type, inputParameter, outputVariable, expressions);
+        MethodInfo memberwiseCloneMethod = ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        BinaryExpression memberwiseCloneInputExpression = Expression.Assign(outputVariable, Expression.Convert(Expression.Call(inputParameter, memberwiseCloneMethod), outputType));
+        expressions.Add(memberwiseCloneInputExpression);
 
         ///// STORE COPIED OBJECT TO REFERENCES DICTIONARY
         if (type.IsClassOtherThanString())
         {
-            StoreReferencesIntoDictionaryExpression(inputParameter, inputDictionary, outputVariable, expressions);
+            //StoreReferencesIntoDictionaryExpression(inputParameter, inputDictionary, outputVariable, expressions);
+            BinaryExpression storeReferencesExpression = Expression.Assign(Expression.Property(inputDictionary, ObjectDictionaryType.GetProperty("Item")!, inputParameter), Expression.Convert(outputVariable, ObjectType));
+            expressions.Add(storeReferencesExpression);
         }
 
         ///// COPY ALL NONVALUE OR NONPRIMITIVE FIELDS
-        FieldsCopyExpressions(type, inputParameter, inputDictionary, outputVariable, boxingVariable, expressions);
-
-        ///// COPY ELEMENTS OF ARRAY
-        if (type.IsArray() && type.GetElementType().IsTypeToDeepCopy())
-        {
-            CreateArrayCopyLoopExpression(type, inputParameter, inputDictionary, outputVariable, variables, expressions);
-        }
-
-        ///// COMBINE ALL EXPRESSIONS INTO LAMBDA FUNCTION
-        return CombineAllIntoLambdaFunctionExpression(inputParameter, inputDictionary, outputVariable, endLabel, variables, expressions);
-    }
-
-    private static void InitializeExpressions(Type type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable,
-        out ParameterExpression boxingVariable, out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions)
-    {
-        inputParameter = Expression.Parameter(ObjectType);
-        inputDictionary = Expression.Parameter(ObjectDictionaryType);
-        outputVariable = Expression.Variable(type);
-        boxingVariable = Expression.Variable(ObjectType);
-        endLabel = Expression.Label();
-        variables = [];
-        expressions = [];
-
-        variables.Add(outputVariable);
-        variables.Add(boxingVariable);
-    }
-
-    private static void IfNullThenReturnNullExpression(ParameterExpression inputParameter, LabelTarget endLabel, List<Expression> expressions)
-    {
-        ///// Intended code:
-        ///// if (input == null)
-        ///// {
-        /////     return null;
-        ///// }
-        ConditionalExpression ifNullThenReturnNullExpression = Expression.IfThen(Expression.Equal(inputParameter, Expression.Constant(null, ObjectType)), Expression.Return(endLabel));
-        expressions.Add(ifNullThenReturnNullExpression);
-    }
-
-    private static void MemberwiseCloneInputToOutputExpression(Type type, ParameterExpression inputParameter, ParameterExpression outputVariable, List<Expression> expressions)
-    {
-        ///// Intended code:
-        ///// var output = (<type>)input.MemberwiseClone();
-        MethodInfo memberwiseCloneMethod = ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        BinaryExpression memberwiseCloneInputExpression = Expression.Assign(outputVariable, Expression.Convert(Expression.Call(inputParameter, memberwiseCloneMethod), type));
-        expressions.Add(memberwiseCloneInputExpression);
-    }
-
-    private static void StoreReferencesIntoDictionaryExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<Expression> expressions)
-    {
-        ///// Intended code:
-        ///// inputDictionary[(Object)input] = (Object)output;
-        BinaryExpression storeReferencesExpression = Expression.Assign(Expression.Property(inputDictionary, ObjectDictionaryType.GetProperty("Item")!, inputParameter), Expression.Convert(outputVariable, ObjectType));
-        expressions.Add(storeReferencesExpression);
-    }
-
-    private static Expression<Func<object, Dictionary<object, object>, object>> CombineAllIntoLambdaFunctionExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable,
-        LabelTarget endLabel, List<ParameterExpression> variables, List<Expression> expressions)
-    {
-        expressions.Add(Expression.Label(endLabel));
-        expressions.Add(Expression.Convert(outputVariable, ObjectType));
-        BlockExpression finalBody = Expression.Block(variables, expressions);
-        return Expression.Lambda<Func<object, Dictionary<object, object>, object>>(finalBody, inputParameter, inputDictionary);
-    }
-
-    private static void CreateArrayCopyLoopExpression(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<ParameterExpression> variables, List<Expression> expressions)
-    {
-        int rank = type.GetArrayRank();
-        List<ParameterExpression> indices = GenerateIndices(rank);
-
-        variables.AddRange(indices);
-
-        Type? elementType = type.GetElementType();
-        Expression forExpression = ArrayFieldToArrayFieldAssignExpression(inputParameter, inputDictionary, outputVariable, elementType, type, indices);
-
-        for (int dimension = 0; dimension < rank; dimension++)
-        {
-            ParameterExpression indexVariable = indices[dimension];
-            forExpression = LoopIntoLoopExpression(inputParameter, indexVariable, forExpression, dimension);
-        }
-
-        expressions.Add(forExpression);
-    }
-
-    private static List<ParameterExpression> GenerateIndices(int arrayRank)
-    {
-        ///// Intended code:
-        ///// int i1, i2, ..., in;
-        List<ParameterExpression> indices = [];
-        for (int i = 0; i < arrayRank; i++)
-        {
-            ParameterExpression indexVariable = Expression.Variable(typeof(int));
-            indices.Add(indexVariable);
-        }
-
-        return indices;
-    }
-
-    private static BinaryExpression ArrayFieldToArrayFieldAssignExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, Type? elementType, Type arrayType, List<ParameterExpression> indices)
-    {
-        IndexExpression indexTo = Expression.ArrayAccess(outputVariable, indices);
-        MethodCallExpression indexFrom = Expression.ArrayIndex(Expression.Convert(inputParameter, arrayType), indices);
-
-        bool forceDeepCopy = elementType != ObjectType;
-        UnaryExpression rightSide = Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(indexFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary), elementType!);
-        return Expression.Assign(indexTo, rightSide);
-    }
-
-    private static BlockExpression LoopIntoLoopExpression(ParameterExpression inputParameter, ParameterExpression indexVariable, Expression loopToEncapsulate, int dimension)
-    {
-        ParameterExpression lengthVariable = Expression.Variable(typeof(int));
-
-        LabelTarget endLabelForThisLoop = Expression.Label();
-
-        LoopExpression newLoop =
-            Expression.Loop
-            (
-                Expression.Block
-                (
-#pragma warning disable IDE0301 // Simplify collection initialization
-                    Array.Empty<ParameterExpression>(),
-#pragma warning restore IDE0301 // Simplify collection initialization
-                    Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable), Expression.Break(endLabelForThisLoop)),
-                    loopToEncapsulate,
-                    Expression.PostIncrementAssign(indexVariable)
-                ),
-                endLabelForThisLoop
-            );
-
-        BinaryExpression lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
-        BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
-#pragma warning disable IDE0300 // Simplify collection initialization
-        return Expression.Block(new[] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
-#pragma warning restore IDE0300 // Simplify collection initialization
-    }
-
-    private static BinaryExpression GetLengthForDimensionExpression(ParameterExpression lengthVariable, ParameterExpression inputParameter, int i)
-    {
-        MethodInfo? getLengthMethod = typeof(Array).GetMethod("GetLength", BindingFlags.Public | BindingFlags.Instance);
-        ConstantExpression dimensionConstant = Expression.Constant(i);
-#pragma warning disable IDE0300 // Simplify collection initialization
-        return Expression.Assign(lengthVariable, Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, new[] { dimensionConstant }));
-#pragma warning restore IDE0300 // Simplify collection initialization
-    }
-
-    private static void FieldsCopyExpressions(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, ParameterExpression boxingVariable, List<Expression> expressions)
-    {
+        //FieldsCopyExpressions(type, inputParameter, inputDictionary, outputVariable, boxingVariable, expressions);
         FieldInfo[] fields = GetAllRelevantFields(type);
-        IEnumerable<FieldInfo> readonlyFields = fields.Where(f => f.IsInitOnly).ToList();
-        IEnumerable<FieldInfo> writableFields = fields.Where(f => !f.IsInitOnly).ToList();
+        IEnumerable<FieldInfo> readonlyFields = fields.Where(f => f.IsInitOnly);
+        IEnumerable<FieldInfo> writableFields = fields.Where(f => !f.IsInitOnly);
 
         ///// READONLY FIELDS COPY (with boxing)
         bool shouldUseBoxing = readonlyFields.Any();
@@ -287,11 +161,25 @@ public static class DeepCloneExpressionTreeHelpers
         {
             if (field.FieldType.IsDelegate())
             {
-                ReadonlyFieldToNullExpression(field, boxingVariable, expressions);
+                //ReadonlyFieldToNullExpression(field, boxingVariable, expressions);
+                MethodCallExpression fieldToNullExpression = Expression.Call(Expression.Constant(field), SetValueMethod!, boxingVariable, Expression.Constant(null, field.FieldType));
+                expressions.Add(fieldToNullExpression);
             }
             else
             {
-                ReadonlyFieldCopyExpression(type, field, inputParameter, inputDictionary, boxingVariable, expressions);
+                //ReadonlyFieldCopyExpression(type, field, inputParameter, inputDictionary, boxingVariable, expressions);
+                MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
+                bool forceDeepCopy = field.FieldType != ObjectType;
+                MethodCallExpression fieldDeepCopyExpression =
+                    Expression.Call
+                    (
+                        Expression.Constant(field, FieldInfoType),
+                        SetValueMethod!,
+                        boxingVariable,
+                        Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary)
+                    );
+
+                expressions.Add(fieldDeepCopyExpression);
             }
         }
 
@@ -306,14 +194,280 @@ public static class DeepCloneExpressionTreeHelpers
         {
             if (field.FieldType.IsDelegate())
             {
-                WritableFieldToNullExpression(field, outputVariable, expressions);
+                //WritableFieldToNullExpression(field, outputVariable, expressions);
+                MemberExpression fieldTo = Expression.Field(outputVariable, field);
+                BinaryExpression fieldToNullExpression = Expression.Assign(fieldTo, Expression.Constant(null, field.FieldType));
+                expressions.Add(fieldToNullExpression);
             }
             else
             {
-                WritableFieldCopyExpression(type, field, inputParameter, inputDictionary, outputVariable, expressions);
+                //WritableFieldCopyExpression(type, field, inputParameter, inputDictionary, outputVariable, expressions);
+                MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
+                Type fieldType = field.FieldType;
+                MemberExpression fieldTo = Expression.Field(outputVariable, field);
+
+                bool forceDeepCopy = field.FieldType != ObjectType;
+
+                BinaryExpression fieldDeepCopyExpression =
+                    Expression.Assign
+                    (
+                        fieldTo,
+                        Expression.Convert
+                        (
+                            Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary),
+                            fieldType
+                        )
+                    );
+
+                expressions.Add(fieldDeepCopyExpression);
             }
         }
+
+        ///// COPY ELEMENTS OF ARRAY
+        if (type.IsArray() && type.GetElementType().IsTypeToDeepCopy())
+        {
+            //CreateArrayCopyLoopExpression(type, inputParameter, inputDictionary, outputVariable, variables, expressions);
+            int rank = type.GetArrayRank();
+
+            //List<ParameterExpression> indices = GenerateIndices(rank);
+            List<ParameterExpression> indices = [];
+            for (int i = 0; i < rank; i++)
+            {
+                ParameterExpression indexVariable = Expression.Variable(typeof(int));
+                indices.Add(indexVariable);
+            }
+
+            variables.AddRange(indices);
+
+            Type? elementType = type.GetElementType();
+            //Expression forExpression = ArrayFieldToArrayFieldAssignExpression(inputParameter, inputDictionary, outputVariable, elementType, type, indices);
+            IndexExpression indexTo = Expression.ArrayAccess(outputVariable, indices);
+            MethodCallExpression indexFrom = Expression.ArrayIndex(Expression.Convert(inputParameter, type), indices);
+
+            bool forceDeepCopy = elementType != ObjectType;
+            UnaryExpression rightSide = Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethodDeepCopyByExpressionTreeObjMethod!, Expression.Convert(indexFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary), elementType!);
+            Expression forExpression = Expression.Assign(indexTo, rightSide);
+
+            for (int dimension = 0; dimension < rank; dimension++)
+            {
+                ParameterExpression indexVariable = indices[dimension];
+                //forExpression = LoopIntoLoopExpression(inputParameter, indexVariable, forExpression, dimension);
+                ParameterExpression lengthVariable = Expression.Variable(typeof(int));
+
+                LabelTarget endLabelForThisLoop = Expression.Label();
+
+                LoopExpression newLoop =
+                    Expression.Loop
+                    (
+                        Expression.Block
+                        (
+#pragma warning disable IDE0301 // Simplify collection initialization
+                            Array.Empty<ParameterExpression>(),
+#pragma warning restore IDE0301 // Simplify collection initialization
+                            Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable), Expression.Break(endLabelForThisLoop)),
+                            forExpression, Expression.PostIncrementAssign(indexVariable)
+                        ),
+                        endLabelForThisLoop
+                    );
+
+                //BinaryExpression lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
+                MethodInfo? getLengthMethod = typeof(Array).GetMethod("GetLength", BindingFlags.Public | BindingFlags.Instance);
+                ConstantExpression dimensionConstant = Expression.Constant(dimension);
+#pragma warning disable IDE0300 // Simplify collection initialization
+                BinaryExpression lengthAssignment = Expression.Assign(lengthVariable, Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, new[] { dimensionConstant }));
+                BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
+                forExpression = Expression.Block(new[] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
+#pragma warning restore IDE0300 // Simplify collection initialization
+            }
+
+            expressions.Add(forExpression);
+        }
+
+        ///// COMBINE ALL EXPRESSIONS INTO LAMBDA FUNCTION
+        //return CombineAllIntoLambdaFunctionExpression(inputParameter, inputDictionary, outputVariable, endLabel, variables, expressions);
+        expressions.Add(Expression.Label(endLabel));
+        expressions.Add(Expression.Convert(outputVariable, ObjectType));
+        BlockExpression finalBody = Expression.Block(variables, expressions);
+        return Expression.Lambda<Func<object, Dictionary<object, object>, object>>(finalBody, inputParameter, inputDictionary);
     }
+
+    //private static void InitializeExpressions(Type type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable,
+    //    out ParameterExpression boxingVariable, out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions)
+    //{
+    //    inputParameter = Expression.Parameter(ObjectType);
+    //    inputDictionary = Expression.Parameter(ObjectDictionaryType);
+    //    outputVariable = Expression.Variable(type);
+    //    boxingVariable = Expression.Variable(ObjectType);
+    //    endLabel = Expression.Label();
+    //    variables = [];
+    //    expressions = [];
+
+    //    variables.Add(outputVariable);
+    //    variables.Add(boxingVariable);
+    //}
+
+    //private static void IfNullThenReturnNullExpression(ParameterExpression inputParameter, LabelTarget endLabel, List<Expression> expressions)
+    //{
+    //    ///// Intended code:
+    //    ///// if (input == null)
+    //    ///// {
+    //    /////     return null;
+    //    ///// }
+    //    ConditionalExpression ifNullThenReturnNullExpression = Expression.IfThen(Expression.Equal(inputParameter, Expression.Constant(null, ObjectType)), Expression.Return(endLabel));
+    //    expressions.Add(ifNullThenReturnNullExpression);
+    //}
+
+    //private static void MemberwiseCloneInputToOutputExpression(Type type, ParameterExpression inputParameter, ParameterExpression outputVariable, List<Expression> expressions)
+    //{
+    //    ///// Intended code:
+    //    ///// var output = (<type>)input.MemberwiseClone();
+    //    MethodInfo memberwiseCloneMethod = ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance)!;
+    //    BinaryExpression memberwiseCloneInputExpression = Expression.Assign(outputVariable, Expression.Convert(Expression.Call(inputParameter, memberwiseCloneMethod), type));
+    //    expressions.Add(memberwiseCloneInputExpression);
+    //}
+
+    //private static void StoreReferencesIntoDictionaryExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<Expression> expressions)
+    //{
+    //    ///// Intended code:
+    //    ///// inputDictionary[(Object)input] = (Object)output;
+    //    BinaryExpression storeReferencesExpression = Expression.Assign(Expression.Property(inputDictionary, ObjectDictionaryType.GetProperty("Item")!, inputParameter), Expression.Convert(outputVariable, ObjectType));
+    //    expressions.Add(storeReferencesExpression);
+    //}
+
+    //private static Expression<Func<object, Dictionary<object, object>, object>> CombineAllIntoLambdaFunctionExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable,
+    //    LabelTarget endLabel, List<ParameterExpression> variables, List<Expression> expressions)
+    //{
+    //    expressions.Add(Expression.Label(endLabel));
+    //    expressions.Add(Expression.Convert(outputVariable, ObjectType));
+    //    BlockExpression finalBody = Expression.Block(variables, expressions);
+    //    return Expression.Lambda<Func<object, Dictionary<object, object>, object>>(finalBody, inputParameter, inputDictionary);
+    //}
+
+    //private static void CreateArrayCopyLoopExpression(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<ParameterExpression> variables, List<Expression> expressions)
+    //{
+    //    int rank = type.GetArrayRank();
+    //    List<ParameterExpression> indices = GenerateIndices(rank);
+
+    //    variables.AddRange(indices);
+
+    //    Type? elementType = type.GetElementType();
+    //    Expression forExpression = ArrayFieldToArrayFieldAssignExpression(inputParameter, inputDictionary, outputVariable, elementType, type, indices);
+
+    //    for (int dimension = 0; dimension < rank; dimension++)
+    //    {
+    //        ParameterExpression indexVariable = indices[dimension];
+    //        forExpression = LoopIntoLoopExpression(inputParameter, indexVariable, forExpression, dimension);
+    //    }
+
+    //    expressions.Add(forExpression);
+    //}
+
+    //private static List<ParameterExpression> GenerateIndices(int arrayRank)
+    //{
+    //    ///// Intended code:
+    //    ///// int i1, i2, ..., in;
+    //    List<ParameterExpression> indices = [];
+    //    for (int i = 0; i < arrayRank; i++)
+    //    {
+    //        ParameterExpression indexVariable = Expression.Variable(typeof(int));
+    //        indices.Add(indexVariable);
+    //    }
+
+    //    return indices;
+    //}
+
+    //private static BinaryExpression ArrayFieldToArrayFieldAssignExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, Type? elementType, Type arrayType, List<ParameterExpression> indices)
+    //{
+    //    IndexExpression indexTo = Expression.ArrayAccess(outputVariable, indices);
+    //    MethodCallExpression indexFrom = Expression.ArrayIndex(Expression.Convert(inputParameter, arrayType), indices);
+
+    //    bool forceDeepCopy = elementType != ObjectType;
+    //    UnaryExpression rightSide = Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(indexFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary), elementType!);
+    //    return Expression.Assign(indexTo, rightSide);
+    //}
+
+//    private static BlockExpression LoopIntoLoopExpression(ParameterExpression inputParameter, ParameterExpression indexVariable, Expression loopToEncapsulate, int dimension)
+//    {
+//        ParameterExpression lengthVariable = Expression.Variable(typeof(int));
+
+//        LabelTarget endLabelForThisLoop = Expression.Label();
+
+//        LoopExpression newLoop =
+//            Expression.Loop
+//            (
+//                Expression.Block
+//                (
+//#pragma warning disable IDE0301 // Simplify collection initialization
+//                    Array.Empty<ParameterExpression>(),
+//#pragma warning restore IDE0301 // Simplify collection initialization
+//                    Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable), Expression.Break(endLabelForThisLoop)),
+//                    loopToEncapsulate,
+//                    Expression.PostIncrementAssign(indexVariable)
+//                ),
+//                endLabelForThisLoop
+//            );
+
+//        BinaryExpression lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
+//        BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
+//#pragma warning disable IDE0300 // Simplify collection initialization
+//        return Expression.Block(new[] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
+//#pragma warning restore IDE0300 // Simplify collection initialization
+//    }
+
+    private static BinaryExpression GetLengthForDimensionExpression(ParameterExpression lengthVariable, ParameterExpression inputParameter, int i)
+    {
+        MethodInfo? getLengthMethod = typeof(Array).GetMethod("GetLength", BindingFlags.Public | BindingFlags.Instance);
+        ConstantExpression dimensionConstant = Expression.Constant(i);
+#pragma warning disable IDE0300 // Simplify collection initialization
+        return Expression.Assign(lengthVariable, Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, new[] { dimensionConstant }));
+#pragma warning restore IDE0300 // Simplify collection initialization
+    }
+
+    //private static void FieldsCopyExpressions(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, ParameterExpression boxingVariable, List<Expression> expressions)
+    //{
+    //    FieldInfo[] fields = GetAllRelevantFields(type);
+    //    IEnumerable<FieldInfo> readonlyFields = fields.Where(f => f.IsInitOnly).ToList();
+    //    IEnumerable<FieldInfo> writableFields = fields.Where(f => !f.IsInitOnly).ToList();
+
+    //    ///// READONLY FIELDS COPY (with boxing)
+    //    bool shouldUseBoxing = readonlyFields.Any();
+    //    if (shouldUseBoxing)
+    //    {
+    //        BinaryExpression boxingExpression = Expression.Assign(boxingVariable, Expression.Convert(outputVariable, ObjectType));
+    //        expressions.Add(boxingExpression);
+    //    }
+
+    //    foreach (FieldInfo field in readonlyFields)
+    //    {
+    //        if (field.FieldType.IsDelegate())
+    //        {
+    //            ReadonlyFieldToNullExpression(field, boxingVariable, expressions);
+    //        }
+    //        else
+    //        {
+    //            ReadonlyFieldCopyExpression(type, field, inputParameter, inputDictionary, boxingVariable, expressions);
+    //        }
+    //    }
+
+    //    if (shouldUseBoxing)
+    //    {
+    //        BinaryExpression unboxingExpression = Expression.Assign(outputVariable, Expression.Convert(boxingVariable, type));
+    //        expressions.Add(unboxingExpression);
+    //    }
+
+    //    ///// NOT-READONLY FIELDS COPY
+    //    foreach (FieldInfo field in writableFields)
+    //    {
+    //        if (field.FieldType.IsDelegate())
+    //        {
+    //            WritableFieldToNullExpression(field, outputVariable, expressions);
+    //        }
+    //        else
+    //        {
+    //            WritableFieldCopyExpression(type, field, inputParameter, inputDictionary, outputVariable, expressions);
+    //        }
+    //    }
+    //}
 
     private static FieldInfo[] GetAllRelevantFields(Type? type, bool forceAllFields = false)
     {
@@ -336,41 +490,41 @@ public static class DeepCloneExpressionTreeHelpers
     private static readonly Type FieldInfoType = typeof(FieldInfo);
     private static readonly MethodInfo? SetValueMethod = FieldInfoType.GetMethod("SetValue", [ObjectType, ObjectType]);
 
-    private static void ReadonlyFieldToNullExpression(FieldInfo field, ParameterExpression boxingVariable, List<Expression> expressions)
-    {
-        // This option must be implemented by Reflection because of the following:
-        // https://visualstudio.uservoice.com/forums/121579-visual-studio-2015/suggestions/2727812-allow-expression-assign-to-set-readonly-struct-f
+    //private static void ReadonlyFieldToNullExpression(FieldInfo field, ParameterExpression boxingVariable, List<Expression> expressions)
+    //{
+    //    // This option must be implemented by Reflection because of the following:
+    //    // https://visualstudio.uservoice.com/forums/121579-visual-studio-2015/suggestions/2727812-allow-expression-assign-to-set-readonly-struct-f
 
-        ///// Intended code:
-        ///// fieldInfo.SetValue(boxing, <fieldtype>null);
-        MethodCallExpression fieldToNullExpression = Expression.Call(Expression.Constant(field), SetValueMethod!, boxingVariable, Expression.Constant(null, field.FieldType));
-        expressions.Add(fieldToNullExpression);
-    }
+    //    ///// Intended code:
+    //    ///// fieldInfo.SetValue(boxing, <fieldtype>null);
+    //    MethodCallExpression fieldToNullExpression = Expression.Call(Expression.Constant(field), SetValueMethod!, boxingVariable, Expression.Constant(null, field.FieldType));
+    //    expressions.Add(fieldToNullExpression);
+    //}
 
     private static readonly Type ThisType = typeof(DeepCloneExpressionTreeHelpers);
     private static readonly MethodInfo? DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static);
 
-    private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions)
-    {
-        // This option must be implemented by Reflection (SetValueMethod) because of the following:
-        // https://visualstudio.uservoice.com/forums/121579-visual-studio-2015/suggestions/2727812-allow-expression-assign-to-set-readonly-struct-f
+    //private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions)
+    //{
+    //    // This option must be implemented by Reflection (SetValueMethod) because of the following:
+    //    // https://visualstudio.uservoice.com/forums/121579-visual-studio-2015/suggestions/2727812-allow-expression-assign-to-set-readonly-struct-f
 
-        ///// Intended code:
-        ///// fieldInfo.SetValue(boxing, DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>))
+    //    ///// Intended code:
+    //    ///// fieldInfo.SetValue(boxing, DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>))
 
-        MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
-        bool forceDeepCopy = field.FieldType != ObjectType;
-        MethodCallExpression fieldDeepCopyExpression =
-            Expression.Call
-            (
-                Expression.Constant(field, FieldInfoType),
-                SetValueMethod!,
-                boxingVariable,
-                Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary)
-            );
+    //    MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
+    //    bool forceDeepCopy = field.FieldType != ObjectType;
+    //    MethodCallExpression fieldDeepCopyExpression =
+    //        Expression.Call
+    //        (
+    //            Expression.Constant(field, FieldInfoType),
+    //            SetValueMethod!,
+    //            boxingVariable,
+    //            Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary)
+    //        );
 
-        expressions.Add(fieldDeepCopyExpression);
-    }
+    //    expressions.Add(fieldDeepCopyExpression);
+    //}
 
     private static void WritableFieldToNullExpression(FieldInfo field, ParameterExpression outputVariable, List<Expression> expressions)
     {

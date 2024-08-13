@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -20,49 +21,18 @@ public static class ObjectHelpers
     /// Copy properties of the same name from one object to another
     /// </summary>
     /// <typeparam name="T">Type of source object</typeparam>
-    /// <typeparam name="TU">Type of destination object</typeparam>
+    /// <typeparam name="UT">Type of destination object</typeparam>
     /// <param name="source">Object to copy common properties from</param>
     /// <param name="dest">Object to copy common properties to</param>
-    public static void CopyPropertiesTo<T, TU>(this T source, TU dest)
+    public static void CopyPropertiesTo<T, UT>(this T source, UT dest)
     {
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
+        IEnumerable<PropertyInfo> destProps = typeof(UT).GetProperties().Where(x => x.CanWrite);
 
         foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
         {
             PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
             destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
-        }
-    }
-
-    /// <summary>
-    /// Copy properties of the same name from one object to another, recursively navigating classes if they are not the same type
-    /// </summary>
-    /// <typeparam name="T">Type of source object</typeparam>
-    /// <typeparam name="TU">Type of destination object</typeparam>
-    /// <param name="source">Object to copy common properties from</param>
-    /// <param name="dest">Object to copy common properties to</param>
-    public static void CopyPropertiesToRecursive<T, TU>(this T source, TU dest, int maxDepth = -1)
-    {
-        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
-
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
-        {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
-            object? value = sourceProp.GetValue(source, null);
-
-            //Only need to do this if the source and destination types are not the same, otherwise a direct copy will alwyas work
-            if (value != null && destProp != null && destProp.GetType() != sourceProp.GetType() && sourceProp.PropertyType.IsClass && sourceProp.PropertyType != typeof(string))
-            {
-                object? nestedProperty = Activator.CreateInstance(sourceProp.PropertyType);
-                nestedProperty = CopyRecursiveProperties(nestedProperty, value, 1, maxDepth);
-                destProp?.SetValue(dest, nestedProperty, null);
-            }
-            else
-            {
-                destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
-            }
         }
     }
 
@@ -90,12 +60,12 @@ public static class ObjectHelpers
     /// </summary>
     /// <typeparam name="T">Type of object being copied</typeparam>
     /// <param name="source">Object to copy common properties from</param>
-    public static TU CopyPropertiesToNew<T, TU>(this T source) where TU : new()
+    public static UT CopyPropertiesToNew<T, UT>(this T source) where UT : new()
     {
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
+        IEnumerable<PropertyInfo> destProps = typeof(UT).GetProperties().Where(x => x.CanWrite);
 
-        TU dest = new();
+        UT dest = new();
         foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
         {
             PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
@@ -104,71 +74,165 @@ public static class ObjectHelpers
         return dest;
     }
 
+    //Can handle collections
     /// <summary>
-    /// Copy properties of the same name from one object to another, recursively navigating classes if they are not the same type
+    /// Copies properties of one class to a new instance of a class using reflection based on property name matching
     /// </summary>
-    /// <typeparam name="T">Type of object being copied</typeparam>
-    /// <param name="source">Object to copy common properties from</param>
-    public static TU CopyPropertiesToNewRecursive<T, TU>(this T source, int maxDepth = -1) where TU : new()
+    /// <typeparam name="T">Type to copy values from</typeparam>
+    /// <typeparam name="UT">Type to copy values to</typeparam>
+    /// <param name="source">Object to copy values into new object from</param>
+    /// <param name="maxDepth">How deep to recursively traverse. Default = -1 which is unlimited recursion</param>
+    /// <returns>A new instance of UT with properties of the same name from source populated</returns>
+    [return: NotNullIfNotNull(nameof(source))]
+    public static UT? CopyPropertiesToNewRecursive<T, UT>(this T source, int maxDepth = -1) where UT : new()
     {
-        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = typeof(TU).GetProperties().Where(x => x.CanWrite);
+        if (source == null) return default;
 
-        TU dest = new();
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+        if (typeof(IEnumerable).IsAssignableFrom(typeof(T)) && typeof(IEnumerable).IsAssignableFrom(typeof(UT)) && typeof(T) != typeof(string) && typeof(UT) != typeof(string))
         {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
-            object? value = sourceProp.GetValue(source, null);
+            return (UT?)CopyCollection(source, typeof(UT), maxDepth) ?? new();
+        }
 
-            //Only need to do this if the source and destination types are not the same, otherwise a direct copy will always work
-            if (value != null && destProp != null && destProp.PropertyType.AssemblyQualifiedName != sourceProp.PropertyType.AssemblyQualifiedName &&
-                sourceProp.PropertyType.IsClass && sourceProp.PropertyType != typeof(string))
+        return (UT?)CopyObject(source, typeof(UT), 0, maxDepth) ?? new();
+    }
+
+    private static object? CopyObject(object source, Type destType, int depth, int maxDepth)
+    {
+        if (source == null) return null;
+
+        Type sourceType = source.GetType();
+        object? dest = Activator.CreateInstance(destType);
+
+        if (sourceType == destType)
+        {
+            dest = source;
+        }
+        else
+        {
+            IEnumerable<PropertyInfo> sourceProps = sourceType.GetProperties().Where(x => x.CanRead);
+            IEnumerable<PropertyInfo> destProps = destType.GetProperties().Where(x => x.CanWrite);
+
+            foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
             {
-                object? nestedProperty = Activator.CreateInstance(destProp.PropertyType);
-                nestedProperty = CopyRecursiveProperties(nestedProperty, value, 1, maxDepth);
-                destProp?.SetValue(dest, nestedProperty, null);
-            }
-            else
-            {
-                destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
+                PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+                if (destProp == null) continue;
+
+                object? value = sourceProp.GetValue(source, null);
+                if (value == null)
+                {
+                    destProp.SetValue(dest, null, null);
+                    continue;
+                }
+
+                if (IsSimpleType(sourceProp.PropertyType))
+                {
+                    destProp.SetValue(dest, value, null);
+                }
+                else if (typeof(IEnumerable).IsAssignableFrom(sourceProp.PropertyType) && typeof(IEnumerable).IsAssignableFrom(destProp.PropertyType))
+                {
+                    object? collectionValue = CopyCollection(value, destProp.PropertyType, maxDepth);
+                    destProp.SetValue(dest, collectionValue, null);
+                }
+                else if ((maxDepth == -1 || depth < maxDepth) && sourceProp.PropertyType.IsClass)
+                {
+                    object? nestedValue = CopyObject(value, destProp.PropertyType, depth + 1, maxDepth);
+                    destProp.SetValue(dest, nestedValue, null);
+                }
+                else
+                {
+                    destProp.SetValue(dest, value, null);
+                }
             }
         }
+
         return dest;
     }
 
-    /// <summary>
-    /// Recursively copies properties for nested classes
-    /// </summary>
-    /// <param name="dest">Object to have same name properties copied to</param>
-    /// <param name="source">Source data to copy same name properties from</param>
-    /// <param name="depth">The number of nested objects deep the code is working at. 0 is the top level of the class</param>
-    /// <param name="maxDepth">Sets limit on number of nested objects deep to copy</param>
-    private static object CopyRecursiveProperties(object? dest, object source, int depth, int maxDepth = -1)
+    private static object? CopyCollection(object source, Type destType, int maxDepth)
     {
-        Type sourceType = source.GetType();
-        Type destType = dest!.GetType();
+        if (source == null) return null;
 
-        IEnumerable<PropertyInfo> sourceProps = sourceType.GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = destType.GetProperties().Where(x => x.CanWrite);
+        IEnumerable sourceCollection = (IEnumerable)source;
 
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+        // Check if the destination type is a dictionary
+        if (destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
         {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
-            object? value = sourceProp.GetValue(source, null);
-            if (value != null && destProp != null && (maxDepth == -1 || maxDepth <= depth) && destProp.PropertyType.AssemblyQualifiedName != sourceProp.PropertyType.AssemblyQualifiedName &&
-                sourceProp.PropertyType.IsClass && sourceProp.PropertyType != typeof(string))
+            Type[] sourceGenericArgs = source.GetType().GetGenericArguments();
+            Type sourceKeyType = sourceGenericArgs[0];
+            Type sourceValueType = sourceGenericArgs[1];
+
+            Type[] destGenericArgs = destType.GetGenericArguments();
+            Type destKeyType = destGenericArgs[0];
+            Type destValueType = destGenericArgs[1];
+
+            // Create a new dictionary
+            IDictionary destDictionary = (IDictionary)Activator.CreateInstance(destType)!;
+
+            // Create a generic type for KeyValuePair<TKey, TValue>
+            Type kvpType = typeof(KeyValuePair<,>).MakeGenericType(sourceKeyType, sourceValueType);
+
+            // Copy key-value pairs
+            foreach (object item in sourceCollection)
             {
-                // Create a new instance of the nested class and copy properties recursively
-                object? nestedProperty = Activator.CreateInstance(destProp.PropertyType);
-                nestedProperty = CopyRecursiveProperties(nestedProperty, value, depth + 1, maxDepth);
-                destProp?.SetValue(dest, nestedProperty, null);
+                object key = kvpType.GetProperty("Key")!.GetValue(item, null)!;
+                object? value = kvpType.GetProperty("Value")!.GetValue(item, null);
+
+                object copiedKey = CopyObject(key, destKeyType, 1, maxDepth)!;
+                object? copiedValue = value == null ? null : CopyObject(value, destValueType, 0, maxDepth);
+                destDictionary.Add(copiedKey, copiedValue);
             }
-            else
-            {
-                destProp?.SetValue(dest, value, null);
-            }
+
+            return destDictionary;
         }
-        return dest;
+        else
+        {
+            Type elementType = destType.IsArray ? destType.GetElementType() ?? typeof(object) : destType.GetGenericArguments()[0];
+            Type listType = typeof(List<>).MakeGenericType(elementType);
+            IList list = (IList)Activator.CreateInstance(listType)!;
+
+            foreach (object item in sourceCollection)
+            {
+                object? copiedItem = CopyObject(item, elementType, 0, maxDepth);
+
+                list.Add(copiedItem);
+            }
+
+            if (destType.IsInterface || destType == listType)
+            {
+                return list;
+            }
+
+            if (destType.IsArray)
+            {
+                Array array = Array.CreateInstance(elementType, list.Count);
+                list.CopyTo(array, 0);
+                return array;
+            }
+
+            object? destCollection = Activator.CreateInstance(destType);
+            MethodInfo? addMethod = destType.GetMethod("Add");
+            if (addMethod != null)
+            {
+                foreach (object? item in list)
+                {
+                    addMethod.Invoke(destCollection, [item]);
+                }
+            }
+
+            return destCollection;
+        }
+    }
+
+    private static bool IsSimpleType(Type type)
+    {
+        return type.IsPrimitive
+            || type.IsEnum
+            || type == typeof(string)
+            || type == typeof(decimal)
+            || type == typeof(DateTime)
+            || type == typeof(DateTimeOffset)
+            || type == typeof(TimeSpan)
+            || type == typeof(Guid);
     }
 
     /// <summary>
@@ -529,6 +593,26 @@ public static class ObjectHelpers
     }
 
     /// <summary>
+    /// Checks to see if a type implements IDictionary
+    /// </summary>
+    /// <param name="type">Type to check if it implements IDictionary</param>
+    /// <returns>True if type parameter implements IDictionary</returns>
+    public static bool IsDictionary(this Type type)
+    {
+        return typeof(IDictionary).IsAssignableFrom(type);
+    }
+
+    /// <summary>
+    /// Checks to see if a type implements IEnumerable and is not a string
+    /// </summary>
+    /// <param name="type">Type to check if it implements IEnumerable</param>
+    /// <returns>True if type parameter implements IEnumerable and is not a string</returns>
+    public static bool IsEnumerable(this Type type)
+    {
+        return typeof(IEnumerable).IsAssignableFrom(type) && type != typeof(string);
+    }
+
+    /// <summary>
     /// Checks to see if a type is a class other than a string
     /// </summary>
     /// <param name="type">Type to check to see if it's a class other than a string</param>
@@ -635,7 +719,7 @@ public static class ObjectHelpers
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+                logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
                 return false;
             }
         }
@@ -657,6 +741,12 @@ public static class ObjectHelpers
         return isNumeric;
     }
 
+    /// <summary>
+    /// Read a stream into a byte array asynchronously
+    /// </summary>
+    /// <param name="stream">Stream to read from</param>
+    /// <param name="bufferSize">Buffer size to use when reading from the stream</param>
+    /// <returns></returns>
     public static async Task<byte[]> ReadStreamAsync(Stream stream, int bufferSize = 4096)
     {
         int read;

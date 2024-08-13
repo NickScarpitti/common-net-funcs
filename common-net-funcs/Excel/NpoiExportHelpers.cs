@@ -43,7 +43,7 @@ public static class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
 
         return new();
@@ -77,7 +77,7 @@ public static class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
 
         return new();
@@ -186,7 +186,7 @@ public static class NpoiExportHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return success;
     }

@@ -46,7 +46,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -73,7 +73,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -149,18 +149,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         //Microsoft.EntityFrameworkCore.Query.NavigationBaseIncludeIgnored
 
@@ -184,7 +184,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -226,7 +226,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -280,18 +280,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -370,18 +370,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -450,7 +450,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -494,7 +494,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -556,7 +556,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -598,7 +598,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -648,18 +648,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -742,18 +742,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -837,18 +837,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -933,18 +933,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1019,7 +1019,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1049,7 +1049,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1117,18 +1117,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1199,18 +1199,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1240,7 +1240,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1311,18 +1311,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1351,7 +1351,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1381,7 +1381,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1452,18 +1452,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 }
                 catch (Exception ex2)
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfEexception()} Error2");
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
                 }
             }
             else
             {
-                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfEexception()} Error");
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1489,7 +1489,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
     }
@@ -1515,7 +1515,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return count;
     }
@@ -1542,7 +1542,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
     }
 
@@ -1565,7 +1565,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
     }
 
@@ -1583,7 +1583,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
     }
 
@@ -1608,7 +1608,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tKey: {JsonSerializer.Serialize(key)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tKey: {JsonSerializer.Serialize(key)}");
         }
         return success;
     }
@@ -1627,7 +1627,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
         return false;
     }
@@ -1646,7 +1646,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
         }
         return false;
     }
@@ -1665,7 +1665,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tKeys: {JsonSerializer.Serialize(keys)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tKeys: {JsonSerializer.Serialize(keys)}");
         }
         return false;
     }
@@ -1704,12 +1704,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         catch (DbUpdateException duex)
         {
             result = false;
-            logger.Error(duex, "{msg}", $"{duex.GetLocationOfEexception()} DBUpdate Error\n\tModels: {JsonSerializer.Serialize(models)}");
+            logger.Error(duex, "{msg}", $"{duex.GetLocationOfException()} DBUpdate Error\n\tModels: {JsonSerializer.Serialize(models)}");
         }
         catch (Exception ex)
         {
             result = false;
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error\n\tModels: {JsonSerializer.Serialize(models)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModels: {JsonSerializer.Serialize(models)}");
         }
         return result;
     }
@@ -1728,11 +1728,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (DbUpdateException duex)
         {
-            logger.Error(duex, "{msg}", $"{duex.GetLocationOfEexception()} DBUpdate Error");
+            logger.Error(duex, "{msg}", $"{duex.GetLocationOfException()} DBUpdate Error");
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return result;
     }

@@ -229,7 +229,7 @@ public static class RestHelpers
         }
         catch (TaskCanceledException tcex)
         {
-            string exceptionLocation = tcex.GetLocationOfEexception();
+            string exceptionLocation = tcex.GetLocationOfException();
             if (expectTaskCancellation)
             {
                 logger.Info("{msg}", $"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
@@ -241,7 +241,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error URL: {url}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {url}");
         }
         return result;
     }
@@ -385,7 +385,7 @@ public static class RestHelpers
         }
         catch (TaskCanceledException tcex)
         {
-            string exceptionLocation = tcex.GetLocationOfEexception();
+            string exceptionLocation = tcex.GetLocationOfException();
             if (expectTaskCancellation)
             {
                 logger.Info("{msg}", $"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
@@ -397,7 +397,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error URL: {url}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {url}");
         }
         return restObject;
     }
@@ -522,7 +522,7 @@ public static class RestHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfEexception()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return result;
     }

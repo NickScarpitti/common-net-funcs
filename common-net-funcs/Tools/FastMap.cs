@@ -8,7 +8,7 @@ namespace Common_Net_Funcs.Tools;
 
 public static class ExpressionTreeMapper
 {
-    private static readonly ConcurrentDictionary<(Type, Type), Delegate> cachedMappers = [];
+    private static readonly ConcurrentDictionary<(Type, Type), Delegate> mapperCache = [];
 
     /// <summary>
     /// Method that maps one object onto another by property name using expression trees
@@ -22,7 +22,7 @@ public static class ExpressionTreeMapper
     {
         if (source == null) { return default; }
 
-        Func<T, UT> mapper = (Func<T, UT>)cachedMappers.GetOrAdd((typeof(T), typeof(UT)), _ => CreateMapper<T, UT>());
+        Func<T, UT> mapper = (Func<T, UT>)mapperCache.GetOrAdd((typeof(T), typeof(UT)), _ => CreateMapper<T, UT>());
         return mapper(source)!;
     }
 

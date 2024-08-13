@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/NickScarpitti/Common_Net_Funcs</PackageProjectUrl>
     <PackageTags>dotnet;web;email;conversion;convert;excel;npoi;odbc;async;datatables;rest;api</PackageTags>
     <Nullable>enable</Nullable>
-    <Version>2.8.1</Version>
+    <Version>2.8.2</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -81,13 +81,13 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.1" />
-    <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.11" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.12" />
     <PackageReference Include="NPOI" Version="2.7.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
     <PackageReference Include="System.Data.Odbc" Version="8.0.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.4" />
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="8.103.1" />
+    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="8.103.2" />
   </ItemGroup>
 
   <ItemGroup>

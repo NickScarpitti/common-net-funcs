@@ -4,12 +4,11 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Util;
 using Microsoft.Extensions.Logging;
-using RAPID_Data.ServerOps.Interfaces;
 using static Common_Net_Funcs.Tools.DebugHelpers;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
 using static Common_Net_Funcs.Tools.StringHelpers;
 
-namespace RAPID_Data.ServerOps;
+namespace Common_Net_Funcs.Web.Aws;
 
 public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
 {
@@ -216,7 +215,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                 do
                 {
                     response = await s3Client.ListObjectsV2Async(request);
-                    fileNames.AddRange(response?.S3Objects.ConvertAll(x => x.Key)?? []);
+                    fileNames.AddRange(response?.S3Objects.ConvertAll(x => x.Key) ?? []);
                     request.ContinuationToken = response?.NextContinuationToken;
                 } while (response?.IsTruncated ?? false);
             }

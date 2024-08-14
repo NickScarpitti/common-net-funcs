@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 
-namespace RAPID_Data.ServerOps.Interfaces;
+namespace Common_Net_Funcs.Web.Aws;
+
 public interface IAwsS3
 {
     Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null);

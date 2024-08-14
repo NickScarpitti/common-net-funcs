@@ -381,7 +381,7 @@ public static class RestHelpers
             httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
 
             restObject.Response = await Client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
-            restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions);
+            restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions, httpHeaders);
         }
         catch (TaskCanceledException tcex)
         {
@@ -411,7 +411,7 @@ public static class RestHelpers
     /// <param name="url">URL HTTP request was made against</param>
     /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
     /// <returns>Response content if HTTP request was successful</returns>
-    private static async Task<T?> HandleResponse<T> (HttpResponseMessage response, string httpMethod, string url, bool useNewtonsoftDeserializer, MsgPackOptions? msgPackOptions = null)
+    private static async Task<T?> HandleResponse<T> (HttpResponseMessage response, string httpMethod, string url, bool useNewtonsoftDeserializer, MsgPackOptions? msgPackOptions = null, Dictionary<string, string>? httpHeaders = null)
     {
         T? result = default;
         try
@@ -517,7 +517,7 @@ public static class RestHelpers
                 string errorMessage = response.Content.Headers.ContentType.ToNString().ContainsInvariant("json") ?
                     JToken.Parse(await response.Content.ReadAsStringAsync()).ToString(Formatting.Indented) :
                     await response.Content.ReadAsStringAsync();
-                logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n{errorMessage}");
+                logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n{errorMessage}\n{(httpHeaders != null ? $"Headers: {string.Join(", ", httpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
             }
         }
         catch (Exception ex)

@@ -16,8 +16,6 @@ public enum EComparisonType
 /// </summary>
 public static partial class StringHelpers
 {
-    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
     [GeneratedRegex(@"\s+")]
     private static partial Regex MultiSpaceRegex();
 
@@ -45,28 +43,24 @@ public static partial class StringHelpers
     /// <param name="s">String to get left substring from</param>
     /// <param name="numChars">Number of characters to take from the right side of the string</param>
     /// <returns>String of the length indicated from the left side of the source string</returns>
+    [return: NotNullIfNotNull(nameof(s))]
     public static string? Left(this string? s, int numChars)
     {
-        try
+        if (s == null)
         {
-            if (s.IsNullOrEmpty())
-            {
-                return null;
-            }
-
-            if (numChars <= s.Length)
-            {
-                return s[..numChars];
-            }
-            else
-            {
-                return s;
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "Error getting left chars");
             return null;
+        }
+        else if (s.Length == 0)
+        {
+            return string.Empty;
+        }
+        else if (numChars <= s.Length)
+        {
+            return s[..numChars];
+        }
+        else
+        {
+            return s;
         }
     }
 
@@ -76,28 +70,24 @@ public static partial class StringHelpers
     /// <param name="s">String to extract right substring from</param>
     /// <param name="numChars">Number of characters to take from the right side of the string</param>
     /// <returns>String of the length indicated from the right side of the source string</returns>
+    [return: NotNullIfNotNull(nameof(s))]
     public static string? Right(this string? s, int numChars)
     {
-        try
+        if (s == null)
         {
-            if (s.IsNullOrEmpty())
-            {
-                return null;
-            }
-
-            if (numChars <= s.Length)
-            {
-                return s.Substring(s.Length - numChars, numChars);
-            }
-            else
-            {
-                return s;
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "Error getting right chars");
             return null;
+        }
+        else if (s.Length == 0)
+        {
+            return string.Empty;
+        }
+        else if (numChars <= s.Length)
+        {
+            return s.Substring(s.Length - numChars, numChars);
+        }
+        else
+        {
+            return s;
         }
     }
 
@@ -383,5 +373,13 @@ public static partial class StringHelpers
     public static bool IsNumericOnly(this string? testString, bool allowSpaces = false)
     {
         return testString != null && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
+    }
+
+    [return: NotNullIfNotNull(nameof(s))]
+    public static string? ExtractToLastInstance(this string? s, char charToFind)
+    {
+        if (s == null) { return null; }
+        int lastIndex = s.LastIndexOf(charToFind);
+        return lastIndex != -1 ? s[..lastIndex] : s;
     }
 }

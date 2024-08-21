@@ -364,11 +364,31 @@ public static partial class StringHelpers
         return testString != null && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
     }
 
+    /// <summary>
+    /// Gets string up until before the last instance of a character (exclusive)
+    /// </summary>
+    /// <param name="s">String to extract from</param>
+    /// <param name="charToFind">Character to find last instance of</param>
+    /// <returns>String up until the last instance of charToFind (exclusive)</returns>
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ExtractToLastInstance(this string? s, char charToFind)
     {
         if (s == null) { return null; }
         int lastIndex = s.LastIndexOf(charToFind);
         return lastIndex != -1 ? s[..lastIndex] : s;
+    }
+
+    /// <summary>
+    /// Gets string remaining after the last instance of a character (exclusive)
+    /// </summary>
+    /// <param name="s">String to extract from</param>
+    /// <param name="charToFind">Character to find last instance of</param>
+    /// <returns>Remaining string after the last instance of charToFind (exclusive)</returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static string? ExtractFromLastInstance(this string? s, char charToFind)
+    {
+        if (s == null) { return null; }
+        int lastIndex = s.LastIndexOf(charToFind);
+        return lastIndex != -1 ? s[(lastIndex + 1)..] : s;
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using static Common_Net_Funcs.Conversion.StringConversion;
 
 namespace Common_Net_Funcs.Tools;
 
@@ -191,23 +190,13 @@ public static partial class StringHelpers
     }
 
     /// <summary>
-    /// Indicates whether a specified string is null, a zero length string, or consists only of white-space characters
-    /// </summary>
-    /// <param name="s">The string to test</param>
-    /// <returns>True if s is null, a zero length string, or consists only of white-space characters</returns>
-    public static bool IsNullOrWhiteSpace<T>([NotNullWhen(false)] this T? s)
-    {
-        return string.IsNullOrWhiteSpace(s.ToNString());
-    }
-
-    /// <summary>
     /// Indicates whether a specified string is null or a zero length string
     /// </summary>
-    /// <param name="s">The string to test</param>
+    /// <param name="enumerable">Collection to check if it's null or has no elements</param>
     /// <returns>True if s is null or a zero length string</returns>
-    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T? s)
+    public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? enumerable)
     {
-        return string.IsNullOrEmpty(s.ToNString());
+        return enumerable?.Any() != true;
     }
 
     /// <summary>

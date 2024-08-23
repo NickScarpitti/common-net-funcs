@@ -2,8 +2,8 @@
 using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.S3.Util;
 using Microsoft.Extensions.Logging;
+using static Amazon.S3.Util.AmazonS3Util;
 using static Common_Net_Funcs.Tools.DebugHelpers;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
 using static Common_Net_Funcs.Tools.StringHelpers;
@@ -297,14 +297,14 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                 }
                 else
                 {
-                    isValid = await AmazonS3Util.DoesS3BucketExistV2Async(s3Client, bucketName);
+                    isValid = await DoesS3BucketExistV2Async(s3Client, bucketName);
                     validatedBuckets.AddDictionaryItem(bucketName, isValid);
                 }
             }
 
             if (!isValid) //Retry in case of intermittent outage
             {
-                isValid = await AmazonS3Util.DoesS3BucketExistV2Async(s3Client, bucketName);
+                isValid = await DoesS3BucketExistV2Async(s3Client, bucketName);
                 if (validatedBuckets != null)
                 {
                     validatedBuckets[bucketName] = isValid;

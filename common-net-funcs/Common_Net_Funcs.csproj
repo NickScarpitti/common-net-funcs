@@ -77,11 +77,13 @@
     <PackageReference Include="MessagePack" Version="2.5.172" />
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.8" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.8" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.2" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.12" />
+    <PackageReference Include="Npgsql" Version="8.0.3" />
     <PackageReference Include="NPOI" Version="2.7.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
     <PackageReference Include="System.Data.Odbc" Version="8.0.0" />

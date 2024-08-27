@@ -5,11 +5,11 @@ using static Common_Net_Funcs.Tools.DebugHelpers;
 
 namespace Common_Net_Funcs.SQL;
 
-public class UpdateResult
-{
-    public int RecordsChanged { get; set; }
-    public bool Success { get; set; }
-}
+//public class UpdateResult
+//{
+//    public int RecordsChanged { get; set; }
+//    public bool Success { get; set; }
+//}
 
 /// <summary>
 /// Interact with ODBC data sources

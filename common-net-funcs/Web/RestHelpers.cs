@@ -515,22 +515,6 @@ public static class RestHelpers
                     {
                         result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream);
                     }
-
-                    //Deserialize as string - Legacy
-                    //await response.Content.ReadAsStringAsync().ContinueWith((Task<string> x) =>
-                    //{
-                    //    if (x.IsFaulted) throw x.Exception ?? new();
-
-                    //    Type returnType = typeof(T);
-                    //    if (returnType == typeof(string) || Nullable.GetUnderlyingType(returnType) == typeof(string))
-                    //    {
-                    //        result = (T)Convert.ChangeType(x.Result, typeof(T)); //Makes it so the result will be accepted as a string in generic terms
-                    //    }
-                    //    else if (x.Result?.Length > 0)
-                    //    {
-                    //        result = DeserializeObject<T>(x.Result); //using static Newtonsoft.Json.JsonConvert;
-                    //    }
-                    //});
                 }
                 else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
                 {

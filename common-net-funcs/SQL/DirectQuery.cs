@@ -202,7 +202,7 @@ public static class DirectQuery
     }
 
     /// <summary>
-    /// Execute an update query synchronously
+    /// Execute an update query asynchronously
     /// </summary>
     /// <param name="sql">Update query to retrieve run against database</param>
     /// <param name="connStr">Connection string to run the query on</param>
@@ -236,13 +236,21 @@ public static class DirectQuery
         }
     }
 
+    /// <summary>
+    /// Execute an update query asynchronously
+    /// </summary>
+    /// <param name="sql">Update query to retrieve run against database</param>
+    /// <param name="connStr">Connection string to run the query on</param>
+    /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+    /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
+    /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
     public static Task<UpdateResult> RunUpdateQuery(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
         return RunUpdateQueryInternal(conn, cmd, commandTimeoutSeconds, maxRetry);
     }
 
     /// <summary>
-    /// Execute an update query synchronously
+    /// Execute an update query asynchronously
     /// </summary>
     /// <param name="conn">Database connection to use</param>
     /// <param name="cmd">Command to use with parameters</param>

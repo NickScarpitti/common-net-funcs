@@ -1,9 +1,9 @@
 ﻿using System.Data;
 using System.Text.RegularExpressions;
-using System.Web;
 using static Common_Net_Funcs.Conversion.StringConversion;
 using static Common_Net_Funcs.Tools.ObjectHelpers;
 using static Common_Net_Funcs.Tools.StringHelpers;
+using static System.Web.HttpUtility;
 
 namespace Common_Net_Funcs.Communications;
 
@@ -65,7 +65,7 @@ public static partial class HtmlBuilder
     {
         if (text != null)
         {
-            text = HttpUtility.HtmlEncode(text);
+            text = HtmlEncode(text);
             text = text.Replace("\r\n", "\r").Replace("\n", "\r").Replace("\r", "<br>").Replace("\t", "&nbsp&nbsp&nbsp");
         }
         return text ?? string.Empty;

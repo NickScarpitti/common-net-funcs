@@ -32,7 +32,7 @@ public class MailAddress
 public class MailAttachment
 {
     public string? AttachmentName { get; set; }
-    public Stream? AttatchmentStream { get; set; }
+    public Stream? AttachmentStream { get; set; }
 }
 
 public static class Email
@@ -217,10 +217,10 @@ public static class Email
                     int i = 1;
                     foreach (MailAttachment attachment in attachments)
                     {
-                        if (attachment.AttatchmentStream != null)
+                        if (attachment.AttachmentStream != null)
                         {
-                            attachment.AttatchmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
-                            tasks.Add(bodyBuilder.Attachments.AddAsync(attachment.AttachmentName ?? $"File {i}", attachment.AttatchmentStream));
+                            attachment.AttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
+                            tasks.Add(bodyBuilder.Attachments.AddAsync(attachment.AttachmentName ?? $"File {i}", attachment.AttachmentStream));
                             i++;
                         }
                     }
@@ -232,17 +232,17 @@ public static class Email
                     using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
 
                     //TODO:: Test this to see if it works
-                    await attachments.Select(x => (x.AttatchmentStream, x.AttachmentName)).AddFilesToZip(archive, CompressionLevel.SmallestSize);
+                    await attachments.Select(x => (x.AttachmentStream, x.AttachmentName)).AddFilesToZip(archive, CompressionLevel.SmallestSize);
 
                     //foreach (MailAttachment attachment in attachments)
                     //{
-                    //    //await attachment.AttatchmentStream.AddZipToArchive(archive, attachment.AttachmentName, CompressionLevel.SmallestSize);
-                    //    if (attachment.AttatchmentStream != null)
+                    //    //await attachment.AttachmentStream.AddZipToArchive(archive, attachment.AttachmentName, CompressionLevel.SmallestSize);
+                    //    if (attachment.AttachmentStream != null)
                     //    {
-                    //        attachment.AttatchmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
+                    //        attachment.AttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
                     //        ZipArchiveEntry entry = archive.CreateEntry(attachment.AttachmentName ?? $"File {archive.Entries.Count}", CompressionLevel.SmallestSize);
                     //        await using Stream entryStream = entry.Open();
-                    //        await attachment.AttatchmentStream.CopyToAsync(entryStream);
+                    //        await attachment.AttachmentStream.CopyToAsync(entryStream);
                     //        await entryStream.FlushAsync();
                     //    }
                     //}

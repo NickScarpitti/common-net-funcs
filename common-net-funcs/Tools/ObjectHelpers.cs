@@ -734,7 +734,7 @@ public static class ObjectHelpers
     public static bool IsNumeric(this object? testObject)
     {
         bool isNumeric = false;
-        if (!testObject.IsNullOrWhiteSpace())
+        if (testObject?.ToString().IsNullOrWhiteSpace() == false)
         {
             isNumeric = decimal.TryParse(testObject.ToString(), NumberStyles.Number, NumberFormatInfo.InvariantInfo, out _);
         }

@@ -2,8 +2,25 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>Nick_Scarpitti</Authors>
+    <PackageIcon>TTLogo.png</PackageIcon>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs</PackageProjectUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Description>
+      Helper methods that deal with
+    </Description>
+    <PackageTags>dotnet;helpers;</PackageTags>
   </PropertyGroup>
   
   <ItemGroup>

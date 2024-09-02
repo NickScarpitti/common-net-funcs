@@ -1,27 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Title>Subset Model Binder</Title>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>Subset Model Binder</Title>
     <Version>1.0.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Authors>Nick_Scarpitti</Authors>
+    <PackageIcon>TTLogo.png</PackageIcon>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs</PackageProjectUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <Description>
       A code generator that enforces a class to be only a subset of another class, with no extra properties or properties of incorrect types.
       Uses ModelMetadataType or MetadataType to apply attributes to your subset class.
     </Description>
-    <PackageIcon>TTLogo.png</PackageIcon>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>generator;model;binding;source generator;model binding;mvc</PackageTags>
-    <AssemblyVersion>$(Version)</AssemblyVersion>
-    <FileVersion>$(Version)</FileVersion>
-    <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageTags>dotnet;helpers;generator;model;binding;source generator;model binding;mvc</PackageTags>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <PackageProjectUrl>https://github.com/NickScarpitti/subset-model-binder</PackageProjectUrl>
@@ -56,7 +58,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="bin\Debug\netstandard2.0\\CommonNetFuncs.SubsetModelBinder.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Remove="bin\Debug\netstandard2.0\\CommonNetFuncs.SubsetModelBinder.pdb" />
     <None Include="$(OutputPath)\$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 

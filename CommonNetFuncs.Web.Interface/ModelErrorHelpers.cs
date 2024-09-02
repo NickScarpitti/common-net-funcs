@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using static Common_Net_Funcs.Tools.StringHelpers;
+using static CommonNetFuncs.Core.Strings;
 
-namespace Common_Net_Funcs.Web;
+namespace CommonNetFuncs.Web.Interface;
 
 /// <summary>
 /// For use with ASP.NET Core ModelStateDictionary

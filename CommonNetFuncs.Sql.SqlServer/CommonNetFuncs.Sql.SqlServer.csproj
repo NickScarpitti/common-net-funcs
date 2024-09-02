@@ -23,4 +23,11 @@
     <ProjectReference Include="..\CommonNetFuncs.Sql.Common\CommonNetFuncs.Sql.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+  </ItemGroup>
+
 </Project>

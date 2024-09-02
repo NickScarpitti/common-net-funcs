@@ -14,4 +14,11 @@
     <EditorConfigFiles Include=".editorconfig" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+  </ItemGroup>
+
 </Project>

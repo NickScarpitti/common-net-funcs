@@ -26,5 +26,12 @@
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.EFCore\CommonNetFuncs.EFCore.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+  </ItemGroup>
   
 </Project>

@@ -18,4 +18,11 @@
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.12" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+  </ItemGroup>
+
 </Project>

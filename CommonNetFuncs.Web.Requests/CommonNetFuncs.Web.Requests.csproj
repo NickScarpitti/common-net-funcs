@@ -32,4 +32,11 @@
     <ProjectReference Include="..\CommonNetFuncs.Web.Common\CommonNetFuncs.Web.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+  </ItemGroup>
+
 </Project>

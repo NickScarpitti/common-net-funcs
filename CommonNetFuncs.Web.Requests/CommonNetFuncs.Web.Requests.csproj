@@ -29,14 +29,6 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <None Remove=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EditorConfigFiles Include=".editorconfig" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MemoryPack" Version="1.21.1" />
@@ -50,12 +42,16 @@
     <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
     <ProjectReference Include="..\CommonNetFuncs.Web.Common\CommonNetFuncs.Web.Common.csproj" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <None Update="TTLogo.png">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove=".editorconfig" />
   </ItemGroup>
 
 </Project>

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common_Net_Funcs", "common-net-funcs\Common_Net_Funcs.csproj", "{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Compression", "CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj", "{12F352BC-1523-482B-BDDC-52DEE98EF839}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Core", "CommonNetFuncs.Core\CommonNetFuncs.Core.csproj", "{9DDEABA9-62D8-4423-917E-7FD8B4841935}"
@@ -20,6 +18,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Excel.ClosedXml", "CommonNetFuncs.Excel.ClosedXml\CommonNetFuncs.Excel.ClosedXml.csproj", "{21A512F2-71CE-4255-B78B-D331A44254F0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{23A01FE6-098B-49C8-BF77-B79FBB8B4009}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Csv", "CommonNetFuncs.Csv\CommonNetFuncs.Csv.csproj", "{FB72DE61-CAA9-46F5-B965-373D37EFB361}"
 EndProject
@@ -35,21 +36,21 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Sql.Odbc", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Sql.PostgreSQL", "CommonNetFuncs.Sql.PostgreSQL\CommonNetFuncs.Sql.PostgreSQL.csproj", "{E582FCEC-D66F-4FBA-A4D7-74E2EFB5908E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Web.Middleware", "CommonNetFuncs.Web.Middleware\CommonNetFuncs.Web.Middleware.csproj", "{CEAF70BE-A5A8-4796-B3B8-7B0EEDE82322}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Web.Middleware", "CommonNetFuncs.Web.Middleware\CommonNetFuncs.Web.Middleware.csproj", "{CEAF70BE-A5A8-4796-B3B8-7B0EEDE82322}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Web.Jwt", "CommonNetFuncs.Web.Jwt\CommonNetFuncs.Web.Jwt.csproj", "{9D57807C-AA8E-48BB-A51C-F85A51A4502F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Web.Jwt", "CommonNetFuncs.Web.Jwt\CommonNetFuncs.Web.Jwt.csproj", "{9D57807C-AA8E-48BB-A51C-F85A51A4502F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Web.Aws.S3", "CommonNetFuncs.Web.Aws.S3\CommonNetFuncs.Web.Aws.S3.csproj", "{A6DCEA08-D4CA-4080-AC79-F73C1729107D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Web.Aws.S3", "CommonNetFuncs.Web.Aws.S3\CommonNetFuncs.Web.Aws.S3.csproj", "{A6DCEA08-D4CA-4080-AC79-F73C1729107D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Web.Requests", "CommonNetFuncs.Web.Requests\CommonNetFuncs.Web.Requests.csproj", "{3B1CE560-6197-4ED6-A31B-FE9867663F7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Web.Requests", "CommonNetFuncs.Web.Requests\CommonNetFuncs.Web.Requests.csproj", "{3B1CE560-6197-4ED6-A31B-FE9867663F7B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Web.Common", "CommonNetFuncs.Web.Common\CommonNetFuncs.Web.Common.csproj", "{D3F7CB9D-EEB5-46A5-808A-2473A1D5F4E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Web.Common", "CommonNetFuncs.Web.Common\CommonNetFuncs.Web.Common.csproj", "{D3F7CB9D-EEB5-46A5-808A-2473A1D5F4E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Web.Api", "CommonNetFuncs.Web.Api\CommonNetFuncs.Web.Api.csproj", "{B211C992-01D5-4AB3-972D-CEA7C06FCF13}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Web.Api", "CommonNetFuncs.Web.Api\CommonNetFuncs.Web.Api.csproj", "{B211C992-01D5-4AB3-972D-CEA7C06FCF13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Web.Interface", "CommonNetFuncs.Web.Interface\CommonNetFuncs.Web.Interface.csproj", "{1F24BBA7-900D-48F6-A4CC-E783A53B005E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Web.Interface", "CommonNetFuncs.Web.Interface\CommonNetFuncs.Web.Interface.csproj", "{1F24BBA7-900D-48F6-A4CC-E783A53B005E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.SubsetModelBinder", "CommonNetFuncs.SubsetModelBinder\CommonNetFuncs.SubsetModelBinder.csproj", "{01BFBF4E-75B6-4223-87D0-8F58FFE0AE56}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.SubsetModelBinder", "CommonNetFuncs.SubsetModelBinder\CommonNetFuncs.SubsetModelBinder.csproj", "{01BFBF4E-75B6-4223-87D0-8F58FFE0AE56}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,18 +62,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Debug|x64.ActiveCfg = Debug|x64
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Debug|x64.Build.0 = Debug|x64
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Debug|x86.ActiveCfg = Debug|x86
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Debug|x86.Build.0 = Debug|x86
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Release|Any CPU.Build.0 = Release|Any CPU
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Release|x64.ActiveCfg = Release|x64
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Release|x64.Build.0 = Release|x64
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Release|x86.ActiveCfg = Release|x86
-		{045E6BB7-8572-47F6-A9B2-01CAC4B72F16}.Release|x86.Build.0 = Release|x86
 		{12F352BC-1523-482B-BDDC-52DEE98EF839}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{12F352BC-1523-482B-BDDC-52DEE98EF839}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12F352BC-1523-482B-BDDC-52DEE98EF839}.Debug|x64.ActiveCfg = Debug|Any CPU

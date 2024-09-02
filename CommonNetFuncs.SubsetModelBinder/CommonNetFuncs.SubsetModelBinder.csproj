@@ -40,18 +40,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EditorConfigFiles Include=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="TTLogo.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove=".editorconfig" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,7 +56,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\netstandard2.0\\CommonNetFuncs.SubsetModelBinder.dll" />
+    <None Remove="bin\Debug\netstandard2.0\CommonNetFuncs.SubsetModelBinder.dll" />
   </ItemGroup>
 
   <ItemGroup>

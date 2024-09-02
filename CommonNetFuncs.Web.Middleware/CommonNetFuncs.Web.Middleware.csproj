@@ -31,15 +31,11 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Remove=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EditorConfigFiles Include=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +43,10 @@
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove=".editorconfig" />
   </ItemGroup>
 
 </Project>

@@ -25,15 +25,7 @@
     </Description>
     <PackageTags>dotnet;helpers;export;csv;csvhelper;</PackageTags>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EditorConfigFiles Include=".editorconfig" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.0.1" />
   </ItemGroup>
@@ -49,4 +41,7 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove=".editorconfig" />
+  </ItemGroup>
 </Project>

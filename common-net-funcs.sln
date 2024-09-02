@@ -34,7 +34,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Sql.Common",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Sql.Odbc", "CommonNetFuncs.Sql.Odbc\CommonNetFuncs.Sql.Odbc.csproj", "{EFB7222A-D162-4387-861F-2991DD1E1CDC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Sql.PostgreSQL", "CommonNetFuncs.Sql.PostgreSQL\CommonNetFuncs.Sql.PostgreSQL.csproj", "{E582FCEC-D66F-4FBA-A4D7-74E2EFB5908E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Sql.PostgreSql", "CommonNetFuncs.Sql.PostgreSql\CommonNetFuncs.Sql.PostgreSql.csproj", "{E582FCEC-D66F-4FBA-A4D7-74E2EFB5908E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Web.Middleware", "CommonNetFuncs.Web.Middleware\CommonNetFuncs.Web.Middleware.csproj", "{CEAF70BE-A5A8-4796-B3B8-7B0EEDE82322}"
 EndProject

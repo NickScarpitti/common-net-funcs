@@ -2,10 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <Platforms>AnyCPU;x86;x64</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Version>1.0.0</Version>
+    <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -20,7 +23,7 @@
     <Description>
       Helper methods that deal with EFCore, including providing basic actions against a DB Context and handling navigation properties.
     </Description>
-    <PackageTags>dotnet;helpers;efcore;navigationproperties;dbcontext</PackageTags>
+    <PackageTags>dotnet;helpers;efcore;navigation properties;dbcontext</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

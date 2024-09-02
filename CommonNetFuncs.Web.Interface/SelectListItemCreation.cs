@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace CommonNetFuncs.Web.Common;
-public static class StringConversion
+namespace CommonNetFuncs.Web.Interface;
+public static class SelectListItemCreation
 {
     /// <summary>
     /// Converts value to select list item

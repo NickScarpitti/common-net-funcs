@@ -1,7 +1,7 @@
 ﻿using static System.Convert;
 using static System.Math;
 
-namespace CommonNetFuncs.Convert;
+namespace CommonNetFuncs.Core;
 
 /// <summary>
 /// Helper methods for doing unit conversions

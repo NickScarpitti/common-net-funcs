@@ -1,7 +1,7 @@
 ﻿using CliWrap;
 using CliWrap.Buffered;
-using CommonNetFuncs.Convert;
 using static CommonNetFuncs.Core.Strings;
+using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Images;
 public static class Optimizer
@@ -17,28 +17,55 @@ public static class Optimizer
     /// </summary>
     /// <param name="file">Path to the file that will be optimized</param>
     /// <remarks>Need to have gifsicle, jpegoptim, and optipng installed for these to work</remarks>
-    public static async Task OptimizeImage(string file)
+    public static async Task OptimizeImage(string file, IEnumerable<string>? gifsicleArgs = null, IEnumerable<string>? jpegoptimArgs = null, IEnumerable<string>? optipngArgs = null)
     {
         FileInfo originalFileInfo = new(file);
         long originalFileSize = originalFileInfo.Length;
         string commandType = string.Empty;
         string extension = Path.GetExtension(file).Replace(".", string.Empty);
         BufferedCommandResult result = new(0, DateTimeOffset.Now, DateTimeOffset.Now, string.Empty, string.Empty);
+
         //Compress
         if (GifsicleExtensions.ContainsInvariant(extension))
         {
             commandType = "gifsicle";
-            result = await Cli.Wrap(commandType).WithArguments(["-b", "-O3", file]).ExecuteBufferedAsync();
+            if (gifsicleArgs == null) 
+            { 
+                gifsicleArgs = ["-b", "-O3", file];
+            }
+            else if (!gifsicleArgs.Any(x => x.StrEq(file)))
+            {
+                gifsicleArgs = gifsicleArgs.Append(file);
+            }
+            result = await Cli.Wrap(commandType).WithArguments(gifsicleArgs).ExecuteBufferedAsync();
         }
         else if (JpegoptimExtensions.ContainsInvariant(extension))
         {
             commandType = "jpegoptim";
-            result = await Cli.Wrap(commandType).WithArguments(["--preserve-perms", "--preserve", file]).ExecuteBufferedAsync();
+            
+            if (jpegoptimArgs == null)
+            {
+                jpegoptimArgs = ["--preserve-perms", "--preserve", file];
+            }
+            else if(!jpegoptimArgs.Any(x => x.StrEq(file)))
+            {
+                jpegoptimArgs = jpegoptimArgs.Append(file);
+            }
+            result = await Cli.Wrap(commandType).WithArguments(jpegoptimArgs).ExecuteBufferedAsync();
         }
         else if (OptipngExtensions.ContainsInvariant(extension))
         {
             commandType = "optipng";
-            result = await Cli.Wrap(commandType).WithArguments(["-fix", "-o5", file]).ExecuteBufferedAsync();
+            
+            if (optipngArgs == null)
+            {
+                optipngArgs = ["-fix", "-o5", file];
+            }
+            else if(!optipngArgs.Any(x => x.StrEq(file)))
+            {
+                optipngArgs = optipngArgs.Append(file);
+            }
+            result = await Cli.Wrap(commandType).WithArguments(optipngArgs).ExecuteBufferedAsync();
         }
 
         if (!commandType.IsNullOrWhiteSpace())

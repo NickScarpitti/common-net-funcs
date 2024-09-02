@@ -1,8 +1,8 @@
 ﻿using static System.Math;
 
-namespace CommonNetFuncs.Convert;
+namespace CommonNetFuncs.Core;
 
-public static class ScaleConversion
+public static class DimensionScale
 {
     /// <summary>
     /// Get the dimensions to scale a 2d object in a way that maximally fits inside of the maximum constraint dimensions while maintaining its aspect ratio.

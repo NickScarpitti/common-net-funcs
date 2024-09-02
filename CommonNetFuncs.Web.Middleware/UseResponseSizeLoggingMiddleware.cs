@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using CommonNetFuncs.Core;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using static CommonNetFuncs.Convert.UnitConversion;
+using static CommonNetFuncs.Core.UnitConversion;
 
 namespace CommonNetFuncs.Web.Middleware;
 

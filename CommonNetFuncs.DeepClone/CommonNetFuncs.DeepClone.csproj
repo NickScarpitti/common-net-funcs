@@ -2,10 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <Platforms>AnyCPU;x86;x64</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Version>1.0.0</Version>
+    <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -18,9 +21,9 @@
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>
-      Helper methods that deal with deep cloning objects (copying an object without a memory reference)
+      Helper methods that deal with deep cloning objects (copying an object without a memory reference).
     </Description>
-    <PackageTags>dotnet;helpers;deepcopy;clone;copy;deepclone;</PackageTags>
+    <PackageTags>dotnet;helpers;deep copy;deep clone;clone;copy;</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

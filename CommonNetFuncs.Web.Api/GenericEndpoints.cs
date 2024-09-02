@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-using CommonNetFuncs.EFCore;
+﻿using CommonNetFuncs.EFCore;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Copy;
@@ -12,6 +12,7 @@ namespace CommonNetFuncs.Web.Api;
 public class GenericEndpoints : ControllerBase
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
     /// <summary>
     /// Basic endpoint to create more than one entity at a time
     /// </summary>

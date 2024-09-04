@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using NLog;
 
@@ -60,9 +61,9 @@ public static class Inspect
     /// <param name="obj1">First object to compare for value equality</param>
     /// <param name="obj2">Second object to compare for value equality</param>
     /// <returns>True if the two objects have the same value for all elements</returns>
-    public static bool IsEqual(this object? obj1, object? obj2)
+    public static bool IsEqualR(this object? obj1, object? obj2)
     {
-        return obj1.IsEqual(obj2, null);
+        return obj1.IsEqualR(obj2, null);
     }
 
     /// <summary>
@@ -72,7 +73,7 @@ public static class Inspect
     /// <param name="obj2">First object to compare for value equality</param>
     /// <param name="exemptProps">Names of properties to not include in the matching check</param>
     /// <returns>True if both objects contain identical values for all properties except for the ones identified by exemptProps</returns>
-    public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
+    public static bool IsEqualR(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
     {
         // They're both null.
         if (obj1 == null && obj2 == null)
@@ -124,80 +125,103 @@ public static class Inspect
         return true;
     }
 
-    /// <summary>
-    /// Compare two class objects for value equality
-    /// </summary>
-    /// <param name="obj1">First object to compare values from</param>
-    /// <param name="obj2">Second object to compare values from</param>
-    /// <returns>True if both objects contain identical values for all properties</returns>
-    public static bool Equals<T>(this T? obj1, T? obj2)
+    private static readonly Dictionary<Tuple<Type, bool, bool>, Func<object, object, IEnumerable<string>, bool>> CompareDelegates = [];
+    public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
     {
         // They're both null.
         if (obj1 == null && obj2 == null)
         {
             return true;
         }
+
         // One is null, so they can't be the same.
         if (obj1 == null || obj2 == null)
         {
             return false;
         }
+
+        Type type = obj1.GetType();
+
         // How can they be the same if they're different types?
-        if (obj1.GetType() != obj1.GetType())
+        if (type != obj2.GetType())
         {
             return false;
         }
 
-        foreach (PropertyInfo prop in obj1.GetType().GetProperties())
+        exemptProps ??= [];
+        Tuple<Type, bool, bool> key = Tuple.Create(type, ignoreStringCase, recursive);
+        if (!CompareDelegates.TryGetValue(key, out Func<object, object, IEnumerable<string>, bool>? compareDelegate))
         {
-            object aPropValue = prop.GetValue(obj1) ?? string.Empty;
-            object bPropValue = prop.GetValue(obj2) ?? string.Empty;
-            if (aPropValue.ToString() != bPropValue.ToString())
-            {
-                return false;
-            }
+            compareDelegate = CreateCompareDelegate(type, ignoreStringCase, recursive);
+            CompareDelegates[key] = compareDelegate;
         }
-        return true;
+
+        return compareDelegate(obj1, obj2, exemptProps);
     }
 
-    /// <summary>
-    /// Compare two class objects for value equality
-    /// </summary>
-    /// <param name="obj1">First object to compare values from</param>
-    /// <param name="obj2">Second object to compare values from</param>
-    /// <param name="exemptProps">Names of properties to not include in the matching check</param>
-    /// <returns>True if both objects contain identical values for all properties except for the ones identified by exemptProps</returns>
-    public static bool Equals<T>(this T? obj1, T? obj2, IEnumerable<string> exemptProps)
+    private static Func<object, object, IEnumerable<string>, bool> CreateCompareDelegate(Type type, bool ignoreStringCase, bool recursive)
     {
-        // They're both null.
-        if (obj1 == null && obj2 == null)
-        {
-            return true;
-        }
-        // One is null, so they can't be the same.
-        if (obj1 == null || obj2 == null)
-        {
-            return false;
-        }
-        // How can they be the same if they're different types?
-        if (obj1.GetType() != obj1.GetType())
-        {
-            return false;
-        }
+        ParameterExpression obj1Param = Expression.Parameter(typeof(object), "obj1");
+        ParameterExpression obj2Param = Expression.Parameter(typeof(object), "obj2");
+        ParameterExpression exemptPropsParam = Expression.Parameter(typeof(IEnumerable<string>), "exemptProps");
 
-        foreach (PropertyInfo prop in obj1.GetType().GetProperties())
+        UnaryExpression typedObj1 = Expression.Convert(obj1Param, type);
+        UnaryExpression typedObj2 = Expression.Convert(obj2Param, type);
+
+        IEnumerable<PropertyInfo> properties = type.GetProperties().Where(p => p.CanRead && p.GetIndexParameters().Length == 0);
+
+        List<Expression> comparisons = [];
+
+        foreach (PropertyInfo prop in properties)
         {
-            if (!exemptProps.Contains(prop.Name))
+            MethodCallExpression propExemptCheck = Expression.Call(typeof(Enumerable), "Contains", [typeof(string)], exemptPropsParam, Expression.Constant(prop.Name));
+
+            MemberExpression value1 = Expression.Property(typedObj1, prop);
+            MemberExpression value2 = Expression.Property(typedObj2, prop);
+
+            Expression comparison;
+
+            if (prop.PropertyType == typeof(string))
             {
-                object aPropValue = prop.GetValue(obj1) ?? string.Empty;
-                object bPropValue = prop.GetValue(obj2) ?? string.Empty;
-                if (aPropValue.ToString() != bPropValue.ToString())
+                if (ignoreStringCase)
                 {
-                    return false;
+                    MethodInfo? equalsMethod = typeof(string).GetMethod("Equals", [typeof(string), typeof(string), typeof(StringComparison)])!;
+                    comparison = Expression.Call(equalsMethod, value1, value2, Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                }
+                else
+                {
+                    MethodInfo? equalsMethod = typeof(string).GetMethod("Equals", [typeof(string), typeof(string)])!;
+                    comparison = Expression.Call(equalsMethod, value1, value2);
                 }
             }
+            else if (prop.PropertyType.IsValueType)
+            {
+                comparison = Expression.Equal(value1, value2);
+            }
+            else if (typeof(IComparable).IsAssignableFrom(prop.PropertyType))
+            {
+                comparison = Expression.Equal(Expression.Call(value1, "CompareTo", null, value2), Expression.Constant(0));
+            }
+            else if (recursive && !prop.PropertyType.IsValueType && prop.PropertyType != typeof(string))
+            {
+                MethodInfo? isEqualMethod = typeof(Inspect).GetMethod(nameof(IsEqual), [typeof(object), typeof(object), typeof(IEnumerable<string>), typeof(bool), typeof(bool)])!;
+                comparison = Expression.Call(isEqualMethod, value1, value2, Expression.Constant(null, typeof(IEnumerable<string>)), Expression.Constant(ignoreStringCase), Expression.Constant(recursive));
+            }
+            else
+            {
+                //comparison = Expression.Equal(value1, value2);
+                comparison = Expression.Constant(true);
+            }
+
+            comparisons.Add(Expression.Condition(propExemptCheck, Expression.Constant(true), comparison));
         }
-        return true;
+
+        Expression andAlsoExpression = comparisons.Aggregate(Expression.And);
+
+        Expression<Func<object, object, IEnumerable<string>, bool>> lambda = Expression.Lambda<Func<object, object, IEnumerable<string>, bool>>(
+            andAlsoExpression, obj1Param, obj2Param, exemptPropsParam);
+
+        return lambda.Compile();
     }
 
     /// <summary>

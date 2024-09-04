@@ -1,11 +1,11 @@
-﻿using CommonNetFuncs.EFCore;
+﻿using System.ComponentModel.DataAnnotations;
+using CommonNetFuncs.EFCore;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 using static CommonNetFuncs.Core.Collections;
-using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Copy;
+using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.DeepClone.ExpressionTrees;
 
 namespace CommonNetFuncs.Web.Api;

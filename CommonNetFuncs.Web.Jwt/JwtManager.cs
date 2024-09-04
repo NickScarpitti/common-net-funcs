@@ -28,7 +28,7 @@ public class JwtManager : IJwtManager
     /// <param name="key">Application token key from application secret</param>
     /// <param name="devTokenLifespan">How long the token should remain valid in development environment</param>
     /// <param name="stdTokenLifespan">How long the token should remain valid in a non-development environment</param>
-    /// <returns>TokenObject if the credentials passed in are valid></returns>
+    /// <returns>JwtToken if the credentials passed in are valid></returns>
 	public JwtToken? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan,
         TimeSpan stdTokenLifespan, string? issuer = null, string? email = null, string? audience = null)
     {

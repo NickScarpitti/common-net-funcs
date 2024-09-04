@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using static CommonNetFuncs.Core.UnitConversion;
+using static System.Web.HttpUtility;
 
 namespace CommonNetFuncs.Web.Middleware;
 
@@ -27,7 +28,7 @@ public class UseResponseSizeLoggingMiddleware(RequestDelegate next, ILogger<UseR
         await next(context);
 
         //Log the response size
-        logger.LogWarning("{msg}", $"Response to {context.Request.Path} [{context.Request.Method}] of type [{context.Request.Headers.Accept}{(string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + {context.Request.Headers.AcceptEncoding}")}] " +
+        logger.LogWarning("{msg}", $"Response to {HtmlEncode(context.Request.Path)} [{HtmlEncode(context.Request.Method)}] of type [{HtmlEncode(context.Request.Headers.Accept)}{(string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + {HtmlEncode(context.Request.Headers.AcceptEncoding)}")}] " +
             $"with Size: {responseBodyStream.Length.GetFileSizeFromBytesWithUnits(2)}");
 
         //Copy the contents of the new memory stream to the original response stream

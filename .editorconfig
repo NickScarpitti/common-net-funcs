@@ -83,6 +83,7 @@ dotnet_code_quality_unused_parameters = all:suggestion
 
 # IDE0305: Simplify collection initialization
 dotnet_diagnostic.IDE0305.severity = none
+dotnet_diagnostic.CA1016.severity = none
 
 [*.cs]
 # var preferences

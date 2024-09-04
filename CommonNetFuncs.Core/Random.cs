@@ -8,7 +8,7 @@ namespace CommonNetFuncs.Core;
 /// <summary>
 /// Helper functions for randomization
 /// </summary>
-public static class Randomizers
+public static class Random
 {
     /// <summary>
     /// Generate a random integer between 0 and maxValue - 1

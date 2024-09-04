@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using static System.Web.HttpUtility;
 
-namespace Common_Net_Funcs.Communications;
+namespace CommonNetFuncs.Email;
 
 public static partial class HtmlEmailBuilder
 {

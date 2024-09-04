@@ -18,7 +18,7 @@ using static System.Math;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Strings;
 
-namespace Common_Net_Funcs.Excel;
+namespace CommonNetFuncs.Excel.Npoi;
 
 /// <summary>
 /// Methods to make reading and writing to an excel file easier using NPOI

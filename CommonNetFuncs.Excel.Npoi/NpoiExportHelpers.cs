@@ -3,7 +3,7 @@ using CommonNetFuncs.Core;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
-using static Common_Net_Funcs.Excel.NpoiCommonHelpers;
+using static CommonNetFuncs.Excel.Npoi.NpoiCommonHelpers;
 using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.Excel.Npoi;

@@ -29,8 +29,8 @@ public static class Optimizer
         if (GifsicleExtensions.ContainsInvariant(extension))
         {
             commandType = "gifsicle";
-            if (gifsicleArgs == null) 
-            { 
+            if (gifsicleArgs == null)
+            {
                 gifsicleArgs = ["-b", "-O3", file];
             }
             else if (!gifsicleArgs.Any(x => x.StrEq(file)))
@@ -42,7 +42,7 @@ public static class Optimizer
         else if (JpegoptimExtensions.ContainsInvariant(extension))
         {
             commandType = "jpegoptim";
-            
+
             if (jpegoptimArgs == null)
             {
                 jpegoptimArgs = ["--preserve-perms", "--preserve", file];
@@ -56,7 +56,7 @@ public static class Optimizer
         else if (OptipngExtensions.ContainsInvariant(extension))
         {
             commandType = "optipng";
-            
+
             if (optipngArgs == null)
             {
                 optipngArgs = ["-fix", "-o5", file];

@@ -206,7 +206,6 @@ public static class Async
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
     }
-
 }
 
 public class AsyncIntString

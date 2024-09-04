@@ -6,7 +6,7 @@ using NLog;
 using static System.Convert;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Strings;
-using static CommonNetFuncs.Web.Common.UriHelpers;
+using static CommonNetFuncs.Sql.Common.QueryParameters;
 
 namespace CommonNetFuncs.Web.Interface;
 

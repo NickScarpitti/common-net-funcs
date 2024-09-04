@@ -3,7 +3,7 @@ using CommonNetFuncs.Core;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
-using static Common_Net_Funcs.Excel.NpoiCommonHelpers;
+using static CommonNetFuncs.Excel.Npoi.Common;
 using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.Excel.Npoi;
@@ -11,7 +11,7 @@ namespace CommonNetFuncs.Excel.Npoi;
 /// <summary>
 /// Export data to an excel data using NPOI
 /// </summary>
-public static class NpoiExportHelpers
+public static class Export
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

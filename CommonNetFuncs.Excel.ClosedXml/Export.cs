@@ -8,7 +8,7 @@ namespace CommonNetFuncs.Excel.ClosedXml;
 ///// <summary>
 ///// Export data to an excel data using ClosedXml
 ///// </summary>
-public static class ClosedXmlExportHelpers
+public static class Export
 {
     //    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

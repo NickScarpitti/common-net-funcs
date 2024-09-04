@@ -18,12 +18,12 @@ using static System.Math;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Strings;
 
-namespace Common_Net_Funcs.Excel;
+namespace CommonNetFuncs.Excel.Npoi;
 
 /// <summary>
 /// Methods to make reading and writing to an excel file easier using NPOI
 /// </summary>
-public static partial class NpoiCommonHelpers
+public static partial class Common
 {
     [GeneratedRegex("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")]
     private static partial Regex HexColorRegex();
@@ -792,7 +792,7 @@ public static partial class NpoiCommonHelpers
                 if (imageData[i].Length > 0 && wb != null && cellNames[i] != null)
                 {
                     ICell? cell = wb.GetCellFromName(cellNames[i]);
-                    CellRangeAddress? area = GetRangeOfMergedCells(cell);
+                    CellRangeAddress? area = cell.GetRangeOfMergedCells();
 
                     if (cell != null && area != null)
                     {
@@ -1058,7 +1058,7 @@ public static partial class NpoiCommonHelpers
                         {
                             for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
                             {
-                                dataTable.Columns.Add(GetStringValue(GetCellFromCoordinates(ws, colIndex, startRowIndex)));
+                                dataTable.Columns.Add(ws.GetCellFromCoordinates(colIndex, startRowIndex).GetStringValue());
                             }
                         }
                         else
@@ -1104,7 +1104,7 @@ public static partial class NpoiCommonHelpers
 
                                 for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
                                 {
-                                    newRowData[colIndex - startColIndex] = GetStringValue(GetCellFromCoordinates(ws, colIndex, rowIndex));
+                                    newRowData[colIndex - startColIndex] = ws.GetCellFromCoordinates(colIndex, rowIndex).GetStringValue();
                                 }
                                 dataTable.Rows.Add(newRowData);
                             }
@@ -1122,7 +1122,7 @@ public static partial class NpoiCommonHelpers
 
                                 for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
                                 {
-                                    string? cellValue = GetStringValue(GetCellFromCoordinates(ws, colIndex, rowIndex));
+                                    string? cellValue = ws.GetCellFromCoordinates(colIndex, rowIndex).GetStringValue();
                                     rowIsNotNull = rowIsNotNull ? rowIsNotNull : !cellValue.IsNullOrWhiteSpace();
                                     newRowData[colIndex - startColIndex] = cellValue;
                                 }
@@ -1140,7 +1140,7 @@ public static partial class NpoiCommonHelpers
 
             wb?.Dispose();
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             logger.Error(ex, "{msg}", $"Unable to read excel data. Location: {ex.GetLocationOfException()}");
         }
@@ -1196,7 +1196,7 @@ public static partial class NpoiCommonHelpers
                     //Get headers
                     for (int i = table.StartColIndex; i < table.EndColIndex + 1; i++)
                     {
-                        dataTable.Columns.Add(GetStringValue(GetCellFromCoordinates(ws, i, table.StartRowIndex)));
+                        dataTable.Columns.Add(ws.GetCellFromCoordinates(i, table.StartRowIndex).GetStringValue());
                     }
 
                     //Get body data
@@ -1206,7 +1206,7 @@ public static partial class NpoiCommonHelpers
 
                         for (int n = table.StartColIndex; n < table.EndColIndex + 1; n++)
                         {
-                            newRowData[n - table.StartColIndex] = GetStringValue(GetCellFromCoordinates(ws, n, i));
+                            newRowData[n - table.StartColIndex] = ws.GetCellFromCoordinates(n, i).GetStringValue();
                         }
 
                         dataTable.Rows.Add(newRowData);
@@ -1227,7 +1227,7 @@ public static partial class NpoiCommonHelpers
     /// </summary>
     /// <param name="fileStream">Stream representation of a file</param>
     /// <returns>True if stream is an XLSX file</returns>
-    public static bool IsXlsx (this Stream fileStream)
+    public static bool IsXlsx(this Stream fileStream)
     {
         return DocumentFactoryHelper.HasOOXMLHeader(fileStream);
     }
@@ -1237,7 +1237,7 @@ public static partial class NpoiCommonHelpers
     /// </summary>
     /// <param name="workbook">NPOI Workbook Object</param>
     /// <returns>True if stream is an XLSX file</returns>
-    public static bool IsXlsx (this IWorkbook workbook)
+    public static bool IsXlsx(this IWorkbook workbook)
     {
         return workbook.GetType().Name != typeof(HSSFWorkbook).Name;
     }

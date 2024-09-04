@@ -8,7 +8,7 @@ namespace CommonNetFuncs.Excel.ClosedXml;
 ///// <summary>
 ///// Methods to make reading and writing to an excel file easier using NPOI
 ///// </summary>
-public static class ClosedXmlCommonHelpers
+public static class Common
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

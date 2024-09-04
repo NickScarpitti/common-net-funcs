@@ -1,7 +1,7 @@
 ﻿using MemoryPack;
 using MessagePack;
 
-namespace Common_Net_Funcs.Web.JWT;
+namespace CommonNetFuncs.Web.Jwt;
 
 [MemoryPackable]
 [MessagePackObject(true)]

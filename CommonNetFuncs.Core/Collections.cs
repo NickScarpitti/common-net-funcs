@@ -162,7 +162,7 @@ public static class Collections
     /// <param name="items">Items to have the updateMethod expression performed on</param>
     /// <param name="updateMethod">Lambda expression of the action to perform</param>
     /// <returns>IEnumerable with values updated according to updateMethod</returns>
-    public static void SetValue(this IEnumerable<string?> items, Func<string?, string?> updateMethod)
+    public static List<string?> SetValue(this IEnumerable<string?> items, Func<string?, string?> updateMethod)
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(updateMethod);
@@ -173,6 +173,7 @@ public static class Collections
         {
             list[i] = updateMethod(list[i]);
         }
+        return list.ToList();
     }
 
     /// <summary>

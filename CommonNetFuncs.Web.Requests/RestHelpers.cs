@@ -1,15 +1,16 @@
 ﻿using System.Buffers;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
+using CommonNetFuncs.Compression;
+using CommonNetFuncs.Core;
+using CommonNetFuncs.Web.Common;
 using MemoryPack;
 using MemoryPack.Compression;
 using MessagePack;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using NLog;
-using System.Text;
-using CommonNetFuncs.Core;
-using CommonNetFuncs.Web.Common;
-using CommonNetFuncs.Compression;
 using static CommonNetFuncs.Compression.Streams;
 
 namespace CommonNetFuncs.Web.Requests;
@@ -427,8 +428,18 @@ public static class RestHelpers
                 //string errorMessage = response.Content.Headers.ContentType.ToNString().ContainsInvariant("json") ?
                 //    JToken.Parse(await response.Content.ReadAsStringAsync()).ToString(Formatting.Indented) :
                 //    await response.Content.ReadAsStringAsync();
-                string? errorMessage = await ReadResponseStream<string>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions);
-                logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\nContent:\n{errorMessage}\n{(httpHeaders != null ? $"Headers: {string.Join(", ", httpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
+                //string? errorMessage = await ReadResponseStream<string>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions);
+                string? errorMessage = null;
+                if (contentType.ContainsInvariant(ContentTypes.JsonProblem))
+                {
+                    ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions) ?? new();
+                    errorMessage = $"({problemDetails.Status}) {problemDetails.Title}\n\t\t{string.Join("\n\t\t", problemDetails.Errors.Select(x => $"{x.Key}:\n\t\t\t{string.Join("\n\t\t\t",x.Value)}"))}";
+                }
+                else
+                {
+                    errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, useNewtonsoftDeserializer, msgPackOptions);
+                }
+                logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(httpHeaders != null ? $"Headers: {string.Join(", ", httpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
             }
         }
         catch (Exception ex)
@@ -526,9 +537,20 @@ public static class RestHelpers
                     {
                         await responseStream.DecompressStream(outputStream, ECompressionType.Brotli);
                     }
-                    using StreamReader reader = new(outputStream, Encoding.UTF8);
-                    string stringResult = reader.ReadToEnd();
+
+                    string stringResult;
+                    if (outputStream.Length == 0)
+                    {
+                        using StreamReader reader = new(responseStream, Encoding.UTF8);
+                        stringResult = reader.ReadToEnd();
+                    }
+                    else
+                    {
+                        using StreamReader reader = new(outputStream, Encoding.UTF8);
+                        stringResult = reader.ReadToEnd();
+                    }
                     result = (T)(object)stringResult;
+
                 }
             }
         }
@@ -630,4 +652,9 @@ public static class RestHelpers
         }
         return (itemsPerChunk, numberOfChunks);
     }
+}
+
+public class ProblemDetailsWithErrors : ProblemDetails
+{
+    public IDictionary<string, List<string>> Errors { get; } = new Dictionary<string, List<string>>(StringComparer.Ordinal);
 }

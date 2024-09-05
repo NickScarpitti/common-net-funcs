@@ -419,7 +419,7 @@ public static class Collections
     /// <param name="propToAgg">Property to string aggregate</param>
     /// <param name="separator">String value used between aggregated values</param>
     /// <returns>List with specified property aggregated</returns>
-    public static List<T> StringAggProps<T>(this IEnumerable<T>? collection, string propToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
+    public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string propToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
     {
         return collection.StringAggProps([propToAgg], separator, distinct, parallel);
     }
@@ -431,7 +431,7 @@ public static class Collections
     /// <param name="propsToAgg">Properties to string aggregate</param>
     /// <param name="separator">String value used between aggregated values</param>
     /// <returns>List with specified properties aggregated</returns>
-    public static List<T> StringAggProps<T>(this IEnumerable<T>? collection, string[] propsToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
+    public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string[] propsToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
     {
         if (collection?.Any() != true)
         {
@@ -471,11 +471,12 @@ public static class Collections
                         }
                     }
                     return result;
-                }).ToList();
+                });
         }
         else
         {
-            return collection.AsParallel().GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? "")) })
+            return collection.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered)
+                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? "")) })
                 .Select(g =>
                 {
                     T result = new();
@@ -493,7 +494,7 @@ public static class Collections
                         }
                     }
                     return result;
-                }).ToList();
+                });
         }
     }
 }

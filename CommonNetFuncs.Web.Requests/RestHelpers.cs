@@ -425,10 +425,6 @@ public static class RestHelpers
             }
             else
             {
-                //string errorMessage = response.Content.Headers.ContentType.ToNString().ContainsInvariant("json") ?
-                //    JToken.Parse(await response.Content.ReadAsStringAsync()).ToString(Formatting.Indented) :
-                //    await response.Content.ReadAsStringAsync();
-                //string? errorMessage = await ReadResponseStream<string>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions);
                 string? errorMessage = null;
                 if (contentType.ContainsInvariant(ContentTypes.JsonProblem))
                 {
@@ -481,11 +477,6 @@ public static class RestHelpers
                 {
                     if (contentEncoding.StrEq(EncodingTypes.GZip))
                     {
-                        //await using GZipStream gzipStream = new(responseStream, CompressionMode.Decompress);
-                        //await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-                        //gzipStream.CopyTo(outputStream);
-                        //outputStream.Position = 0;
-
                         await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
                         await responseStream.DecompressStream(outputStream, ECompressionType.Gzip);
                         result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
@@ -550,7 +541,6 @@ public static class RestHelpers
                         stringResult = reader.ReadToEnd();
                     }
                     result = (T)(object)stringResult;
-
                 }
             }
         }
@@ -604,7 +594,7 @@ public static class RestHelpers
     private static void AttachHeaders(this HttpRequestMessage httpRequestMessage, string? bearerToken, Dictionary<string, string>? httpHeaders)
     {
         //Changed this from inline if due to setting .Authorization to null if bearerToken is empty/null resulting in an exception during the post request: "A task was canceled"
-        if (bearerToken != null || bearerToken?.Length == 0 && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false))
+        if (bearerToken != null || (bearerToken?.Length == 0 && !(httpHeaders?.Where(x => x.Key.StrEq("Authorization")).Any() ?? false)))
         {
             try
             {

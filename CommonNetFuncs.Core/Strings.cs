@@ -926,9 +926,74 @@ public static partial class Strings
     /// <param name="dateString">Input date string to be converted</param>
     /// <param name="sourceFormat">Format of dateString string</param>
     /// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
+    /// <returns>Date formatted as a string following the output format</returns>
     [return: NotNullIfNotNull(nameof(dateString))]
     public static string? FormatDateString(this string? dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
     {
         return dateString == null ? null : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? "MM/dd/yyyy" : outputFormat);
+    }
+
+    /// <summary>
+    /// Replaces any characters that don't match the provided regexPattern with specified replacement string.
+    /// </summary>
+    /// <param name="input">String to apply regex / replacement to</param>
+    /// <param name="regexPattern">Regex pattern used to white list characters in input</param>
+    /// <param name="replacement">String to replace any characters that aren't matched by the regex pattern</param>
+    /// <param name="matchFirstOnly">If true, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
+    /// <returns>String with any non-matching characters replaced by the replacement string</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? ReplaceInverse(this string? input, string regexPattern, string? replacement = "", bool matchFirstOnly = false)
+    {
+        if (input.IsNullOrEmpty()) return input;
+        Regex regex = new(regexPattern);
+        return regex.ReplaceInverse(input, replacement, matchFirstOnly);
+    }
+
+    /// <summary>
+    /// Replaces any characters that don't match the provided regexPattern with specified replacement string.
+    /// </summary>
+    /// <param name="regex">Regex used to white list characters in input</param>
+    /// <param name="input">String to apply regex / replacement to</param>
+    /// <param name="replacement">String to replace any characters that aren't matched by the regex pattern</param>
+    /// <param name="matchFirstOnly">If true, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
+    /// <returns>String with any non-matching characters replaced by the replacement string</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? ReplaceInverse(this Regex regex, string? input, string? replacement = "", bool matchFirstOnly = false)
+    {
+        if (input.IsNullOrEmpty()) return input;
+        replacement ??= string.Empty;
+
+        // Use StringBuilder to build the result
+        StringBuilder result = new();
+        int lastMatchEnd = 0;
+
+        foreach (Match match in regex.Matches(input))
+        {
+            // Append non-matching parts before the current match
+            if (match.Index > lastMatchEnd)
+            {
+                // Append the replacement string only if it's not empty
+                if (replacement.Length > 0)
+                {
+                    result.Append(replacement);
+                }
+            }
+            // Append the matched value
+            result.Append(match.Value);
+            lastMatchEnd = match.Index + match.Length;
+
+            if (matchFirstOnly)
+            {
+                break;
+            }
+        }
+
+        // Append any remaining non-matching characters after the last match
+        if (lastMatchEnd < input.Length && replacement.Length > 0)
+        {
+            result.Append(replacement);
+        }
+
+        return result.ToString();
     }
 }

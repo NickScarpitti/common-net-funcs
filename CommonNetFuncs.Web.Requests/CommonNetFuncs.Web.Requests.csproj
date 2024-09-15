@@ -7,7 +7,7 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.10</Version>
+    <Version>1.0.11</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -34,7 +34,7 @@
     <PackageReference Include="MemoryPack" Version="1.21.1" />
     <PackageReference Include="MessagePack" Version="2.5.172" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.8" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.12" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.13" />
   </ItemGroup>
 
   <ItemGroup>

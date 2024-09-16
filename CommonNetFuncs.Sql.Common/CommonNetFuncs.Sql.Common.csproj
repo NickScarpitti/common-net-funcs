@@ -7,7 +7,7 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.1</Version>
+    <Version>1.0.10</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -21,7 +21,7 @@
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>
-      Helper methods that deal with preparing and executing queries. 
+      Helper methods that deal with preparing and executing queries.
     </Description>
     <PackageTags>dotnet;helpers;sql;sql server;postgres;postgresql;tsql;odbc</PackageTags>
   </PropertyGroup>

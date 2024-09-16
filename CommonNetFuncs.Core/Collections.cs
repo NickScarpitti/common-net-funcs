@@ -411,6 +411,92 @@ public static class Collections
 
         return combined;
     }
+
+    /// <summary>
+    /// Performs a string aggregation on the designated property, using all other properties as the group by
+    /// </summary>
+    /// <param name="collection">Collection to perform the string aggregation on based on the property identified</param>
+    /// <param name="propToAgg">Property to string aggregate</param>
+    /// <param name="separator">String value used between aggregated values</param>
+    /// <returns>List with specified property aggregated</returns>
+    public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string propToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
+    {
+        return collection.StringAggProps([propToAgg], separator, distinct, parallel);
+    }
+
+    /// <summary>
+    /// Performs a string aggregation on the designated properties, using all other properties as the group by
+    /// </summary>
+    /// <param name="collection">Collection to perform the string aggregation on based on the properties identified</param>
+    /// <param name="propsToAgg">Properties to string aggregate</param>
+    /// <param name="separator">String value used between aggregated values</param>
+    /// <returns>List with specified properties aggregated</returns>
+    public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string[] propsToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
+    {
+        if (collection?.Any() != true)
+        {
+            return [];
+        }
+
+        if (!propsToAgg.AnyFast())
+        {
+            throw new ArgumentException("There must be at least one property identified in propsToAgg", nameof(propsToAgg));
+        }
+
+        PropertyInfo[] properties = typeof(T).GetProperties();
+        PropertyInfo[] groupingProperties = properties.Where(p => !propsToAgg.Contains(p.Name)).ToArray();
+
+        if (!groupingProperties.AnyFast() || propsToAgg.Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Length)
+        {
+            throw new ArgumentException($"Invalid aggregate property values. All values in propsToAgg must be present in type {typeof(T)}", nameof(propsToAgg));
+        }
+
+        if (!parallel)
+        {
+            return collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? "")) })
+                .Select(g =>
+                {
+                    T result = new();
+                    foreach (PropertyInfo prop in properties)
+                    {
+                        if (propsToAgg.Contains(prop.Name))
+                        {
+                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? "").Distinct()) :
+                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? ""));
+                            prop.SetValue(result, aggregatedValue);
+                        }
+                        else
+                        {
+                            prop.SetValue(result, prop.GetValue(g.First()));
+                        }
+                    }
+                    return result;
+                });
+        }
+        else
+        {
+            return collection.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered)
+                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? "")) })
+                .Select(g =>
+                {
+                    T result = new();
+                    foreach (PropertyInfo prop in properties)
+                    {
+                        if (propsToAgg.Contains(prop.Name))
+                        {
+                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? "").Distinct()) :
+                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? ""));
+                            prop.SetValue(result, aggregatedValue);
+                        }
+                        else
+                        {
+                            prop.SetValue(result, prop.GetValue(g.First()));
+                        }
+                    }
+                    return result;
+                });
+        }
+    }
 }
 
 public class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor

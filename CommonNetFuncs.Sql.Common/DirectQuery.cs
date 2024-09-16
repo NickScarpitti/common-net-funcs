@@ -4,12 +4,6 @@ using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.Sql.Common;
 
-public class UpdateResult
-{
-    public int RecordsChanged { get; set; }
-    public bool Success { get; set; }
-}
-
 /// <summary>
 /// Interact with databases by using direct queries
 /// </summary>

@@ -27,7 +27,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.402.11" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.402.12" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.13" />
   </ItemGroup>
 

@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -139,10 +141,10 @@ public static partial class Strings
     }
 
     /// <summary>
-    /// Makes a string with of the word "null" into a null value
+    /// Makes a string with the word "null" into a null value
     /// </summary>
     /// <param name="s">String to change to null if it contains the word "null"</param>
-    /// <returns>Null is the string passed in is null or is the word null with no other text characters other than whitespace</returns>
+    /// <returns>Null if the string passed in is null or is the word null with no other text characters other than whitespace</returns>
     public static string? MakeNullNull(this string? s)
     {
         return s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", "")?.Length == 0 || s.Trim().StrEq("Null") ? null : s;
@@ -421,14 +423,15 @@ public static partial class Strings
     /// </summary>
     /// <typeparam name="T">Type of object to trim strings in</typeparam>
     /// <param name="obj">Object containing string properties to be trimmed</param>
-    public static T TrimObjectStrings<T>(this T obj)
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static T? TrimObjectStringsR<T>(this T? obj)
     {
-        PropertyInfo[] props = typeof(T).GetProperties();
-        if (props != null)
+        if (obj == null)
         {
-            foreach (PropertyInfo prop in props)
+            IEnumerable<PropertyInfo> props = typeof(T).GetProperties().Where(x => x.PropertyType == typeof(string));
+            if (props.Any())
             {
-                if (prop.PropertyType == typeof(string))
+                foreach (PropertyInfo prop in props)
                 {
                     string? value = (string?)prop.GetValue(obj);
                     if (!value.IsNullOrEmpty())
@@ -441,19 +444,66 @@ public static partial class Strings
         return obj;
     }
 
+    private static readonly ConcurrentDictionary<(Type, bool), Delegate> trimObjectStringsCache = new();
+
     /// <summary>
-    /// Removes excess spaces in string properties inside of an object with the option to also trim them
+    /// Removes excess spaces in string properties inside of an object
     /// </summary>
-    /// <typeparam name="T">Type of object to normalize strings in</typeparam>
-    /// <param name="obj">Object containing string properties to be normalized</param>
-    public static T NormalizeObjectStrings<T>(this T obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD)
+    /// <typeparam name="T">Type of object to trim strings in</typeparam>
+    /// <param name="obj">Object containing string properties to be trimmed</param>
+    /// <param name="recursive">If true, will recursively apply string trimming to nested object</param>
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static T? TrimObjectStrings<T>(this T? obj, bool recursive = false)
     {
-        PropertyInfo[] props = typeof(T).GetProperties();
-        if (props != null)
+        if (obj == null) return obj;
+
+        Type type = typeof(T);
+        (Type type, bool recursive) key = (type, recursive);
+
+        Action<T> action = (Action<T>)trimObjectStringsCache.GetOrAdd(key, _ => CreateTrimObjectStringsExpression<T>(recursive).Compile());
+        action(obj);
+
+        return obj;
+    }
+
+    private static Expression<Action<T>> CreateTrimObjectStringsExpression<T>(bool recursive)
+    {
+        ParameterExpression objParam = Expression.Parameter(typeof(T), "obj");
+        List<Expression> expressions = [];
+        List<ParameterExpression> variables = [];
+
+        foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.PropertyType == typeof(string) || (recursive && x.PropertyType.IsClass)))
         {
-            foreach (PropertyInfo prop in props)
+            if (prop.PropertyType == typeof(string))
             {
-                if (prop.PropertyType == typeof(string))
+                MemberExpression propExpr = Expression.Property(objParam, prop);
+
+                MethodInfo makeTrimFull = typeof(Strings).GetMethod(nameof(TrimFull))!;
+                MethodCallExpression callTrimFull = Expression.Call(makeTrimFull, propExpr);
+                expressions.Add(Expression.Assign(propExpr, callTrimFull));
+            }
+            else if (recursive && prop.PropertyType.IsClass)
+            {
+                MemberExpression propExpr = Expression.Property(objParam, prop);
+                MethodInfo makeTrimObjectMethod = typeof(Strings).GetMethod(nameof(TrimObjectStrings))!;
+                MethodInfo genericMethod = makeTrimObjectMethod.MakeGenericMethod(prop.PropertyType);
+                MethodCallExpression callMakeTrimObject = Expression.Call(genericMethod, propExpr, Expression.Constant(true));
+                expressions.Add(callMakeTrimObject);
+            }
+        }
+
+        BlockExpression body = Expression.Block(variables, expressions);
+        return Expression.Lambda<Action<T>>(body, objParam);
+    }
+
+    public static T? NormalizeObjectStringsR<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD)
+    {
+        if (obj != null)
+        {
+            IEnumerable<PropertyInfo> props = typeof(T).GetProperties().Where(x => x.PropertyType == typeof(string));
+            if (props.Any())
+            {
+                foreach (PropertyInfo prop in props)
                 {
                     string? value = (string?)prop.GetValue(obj);
                     if (!value.IsNullOrEmpty())
@@ -471,6 +521,161 @@ public static partial class Strings
             }
         }
         return obj;
+    }
+
+    private static readonly ConcurrentDictionary<(Type, bool, NormalizationForm, bool), Delegate> normalizeObjectStringsCache = new();
+
+    /// <summary>
+    /// Removes excess spaces in string properties inside of an object with the option to also trim them
+    /// </summary>
+    /// <typeparam name="T">Type of object to normalize strings in</typeparam>
+    /// <param name="obj">Object containing string properties to be normalized</param>
+    /// <param name="enableTrim">If true, will trim all object strings</param>
+    /// <param name="normalizationForm">String normalization setting</param>
+    /// <param name="recursive">If true, will recursively apply string normalization to nested object</param>
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static T? NormalizeObjectStrings<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false)
+    {
+        if (obj == null) return obj;
+
+        Type type = typeof(T);
+        (Type type, bool enableTrim, NormalizationForm normalizationForm, bool recursive) key = (type, enableTrim, normalizationForm, recursive);
+
+        Action<T> action = (Action<T>)normalizeObjectStringsCache.GetOrAdd(key, _ => CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive).Compile());
+        action(obj);
+
+        return obj;
+    }
+
+    private static Expression<Action<T>> CreateNormalizeObjectStringsExpression<T>(bool enableTrim, NormalizationForm normalizationForm, bool recursive)
+    {
+        ParameterExpression objParam = Expression.Parameter(typeof(T), "obj");
+        List<Expression> expressions = [];
+        List<ParameterExpression> variables = [];
+
+        foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.PropertyType == typeof(string) || (recursive && x.PropertyType.IsClass)))
+        {
+            if (prop.PropertyType == typeof(string))
+            {
+                MemberExpression propExpr = Expression.Property(objParam, prop);
+
+                // Create a local variable to store the property value
+                ParameterExpression localVar = Expression.Variable(typeof(string), prop.Name);
+                variables.Add(localVar);
+                expressions.Add(Expression.Assign(localVar, propExpr));
+
+                // Create the null check
+                Expression nullCheck = Expression.NotEqual(localVar, Expression.Constant(null, typeof(string)));
+
+                Expression stringOperations;
+                if (enableTrim)
+                {
+                    MethodInfo trimMethod = typeof(Strings).GetMethod(nameof(TrimFull))!;
+                    MethodCallExpression callTrimMethod = Expression.Call(trimMethod, localVar);
+                    MethodInfo makeNormalizeMethod = typeof(string).GetMethod(nameof(string.Normalize), [typeof(NormalizationForm)])!;
+                    stringOperations = Expression.Call(callTrimMethod, makeNormalizeMethod, Expression.Constant(normalizationForm));
+                }
+                else
+                {
+                    MethodInfo makeNormalizeMethod = typeof(string).GetMethod(nameof(string.Normalize), [typeof(NormalizationForm)])!;
+                    stringOperations = Expression.Call(localVar, makeNormalizeMethod, Expression.Constant(normalizationForm));
+                }
+
+                // Combine the null check with the string operations
+                Expression conditionalOperation = Expression.Condition(nullCheck, stringOperations, localVar);
+
+                // Assign the result back to the property
+                expressions.Add(Expression.Assign(propExpr, conditionalOperation));
+            }
+            else if (recursive && prop.PropertyType.IsClass)
+            {
+                MemberExpression propExpr = Expression.Property(objParam, prop);
+                MethodInfo makeObjectNullNullMethod = typeof(Strings).GetMethod(nameof(NormalizeObjectStrings))!;
+                MethodInfo genericMethod = makeObjectNullNullMethod.MakeGenericMethod(prop.PropertyType);
+                MethodCallExpression callMakeObjectNullNull = Expression.Call(genericMethod, propExpr, Expression.Constant(enableTrim), Expression.Constant(normalizationForm), Expression.Constant(true));
+
+                // Add null check for recursive call
+                Expression nullCheck = Expression.NotEqual(propExpr, Expression.Constant(null));
+                Expression conditionalCall = Expression.IfThen(nullCheck, callMakeObjectNullNull);
+                expressions.Add(conditionalCall);
+            }
+        }
+
+        BlockExpression body = Expression.Block(variables, expressions);
+        return Expression.Lambda<Action<T>>(body, objParam);
+    }
+
+    /// <summary>
+    /// Makes string properties in an object with the word "null" into a null value
+    /// </summary>
+    /// <param name="obj">Object containing string properties to be set to null if null</param>
+    /// <returns>Objects with properties set to null if the string property is null or is the word "null" with no other text characters other than whitespace</returns>
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static T? MakeObjectNullNullR<T>(this T? obj)
+    {
+        if (obj != null)
+        {
+            IEnumerable<PropertyInfo> props = typeof(T).GetProperties().Where(x => x.PropertyType == typeof(string));
+            if (props.Any())
+            {
+                foreach (PropertyInfo prop in props)
+                {
+                    string? value = (string?)prop.GetValue(obj);
+                    prop.SetValue(obj, value.MakeNullNull());
+                }
+            }
+        }
+        return obj;
+    }
+
+    private static readonly ConcurrentDictionary<(Type, bool), Delegate> makeObjectNullNullCache = new();
+
+    /// <summary>
+    /// Makes string properties in an object with the word "null" into a null value
+    /// </summary>
+    /// <param name="obj">Object containing string properties to be set to null if null</param>
+    /// <param name="recursive">If true, will recursively apply nullification to nested objects</param>
+    /// <returns>Objects with properties set to null if the string property is null or is the word "null" with no other text characters other than whitespace</returns>
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static T? MakeObjectNullNull<T>(this T? obj, bool recursive = false)
+    {
+        if (obj == null) return obj;
+
+        Type type = typeof(T);
+        (Type type, bool recursive) key = (type, recursive);
+
+        Action<T> action = (Action<T>)makeObjectNullNullCache.GetOrAdd(key, _ => CreateMakeObjectNullNullExpression<T>(recursive).Compile());
+        action(obj);
+
+        return obj;
+    }
+
+    private static Expression<Action<T>> CreateMakeObjectNullNullExpression<T>(bool recursive)
+    {
+        ParameterExpression objParam = Expression.Parameter(typeof(T), "obj");
+        List<Expression> expressions = [];
+
+        foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.PropertyType == typeof(string) || (recursive && x.PropertyType.IsClass)))
+        {
+            if (prop.PropertyType == typeof(string))
+            {
+                MemberExpression propExpr = Expression.Property(objParam, prop);
+                MethodInfo makeNullNullMethod = typeof(Strings).GetMethod(nameof(MakeNullNull))!;
+                MethodCallExpression callMakeNullNull = Expression.Call(makeNullNullMethod, propExpr);
+                expressions.Add(Expression.Assign(propExpr, callMakeNullNull));
+            }
+            else //if (recursive && prop.PropertyType.IsClass) //Can use else here since property filter means only valid properties that are not strings will make it here
+            {
+                MemberExpression propExpr = Expression.Property(objParam, prop);
+                MethodInfo makeObjectNullNullMethod = typeof(Strings).GetMethod(nameof(MakeObjectNullNull))!;
+                MethodInfo genericMethod = makeObjectNullNullMethod.MakeGenericMethod(prop.PropertyType);
+                MethodCallExpression callMakeObjectNullNull = Expression.Call(genericMethod, propExpr, Expression.Constant(true));
+                expressions.Add(callMakeObjectNullNull);
+            }
+        }
+
+        BlockExpression body = Expression.Block(expressions);
+        return Expression.Lambda<Action<T>>(body, objParam);
     }
 
     /// <summary>

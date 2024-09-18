@@ -30,7 +30,7 @@
   <ItemGroup>
     <PackageReference Include="MemoryPack" Version="1.21.1" />
     <PackageReference Include="MessagePack" Version="2.5.172" />
-    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.2" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.2" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,7 +43,7 @@
       <Pack>True</Pack>
     </None>
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Remove=".editorconfig" />
   </ItemGroup>

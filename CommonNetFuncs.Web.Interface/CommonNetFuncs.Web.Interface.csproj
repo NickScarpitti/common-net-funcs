@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MemoryPack" Version="1.21.1" />
+    <PackageReference Include="MemoryPack" Version="1.21.2" />
     <PackageReference Include="MessagePack" Version="2.5.172" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.13" PrivateAssets="all" />
   </ItemGroup>

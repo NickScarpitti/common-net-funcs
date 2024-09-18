@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.13" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.13" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

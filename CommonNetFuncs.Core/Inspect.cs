@@ -175,7 +175,7 @@ public static class Inspect
 
         foreach (PropertyInfo prop in properties)
         {
-            MethodCallExpression propExemptCheck = Expression.Call(typeof(Enumerable), "Contains", [typeof(string)], exemptPropsParam, Expression.Constant(prop.Name));
+            MethodCallExpression propExemptCheck = Expression.Call(typeof(Enumerable), nameof(Enumerable.Contains), [typeof(string)], exemptPropsParam, Expression.Constant(prop.Name));
 
             MemberExpression value1 = Expression.Property(typedObj1, prop);
             MemberExpression value2 = Expression.Property(typedObj2, prop);
@@ -186,12 +186,12 @@ public static class Inspect
             {
                 if (ignoreStringCase)
                 {
-                    MethodInfo? equalsMethod = typeof(string).GetMethod("Equals", [typeof(string), typeof(string), typeof(StringComparison)])!;
+                    MethodInfo? equalsMethod = typeof(string).GetMethod(nameof(string.Equals), [typeof(string), typeof(string), typeof(StringComparison)])!;
                     comparison = Expression.Call(equalsMethod, value1, value2, Expression.Constant(StringComparison.OrdinalIgnoreCase));
                 }
                 else
                 {
-                    MethodInfo? equalsMethod = typeof(string).GetMethod("Equals", [typeof(string), typeof(string)])!;
+                    MethodInfo? equalsMethod = typeof(string).GetMethod(nameof(string.Equals), [typeof(string), typeof(string)])!;
                     comparison = Expression.Call(equalsMethod, value1, value2);
                 }
             }

@@ -7,7 +7,7 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.10</Version>
+    <Version>1.0.13</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -28,9 +28,9 @@
 
 
   <ItemGroup>
-    <PackageReference Include="MemoryPack" Version="1.21.1" />
+    <PackageReference Include="MemoryPack" Version="1.21.2" />
     <PackageReference Include="MessagePack" Version="2.5.172" />
-    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.2" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.2" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,7 +43,7 @@
       <Pack>True</Pack>
     </None>
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Remove=".editorconfig" />
   </ItemGroup>

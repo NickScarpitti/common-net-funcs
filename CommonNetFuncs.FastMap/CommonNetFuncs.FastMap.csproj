@@ -25,7 +25,7 @@
     </Description>
     <PackageTags>dotnet;helpers;mapping;fast;expression trees;</PackageTags>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
   </ItemGroup>

@@ -27,9 +27,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MailKit" Version="4.7.1.1" />
-    <PackageReference Include="MimeKit" Version="4.7.1" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.13" />
+    <PackageReference Include="MailKit" Version="4.7.1.1" PrivateAssets="all" />
+    <PackageReference Include="MimeKit" Version="4.7.1" PrivateAssets="all" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.13" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

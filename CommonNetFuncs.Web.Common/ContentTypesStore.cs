@@ -9,6 +9,9 @@ public static class ContentTypes
     public const string JsonProblem = "application/problem+json";
     public const string MemPack = "application/x-memorypack";
     public const string MsgPack = "application/x-msgpack";
+    public const string UrlEncodedFormData = "application/x-www-form-urlencoded";
+    public const string MultiPartFormData = "multipart/form-data";
+    public static readonly string[] FormDataTypes = [UrlEncodedFormData, MultiPartFormData];
 
     //Images
     public const string Png = "image/png";

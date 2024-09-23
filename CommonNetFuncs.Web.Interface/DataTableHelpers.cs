@@ -28,7 +28,7 @@ public static class DataTableHelpers
         DataTableRequest dataTableRequest = new();
         try
         {
-            if (FormDataTypes.ContainsInvariant(request.ContentType) && request.Form != null)
+            if (FormDataTypes.Any(request.ContentType.ContainsInvariant) && request.Form != null)
             {
                 dataTableRequest.Draw = request.Form.Where(x => x.Key.StrEq("draw")).Select(x => x.Value).FirstOrDefault();
 

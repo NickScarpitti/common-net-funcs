@@ -1,4 +1,5 @@
-﻿using MemoryPack;
+﻿using System.Text.Json.Serialization;
+using MemoryPack;
 using MessagePack;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
@@ -119,6 +120,21 @@ public class DataTableRequest
     public Dictionary<int, string?> SortColumns { get; set; }
     public string? Draw { get; set; }
     public Dictionary<string, string?> SearchValues { get; set; }
+}
+
+public class DataTableReturnData<T>
+{
+    [JsonPropertyName("draw")]
+    public string? Draw { get; set; }
+
+    [JsonPropertyName("recordsFiltered")]
+    public int? RecordsFiltered { get; set; }
+
+    [JsonPropertyName("recordsTotal")]
+    public int? RecordsTotal { get; set; }
+
+    [JsonPropertyName("data")]
+    public IEnumerable<T> Data { get; set; } = [];
 }
 
 [MemoryPackable]

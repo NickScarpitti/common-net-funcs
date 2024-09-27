@@ -1,4 +1,5 @@
-﻿using MemoryPack;
+﻿using System.Text.Json.Serialization;
+using MemoryPack;
 using MessagePack;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
@@ -7,6 +8,7 @@ using static System.Convert;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Sql.Common.QueryParameters;
+using static CommonNetFuncs.Web.Common.ContentTypes;
 
 namespace CommonNetFuncs.Web.Interface;
 
@@ -27,47 +29,54 @@ public static class DataTableHelpers
         DataTableRequest dataTableRequest = new();
         try
         {
-            dataTableRequest.Draw = request.Form.Where(x => x.Key.StrEq("draw")).Select(x => x.Value).FirstOrDefault();
-
-            for (int i = 0; request.Form.Any(y => y.Key.StrEq($"order[{i}][column]")); i++)
+            if (FormDataTypes.Any(request.ContentType.ContainsInvariant) && request.Form != null)
             {
-                dataTableRequest.SortColumns.Add(i, request.Form.Where(x => x.Key.StrEq("columns[" + request.Form.Where(y => y.Key.StrEq($"order[{i}][column]"))
-                    .Select(z => z.Value).FirstOrDefault() + "][data]")).Select(x => x.Value).FirstOrDefault());
+                dataTableRequest.Draw = request.Form.Where(x => x.Key.StrEq("draw")).Select(x => x.Value).FirstOrDefault();
 
-                dataTableRequest.SortColumnDir.Add(i, request.Form.Where(x => x.Key.StrEq($"order[{i}][dir]")).Select(x => x.Value).FirstOrDefault());
-            }
-
-            string? start = request.Form.Where(x => x.Key.StrEq("start")).Select(x => x.Value).FirstOrDefault();
-            string? length = request.Form.Where(x => x.Key.StrEq("length")).Select(x => x.Value).FirstOrDefault();
-            string? searchValue = request.Form.Where(x => x.Key.StrEq("search[value]")).Select(x => x.Value).FirstOrDefault();
-
-            //Paging Size (10,20,50,100)
-            dataTableRequest.PageSize = length != StringValues.Empty ? ToInt32(length) : 0;
-            dataTableRequest.Skip = start != StringValues.Empty ? ToInt32(start) : 0;
-
-            //Get search value key pairs
-            if (!searchValue.IsNullOrEmpty())
-            {
-                foreach (string val in searchValue.Split(',').ToList())
+                for (int i = 0; request.Form.Any(y => y.Key.StrEq($"order[{i}][column]")); i++)
                 {
-                    string cleanVal = val.CleanQueryParam()!;
-                    int startPos = cleanVal.IndexOf('=') + 1;
-                    if (startPos == 0)
+                    dataTableRequest.SortColumns.Add(i, request.Form.Where(x => x.Key.StrEq("columns[" + request.Form.Where(y => y.Key.StrEq($"order[{i}][column]"))
+                        .Select(z => z.Value).FirstOrDefault() + "][data]")).Select(x => x.Value).FirstOrDefault());
+
+                    dataTableRequest.SortColumnDir.Add(i, request.Form.Where(x => x.Key.StrEq($"order[{i}][dir]")).Select(x => x.Value).FirstOrDefault());
+                }
+
+                string? start = request.Form.Where(x => x.Key.StrEq("start")).Select(x => x.Value).FirstOrDefault();
+                string? length = request.Form.Where(x => x.Key.StrEq("length")).Select(x => x.Value).FirstOrDefault();
+                string? searchValue = request.Form.Where(x => x.Key.StrEq("search[value]")).Select(x => x.Value).FirstOrDefault();
+
+                //Paging Size (10,20,50,100)
+                dataTableRequest.PageSize = length != StringValues.Empty ? ToInt32(length) : 0;
+                dataTableRequest.Skip = start != StringValues.Empty ? ToInt32(start) : 0;
+
+                //Get search value key pairs
+                if (!searchValue.IsNullOrEmpty())
+                {
+                    foreach (string val in searchValue.Split(',').ToList())
                     {
-                        continue;
-                    }
-                    string key = cleanVal[..(startPos - 1)];
-                    if (startPos + 1 <= cleanVal.Length)
-                    {
-                        int valLength = cleanVal.Length - startPos;
-                        string outVal = cleanVal.Substring(startPos, valLength);
-                        dataTableRequest.SearchValues.Add(key, outVal);
-                    }
-                    else
-                    {
-                        dataTableRequest.SearchValues.Add(key, null);
+                        string cleanVal = val.CleanQueryParam()!;
+                        int startPos = cleanVal.IndexOf('=') + 1;
+                        if (startPos == 0)
+                        {
+                            continue;
+                        }
+                        string key = cleanVal[..(startPos - 1)];
+                        if (startPos + 1 <= cleanVal.Length)
+                        {
+                            int valLength = cleanVal.Length - startPos;
+                            string outVal = cleanVal.Substring(startPos, valLength);
+                            dataTableRequest.SearchValues.Add(key, outVal);
+                        }
+                        else
+                        {
+                            dataTableRequest.SearchValues.Add(key, null);
+                        }
                     }
                 }
+            }
+            else
+            {
+                logger.Warn($"Unable to read Datatable request: Body is not a valid form data type [{string.Join(", ", FormDataTypes)}], or form data is null");
             }
         }
         catch (Exception ex)
@@ -111,6 +120,21 @@ public class DataTableRequest
     public Dictionary<int, string?> SortColumns { get; set; }
     public string? Draw { get; set; }
     public Dictionary<string, string?> SearchValues { get; set; }
+}
+
+public class DataTableReturnData<T>
+{
+    [JsonPropertyName("draw")]
+    public string? Draw { get; set; }
+
+    [JsonPropertyName("recordsFiltered")]
+    public int? RecordsFiltered { get; set; }
+
+    [JsonPropertyName("recordsTotal")]
+    public int? RecordsTotal { get; set; }
+
+    [JsonPropertyName("data")]
+    public IEnumerable<T> Data { get; set; } = [];
 }
 
 [MemoryPackable]

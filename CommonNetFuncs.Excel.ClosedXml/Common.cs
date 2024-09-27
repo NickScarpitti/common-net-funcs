@@ -431,9 +431,6 @@ public static class Common
     /// <summary>
     /// Get the width of a specified range in pixels
     /// </summary>
-    /// <param name="ws"></param>
-    /// <param name="startCol"></param>
-    /// <param name="endCol"></param>
     /// <returns>Double representation of the width of the column range in pixels</returns>
     //public static double GetRangeWidthInPx(this IXLWorksheet ws, int startCol, int endCol)
     //{
@@ -455,9 +452,6 @@ public static class Common
     /// <summary>
     /// Get the height of a specified range in pixels
     /// </summary>
-    /// <param name="ws"></param>
-    /// <param name="startCol"></param>
-    /// <param name="endCol"></param>
     /// <returns>Double representation of the height of the rows range in pixels</returns>
     //public static double GetRangeHeightInPx(this IXLWorksheet ws, int startRow, int endRow)
     //{

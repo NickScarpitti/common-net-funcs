@@ -125,4 +125,9 @@ public static class MathHelpers
         int position = value.ToString()!.IndexOf(decimalSeparator);
         return position == -1 ? 0 : value.ToString()!.Length - position - 1;
     }
+
+    public static IEnumerable<int> GenerateRange(int start, int end)
+    {
+        return Enumerable.Range(start, end - start + 1);
+    }
 }

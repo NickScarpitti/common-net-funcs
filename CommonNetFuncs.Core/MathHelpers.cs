@@ -125,4 +125,19 @@ public static class MathHelpers
         int position = value.ToString()!.IndexOf(decimalSeparator);
         return position == -1 ? 0 : value.ToString()!.Length - position - 1;
     }
+
+    /// <summary>
+    /// Generates a continuous range of numbers between start and end parameters (inclusive)
+    /// </summary>
+    /// <param name="start">Number to start range with (inclusive)</param>
+    /// <param name="end">Number to end range with (inclusive)</param>
+    /// <returns>An IEnumerable containing a continuous range of numbers between start and end parameters (inclusive)</returns>
+    public static IEnumerable<int> GenerateRange(int start, int end)
+    {
+        if (start > end)
+        {
+            throw new ArgumentException($"Parameter '{nameof(start)}' ({start}) cannot be greater than parameter '{nameof(end)}' ({end})");
+        }
+        return Enumerable.Range(start, end - start + 1);
+    }
 }

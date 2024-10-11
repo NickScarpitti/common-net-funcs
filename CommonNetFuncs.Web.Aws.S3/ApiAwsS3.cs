@@ -106,8 +106,8 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
             }
             else
             {
-                logger.LogTrace(awsEx, "{msg}", $"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfException()}");
-                logger.LogWarning("{msg}", $"Unable to get file {fileName} from {bucketName} bucket in {awsEx.GetLocationOfException()}");
+                logger.LogTrace(awsEx, "{msg}", $"Unable to get file {fileName.UrlEncodeReadable()} from {bucketName.UrlEncodeReadable()} bucket in {awsEx.GetLocationOfException()}");
+                logger.LogWarning("{msg}", $"Unable to get file {fileName.UrlEncodeReadable()} from {bucketName.UrlEncodeReadable()} bucket in {awsEx.GetLocationOfException()}");
             }
         }
         catch (Exception ex)
@@ -139,7 +139,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         {
             if (awsEx.StatusCode == HttpStatusCode.NotFound)
             {
-                logger.LogWarning("{msg}", $"{fileName} not found for deletion");
+                logger.LogWarning("{msg}", $"{fileName.UrlEncodeReadable()} not found for deletion");
             }
             else
             {
@@ -267,7 +267,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
             }
             else
             {
-                logger.LogWarning("{msg}", $"Unable to get URL for {fileName} from {bucketName}");
+                logger.LogWarning("{msg}", $"Unable to get URL for {fileName.UrlEncodeReadable()} from {bucketName.UrlEncodeReadable()}");
             }
         }
         catch (Exception ex)

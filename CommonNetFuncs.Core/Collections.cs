@@ -210,9 +210,10 @@ public static class Collections
     /// </summary>
     /// <param name="items">Enumerable of strings to select from</param>
     /// <returns>An enumerable containing all string values from the original collection that are not null, empty, or only whitespace</returns>
-    public static IEnumerable<string> SelectNonEmpty(this IEnumerable<string?> items)
+    [return: NotNullIfNotNull(nameof(items))]
+    public static IEnumerable<string>? SelectNonEmpty(this IEnumerable<string?>? items)
     {
-        return items.Where(x => !x.IsNullOrWhiteSpace()).Select(x => x!);
+        return items?.Where(x => !x.IsNullOrWhiteSpace()).Select(x => x!);
     }
 
     /// <summary>
@@ -220,9 +221,10 @@ public static class Collections
     /// </summary>
     /// <param name="items">Enumerable of objects to select from</param>
     /// <returns>An enumerable containing all object values from the original collection that are not null</returns>
-    public static IEnumerable<T> SelectNonNull<T>(this IEnumerable<T?> items)
+    [return: NotNullIfNotNull(nameof(items))]
+    public static IEnumerable<T>? SelectNonNull<T>(this IEnumerable<T?>? items)
     {
-        return items.SelectNonNull();
+        return items?.SelectNonNull();
     }
 
     /// <summary>

@@ -206,6 +206,26 @@ public static class Collections
     }
 
     /// <summary>
+    /// Select only strings that are not null, empty, or only whitespace
+    /// </summary>
+    /// <param name="items">Enumerable of strings to select from</param>
+    /// <returns>An enumerable containing all string values from the original collection that are not null, empty, or only whitespace</returns>
+    public static IEnumerable<string> SelectNonEmpty(this IEnumerable<string?> items)
+    {
+        return items.Where(x => !x.IsNullOrWhiteSpace()).Select(x => x!);
+    }
+
+    /// <summary>
+    /// Select only objects that are not null
+    /// </summary>
+    /// <param name="items">Enumerable of objects to select from</param>
+    /// <returns>An enumerable containing all object values from the original collection that are not null</returns>
+    public static IEnumerable<T> SelectNonNull<T>(this IEnumerable<T?> items)
+    {
+        return items.SelectNonNull();
+    }
+
+    /// <summary>
     /// Create a single item list from an object
     /// </summary>
     /// <typeparam name="T">Type to use in list</typeparam>

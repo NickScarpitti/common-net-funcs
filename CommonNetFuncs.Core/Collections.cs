@@ -224,7 +224,7 @@ public static class Collections
     [return: NotNullIfNotNull(nameof(items))]
     public static IEnumerable<T>? SelectNonNull<T>(this IEnumerable<T?>? items)
     {
-        return items?.SelectNonNull();
+        return items?.Where(x => x != null).Select(x => x!);
     }
 
     /// <summary>

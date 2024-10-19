@@ -27,6 +27,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Conversion\**" />
+    <EmbeddedResource Remove="Conversion\**" />
+    <None Remove="Conversion\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
   </ItemGroup>
 
@@ -35,10 +41,6 @@
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Conversion\" />
   </ItemGroup>
 
   <ItemGroup>

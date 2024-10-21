@@ -27,8 +27,8 @@ public class RestObject<T>// where T : class
 
 public class MsgPackOptions
 {
-    public bool UseMsgPackCompression { get; set; } = false;
-    public bool UseMsgPackUntrusted { get; set; } = false;
+    public bool UseMsgPackCompression { get; set; }
+    public bool UseMsgPackUntrusted { get; set; }
 }
 
 public static class RestHelperConstants
@@ -66,7 +66,7 @@ public static class RestHelpers
     private const double DefaultRequestTimeout = 100; //Default timeout for HttpClient
     private static readonly SocketsHttpHandler SocketsHttpHandler = new() { MaxConnectionsPerServer = 100, KeepAlivePingPolicy = HttpKeepAlivePingPolicy.Always, KeepAlivePingDelay = TimeSpan.FromSeconds(15), KeepAlivePingTimeout = TimeSpan.FromMinutes(60) };
     private static readonly HttpClient Client = new(SocketsHttpHandler) { Timeout = Timeout.InfiniteTimeSpan }; //Use infinite timespan here to force using token specified timeout
-    private static readonly List<HttpMethod> RequestsWithBody = [HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch];
+    private static readonly HttpMethod[] RequestsWithBody = [HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch];
 
     /// <summary>
     /// Executes a GET request against the specified URL and returns the result

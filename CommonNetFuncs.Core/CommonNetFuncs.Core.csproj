@@ -38,10 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Conversion\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove=".editorconfig" />
   </ItemGroup>
 

@@ -143,11 +143,25 @@ public static class ExcelHelper
         return worksheetPart.Worksheet;
     }
 
+    /// OK
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="cell"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public static Worksheet GetWorksheetFromCell(this Cell cell)
     {
         return cell.Ancestors<Worksheet>().FirstOrDefault() ?? throw new InvalidOperationException("Cell is not part of a worksheet.");
     }
 
+    /// OK
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="cell"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public static Workbook GetWorkbookFromCell(this Cell cell)
     {
         // Get the parent worksheet
@@ -160,6 +174,13 @@ public static class ExcelHelper
         return workbookPart.Workbook;
     }
 
+    /// OK
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="worksheet"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public static Workbook GetWorkbookFromWorksheet(this Worksheet worksheet)
     {
         // Get the workbook part
@@ -169,6 +190,13 @@ public static class ExcelHelper
         return workbookPart.Workbook;
     }
 
+    /// OK
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="worksheetPart"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public static Workbook GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
     {
         // Get the workbook part
@@ -177,7 +205,6 @@ public static class ExcelHelper
         // Return the workbook
         return workbookPart.Workbook;
     }
-
 
     public static bool IsCellEmpty(this Cell cell)
     {

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
@@ -35,9 +36,149 @@ public static class ExcelHelper
         Whiteout
     }
 
-    //private const int MaxCellWidthInExcelUnits = 65280;
+    /// OK
+    /// <summary>
+    /// Populates SpreadsheetDocument with all components needed for a new Excel file including a single new sheet
+    /// </summary>
+    /// <param name="document">SpreadsheetDocument to add components to</param>
+    /// <param name="sheetName">Optional name for the new sheet that will be created</param>
+    /// <returns>Id of the sheet that was created during initialization</returns>
+    public static uint InitializeExcelFile(this SpreadsheetDocument document, string? sheetName = null)
+    {
+        return document.CreateNewSheet(sheetName);
+    }
 
-    // OpenXML doesn't have a direct equivalent for ICell, so we'll work with Cell objects
+    /// OK
+    /// <summary>
+    /// Adds a new sheet to a SpreadsheetDocument named according to the value passed into sheetName or "Sheet #"
+    /// </summary>
+    /// <param name="document">SpreadsheetDocument to add sheet to</param>
+    /// <param name="sheetName">Optional name for the new sheet that will be created. Default is "Sheet #"</param>
+    /// <returns>Id of the sheet that was created</returns>
+    public static uint CreateNewSheet(this SpreadsheetDocument document, string? sheetName = null)
+    {
+        WorkbookPart? workbookPart = document.WorkbookPart;
+        if (workbookPart == null)
+        {
+            workbookPart = document.AddWorkbookPart();
+            workbookPart.Workbook = new();
+        }
+        // Add a blank WorksheetPart
+        WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+        worksheetPart.Worksheet = new Worksheet(new SheetData());
+
+        Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>() ?? workbookPart.Workbook.AppendChild(new Sheets());
+        string worksheetPartId = workbookPart.GetIdOfPart(worksheetPart);
+
+        // Get a unique ID for the new worksheet.
+        uint sheetId = 1;
+        if (sheets.Elements<Sheet>().Any())
+        {
+            sheetId = (sheets.Elements<Sheet>().Max(s => s.SheetId?.Value) + 1) ?? (uint)sheets.Elements<Sheet>().Count() + 1;
+        }
+
+        // Append the new worksheet and associate it with the workbook.
+        Sheet sheet = new() {
+            Id = worksheetPartId,
+            SheetId = sheetId,
+            Name = sheetName ?? "Sheet" + sheetId
+        };
+
+        sheets.Append(sheet);
+        return sheetId;
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets a Worksheet by its name from a SpreadsheetDocument.
+    /// </summary>
+    /// <param name="document">The SpreadsheetDocument containing the worksheet</param>
+    /// <param name="sheetName">The name of the worksheet to retrieve</param>
+    /// <returns>The Worksheet corresponding to the given name, or null if not found</returns>
+    public static Worksheet? GetWorksheetByName(this SpreadsheetDocument document, string sheetName, bool createIfMissing = true)
+    {
+        WorkbookPart? workbookPart = document.WorkbookPart;
+        if (workbookPart == null && createIfMissing)
+        {
+            workbookPart = document.AddWorkbookPart();
+            workbookPart.Workbook = new();
+        }
+        else if(workbookPart == null)
+        {
+            throw new ArgumentException("The document does not contain a WorkbookPart.");
+        }
+
+        Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Name?.Value.StrEq(sheetName) == true);
+
+        if (sheet == null && createIfMissing)
+        {
+            return document.GetWorksheetById(document.CreateNewSheet(sheetName));
+        }
+        else if(sheet == null)
+        {
+            return null;
+        }
+        else
+        {
+            WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
+            return worksheetPart.Worksheet;
+        }
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets a Worksheet by its ID from a SpreadsheetDocument
+    /// </summary>
+    /// <param name="document">The SpreadsheetDocument containing the worksheet</param>
+    /// <param name="sheetId">The ID of the worksheet to retrieve</param>
+    /// <returns>The Worksheet corresponding to the given ID, or null if not found</returns>
+    public static Worksheet? GetWorksheetById(this SpreadsheetDocument document, uint sheetId)
+    {
+        WorkbookPart? workbookPart = document.WorkbookPart ?? throw new ArgumentException("The document does not contain a WorkbookPart.");
+        Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.SheetId != null && s.SheetId.Value == sheetId);
+
+        if (sheet == null) return null;
+
+        WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
+        return worksheetPart.Worksheet;
+    }
+
+    public static Worksheet GetWorksheetFromCell(this Cell cell)
+    {
+        return cell.Ancestors<Worksheet>().FirstOrDefault() ?? throw new InvalidOperationException("Cell is not part of a worksheet.");
+    }
+
+    public static Workbook GetWorkbookFromCell(this Cell cell)
+    {
+        // Get the parent worksheet
+        Worksheet worksheet = cell.GetWorksheetFromCell();
+
+        // Get the workbook part
+        WorkbookPart? workbookPart = (worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault()) ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+
+        // Return the workbook
+        return workbookPart.Workbook;
+    }
+
+    public static Workbook GetWorkbookFromWorksheet(this Worksheet worksheet)
+    {
+        // Get the workbook part
+        WorkbookPart? workbookPart = (worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault()) ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+
+        // Return the workbook
+        return workbookPart.Workbook;
+    }
+
+    public static Workbook GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
+    {
+        // Get the workbook part
+        WorkbookPart? workbookPart = (worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault()) ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+
+        // Return the workbook
+        return workbookPart.Workbook;
+    }
+
+
     public static bool IsCellEmpty(this Cell cell)
     {
         return string.IsNullOrWhiteSpace(cell.InnerText);
@@ -75,12 +216,9 @@ public static class ExcelHelper
         {
             if (startCell.Parent is Row row && row.Parent is SheetData sheetData && startCell.CellReference != null)
             {
-                Worksheet? worksheet = startCell.GetWorksheetFromCell();
-                if (worksheet != null)
-                {
-                    CellReference startCellReference = new(startCell.CellReference!);
-                    return worksheet.GetCellFromCoordinates((int)startCellReference.ColumnIndex + colOffset, (int)startCellReference.RowIndex + rowOffset);
-                }
+                Worksheet worksheet = startCell.GetWorksheetFromCell();
+                CellReference startCellReference = new(startCell.CellReference!);
+                return worksheet.GetCellFromCoordinates((int)startCellReference.ColumnIndex + colOffset, (int)startCellReference.RowIndex + rowOffset);
             }
         }
         catch (Exception ex)
@@ -140,42 +278,6 @@ public static class ExcelHelper
         }
     }
 
-    public static Worksheet? GetWorksheetFromCell(this Cell cell)
-    {
-        // Get the parent elements
-        if (cell.Parent is not Row row || row.Parent is not SheetData sheetData)
-        {
-            return null;
-        }
-
-        return sheetData.Parent as Worksheet;
-    }
-
-    public static Workbook? GetWorkbookFromCell(this Cell cell)
-    {
-        // Get the parent elements
-        if (cell.Parent is not Row row || row.Parent is not SheetData sheetData || sheetData.Parent is not Worksheet worksheet)
-        {
-            return null;
-        }
-
-        return worksheet.Parent as Workbook;
-    }
-
-    public static bool SaveExcelFile(SpreadsheetDocument document)
-    {
-        try
-        {
-            document.Save();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
-            return false;
-        }
-    }
-
     private static ConcurrentDictionary<string, Dictionary<string, uint>> WorkbookStandardFormatCache = [];
 
     public static void ClearFormatCache()
@@ -191,16 +293,120 @@ public static class ExcelHelper
         }
     }
 
-    public static Stylesheet GetStylesheet(this SpreadsheetDocument document)
+    /// OK
+    /// <summary>
+    /// Gets the Stylesheet from a SpreadsheetDocument
+    /// </summary>
+    /// <param name="document">The SpreadsheetDocument to get the Stylesheet from</param>
+    /// <param name="createIfMissing">If true, creates Stylesheet (and parent elements if necessary) if missing.</param>
+    /// <returns>The Stylesheet from the document or null if not found and createIfMissing is false</returns>
+    public static Stylesheet? GetStylesheet(this SpreadsheetDocument document, bool createIfMissing = true)
     {
-        WorkbookPart workbookPart = document.WorkbookPart ?? document.AddWorkbookPart();
-        WorkbookStylesPart stylesPart = workbookPart.WorkbookStylesPart ?? workbookPart.AddNewPart<WorkbookStylesPart>();
-        return stylesPart.Stylesheet ?? new();
+        WorkbookPart? workbookPart = document.WorkbookPart;
+        if (workbookPart == null)
+        {
+            if (createIfMissing)
+            {
+                workbookPart = document.AddWorkbookPart();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        WorkbookStylesPart? stylesPart = workbookPart.WorkbookStylesPart;
+        if (stylesPart == null && createIfMissing)
+        {
+            stylesPart = workbookPart.AddNewPart<WorkbookStylesPart>();
+            stylesPart.Stylesheet = new();
+        }
+        return stylesPart?.Stylesheet;
     }
 
+    /// OK
+    /// <summary>
+    /// Gets the Borders from a Stylesheet
+    /// </summary>
+    /// <param name="stylesheet">The Stylesheet to get the Borders from</param>
+    /// <param name="createIfMissing">If true, creates Borders if missing</param>
+    /// <returns>The Borders object, or null if not found and createIfMissing is false</returns>
+    public static Borders? GetBorders(this Stylesheet stylesheet, bool createIfMissing = true)
+    {
+        Borders? borders = stylesheet.Elements<Borders>().FirstOrDefault();
+        if (borders == null && createIfMissing)
+        {
+            stylesheet.AddChild(new Borders());
+            borders = stylesheet.Elements<Borders>().First();
+        }
+        return borders;
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets the Fills from a Stylesheet
+    /// </summary>
+    /// <param name="stylesheet">The Stylesheet to get the Fills from</param>
+    /// <param name="createIfMissing">If true, creates Fills if missing</param>
+    /// <returns>The Fills object, or null if not found and createIfMissing is false</returns>
+    public static Fills? GetFills(this Stylesheet stylesheet, bool createIfMissing = true)
+    {
+        Fills? fills = stylesheet.Elements<Fills>().FirstOrDefault();
+        if (fills == null && createIfMissing)
+        {
+            stylesheet.AddChild(new Fills());
+            fills = stylesheet.Elements<Fills>().First();
+        }
+        return fills;
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets the Fonts from a Stylesheet
+    /// </summary>
+    /// <param name="stylesheet">The Stylesheet to get the Fonts from</param>
+    /// <param name="createIfMissing">If true, creates Fonts if not found</param>
+    /// <returns>The Fonts object, or null if not found and createIfMissing is false</returns>
+    public static Fonts? GetFonts(this Stylesheet stylesheet, bool createIfMissing = true)
+    {
+        Fonts? fonts = stylesheet.Elements<Fonts>().FirstOrDefault();
+        if (fonts == null && createIfMissing)
+        {
+            stylesheet.AddChild(new Fonts());
+            fonts = stylesheet.Elements<Fonts>().First();
+        }
+        return fonts;
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets the CellFormats from a Stylesheet.
+    /// </summary>
+    /// <param name="stylesheet">The Stylesheet to get the CellFormats from.</param>
+    /// <param name="createIfMissing">If true, creates CellFormats if not found.</param>
+    /// <returns>The CellFormats object, or null if not found and not created.</returns>
+    public static CellFormats? GetCellFormats(this Stylesheet stylesheet, bool createIfMissing = true)
+    {
+        CellFormats? cellFormats = stylesheet.Elements<CellFormats>().FirstOrDefault();
+        if (cellFormats == null && createIfMissing)
+        {
+            stylesheet.AddChild(new CellFormats());
+            cellFormats = stylesheet.Elements<CellFormats>().First();
+        }
+        return cellFormats;
+    }
+
+    /// OK
+    /// <summary>
+    /// Creates the style corresponding to the style enum passed in and returns the ID for the style that was created
+    /// </summary>
+    /// <param name="style">Enum value indicating which style to create</param>
+    /// <param name="document">Document to add the standard cell style to</param>
+    /// <param name="cellLocked">Whether or not the cells with this style should be locked or not</param>
+    /// <returns>The ID of the style that was created</returns>
     public static uint GetStandardCellStyle(EStyles style, SpreadsheetDocument document, bool cellLocked = false)
     {
-        Stylesheet stylesheet = document.GetStylesheet();
+        Stylesheet stylesheet = document.GetStylesheet()!;
 
         Dictionary<string, uint> formatCache = WorkbookStandardFormatCache.GetOrAdd(GetWorkbookId(document), _ => []);
         string formatKey = $"{style}_{cellLocked}";
@@ -210,9 +416,9 @@ public static class ExcelHelper
             return existingFormatId;
         }
 
-        Borders borders = stylesheet.Elements<Borders>().First();
-        Fills fills = stylesheet.Elements<Fills>().First();
-        Fonts fonts = stylesheet.Elements<Fonts>().First();
+        Borders borders = stylesheet.GetBorders()!;
+        Fills fills = stylesheet.GetFills()!;
+        Fonts fonts = stylesheet.GetFonts()!;
         CellFormat cellFormat = new();
 
         Border border;
@@ -332,8 +538,8 @@ public static class ExcelHelper
         }
 
         // Check if an identical CellFormat already exists
-        CellFormats cellFormats = stylesheet.Elements<CellFormats>().First();
-        for (uint i = 0; i < (cellFormats.Count ?? 0); i++)
+        CellFormats cellFormats = stylesheet.GetCellFormats()!;
+        for (uint i = 0; i < (uint)cellFormats.Count(); i++)
         {
             if (CellFormatsAreEqual(cellFormat, cellFormats.Elements<CellFormat>().ElementAt((int)i)))
             {
@@ -344,11 +550,12 @@ public static class ExcelHelper
 
         // If no matching format found, add the new one
         cellFormats.Append(cellFormat);
-        uint newFormatId = (cellFormats.Count ?? 0) - 1;
+        uint newFormatId = (uint)cellFormats.Count() - 1;
         formatCache[formatKey] = newFormatId;
         return newFormatId;
     }
 
+    /// OK
     /// <summary>
     /// Get font styling based on EFonts option
     /// </summary>
@@ -383,7 +590,7 @@ public static class ExcelHelper
         return (uint)fonts.Count() - 1;
     }
 
-    private static bool CellFormatsAreEqual(CellFormat format1, CellFormat format2)
+    public static bool CellFormatsAreEqual(CellFormat format1, CellFormat format2)
     {
         // Compare relevant properties of the CellFormat objects
         return format1.BorderId == format2.BorderId &&
@@ -396,23 +603,23 @@ public static class ExcelHelper
             FormatProtectionsAreEqual(format1.Protection, format2.Protection);
     }
 
-    private static bool FormatAlignmentsAreEqual(Alignment? alignment1, Alignment? alignment2)
+    public static bool FormatAlignmentsAreEqual(Alignment? alignment1, Alignment? alignment2)
     {
         if (alignment1 == null && alignment2 == null) return true;
         if (alignment1 == null || alignment2 == null) return false;
         return alignment1.Horizontal == alignment2.Horizontal;
     }
 
-    private static bool FormatProtectionsAreEqual(Protection? protection1, Protection? protection2)
+    public static bool FormatProtectionsAreEqual(Protection? protection1, Protection? protection2)
     {
         if (protection1 == null && protection2 == null) return true;
         if (protection1 == null || protection2 == null) return false;
         return protection1.Locked == protection2.Locked;
     }
 
-    private static readonly ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCaches = new();
+    public static readonly ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCaches = new();
 
-    private class WorkbookStyleCache
+    public class WorkbookStyleCache
     {
         public Dictionary<int, uint> FontCache { get; } = [];
         public Dictionary<int, uint> FillCache { get; } = [];
@@ -466,13 +673,13 @@ public static class ExcelHelper
 
         CellFormats cellFormats = stylesheet.Elements<CellFormats>().First();
         cellFormats.Append(cellFormat);
-        uint newFormatId = (cellFormats.Count ?? 1) - 1;
+        uint newFormatId = (uint)cellFormats.Count() - 1;
         cache.CellFormatCache[cellFormatKey] = newFormatId;
 
         return newFormatId;
     }
 
-    private static uint GetOrAddFont(Stylesheet stylesheet, WorkbookStyleCache cache, Font? font)
+    public static uint GetOrAddFont(Stylesheet stylesheet, WorkbookStyleCache cache, Font? font)
     {
         if (font == null) return 0; // Default font
 
@@ -484,12 +691,12 @@ public static class ExcelHelper
 
         Fonts fonts = stylesheet.Elements<Fonts>().First();
         fonts.Append(font);
-        uint newFontId = (fonts.Count ?? 1) - 1;
+        uint newFontId = (uint)fonts.Count() - 1;
         cache.FontCache[fontHash] = newFontId;
         return newFontId;
     }
 
-    private static uint GetOrAddFill(Stylesheet stylesheet, WorkbookStyleCache cache, Fill? fill)
+    public static uint GetOrAddFill(Stylesheet stylesheet, WorkbookStyleCache cache, Fill? fill)
     {
         if (fill == null) return 0; // Default fill
 
@@ -501,12 +708,12 @@ public static class ExcelHelper
 
         Fills fills = stylesheet.Elements<Fills>().First();
         fills.Append(fill);
-        uint newFillId = (fills.Count ?? 1) - 1;
+        uint newFillId = (uint)fills.Count() - 1;
         cache.FillCache[fillHash] = newFillId;
         return newFillId;
     }
 
-    private static uint GetOrAddBorder(Stylesheet stylesheet, WorkbookStyleCache cache, Border? border)
+    public static uint GetOrAddBorder(Stylesheet stylesheet, WorkbookStyleCache cache, Border? border)
     {
         if (border == null) return 0; // Default border
 
@@ -518,17 +725,17 @@ public static class ExcelHelper
 
         Borders borders = stylesheet.Elements<Borders>().First();
         borders.Append(border);
-        uint newBorderId = (borders.Count ?? 1) - 1;
+        uint newBorderId = (uint)borders.Count() - 1;
         cache.BorderCache[borderHash] = newBorderId;
         return newBorderId;
     }
 
-    private static int GetHashCode(OpenXmlElement element)
+    public static int GetHashCode(OpenXmlElement element)
     {
         return element.OuterXml.GetHashCode();
     }
 
-    private static string GetWorkbookId(SpreadsheetDocument document)
+    public static string GetWorkbookId(SpreadsheetDocument document)
     {
         // Use a combination of the file path (if available) and creation time
         string filePath = document.PackageProperties.Identifier ?? "";
@@ -549,49 +756,47 @@ public static class ExcelHelper
         {
             if (data?.Any() == true)
             {
+                SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
+
                 uint headerStyleId = GetStandardCellStyle(EStyles.Header, document);
                 uint bodyStyleId = GetStandardCellStyle(EStyles.Body, document);
 
-                uint rowIndex = 1;
-                uint columnIndex = 1;
+                uint x = 1;
+                uint y = 1;
 
                 PropertyInfo[] properties = typeof(T).GetProperties();
 
                 // Write headers
                 foreach (PropertyInfo prop in properties)
                 {
-                    Cell cell = InsertCellInWorksheet(worksheet, columnIndex, rowIndex);
-                    cell.CellValue = new CellValue(prop.Name);
-                    cell.StyleIndex = headerStyleId;
-                    columnIndex++;
+                    sheetData.InsertCellValue(x, y, new CellValue(prop.Name), CellValues.SharedString, headerStyleId);
+                    x++;
                 }
-
-                rowIndex++;
+                x = 1;
+                y++;
 
                 // Write data
                 foreach (T item in data)
                 {
-                    columnIndex = 1;
                     foreach (PropertyInfo prop in properties)
                     {
-                        Cell cell = InsertCellInWorksheet(worksheet, columnIndex, rowIndex);
-                        cell.CellValue = new CellValue(prop.GetValue(item)?.ToString() ?? string.Empty);
-                        cell.StyleIndex = bodyStyleId;
-                        columnIndex++;
+                        sheetData.InsertCellValue(x, y, new CellValue(prop.GetValue(item)?.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
+                        x++;
                     }
-                    rowIndex++;
+                    x = 1;
+                    y++;
                 }
 
                 if (createTable)
                 {
-                    CreateTable(worksheet, 1, 1, rowIndex - 1, (uint)properties.Length, tableName);
+                    CreateTable(worksheet, 1, 1, y - 1, (uint)properties.Length, tableName);
                 }
                 else
                 {
-                    SetAutoFilter(worksheet, 1, 1, rowIndex - 1, (uint)properties.Length);
+                    SetAutoFilter(worksheet, 1, 1, y - 1, (uint)properties.Length);
                 }
             }
-
+            ClearCacheForWorkbook(document);
             return true;
         }
         catch (Exception ex)
@@ -607,6 +812,8 @@ public static class ExcelHelper
         {
             if (data?.Rows.Count > 0)
             {
+                SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
+
                 uint headerStyleId = GetStandardCellStyle(EStyles.Header, document);
                 uint bodyStyleId = GetStandardCellStyle(EStyles.Body, document);
 
@@ -617,9 +824,7 @@ public static class ExcelHelper
 
                 foreach (DataColumn column in data.Columns)
                 {
-                    Cell cell = InsertCellInWorksheet(worksheet, x, y);
-                    cell.CellValue = new CellValue(column.ColumnName);
-                    cell.StyleIndex = headerStyleId;
+                    sheetData.InsertCellValue(x, y, new(column.ColumnName), CellValues.SharedString, headerStyleId);
                     maxColumnWidths.Add(x, (column.ColumnName.Length + 5) * 256);
                     x++;
                 }
@@ -633,9 +838,7 @@ public static class ExcelHelper
                     {
                         if (value != null)
                         {
-                            Cell cell = InsertCellInWorksheet(worksheet, x, y);
-                            cell.CellValue = new(value.ToString() ?? string.Empty);
-                            cell.StyleIndex = bodyStyleId;
+                            sheetData.InsertCellValue(x, y, new(value.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
                             x++;
                             int newVal = (value.ToString()?.Length ?? 1) * 256;
                             if (maxColumnWidths[x] < newVal)
@@ -667,30 +870,193 @@ public static class ExcelHelper
         }
     }
 
-    private static Cell InsertCellInWorksheet(Worksheet worksheet, uint columnIndex, uint rowIndex)
+    /// OK
+    /// <summary>
+    /// Creates a cell in the provided worksheet, creating a row to contain it if necessary
+    /// </summary>
+    /// <param name="worksheet">Worksheet to add cell to</param>
+    /// <param name="columnIndex">Column index for the cell to create</param>
+    /// <param name="rowIndex">Row index for the cell to create</param>
+    /// <returns>Cell object that was created or null if worksheet sheetData element is null</returns>
+    public static Cell? InsertCell(this Worksheet worksheet, uint columnIndex, uint rowIndex)
     {
         SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
-        CellReference cellReference = new(columnIndex, rowIndex);
+        return sheetData.InsertCell(columnIndex, rowIndex);
+    }
 
-        // Check if the row exists, create if not
-        Row? row = sheetData?.Elements<Row>().FirstOrDefault(x => x.RowIndex != null && x.RowIndex == rowIndex);
-        if (row == null)
+    /// OK
+    /// <summary>
+    /// Creates a cell in the provided sheetData, creating a row to contain it if necessary
+    /// </summary>
+    /// <param name="sheetData">SheetData to add cell to</param>
+    /// <param name="columnIndex">Column index for the cell to create</param>
+    /// <param name="rowIndex">Row index for the cell to create</param>
+    /// <returns>Cell object that was created or null if sheetData is null</returns>
+    [return:NotNullIfNotNull(nameof(sheetData))]
+    public static Cell? InsertCell(this SheetData? sheetData, uint columnIndex, uint rowIndex)
+    {
+        Cell? cell = null;
+        if (sheetData != null)
         {
-            row = new Row { RowIndex = rowIndex };
-            sheetData!.Append(row);
-        }
+            CellReference cellReference = new(columnIndex, rowIndex);
+            string cellRef = cellReference.ToString();
+            // Check if the row exists, create if not
+            Row? row = sheetData?.Elements<Row>().FirstOrDefault(x => x.RowIndex != null && x.RowIndex == rowIndex);
+            if (row == null)
+            {
+                row = new Row { RowIndex = rowIndex };
+                sheetData!.Append(row);
+            }
 
-        // Check if the cell exists, create if not
-        Cell? cell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value == cellReference.ToString());
-        if (cell == null)
-        {
-            cell = new Cell { CellReference = cellReference.ToString() };
-            row.Append(cell);
+            // Check if the cell exists, create if not
+            cell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value == cellRef);
+            if (cell == null)
+            {
+                //cell = new Cell { CellReference = cellReference.ToString() };
+                //row.Append(cell);
+
+                // Cells must be in sequential order according to CellReference. Determine where to insert the new cell.
+                Cell? refCell = null;
+
+                foreach (Cell existingCell in row.Elements<Cell>())
+                {
+                    if (string.Compare(existingCell.CellReference?.Value, cellRef, true) > 0)
+                    {
+                        refCell = cell;
+                        break;
+                    }
+                }
+
+                Cell newCell = new() { CellReference = cellRef };
+                row.InsertBefore(newCell, refCell);
+
+                return newCell;
+            }
         }
         return cell;
     }
 
-    private static void CreateTable(Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn, string tableName)
+    /// OK
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="worksheet"></param>
+    /// <param name="columnIndex"></param>
+    /// <param name="rowIndex"></param>
+    /// <param name="cellValue"></param>
+    /// <param name="cellType"></param>
+    /// <param name="styleIndex"></param>
+    public static void InsertCellValue(this Worksheet worksheet, uint columnIndex, uint rowIndex, CellValue cellValue, CellValues? cellType = null, uint? styleIndex = null)
+    {
+        SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
+        sheetData.InsertCellValue(columnIndex, rowIndex, cellValue, cellType, styleIndex);
+    }
+
+    /// OK
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="sheetData"></param>
+    /// <param name="columnIndex"></param>
+    /// <param name="rowIndex"></param>
+    /// <param name="cellValue"></param>
+    /// <param name="cellType"></param>
+    /// <param name="styleIndex"></param>
+    public static void InsertCellValue(this SheetData? sheetData, uint columnIndex, uint rowIndex, CellValue cellValue, CellValues? cellType = null, uint? styleIndex = null)
+    {
+        cellType ??= CellValues.SharedString; //Default to shared string since it is the most compact option
+        Cell? cell = sheetData.InsertCell(columnIndex, rowIndex);
+        if (cell != null)
+        {
+            if (cellType == CellValues.SharedString)
+            {
+                Workbook workbook = cell.GetWorkbookFromCell();
+                int index = workbook.InsertSharedStringItem(cellValue.InnerText);
+                cell.CellValue = new CellValue(index.ToString());
+                cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            }
+            else
+            {
+                cell.CellValue = cellValue;
+                cell.DataType = cellType ?? new EnumValue<CellValues>(cellType!);
+            }
+            if (styleIndex != null)
+            {
+                cell.StyleIndex = styleIndex;
+            }
+        }
+    }
+
+    /// OK
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="worksheet"></param>
+    /// <param name="columnIndex"></param>
+    /// <param name="rowIndex"></param>
+    /// <param name="formulaString"></param>
+    /// <param name="cellType"></param>
+    /// <param name="styleIndex"></param>
+    public static void InsertCellFormula(this Worksheet worksheet, uint columnIndex, uint rowIndex, string formulaString, CellValues? cellType = null, uint? styleIndex = null)
+    {
+        SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
+        sheetData.InsertCellFormula(columnIndex, rowIndex, formulaString, cellType, styleIndex);
+    }
+
+    /// OK
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="sheetData"></param>
+    /// <param name="columnIndex"></param>
+    /// <param name="rowIndex"></param>
+    /// <param name="formulaString"></param>
+    /// <param name="cellType"></param>
+    /// <param name="styleIndex"></param>
+    public static void InsertCellFormula(this SheetData? sheetData, uint columnIndex, uint rowIndex, string formulaString, CellValues? cellType = null, uint? styleIndex = null)
+    {
+        cellType ??= CellValues.String;
+        Cell? cell = sheetData.InsertCell(columnIndex, rowIndex);
+        if (cell != null)
+        {
+            if (cellType == CellValues.SharedString)
+            {
+                cellType = CellValues.String;
+            }
+            cell.CellFormula = new(formulaString);
+            cell.DataType = cellType;
+            if (styleIndex != null)
+            {
+                cell.StyleIndex = styleIndex;
+            }
+        }
+    }
+
+    // Given text and a SharedStringTablePart, creates a SharedStringItem with the specified text and inserts it into the SharedStringTablePart. If the item already exists, returns its index.
+    public static int InsertSharedStringItem(this Workbook workbook, string text)
+    {
+        // If the part does not contain a SharedStringTable, create one.
+        SharedStringTablePart shareStringTablePart = workbook.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault() ?? workbook.WorkbookPart?.AddNewPart<SharedStringTablePart>() ?? throw new InvalidOperationException("The WorkbookPart is missing.");
+        shareStringTablePart.SharedStringTable ??= new();
+
+        int index = shareStringTablePart.SharedStringTable.Elements<SharedStringItem>().Select(x => x.InnerText).IndexOf(text);
+
+        int i = 0;
+        // Iterate through all the items in the SharedStringTable. If the text already exists, return its index.
+        foreach (SharedStringItem item in shareStringTablePart.SharedStringTable.Elements<SharedStringItem>())
+        {
+            if (item.InnerText == text) return i;
+            i++;
+        }
+
+        // The text does not exist in the part. Create the SharedStringItem and return its index.
+        shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text(text)));
+        shareStringTablePart.SharedStringTable.Save();
+
+        return i;
+    }
+
+public static void CreateTable(Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn, string tableName)
     {
         TableDefinitionPart tableDefinitionPart = worksheet.WorksheetPart!.AddNewPart<TableDefinitionPart>();
         Table table = new()
@@ -706,7 +1072,7 @@ public static class ExcelHelper
         TableColumns tableColumns = new() { Count = endColumn - startColumn + 1 };
         for (uint i = 0; i < endColumn - startColumn + 1; i++)
         {
-            tableColumns.Append(new TableColumn { Id = (uint)(i + 1), Name = $"Column{i + 1}" });
+            tableColumns.Append(new TableColumn { Id = i + 1, Name = $"Column{i + 1}" });
         }
 
         TableStyleInfo tableStyleInfo = new()
@@ -738,7 +1104,16 @@ public static class ExcelHelper
         tableParts.Count = (uint)tableParts.ChildElements.Count;
     }
 
-    private static void SetAutoFilter(Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn)
+    /// OK
+    /// <summary>
+    /// Adds auto filter to a range of cells in the worksheet
+    /// </summary>
+    /// <param name="worksheet">Worksheet to add auto filter to</param>
+    /// <param name="startRow">First row of auto filtered range (usually headers)</param>
+    /// <param name="startColumn">First column of auto filtered range</param>
+    /// <param name="endRow">Last row of auto filtered range</param>
+    /// <param name="endColumn">Last column of auto filtered range</param>
+    public static void SetAutoFilter(Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn)
     {
         worksheet.Append(new AutoFilter() { Reference = new CellReference(startColumn, startRow) + ":" + new CellReference(endColumn, endRow) });
     }
@@ -752,8 +1127,8 @@ public static class ExcelHelper
             string cellDataType = cell.DataType.Value.ToString();
             if (cellDataType == CellValues.SharedString.ToString())
             {
-                Worksheet? worksheet = cell.GetWorksheetFromCell();
-                SharedStringTablePart? stringTable = worksheet?.WorksheetPart?.GetParentParts().OfType<SharedStringTablePart>().FirstOrDefault();
+                Worksheet worksheet = cell.GetWorksheetFromCell();
+                SharedStringTablePart? stringTable = worksheet.WorksheetPart?.GetParentParts().OfType<SharedStringTablePart>().FirstOrDefault();
                 if (stringTable != null)
                 {
                     return stringTable.SharedStringTable.ElementAt(int.Parse(cell.InnerText)).InnerText;
@@ -844,7 +1219,7 @@ public static class ExcelHelper
         }
     }
 
-    private static CellReference? GetCellFromName(WorkbookPart workbookPart, string name)
+    public static CellReference? GetCellFromName(WorkbookPart workbookPart, string name)
     {
         DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(dn => dn.Name == name);
 
@@ -862,12 +1237,12 @@ public static class ExcelHelper
         return null;
     }
 
-    private static WorksheetPart? GetWorksheetPartByCellReference(WorkbookPart workbookPart, CellReference cellReference)
+    public static WorksheetPart? GetWorksheetPartByCellReference(WorkbookPart workbookPart, CellReference cellReference)
     {
         return workbookPart.WorksheetParts.FirstOrDefault(wp => wp.Worksheet.Descendants<Cell>().Any(c => c.CellReference == cellReference.ToString()));
     }
 
-    private static DrawingsPart? GetOrCreateDrawingsPart(WorksheetPart worksheetPart)
+    public static DrawingsPart? GetOrCreateDrawingsPart(WorksheetPart worksheetPart)
     {
         if (worksheetPart.DrawingsPart == null)
         {
@@ -881,7 +1256,7 @@ public static class ExcelHelper
         return worksheetPart.DrawingsPart;
     }
 
-    private static (CellReference, CellReference) GetMergedCellArea(WorksheetPart worksheetPart, CellReference cellReference)
+    public static (CellReference, CellReference) GetMergedCellArea(WorksheetPart worksheetPart, CellReference cellReference)
     {
         MergeCells? mergedCells = worksheetPart.Worksheet.Elements<MergeCells>().FirstOrDefault();
         if (mergedCells != null)
@@ -905,7 +1280,7 @@ public static class ExcelHelper
         return (cellReference, cellReference);
     }
 
-    private static int GetRangeWidthInEmu(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
+    public static int GetRangeWidthInEmu(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
     {
         Worksheet worksheet = worksheetPart.Worksheet;
         Columns? cols = worksheet.Elements<Columns>().FirstOrDefault();
@@ -921,7 +1296,7 @@ public static class ExcelHelper
         return totalWidth;
     }
 
-    private static int GetRangeHeightInEmu(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
+    public static int GetRangeHeightInEmu(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
     {
         Worksheet worksheet = worksheetPart.Worksheet;
 
@@ -936,7 +1311,7 @@ public static class ExcelHelper
         return totalHeight;
     }
 
-    private static void AddImageToWorksheet(DrawingsPart drawingsPart, string relationshipId, CellReference fromCell, CellReference toCell, int xMargin, int yMargin, int width, int height)
+    public static void AddImageToWorksheet(DrawingsPart drawingsPart, string relationshipId, CellReference fromCell, CellReference toCell, int xMargin, int yMargin, int width, int height)
     {
         Xdr.WorksheetDrawing worksheetDrawing = drawingsPart.WorksheetDrawing;
 
@@ -1105,14 +1480,14 @@ public static class ExcelHelper
         return dataTable;
     }
 
-    private static CellReference GetLastPopulatedCell(SheetData sheetData)
+    public static CellReference GetLastPopulatedCell(SheetData sheetData)
     {
         uint maxRow = sheetData.Elements<Row>().Max(x => x.RowIndex?.Value ?? 0);
         uint maxCol = sheetData.Descendants<Cell>().Where(x => x != null).Max(x => new CellReference(x.CellReference!).ColumnIndex);
         return new CellReference(maxCol, maxRow);
     }
 
-    private static string GetCellValue(this SheetData sheetData, uint row, uint col)
+    public static string GetCellValue(this SheetData sheetData, uint row, uint col)
     {
         CellReference cellRef = new(col, row);
         Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => x.RowIndex != null && x.RowIndex == row)?
@@ -1121,11 +1496,11 @@ public static class ExcelHelper
         return cell?.GetCellValue() ?? string.Empty;
     }
 
-    private static string GetCellValue(this Cell cell)
+    public static string GetCellValue(this Cell cell)
     {
         if (cell.DataType != null && cell.DataType == CellValues.SharedString)
         {
-            SharedStringTablePart? sharedStringPart = cell.GetWorkbookFromCell()?.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+            SharedStringTablePart? sharedStringPart = cell.GetWorkbookFromCell().WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
             if (sharedStringPart != null)
             {
                 int ssid = int.Parse(cell.InnerText);
@@ -1206,7 +1581,7 @@ public static class ExcelHelper
         return dataTable;
     }
 
-    private static Table? FindTable(WorkbookPart workbookPart, string? tableName)
+    public static Table? FindTable(WorkbookPart workbookPart, string? tableName)
     {
         foreach (WorksheetPart worksheetPart in workbookPart.WorksheetParts)
         {
@@ -1247,8 +1622,34 @@ public partial class CellReference
     [GeneratedRegex(@"([A-Z]+)(\d+)")]
     private static partial Regex CellRefRegex();
 
-    public uint RowIndex { get; set; }
-    public uint ColumnIndex { get; set; }
+    private uint _RowIndex;
+
+    public uint RowIndex
+    {
+        get { return _RowIndex; }
+        set
+        {
+            if (value < 1 || value > 1048576)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 1048576");
+            }
+            _RowIndex = value;
+        }
+    }
+
+    private uint _ColumnIndex;
+
+    public uint ColumnIndex {
+        get { return _ColumnIndex; }
+        set
+        {
+            if (value < 1 || value > 16384)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 16384");
+            }
+            _ColumnIndex = value;
+        }
+    }
 
     public CellReference(string reference)
     {
@@ -1268,7 +1669,7 @@ public partial class CellReference
         return $"{NumberToColumnName(ColumnIndex)}{RowIndex}";
     }
 
-    private static uint ColumnNameToNumber(string columnName)
+    public static uint ColumnNameToNumber(string columnName)
     {
         uint number = 0;
         for (int i = 0; i < columnName.Length; i++)
@@ -1279,9 +1680,9 @@ public partial class CellReference
         return number - 1;
     }
 
-    private static string NumberToColumnName(uint columnNumber)
+    public static string NumberToColumnName(uint columnNumber)
     {
-        int number = (int)columnNumber;
+        int number = (int)columnNumber - 1; //Make this 1 based to avoid confusion
         string columnName = "";
         while (number >= 0)
         {

@@ -519,6 +519,18 @@ public static class Collections
                 });
         }
     }
+
+    public static int IndexOf<T>(this IEnumerable<T> collection, T value)
+    {
+        return collection.IndexOf(value, null);
+    }
+
+    public static int IndexOf<T>(this IEnumerable<T> collection, T value, IEqualityComparer<T>? comparer)
+    {
+        comparer ??= EqualityComparer<T>.Default;
+        var found = collection.Select((a, i) => new { a, i }).FirstOrDefault(x => comparer.Equals(x.a, value));
+        return found == null ? -1 : found.i;
+    }
 }
 
 public class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor

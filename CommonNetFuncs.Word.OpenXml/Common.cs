@@ -11,13 +11,13 @@ public static class Common
     public static bool ChangeUrlsInWordDoc(Stream fileStream, string newUrl, string urlToReplace, bool replaceAll = true)
     {
         bool success = false;
-        using WordprocessingDocument wordDoc = WordprocessingDocument.Open(fileStream, true);
+        using WordprocessingDocument wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
         try
         {
             MainDocumentPart? mainPart = wordDoc.MainDocumentPart;
             if (mainPart != null)
             {
-                foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships)
+                foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
                 {
                     if (hyperlink.Uri.ToString().StrEq(urlToReplace))
                     {
@@ -30,7 +30,7 @@ public static class Common
                         break;
                     }
                 }
-                mainPart.Document.Save();
+                //mainPart.Document.Save();
                 success = true;
             }
         }
@@ -48,14 +48,14 @@ public static class Common
     public static bool ChangeUrlsInWordDocRegex(Stream fileStream, string regexPattern, string replacementText, bool replaceAll = true)
     {
         bool success = false;
-        using WordprocessingDocument wordDoc = WordprocessingDocument.Open(fileStream, true);
+        using WordprocessingDocument wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
         try
         {
             MainDocumentPart? mainPart = wordDoc.MainDocumentPart;
             if (mainPart != null)
             {
                 Regex regex = new(regexPattern);
-                foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships)
+                foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
                 {
                     string currentUri = hyperlink.Uri.ToString();
                     if (regex.Matches(currentUri).AnyFast())
@@ -69,7 +69,7 @@ public static class Common
                         break;
                     }
                 }
-                mainPart.Document.Save();
+                //mainPart.Document.Save();
                 success = true;
             }
         }

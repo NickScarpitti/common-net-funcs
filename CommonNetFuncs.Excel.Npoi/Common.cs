@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Concurrent;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -392,7 +393,7 @@ public static partial class Common
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
     public static ICellStyle GetCustomStyle(IWorkbook wb, string hexColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
-        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null)
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100)
     {
         ICellStyle cellStyle = GetCustomStyle(wb, cellLocked, font, alignment, fillPattern, borderStyles);
         if (wb.IsXlsx())
@@ -408,7 +409,7 @@ public static partial class Common
         {
             if (hexColor != null)
             {
-                HSSFColor hssfColor = GetClosestHssfColor(hexColor);
+                HSSFColor hssfColor = GetClosestHssfColor(hexColor, cachedColorLimit);
                 if (hssfColor != null)
                 {
                     ((HSSFCellStyle)cellStyle).FillForegroundColor = hssfColor.Indexed;
@@ -453,11 +454,12 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Gets the standard ICellStyle corresponding to the style enum passed in. Custom returns a new default style
+    /// Gets the standard ICellStyle corresponding to the style enum passed in
     /// </summary>
-    /// <param name="style"></param>
-    /// <param name="wb"></param>
-    /// <param name="cellLocked"></param>
+    /// <param name="style">Enum value indicating which style to create</param>
+    /// <param name="wb">Workbook to add the standard cell style to</param>
+    /// <param name="cellLocked">Whether or not the cells with this style should be locked or not</param>
+    /// <returns>The ICellStyle that was created</returns>
     public static ICellStyle GetStandardCellStyle(EStyles style, IWorkbook wb, bool cellLocked = false)
     {
         ICellStyle cellStyle = wb.CreateCellStyle();
@@ -567,7 +569,7 @@ public static partial class Common
                 int x = 0;
                 int y = 0;
 
-                Dictionary<int, int> maxColumnWidths = [];
+                int[] maxColumnWidths = [];
 
                 PropertyInfo[] props = typeof(T).GetProperties();
                 foreach (PropertyInfo prop in props)
@@ -579,7 +581,7 @@ public static partial class Common
                         c.SetCellValue(prop.Name);
                         c.CellStyle = headerStyle;
                     }
-                    maxColumnWidths.Add(x, (prop.Name.Length + 5) * 256);
+                    maxColumnWidths[x] = (prop.Name.Length + 5) * 256;
                     x++;
                 }
                 x = 0;
@@ -1296,16 +1298,23 @@ public static partial class Common
         return workbook.GetType().Name != typeof(HSSFWorkbook).Name;
     }
 
+    private static readonly Dictionary<string, HSSFColor> hssfColorCache = [];
+
     /// <summary>
     /// Converts a hex color to the closest available HSSFColor
     /// </summary>
     /// <param name="hexColor">Hex color to convert</param>
     /// <returns>The closest HSSFColor to the provided hex color</returns>
-    public static HSSFColor GetClosestHssfColor(string hexColor)
+    public static HSSFColor GetClosestHssfColor(string hexColor, int cachedColorLimit = 100)
     {
+        if (hssfColorCache.TryGetValue(hexColor, out HSSFColor? hSSFColor))
+        {
+            return hSSFColor!;
+        }
+
         HSSFColor outputColor = new();
         Regex regex = HexColorRegex();
-        if (hexColor?.Length == 7 && regex.IsMatch(hexColor))
+        if (hexColor.Length == 7 && regex.IsMatch(hexColor))
         {
             byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
 
@@ -1325,6 +1334,14 @@ public static partial class Common
                 }
             }
         }
+        if (hssfColorCache.Count >= cachedColorLimit)
+        {
+            while (hssfColorCache.Count > cachedColorLimit)
+            {
+                hssfColorCache.Remove(hssfColorCache.First().Key);
+            }
+        }
+        hssfColorCache[hexColor] = outputColor;
         return outputColor;
     }
 }

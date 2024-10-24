@@ -14,7 +14,7 @@ using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
 
 namespace CommonNetFuncs.Excel.OpenXml;
 
-public static class ExcelHelper
+public static partial class ExcelHelper
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -78,7 +78,8 @@ public static class ExcelHelper
         }
 
         // Append the new worksheet and associate it with the workbook.
-        Sheet sheet = new() {
+        Sheet sheet = new()
+        {
             Id = worksheetPartId,
             SheetId = sheetId,
             Name = sheetName ?? "Sheet" + sheetId
@@ -103,7 +104,7 @@ public static class ExcelHelper
             workbookPart = document.AddWorkbookPart();
             workbookPart.Workbook = new();
         }
-        else if(workbookPart == null)
+        else if (workbookPart == null)
         {
             throw new ArgumentException("The document does not contain a WorkbookPart.");
         }
@@ -114,7 +115,7 @@ public static class ExcelHelper
         {
             return document.GetWorksheetById(document.CreateNewSheet(sheetName));
         }
-        else if(sheet == null)
+        else if (sheet == null)
         {
             return null;
         }
@@ -454,6 +455,7 @@ public static class ExcelHelper
         {
             case EStyles.Header:
                 cellFormat.Alignment = new Alignment { Horizontal = HorizontalAlignmentValues.Center };
+                cellFormat.ApplyAlignment = true;
 
                 border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
                     new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
@@ -464,9 +466,9 @@ public static class ExcelHelper
                 fill = new(
                     new PatternFill(
                         new ForegroundColor { Rgb = "D9D9D9" },
-                        new BackgroundColor { Indexed = 64 }
+                        new BackgroundColor { Indexed = 64, Rgb = "D9D9D9" }
                     )
-                    { PatternType = PatternValues.Solid }
+                    { PatternType = PatternValues.Solid, BackgroundColor = new BackgroundColor { Rgb = "D9D9D9" } }
                 );
                 fills.Append(fill);
                 cellFormat.FillId = (uint)fills.Count() - 1;
@@ -478,6 +480,7 @@ public static class ExcelHelper
 
             case EStyles.HeaderThickTop:
                 cellFormat.Alignment = new Alignment { Horizontal = HorizontalAlignmentValues.Center };
+                cellFormat.ApplyAlignment = true;
 
                 border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
                     new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Medium }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
@@ -502,6 +505,7 @@ public static class ExcelHelper
 
             case EStyles.Body:
                 cellFormat.Alignment = new Alignment { Horizontal = HorizontalAlignmentValues.Center };
+                cellFormat.ApplyAlignment = true;
 
                 border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
                     new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
@@ -575,10 +579,18 @@ public static class ExcelHelper
             }
         }
 
+
         // If no matching format found, add the new one
+        //cellFormat.FormatId = (uint)cellFormats.Count() - 1;
         cellFormats.Append(cellFormat);
         uint newFormatId = (uint)cellFormats.Count() - 1;
         formatCache[formatKey] = newFormatId;
+
+        fonts.Count = (uint)fonts.Count();
+        fills.Count = (uint)fills.Count();
+        borders.Count = (uint)borders.Count();
+        cellFormats.Count = (uint)cellFormats.Count();
+
         return newFormatId;
     }
 
@@ -657,7 +669,7 @@ public static class ExcelHelper
     public static uint? GetCustomStyle(SpreadsheetDocument document, bool cellLocked = false, Font? font = null,
         HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null)
     {
-        Stylesheet stylesheet = document.GetStylesheet();
+        Stylesheet? stylesheet = document.GetStylesheet();
 
         if (stylesheet == null) return null;
 
@@ -706,7 +718,7 @@ public static class ExcelHelper
         return newFormatId;
     }
 
-    public static uint GetOrAddFont(Stylesheet stylesheet, WorkbookStyleCache cache, Font? font)
+    public static uint GetOrAddFont(this Stylesheet stylesheet, WorkbookStyleCache cache, Font? font)
     {
         if (font == null) return 0; // Default font
 
@@ -718,12 +730,13 @@ public static class ExcelHelper
 
         Fonts fonts = stylesheet.Elements<Fonts>().First();
         fonts.Append(font);
+        fonts.Count = (uint)fonts.Count();
         uint newFontId = (uint)fonts.Count() - 1;
         cache.FontCache[fontHash] = newFontId;
         return newFontId;
     }
 
-    public static uint GetOrAddFill(Stylesheet stylesheet, WorkbookStyleCache cache, Fill? fill)
+    public static uint GetOrAddFill(this Stylesheet stylesheet, WorkbookStyleCache cache, Fill? fill)
     {
         if (fill == null) return 0; // Default fill
 
@@ -735,12 +748,13 @@ public static class ExcelHelper
 
         Fills fills = stylesheet.Elements<Fills>().First();
         fills.Append(fill);
+        fills.Count = (uint)fills.Count();
         uint newFillId = (uint)fills.Count() - 1;
         cache.FillCache[fillHash] = newFillId;
         return newFillId;
     }
 
-    public static uint GetOrAddBorder(Stylesheet stylesheet, WorkbookStyleCache cache, Border? border)
+    public static uint GetOrAddBorder(this Stylesheet stylesheet, WorkbookStyleCache cache, Border? border)
     {
         if (border == null) return 0; // Default border
 
@@ -752,6 +766,7 @@ public static class ExcelHelper
 
         Borders borders = stylesheet.Elements<Borders>().First();
         borders.Append(border);
+        borders.Count = (uint)borders.Count();
         uint newBorderId = (uint)borders.Count() - 1;
         cache.BorderCache[borderHash] = newBorderId;
         return newBorderId;
@@ -822,6 +837,7 @@ public static class ExcelHelper
                 {
                     SetAutoFilter(worksheet, 1, 1, y - 1, (uint)properties.Length);
                 }
+                worksheet.AutoFitColumns();
             }
             ClearCacheForWorkbook(document);
             return true;
@@ -844,19 +860,16 @@ public static class ExcelHelper
                 uint headerStyleId = GetStandardCellStyle(EStyles.Header, document);
                 uint bodyStyleId = GetStandardCellStyle(EStyles.Body, document);
 
-                uint y = 0;
-                uint x = 0;
-
-                Dictionary<uint, int> maxColumnWidths = [];
+                uint y = 1;
+                uint x = 1;
 
                 foreach (DataColumn column in data.Columns)
                 {
                     sheetData.InsertCellValue(x, y, new(column.ColumnName), CellValues.SharedString, headerStyleId);
-                    maxColumnWidths.Add(x, (column.ColumnName.Length + 5) * 256);
                     x++;
                 }
 
-                x = 0;
+                x = 1;
                 y++;
 
                 foreach (DataRow row in data.Rows)
@@ -866,16 +879,10 @@ public static class ExcelHelper
                         if (value != null)
                         {
                             sheetData.InsertCellValue(x, y, new(value.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
-                            x++;
-                            int newVal = (value.ToString()?.Length ?? 1) * 256;
-                            if (maxColumnWidths[x] < newVal)
-                            {
-                                maxColumnWidths[x] = newVal;
-                            }
                         }
                         x++;
                     }
-                    x = 0;
+                    x = 1;
                     y++;
                 }
 
@@ -887,6 +894,7 @@ public static class ExcelHelper
                 {
                     SetAutoFilter(worksheet, 1, 1, y - 1, (uint)data.Columns.Count);
                 }
+                worksheet.AutoFitColumns();
             }
             return true;
         }
@@ -919,8 +927,8 @@ public static class ExcelHelper
     /// <param name="columnIndex">Column index for the cell to create</param>
     /// <param name="rowIndex">Row index for the cell to create</param>
     /// <returns>Cell object that was created or null if sheetData is null</returns>
-    [return:NotNullIfNotNull(nameof(sheetData))]
-    public static Cell? InsertCell(this SheetData? sheetData, uint columnIndex, uint rowIndex)
+    [return: NotNullIfNotNull(nameof(sheetData))]
+    public static Cell? InsertCell(this SheetData? sheetData, uint columnIndex, uint rowIndex, uint? styleIndex = null)
     {
         Cell? cell = null;
         if (sheetData != null)
@@ -939,22 +947,27 @@ public static class ExcelHelper
             cell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value == cellRef);
             if (cell == null)
             {
-                //cell = new Cell { CellReference = cellReference.ToString() };
-                //row.Append(cell);
-
                 // Cells must be in sequential order according to CellReference. Determine where to insert the new cell.
                 Cell? refCell = null;
 
                 foreach (Cell existingCell in row.Elements<Cell>())
                 {
-                    if (string.Compare(existingCell.CellReference?.Value, cellRef, true) > 0)
+                    CellReference existingCellReference = new(existingCell.CellReference!);
+                    if (existingCellReference.ColumnIndex > cellReference.ColumnIndex && existingCellReference.RowIndex > cellReference.RowIndex)
                     {
-                        refCell = cell;
+                        refCell = existingCell; //existingCell; //cell
                         break;
                     }
+
+                    //Only works until column AA
+                    //if (string.Compare(existingCell.CellReference?.Value, cellRef, true) > 0)
+                    //{
+                    //    refCell = existingCell; //existingCell; //cell
+                    //    break;
+                    //}
                 }
 
-                Cell newCell = new() { CellReference = cellRef };
+                Cell newCell = new() { CellReference = cellRef, StyleIndex = styleIndex };
                 row.InsertBefore(newCell, refCell);
 
                 return newCell;
@@ -992,7 +1005,7 @@ public static class ExcelHelper
     public static void InsertCellValue(this SheetData? sheetData, uint columnIndex, uint rowIndex, CellValue cellValue, CellValues? cellType = null, uint? styleIndex = null)
     {
         cellType ??= CellValues.SharedString; //Default to shared string since it is the most compact option
-        Cell? cell = sheetData.InsertCell(columnIndex, rowIndex);
+        Cell? cell = sheetData.InsertCell(columnIndex, rowIndex, styleIndex);
         if (cell != null)
         {
             if (cellType == CellValues.SharedString)
@@ -1006,10 +1019,6 @@ public static class ExcelHelper
             {
                 cell.CellValue = cellValue;
                 cell.DataType = cellType ?? new EnumValue<CellValues>(cellType!);
-            }
-            if (styleIndex != null)
-            {
-                cell.StyleIndex = styleIndex;
             }
         }
     }
@@ -1083,15 +1092,34 @@ public static class ExcelHelper
         return i;
     }
 
-public static void CreateTable(Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn, string tableName)
+    public static void CreateTable(Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn, string tableName)
     {
         TableDefinitionPart tableDefinitionPart = worksheet.WorksheetPart!.AddNewPart<TableDefinitionPart>();
+        string rId = worksheet.WorksheetPart!.GetIdOfPart(tableDefinitionPart);
+
+        // Check if TableParts element exists, if not create it
+        TableParts? tableParts = worksheet.Elements<TableParts>().FirstOrDefault();
+        if (tableParts == null)
+        {
+            tableParts = new TableParts();
+            worksheet.Append(tableParts);
+        }
+
+        TablePart tablePart = new() { Id = rId };
+        tableParts.Append(tablePart);
+
+        // Define the table range
+        //string reference = new CellReference(startColumn, startRow).ToString() + ":" + new CellReference(endColumn, endRow).ToString();
+
         Table table = new()
         {
-            Id = 1,
+            Id = (uint)(tableParts.Count() + 1),
             Name = tableName,
             DisplayName = tableName,
-            Reference = new CellReference(startColumn, startRow) + ":" + new CellReference(endColumn, endRow)
+            Reference = new CellReference(startColumn, startRow) + ":" + new CellReference(endColumn, endRow),
+            TotalsRowShown = false,
+            HeaderRowCount = 1,
+            BorderFormatId = 0
         };
 
         AutoFilter autoFilter = new() { Reference = table.Reference };
@@ -1099,14 +1127,18 @@ public static void CreateTable(Worksheet worksheet, uint startRow, uint startCol
         TableColumns tableColumns = new() { Count = endColumn - startColumn + 1 };
         for (uint i = 0; i < endColumn - startColumn + 1; i++)
         {
-            tableColumns.Append(new TableColumn { Id = i + 1, Name = $"Column{i + 1}" });
+            // Use the content of the first row as column names
+            Cell headerCell = worksheet.GetCellFromCoordinates((int)i + 1, 1)!; //  (startRow, startColumn + i);
+            string columnName = headerCell?.InnerText ?? $"Column{i + 1}";
+
+            tableColumns.Append(new TableColumn { Id = i + 1, Name = columnName });
         }
 
         TableStyleInfo tableStyleInfo = new()
         {
             Name = "TableStyleMedium2",
-            ShowFirstColumn = false,
-            ShowLastColumn = false,
+            //ShowFirstColumn = false,
+            //ShowLastColumn = false,
             ShowRowStripes = true,
             ShowColumnStripes = false
         };
@@ -1116,19 +1148,6 @@ public static void CreateTable(Worksheet worksheet, uint startRow, uint startCol
         table.Append(tableStyleInfo);
 
         tableDefinitionPart.Table = table;
-
-        TablePart tablePart = new() { Id = worksheet.WorksheetPart.GetIdOfPart(tableDefinitionPart) };
-
-        // Check if TableParts element exists, if not create it
-        TableParts? tableParts = worksheet.Elements<TableParts>().FirstOrDefault();
-        if (tableParts == null)
-        {
-            tableParts = new();
-            worksheet.Append(tableParts);
-        }
-
-        tableParts.Append(tablePart);
-        tableParts.Count = (uint)tableParts.ChildElements.Count;
     }
 
     /// OK
@@ -1523,22 +1542,41 @@ public static void CreateTable(Worksheet worksheet, uint startRow, uint startCol
         return cell?.GetCellValue() ?? string.Empty;
     }
 
-    public static string GetCellValue(this Cell cell)
+    //public static string GetCellValue(this Cell cell)
+    //{
+    //    if (cell.DataType != null && cell.DataType == CellValues.SharedString)
+    //    {
+    //        SharedStringTablePart? sharedStringPart = cell.GetWorkbookFromCell().WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+    //        if (sharedStringPart != null)
+    //        {
+    //            int ssid = int.Parse(cell.InnerText);
+    //            return sharedStringPart.SharedStringTable.Elements<SharedStringItem>().ElementAt(ssid).InnerText;
+    //        }
+    //    }
+    //    else if (cell.CellValue != null)
+    //    {
+    //        return cell.CellValue.Text;
+    //    }
+    //    return string.Empty;
+    //}
+
+    private static string GetCellValue(this Cell cell)
     {
-        if (cell.DataType != null && cell.DataType == CellValues.SharedString)
+        if (cell.CellValue == null) return string.Empty;
+
+        string value = cell.CellValue.Text;
+
+        // If this is a shared string, look up the actual value
+        if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
         {
             SharedStringTablePart? sharedStringPart = cell.GetWorkbookFromCell().WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
             if (sharedStringPart != null)
             {
-                int ssid = int.Parse(cell.InnerText);
-                return sharedStringPart.SharedStringTable.Elements<SharedStringItem>().ElementAt(ssid).InnerText;
+                return sharedStringPart.SharedStringTable.ElementAt(int.Parse(value)).InnerText;
             }
         }
-        else if (cell.CellValue != null)
-        {
-            return cell.CellValue.Text;
-        }
-        return string.Empty;
+
+        return value;
     }
 
     /// <summary>
@@ -1626,98 +1664,274 @@ public static void CreateTable(Worksheet worksheet, uint startRow, uint startCol
         return null;
     }
 
-    // The GetClosestHssfColor method is not applicable to OpenXML as it
-    // uses a different color system. You would need to implement a similar
-    // functionality using the color representations in OpenXML.
-
+    /// OK
+    /// <summary>
+    /// Gets specified row from worksheet
+    /// </summary>
+    /// <param name="worksheet">Worksheet to retrieve the row from</param>
+    /// <param name="rowIndex">Index of the row to retrieve</param>
+    /// <returns>Row from worksheet specified by rowIndex</returns>
     public static Row? GetRow(this Worksheet worksheet, uint rowIndex)
     {
         return worksheet.GetFirstChild<SheetData>()?.Elements<Row>().FirstOrDefault(r => r.RowIndex != null && r.RowIndex == rowIndex);
     }
 
+    /// OK
+    /// <summary>
+    /// Gets cell at a particular column index from a row
+    /// </summary>
+    /// <param name="row">Row to get cell from</param>
+    /// <param name="columnIndex">Column index of cell in the row</param>
+    /// <returns>Cell specified from the row and column index</returns>
     public static Cell? GetCell(this Row row, uint columnIndex)
     {
         if (row.RowIndex == null) return null;
         string cellReference = new CellReference(columnIndex, row.RowIndex.Value).ToString();
         return row.Elements<Cell>().FirstOrDefault(c => c.CellReference == cellReference);
     }
-}
 
-// Helper classes and methods
-public partial class CellReference
-{
-    [GeneratedRegex(@"([A-Z]+)(\d+)")]
-    private static partial Regex CellRefRegex();
-
-    private uint _RowIndex;
-
-    public uint RowIndex
+    /// OK
+    /// <summary>
+    /// Automatically adjusts column widths to fit the content in each column
+    /// </summary>
+    /// <param name="worksheet">The worksheet to adjust columns in</param>
+    /// <param name="maxWidth">Optional maximum width limit for columns</param>
+    public static void AutoFitColumns(this Worksheet worksheet, double maxWidth = 100)
     {
-        get { return _RowIndex; }
-        set
+        SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
+        if (sheetData == null) return;
+
+        // Dictionary to store maximum width of each column
+        ConcurrentDictionary<uint, double> columnWidths = [];
+
+        // Iterate through all rows and cells
+        foreach (Row row in sheetData.Elements<Row>())
         {
-            if (value < 1 || value > 1048576)
+            foreach (Cell cell in row.Elements<Cell>())
             {
-                throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 1048576");
+                if(string.IsNullOrEmpty(cell.CellReference?.Value)) continue;
+
+                CellReference cellRef = new(cell.CellReference!.Value!);
+                uint columnIndex = cellRef.ColumnIndex - 1;
+
+                // Calculate the width needed for this cell
+                double width = cell.CalculateWidth();
+
+                // Update maximum width for this column if necessary
+                if (!columnWidths.TryGetValue(columnIndex, out double value) || width > value)
+                {
+                    value = Math.Min(width, maxWidth);
+                    columnWidths[columnIndex] = value;
+                }
             }
-            _RowIndex = value;
         }
-    }
 
-    private uint _ColumnIndex;
+        // Create or get Columns element
+        Columns columns = worksheet.GetColumns();
 
-    public uint ColumnIndex {
-        get { return _ColumnIndex; }
-        set
+        // Set the width for each column
+        foreach (KeyValuePair<uint, double> kvp in columnWidths)
         {
-            if (value < 1 || value > 16384)
+            Column col = new()
             {
-                throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 16384");
+                Min = kvp.Key + 1, // Add 1 because CellReference uses 0-based column indices
+                Max = kvp.Key + 1,
+                Width = kvp.Value,
+                CustomWidth = true
+            };
+
+            columns.Append(col);
+        }
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets the Columns object from the worksheet, creating it if it does not exist yet
+    /// </summary>
+    /// <param name="worksheet">Worksheet to get columns from</param>
+    /// <returns>The Columns object from the worksheet</returns>
+    public static Columns GetColumns(this Worksheet worksheet)
+    {
+        Columns? columns = worksheet.GetFirstChild<Columns>();
+        if (columns == null)
+        {
+            columns = new Columns();
+            worksheet.InsertAt(columns, 0);
+        }
+        return columns;
+    }
+
+    /// OK
+    /// <summary>
+    /// Fits a single column to the size indicated by columnWidth
+    /// </summary>
+    /// <param name="worksheet">Worksheet containing the column to size</param>
+    /// <param name="colIndex">0 based column Index to fit</param>
+    /// <param name="columnWidth">Width to set for the specified column</param>
+    /// <param name="columns">Worksheet Columns object to prevent re-getting it on every call</param>
+    public static void SizeColumn(this Worksheet worksheet, uint colIndex, double columnWidth, Columns? columns = null)
+    {
+        columns ??= worksheet.GetColumns();
+
+        Column? col = columns.Elements<Column>().FirstOrDefault(c => colIndex >= (c.Min?.Value ?? 0) && colIndex <= (c.Max?.Value ?? 0));
+        if (col == null) //Create new column
+        {
+            // Columns must be in sequential order according to CellReference. Determine where to insert the new cell.
+            Column? refCol = null;
+
+            foreach (Column existingCol in columns.Elements<Column>())
+            {
+                if (existingCol.Min?.Value > colIndex)
+                {
+                    refCol = existingCol; //col
+                }
             }
-            _ColumnIndex = value;
+
+            Column newCol = new()
+            {
+                Min = colIndex + 1, // Add 1 because CellReference uses 0-based column indices
+                Max = colIndex + 1,
+                Width = columnWidth,
+                CustomWidth = true
+            };
+            columns.InsertBefore(newCol, refCol);
         }
-    }
-
-    public CellReference(string reference)
-    {
-        Match match = CellRefRegex().Match(reference);
-        ColumnIndex = ColumnNameToNumber(match.Groups[1].Value);
-        RowIndex = uint.Parse(match.Groups[2].Value);
-    }
-
-    public CellReference(uint col, uint row)
-    {
-        ColumnIndex = col;
-        RowIndex = row;
-    }
-
-    public override string ToString()
-    {
-        return $"{NumberToColumnName(ColumnIndex)}{RowIndex}";
-    }
-
-    public static uint ColumnNameToNumber(string columnName)
-    {
-        uint number = 0;
-        for (int i = 0; i < columnName.Length; i++)
+        else
         {
-            number *= 26;
-            number += (uint)(columnName[i] - 'A' + 1);
+            //Existing column, just need to add width attributes
+            col.Width = columnWidth;
+            col.CustomWidth = true;
         }
-        return number - 1;
     }
 
-    public static string NumberToColumnName(uint columnNumber)
+    /// OK
+    /// <summary>
+    /// Calculate the width of a cell based on the provided text
+    /// </summary>
+    /// <param name="cell">Cell to calculate the width of</param>
+    /// <returns>Fitted width of the cell</returns>
+    private static double CalculateWidth(this Cell cell)
     {
-        int number = (int)columnNumber - 1; //Make this 1 based to avoid confusion
-        string columnName = "";
-        while (number >= 0)
+        return CalculateWidth(cell.GetCellValue(), cell.StyleIndex?.Value);
+    }
+
+    /// OK
+    /// <summary>
+    /// Calculate the width of a cell based on the provided text
+    /// </summary>
+    /// <param name="text">The text value of the cell</param>
+    /// <param name="styleIndex">Style index value associated with the cell</param>
+    /// <returns>Fitted width of the cell</returns>
+    private static double CalculateWidth(string text, uint? styleIndex = null)
+    {
+        if (string.IsNullOrEmpty(text)) return 0;
+
+        const int padding = 1; // Extra padding
+        uint[] numberStyles = [5, 6, 7, 8]; //styles that will add extra chars
+        uint[] boldStyles = [1, 2, 3, 4, 6, 7, 8]; //styles that will bold
+        double width = text.Length + padding;
+
+        // Add extra width for numbers to account for digit grouping
+        if (double.TryParse(text, out _))
         {
-            int remainder = number % 26;
-            columnName = Convert.ToChar('A' + remainder) + columnName;
-            number = (number / 26) - 1;
-            if (number < 0) break;
+            width++;
         }
-        return columnName;
+
+        if (styleIndex != null && numberStyles.Contains((uint)styleIndex))
+        {
+            int thousandCount = (int)Math.Truncate((double)width / 4);
+
+            //add 3 for '.00'
+            width += (3 + thousandCount);
+        }
+
+        if (styleIndex != null && boldStyles.Contains((uint)styleIndex))
+        {
+            //add an extra char for bold - not 100% acurate but good enough for what i need.
+            width++;
+        }
+
+        const double maxWidth = 5;
+        return Math.Truncate((width * maxWidth + 5) / maxWidth * 256) / 256;
+    }
+
+    // Helper classes to deal with cell references more easily
+    public partial class CellReference
+    {
+        [GeneratedRegex(@"([A-Z]+)(\d+)")]
+        private static partial Regex CellRefRegex();
+
+        private uint _RowIndex;
+
+        public uint RowIndex
+        {
+            get { return _RowIndex; }
+            set
+            {
+                if (value < 1 || value > 1048576)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 1048576");
+                }
+                _RowIndex = value;
+            }
+        }
+
+        private uint _ColumnIndex;
+
+        public uint ColumnIndex
+        {
+            get { return _ColumnIndex; }
+            set
+            {
+                if (value < 1 || value > 16384)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 16384");
+                }
+                _ColumnIndex = value;
+            }
+        }
+
+        public CellReference(string reference)
+        {
+            Match match = CellRefRegex().Match(reference);
+            ColumnIndex = ColumnNameToNumber(match.Groups[1].Value);
+            RowIndex = uint.Parse(match.Groups[2].Value);
+        }
+
+        public CellReference(uint col, uint row)
+        {
+            ColumnIndex = col;
+            RowIndex = row;
+        }
+
+        public override string ToString()
+        {
+            return $"{NumberToColumnName(ColumnIndex)}{RowIndex}";
+        }
+
+        public static uint ColumnNameToNumber(string columnName)
+        {
+            uint number = 0;
+            for (int i = 0; i < columnName.Length; i++)
+            {
+                number *= 26;
+                number += (uint)(columnName[i] - 'A' + 1);
+            }
+            return number;// - 1;
+        }
+
+        public static string NumberToColumnName(uint columnNumber)
+        {
+            int number = (int)columnNumber - 1; //Make this 1 based to avoid confusion
+            string columnName = "";
+            while (number >= 0)
+            {
+                int remainder = number % 26;
+                columnName = Convert.ToChar('A' + remainder) + columnName;
+                number = (number / 26) - 1;
+                if (number < 0) break;
+            }
+            return columnName;
+        }
     }
 }

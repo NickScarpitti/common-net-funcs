@@ -1287,7 +1287,9 @@ public static partial class Common
         return workbook.GetType().Name != typeof(HSSFWorkbook).Name;
     }
 
-    private static readonly Dictionary<string, HSSFColor> hssfColorCache = [];
+    private static readonly Dictionary<string, HSSFColor> HssfColorCache = [];
+
+    private static readonly Lazy<IEnumerable<HSSFColor>> HssfColors = new Lazy<IEnumerable<HSSFColor>>(() => HSSFColor.GetIndexHash().Select(x => x.Value));
 
     /// <summary>
     /// Converts a hex color to the closest available HSSFColor
@@ -1296,7 +1298,7 @@ public static partial class Common
     /// <returns>The closest HSSFColor to the provided hex color</returns>
     public static HSSFColor GetClosestHssfColor(string hexColor, int cachedColorLimit = 100)
     {
-        if (hssfColorCache.TryGetValue(hexColor, out HSSFColor? hSSFColor))
+        if (HssfColorCache.TryGetValue(hexColor, out HSSFColor? hSSFColor))
         {
             return hSSFColor!;
         }
@@ -1305,32 +1307,51 @@ public static partial class Common
         Regex regex = HexColorRegex();
         if (hexColor.Length == 7 && regex.IsMatch(hexColor))
         {
-            byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
+            //Span<byte> rgb =
+            //[
+            //    ToByte(hexColor.Substring(1, 2), 16),
+            //    ToByte(hexColor.Substring(3, 2), 16),
+            //    ToByte(hexColor.Substring(5, 2), 16),
+            //];
 
-            int deviation = int.MaxValue;
-            foreach (HSSFColor hssfColor in HSSFColor.GetIndexHash().Select(x => x.Value))
-            {
-                byte[] hssfRgb = hssfColor.RGB;
-                int totalDeviation = (int)Pow((double)rgb[0] - hssfRgb[0], 2) + (int)Pow((double)rgb[1] - hssfRgb[1], 2) + (int)Pow((double)rgb[2] - hssfRgb[2], 2);
-                if (totalDeviation < deviation)
-                {
-                    outputColor = hssfColor;
-                    deviation = totalDeviation;
-                    if (deviation == 0)
-                    {
-                        break;
-                    }
-                }
-            }
+            byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
+            outputColor = HssfColors.Value.MinBy(hssfColor => ColorDistance(rgb, hssfColor.RGB)) ?? new HSSFColor();
+
+            //Old way to do this
+            //int deviation = int.MaxValue;
+            //foreach (HSSFColor hssfColor in HSSFColor.GetIndexHash().Select(x => x.Value))
+            //{
+            //    byte[] hssfRgb = hssfColor.RGB;
+            //    int totalDeviation = (int)Pow((double)rgb[0] - hssfRgb[0], 2) + (int)Pow((double)rgb[1] - hssfRgb[1], 2) + (int)Pow((double)rgb[2] - hssfRgb[2], 2);
+            //    if (totalDeviation < deviation)
+            //    {
+            //        outputColor = hssfColor;
+            //        deviation = totalDeviation;
+            //        if (deviation == 0)
+            //        {
+            //            break;
+            //        }
+            //    }
+            //}
         }
-        if (hssfColorCache.Count >= cachedColorLimit)
+
+        if (HssfColorCache.Count >= cachedColorLimit)
         {
-            while (hssfColorCache.Count > cachedColorLimit)
+            while (HssfColorCache.Count > cachedColorLimit)
             {
-                hssfColorCache.Remove(hssfColorCache.First().Key);
+                HssfColorCache.Remove(HssfColorCache.First().Key);
             }
         }
-        hssfColorCache[hexColor] = outputColor;
+        HssfColorCache[hexColor] = outputColor;
         return outputColor;
+    }
+
+    private static double ColorDistance(ReadOnlySpan<byte> rgb1, ReadOnlySpan<byte> rgb2)
+    {
+        double rmean = (rgb1[0] + rgb2[0]) / 2.0;
+        double r = rgb1[0] - rgb2[0];
+        double g = rgb1[1] - rgb2[1];
+        double b = rgb1[2] - rgb2[2];
+        return Sqrt((2 + rmean / 256) * r * r + 4 * g * g + (2 + (255 - rmean) / 256) * b * b);
     }
 }

@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
+using CommonNetFuncs.Excel.Common;
 using NPOI.HSSF.UserModel;
 using NPOI.HSSF.Util;
 using NPOI.OpenXmlFormats.Spreadsheet;
@@ -42,23 +43,6 @@ public static partial class Common
     private static partial Regex HexColorRegex();
 
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
-    public enum EStyles
-    {
-        Header,
-        HeaderThickTop,
-        Body,
-        Error,
-        Blackout,
-        Whiteout,
-        Custom
-    }
-
-    public enum EFonts
-    {
-        Default,
-        Header
-    }
 
     private const int MaxCellWidthInExcelUnits = 65280;
 
@@ -459,13 +443,13 @@ public static partial class Common
     /// <param name="wb">Workbook to add the standard cell style to</param>
     /// <param name="cellLocked">Whether or not the cells with this style should be locked or not</param>
     /// <returns>The ICellStyle that was created</returns>
-    public static ICellStyle GetStandardCellStyle(EStyles style, IWorkbook wb, bool cellLocked = false)
+    public static ICellStyle GetStandardCellStyle(EStyle style, IWorkbook wb, bool cellLocked = false)
     {
         ICellStyle cellStyle = wb.CreateCellStyle();
         IFont cellFont;
         switch (style)
         {
-            case EStyles.Header:
+            case EStyle.Header:
                 cellStyle.Alignment = HorizontalAlignment.Center;
                 cellStyle.BorderBottom = BorderStyle.Thin;
                 cellStyle.BorderLeft = BorderStyle.Thin;
@@ -473,10 +457,10 @@ public static partial class Common
                 cellStyle.BorderTop = BorderStyle.Thin;
                 cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
-                cellStyle.SetFont(GetFont(EFonts.Header, wb));
+                cellStyle.SetFont(GetFont(EFont.Header, wb));
                 break;
 
-            case EStyles.HeaderThickTop:
+            case EStyle.HeaderThickTop:
                 cellStyle.Alignment = HorizontalAlignment.Center;
                 cellStyle.BorderBottom = BorderStyle.Thin;
                 cellStyle.BorderLeft = BorderStyle.Thin;
@@ -484,24 +468,24 @@ public static partial class Common
                 cellStyle.BorderTop = BorderStyle.Medium;
                 cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
-                cellStyle.SetFont(GetFont(EFonts.Header, wb));
+                cellStyle.SetFont(GetFont(EFont.Header, wb));
                 break;
 
-            case EStyles.Body:
+            case EStyle.Body:
                 cellStyle.Alignment = HorizontalAlignment.Center;
                 cellStyle.BorderBottom = BorderStyle.Thin;
                 cellStyle.BorderLeft = BorderStyle.Thin;
                 cellStyle.BorderRight = BorderStyle.Thin;
                 cellStyle.FillForegroundColor = HSSFColor.COLOR_NORMAL;
-                cellStyle.SetFont(GetFont(EFonts.Default, wb));
+                cellStyle.SetFont(GetFont(EFont.Default, wb));
                 break;
 
-            case EStyles.Error:
+            case EStyle.Error:
                 cellStyle.FillForegroundColor = HSSFColor.Red.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 break;
 
-            case EStyles.Blackout:
+            case EStyle.Blackout:
                 cellFont = wb.CreateFont();
                 cellFont.Color = HSSFColor.Black.Index;
                 cellStyle.SetFont(cellFont);
@@ -509,7 +493,7 @@ public static partial class Common
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 break;
 
-            case EStyles.Whiteout:
+            case EStyle.Whiteout:
                 cellFont = wb.CreateFont();
                 cellFont.Color = HSSFColor.White.Index;
                 cellStyle.SetFont(cellFont);
@@ -527,21 +511,27 @@ public static partial class Common
     /// <param name="font">Enum for preset fonts</param>
     /// <param name="wb">Workbook the font will be used in</param>
     /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
-    public static IFont GetFont(EFonts font, IWorkbook wb)
+    public static IFont GetFont(EFont font, IWorkbook wb)
     {
         IFont cellFont = wb.CreateFont();
         switch (font)
         {
-            case EFonts.Default:
+            case EFont.Default:
                 cellFont.IsBold = false;
                 cellFont.FontHeightInPoints = 10;
-                cellFont.FontName = "Calibri";
+                cellFont.FontName = nameof(EFontName.Calibri);
                 break;
 
-            case EFonts.Header:
+            case EFont.Header:
                 cellFont.IsBold = true;
                 cellFont.FontHeightInPoints = 10;
-                cellFont.FontName = "Calibri";
+                cellFont.FontName = nameof(EFontName.Calibri);
+                break;
+
+            case EFont.Whiteout:
+                cellFont.IsBold = false;
+                cellFont.FontHeight = 10;
+                cellFont.FontName = nameof(EFontName.Calibri);
                 break;
         }
         return cellFont;
@@ -554,7 +544,8 @@ public static partial class Common
     /// <param name="wb">Workbook to insert the data into</param>
     /// <param name="ws">Worksheet to insert the data into</param>
     /// <param name="data">Data to be inserted into the workbook</param>
-    /// <param name="createTable">Turn the output into an Excel table (unused)</param>
+    /// <param name="createTable">Turn the output into an Excel table</param>
+    /// <param name="tableName">Name of the table when createTable is true</param>
     /// <returns>True if excel file was created successfully</returns>
     public static bool ExportFromTable<T>(SXSSFWorkbook wb, ISheet ws, IEnumerable<T> data, bool createTable = false, string tableName = "Data")
     {
@@ -562,13 +553,14 @@ public static partial class Common
         {
             if (data?.Any() == true)
             {
-                ICellStyle headerStyle = GetStandardCellStyle(EStyles.Header, wb);
-                ICellStyle bodyStyle = GetStandardCellStyle(EStyles.Body, wb);
+                ICellStyle headerStyle = GetStandardCellStyle(EStyle.Header, wb);
+                ICellStyle bodyStyle = GetStandardCellStyle(EStyle.Body, wb);
 
                 int x = 0;
                 int y = 0;
 
-                int[] maxColumnWidths = [];
+                Dictionary<int, int> maxColumnWidths = [];
+                List<string> columnNames = [];
 
                 PropertyInfo[] props = typeof(T).GetProperties();
                 foreach (PropertyInfo prop in props)
@@ -579,6 +571,7 @@ public static partial class Common
                     {
                         c.SetCellValue(prop.Name);
                         c.CellStyle = headerStyle;
+                        columnNames.Add(prop.Name);
                     }
                     maxColumnWidths[x] = (prop.Name.Length + 5) * 256;
                     x++;
@@ -614,29 +607,7 @@ public static partial class Common
                 }
                 else
                 {
-                    //Based on code found here: https://stackoverflow.com/questions/65178752/format-a-excel-cell-range-as-a-table-using-npoi
-                    XSSFTable table = ((XSSFSheet)ws).CreateTable();
-                    CT_Table ctTable = table.GetCTTable();
-                    AreaReference dataRange = new(new CellReference(0, 0), new CellReference(y - 1, props.Length - 1));
-
-                    ctTable.@ref = dataRange.FormatAsString();
-                    ctTable.id = 1;
-                    ctTable.name = tableName;
-                    ctTable.displayName = tableName;
-                    ctTable.autoFilter = new() { @ref = dataRange.FormatAsString() };
-                    //ctTable.totalsRowShown = false;
-                    ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
-                    ctTable.tableColumns = new() { tableColumn = [] };
-
-                    T tableHeader = data.First();
-                    props = tableHeader!.GetType().GetProperties();
-
-                    uint i = 1;
-                    foreach (PropertyInfo prop in props)
-                    {
-                        ctTable.tableColumns.tableColumn.Add(new() { id = i, name = prop.Name });
-                        i++;
-                    }
+                    wb.XssfWorkbook.CreateTable(ws.SheetName, tableName, 0, props.Length - 1, 0, y - 1, columnNames);
                 }
 
                 try
@@ -669,7 +640,8 @@ public static partial class Common
     /// <param name="wb">Workbook to insert the data into</param>
     /// <param name="ws">Worksheet to insert the data into</param>
     /// <param name="data">Data as DataTable to be inserted into the workbook</param>
-    /// <param name="createTable">Turn the output into an Excel table (unused)</param>
+    /// <param name="createTable">Turn the output into an Excel table</param>
+    /// <param name="tableName">Name of the table when createTable is true</param>
     /// <returns>True if excel file was created successfully</returns>
     public static bool ExportFromTable(SXSSFWorkbook wb, ISheet ws, DataTable data, bool createTable = false, string tableName = "Data")
     {
@@ -677,22 +649,22 @@ public static partial class Common
         {
             if (data?.Rows.Count > 0)
             {
-                ICellStyle headerStyle = GetStandardCellStyle(EStyles.Header, wb);
-                ICellStyle bodyStyle = GetStandardCellStyle(EStyles.Body, wb);
+                ICellStyle headerStyle = GetStandardCellStyle(EStyle.Header, wb);
+                ICellStyle bodyStyle = GetStandardCellStyle(EStyle.Body, wb);
 
                 int x = 0;
                 int y = 0;
 
                 Dictionary<int, int> maxColumnWidths = [];
-
+                List<string> columnNames = [];
                 foreach (DataColumn column in data.Columns)
                 {
-                    //((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                     ICell? c = ws.GetCellFromCoordinates(x, y);
                     if (c != null)
                     {
                         c.SetCellValue(column.ColumnName);
                         c.CellStyle = headerStyle;
+                        columnNames.Add(column.ColumnName);
                     }
                     maxColumnWidths.Add(x, (column.ColumnName.Length + 5) * 256);
                     x++;
@@ -731,26 +703,7 @@ public static partial class Common
                 }
                 else
                 {
-                    //Based on code found here: https://stackoverflow.com/questions/65178752/format-a-excel-cell-range-as-a-table-using-npoi
-                    XSSFTable table = ((XSSFSheet)ws).CreateTable();
-                    CT_Table ctTable = table.GetCTTable();
-                    AreaReference dataRange = new(new CellReference(0, 0), new CellReference(y - 1, data.Rows.Count - 1));
-
-                    ctTable.@ref = dataRange.FormatAsString();
-                    ctTable.id = 1;
-                    ctTable.name = tableName;
-                    ctTable.displayName = tableName;
-                    ctTable.autoFilter = new() { @ref = dataRange.FormatAsString() };
-                    //ctTable.totalsRowShown = false;
-                    ctTable.tableStyleInfo = new() { name = "TableStyleMedium1", showRowStripes = true };
-                    ctTable.tableColumns = new() { tableColumn = [] };
-
-                    uint i = 1;
-                    foreach (DataColumn column in data.Columns)
-                    {
-                        ctTable.tableColumns.tableColumn.Add(new() { id = i, name = column.ColumnName });
-                        i++;
-                    }
+                    wb.XssfWorkbook.CreateTable(ws.SheetName, tableName, 0, data.Columns.Count - 1, 0, y - 1, columnNames);
                 }
 
                 try
@@ -774,6 +727,43 @@ public static partial class Common
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Create a table for the specified sheet in an XSSFWorkbook
+    /// </summary>
+    /// <param name="xssfWorkbook">Workbook to add table to</param>
+    /// <param name="sheetName">Name of the sheet to add the table to</param>
+    /// <param name="tableName">Name of the table to add</param>
+    /// <param name="firstColIndex">Zero based index of the first column of the table</param>
+    /// <param name="lastColIndex">Zero based index of the last column of the table</param>
+    /// <param name="firstRowIndex">Zero based index of the first row of the table</param>
+    /// <param name="lastRowIndex">Zero based index of the last row of the table</param>
+    /// <param name="columnNames">Optional: Ordered list of names for each column in the table. Will use Column# if not provided or list has fewer elements than there are columns in the table</param>
+    /// <param name="tableStyle">Optional: Style to use for table, defaults to TableStyleMedium1</param>
+    /// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
+    /// <param name="showColStripes">Optional: Styles the table to show column stripes or not</param>
+    public static void CreateTable(this XSSFWorkbook xssfWorkbook, string sheetName, string tableName, int firstColIndex, int lastColIndex, int firstRowIndex, int lastRowIndex, List<string>? columnNames = null,
+        ETableStyle tableStyle = ETableStyle.TableStyleMedium1, bool showRowStripes = true, bool showColStripes = false)
+    {
+        XSSFSheet xssfSheet = (XSSFSheet)xssfWorkbook.GetSheet(sheetName);
+        XSSFTable table = xssfSheet.CreateTable();
+        CT_Table ctTable = table.GetCTTable();
+        AreaReference dataRange = new(new CellReference(firstRowIndex, firstColIndex), new CellReference(lastRowIndex, lastColIndex));
+
+        ctTable.@ref = dataRange.FormatAsString();
+        ctTable.id = (uint)xssfSheet.GetTables().Count;
+        ctTable.name = tableName;
+        ctTable.displayName = tableName;
+        ctTable.autoFilter = new() { @ref = dataRange.FormatAsString() };
+        ctTable.tableStyleInfo = new() { name = tableStyle.ToString(), showRowStripes = showRowStripes, showColumnStripes = showColStripes };
+        ctTable.tableColumns = new() { tableColumn = [] };
+
+        for (int i = 0; i < lastColIndex - firstColIndex + 1; i++)
+        {
+            string? cellValue = columnNames.AnyFast() && columnNames.Count - 1 >= i ? columnNames[i] : $"Column{i + 1}";
+            ctTable.tableColumns.tableColumn.Add(new() { id = (uint)i + 1, name = cellValue });
         }
     }
 

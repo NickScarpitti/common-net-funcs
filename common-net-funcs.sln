@@ -56,6 +56,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Excel.OpenXm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Word.OpenXml", "CommonNetFuncs.Word.OpenXml\CommonNetFuncs.Word.OpenXml.csproj", "{4FDBADB8-0B23-43E3-8AAD-95A05CA2E3DF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Excel.Common", "CommonNetFuncs.Excel.Common\CommonNetFuncs.Excel.Common.csproj", "{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -354,6 +356,18 @@ Global
 		{4FDBADB8-0B23-43E3-8AAD-95A05CA2E3DF}.Release|x64.Build.0 = Release|Any CPU
 		{4FDBADB8-0B23-43E3-8AAD-95A05CA2E3DF}.Release|x86.ActiveCfg = Release|Any CPU
 		{4FDBADB8-0B23-43E3-8AAD-95A05CA2E3DF}.Release|x86.Build.0 = Release|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Debug|x64.Build.0 = Debug|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Debug|x86.Build.0 = Debug|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Release|x64.ActiveCfg = Release|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Release|x64.Build.0 = Release|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Release|x86.ActiveCfg = Release|Any CPU
+		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -21,31 +21,9 @@
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>
-      Helper methods that deal with reading and writing excel files using ClosedXml.
+      Items that are used in multiple CommonNetCoreFuncs.Excel packages
     </Description>
-    <PackageTags>dotnet;helpers;excel;closedxml;</PackageTags>
+    <PackageTags>dotnet;helpers;excel;npoi;openxml;closedxml;</PackageTags>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.104.1" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
-    <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
-    <ProjectReference Include="..\CommonNetFuncs.Excel.Common\CommonNetFuncs.Excel.Common.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="TTLogo.png">
-      <PackagePath>\</PackagePath>
-      <Pack>True</Pack>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove=".editorconfig" />
-  </ItemGroup>
 
 </Project>

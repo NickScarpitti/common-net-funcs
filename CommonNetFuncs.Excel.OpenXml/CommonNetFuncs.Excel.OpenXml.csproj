@@ -1,29 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-<Platforms>AnyCPU;x86;x64</Platforms>
+    <TargetFramework>net8.0</TargetFramework>
+	  <Platforms>AnyCPU;x86;x64</Platforms>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.26</Version>
+    <Version>1.0.28</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Authors>Nick_Scarpitti</Authors>
     <PackageIcon>TTLogo.png</PackageIcon>
-    <RepositoryType>git</RepositoryType>    
-     <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs</PackageProjectUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    
-     <Description>
-      Helper methods that deal with reading and writing excel files using NPOI.
-    </Description>    OPpenXML 
-    <PackageTags>dotnet;helpers;excel;npoi;</PackageTags>openxml 
+
+    <Description>
+		Helper methods that deal with reading and writing excel files using NPOI.
+    </Description>
+    <PackageTags>dotnet;helpers;excel;npoi;openxml;office;msoffice;</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

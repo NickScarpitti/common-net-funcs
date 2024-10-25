@@ -1474,8 +1474,8 @@ public static partial class ExcelHelper
                             decimal rangeAspect = (decimal)rangeWidth / rangeHeight;
 
                             decimal scale = rangeAspect < imgAspect
-                                ? (rangeWidth - 3 * 9525m) / (imgWidth * 9525m)  // 1px = 9525 EMUs
-                                : (rangeHeight - 3 * 9525m) / (imgHeight * 9525m);
+                                ? (rangeWidth - (3 * 9525m)) / (imgWidth * 9525m)  // 1px = 9525 EMUs
+                                : (rangeHeight - (3 * 9525m)) / (imgHeight * 9525m);
 
                             int resizeWidth = (int)Math.Round(imgWidth * scale * 9525m, 0, MidpointRounding.ToZero);
                             int resizeHeight = (int)Math.Round(imgHeight * scale * 9525m, 0, MidpointRounding.ToZero);
@@ -2128,7 +2128,7 @@ public static partial class ExcelHelper
         }
 
         const double maxWidth = 5;
-        return Math.Truncate((width * maxWidth + 5) / maxWidth * 256) / 256;
+        return Math.Truncate(((width * maxWidth) + 5) / maxWidth * 256) / 256;
     }
 
     // Helper classes to deal with cell references more easily

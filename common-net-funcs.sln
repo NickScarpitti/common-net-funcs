@@ -52,11 +52,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Web.Interfac
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.SubsetModelBinder", "CommonNetFuncs.SubsetModelBinder\CommonNetFuncs.SubsetModelBinder.csproj", "{01BFBF4E-75B6-4223-87D0-8F58FFE0AE56}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Excel.OpenXml", "CommonNetFuncs.Excel.OpenXml\CommonNetFuncs.Excel.OpenXml.csproj", "{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Word.OpenXml", "CommonNetFuncs.Word.OpenXml\CommonNetFuncs.Word.OpenXml.csproj", "{4FDBADB8-0B23-43E3-8AAD-95A05CA2E3DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Word.OpenXml", "CommonNetFuncs.Word.OpenXml\CommonNetFuncs.Word.OpenXml.csproj", "{4FDBADB8-0B23-43E3-8AAD-95A05CA2E3DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Excel.Common", "CommonNetFuncs.Excel.Common\CommonNetFuncs.Excel.Common.csproj", "{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonNetFuncs.Excel.Common", "CommonNetFuncs.Excel.Common\CommonNetFuncs.Excel.Common.csproj", "{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonNetFuncs.Excel.OpenXml", "CommonNetFuncs.Excel.OpenXml\CommonNetFuncs.Excel.OpenXml.csproj", "{C1B625F6-820B-4AA9-B9ED-464D10C33F00}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -332,18 +332,6 @@ Global
 		{01BFBF4E-75B6-4223-87D0-8F58FFE0AE56}.Release|x64.Build.0 = Release|Any CPU
 		{01BFBF4E-75B6-4223-87D0-8F58FFE0AE56}.Release|x86.ActiveCfg = Release|Any CPU
 		{01BFBF4E-75B6-4223-87D0-8F58FFE0AE56}.Release|x86.Build.0 = Release|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Debug|x64.Build.0 = Debug|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Debug|x86.Build.0 = Debug|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Release|x64.ActiveCfg = Release|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Release|x64.Build.0 = Release|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Release|x86.ActiveCfg = Release|Any CPU
-		{C685B8A3-43CF-4EBF-AA2B-97FF5B4525EB}.Release|x86.Build.0 = Release|Any CPU
 		{4FDBADB8-0B23-43E3-8AAD-95A05CA2E3DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4FDBADB8-0B23-43E3-8AAD-95A05CA2E3DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FDBADB8-0B23-43E3-8AAD-95A05CA2E3DF}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -368,6 +356,18 @@ Global
 		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Release|x64.Build.0 = Release|Any CPU
 		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Release|x86.ActiveCfg = Release|Any CPU
 		{0D20D6D9-F615-4FC9-8914-42D296F6F8B7}.Release|x86.Build.0 = Release|Any CPU
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Debug|x64.ActiveCfg = Debug|x64
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Debug|x64.Build.0 = Debug|x64
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Debug|x86.ActiveCfg = Debug|x86
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Debug|x86.Build.0 = Debug|x86
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Release|x64.ActiveCfg = Release|x64
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Release|x64.Build.0 = Release|x64
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Release|x86.ActiveCfg = Release|x86
+		{C1B625F6-820B-4AA9-B9ED-464D10C33F00}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

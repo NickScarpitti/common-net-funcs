@@ -823,6 +823,17 @@ public static partial class Common
     /// Adds images into a workbook at the designated named ranges
     /// </summary>
     /// <param name="wb">Workbook to insert images into</param>
+    /// <param name="imageData">Image byte array</param>
+    /// <param name="cellName">Named range to insert image at. Must be equal in length to imageData parameter</param>
+    public static void AddImage(this IWorkbook wb, byte[] imageData, string cellName, AnchorType anchorType = AnchorType.MoveAndResize)
+    {
+        wb.AddImages([imageData], [cellName], anchorType);
+    }
+
+    /// <summary>
+    /// Adds images into a workbook at the designated named ranges
+    /// </summary>
+    /// <param name="wb">Workbook to insert images into</param>
     /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
     /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
     public static void AddImages(this IWorkbook wb, List<byte[]> imageData, List<string> cellNames, AnchorType anchorType = AnchorType.MoveAndResize)

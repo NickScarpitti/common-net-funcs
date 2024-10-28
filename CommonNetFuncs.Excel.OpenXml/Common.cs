@@ -187,6 +187,7 @@ public static partial class ExcelHelper
         return workbookPart.Workbook;
     }
 
+    /// OK
     /// <summary>
     /// Gets a WorkbookPart from a CellReference object
     /// </summary>
@@ -198,6 +199,7 @@ public static partial class ExcelHelper
         return workbookPart.WorksheetParts.FirstOrDefault(wp => wp.Worksheet.Descendants<Cell>().Any(c => c.CellReference == cellReference.ToString()));
     }
 
+    /// OK
     /// <summary>
     /// Gets a Sheet by name from a SpreadsheetDocument
     /// </summary>
@@ -210,6 +212,7 @@ public static partial class ExcelHelper
         return workbookPart?.Workbook.Descendants<Sheet>().FirstOrDefault(s => sheetName == null || s.Name == sheetName);
     }
 
+    /// OK
     /// <summary>
     /// Gets the SheetData from a SpreadsheetDocument for a specific sheet
     /// </summary>
@@ -231,16 +234,52 @@ public static partial class ExcelHelper
         return sheetData;
     }
 
+    /// OK
     /// <summary>
     /// Checks if a Cell is empty
     /// </summary>
     /// <param name="cell">The Cell to check</param>
     /// <returns>True if the Cell is empty, false otherwise</returns>
-    public static bool IsCellEmpty(this Cell cell)
+    public static bool IsCellEmpty(this Cell? cell)
     {
-        return string.IsNullOrWhiteSpace(cell.InnerText);
+        return cell == null || string.IsNullOrWhiteSpace(cell.InnerText);
     }
 
+    /// OK
+    /// <summary>
+    /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
+    /// </summary>
+    /// <param name="ws">The Worksheet containing the cell</param>
+    /// <param name="cellReference">The cell reference to the cell to get</param>
+    /// <param name="colOffset">Optional: Column offset from cellReference column</param>
+    /// <param name="rowOffset">Optional: Row offset from cellReference row</param>
+    /// <returns>The Cell object, or null if not found</returns>
+    public static Cell? GetCellFromReference(this Worksheet ws, CellReference cellReference, int colOffset = 0, int rowOffset = 0)
+    {
+        try
+        {
+            Row? row = ws.GetRow(cellReference.RowIndex + (uint)rowOffset);
+            if (row == null)
+            {
+                row = new Row() { RowIndex = (uint)(cellReference.RowIndex + rowOffset) };
+                ws.Append(row);
+            }
+            Cell? cell = row.GetCell(cellReference.ColumnIndex + (uint)colOffset);
+            if (cell == null)
+            {
+                cell = new Cell() { CellReference = new CellReference(cellReference.ColumnIndex + (uint)colOffset, cellReference.RowIndex + (uint)rowOffset).ToString() };
+                row.Append(cell);
+            }
+            return cell;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            return null;
+        }
+    }
+
+    /// OK
     /// <summary>
     /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
     /// </summary>
@@ -254,19 +293,7 @@ public static partial class ExcelHelper
         try
         {
             CellReference cellRef = new(cellReference);
-            Row? row = ws.GetRow(cellRef.RowIndex + (uint)rowOffset);
-            if (row == null)
-            {
-                row = new Row() { RowIndex = (uint)(cellRef.RowIndex + rowOffset) };
-                ws.Append(row);
-            }
-            Cell? cell = row.GetCell(cellRef.ColumnIndex + (uint)colOffset);
-            if (cell == null)
-            {
-                cell = new Cell() { CellReference = new CellReference(cellRef.ColumnIndex + (uint)colOffset, cellRef.RowIndex + (uint)rowOffset).ToString() };
-                row.Append(cell);
-            }
-            return cell;
+            return ws.GetCellFromReference(cellRef, colOffset, rowOffset);
         }
         catch (Exception ex)
         {
@@ -275,6 +302,7 @@ public static partial class ExcelHelper
         }
     }
 
+    /// OK
     /// <summary>
     /// Gets a Cell offset from a given starting Cell
     /// </summary>
@@ -300,6 +328,7 @@ public static partial class ExcelHelper
         return null;
     }
 
+    /// OK
     /// <summary>
     /// Gets a Cell from a Worksheet using coordinates
     /// </summary>
@@ -334,6 +363,7 @@ public static partial class ExcelHelper
         }
     }
 
+    /// OK
     /// <summary>
     /// Gets a Cell from a SpreadsheetDocument using a named cell
     /// </summary>
@@ -347,12 +377,35 @@ public static partial class ExcelHelper
         try
         {
             WorkbookPart workbookPart = document.WorkbookPart ?? document.AddWorkbookPart();
-            DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName);
+            return workbookPart.GetCellFromName(cellName, colOffset, rowOffset);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            return null;
+        }
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets a Cell from a WorkbookPart using a named cell
+    /// </summary>
+    /// <param name="workbookPart">The WorkbookPart containing the cell</param>
+    /// <param name="cellName">The named reference of the cell</param>
+    /// <param name="colOffset">Optional: Column offset from the named cell</param>
+    /// <param name="rowOffset">Optional: Row offset from the named cell</param>
+    /// <returns>The Cell object, or null if not found</returns>
+    public static Cell? GetCellFromName(this WorkbookPart workbookPart, string cellName, int colOffset = 0, int rowOffset = 0)
+    {
+        try
+        {
+            DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
+                workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name.ToNString().StrEq(cellName)); // Search invariant case if exact fails
             if (definedName != null)
             {
                 string reference = definedName.Text;
                 string sheetName = reference.Split('!')[0].Trim('\'');
-                string cellReference = reference.Split('!')[1];
+                string cellReference = reference.Split('!')[1].Replace("$", null);
 
                 Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().First(s => s.Name == sheetName);
                 WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
@@ -367,32 +420,67 @@ public static partial class ExcelHelper
         }
     }
 
+    /// OK
+    /// <summary>
+    /// Gets CellReference of named cell
+    /// </summary>
+    /// <param name="document">SpreadsheetDocument containing the named cell</param>
+    /// <param name="cellName">The name of the cell</param>
+    /// <param name="colOffset">Optional: Column offset from the named cell</param>
+    /// <param name="rowOffset">Optional: Row offset from the named cell</param>
+    /// <returns>The CellReference for the named cell, null if not found</returns>
+    public static CellReference? GetCellReferenceFromName(this SpreadsheetDocument document, string cellName, int colOffset = 0, int rowOffset = 0)
+    {
+        try
+        {
+            WorkbookPart workbookPart = document.WorkbookPart ?? document.AddWorkbookPart();
+            return workbookPart.GetCellReferenceFromName(cellName, colOffset, rowOffset);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            return null;
+        }
+    }
+
+    /// OK
     /// <summary>
     /// Gets CellReference of named cell
     /// </summary>
     /// <param name="workbookPart">WorkbookPart containing the named cell</param>
-    /// <param name="name">The name of the cell</param>
+    /// <param name="cellName">The name of the cell</param>
+    /// <param name="colOffset">Optional: Column offset from the named cell</param>
+    /// <param name="rowOffset">Optional: Row offset from the named cell</param>
     /// <returns>The CellReference for the named cell, null if not found</returns>
-    public static CellReference? GetCellFromName(this WorkbookPart workbookPart, string name)
+    public static CellReference? GetCellReferenceFromName(this WorkbookPart workbookPart, string cellName, int colOffset = 0, int rowOffset = 0)
     {
-        DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(dn => dn.Name == name);
-
-        if (definedName != null)
+        try
         {
-            string reference = definedName.Text;
-            // Assuming the reference is in the format "SheetName!A1"
-            string[] parts = reference.Split('!');
-            if (parts.Length == 2)
+            DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
+                workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name.ToNString().StrEq(cellName)); // Search invariant case if exact fails
+            if (definedName != null)
             {
-                return new CellReference(parts[1]);
-            }
-        }
+                string reference = definedName.Text;
+                string sheetName = reference.Split('!')[0].Trim('\'');
+                string cellReference = reference.Split('!')[1].Replace("$", null);
 
-        return null;
+                Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().First(s => s.Name == sheetName);
+                WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
+                Cell? cell = worksheetPart.Worksheet.GetCellFromReference(cellReference, colOffset, rowOffset);
+                return cell?.CellReference != null ? new(cell.CellReference!) : null;
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            return null;
+        }
     }
 
     private static ConcurrentDictionary<string, Dictionary<string, uint>> WorkbookStandardFormatCache = [];
 
+    /// OK
     /// <summary>
     /// Clears all cached standard formats for all workbooks
     /// </summary>
@@ -401,6 +489,7 @@ public static partial class ExcelHelper
         WorkbookStandardFormatCache = [];
     }
 
+    /// OK
     /// <summary>
     /// Clears standard format cache for specific workbook
     /// </summary>
@@ -413,6 +502,7 @@ public static partial class ExcelHelper
         }
     }
 
+    /// OK
     /// <summary>
     /// Clears all cached custom formats for all workbooks
     /// </summary>
@@ -421,6 +511,7 @@ public static partial class ExcelHelper
         WorkbookCustomFormatCaches = [];
     }
 
+    /// OK
     /// <summary>
     /// Clears custom format cache for specific workbook
     /// </summary>
@@ -803,6 +894,7 @@ public static partial class ExcelHelper
         return (uint)fonts.Count() - 1;
     }
 
+    /// OK
     /// <summary>
     /// Check to see if two CellFormat objects are the same based on Fill, Font, Border, Alignment, and Protection
     /// </summary>
@@ -822,6 +914,7 @@ public static partial class ExcelHelper
             FormatProtectionsAreEqual(format1.Protection, format2.Protection);
     }
 
+    /// OK
     /// <summary>
     /// Check to see if two Alignment objects are identical
     /// </summary>
@@ -835,6 +928,7 @@ public static partial class ExcelHelper
         return alignment1.Horizontal == alignment2.Horizontal;
     }
 
+    /// OK
     /// <summary>
     /// Check to see if two Protection objects are identical
     /// </summary>
@@ -858,6 +952,7 @@ public static partial class ExcelHelper
         public Dictionary<string, uint> CellFormatCache { get; } = [];
     }
 
+    /// OK
     /// <summary>
     /// Create a custom style to apply in a SpreadsheetDocument
     /// </summary>
@@ -868,7 +963,7 @@ public static partial class ExcelHelper
     /// <param name="fill">Sets Fill value of CellFormat, creates if no identical fill exists yet</param>
     /// <param name="border">Sets Border value of CellFormat, creates if no identical border exists yet</param>
     /// <returns>ID of the new CellFormat</returns>
-    public static uint? GetCustomStyle(SpreadsheetDocument document, bool cellLocked = false, Font? font = null,
+    public static uint? GetCustomStyle(this SpreadsheetDocument document, bool cellLocked = false, Font? font = null,
         HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null)
     {
         Stylesheet? stylesheet = document.GetStylesheet();
@@ -921,6 +1016,7 @@ public static partial class ExcelHelper
         return newFormatId;
     }
 
+    /// OK
     /// <summary>
     /// Creates a new Font if font does not already exist, otherwise retrieves existing font
     /// </summary>
@@ -946,6 +1042,7 @@ public static partial class ExcelHelper
         return newFontId;
     }
 
+    /// OK
     /// <summary>
     /// Creates a new Fill if fill does not already exist, otherwise retrieves existing fill
     /// </summary>
@@ -971,6 +1068,7 @@ public static partial class ExcelHelper
         return newFillId;
     }
 
+    /// OK
     /// <summary>
     /// Creates a new Border if border does not already exist, otherwise retrieves existing border
     /// </summary>
@@ -996,6 +1094,7 @@ public static partial class ExcelHelper
         return newBorderId;
     }
 
+    /// OK
     /// <summary>
     /// Gets hash of an OpenXmlElement
     /// </summary>
@@ -1006,6 +1105,7 @@ public static partial class ExcelHelper
         return element.OuterXml.GetHashCode();
     }
 
+    /// OK
     /// <summary>
     /// Gets a unique identifier for the current SpreadsheetDocument
     /// </summary>
@@ -1435,6 +1535,16 @@ public static partial class ExcelHelper
     /// </summary>
     /// <param name="workbookPart">WorkbookPart to insert images into</param>
     /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
+    /// <param name="cellName">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
+    public static void AddImage(this WorkbookPart workbookPart, byte[] imageData, string cellName)
+    {
+        workbookPart.AddImages([imageData], [cellName]);
+    }
+    /// <summary>
+    /// Adds images into a workbook at the designated named ranges
+    /// </summary>
+    /// <param name="workbookPart">WorkbookPart to insert images into</param>
+    /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
     /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
     public static void AddImages(this WorkbookPart workbookPart, List<byte[]> imageData, List<string> cellNames)
     {
@@ -1447,7 +1557,7 @@ public static partial class ExcelHelper
             {
                 if (imageData[i].Length > 0 && cellNames[i] != null)
                 {
-                    CellReference? cellReference = GetCellFromName(workbookPart, cellNames[i]);
+                    CellReference? cellReference = GetCellReferenceFromName(workbookPart, cellNames[i]);
                     if (cellReference != null)
                     {
                         if (worksheetPart == null)
@@ -1488,7 +1598,7 @@ public static partial class ExcelHelper
                                 imagePart.FeedData(stream);
                             }
 
-                            AddImageToWorksheet(drawingsPart, imagePart.GetIdOfPart(imagePart),
+                            AddImageToWorksheet(drawingsPart, drawingsPart.GetIdOfPart(imagePart),
                                 mergedCellArea.Item1, mergedCellArea.Item2,
                                 xMargin, yMargin, resizeWidth, resizeHeight);
                         }
@@ -1522,8 +1632,8 @@ public static partial class ExcelHelper
     /// </summary>
     /// <param name="worksheetPart">WorksheetPart containing the merged cell area</param>
     /// <param name="cellReference">Cell reference for the merged cell area</param>
-    /// <returns></returns>
-    public static (CellReference, CellReference) GetMergedCellArea(WorksheetPart worksheetPart, CellReference cellReference)
+    /// <returns>Cell references for the first (top left) and last (bottom right) cell</returns>
+    public static (CellReference FirstCell, CellReference LastCell) GetMergedCellArea(WorksheetPart worksheetPart, CellReference cellReference)
     {
         MergeCells? mergedCells = worksheetPart.Worksheet.Elements<MergeCells>().FirstOrDefault();
         if (mergedCells != null)
@@ -1683,6 +1793,7 @@ public static partial class ExcelHelper
     // Data validation in OpenXML requires a different approach and would need
     // a more complex implementation.
 
+    /// OK
     /// <summary>
     /// Reads tabular data from an unformatted excel sheet to a DataTable object using OpenXML
     /// </summary>
@@ -1710,7 +1821,7 @@ public static partial class ExcelHelper
 
                 // Determine start and end cells
                 CellReference startCell = new(startCellReference ?? "A1");
-                CellReference endCell = endCellReference != null ? new(endCellReference) : GetLastPopulatedCell(sheetData);
+                CellReference endCell = endCellReference != null ? new(endCellReference) : sheetData.GetLastPopulatedCell();
 
                 // Add columns to DataTable
                 for (uint col = startCell.ColumnIndex; col <= endCell.ColumnIndex; col++)
@@ -1756,12 +1867,13 @@ public static partial class ExcelHelper
         return dataTable;
     }
 
+    /// OK
     /// <summary>
     /// Gets the last populated cell from SheetData
     /// </summary>
     /// <param name="sheetData">SheetData to get last populated cell from</param>
     /// <returns>Cell reference of the last populated cell</returns>
-    public static CellReference GetLastPopulatedCell(SheetData sheetData)
+    public static CellReference GetLastPopulatedCell(this SheetData sheetData)
     {
         uint maxRow = sheetData.Elements<Row>().Max(x => x.RowIndex?.Value ?? 0);
         uint maxCol = sheetData.Descendants<Cell>().Where(x => x != null).Max(x => new CellReference(x.CellReference!).ColumnIndex);
@@ -1789,11 +1901,36 @@ public static partial class ExcelHelper
     /// <summary>
     /// Gets the string value of a cell
     /// </summary>
+    /// <param name="sheetData">SheetData containing cell value to be read</param>
+    /// <param name="cellReference">CellReference of cell to get value of</param>
+    /// <returns>String value of the indicated cell</returns>
+    public static string GetCellValue(this SheetData sheetData, CellReference cellReference)
+    {
+        return sheetData.GetCellValue(cellReference.RowIndex, cellReference.ColumnIndex);
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets the string value of a cell
+    /// </summary>
+    /// <param name="cellReference">CellReference to read string value from</param>
+    /// <param name="worksheet">Worksheet that contains the cell to get value of</param>
+    /// <returns>String value of the cell</returns>
+    private static string GetCellValue(this Worksheet worksheet, CellReference cellReference)
+    {
+        Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+        return cell?.GetCellValue() ?? string.Empty;
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets the string value of a cell
+    /// </summary>
     /// <param name="cell">Cell to read string value from</param>
     /// <returns>String value of the cell</returns>
-    private static string GetCellValue(this Cell cell)
+    private static string GetCellValue(this Cell? cell)
     {
-        if (cell.CellValue == null) return string.Empty;
+        if (cell?.CellValue == null) return string.Empty;
 
         string value = cell.CellValue.Text;
 
@@ -1814,9 +1951,22 @@ public static partial class ExcelHelper
     /// <summary>
     /// Gets the stylized string value of a cell
     /// </summary>
+    /// <param name="cellReference">CellReference to read stylized string value from</param>
+    /// <param name="worksheet">Worksheet that contains the cell to get value of</param>
+    /// <returns>Stylized string value of a cell</returns>
+    public static string? GetStringValue(this Worksheet worksheet, CellReference cellReference)
+    {
+        Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+        return cell?.GetStringValue();
+    }
+
+    /// OK
+    /// <summary>
+    /// Gets the stylized string value of a cell
+    /// </summary>
     /// <param name="cell">Cell to read stylized string value from</param>
     /// <returns>Stylized string value of a cell</returns>
-    public static string? GetStringValue(this Cell cell)
+    public static string? GetStringValue(this Cell? cell)
     {
         if (cell == null) return null;
 
@@ -1826,7 +1976,8 @@ public static partial class ExcelHelper
             if (cellDataType == CellValues.SharedString.ToString())
             {
                 Worksheet worksheet = cell.GetWorksheetFromCell();
-                SharedStringTablePart? stringTable = worksheet.WorksheetPart?.GetParentParts().OfType<SharedStringTablePart>().FirstOrDefault();
+                Workbook workbook = worksheet.GetWorkbookFromWorksheet();
+                SharedStringTablePart? stringTable = workbook.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
                 if (stringTable != null)
                 {
                     return stringTable.SharedStringTable.ElementAt(int.Parse(cell.InnerText)).InnerText;
@@ -1849,6 +2000,7 @@ public static partial class ExcelHelper
         return cell.InnerText;
     }
 
+    /// OK
     /// <summary>
     /// Reads an Excel table into a DataTable object using OpenXML
     /// </summary>
@@ -1863,7 +2015,7 @@ public static partial class ExcelHelper
         {
             using SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(fileStream, false);
             WorkbookPart? workbookPart = spreadsheetDocument.WorkbookPart ?? throw new InvalidOperationException("The workbook part is missing.");
-            Table? table = FindTable(workbookPart, tableName) ?? throw new InvalidOperationException($"Table '{tableName ?? ""}' not found.");
+            Table? table = workbookPart.FindTable(tableName) ?? throw new InvalidOperationException($"Table '{tableName ?? ""}' not found.");
             Sheet? sheet = spreadsheetDocument.GetSheetByName(table.Name);
             if (sheet?.Id?.Value == null)
             {
@@ -1907,6 +2059,7 @@ public static partial class ExcelHelper
                 }
                 dataTable.Rows.Add(dataRow);
             }
+            spreadsheetDocument.Dispose();
         }
         catch (Exception ex)
         {
@@ -1916,13 +2069,14 @@ public static partial class ExcelHelper
         return dataTable;
     }
 
+    /// OK
     /// <summary>
     /// Get table by table name
     /// </summary>
     /// <param name="workbookPart">WorkbookPart containing table</param>
     /// <param name="tableName">Name of table to retrieve</param>
     /// <returns>Table indicated by tableName, null if not found</returns>
-    public static Table? FindTable(WorkbookPart workbookPart, string? tableName)
+    public static Table? FindTable(this WorkbookPart workbookPart, string? tableName)
     {
         foreach (WorksheetPart worksheetPart in workbookPart.WorksheetParts)
         {
@@ -2169,7 +2323,7 @@ public static partial class ExcelHelper
 
         public CellReference(string reference)
         {
-            Match match = CellRefRegex().Match(reference);
+            Match match = CellRefRegex().Match(reference.ToUpperInvariant());
             ColumnIndex = ColumnNameToNumber(match.Groups[1].Value);
             RowIndex = uint.Parse(match.Groups[2].Value);
         }

@@ -8,14 +8,16 @@ public enum EStyle
     Error,
     Blackout,
     Whiteout,
-    Custom
+    Custom,
+    ImageBackground
 }
 
 public enum EFont
 {
     Default,
     Header,
-    Whiteout
+    Whiteout,
+    ImageBackground
 }
 
 public enum ETableStyle

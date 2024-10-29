@@ -18,7 +18,6 @@ public static partial class ExcelHelper
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-    /// OK
     /// <summary>
     /// Populates SpreadsheetDocument with all components needed for a new Excel file including a single new sheet
     /// </summary>
@@ -30,7 +29,6 @@ public static partial class ExcelHelper
         return document.CreateNewSheet(sheetName);
     }
 
-    /// OK
     /// <summary>
     /// Adds a new sheet to a SpreadsheetDocument named according to the value passed into sheetName or "Sheet #"
     /// </summary>
@@ -71,7 +69,6 @@ public static partial class ExcelHelper
         return sheetId;
     }
 
-    /// OK
     /// <summary>
     /// Gets a Worksheet by its name from a SpreadsheetDocument.
     /// </summary>
@@ -108,7 +105,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Gets a Worksheet by its ID from a SpreadsheetDocument
     /// </summary>
@@ -126,7 +122,6 @@ public static partial class ExcelHelper
         return worksheetPart.Worksheet;
     }
 
-    /// OK
     /// <summary>
     /// Gets a Worksheet from a Cell object
     /// </summary>
@@ -137,7 +132,6 @@ public static partial class ExcelHelper
         return cell.Ancestors<Worksheet>().FirstOrDefault() ?? throw new InvalidOperationException("Cell is not part of a worksheet.");
     }
 
-    /// OK
     /// <summary>
     /// Gets a Workbook from a Cell object
     /// </summary>
@@ -155,7 +149,6 @@ public static partial class ExcelHelper
         return workbookPart.Workbook;
     }
 
-    /// OK
     /// <summary>
     /// Gets a Workbook from a Worksheet object
     /// </summary>
@@ -171,7 +164,6 @@ public static partial class ExcelHelper
         return workbookPart.Workbook;
     }
 
-    /// OK
     /// <summary>
     /// Gets a Workbook from a WorksheetPart object
     /// </summary>
@@ -187,7 +179,6 @@ public static partial class ExcelHelper
         return workbookPart.Workbook;
     }
 
-    /// OK
     /// <summary>
     /// Gets a WorkbookPart from a CellReference object
     /// </summary>
@@ -199,7 +190,6 @@ public static partial class ExcelHelper
         return workbookPart.WorksheetParts.FirstOrDefault(wp => wp.Worksheet.Descendants<Cell>().Any(c => c.CellReference == cellReference.ToString()));
     }
 
-    /// OK
     /// <summary>
     /// Gets a Sheet by name from a SpreadsheetDocument
     /// </summary>
@@ -212,7 +202,6 @@ public static partial class ExcelHelper
         return workbookPart?.Workbook.Descendants<Sheet>().FirstOrDefault(s => sheetName == null || s.Name == sheetName);
     }
 
-    /// OK
     /// <summary>
     /// Gets the SheetData from a SpreadsheetDocument for a specific sheet
     /// </summary>
@@ -234,7 +223,6 @@ public static partial class ExcelHelper
         return sheetData;
     }
 
-    /// OK
     /// <summary>
     /// Checks if a Cell is empty
     /// </summary>
@@ -245,7 +233,6 @@ public static partial class ExcelHelper
         return cell == null || string.IsNullOrWhiteSpace(cell.InnerText);
     }
 
-    /// OK
     /// <summary>
     /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
     /// </summary>
@@ -279,7 +266,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
     /// </summary>
@@ -302,7 +288,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Gets a Cell offset from a given starting Cell
     /// </summary>
@@ -328,7 +313,6 @@ public static partial class ExcelHelper
         return null;
     }
 
-    /// OK
     /// <summary>
     /// Gets a Cell from a Worksheet using coordinates
     /// </summary>
@@ -363,7 +347,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Gets a Cell from a SpreadsheetDocument using a named cell
     /// </summary>
@@ -386,7 +369,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Gets a Cell from a WorkbookPart using a named cell
     /// </summary>
@@ -420,7 +402,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Gets CellReference of named cell
     /// </summary>
@@ -443,7 +424,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Gets CellReference of named cell
     /// </summary>
@@ -480,7 +460,6 @@ public static partial class ExcelHelper
 
     private static ConcurrentDictionary<string, Dictionary<string, uint>> WorkbookStandardFormatCache = [];
 
-    /// OK
     /// <summary>
     /// Clears all cached standard formats for all workbooks
     /// </summary>
@@ -489,7 +468,6 @@ public static partial class ExcelHelper
         WorkbookStandardFormatCache = [];
     }
 
-    /// OK
     /// <summary>
     /// Clears standard format cache for specific workbook
     /// </summary>
@@ -502,7 +480,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Clears all cached custom formats for all workbooks
     /// </summary>
@@ -511,7 +488,6 @@ public static partial class ExcelHelper
         WorkbookCustomFormatCaches = [];
     }
 
-    /// OK
     /// <summary>
     /// Clears custom format cache for specific workbook
     /// </summary>
@@ -524,7 +500,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Gets the Stylesheet from a SpreadsheetDocument
     /// </summary>
@@ -555,7 +530,6 @@ public static partial class ExcelHelper
         return stylesPart?.Stylesheet;
     }
 
-    /// OK
     /// <summary>
     /// Gets the Borders from a Stylesheet
     /// </summary>
@@ -576,7 +550,6 @@ public static partial class ExcelHelper
         return borders;
     }
 
-    /// OK
     /// <summary>
     /// Gets the Fills from a Stylesheet
     /// </summary>
@@ -612,7 +585,6 @@ public static partial class ExcelHelper
         return fills;
     }
 
-    /// OK
     /// <summary>
     /// Gets the Fonts from a Stylesheet
     /// </summary>
@@ -640,7 +612,6 @@ public static partial class ExcelHelper
         return fonts;
     }
 
-    /// OK
     /// <summary>
     /// Gets the CellFormats from a Stylesheet.
     /// </summary>
@@ -667,7 +638,6 @@ public static partial class ExcelHelper
         return cellFormats;
     }
 
-    /// OK
     /// <summary>
     /// Creates the style corresponding to the style enum passed in and returns the ID for the style that was created
     /// </summary>
@@ -860,7 +830,6 @@ public static partial class ExcelHelper
         return newFormatId;
     }
 
-    /// OK
     /// <summary>
     /// Get font styling based on EFonts option
     /// </summary>
@@ -894,7 +863,6 @@ public static partial class ExcelHelper
         return (uint)fonts.Count() - 1;
     }
 
-    /// OK
     /// <summary>
     /// Check to see if two CellFormat objects are the same based on Fill, Font, Border, Alignment, and Protection
     /// </summary>
@@ -914,7 +882,6 @@ public static partial class ExcelHelper
             FormatProtectionsAreEqual(format1.Protection, format2.Protection);
     }
 
-    /// OK
     /// <summary>
     /// Check to see if two Alignment objects are identical
     /// </summary>
@@ -928,7 +895,6 @@ public static partial class ExcelHelper
         return alignment1.Horizontal == alignment2.Horizontal;
     }
 
-    /// OK
     /// <summary>
     /// Check to see if two Protection objects are identical
     /// </summary>
@@ -952,7 +918,6 @@ public static partial class ExcelHelper
         public Dictionary<string, uint> CellFormatCache { get; } = [];
     }
 
-    /// OK
     /// <summary>
     /// Create a custom style to apply in a SpreadsheetDocument
     /// </summary>
@@ -1016,7 +981,6 @@ public static partial class ExcelHelper
         return newFormatId;
     }
 
-    /// OK
     /// <summary>
     /// Creates a new Font if font does not already exist, otherwise retrieves existing font
     /// </summary>
@@ -1042,7 +1006,6 @@ public static partial class ExcelHelper
         return newFontId;
     }
 
-    /// OK
     /// <summary>
     /// Creates a new Fill if fill does not already exist, otherwise retrieves existing fill
     /// </summary>
@@ -1068,7 +1031,6 @@ public static partial class ExcelHelper
         return newFillId;
     }
 
-    /// OK
     /// <summary>
     /// Creates a new Border if border does not already exist, otherwise retrieves existing border
     /// </summary>
@@ -1094,7 +1056,6 @@ public static partial class ExcelHelper
         return newBorderId;
     }
 
-    /// OK
     /// <summary>
     /// Gets hash of an OpenXmlElement
     /// </summary>
@@ -1105,7 +1066,6 @@ public static partial class ExcelHelper
         return element.OuterXml.GetHashCode();
     }
 
-    /// OK
     /// <summary>
     /// Gets a unique identifier for the current SpreadsheetDocument
     /// </summary>
@@ -1119,7 +1079,6 @@ public static partial class ExcelHelper
         return $"{filePath}_{creationTime}";
     }
 
-    /// OK
     /// <summary>
     /// Generates a simple excel file containing the passed in data in a tabular format
     /// </summary>
@@ -1188,7 +1147,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Generates a simple excel file containing the passed in data in a tabular format
     /// </summary>
@@ -1255,7 +1213,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Creates a cell in the provided worksheet, creating a row to contain it if necessary
     /// </summary>
@@ -1269,7 +1226,6 @@ public static partial class ExcelHelper
         return sheetData.InsertCell(columnIndex, rowIndex);
     }
 
-    /// OK
     /// <summary>
     /// Creates a cell in the provided sheetData, creating a row to contain it if necessary
     /// </summary>
@@ -1326,7 +1282,6 @@ public static partial class ExcelHelper
         return cell;
     }
 
-    /// OK
     /// <summary>
     /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
     /// </summary>
@@ -1342,7 +1297,6 @@ public static partial class ExcelHelper
         sheetData.InsertCellValue(columnIndex, rowIndex, cellValue, cellType, styleIndex);
     }
 
-    /// OK
     /// <summary>
     /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
     /// </summary>
@@ -1373,7 +1327,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
     /// </summary>
@@ -1389,7 +1342,6 @@ public static partial class ExcelHelper
         sheetData.InsertCellFormula(columnIndex, rowIndex, formulaString, cellType, styleIndex);
     }
 
-    /// OK
     /// <summary>
     /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
     /// </summary>
@@ -1418,7 +1370,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Creates a SharedStringItem with the specified text and inserts it into the SharedStringTablePart. If the item already exists, returns its index.
     /// </summary>
@@ -1449,7 +1400,6 @@ public static partial class ExcelHelper
         return i;
     }
 
-    /// OK
     /// <summary>
     /// Create a table for the specified sheet in worksheet
     /// </summary>
@@ -1516,7 +1466,6 @@ public static partial class ExcelHelper
         };
     }
 
-    /// OK
     /// <summary>
     /// Adds auto filter to a range of cells in the worksheet
     /// </summary>
@@ -1533,29 +1482,32 @@ public static partial class ExcelHelper
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
     /// </summary>
-    /// <param name="workbookPart">WorkbookPart to insert images into</param>
-    /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
-    /// <param name="cellName">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
-    public static void AddImage(this WorkbookPart workbookPart, byte[] imageData, string cellName)
+    /// <param name="document">SpreadsheetDocument to insert images into</param>
+    /// <param name="imageData">Image byte array</param>
+    /// <param name="cellName">Named range to insert image at</param>
+    public static void AddImage(this SpreadsheetDocument document, byte[] imageData, string cellName)
     {
-        workbookPart.AddImages([imageData], [cellName]);
+        document.AddImages([imageData], [cellName]);
     }
+
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
     /// </summary>
-    /// <param name="workbookPart">WorkbookPart to insert images into</param>
+    /// <param name="document">SpreadsheetDocument to insert images into</param>
     /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
     /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
-    public static void AddImages(this WorkbookPart workbookPart, List<byte[]> imageData, List<string> cellNames)
+    public static void AddImages(this SpreadsheetDocument document, List<byte[]> imageData, List<string> cellNames)
     {
+        WorkbookPart? workbookPart = document.WorkbookPart;
         if (workbookPart != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
         {
             WorksheetPart? worksheetPart = null;
             DrawingsPart? drawingsPart = null;
 
+            uint? cellStyleIndex = document.GetCustomStyle(font: new() { FontSize = new() { Val = 11 }, FontName = new() { Val = nameof(EFontName.Calibri) } });
             for (int i = 0; i < imageData.Count; i++)
             {
-                if (imageData[i].Length > 0 && cellNames[i] != null)
+                if (imageData[i].Length > 0 && !cellNames[i].IsNullOrWhiteSpace())
                 {
                     CellReference? cellReference = GetCellReferenceFromName(workbookPart, cellNames[i]);
                     if (cellReference != null)
@@ -1569,43 +1521,101 @@ public static partial class ExcelHelper
                             }
                         }
 
-                        if (worksheetPart != null && drawingsPart != null)
+                        if (worksheetPart != null && drawingsPart != null && cellStyleIndex != null)
                         {
-                            (CellReference, CellReference) mergedCellArea = GetMergedCellArea(worksheetPart, cellReference);
-
-                            using Image image = Image.Load(imageData[i]);
-                            int imgWidth = image.Width;
-                            int imgHeight = image.Height;
-
-                            decimal imgAspect = (decimal)imgWidth / imgHeight;
-
-                            int rangeWidth = GetRangeWidthInEmu(worksheetPart, mergedCellArea);
-                            int rangeHeight = GetRangeHeightInEmu(worksheetPart, mergedCellArea);
-                            decimal rangeAspect = (decimal)rangeWidth / rangeHeight;
-
-                            decimal scale = rangeAspect < imgAspect
-                                ? (rangeWidth - (3 * 9525m)) / (imgWidth * 9525m)  // 1px = 9525 EMUs
-                                : (rangeHeight - (3 * 9525m)) / (imgHeight * 9525m);
-
-                            int resizeWidth = (int)Math.Round(imgWidth * scale * 9525m, 0, MidpointRounding.ToZero);
-                            int resizeHeight = (int)Math.Round(imgHeight * scale * 9525m, 0, MidpointRounding.ToZero);
-                            int xMargin = (int)Math.Round((rangeWidth - resizeWidth) / 2.0m, 0, MidpointRounding.ToZero);
-                            int yMargin = (int)Math.Round((rangeHeight - resizeHeight) * 1.75m / 2.0m, 0, MidpointRounding.ToZero);
-
-                            ImagePart imagePart = drawingsPart.AddImagePart(ImagePartType.Png);
-                            using (MemoryStream stream = new(imageData[i]))
-                            {
-                                imagePart.FeedData(stream);
-                            }
-
-                            AddImageToWorksheet(drawingsPart, drawingsPart.GetIdOfPart(imagePart),
-                                mergedCellArea.Item1, mergedCellArea.Item2,
-                                xMargin, yMargin, resizeWidth, resizeHeight);
+                            worksheetPart.AddImagePart(drawingsPart, GetMergedCellArea(worksheetPart, cellReference), (uint)cellStyleIndex, imageData[i]);
                         }
                     }
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Adds images into a workbook at the designated named ranges
+    /// </summary>
+    /// <param name="document">SpreadsheetDocument to insert images into</param>
+    /// <param name="imageData">Image byte array</param>
+    /// <param name="mergedCellArea">Tuple defining the first (top left) and last (bottom right) cell of the range to insert the image into</param>
+    public static void AddImage(this SpreadsheetDocument document, byte[] imageData, (CellReference FirstCell, CellReference LastCell) mergedCellArea)
+    {
+        document.AddImages([imageData], [mergedCellArea]);
+    }
+
+    /// <summary>
+    /// Adds images into a workbook at the designated named ranges
+    /// </summary>
+    /// <param name="document">SpreadsheetDocument to insert images into</param>
+    /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
+    /// <param name="mergedCellAreas">List of tuples defining the first (top left) and last (bottom right) cell of the range to insert the images into. Must be equal in length to imageData parameter</param>
+    public static void AddImages(this SpreadsheetDocument document, List<byte[]> imageData, List<(CellReference FirstCell, CellReference LastCell)> mergedCellAreas)
+    {
+        WorkbookPart? workbookPart = document.WorkbookPart;
+        if (workbookPart != null && imageData.Count > 0 && mergedCellAreas.Count > 0 && imageData.Count == mergedCellAreas.Count)
+        {
+            WorksheetPart? worksheetPart = null;
+            DrawingsPart? drawingsPart = null;
+
+            uint? cellStyleIndex = document.GetCustomStyle(font: new() { FontSize = new() { Val = 11 }, FontName = new() { Val = nameof(EFontName.Calibri) } });
+            for (int i = 0; i < imageData.Count; i++)
+            {
+                if (imageData[i].Length > 0)
+                {
+                    (CellReference FirstCell, CellReference LastCell) mergedCellArea = mergedCellAreas[i];
+                    CellReference? cellReference = mergedCellArea.FirstCell;
+                    if (cellReference != null)
+                    {
+                        if (worksheetPart == null)
+                        {
+                            worksheetPart = GetWorksheetPartByCellReference(workbookPart, cellReference);
+                            if (worksheetPart != null)
+                            {
+                                drawingsPart = GetOrCreateDrawingsPart(worksheetPart);
+                            }
+                        }
+
+                        if (worksheetPart != null && drawingsPart != null && cellStyleIndex != null)
+                        {
+                            worksheetPart.AddImagePart(drawingsPart, mergedCellArea, (uint)cellStyleIndex, imageData[i]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static void AddImagePart(this WorksheetPart worksheetPart, DrawingsPart drawingsPart, (CellReference FirstCell, CellReference LastCell) mergedCellArea, uint cellStyleIndex, byte[] imageData)
+    {
+        //Set cells to standard font to ensure cell sizes are gotten correctly
+        Cell? cell = worksheetPart.Worksheet.GetCellFromReference(mergedCellArea.FirstCell);
+        if (cell != null)
+        {
+            cell.StyleIndex = cellStyleIndex;
+        }
+        using Image image = Image.Load(imageData);
+        int imgWidthPx = image.Width;
+        int imgHeightPx = image.Height;
+
+        decimal imgAspect = (decimal)imgWidthPx / imgHeightPx;
+
+        int rangeWidthPx = GetRangeWidthInPx(worksheetPart, mergedCellArea);
+        int rangeHeightPx = GetRangeHeightInPx(worksheetPart, mergedCellArea);
+        decimal rangeAspect = (decimal)rangeWidthPx / rangeHeightPx;
+
+        decimal scale = rangeAspect < imgAspect ? (rangeWidthPx - 3m) / imgWidthPx : (rangeHeightPx - 3m) / imgHeightPx;
+
+        int resizeWidth = (int)Math.Round(imgWidthPx * scale, 0, MidpointRounding.ToZero);
+        int resizeHeight = (int)Math.Round(imgHeightPx * scale, 0, MidpointRounding.ToZero);
+        int xMargin = (int)Math.Round((rangeWidthPx - resizeWidth) * 9525 / 2.0m, 0, MidpointRounding.ToZero);
+        int yMargin = (int)Math.Round((rangeHeightPx - resizeHeight) * 9525 * 1.75m / 2.0m, 0, MidpointRounding.ToZero);
+
+        ImagePart imagePart = drawingsPart.AddImagePart(ImagePartType.Png);
+        using (MemoryStream stream = new(imageData))
+        {
+            imagePart.FeedData(stream);
+        }
+
+        AddImageToWorksheet(drawingsPart, drawingsPart.GetIdOfPart(imagePart), mergedCellArea.FirstCell, mergedCellArea.LastCell, xMargin, yMargin, resizeWidth, resizeHeight);
     }
 
     /// <summary>
@@ -1658,43 +1668,49 @@ public static partial class ExcelHelper
     }
 
     /// <summary>
-    /// Get the width of a range in EMU
+    /// Get the width of a range in pixels
     /// </summary>
     /// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
     /// <param name="range">The range being measured</param>
     /// <returns>The width of the specified range in EMU</returns>
-    public static int GetRangeWidthInEmu(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
+    public static int GetRangeWidthInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
     {
         Worksheet worksheet = worksheetPart.Worksheet;
-        Columns? cols = worksheet.Elements<Columns>().FirstOrDefault();
+        Columns? columns = worksheet.Elements<Columns>().FirstOrDefault();
 
-        int totalWidth = 0;
-        for (uint col = range.start.ColumnIndex; col <= range.end.ColumnIndex; col++)
+        double totalWidthChars = 0;
+        for (uint colIndex = range.start.ColumnIndex; colIndex <= range.end.ColumnIndex; colIndex++)
         {
-            Column? column = cols?.Elements<Column>().FirstOrDefault(x => x.Min != null && x.Max != null && x.Min <= col + 1 && col + 1 <= x.Max);
-            double columnWidth = column?.Width ?? 8.43; // Default column width
-            totalWidth += (int)(columnWidth * 9525); // Convert to EMUs (1 character width = 9525 EMUs)
+            Column? column = worksheet.GetOrCreateColumn(colIndex, columns: columns);
+            double columnWidthChars = column?.Width ?? 8.43; // Default column width (# in characters)
+            totalWidthChars += columnWidthChars; //(int)Math.Truncate((columnWidthChars *  7 + 5) / 7 * 256)/ 256;
         }
 
-        return totalWidth;
+        return (int)Math.Round(totalWidthChars * 7, 0, MidpointRounding.ToZero);
     }
 
     /// <summary>
-    /// Get the height of a range in EMU
+    /// Get the height of a range in pixels
     /// </summary>
     /// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
     /// <param name="range">The range being measured</param>
     /// <returns>The height of the specified range in EMU</returns>
-    public static int GetRangeHeightInEmu(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
+    public static int GetRangeHeightInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
     {
         Worksheet worksheet = worksheetPart.Worksheet;
 
         int totalHeight = 0;
-        for (uint row = range.start.RowIndex; row <= range.end.RowIndex; row++)
+        for (uint rowIndex = range.start.RowIndex; rowIndex <= range.end.RowIndex; rowIndex++)
         {
-            Row? r = worksheet.Elements<Row>().FirstOrDefault(x => x.RowIndex != null && x.RowIndex == row);
-            double rowHeight = r?.Height ?? 15; // Default row height
-            totalHeight += (int)(rowHeight * 9525); // Convert to EMUs (1 point = 9525 EMUs)
+            Row? row = worksheet.GetRow(rowIndex);
+            if (row == null)
+            {
+                SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
+                row = new Row { RowIndex = rowIndex };
+                sheetData!.Append(row);
+            }
+            double rowHeight = row?.Height ?? 14.2; // Default row height for Calibri 11pt
+            totalHeight += (int)(rowHeight * 12700 / 9525); // Convert to EMUs (1 point = 12700 EMUs), then to pixels (1 pixel = 9525 EMUs)
         }
 
         return totalHeight;
@@ -1726,7 +1742,7 @@ public static partial class ExcelHelper
         {
             FromMarker = new Xdr.FromMarker
             {
-                ColumnId = new Xdr.ColumnId { Text = fromCell.ColumnIndex.ToString() },
+                ColumnId = new Xdr.ColumnId { Text = (fromCell.ColumnIndex -1).ToString() },
                 RowId = new Xdr.RowId { Text = (fromCell.RowIndex - 1).ToString() },
                 ColumnOffset = new Xdr.ColumnOffset { Text = xMargin.ToString() },
                 RowOffset = new Xdr.RowOffset { Text = yMargin.ToString() }
@@ -1773,7 +1789,7 @@ public static partial class ExcelHelper
     /// <param name="sheet">The Worksheet to get the range from</param>
     /// <param name="range">The range in A1:B2 format</param>
     /// <returns>An IEnumerable of Cells in the specified range</returns>
-    public static IEnumerable<Cell?> GetRange(Worksheet sheet, string range)
+    public static IEnumerable<Cell?> GetRange(this Worksheet sheet, string range)
     {
         string[] addresses = range.Split(':');
         CellReference startAddress = new(addresses[0]);
@@ -1793,7 +1809,6 @@ public static partial class ExcelHelper
     // Data validation in OpenXML requires a different approach and would need
     // a more complex implementation.
 
-    /// OK
     /// <summary>
     /// Reads tabular data from an unformatted excel sheet to a DataTable object using OpenXML
     /// </summary>
@@ -1867,7 +1882,6 @@ public static partial class ExcelHelper
         return dataTable;
     }
 
-    /// OK
     /// <summary>
     /// Gets the last populated cell from SheetData
     /// </summary>
@@ -1880,7 +1894,6 @@ public static partial class ExcelHelper
         return new CellReference(maxCol, maxRow);
     }
 
-    /// OK
     /// <summary>
     /// Gets the string value of a cell
     /// </summary>
@@ -1897,7 +1910,6 @@ public static partial class ExcelHelper
         return cell?.GetCellValue() ?? string.Empty;
     }
 
-    /// OK
     /// <summary>
     /// Gets the string value of a cell
     /// </summary>
@@ -1909,26 +1921,24 @@ public static partial class ExcelHelper
         return sheetData.GetCellValue(cellReference.RowIndex, cellReference.ColumnIndex);
     }
 
-    /// OK
     /// <summary>
     /// Gets the string value of a cell
     /// </summary>
-    /// <param name="cellReference">CellReference to read string value from</param>
     /// <param name="worksheet">Worksheet that contains the cell to get value of</param>
+    /// <param name="cellReference">CellReference to read string value from</param>
     /// <returns>String value of the cell</returns>
-    private static string GetCellValue(this Worksheet worksheet, CellReference cellReference)
+    public static string GetCellValue(this Worksheet worksheet, CellReference cellReference)
     {
         Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
         return cell?.GetCellValue() ?? string.Empty;
     }
 
-    /// OK
     /// <summary>
     /// Gets the string value of a cell
     /// </summary>
     /// <param name="cell">Cell to read string value from</param>
     /// <returns>String value of the cell</returns>
-    private static string GetCellValue(this Cell? cell)
+    public static string GetCellValue(this Cell? cell)
     {
         if (cell?.CellValue == null) return string.Empty;
 
@@ -1947,12 +1957,11 @@ public static partial class ExcelHelper
         return value;
     }
 
-    /// OK
     /// <summary>
     /// Gets the stylized string value of a cell
     /// </summary>
-    /// <param name="cellReference">CellReference to read stylized string value from</param>
     /// <param name="worksheet">Worksheet that contains the cell to get value of</param>
+    /// <param name="cellReference">CellReference to read stylized string value from</param>
     /// <returns>Stylized string value of a cell</returns>
     public static string? GetStringValue(this Worksheet worksheet, CellReference cellReference)
     {
@@ -1960,7 +1969,6 @@ public static partial class ExcelHelper
         return cell?.GetStringValue();
     }
 
-    /// OK
     /// <summary>
     /// Gets the stylized string value of a cell
     /// </summary>
@@ -2000,7 +2008,6 @@ public static partial class ExcelHelper
         return cell.InnerText;
     }
 
-    /// OK
     /// <summary>
     /// Reads an Excel table into a DataTable object using OpenXML
     /// </summary>
@@ -2069,7 +2076,6 @@ public static partial class ExcelHelper
         return dataTable;
     }
 
-    /// OK
     /// <summary>
     /// Get table by table name
     /// </summary>
@@ -2094,7 +2100,6 @@ public static partial class ExcelHelper
         return null;
     }
 
-    /// OK
     /// <summary>
     /// Gets specified row from worksheet
     /// </summary>
@@ -2106,7 +2111,6 @@ public static partial class ExcelHelper
         return worksheet.GetFirstChild<SheetData>()?.Elements<Row>().FirstOrDefault(r => r.RowIndex != null && r.RowIndex == rowIndex);
     }
 
-    /// OK
     /// <summary>
     /// Gets cell at a particular column index from a row
     /// </summary>
@@ -2120,7 +2124,6 @@ public static partial class ExcelHelper
         return row.Elements<Cell>().FirstOrDefault(c => c.CellReference == cellReference);
     }
 
-    /// OK
     /// <summary>
     /// Automatically adjusts column widths to fit the content in each column
     /// </summary>
@@ -2174,7 +2177,6 @@ public static partial class ExcelHelper
         }
     }
 
-    /// OK
     /// <summary>
     /// Gets the Columns object from the worksheet, creating it if it does not exist yet
     /// </summary>
@@ -2191,15 +2193,38 @@ public static partial class ExcelHelper
         return columns;
     }
 
-    /// OK
     /// <summary>
     /// Fits a single column to the size indicated by columnWidth
     /// </summary>
     /// <param name="worksheet">Worksheet containing the column to size</param>
-    /// <param name="colIndex">0 based column Index to fit</param>
+    /// <param name="colIndex">1 based column Index to fit</param>
     /// <param name="columnWidth">Width to set for the specified column</param>
-    /// <param name="columns">Worksheet Columns object to prevent re-getting it on every call</param>
+    /// <param name="columns">Optional: Worksheet Columns object to prevent re-getting it on every call</param>
     public static void SizeColumn(this Worksheet worksheet, uint colIndex, double columnWidth, Columns? columns = null)
+    {
+        columns ??= worksheet.GetColumns();
+
+        Column? col = columns.Elements<Column>().FirstOrDefault(c => colIndex >= (c.Min?.Value ?? 0) && colIndex <= (c.Max?.Value ?? 0));
+        if (col == null) //Create new column
+        {
+            worksheet.GetOrCreateColumn(colIndex, columnWidth, columns);
+        }
+        else
+        {
+            //Existing column, just need to add width attributes
+            col.Width = columnWidth;
+            col.CustomWidth = true;
+        }
+    }
+
+    /// <summary>
+    /// Gets or creates a single column
+    /// </summary>
+    /// <param name="worksheet">Worksheet containing the column to size</param>
+    /// <param name="colIndex">1 based column Index to fit</param>
+    /// <param name="columnWidth">Optional: Width to set for the specified column</param>
+    /// <param name="columns">Optional: Worksheet Columns object to prevent re-getting it on every call</param>
+    public static Column? GetOrCreateColumn(this Worksheet worksheet, uint colIndex, double? columnWidth = null, Columns? columns = null)
     {
         columns ??= worksheet.GetColumns();
 
@@ -2217,42 +2242,41 @@ public static partial class ExcelHelper
                 }
             }
 
+            //TODO:: Check if Min and Max here actually need the + 1
             Column newCol = new()
             {
-                Min = colIndex + 1, // Add 1 because CellReference uses 0-based column indices
-                Max = colIndex + 1,
-                Width = columnWidth,
-                CustomWidth = true
+                Min = colIndex,
+                Max = colIndex
             };
+
+            if (columnWidth != null)
+            {
+                newCol.CustomWidth = true;
+                newCol.Width = columnWidth;
+            }
+
             columns.InsertBefore(newCol, refCol);
         }
-        else
-        {
-            //Existing column, just need to add width attributes
-            col.Width = columnWidth;
-            col.CustomWidth = true;
-        }
+        return col;
     }
 
-    /// OK
     /// <summary>
     /// Calculate the width of a cell based on the provided text
     /// </summary>
     /// <param name="cell">Cell to calculate the width of</param>
     /// <returns>Fitted width of the cell</returns>
-    private static double CalculateWidth(this Cell cell)
+    public static double CalculateWidth(this Cell cell)
     {
         return CalculateWidth(cell.GetCellValue(), cell.StyleIndex?.Value);
     }
 
-    /// OK
     /// <summary>
     /// Calculate the width of a cell based on the provided text
     /// </summary>
     /// <param name="text">The text value of the cell</param>
     /// <param name="styleIndex">Style index value associated with the cell</param>
     /// <returns>Fitted width of the cell</returns>
-    private static double CalculateWidth(string text, uint? styleIndex = null)
+    public static double CalculateWidth(string text, uint? styleIndex = null)
     {
         if (string.IsNullOrEmpty(text)) return 0;
 
@@ -2281,8 +2305,8 @@ public static partial class ExcelHelper
             width++;
         }
 
-        const double maxWidth = 5;
-        return Math.Truncate(((width * maxWidth) + 5) / maxWidth * 256) / 256;
+        const double maxCharWidth = 5; // Calibri 11pt is 7, but 5 seemed to work ok
+        return Math.Truncate(((width * maxCharWidth) + 5) / maxCharWidth * 256) / 256;
     }
 
     // Helper classes to deal with cell references more easily

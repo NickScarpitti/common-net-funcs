@@ -3,7 +3,6 @@ using CommonNetFuncs.Core;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
-using static CommonNetFuncs.Excel.Npoi.Common;
 using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.Excel.Npoi;
@@ -32,7 +31,7 @@ public static class Export
 
             using SXSSFWorkbook wb = new();
             ISheet ws = wb.CreateSheet(sheetName);
-            if (!ExportFromTable(wb, ws, dataList, createTable, tableName))
+            if (!dataList.ExcelExport(wb, ws, createTable, tableName))
             {
                 return null;
             }
@@ -66,7 +65,7 @@ public static class Export
 
             using SXSSFWorkbook wb = new();
             ISheet ws = wb.CreateSheet(sheetName);
-            if (!ExportFromTable(wb, ws, datatable, createTable, tableName))
+            if (!datatable.ExcelExport(wb, ws, createTable, tableName))
             {
                 return null;
             }
@@ -147,9 +146,9 @@ public static class Export
     /// <summary>
     /// Add data to a new sheet in a workbook
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type that contains the data for the exported table. Supported types are IEnumerable and DataTable</typeparam>
     /// <param name="wb">Workbook to add sheet table to</param>
-    /// <param name="data">Data to populate table with (only accepts IEnumerable </param>
+    /// <param name="data">Data to populate table with (only accepts IEnumerable and DataTable)</param>
     /// <param name="dataType">Type of the data parameter</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
@@ -173,11 +172,11 @@ public static class Export
             {
                 if (dataType == typeof(IEnumerable<T>))
                 {
-                    success = ExportFromTable(wb, ws, (IEnumerable<T>)data, createTable, tableName);
+                    success = ((IEnumerable<T>)data).ExcelExport(wb, ws, createTable, tableName);
                 }
                 else if (dataType == typeof(DataTable))
                 {
-                    success = ExportFromTable(wb, ws, (DataTable)data, createTable, tableName);
+                    success = ((DataTable)data).ExcelExport(wb, ws, createTable, tableName);
                 }
                 else
                 {

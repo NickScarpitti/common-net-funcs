@@ -7,7 +7,7 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.17</Version>
+    <Version>1.0.28</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -27,6 +27,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Conversion\**" />
+    <EmbeddedResource Remove="Conversion\**" />
+    <None Remove="Conversion\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
   </ItemGroup>
 
@@ -35,10 +41,6 @@
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Conversion\" />
   </ItemGroup>
 
   <ItemGroup>

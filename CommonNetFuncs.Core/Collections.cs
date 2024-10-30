@@ -206,6 +206,28 @@ public static class Collections
     }
 
     /// <summary>
+    /// Select only strings that are not null, empty, or only whitespace
+    /// </summary>
+    /// <param name="items">Enumerable of strings to select from</param>
+    /// <returns>An enumerable containing all string values from the original collection that are not null, empty, or only whitespace</returns>
+    [return: NotNullIfNotNull(nameof(items))]
+    public static IEnumerable<string>? SelectNonEmpty(this IEnumerable<string?>? items)
+    {
+        return items?.Where(x => !x.IsNullOrWhiteSpace()).Select(x => x!);
+    }
+
+    /// <summary>
+    /// Select only objects that are not null
+    /// </summary>
+    /// <param name="items">Enumerable of objects to select from</param>
+    /// <returns>An enumerable containing all object values from the original collection that are not null</returns>
+    [return: NotNullIfNotNull(nameof(items))]
+    public static IEnumerable<T>? SelectNonNull<T>(this IEnumerable<T?>? items)
+    {
+        return items?.Where(x => x != null).Select(x => x!);
+    }
+
+    /// <summary>
     /// Create a single item list from an object
     /// </summary>
     /// <typeparam name="T">Type to use in list</typeparam>
@@ -264,7 +286,7 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ConvertDataTableToList<T>(DataTable table, bool convertShortToBool = false) where T : class, new()
+    public static List<T?> ToList<T>(this DataTable table, bool convertShortToBool = false) where T : class, new()
     {
         List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
 
@@ -325,7 +347,7 @@ public static class Collections
     /// <param name="maxDegreeOfParallelism">Parallelism parameter to be used in Parallel.Foreach loop</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ConvertDataTableToListParallel<T>(DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false) where T : class, new()
+    public static List<T?> ToListParallel<T>(this DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false) where T : class, new()
     {
         ConcurrentBag<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
 
@@ -378,6 +400,185 @@ public static class Collections
             });
         }
         return bag.ToList();
+    }
+
+    /// <summary>
+    /// Convert a collection into equivalent DataTable object
+    /// </summary>
+    /// <typeparam name="T">Class to use in table creation</typeparam>
+    /// <param name="data">Collection to convert into a DataTable</param>
+    /// <param name="dataTable">DataTable to optionally insert data into</param>
+    /// <param name="useExpressionTrees">Uses expression trees with caching to perform the conversion</param>
+    /// <param name="useParallel">Parallelizes the conversion</param>
+    /// <param name="approximateCount">Used for pre-allocating variable size when using parallelization, default is data.Count()</param>
+    /// <param name="degreeOfParallelism">Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine)</param>
+    /// <returns>A DaataTable representation of the collection that was passed in</returns>
+    [return:NotNullIfNotNull(nameof(data))]
+    public static DataTable? ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1) where T : class, new()
+    {
+        if (data == null) return null;
+        dataTable ??= new();
+        return useExpressionTrees ? data.ToDataTableExpressionTrees(dataTable, useParallel, approximateCount, degreeOfParallelism) : data.ToDataTableReflection(dataTable, useParallel, approximateCount, degreeOfParallelism);
+    }
+
+    private static DataTable ToDataTableReflection<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism) where T : class, new()
+    {
+        PropertyInfo[] properties = typeof(T).GetProperties();
+
+        // Create columns
+        foreach (PropertyInfo prop in properties)
+        {
+            dataTable.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+        }
+
+        // Add rows
+        if (!useParallel)
+        {
+            foreach (T item in data)
+            {
+                DataRow row = dataTable.NewRow();
+                foreach (PropertyInfo prop in properties)
+                {
+                    row[prop.Name] = prop.GetValue(item) ?? System.DBNull.Value;
+                }
+                dataTable.Rows.Add(row);
+            }
+        }
+        else
+        {
+            // Process items in parallel and collect results
+            int columnCount = dataTable.Columns.Count;
+            List<object[]> rows = new(approximateCount ?? data.Count());
+            object lockObj = new();
+
+            ParallelOptions options = new() { MaxDegreeOfParallelism = degreeOfParallelism == -1 ? Environment.ProcessorCount : degreeOfParallelism };
+            Parallel.ForEach(data, options, () => new List<object[]>(), (item, _, localRows) =>
+            {
+                object[] rowValues = new object[columnCount];
+                for (int i = 0; i < columnCount; i++)
+                {
+                    rowValues[i] = properties[i].GetValue(item) ?? System.DBNull.Value;
+                }
+
+                localRows.Add(rowValues);
+                return localRows;
+            },
+            localRows =>
+            {
+                lock (lockObj)
+                {
+                    rows.AddRange(localRows);
+                }
+            });
+
+            // Add all rows to the table
+            foreach (object[] rowValues in rows)
+            {
+                dataTable.Rows.Add(rowValues);
+            }
+        }
+
+        return dataTable;
+    }
+
+    private static readonly ConcurrentDictionary<Type, TypeAccessor> _typeAccessorCache = new();
+
+    private sealed class TypeAccessor
+    {
+        public readonly DataColumnCollection ColumnDefinitions;
+        public readonly Func<object, object>[] PropertyGetters;
+        public readonly string[] PropertyNames;
+        public readonly Type[] PropertyTypes;
+        public readonly DataTable SchemaTable;
+
+        public TypeAccessor(Type type)
+        {
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanRead).ToArray();
+
+            SchemaTable = new DataTable();
+            PropertyGetters = new Func<object, object>[properties.Length];
+            PropertyNames = new string[properties.Length];
+            PropertyTypes = new Type[properties.Length];
+
+            for (int i = 0; i < properties.Length; i++)
+            {
+                PropertyInfo property = properties[i];
+                PropertyNames[i] = property.Name;
+                PropertyGetters[i] = CreatePropertyGetter(type, property);
+                PropertyTypes[i] = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                SchemaTable.Columns.Add(property.Name, PropertyTypes[i]);
+            }
+
+            ColumnDefinitions = SchemaTable.Columns;
+        }
+
+        private static Func<object, object> CreatePropertyGetter(Type type, PropertyInfo property)
+        {
+            ParameterExpression instance = Expression.Parameter(typeof(object), "instance");
+            UnaryExpression convertInstance = Expression.Convert(instance, type);
+            MemberExpression propertyAccess = Expression.Property(convertInstance, property);
+            UnaryExpression convertProperty = Expression.Convert(propertyAccess, typeof(object));
+            return Expression.Lambda<Func<object, object>>(convertProperty, instance).Compile();
+        }
+    }
+
+    private static DataTable ToDataTableExpressionTrees<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism) where T : class, new()
+    {
+        TypeAccessor typeAccessor = _typeAccessorCache.GetOrAdd(typeof(T), t => new TypeAccessor(t));
+        foreach (DataColumn col in typeAccessor.ColumnDefinitions)
+        {
+            dataTable.Columns.Add(new DataColumn(col.ColumnName, col.DataType));
+        }
+
+        Func<object, object>[] propertyGetters = typeAccessor.PropertyGetters;
+        int columnCount = propertyGetters.Length;
+        object[] rowValues = new object[columnCount];
+
+        // Add the rows
+        if (!useParallel)
+        {
+            foreach (T item in data)
+            {
+                for (int i = 0; i < columnCount; i++)
+                {
+                    rowValues[i] = propertyGetters[i](item) ?? System.DBNull.Value;
+                }
+                dataTable.Rows.Add(rowValues);
+            }
+        }
+        else
+        {
+            // Process items in parallel and collect results
+            List<object[]> rows = new(approximateCount ?? data.Count());
+            object lockObj = new();
+
+            ParallelOptions options = new() { MaxDegreeOfParallelism = degreeOfParallelism == -1 ? Environment.ProcessorCount : degreeOfParallelism };
+            Parallel.ForEach(data, options, () => new List<object[]>(), (item, _, localRows) =>
+            {
+                object[] rowValues = new object[columnCount];
+                for (int i = 0; i < columnCount; i++)
+                {
+                    rowValues[i] = propertyGetters[i](item) ?? System.DBNull.Value;
+                }
+                localRows.Add(rowValues);
+                return localRows;
+            },
+            localRows =>
+            {
+                lock (lockObj)
+                {
+                    rows.AddRange(localRows);
+                }
+            });
+
+            // Add all rows to the table
+            foreach (object[] rowVals in rows)
+            {
+                dataTable.Rows.Add(rowVals);
+            }
+        }
+
+        return dataTable;
     }
 
     /// <summary>
@@ -496,6 +697,18 @@ public static class Collections
                     return result;
                 });
         }
+    }
+
+    public static int IndexOf<T>(this IEnumerable<T> collection, T value)
+    {
+        return collection.IndexOf(value, null);
+    }
+
+    public static int IndexOf<T>(this IEnumerable<T> collection, T value, IEqualityComparer<T>? comparer)
+    {
+        comparer ??= EqualityComparer<T>.Default;
+        var found = collection.Select((a, i) => new { a, i }).FirstOrDefault(x => comparer.Equals(x.a, value));
+        return found == null ? -1 : found.i;
     }
 }
 

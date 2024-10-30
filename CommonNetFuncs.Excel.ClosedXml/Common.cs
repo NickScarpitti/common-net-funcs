@@ -2,7 +2,7 @@
 using System.Reflection;
 using ClosedXML.Excel;
 using static CommonNetFuncs.Core.ExceptionLocation;
-
+using CommonNetFuncs.Excel.Common;
 namespace CommonNetFuncs.Excel.ClosedXml;
 
 ///// <summary>
@@ -11,21 +11,6 @@ namespace CommonNetFuncs.Excel.ClosedXml;
 public static class Common
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
-    public enum EStyles
-    {
-        Header,
-        Body,
-        Error,
-        Custom
-    }
-
-    public enum EFonts
-    {
-        Default,
-        Header,
-        BigWhiteHeader
-    }
 
     /// <summary>
     /// Checks if cell is empty
@@ -70,38 +55,38 @@ public static class Common
     /// <param name="htmlColor">Background color in HTML format</param>
     /// <param name="font">Font to use for the cells this style applies to</param>
     /// <param name="alignment">Text alignment for the cells this style applies to</param>
-    /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static IXLStyle? GetStyle(EStyles style, IXLWorkbook wb, bool cellLocked = false, string? htmlColor = null, IXLFont? font = null, XLAlignmentHorizontalValues? alignment = null)
+    /// <returns>IXLStyle object containing all of the styling associated with the input EStyle option</returns>
+    public static IXLStyle? GetStyle(EStyle style, IXLWorkbook wb, bool cellLocked = false, string? htmlColor = null, IXLFont? font = null, XLAlignmentHorizontalValues? alignment = null)
     {
         IXLStyle? cellStyle = CreateEmptyStyle();
         if (cellStyle == null) { return null; }
         switch (style)
         {
-            case EStyles.Header:
+            case EStyle.Header:
                 cellStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 cellStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.LeftBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.RightBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.TopBorder = XLBorderStyleValues.Thin;
                 cellStyle.Fill.BackgroundColor = XLColor.LightGray;
-                cellStyle.Font = GetFont(EFonts.Header, wb);
+                cellStyle.Font = GetFont(EFont.Header, wb);
                 break;
 
-            case EStyles.Body:
+            case EStyle.Body:
                 cellStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 cellStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.LeftBorder = XLBorderStyleValues.Thin;
                 cellStyle.Border.RightBorder = XLBorderStyleValues.Thin;
                 cellStyle.Fill.BackgroundColor = XLColor.NoColor;
-                cellStyle.Font = GetFont(EFonts.Default, wb);
+                cellStyle.Font = GetFont(EFont.Default, wb);
                 break;
 
-            case EStyles.Error:
+            case EStyle.Error:
                 cellStyle.Fill.BackgroundColor = XLColor.Red;
                 cellStyle.Fill.PatternType = XLFillPatternValues.Solid;
                 break;
 
-            case EStyles.Custom:
+            case EStyle.Custom:
                 IXLStyle xStyle = wb.Style;
                 if (alignment != null) { xStyle.Alignment.Horizontal = (XLAlignmentHorizontalValues)alignment; }
                 if (htmlColor != null) { xStyle.Fill.BackgroundColor = XLColor.FromHtml(htmlColor); }
@@ -127,23 +112,23 @@ public static class Common
     }
 
     /// <summary>
-    /// Get font styling based on EFonts option
+    /// Get font styling based on EFont option
     /// </summary>
     /// <param name="font">Font type to get</param>
     /// <param name="wb">Workbook to add font to</param>
-    /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
-    public static IXLFont GetFont(EFonts font, IXLWorkbook wb)
+    /// <returns>IXLFont object containing all of the styling associated with the input EFont option</returns>
+    public static IXLFont GetFont(EFont font, IXLWorkbook wb)
     {
         IXLFont cellFont = wb.Style.Font;
         switch (font)
         {
-            case EFonts.Default:
+            case EFont.Default:
                 cellFont.Bold = false;
                 cellFont.FontSize = 10;
                 cellFont.FontName = "Calibri";
                 break;
 
-            case EFonts.Header:
+            case EFont.Header:
                 cellFont.Bold = true;
                 cellFont.FontSize = 10;
                 cellFont.FontName = "Calibri";
@@ -167,8 +152,8 @@ public static class Common
         {
             if (data?.Any() == true)
             {
-                IXLStyle? headerStyle = GetStyle(EStyles.Header, wb);
-                IXLStyle? bodyStyle = GetStyle(EStyles.Body, wb);
+                IXLStyle? headerStyle = GetStyle(EStyle.Header, wb);
+                IXLStyle? bodyStyle = GetStyle(EStyle.Body, wb);
 
                 int x = 1;
                 int y = 1;
@@ -264,8 +249,8 @@ public static class Common
             {
                 if (data.Rows.Count > 0)
                 {
-                    IXLStyle? headerStyle = GetStyle(EStyles.Header, wb);
-                    IXLStyle? bodyStyle = GetStyle(EStyles.Body, wb);
+                    IXLStyle? headerStyle = GetStyle(EStyle.Header, wb);
+                    IXLStyle? bodyStyle = GetStyle(EStyle.Body, wb);
 
                     int x = 1;
                     int y = 1;

@@ -2,12 +2,15 @@
 using System.Globalization;
 using CsvHelper;
 using static System.Convert;
+using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Streams;
 
 namespace CommonNetFuncs.Csv;
 
 public static class CsvHelperExportHelpers
 {
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
     /// <summary>
     /// Writes collection of values to a CSV file in a MemoryStream
     /// </summary>
@@ -35,44 +38,59 @@ public static class CsvHelperExportHelpers
         memoryStream ??= new();
         await using MemoryStream sourceMemoryStream = new();
         await using StreamWriter streamWriter = new(sourceMemoryStream);
-        //Headers
-        for (int i = 0; i < dataTable.Columns.Count; i++)
+        try
         {
-            await streamWriter.WriteAsync(dataTable.Columns[i]?.ToString() ?? string.Empty);
-            if (i < dataTable.Columns.Count - 1)
-            {
-                await streamWriter.WriteAsync(",");
-            }
-        }
-        await streamWriter.WriteAsync(streamWriter.NewLine);
-        foreach (DataRow row in dataTable.Rows)
-        {
+            //Headers
             for (int i = 0; i < dataTable.Columns.Count; i++)
             {
-                if (!IsDBNull(row[i]))
-                {
-                    string? value = row[i].ToString();
-                    if (value?.Contains(',') ?? false)
-                    {
-                        value = string.Format("\"{0}\"", value);
-                        await streamWriter.WriteAsync(value);
-                    }
-                    else
-                    {
-                        await streamWriter.WriteAsync(row[i]?.ToString() ?? string.Empty);
-                    }
-                }
+                await streamWriter.WriteAsync(dataTable.Columns[i]?.ToString() ?? string.Empty);
                 if (i < dataTable.Columns.Count - 1)
                 {
                     await streamWriter.WriteAsync(",");
                 }
             }
             await streamWriter.WriteAsync(streamWriter.NewLine);
-        }
+            foreach (DataRow row in dataTable.Rows)
+            {
+                for (int i = 0; i < dataTable.Columns.Count; i++)
+                {
+                    if (!IsDBNull(row[i]))
+                    {
+                        string? value = row[i].ToString();
+                        if (value?.Contains(',') ?? false)
+                        {
+                            value = string.Format("\"{0}\"", value);
+                            await streamWriter.WriteAsync(value);
+                        }
+                        else
+                        {
+                            await streamWriter.WriteAsync(row[i]?.ToString() ?? string.Empty);
+                        }
+                    }
+                    if (i < dataTable.Columns.Count - 1)
+                    {
+                        await streamWriter.WriteAsync(",");
+                    }
+                }
+                await streamWriter.WriteAsync(streamWriter.NewLine);
+            }
 
-        await streamWriter.FlushAsync();
-        sourceMemoryStream.Position = 0;
-        await memoryStream.WriteStreamToStream(sourceMemoryStream);
+            await streamWriter.FlushAsync();
+            sourceMemoryStream.Position = 0;
+            await memoryStream.WriteStreamToStream(sourceMemoryStream);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+        finally
+        {
+            streamWriter.Close();
+            await streamWriter.DisposeAsync();
+
+            sourceMemoryStream.Close();
+            await sourceMemoryStream.DisposeAsync();
+        }
 
         return memoryStream;
     }

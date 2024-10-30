@@ -44,7 +44,7 @@ public static class DimensionScale
         bool scaleUpToFit = true, int? resultDecimalPlaces = null)
     {
         // If the image dimensions are exactly the same as the container, or if both dimensions are smaller, return the original dimensions.
-        if (originalWidth == maxWidth && originalHeight == maxHeight || !scaleUpToFit && originalWidth <= maxWidth && originalHeight <= maxHeight)
+        if ((originalWidth == maxWidth && originalHeight == maxHeight) || (!scaleUpToFit && originalWidth <= maxWidth && originalHeight <= maxHeight))
         {
             return (originalWidth, originalHeight);
         }

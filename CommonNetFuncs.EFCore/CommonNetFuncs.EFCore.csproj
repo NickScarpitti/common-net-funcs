@@ -7,7 +7,7 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.17</Version>
+    <Version>1.0.29</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -30,8 +30,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.6" PrivateAssets="all" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="8.103.5" PrivateAssets="all" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.7" PrivateAssets="all" />
+    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="8.103.6" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using static System.Convert;
+using static System.Web.HttpUtility;
 
 namespace CommonNetFuncs.Core;
 
@@ -343,7 +344,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ReplaceInvariant(this string? s, string oldValue, string newValue)
     {
-        return s?.Replace(oldValue, newValue);
+        return s?.Replace(oldValue, newValue, StringComparison.InvariantCultureIgnoreCase);
     }
 
     /// <summary>
@@ -1200,5 +1201,41 @@ public static partial class Strings
         }
 
         return result.ToString();
+    }
+
+    /// <summary>
+    /// URL Encodes a string but then replaces specific escape sequences with their decoded character. This method is mainly for logging user defined values in a safe manner.
+    /// </summary>
+    /// <param name="input">Input string to be URL encoded</param>
+    /// <param name="replaceEscapeSequences">
+    /// <para>List of key value pairs where the key is the escape sequence to replace and the value is the value to replace the escape sequence with.</para>
+    /// <para>If null or empty, will use default escape sequence replacements "%20" -> " ", "%2F" -> "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
+    /// </param>
+    /// <param name="appendDefaultEscapeSequences">
+    /// <para>If true, will append the default escape sequence replacements to any passed in through replaceEscapeSequences</para>
+    /// <para>The default escape sequence replacements are "%20" -> " ", "%2F" -> "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
+    /// </param>
+    /// <returns>URL encoded string with the specified escape sequences replaced with their given values</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? UrlEncodeReadable(this string? input, List<KeyValuePair<string, string>>? replaceEscapeSequences = null, bool appendDefaultEscapeSequences = true)
+    {
+        if (input.IsNullOrWhiteSpace()) { return input; }
+        List<KeyValuePair<string, string>> defaultEscapeSequences = [new("%20", " "), new("+", " "), new("%2F", "/"), new("%5C", @"\"), new("%7C", "|"), new("%28", "("), new("%29", "("), new("%2A", "*")];
+        if (replaceEscapeSequences == null || replaceEscapeSequences.Count == 0)
+        {
+            replaceEscapeSequences = defaultEscapeSequences;
+        }
+        else if (appendDefaultEscapeSequences)
+        {
+            replaceEscapeSequences.AddRange(defaultEscapeSequences.Where(x => !replaceEscapeSequences.Any(y => y.Key.StrEq(x.Key))));
+        }
+
+        string output = UrlEncode(input);
+        foreach (KeyValuePair<string, string> replaceEscapeSequence in replaceEscapeSequences)
+        {
+            output = output.ReplaceInvariant(replaceEscapeSequence.Key, replaceEscapeSequence.Value);
+        }
+
+        return output;
     }
 }

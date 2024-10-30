@@ -20,18 +20,16 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
     <Description>
-      Misc middlewares for ASP.NET MVC applications
+      Helper methods that deal with reading and writing word files using OpenXML.
     </Description>
-    <PackageTags>dotnet;helpers;web;asp.net;asp.net core;mvc;middleware</PackageTags>
+    <PackageTags>dotnet;helpers;word;office;msoffice;openxml;</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.1.1" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,10 +41,6 @@
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove=".editorconfig" />
   </ItemGroup>
 
 </Project>

@@ -70,7 +70,7 @@ public class SubsetValidatorGenerator : IIncrementalGenerator
                 ReportDiagnosticOnce(context, "SG0003", "Class must be partial", $"The class '{subsetClassSymbol.Name}' decorated with SubsetOf attribute must be marked as partial", subsetClass.Identifier.GetLocation(), reportedDiagnostics);
             }
 
-            AttributeData? subsetOfAttribute = subsetClassSymbol.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == nameof(SubsetModelBinder.SubsetOfAttribute));
+            AttributeData? subsetOfAttribute = subsetClassSymbol.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == nameof(SubsetOfAttribute));
 
             if (subsetOfAttribute == null) continue;
 
@@ -78,6 +78,7 @@ public class SubsetValidatorGenerator : IIncrementalGenerator
 
             bool isMvcApp = subsetOfAttribute.ConstructorArguments.Length > 1 && (bool)subsetOfAttribute.ConstructorArguments[1].Value!;
             bool allowInheritedProperties = subsetOfAttribute.ConstructorArguments.Length > 2 && (bool)subsetOfAttribute.ConstructorArguments[2].Value!;
+            bool ignoreType = subsetOfAttribute.ConstructorArguments.Length > 3 && (bool)subsetOfAttribute.ConstructorArguments[3].Value!;
 
             // Get all properties of the original type, including inherited ones
             Dictionary<string, IPropertySymbol> originalProperties = GetAllProperties(originalTypeSymbol, allowInheritedProperties);
@@ -89,7 +90,7 @@ public class SubsetValidatorGenerator : IIncrementalGenerator
                     ReportDiagnosticOnce(context, "SG0002", "Property not found", $"Property '{subsetProperty.Name}' is not present in the parent class '{originalTypeSymbol.Name}'" +
                         (allowInheritedProperties ? " or its base classes" : ""), subsetProperty.Locations.FirstOrDefault(), reportedDiagnostics);
                 }
-                else if (!SymbolEqualityComparer.Default.Equals(subsetProperty.Type, originalProperty.Type))
+                else if (!ignoreType && !SymbolEqualityComparer.Default.Equals(subsetProperty.Type, originalProperty.Type))
                 {
                     ReportDiagnosticOnce(context, "SG0001", "Property type mismatch", $"Property '{subsetProperty.Name}' has a different type than in the original class '{originalTypeSymbol.Name}'" +
                         (allowInheritedProperties ? " or its base classes" : "") + $". Expected: {originalProperty.Type.Name}, Found: {subsetProperty.Type.Name}", subsetProperty.Locations.FirstOrDefault(),

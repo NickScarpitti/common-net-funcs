@@ -136,16 +136,15 @@ public static partial class Common
     {
         try
         {
-            IName name = wb.GetName(cellName);
+            IName? name = wb.GetName(cellName);
             CellReference[] crs;
-            try
+            if (name != null)
             {
                 crs = new AreaReference(name.RefersToFormula, SpreadsheetVersion.EXCEL2007).GetAllReferencedCells();
             }
-            catch (Exception ex)
+            else
             {
                 logger.Warn("{msg}", $"Unable to locate cell with name {cellName}");
-                logger.Warn(ex);
                 return null;
             }
 

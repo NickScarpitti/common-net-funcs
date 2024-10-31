@@ -11,11 +11,12 @@ namespace CommonNetFuncs.SubsetModelBinder;
 [Generator(LanguageNames.CSharp)]
 public class SubsetValidatorGenerator : IIncrementalGenerator
 {
+    private static readonly string attributeName = typeof(SubsetOfAttribute).Namespace + nameof(SubsetOfAttribute);
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         IncrementalValuesProvider<ClassDeclarationSyntax> classDeclarations = context.SyntaxProvider
         .ForAttributeWithMetadataName( //Used to be CreateSyntaxProvider
-                "Subset_Model_Binder.SubsetOfAttribute",
+                attributeName,
                 predicate: (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: > 0 },
                 transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx))
             .Where(static m => m is not null)!;
@@ -38,7 +39,7 @@ public class SubsetValidatorGenerator : IIncrementalGenerator
                     INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
                     string fullName = attributeContainingTypeSymbol.ToDisplayString();
 
-                    if (fullName == "Subset_Model_Binder.SubsetOfAttribute")
+                    if (fullName == attributeName)
                     {
                         return classDeclarationSyntax;
                     }

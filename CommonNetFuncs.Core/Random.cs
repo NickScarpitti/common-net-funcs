@@ -179,9 +179,9 @@ public static class Random
     /// <typeparam name="T">Type of object to return</typeparam>
     /// <param name="items">Items to select from</param>
     /// <returns>Randomly selected object</returns>
-    public static T GetRandomElement<T>(this IEnumerable<T> items)
+    public static T? GetRandomElement<T>(this IEnumerable<T> items)
     {
-        return items.Skip(GetRandomInt(items.Count())).First();
+        return items.Any() ? items.Skip(GetRandomInt(items.Count())).First() : default;
     }
 
     /// <summary>

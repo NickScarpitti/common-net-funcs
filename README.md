@@ -10,7 +10,9 @@
 6. [Email](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Email)
 7. Excel
    1. [ClosedXml](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Excel.ClosedXml)
-   2. [Npoi](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Excel.Npoi)
+   2. [Common](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Excel.Common)
+   3. [Npoi](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Excel.Npoi)
+   4. [OpenXML](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Excel.OpenXml)
 8. [FastMap](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.FastMap)
 9. [Images](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Images)
 10. Sql
@@ -28,3 +30,5 @@
     5. [Jwt](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Jwt)
     6. [Middleware](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Middleware)
     7. [Requests](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Requests)
+ 13. Word
+     1.  [OpenXML](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Word.OpenXml)

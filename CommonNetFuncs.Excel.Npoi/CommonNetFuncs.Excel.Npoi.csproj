@@ -24,6 +24,7 @@
       Helper methods that deal with reading and writing excel files using NPOI.
     </Description>
     <PackageTags>dotnet;helpers;excel;npoi;office;msoffice;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,6 +41,10 @@
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

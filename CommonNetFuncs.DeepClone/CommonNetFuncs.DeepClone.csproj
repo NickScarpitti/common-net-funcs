@@ -24,6 +24,7 @@
       Helper methods that deal with deep cloning objects (copying an object without a memory reference).
     </Description>
     <PackageTags>dotnet;helpers;deep copy;deep clone;clone;copy;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +33,10 @@
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

@@ -24,10 +24,15 @@
       Items that are used in multiple CommonNetCoreFuncs.Excel packages
     </Description>
     <PackageTags>dotnet;helpers;excel;npoi;openxml;closedxml;office;msoffice;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

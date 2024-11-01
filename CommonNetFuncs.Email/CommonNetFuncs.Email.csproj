@@ -24,6 +24,7 @@
       Helper methods that deal with sending email, including an SMTP email sending service and an HTML email builder helper.
     </Description>
     <PackageTags>dotnet;helpers;email;mail;smtp</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,6 +39,10 @@
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

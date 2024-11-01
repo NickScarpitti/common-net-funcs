@@ -24,6 +24,7 @@
       Misc middlewares for ASP.NET MVC applications
     </Description>
     <PackageTags>dotnet;helpers;web;asp.net;asp.net core;mvc;middleware</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,6 +41,10 @@
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

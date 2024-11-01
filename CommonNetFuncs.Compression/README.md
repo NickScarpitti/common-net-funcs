@@ -4,9 +4,20 @@
 
 This project contains helper methods for compressing files into a zip file as well as compress and decompress streams.
 
+## Contents
+
+- [Contents](#contents)
+- [Files](#files)
+- [Streams](#streams)
+
+---
+
 ## Files
 
-### Usage Examples
+Used for compressing file data into a ZipArchive class.
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
 
 Add file to zip folder and write it to disk.
 
@@ -22,8 +33,8 @@ public async Task CreatePeopleZipFile()
 
     await using MemoryStream zipStream = new();
 
-    //Converts list to excel file in a MemoryStream (see Excel.Npoi) 
-    await using MemoryStream peopleExcelStream = await people.GenericExcelExport() ?? new(); 
+    //Converts list to excel file in a MemoryStream (see Excel.Npoi)
+    await using MemoryStream peopleExcelStream = await people.GenericExcelExport() ?? new();
     await (peopleExcelStream, "People.xlsx").ZipFile(zipStream, CompressionLevel.SmallestSize);
     peopleExcelStream.Dispose();
     zipStream.Position = 0;
@@ -49,7 +60,7 @@ public async Task CreatePeopleAndAddressesZipFile()
     using ZipArchive archive = new(zipStream, ZipArchiveMode.Create, true);
 
     //Convert lists to excel file in a MemoryStream (see Excel.Npoi) then add them to a ZipArchive
-    await using MemoryStream peopleExcelStream = await people.GenericExcelExport() ?? new(); 
+    await using MemoryStream peopleExcelStream = await people.GenericExcelExport() ?? new();
     await peopleExcelStream.AddFileToZip(archive, "People.xlsx", CompressionLevel.SmallestSize);
     peopleExcelStream.Dispose();
 
@@ -65,7 +76,22 @@ public async Task CreatePeopleAndAddressesZipFile()
 }
 ```
 
+</details>
+
+---
+
 ## Streams
+
+Used for compressing and decompressing streams of data.
+Currently supported compression algorithms:
+
+- Brotli
+- GZip
+- Deflate
+- ZLib
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
 
 Compress and then decompress a stream. [CommonNetFuncs.Web.Requests]((https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Requests)) has a more practical implementation decompressing compressed API responses.
 
@@ -84,3 +110,5 @@ public async Task CompressAndDecompressFile()
     await compressedStream.DecompressStream(decompressedStream, ECompressionType.Gzip);
 }
 ```
+
+</details>

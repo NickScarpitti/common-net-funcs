@@ -24,6 +24,7 @@
       Helper methods that deal with creating, sending, and handling the responses from REST API calls
     </Description>
     <PackageTags>dotnet;helpers;web;api;rest;requests;response;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,6 +46,10 @@
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

@@ -24,6 +24,7 @@
       Helper methods that deal with preparing and executing queries.
     </Description>
     <PackageTags>dotnet;helpers;sql;sql server;postgres;postgresql;tsql;odbc</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,6 +37,10 @@
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

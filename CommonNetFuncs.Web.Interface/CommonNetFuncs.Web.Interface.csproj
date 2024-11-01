@@ -24,6 +24,7 @@
       Helper methods that deal with ASP.NET Core interfaces
     </Description>
     <PackageTags>dotnet;helpers;datatables.net;asp.net;asp.net core;mvc;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,6 +45,10 @@
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

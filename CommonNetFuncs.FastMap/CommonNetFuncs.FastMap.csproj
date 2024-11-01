@@ -24,6 +24,7 @@
       A fast method to copy one type of object to another based on property names using expression trees with no setup code required for the classes being mapped.
     </Description>
     <PackageTags>dotnet;helpers;mapping;fast;expression trees;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +33,10 @@
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

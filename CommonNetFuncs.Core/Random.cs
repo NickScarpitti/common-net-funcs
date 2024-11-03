@@ -108,7 +108,7 @@ public static class Random
         while (n > 1)
         {
             n--;
-            int k = GetRandomInt(n + 1); //rngOld.Next(n + 1);
+            int k = GetRandomInt(0, n + 1); //rngOld.Next(n + 1);
             (list[n], list[k]) = (list[k], list[n]);
         }
         return list;
@@ -179,9 +179,9 @@ public static class Random
     /// <typeparam name="T">Type of object to return</typeparam>
     /// <param name="items">Items to select from</param>
     /// <returns>Randomly selected object</returns>
-    public static T GetRandomElement<T>(this IEnumerable<T> items)
+    public static T? GetRandomElement<T>(this IEnumerable<T> items)
     {
-        return items.Skip(GetRandomInt(items.Count())).First();
+        return items.Skip(GetRandomInt(0, items.Count())).First();
     }
 
     /// <summary>

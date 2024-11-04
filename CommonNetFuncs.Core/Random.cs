@@ -13,8 +13,9 @@ public static class Random
     /// <summary>
     /// Generate a random integer between 0 and maxValue - 1
     /// </summary>
+    /// <param name="minValue">Min value (inclusive) to return. Must be greater >= 0</param>
     /// <param name="maxValue">Max value (non-inclusive) to return</param>
-    /// <returns>Random number between 0 and maxValue - 1</returns>
+    /// <returns>Random number between minValue and maxValue - 1</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public static int GetRandomInt(int minValue = 0, int maxValue = int.MaxValue)
     {
@@ -27,8 +28,28 @@ public static class Random
         byte[] randomNumber = new byte[4]; // 4 bytes for an integer
         rng.GetBytes(randomNumber);
         int result = BitConverter.ToInt32(randomNumber, 0) & 0x7FFFFFFF; // Ensure it's non-negative
-        //return result % maxValue; // Return a value between 0 and maxValue - 1
         return minValue + result % (maxValue - minValue);
+    }
+
+    /// <summary>
+    /// Generate a random integer between 0 and maxValue - 1
+    /// </summary>
+    /// <param name="maxValue">Max value (non-inclusive) to return</param>
+    /// <returns>Random number between 0 and maxValue - 1</returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public static int GetRandomInt(int maxValue = int.MaxValue)
+    {
+        return GetRandomInt(0, maxValue);
+    }
+
+    /// <summary>
+    /// Generate a random integer between 0 and int.MaxValue - 1
+    /// </summary>
+    /// <returns>Random number between 0 and int.MaxValue - 1</returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public static int GetRandomInt()
+    {
+        return GetRandomInt(0, int.MaxValue);
     }
 
     /// <summary>

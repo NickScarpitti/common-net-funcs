@@ -1,6 +1,6 @@
-# CommonNetFuncs.Web.Requests
+# CommonNetFuncs.Excel.Common
 
-[![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Web.Requests)](https://www.nuget.org/packages/CommonNetFuncs.Web.Requests/)
+[![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Excel.Common)](https://www.nuget.org/packages/CommonNetFuncs.Excel.Common/)
 
 This lightweight project contains helper methods for several common functions required by applications.
 
@@ -11,8 +11,6 @@ This lightweight project contains helper methods for several common functions re
 ---
 
 ## [Class Name Here]
-
-### Usage Examples
 
 [Description here]
 

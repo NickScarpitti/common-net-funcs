@@ -1,6 +1,6 @@
-# CommonNetFuncs.Web.Requests
+# CommonNetFuncs.Word.OpenXml
 
-[![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Web.Requests)](https://www.nuget.org/packages/CommonNetFuncs.Web.Requests/)
+[![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Word.OpenXml)](https://www.nuget.org/packages/CommonNetFuncs.Word.OpenXml/)
 
 This lightweight project contains helper methods for several common functions required by applications.
 

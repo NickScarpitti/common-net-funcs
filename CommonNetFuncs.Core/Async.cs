@@ -20,7 +20,46 @@ public static class Async
             if (obj != null)
             {
                 T? resultObject = await task;
-                resultObject?.CopyPropertiesTo(obj);
+                if (!typeof(T).IsSimpleType())
+                {
+                    resultObject?.CopyPropertiesTo(obj);
+                }
+                else
+                {
+                    obj = resultObject;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+    }
+
+    /// <summary>
+    /// Task to fill obj variable asynchronously
+    /// </summary>
+    /// <param name="obj">Object to insert data into</param>
+    /// <param name="task">Async task that returns the value to insert into obj object</param>
+    public static async Task ObjectFill<T>(this List<T>? obj, Task<List<T>?> task)
+    {
+        try
+        {
+            if (obj != null)
+            {
+                List<T>? resultObject = await task;
+                if (resultObject != null)
+                {
+                    if(obj != null)
+                    {
+                        obj.AddRange(resultObject);
+                    }
+                    else
+                    {
+                        obj = new(resultObject);
+                    }
+                    resultObject = null;
+                }
             }
         }
         catch (Exception ex)
@@ -43,7 +82,14 @@ public static class Async
                 IEnumerable<T>? resultObject = await task;
                 if (resultObject != null)
                 {
-                    obj.AddRange(resultObject);
+                    if (obj != null)
+                    {
+                        obj.AddRange(resultObject);
+                    }
+                    else
+                    {
+                        obj = new(resultObject);
+                    }
                     resultObject = null;
                 }
             }
@@ -68,7 +114,14 @@ public static class Async
                 IEnumerable<T>? resultObject = await task;
                 if (resultObject != null)
                 {
-                    obj.AddRangeParallel(resultObject);
+                    if (obj != null)
+                    {
+                        obj.AddRangeParallel(resultObject);
+                    }
+                    else
+                    {
+                        obj = new(resultObject);
+                    }
                     resultObject = null;
                 }
             }
@@ -93,7 +146,46 @@ public static class Async
                 ConcurrentBag<T>? resultObject = await task;
                 if (resultObject != null)
                 {
-                    obj.AddRangeParallel(resultObject);
+                    if (obj != null)
+                    {
+                        obj.AddRangeParallel(resultObject);
+                    }
+                    else
+                    {
+                        obj = new(resultObject);
+                    }
+                    resultObject = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+    }
+
+    /// <summary>
+    /// Task to fill list obj variable asynchronously
+    /// </summary>
+    /// <param name="obj">List object to insert data into</param>
+    /// <param name="task">Async task that returns the list of values to insert into obj object</param>
+    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>?> task)
+    {
+        try
+        {
+            if (obj != null)
+            {
+                List<T>? resultObject = await task;
+                if (resultObject != null)
+                {
+                    if (obj != null)
+                    {
+                        obj.AddRangeParallel(resultObject);
+                    }
+                    else
+                    {
+                        obj = new(resultObject);
+                    }
                     resultObject = null;
                 }
             }

@@ -11,7 +11,7 @@ namespace CommonNetFuncs.SubsetModelBinder;
 [Generator(LanguageNames.CSharp)]
 public class SubsetValidatorGenerator : IIncrementalGenerator
 {
-    private static readonly string attributeName = typeof(SubsetOfAttribute).Namespace + nameof(SubsetOfAttribute);
+    private static readonly string attributeName = typeof(SubsetOfAttribute).Namespace + "." + nameof(SubsetOfAttribute);//"CommonNetFuncs.SubsetModelBinder.SubsetOfAttribute"; //typeof(SubsetOfAttribute).Namespace + nameof(SubsetOfAttribute);
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         IncrementalValuesProvider<ClassDeclarationSyntax> classDeclarations = context.SyntaxProvider

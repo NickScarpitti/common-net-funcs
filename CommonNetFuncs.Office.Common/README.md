@@ -1,6 +1,6 @@
 # CommonNetFuncs.Images
 
-[![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Images)](https://www.nuget.org/packages/CommonNetFuncs.Images/)
+[![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Office.Common)](https://www.nuget.org/packages/CommonNetFuncs.Office.Common/)
 
 This lightweight project contains helper methods for several common functions required by applications.
 

@@ -97,6 +97,104 @@ collection?.Count > 0;
 bool x = collection.AnyFast();
 ```
 
+#### AddDictionaryItem
+
+[Description]
+
+```cs
+```
+
+#### AddRange & AddRangeParallel
+
+[Description]
+
+```cs
+```
+
+#### SetValue & SetValueParallel
+
+[Description]
+
+```cs
+```
+
+#### SelectNonEmpty
+
+[Description]
+
+```cs
+```
+
+#### SelectNonNull
+
+[Description]
+
+```cs
+```
+
+#### SingleToList
+
+[Description]
+
+```cs
+```
+
+#### GetObjectByPartial
+
+[Description]
+
+```cs
+```
+
+#### ToList
+
+[Description]
+
+```cs
+```
+
+#### ToListParallel
+
+[Description]
+
+```cs
+```
+
+#### ToDataTable
+
+[Description]
+
+```cs
+```
+
+#### ToDataTableReflection
+
+[Description]
+
+```cs
+```
+
+#### CombineExpressions
+
+[Description]
+
+```cs
+```
+
+#### StringAggProps
+
+[Description]
+
+```cs
+```
+
+#### IndexOf
+
+[Description]
+
+```cs
+```
+
 </details>
 
 ---

@@ -87,10 +87,10 @@ public static class NavigationProperties
                 //Prevent following circular references or redundant branches
                 if (!parentNavigations.Select(x => x.Value).Contains(navigationPropertyName)) //&& (depth == 0 || !topLevelProperties.Any(x => x == navigationPropertyName)))
                 {
-                    parentNavigations.AddDictionaryItem(depth, navigationPropertyName);
+                    parentNavigations.TryAdd(depth, navigationPropertyName);
 
                     //No need to keep reassigning the query as nothing is changing through each iteration
-                    foundNavigations!.AddDictionaryItem(string.Join(".", parentNavigations.OrderBy(x => x.Key).Select(x => x.Value)), typeof(T)); //Ensure that every step is called out in case the end navigation is null to ensure prior values are loaded
+                    foundNavigations!.TryAdd(string.Join(".", parentNavigations.OrderBy(x => x.Key).Select(x => x.Value)), typeof(T)); //Ensure that every step is called out in case the end navigation is null to ensure prior values are loaded
                     GetNavigations<T>(context, !navigationProperty.ClrType.GenericTypeArguments.AnyFast() ? navigationProperty.ClrType : navigationProperty.ClrType.GenericTypeArguments[0],
                         depth + 1, maxDepth, topLevelNavigations, parentNavigations.DeepClone(), foundNavigations);
                 }
@@ -99,7 +99,7 @@ public static class NavigationProperties
         else
         {
             //Reached the deepest navigation property
-            foundNavigations!.AddDictionaryItem(string.Join(".", parentNavigations.OrderBy(x => x.Key).Select(x => x.Value)), typeof(T));
+            foundNavigations!.TryAdd(string.Join(".", parentNavigations.OrderBy(x => x.Key).Select(x => x.Value)), typeof(T));
         }
 
         if (depth == 0 && useCaching && !cachedEntityNavigations.Any(x => x.Key == typeof(T)) && foundNavigations?.AnyFast() == true)

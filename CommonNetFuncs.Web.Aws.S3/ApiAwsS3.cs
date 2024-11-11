@@ -298,7 +298,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                 else
                 {
                     isValid = await DoesS3BucketExistV2Async(s3Client, bucketName);
-                    validatedBuckets.AddDictionaryItem(bucketName, isValid);
+                    validatedBuckets.TryAdd(bucketName, isValid);
                 }
             }
 

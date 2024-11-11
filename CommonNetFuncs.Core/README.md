@@ -97,11 +97,20 @@ collection?.Count > 0;
 bool x = collection.AnyFast();
 ```
 
-#### AddDictionaryItem
+#### AddDictionaryItem & AddDictionaryItems
 
-[Description]
+Used to directly TryAdd a KeyValuePair object(s) to a dictionary
 
 ```cs
+KeyValuePair<string, string> JsonContentHeader = new("Content-Type", "application/json");
+
+//Single addition
+ConcurrentDictionary<string, string>? httpHeaders = [];
+httpHeaders.AddDictionaryItem(JsonContentHeader);
+
+//Add multiples
+List<KeyValuePair<string, string>> keyValuePairs = [new("Accept-Encoding", "br"), new("Accept-Encoding", "gzip")];
+httpHeaders.AddDictionaryItems(keyValuePairs);
 ```
 
 #### AddRange & AddRangeParallel

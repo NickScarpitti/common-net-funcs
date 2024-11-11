@@ -81,17 +81,6 @@ public static class Collections
     /// Provides a safe way to add a new Dictionary key without having to worry about duplication
     /// </summary>
     /// <param name="dict">Dictionary to add item to</param>
-    /// <param name="key">Key of new item to add to dictionary</param>
-    /// <param name="value">Value of new item to add to dictionary</param>
-    public static void AddDictionaryItem<K, V>(this IDictionary<K, V?> dict, K key, V? value = default) where K : notnull
-    {
-        dict.TryAdd(key, value);
-    }
-
-    /// <summary>
-    /// Provides a safe way to add a new Dictionary key without having to worry about duplication
-    /// </summary>
-    /// <param name="dict">Dictionary to add item to</param>
     /// <param name="keyValuePair">Key value pair to add to dictionary</param>
     public static void AddDictionaryItem<K, V>(this IDictionary<K, V> dict, KeyValuePair<K, V> keyValuePair) where K : notnull
     {

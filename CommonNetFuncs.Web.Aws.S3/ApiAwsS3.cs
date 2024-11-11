@@ -4,7 +4,6 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
 using static Amazon.S3.Util.AmazonS3Util;
-using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Strings;
 
@@ -298,7 +297,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                 else
                 {
                     isValid = await DoesS3BucketExistV2Async(s3Client, bucketName);
-                    validatedBuckets.AddDictionaryItem(bucketName, isValid);
+                    validatedBuckets.TryAdd(bucketName, isValid);
                 }
             }
 

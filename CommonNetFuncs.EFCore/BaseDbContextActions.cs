@@ -146,7 +146,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                         }
                     }
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -277,7 +277,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryAllFull(queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -367,7 +367,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -645,7 +645,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     model.Entities = results.ConvertAll(x => x.Entities);
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -739,7 +739,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -834,7 +834,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -930,7 +930,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T2), true);
+                    circularReferencingEntities.TryAdd(typeof(T2), true);
                 }
                 catch (Exception ex2)
                 {
@@ -1114,7 +1114,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     }
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -1196,7 +1196,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     }
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -1308,7 +1308,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     }
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -1449,7 +1449,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     }
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {

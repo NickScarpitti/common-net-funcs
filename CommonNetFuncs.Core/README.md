@@ -97,6 +97,113 @@ collection?.Count > 0;
 bool x = collection.AnyFast();
 ```
 
+#### AddDictionaryItem & AddDictionaryItems
+
+Used to directly TryAdd a KeyValuePair object(s) to a dictionary
+
+```cs
+KeyValuePair<string, string> JsonContentHeader = new("Content-Type", "application/json");
+
+//Single addition
+ConcurrentDictionary<string, string>? httpHeaders = [];
+httpHeaders.AddDictionaryItem(JsonContentHeader);
+
+//Add multiples
+List<KeyValuePair<string, string>> keyValuePairs = [new("Accept-Encoding", "br"), new("Accept-Encoding", "gzip")];
+httpHeaders.AddDictionaryItems(keyValuePairs);
+```
+
+#### AddRange & AddRangeParallel
+
+[Description]
+
+```cs
+```
+
+#### SetValue & SetValueParallel
+
+[Description]
+
+```cs
+```
+
+#### SelectNonEmpty
+
+[Description]
+
+```cs
+```
+
+#### SelectNonNull
+
+[Description]
+
+```cs
+```
+
+#### SingleToList
+
+[Description]
+
+```cs
+```
+
+#### GetObjectByPartial
+
+[Description]
+
+```cs
+```
+
+#### ToList
+
+[Description]
+
+```cs
+```
+
+#### ToListParallel
+
+[Description]
+
+```cs
+```
+
+#### ToDataTable
+
+[Description]
+
+```cs
+```
+
+#### ToDataTableReflection
+
+[Description]
+
+```cs
+```
+
+#### CombineExpressions
+
+[Description]
+
+```cs
+```
+
+#### StringAggProps
+
+[Description]
+
+```cs
+```
+
+#### IndexOf
+
+[Description]
+
+```cs
+```
+
 </details>
 
 ---

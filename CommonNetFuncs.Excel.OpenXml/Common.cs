@@ -2363,6 +2363,11 @@ public static partial class ExcelHelper
             return $"{NumberToColumnName(ColumnIndex)}{RowIndex}";
         }
 
+        /// <summary>
+        /// Get the 1 based column number for the column name provided (1 = A)
+        /// </summary>
+        /// <param name="columnName">The column name to get the 1 based (1 = A) column index of</param>
+        /// <returns>The 1 based column index (1 = A) corresponding to the value of columnName</returns>
         public static uint ColumnNameToNumber(string columnName)
         {
             uint number = 0;
@@ -2374,6 +2379,11 @@ public static partial class ExcelHelper
             return number;// - 1;
         }
 
+        /// <summary>
+        /// Get the column name corresponding to the provided 1 based column number (A = 1)
+        /// </summary>
+        /// <param name="columnNumber">1 based column number (A = 1) to get name of</param>
+        /// <returns>Column name corresponding to the value of columnNumber</returns>
         public static string NumberToColumnName(uint columnNumber)
         {
             int number = (int)columnNumber - 1; //Make this 1 based to avoid confusion

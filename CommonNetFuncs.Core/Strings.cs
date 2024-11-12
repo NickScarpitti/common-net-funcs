@@ -61,6 +61,21 @@ public static partial class Strings
     [GeneratedRegex(@"^[0-9\s]*$")]
     private static partial Regex NumericOnlyWithSpacesRegex();
 
+    [GeneratedRegex(@"\D+")]
+    private static partial Regex ExtractNumbersRegex();
+
+    [GeneratedRegex(@"(\d{3})(\d{4})")]
+    private static partial Regex SevenDigitPhoneNumberRegex();
+
+    [GeneratedRegex(@"(\d{3})(\d{3})(\d{4})")]
+    private static partial Regex TenDigitPhoneNumberRegex();
+
+    [GeneratedRegex(@"(\d{1})(\d{3})(\d{3})(\d{4})")]
+    private static partial Regex ElevenDigitPhoneNumberRegex();
+
+    [GeneratedRegex(@"(\d{2})(\d{3})(\d{3})(\d{4})")]
+    private static partial Regex TwelveDigitPhoneNumberRegex();
+
     /// <summary>
     /// Clone of VBA Left() function that gets n characters from the left side of the string
     /// </summary>
@@ -1237,5 +1252,65 @@ public static partial class Strings
         }
 
         return output;
+    }
+
+    /// <summary>
+    /// Formats a string as a phone number
+    /// </summary>
+    /// <param name="input">String to be formatted as phone number</param>
+    /// <param name="separator">Character to be used to separate segments of the phone number (country code excluded)</param>
+    /// <param name="addParenToAreaCode">If true, will add parentheses around the area code, eg. +1 (123)-456-7890 instead of +1 123-456-7890</param>
+    /// <returns>String formatted as a phone number</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    static string? FormatPhoneNumber(string? input, string separator = "-", bool addParenToAreaCode = false)
+    {
+        if (input.IsNullOrWhiteSpace())
+        {
+            return input;
+        }
+
+        string[] phoneParts = input.ToLowerInvariant().Split("x");
+        string? extension = phoneParts.Length > 1 ? phoneParts[1] : null;
+
+        input = string.Concat(ExtractNumbersRegex().Split(phoneParts[0]));
+
+        Regex? phoneParser;
+        string format;
+
+        switch (input.Length)
+        {
+            case 7:
+                phoneParser = SevenDigitPhoneNumberRegex();
+                format = $"$1{separator}$2";
+                break;
+
+            case 10:
+                phoneParser = TenDigitPhoneNumberRegex();
+                format = !addParenToAreaCode ? $"$1{separator}$2{separator}$3" : $"($1){separator}$2{separator}$3";
+                break;
+
+            case 11:
+                phoneParser = ElevenDigitPhoneNumberRegex();
+                format = !addParenToAreaCode ? $"+$1 $2{separator}$3{separator}$4" : $"+$1 ($2){separator}$3{separator}$4";
+                break;
+
+            case 12:
+                phoneParser = TwelveDigitPhoneNumberRegex();
+                format = !addParenToAreaCode ? $"+$1 $2{separator}$3{separator}$4" : $"+$1 ($2){separator}$3{separator}$4";
+                break;
+            default:
+                if (extension != null)
+                {
+                    input += $"x{extension}";
+                }
+                return input;
+
+        }
+        input = phoneParser.Replace(input, format);
+        if (extension != null)
+        {
+            input += $"x{extension}";
+        }
+        return input;
     }
 }

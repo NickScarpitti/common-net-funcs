@@ -8,7 +8,7 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.42</Version>
+    <Version>2.0.0</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -18,36 +18,77 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs</PackageProjectUrl>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <IncludeSymbols>True</IncludeSymbols>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <Description>
       A code generator that enforces a class to be only a subset of another class, with no extra properties or properties of incorrect types.
       Uses ModelMetadataType or MetadataType to apply attributes to your subset class.
     </Description>
     <PackageTags>dotnet;helpers;generator;model;binding;source generator;model binding;mvc</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <EnableNETAnalyzers>True</EnableNETAnalyzers>
-    <AnalysisLevel>latest</AnalysisLevel>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <WarningLevel>7</WarningLevel>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <WarningLevel>7</WarningLevel>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="TTLogo.png">
-      <Pack>True</Pack>
+    <None Include="TTLogo.png">
+      <Pack>true</Pack>
       <PackagePath>\</PackagePath>
     </None>
     <None Include="README.md">
       <PackagePath>\</PackagePath>
-      <Pack>True</Pack>
+      <Pack>true</Pack>
+    </None>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommonNetFuncs.SubsetModelBinder.Attribute\CommonNetFuncs.SubsetModelBinder.Attribute.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.SubsetModelBinder.Generator\CommonNetFuncs.SubsetModelBinder.Generator.csproj" />
+  </ItemGroup>
+</Project>
+
+<!--<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Title>Subset Model Binder</Title>
+    <Platforms>AnyCPU;x86;x64</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>2.0.0</Version>
+    <Title>$(AssemblyName)</Title>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>Nick_Scarpitti</Authors>
+    <PackageIcon>TTLogo.png</PackageIcon>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs</PackageProjectUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>
+      A code generator that enforces a class to be only a subset of another class, with no extra properties or properties of incorrect types.
+      Uses ModelMetadataType or MetadataType to apply attributes to your subset class.
+    </Description>
+    <PackageTags>dotnet;helpers;generator;model;binding;source generator;model binding;mvc</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeContentInPack>true</IncludeContentInPack>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="TTLogo.png">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="README.md">
+      <PackagePath>\</PackagePath>
+      <Pack>true</Pack>
     </None>
   </ItemGroup>
 
@@ -56,17 +97,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" PrivateAssets="all" />
+    <ProjectReference Include="..\CommonNetFuncs.SubsetModelBinder.Attribute\CommonNetFuncs.SubsetModelBinder.Attribute.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.SubsetModelBinder.Generator\CommonNetFuncs.SubsetModelBinder.Generator.csproj" />
   </ItemGroup>
+</Project>-->
 
-  <!--<ItemGroup>
-    <None Remove="bin\Debug\netstandard2.0\CommonNetFuncs.SubsetModelBinder.dll" />
-  </ItemGroup>-->
 
-  <ItemGroup>
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(OutputPath)\$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-  </ItemGroup>
-
-</Project>

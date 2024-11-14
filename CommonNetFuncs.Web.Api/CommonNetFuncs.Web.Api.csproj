@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>2.0.0</Version>
+    <Version>1.0.47</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -32,8 +32,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="9.0.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.11" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
   </ItemGroup>
 

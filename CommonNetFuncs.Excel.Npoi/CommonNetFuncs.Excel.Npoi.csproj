@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.42</Version>
+    <Version>2.0.1</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -31,7 +31,7 @@
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
     <PackageReference Include="NPOI" Version="2.7.2" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" PrivateAssets="all" />
-    <PackageReference Include="System.Formats.Asn1" Version="8.0.1" PrivateAssets="all" />
+    <PackageReference Include="System.Formats.Asn1" Version="9.0.0" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

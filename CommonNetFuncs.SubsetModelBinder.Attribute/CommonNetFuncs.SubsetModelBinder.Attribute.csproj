@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <Title>Subset Model Binder Attribute</Title>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -17,39 +18,24 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs</PackageProjectUrl>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>
-      Helper methods that deal with sending email, including an SMTP email sending service and an HTML email builder helper.
+      Attribute for CommonNetFuncs.SubsetModelBinder
     </Description>
-    <PackageTags>dotnet;helpers;email;mail;smtp</PackageTags>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageTags>dotnet;helpers;generator;model;binding;source generator;model binding;mvc</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RootNamespace>CommonNetFuncs.SubsetModelBinder</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MailKit" Version="4.8.0" />
-    <PackageReference Include="MimeKit" Version="4.8.0" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="TTLogo.png">
-      <PackagePath>\</PackagePath>
+    <None Include="TTLogo.png">
       <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
     </None>
     <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove=".editorconfig" />
   </ItemGroup>
 
 </Project>

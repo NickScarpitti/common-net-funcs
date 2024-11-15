@@ -1325,7 +1325,7 @@ public static partial class Common
             {
                 using XSSFWorkbook wb = new(fileStream);
                 ISheet? ws = null;
-                ITable? table = null;
+                XSSFTable? table = null;
                 if (!tableName.IsNullOrWhiteSpace())
                 {
                     table = wb.GetTable(tableName);

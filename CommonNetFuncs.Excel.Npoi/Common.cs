@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
@@ -104,24 +105,53 @@ public static partial class Common
     /// Get ICell offset from the cell indicated with the x and y coordinates
     /// </summary>
     /// <param name="ws">Worksheet that cell is in</param>
-    /// <param name="x">X coordinate of starting cell</param>
-    /// <param name="y">Y coordinate of starting cell</param>
+    /// <param name="colIndex">0 based X coordinate of starting cell</param>
+    /// <param name="rowIndex">0 based Y coordinate of starting cell</param>
     /// <param name="colOffset">X axis offset from the cell reference</param>
     /// <param name="rowOffset">Y axis offset from the cell reference</param>
     /// <returns>ICell object of the specified offset of the cell indicated with the x and y coordinates</returns>
-    public static ICell? GetCellFromCoordinates(this ISheet ws, int x, int y, int colOffset = 0, int rowOffset = 0)
+    public static ICell? GetCellFromCoordinates(this ISheet ws, int colIndex, int rowIndex, int colOffset = 0, int rowOffset = 0)
     {
         try
         {
-            IRow row = ws.GetRow(y + rowOffset);
-            row ??= ws.CreateRow(y + rowOffset);
-            return row.GetCell(x + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+            IRow row = ws.GetRow(rowIndex + rowOffset);
+            row ??= ws.CreateRow(rowIndex + rowOffset);
+            return row.GetCell(colIndex + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Gets the 0 based index of the last row with a non-blank value
+    /// </summary>
+    /// <param name="ws">Worksheet that contains the column to get the last populated row from</param>
+    /// <param name="colIndex">0 based index of the column to find the last populated row in</param>
+    /// <returns>0 based index of the last row with a non-blank value</returns>
+    public static int GetLastPopulatedRowInColumn(this ISheet ws, int colIndex)
+    {
+        int i = 0;
+        ICell? currentCell = ws.GetCellFromCoordinates(colIndex, i);
+        while (currentCell?.IsCellEmpty() == false)
+        {
+            i++;
+            currentCell = ws.GetCellFromCoordinates(colIndex, i);
+        }
+        return i - 1;
+    }
+
+    /// <summary>
+    /// Gets the 0 based index of the last row with a non-blank value
+    /// </summary>
+    /// <param name="ws">Worksheet that contains the column to get the last populated row from</param>
+    /// <param name="colName">Column name of the column to find the last populated row in</param>
+    /// <returns>0 based index of the last row with a non-blank value</returns>
+    public static int GetLastPopulatedRowInColumn(this ISheet ws, string colName)
+    {
+        return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber());
     }
 
     /// <summary>
@@ -235,7 +265,7 @@ public static partial class Common
     /// Initializes cell at indicated row and column
     /// </summary>
     /// <param name="row">Row to create cell in</param>
-    /// <param name="columnIndex">Column index of the cell to create</param>
+    /// <param name="columnIndex">0 based column index of the cell to create</param>
     /// <returns>ICell object of the cell that was created</returns>
     public static ICell CreateCell(this IRow row, int columnIndex)
     {
@@ -1021,8 +1051,8 @@ public static partial class Common
     /// Get the width of a specified range in pixels
     /// </summary>
     /// <param name="ws">Worksheet containing range to get width of</param>
-    /// <param name="startCol">First column in range being measured</param>
-    /// <param name="endCol">Last column in range being measured</param>
+    /// <param name="startCol">0 based index of the first column in range being measured</param>
+    /// <param name="endCol">0 based index of the last column in range being measured</param>
     /// <returns>Double representation of the width of the column range in pixels</returns>
     public static int GetRangeWidthInPx(this ISheet ws, int startCol, int endCol)
     {
@@ -1048,8 +1078,8 @@ public static partial class Common
     /// Get the height of a specified range in pixels
     /// </summary>
     /// <param name="ws">Worksheet containing range to get height of</param>
-    /// <param name="startRow">First row in range being measured</param>
-    /// <param name="endRow">Last row in range being measured</param>
+    /// <param name="startRow">0 based index of the first row in range being measured</param>
+    /// <param name="endRow">0 based index of the last row in range being measured</param>
     /// <returns>Double representation of the height of the rows range in pixels</returns>
     public static int GetRangeHeightInPx(this ISheet ws, int startRow, int endRow)
     {
@@ -1071,7 +1101,7 @@ public static partial class Common
     /// Get cells contained within a range
     /// </summary>
     /// <param name="sheet">Sheet to get range from</param>
-    /// <param name="range">String cell reference in A1 notation</param>
+    /// <param name="range">String cell / range reference in A1 notation</param>
     /// <returns>Array of cells contained within the range specified</returns>
     public static ICell[,] GetRange(this ISheet sheet, string range)
     {
@@ -1122,8 +1152,8 @@ public static partial class Common
     /// <param name="fileStream">Stream of Excel file being read</param>
     /// <param name="hasHeaders">Does the data being read have headers. Will be used for data table column names instead of default 'Column0', 'Column1'... if true. If no headers specified, first row of data must have a value for all columns in order to read all columns correctly./></param>
     /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
-    /// <param name="startCellReference">Top left corner containing data to read. Will use A1 if not specified.</param>
-    /// <param name="endCellReference">Bottom right cell containing data to read. Will read to first full empty row if not specified.</param>
+    /// <param name="startCellReference">Top left corner containing data to read in A1 notation. Will use A1 if not specified.</param>
+    /// <param name="endCellReference">Bottom right cell containing data to read in A1 notation. Will read to first full empty row if not specified.</param>
     /// <returns>DataTable representation of the data read from the excel file</returns>
     public static DataTable ReadExcelFileToDataTable(this Stream fileStream, bool hasHeaders = true, string? sheetName = null, string? startCellReference = null, string? endCellReference = null)
     {
@@ -1295,7 +1325,7 @@ public static partial class Common
             {
                 using XSSFWorkbook wb = new(fileStream);
                 ISheet? ws = null;
-                ITable? table = null;
+                XSSFTable? table = null;
                 if (!tableName.IsNullOrWhiteSpace())
                 {
                     table = wb.GetTable(tableName);
@@ -1440,5 +1470,68 @@ public static partial class Common
         double g = rgb1[1] - rgb2[1];
         double b = rgb1[2] - rgb2[2];
         return Sqrt((2 + rmean / 256) * r * r + 4 * g * g + (2 + (255 - rmean) / 256) * b * b);
+    }
+
+    /// <summary>
+    /// Get the 0 based column number for the column name provided (0 = A)
+    /// </summary>
+    /// <param name="columnName">The column name to get the 0 based (0 = A) column index of</param>
+    /// <returns>The 0 based column index (0 = A) corresponding to the value of columnName</returns>
+    public static int ColumnNameToNumber(this string? columnName)
+    {
+        if (string.IsNullOrEmpty(columnName))
+        {
+            throw new ArgumentException("Column name cannot be null or empty.");
+        }
+
+        columnName = columnName.ToUpperInvariant();
+        int index = 0;
+
+        for (int i = 0; i < columnName.Length; i++)
+        {
+            index *= 26;
+            index += (columnName[i] - 'A' + 1);
+        }
+
+        return index - 1; // Subtract 1 to make it 0-based
+    }
+
+    /// <summary>
+    /// Get the column name corresponding to the provided 0 based column number (A = 0)
+    /// </summary>
+    /// <param name="columnNumber">0 based column number (A = 0) to get name of</param>
+    /// <returns>Column name corresponding to the value of columnNumber</returns>
+    public static string ColumnIndexToName(this int? columnNumber)
+    {
+        if (columnNumber == null || columnNumber < 0)
+        {
+            throw new ArgumentException("Index cannot be null or negative.");
+        }
+
+        return ((int)columnNumber).ColumnIndexToName();
+    }
+
+    /// <summary>
+    /// Get the column name corresponding to the provided 0 based column number (A = 0)
+    /// </summary>
+    /// <param name="columnNumber">0 based column number (A = 0) to get name of</param>
+    /// <returns>Column name corresponding to the value of columnNumber</returns>
+    public static string ColumnIndexToName(this int columnNumber)
+    {
+        if (columnNumber < 0)
+        {
+            throw new ArgumentException("Index cannot be negative.");
+        }
+
+        columnNumber++; // Convert to 1-based index because we're working backwards
+        StringBuilder columnName = new();
+        while (columnNumber > 0)
+        {
+            columnNumber--;
+            columnName.Insert(0, (char)('A' + (columnNumber % 26)));
+            columnNumber /= 26;
+        }
+
+        return columnName.ToString();
     }
 }

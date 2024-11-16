@@ -2,12 +2,13 @@
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using CommonNetFuncs.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Z.EntityFramework.Plus;
-using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Collections;
-using CommonNetFuncs.Core;
+using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.EFCore;
 
@@ -18,9 +19,9 @@ namespace CommonNetFuncs.EFCore;
 /// <typeparam name="UT">DB Context for the database you with to run these actions against.</typeparam>
 public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBaseDbContextActions<T, UT> where T : class where UT : DbContext
 {
-    static readonly ConcurrentDictionary<Type, bool> circularReferencingEntities = new();
-
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+    private static readonly JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles };
+    static readonly ConcurrentDictionary<Type, bool> circularReferencingEntities = new();
 
     public IServiceProvider serviceProvider = serviceProvider;
 
@@ -146,7 +147,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                         }
                     }
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -277,7 +278,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryAllFull(queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -367,7 +368,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -645,7 +646,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     model.Entities = results.ConvertAll(x => x.Entities);
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -739,7 +740,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -834,7 +835,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -930,7 +931,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
                     model = await query.ToListAsync();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T2), true);
+                    circularReferencingEntities.TryAdd(typeof(T2), true);
                 }
                 catch (Exception ex2)
                 {
@@ -1114,7 +1115,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     }
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -1196,7 +1197,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     }
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -1308,7 +1309,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     }
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -1449,7 +1450,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     }
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.AddDictionaryItem(typeof(T), true);
+                    circularReferencingEntities.TryAdd(typeof(T), true);
                 }
                 catch (Exception ex2)
                 {
@@ -1543,7 +1544,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model, defaultJsonSerializerOptions)}");
         }
     }
 
@@ -1566,7 +1567,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model, defaultJsonSerializerOptions)}");
         }
     }
 
@@ -1574,17 +1575,21 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Delete record in the table corresponding to type T matching the object of type T passed in
     /// </summary>
     /// <param name="model">Record of type T to delete</param>
-    public void DeleteByObject(T model)
+    public void DeleteByObject(T model, bool removeNavigationProps = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
 
         try
         {
+            if (removeNavigationProps)
+            {
+                model.RemoveNavigationProperties(context);
+            }
             context.Set<T>().Remove(model);
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model, defaultJsonSerializerOptions)}");
         }
     }
 
@@ -1617,18 +1622,22 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <summary>
     /// Delete records in the table corresponding to type T matching the enumerable objects of type T passed in
     /// </summary>
-    /// <param name="model">Records of type T to delete</param>
-    public bool DeleteMany(IEnumerable<T> model)
+    /// <param name="models">Records of type T to delete</param>
+    public bool DeleteMany(IEnumerable<T> models, bool removeNavigationProps = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         try
         {
-            context.Set<T>().RemoveRange(model); //Requires separate save
+            if (removeNavigationProps)
+            {
+                models.SetValue(x => x.RemoveNavigationProperties(context));
+            }
+            context.Set<T>().RemoveRange(models); //Requires separate save
             return true;
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(models, defaultJsonSerializerOptions)}");
         }
         return false;
     }
@@ -1636,18 +1645,22 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <summary>
     /// Delete records in the table corresponding to type T matching the enumerable objects of type T passed in
     /// </summary>
-    /// <param name="model">Records of type T to delete</param>
-    public async Task<bool> DeleteManyTracked(IEnumerable<T> model)
+    /// <param name="models">Records of type T to delete</param>
+    public async Task<bool> DeleteManyTracked(IEnumerable<T> models, bool removeNavigationProps = false)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         try
         {
-            await context.Set<T>().DeleteRangeByKeyAsync(model); //EF Core +, Does not require separate save
+            if (removeNavigationProps)
+            {
+                models.SetValue(x => x.RemoveNavigationProperties(context));
+            }
+            await context.Set<T>().DeleteRangeByKeyAsync(models); //EF Core +, Does not require separate save
             return true;
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model)}");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(models, defaultJsonSerializerOptions)}");
         }
         return false;
     }

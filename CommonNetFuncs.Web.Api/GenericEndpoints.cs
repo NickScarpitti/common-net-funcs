@@ -46,11 +46,11 @@ public class GenericEndpoints : ControllerBase
     /// <param name="model">Entity to delete</param>
     /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
-    public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+    public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class where UT : DbContext
     {
         try
         {
-            baseAppDbContextActions.DeleteByObject(model);
+            baseAppDbContextActions.DeleteByObject(model, removeNavigationProps);
             if (await baseAppDbContextActions.SaveChanges())
             {
                 return Ok(model);
@@ -71,11 +71,11 @@ public class GenericEndpoints : ControllerBase
     /// <param name="models">Entities to delete</param>
     /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
-    public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+    public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class where UT : DbContext
     {
         try
         {
-            if (models.Any() && baseAppDbContextActions.DeleteMany(models) && await baseAppDbContextActions.SaveChanges())
+            if (models.Any() && baseAppDbContextActions.DeleteMany(models, removeNavigationProps) && await baseAppDbContextActions.SaveChanges())
             {
                 return Ok(models);
             }

@@ -23,7 +23,23 @@ public static class CsvHelperExportHelpers
         memoryStream ??= new();
         await using StreamWriter streamWriter = new(memoryStream);
         await using CsvWriter csvWriter = new(streamWriter, CultureInfo.InvariantCulture);
-        await csvWriter.WriteRecordsAsync(dataList);
+        try
+        {
+            await csvWriter.WriteRecordsAsync(dataList);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+        finally
+        {
+            csvWriter.Flush();
+            await csvWriter.DisposeAsync();
+
+            streamWriter.Flush();
+            streamWriter.Close();
+            await streamWriter.DisposeAsync();
+        }
         return memoryStream;
     }
 

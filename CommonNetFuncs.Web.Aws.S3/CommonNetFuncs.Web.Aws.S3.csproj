@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.31</Version>
+    <Version>2.0.1</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -24,19 +24,25 @@
       Helper methods that deal with AWS S3 interactions
     </Description>
     <PackageTags>dotnet;helpers;aws;s3;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.405.7" PrivateAssets="all" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.406.1" PrivateAssets="all" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.Web.Api\CommonNetFuncs.Web.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="TTLogo.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

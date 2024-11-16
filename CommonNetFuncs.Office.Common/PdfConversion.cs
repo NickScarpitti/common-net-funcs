@@ -74,7 +74,7 @@ public static class PdfConversion
             }
             else
             {
-                throw new ArgumentException($"Invalid extension on file to be converted to PDF. Valid extensions are:\n{string.Join(",\n", Enum.GetNames(typeof(EOfficeFileTypes)))}");
+                throw new ArgumentException($"Invalid extension on file to be converted to PDF. Valid extensions are:\n{string.Join(",\n", Enum.GetNames<EOfficeFileTypes>())}");
             }
         }
         else

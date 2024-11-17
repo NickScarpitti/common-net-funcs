@@ -253,3 +253,6 @@ dotnet_diagnostic.CA1848.severity = none
 [*.vb]
 # Modifier preferences
 visual_basic_preferred_modifier_order = Partial,Default,Private,Protected,Public,Friend,NotOverridable,Overridable,MustOverride,Overloads,Overrides,MustInherit,NotInheritable,Static,Shared,Shadows,ReadOnly,WriteOnly,Dim,Const,WithEvents,Widening,Narrowing,Custom,Async:suggestion
+
+dotnet_diagnostic.VSSpell001.severity = none
+dotnet_diagnostic.VSSpell002.severity = none

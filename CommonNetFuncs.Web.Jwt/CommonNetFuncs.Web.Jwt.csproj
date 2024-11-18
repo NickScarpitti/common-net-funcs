@@ -31,7 +31,7 @@
   <ItemGroup>
     <PackageReference Include="MemoryPack" Version="1.21.3" />
     <PackageReference Include="MessagePack" Version="2.5.192" />
-    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.2.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.2.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

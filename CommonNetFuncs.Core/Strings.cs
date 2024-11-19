@@ -1262,7 +1262,7 @@ public static partial class Strings
     /// <param name="addParenToAreaCode">If true, will add parentheses around the area code, eg. +1 (123)-456-7890 instead of +1 123-456-7890</param>
     /// <returns>String formatted as a phone number</returns>
     [return: NotNullIfNotNull(nameof(input))]
-    static string? FormatPhoneNumber(string? input, string separator = "-", bool addParenToAreaCode = false)
+    public static string? FormatPhoneNumber(this string? input, string separator = "-", bool addParenToAreaCode = false)
     {
         if (input.IsNullOrWhiteSpace())
         {

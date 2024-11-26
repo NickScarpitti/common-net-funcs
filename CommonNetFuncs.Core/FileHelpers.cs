@@ -184,20 +184,66 @@ public static class FileHelpers
         return validExtensions.ContainsInvariant(extension);
     }
 
-    public static async Task<string> GetHashFromFile(this string fileName)
+    /// <summary>
+    /// Gets the hash for a file
+    /// </summary>
+    /// <param name="fileName">Full file name including directory pointing to the file to get the hash of</param>
+    /// <returns>Hash for the file</returns>
+    public static async Task<string> GetHashFromFile(this string fileName, EHashAlgorithm algorithm = EHashAlgorithm.SHA512)
     {
-        string hash;
-        await using (FileStream fileStream = new(fileName, FileMode.Open, FileAccess.Read))
+        string? hash = null;
+        await using FileStream fileStream = new(fileName, FileMode.Open, FileAccess.Read);
+        try
         {
-            hash = await fileStream.GetSha256Hash();
+            hash = await fileStream.GetHashFromStream(algorithm);
         }
-        return hash;
+        catch (Exception ex)
+        {
+            logger.Error(ex, "Error getting hash from file!");
+        }
+        finally
+        {
+            fileStream.Close();
+            await fileStream.DisposeAsync();
+        }
+        return hash ?? string.Empty;
     }
 
-    public static async Task<string> GetSha256Hash(this FileStream fileStream)
+    /// <summary>
+    /// Generates hash based on the contents of a stream using the designated algorithm
+    /// </summary>
+    /// <param name="stream">Stream generate hash for</param>
+    /// <param name="hashAlgorithm">Algorithm to use to generate the hash</param>
+    /// <returns>Hash for the contents of the stream</returns>
+    public static async Task<string> GetHashFromStream(this Stream stream, EHashAlgorithm hashAlgorithm = EHashAlgorithm.SHA512)
     {
-        using HashAlgorithm hashAlgorithm = SHA256.Create();
-        byte[] data = await hashAlgorithm.ComputeHashAsync(fileStream);
+        byte[] data;
+        if (hashAlgorithm == EHashAlgorithm.SHA1)
+        {
+            using HashAlgorithm algorithm = SHA1.Create();
+            data = await algorithm.ComputeHashAsync(stream);
+        }
+        else if (hashAlgorithm == EHashAlgorithm.MD5)
+        {
+            using HashAlgorithm algorithm = MD5.Create();
+            data = await algorithm.ComputeHashAsync(stream);
+        }
+        else if (hashAlgorithm == EHashAlgorithm.SHA256)
+        {
+            using HashAlgorithm algorithm = SHA256.Create();
+            data = await algorithm.ComputeHashAsync(stream);
+        }
+        else if (hashAlgorithm == EHashAlgorithm.SHA384)
+        {
+            using HashAlgorithm algorithm = SHA384.Create();
+            data = await algorithm.ComputeHashAsync(stream);
+        }
+        else
+        {
+            using HashAlgorithm algorithm = SHA512.Create();
+            data = await algorithm.ComputeHashAsync(stream);
+        }
+
         StringBuilder stringBuilder = new();
 
         for (int i = 0; i < data.Length; i++)
@@ -205,5 +251,24 @@ public static class FileHelpers
             stringBuilder.Append(data[i].ToString("x2"));
         }
         return stringBuilder.ToString();
+    }
+
+    /// <summary>
+    /// Returns the full file path of all files contained under the directory startDirectory
+    /// </summary>
+    /// <param name="startDirectory">Top most directory to get files from</param>
+    /// <param name="searchPattern">Optional: Search pattern value to be used for the searchPattern parameter in Directory.GetDirectories</param>
+    /// <returns>List of all files contained within startDirectory and matching searchPattern</returns>
+    public static List<string> GetAllFilesRecursive(string? startDirectory, string searchPattern = "*")
+    {
+        List<string> files = [];
+        if (!startDirectory.IsNullOrWhiteSpace() && Directory.Exists(startDirectory))
+        {
+            foreach (string subDirectory in Directory.GetDirectories(startDirectory, searchPattern, SearchOption.AllDirectories))
+            {
+                files.AddRange(Directory.GetFiles(subDirectory));
+            }
+        }
+        return files;
     }
 }

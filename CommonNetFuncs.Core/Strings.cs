@@ -23,8 +23,7 @@ public enum EHashAlgorithm
     SHA256,
     SHA384,
     SHA512,
-    MD5,
-    RSA
+    MD5
 }
 
 public enum EComparisonType
@@ -1063,7 +1062,6 @@ public static partial class Strings
             EHashAlgorithm.SHA256 => SHA256.HashData(Encoding.UTF8.GetBytes(originalString)),
             EHashAlgorithm.SHA384 => SHA384.HashData(Encoding.UTF8.GetBytes(originalString)),
             EHashAlgorithm.MD5 => MD5.HashData(Encoding.UTF8.GetBytes(originalString)),
-            //case EHashAlgorithm.SHA512:
             _ => SHA512.HashData(Encoding.UTF8.GetBytes(originalString)),
         };
         StringBuilder builder = new();
@@ -1262,7 +1260,7 @@ public static partial class Strings
     /// <param name="addParenToAreaCode">If true, will add parentheses around the area code, eg. +1 (123)-456-7890 instead of +1 123-456-7890</param>
     /// <returns>String formatted as a phone number</returns>
     [return: NotNullIfNotNull(nameof(input))]
-    static string? FormatPhoneNumber(string? input, string separator = "-", bool addParenToAreaCode = false)
+    public static string? FormatPhoneNumber(this string? input, string separator = "-", bool addParenToAreaCode = false)
     {
         if (input.IsNullOrWhiteSpace())
         {

@@ -30,7 +30,7 @@
   <ItemGroup>
     <PackageReference Include="MailKit" Version="4.8.0" />
     <PackageReference Include="MimeKit" Version="4.8.0" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.15" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

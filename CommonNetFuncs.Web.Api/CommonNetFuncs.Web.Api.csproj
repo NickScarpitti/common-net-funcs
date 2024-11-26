@@ -34,7 +34,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="9.0.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" PrivateAssets="all" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.15" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

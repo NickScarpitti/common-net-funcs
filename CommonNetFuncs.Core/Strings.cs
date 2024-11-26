@@ -23,8 +23,7 @@ public enum EHashAlgorithm
     SHA256,
     SHA384,
     SHA512,
-    MD5,
-    RSA
+    MD5
 }
 
 public enum EComparisonType
@@ -1063,7 +1062,6 @@ public static partial class Strings
             EHashAlgorithm.SHA256 => SHA256.HashData(Encoding.UTF8.GetBytes(originalString)),
             EHashAlgorithm.SHA384 => SHA384.HashData(Encoding.UTF8.GetBytes(originalString)),
             EHashAlgorithm.MD5 => MD5.HashData(Encoding.UTF8.GetBytes(originalString)),
-            //case EHashAlgorithm.SHA512:
             _ => SHA512.HashData(Encoding.UTF8.GetBytes(originalString)),
         };
         StringBuilder builder = new();

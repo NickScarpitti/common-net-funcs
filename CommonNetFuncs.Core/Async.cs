@@ -275,5 +275,7 @@ public static class Async
 public class AsyncIntString
 {
     public int AsyncInt { get; set; }
+    public decimal AsyncDecimal { get; set; }
+    public float AsyncFloat { get; set; }
     public string AsyncString { get; set; } = string.Empty;
 }

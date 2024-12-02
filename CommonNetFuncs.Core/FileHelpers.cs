@@ -264,6 +264,7 @@ public static class FileHelpers
         List<string> files = [];
         if (!startDirectory.IsNullOrWhiteSpace() && Directory.Exists(startDirectory))
         {
+            files.AddRange(Directory.GetFiles(startDirectory));
             foreach (string subDirectory in Directory.GetDirectories(startDirectory, searchPattern, SearchOption.AllDirectories))
             {
                 files.AddRange(Directory.GetFiles(subDirectory));

@@ -17,9 +17,13 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <DebugType>embedded</DebugType>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <!-- Optional: Detect breaking changes from a previous stable version -->
+    <PackageValidationBaselineVersion>2.1.0</PackageValidationBaselineVersion>
     <Description>
       Helper methods that deal with EFCore, including providing basic actions against a DB Context and handling navigation properties.
     </Description>
@@ -29,6 +33,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" PrivateAssets="all" />
+    <PackageReference Include="MinVer" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.15" PrivateAssets="all" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.9" PrivateAssets="all" />

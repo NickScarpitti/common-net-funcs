@@ -11,7 +11,7 @@
     <Version>2.1.1</Version>
     <Title>$(AssemblyName)</Title>
         <!--<AssemblyVersion>$(Version)</AssemblyVersion>-->
-    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <AssemblyVersion>2.1.1</AssemblyVersion>
     <!--<FileVersion>$(Version)</FileVersion>-->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Authors>Nick_Scarpitti</Authors>

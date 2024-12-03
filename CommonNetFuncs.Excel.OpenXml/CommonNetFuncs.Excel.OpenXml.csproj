@@ -7,10 +7,11 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>2.1.0</Version>
+    <Version>2.1.1</Version>
     <Title>$(AssemblyName)</Title>
+    <!--<AssemblyVersion>$(Version)</AssemblyVersion>-->
     <AssemblyVersion>$(Version)</AssemblyVersion>
-    <FileVersion>$(Version)</FileVersion>
+    <!--<FileVersion>$(Version)</FileVersion>-->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Authors>Nick_Scarpitti</Authors>
     <PackageIcon>TTLogo.png</PackageIcon>

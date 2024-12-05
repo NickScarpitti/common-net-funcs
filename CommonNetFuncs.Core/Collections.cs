@@ -371,13 +371,54 @@ public static class Collections
                         object? value = row[pair.DataColumn!];
 
                         //Handle issue where DB returns Int16 for boolean values
-                        if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
+                        if (value is not System.DBNull)
                         {
-                            pair.PropertyInfo!.SetValue(item, value is not System.DBNull ? ToBoolean(value) : null);
+                            if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
+                            {
+                                pair.PropertyInfo!.SetValue(item, ToBoolean(value));
+                            }
+                            else
+                            {
+                                Type valueType = value.GetType();
+                                if ((pair.PropertyInfo.PropertyType == typeof(DateOnly) || pair.PropertyInfo.PropertyType == typeof(DateOnly?)) && valueType != typeof(DateOnly) && valueType != typeof(DateOnly?))
+                                {
+                                    if (valueType == typeof(DateTime) || valueType == typeof(DateTime?))
+                                    {
+                                        pair.PropertyInfo!.SetValue(item, DateOnly.FromDateTime((DateTime)value));
+                                    }
+                                    else if (DateOnly.TryParse((string)value, out DateOnly dateOnlyValue))
+                                    {
+                                        pair.PropertyInfo!.SetValue(item, dateOnlyValue);
+                                    }
+                                    else
+                                    {
+                                        pair.PropertyInfo!.SetValue(item, null);
+                                    }
+                                }
+                                else if ((pair.PropertyInfo.PropertyType == typeof(DateTime) || pair.PropertyInfo.PropertyType == typeof(DateTime?)) && valueType != typeof(DateTime) && valueType != typeof(DateTime?))
+                                {
+                                    if (valueType == typeof(DateOnly) || valueType == typeof(DateOnly?))
+                                    {
+                                        pair.PropertyInfo!.SetValue(item, ((DateOnly)value).ToDateTime(TimeOnly.MinValue));
+                                    }
+                                    else if (DateTime.TryParse((string)value, out DateTime dateTimeValue))
+                                    {
+                                        pair.PropertyInfo!.SetValue(item, dateTimeValue);
+                                    }
+                                    else
+                                    {
+                                        pair.PropertyInfo!.SetValue(item, null);
+                                    }
+                                }
+                                else
+                                {
+                                    pair.PropertyInfo!.SetValue(item, value);
+                                }
+                            }
                         }
                         else
                         {
-                            pair.PropertyInfo!.SetValue(item, value is not System.DBNull ? value : null);
+                            pair.PropertyInfo!.SetValue(item, null);
                         }
                     }
                 }

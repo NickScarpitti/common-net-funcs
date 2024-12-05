@@ -48,9 +48,29 @@ public static class UriHelpers
         return dateTime.ToString(dateFormat ?? TimestampUrlFormat);
     }
 
+    [return: NotNullIfNotNull(nameof(date))]
+    public static string? ToUriSafeString(this DateOnly? date, string? dateFormat = null)
+    {
+        return date.ToNString(dateFormat ?? TimestampUrlFormat);
+    }
+
+    public static string ToUriSafeString(this DateOnly date, string? dateFormat = null)
+    {
+        return date.ToString(dateFormat ?? TimestampUrlFormat);
+    }
+
     public static DateTime? ParseUriSafeDateTime(this string? urlSafeDateTime, string? dateFormat = null)
     {
         if (DateTime.TryParseExact(urlSafeDateTime, dateFormat ?? TimestampUrlFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime))
+        {
+            return dateTime;
+        }
+        return null;
+    }
+
+    public static DateOnly? ParseUriSafeDateOnly(this string? urlSafeDateTime, string? dateFormat = null)
+    {
+        if (DateOnly.TryParseExact(urlSafeDateTime, dateFormat ?? TimestampUrlFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly dateTime))
         {
             return dateTime;
         }

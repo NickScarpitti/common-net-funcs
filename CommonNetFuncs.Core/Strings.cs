@@ -696,7 +696,7 @@ public static partial class Strings
     /// <summary>
     /// Converts Nullable DateTime to string using the passed in formatting
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">DateTime to convert to string</param>
     /// <param name="format">Date time format</param>
     /// <returns>Formatted string representation of the passed in nullable DateTime</returns>
     [return: NotNullIfNotNull(nameof(value))]
@@ -706,6 +706,24 @@ public static partial class Strings
         if (value != null)
         {
             DateTime dtActual = (DateTime)value;
+            output = dtActual.ToString(format);
+        }
+        return output;
+    }
+
+    /// <summary>
+    /// Converts Nullable DateTime to string using the passed in formatting
+    /// </summary>
+    /// <param name="value">DateOnly to convert to string</param>
+    /// <param name="format">Date format</param>
+    /// <returns>Formatted string representation of the passed in nullable DateOnly</returns>
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? ToNString(this DateOnly? value, string? format = null)
+    {
+        string? output = null;
+        if (value != null)
+        {
+            DateOnly dtActual = (DateOnly)value;
             output = dtActual.ToString(format);
         }
         return output;
@@ -902,6 +920,25 @@ public static partial class Strings
         else if (double.TryParse(value, out double dbl))
         {
             dtn = DateTime.FromOADate(dbl);
+        }
+        return dtn;
+    }
+
+    /// <summary>
+    /// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
+    /// </summary>
+    /// <param name="value">String to parse into a DateOnly</param>
+    /// <returns>Nullable DateOnly parsed from a string</returns>
+    public static DateOnly? ToNDateOnly(this string? value)
+    {
+        DateOnly? dtn = null;
+        if (DateOnly.TryParse(value, out DateOnly dt))
+        {
+            dtn = dt;
+        }
+        else if (double.TryParse(value, out double dbl))
+        {
+            dtn = DateOnly.FromDateTime(DateTime.FromOADate(dbl));
         }
         return dtn;
     }

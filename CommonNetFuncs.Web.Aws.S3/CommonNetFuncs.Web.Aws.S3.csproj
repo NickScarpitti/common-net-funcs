@@ -24,11 +24,11 @@
     <EnablePackageValidation>true</EnablePackageValidation>
     <!-- Optional: Detect breaking changes from a previous stable version -->
     <PackageValidationBaselineVersion>3.0.0</PackageValidationBaselineVersion>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>
       Helper methods that deal with AWS S3 interactions
     </Description>
     <PackageTags>dotnet;helpers;aws;s3;</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>

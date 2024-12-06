@@ -1,9 +1,9 @@
 ﻿namespace CommonNetFuncs.Core;
 
 /// <summary>
-/// Helpers for dealing with DateTimes
+/// Helpers for dealing with DateOnlys
 /// </summary>
-public static class DateHelpers
+public static class DateOnlyHelpers
 {
     /// <summary>
     /// Get the number of business days found within a date range (inclusive)
@@ -12,17 +12,17 @@ public static class DateHelpers
     /// <param name="endDate">Last date of range to get business days for</param>
     /// <param name="exceptionDates">Days that will not be counted as a business day such as holidays</param>
     /// <returns>The number of business days between the start and end date</returns>
-    public static int GetBusinessDays(DateTime? startDate, DateTime? endDate, List<DateTime>? exceptionDates = null)
+    public static int GetBusinessDays(DateOnly? startDate, DateOnly? endDate, List<DateOnly>? exceptionDates = null)
     {
         if (startDate == null || endDate == null)
         {
             return 0;
         }
 
-        DateTime sDate = (DateTime)startDate;
-        DateTime eDate = (DateTime)endDate;
+        DateOnly sDate = (DateOnly)startDate;
+        DateOnly eDate = (DateOnly)endDate;
 
-        decimal calcBusinessDays = 1 + ((decimal)(eDate - sDate).TotalDays * 5m - (sDate.DayOfWeek - eDate.DayOfWeek) * 2m) / 7m;
+        decimal calcBusinessDays = 1 + ((eDate.DayNumber - sDate.DayNumber) * 5m - (sDate.DayOfWeek - eDate.DayOfWeek) * 2m) / 7m;
 
         if (eDate.DayOfWeek == DayOfWeek.Saturday)
         {
@@ -44,22 +44,22 @@ public static class DateHelpers
     }
 
     /// <summary>
-    /// Get the date of the day requested given the week provided via the dateTime parameter
+    /// Get the date of the day requested given the week provided via the date parameter
     /// </summary>
-    /// <param name="dateTime">Date to search for the day of the week for</param>
+    /// <param name="date">Date to search for the day of the week for</param>
     /// <param name="dayOfWeek">The day of the indicated week to return the date for</param>
     /// <returns>The date of the day of the week indicated by dayOfWeek</returns>
-    public static DateTime GetDayOfWeek(this in DateTime dateTime, DayOfWeek dayOfWeek = DayOfWeek.Monday)
+    public static DateOnly GetDayOfWeek(this in DateOnly date, DayOfWeek dayOfWeek = DayOfWeek.Monday)
     {
-        int diff = (7 + (dateTime.DayOfWeek - dayOfWeek)) % 7;
-        return dateTime.AddDays(-1 * diff).Date;
+        int diff = (7 + (date.DayOfWeek - dayOfWeek)) % 7;
+        return date.AddDays(-1 * diff);
     }
 
     /// <summary>
     /// Gets the first and last day of the month provided
     /// </summary>
     /// <returns>Tuple containing the first and last date of the specified month</returns>
-    public static (DateTime firstDay, DateTime lastDay) GetMonthBoundaries(int month, int year)
+    public static (DateOnly firstDay, DateOnly lastDay) GetMonthBoundaries(int month, int year)
     {
         return (GetFirstDayOfMonth(month, year), GetLastDayOfMonth(month, year));
     }
@@ -68,7 +68,7 @@ public static class DateHelpers
     /// Gets the first and last day of the month provided
     /// </summary>
     /// <returns>Tuple containing the first and last date of the specified month</returns>
-    public static (DateTime firstDay, DateTime lastDay) GetMonthBoundaries(this DateTime date)
+    public static (DateOnly firstDay, DateOnly lastDay) GetMonthBoundaries(this DateOnly date)
     {
         return GetMonthBoundaries(date.Month, date.Year);
     }
@@ -76,8 +76,8 @@ public static class DateHelpers
     /// <summary>
     /// Gets the first day of the month provided
     /// </summary>
-    /// <returns>DateTime for the first day of the specified month</returns>
-    public static DateTime GetFirstDayOfMonth(int month, int year)
+    /// <returns>DateOnly for the first day of the specified month</returns>
+    public static DateOnly GetFirstDayOfMonth(int month, int year)
     {
         return new(year, month, 1);
     }
@@ -85,8 +85,8 @@ public static class DateHelpers
     /// <summary>
     /// Gets the first day of the month provided
     /// </summary>
-    /// <returns>DateTime for the first day of the specified month</returns>
-    public static DateTime GetFirstDayOfMonth(this DateTime date)
+    /// <returns>DateOnly for the first day of the specified month</returns>
+    public static DateOnly GetFirstDayOfMonth(this DateOnly date)
     {
         return GetFirstDayOfMonth(date.Month, date.Year);
     }
@@ -94,8 +94,8 @@ public static class DateHelpers
     /// <summary>
     /// Gets the lest day of the month provided
     /// </summary>
-    /// <returns>DateTime for the lest day of the specified month</returns>
-    public static DateTime GetLastDayOfMonth(int month, int year)
+    /// <returns>DateOnly for the lest day of the specified month</returns>
+    public static DateOnly GetLastDayOfMonth(int month, int year)
     {
         return new(year, month, DateTime.DaysInMonth(year, month));
     }
@@ -103,8 +103,8 @@ public static class DateHelpers
     /// <summary>
     /// Gets the lest day of the month provided
     /// </summary>
-    /// <returns>DateTime for the lest day of the specified month</returns>
-    public static DateTime GetLastDayOfMonth(this DateTime date)
+    /// <returns>DateOnly for the lest day of the specified month</returns>
+    public static DateOnly GetLastDayOfMonth(this DateOnly date)
     {
         return GetLastDayOfMonth(date.Month, date.Year);
     }
@@ -127,5 +127,10 @@ public static class DateHelpers
     public static bool IsValidOaDate(this double? oaDate)
     {
         return oaDate != null && oaDate >= 657435.0 && oaDate <= 2958465.99999999;
+    }
+
+    public static DateOnly GetToday()
+    {
+        return DateOnly.FromDateTime(DateTime.Today);
     }
 }

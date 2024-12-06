@@ -7,7 +7,6 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>3.1.0</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -21,16 +20,23 @@
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <DebugType>embedded</DebugType>
-    <EnablePackageValidation>true</EnablePackageValidation>
-    <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.1.0</PackageValidationBaselineVersion>
     <Description>
       Helper methods that deal with creating, sending, and handling the responses from REST API calls
     </Description>
     <PackageTags>dotnet;helpers;web;api;rest;requests;response;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
-
+  
+  <PropertyGroup>
+    <Version>3.1.0</Version>
+    <MinVerTagPrefix>web.requests-</MinVerTagPrefix>
+    <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
+    <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <!-- Optional: Detect breaking changes from a previous stable version -->
+    <PackageValidationBaselineVersion>3.1.0</PackageValidationBaselineVersion>
+    <EnablePackageValidation>true</EnablePackageValidation>
+  </PropertyGroup>
+  
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

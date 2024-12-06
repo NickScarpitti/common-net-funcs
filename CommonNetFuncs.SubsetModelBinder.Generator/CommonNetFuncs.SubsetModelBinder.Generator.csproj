@@ -8,7 +8,6 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>3.1.0</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -22,9 +21,6 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!--<DebugType>embedded</DebugType>-->
-    <EnablePackageValidation>true</EnablePackageValidation>
-    <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.0.0</PackageValidationBaselineVersion>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <Description>
       A code generator that enforces a class to be only a subset of another class, with no extra properties or properties of incorrect types.
@@ -39,6 +35,16 @@
     <RootNamespace>CommonNetFuncs.SubsetModelBinder</RootNamespace>
 
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>3.1.0</Version>
+    <MinVerTagPrefix>subsetmodelbinder.generator-</MinVerTagPrefix>
+    <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
+    <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <!-- Optional: Detect breaking changes from a previous stable version -->
+    <PackageValidationBaselineVersion>3.1.0</PackageValidationBaselineVersion>
+    <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup>

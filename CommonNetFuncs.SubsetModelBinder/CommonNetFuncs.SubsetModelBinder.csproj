@@ -8,7 +8,6 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>3.1.0</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -22,15 +21,22 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <DebugType>embedded</DebugType>
-    <EnablePackageValidation>true</EnablePackageValidation>
-    <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.0.0</PackageValidationBaselineVersion>
     <Description>
       A code generator that enforces a class to be only a subset of another class, with no extra properties or properties of incorrect types.
       Uses ModelMetadataType or MetadataType to apply attributes to your subset class.
     </Description>
     <PackageTags>dotnet;helpers;generator;model;binding;source generator;model binding;mvc</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>3.1.0</Version>
+    <MinVerTagPrefix>subsetmodelbinder-</MinVerTagPrefix>
+    <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
+    <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <!-- Optional: Detect breaking changes from a previous stable version -->
+    <PackageValidationBaselineVersion>3.1.0</PackageValidationBaselineVersion>
+    <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup>

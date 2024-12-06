@@ -7,7 +7,6 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>3.1.0</Version>
     <Title>$(AssemblyName)</Title>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
@@ -16,19 +15,26 @@
     <PackageIcon>TTLogo.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Media.Ffmpeg</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
     <!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <DebugType>embedded</DebugType>
-    <EnablePackageValidation>true</EnablePackageValidation>
-    <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.0.0</PackageValidationBaselineVersion>
     <Description>
       Helper methods for running tasks with ffmpeg using the Xabe.FFmpeg package.
     </Description>
     <PackageTags>dotnet;helpers;ffmpeg;xabe;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>3.1.0</Version>
+    <MinVerTagPrefix>media.ffmpeg-</MinVerTagPrefix>
+    <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
+    <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <!-- Optional: Detect breaking changes from a previous stable version -->
+    <PackageValidationBaselineVersion>3.1.0</PackageValidationBaselineVersion>
+    <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup>

@@ -9,7 +9,8 @@ This lightweight project contains helper methods for several common functions re
 - [Async](#async)
 - [Collections](#collections)
 - [Copy](#copy)
-- [DateHelpers](#datehelpers)
+- [DateOnlyHelpers](#dateonlyhelpers)
+- [DateTimeHelpers](#datetimehelpers)
 - [DimensionScale](#dimensionscale)
 - [ExceptionLocation](#exceptionlocation)
 - [FileHelpers](#filehelpers)
@@ -227,7 +228,26 @@ httpHeaders.AddDictionaryItems(keyValuePairs);
 
 </details>
 
-## DateHelpers
+## DateOnlyHelpers
+
+### DateHelpers Usage Examples
+
+[Description here]
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### [MethodNameHere]
+
+```cs
+//Code here
+```
+
+---
+
+</details>
+
+## DateTimeHelpers
 
 ### DateHelpers Usage Examples
 

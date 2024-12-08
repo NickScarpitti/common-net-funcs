@@ -1348,4 +1348,19 @@ public static partial class Strings
         }
         return input;
     }
+
+    [return: NotNullIfNotNull(nameof(input))]
+    public static IEnumerable<string> SplitLines(this string? input)
+    {
+        if (input == null)
+        {
+            yield break;
+        }
+        string? line;
+        using StringReader sr = new(input);
+        while ((line = sr.ReadLine()) != null)
+        {
+            yield return line;
+        }
+    }
 }

@@ -174,7 +174,9 @@ public static class Helpers
     private static List<decimal> ParseKeyFrameProbe(string probeResult)
     {
         List<decimal> keyFrameTimeStamps = [];
-        foreach (string result in probeResult.Split("\r\n").Where(x => !x.IsNullOrWhiteSpace()))
+
+        //foreach (string result in probeResult.Split(Environment.NewLine).Where(x => !x.IsNullOrWhiteSpace()))
+        foreach (string result in probeResult.SplitLines().Where(x => !x.IsNullOrWhiteSpace()))
         {
             //.Select(decimal.Parse).Order().ToList()
             if (decimal.TryParse(result, out decimal numericResult))

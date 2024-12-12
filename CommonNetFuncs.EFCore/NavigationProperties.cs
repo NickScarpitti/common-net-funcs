@@ -1,5 +1,7 @@
 ﻿using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Reflection;
+using CommonNetFuncs.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
@@ -23,9 +25,12 @@ public static class NavigationProperties
     /// <returns>IQueryable object with include statements for its navigation properties.</returns>
     public static IQueryable<T> IncludeNavigationProperties<T>(this IQueryable<T> query, DbContext context, int maxDepth = 100) where T : class
     {
-        foreach (string navigation in GetNavigations<T>(context, typeof(T), maxDepth: maxDepth) ?? [])
+        foreach (string? navigation in GetNavigations<T>(context, typeof(T), maxDepth: maxDepth) ?? [])
         {
-            query = query.Include(navigation);
+            if (!navigation.IsNullOrWhiteSpace())
+            {
+                query = query.Include(navigation);
+            }
         }
         return query;
     }
@@ -123,12 +128,28 @@ public static class NavigationProperties
         {
             IEnumerable<INavigation> navigations = (context.Model.FindEntityType(entityType)?.GetNavigations()
                 .Where(x => entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), true).Length == 0 &&
-                    entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(Newtonsoft.Json.JsonIgnoreAttribute), true).Length == 0)) ?? [];
+                    entityType.GetProperty(x.Name)!.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length == 0)) ?? [];
 
             topLevelNavigations = navigations.Select(x => x.Name).ToList();
         }
         return topLevelNavigations;
     }
+
+    ///// <summary>
+    ///// Sets all navigation properties in the provided entity to null.
+    ///// </summary>
+    ///// <typeparam name="T">The entity type to remove the navigation properties from.</typeparam>
+    ///// <param name="obj">The object of type T to remove the navigation properties from.</param>
+    ///// <param name="context">The context that contains the definition for entity T.</param>
+    //public static void RemoveNavigationProperties<T>(this T obj, DbContext context) where T : class
+    //{
+    //    foreach (PropertyInfo prop in obj.GetType().GetProperties().Where(x => GetTopLevelNavigations<T>(context).Contains(x.Name)))
+    //    {
+    //        prop.SetValue(obj, null);
+    //    }
+    //}
+
+    private static readonly ConcurrentDictionary<Type, Action<object>> _navigationSetterCache = new();
 
     /// <summary>
     /// Sets all navigation properties in the provided entity to null.
@@ -138,9 +159,45 @@ public static class NavigationProperties
     /// <param name="context">The context that contains the definition for entity T.</param>
     public static void RemoveNavigationProperties<T>(this T obj, DbContext context) where T : class
     {
-        foreach (PropertyInfo prop in obj.GetType().GetProperties().Where(x => GetTopLevelNavigations<T>(context).Contains(x.Name)))
+        if (obj == null) return;
+
+        Action<T> setter = _navigationSetterCache.GetOrAdd(typeof(T), type =>
         {
-            prop.SetValue(obj, null);
-        }
+            // Get navigation property names
+            List<string> navigations = GetTopLevelNavigations<T>(context);
+
+            // Parameter for the entity instance
+            ParameterExpression parameter = Expression.Parameter(typeof(object), "entity");
+            UnaryExpression convertedParameter = Expression.Convert(parameter, type);
+
+            // Create assignments for each navigation property
+            List<BinaryExpression?> assignments = navigations.Select(navProp =>
+            {
+                PropertyInfo? property = type.GetProperty(navProp);
+                if (property?.CanWrite != true)
+                {
+                    return null;
+                }
+
+                return Expression.Assign(Expression.Property(convertedParameter, property), Expression.Constant(null, property.PropertyType));
+            })
+            .Where(assignment => assignment != null)
+            .ToList();
+
+            // If no valid assignments, return empty action
+            if (!assignments.AnyFast())
+            {
+                return new Action<object>(_ => { });
+            }
+
+            // Create a block with all assignments
+            BlockExpression block = Expression.Block(assignments.SelectNonNull());
+
+            // Compile the expression tree into a delegate
+            return Expression.Lambda<Action<object>>(block, parameter).Compile();
+        });
+
+        // Execute the cached setter
+        setter(obj);
     }
 }

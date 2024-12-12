@@ -250,7 +250,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
         }
 
-        return !trackEntities ? context.Set<T>().AsNoTracking().Select(selectExpression) : context.Set<T>().AsNoTracking().Select(selectExpression);
+        return !trackEntities ? context.Set<T>().AsNoTracking().Select(selectExpression) : context.Set<T>().Select(selectExpression);
     }
 
     /// <summary>
@@ -667,6 +667,67 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     /// <summary>
+    /// Gets the records specified by the skip and take parameters from the corresponding table that satisfy the conditions of the linq query expression.
+    /// Same as running a SELECT <SpecificFields> WHERE <condition> query with Limit/Offset or Fetch/Offset parameters.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="orderByString">EF Core expression for order by statement to keep results consistent.</param>
+    /// <param name="skip">How many records to skip before the ones that should be returned.</param>
+    /// <param name="pageSize">How many records to take after the skipped records.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <returns>The records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
+    public async Task<GenericPagingModel<T2>> GetWithPagingFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
+        string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool trackEntities = false) where T2 : class
+    {
+        IQueryable<T2> qModel;
+        GenericPagingModel<T2> model = new();
+        try
+        {
+            qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, splitQueryOverride, false, trackEntities);
+
+            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync();
+
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
+            model.Entities = results.ConvertAll(x => x.Entities);
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, splitQueryOverride, true);
+                    var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync();
+
+                    model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
+                    model.Entities = results.ConvertAll(x => x.Entities);
+
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.TryAdd(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+        return model;
+    }
+
+    /// <summary>
     /// Gets query to get the records specified by the skip and take parameters from the corresponding table that satisfy the conditions of the linq query expression.
     /// </summary>
     /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
@@ -710,6 +771,53 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 null => context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
                 true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
                 _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression)
+            };
+        }
+    }
+
+    /// <summary>
+    /// Gets query to get the records specified by the skip and take parameters from the corresponding table that satisfy the conditions of the linq query expression.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="orderByString">EF Core expression for order by statement to keep results consistent.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <returns>The query to get the records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
+    public IQueryable<T2> GetQueryPagingWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, string? orderByString,
+        TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false, bool trackEntities = false)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
+
+        if (!handlingCircularRefException)
+        {
+            return splitQueryOverride switch
+            {
+                null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+                true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+                _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression)
+            };
+        }
+        else
+        {
+            return splitQueryOverride switch
+            {
+                null => context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression)
             };
         }
     }

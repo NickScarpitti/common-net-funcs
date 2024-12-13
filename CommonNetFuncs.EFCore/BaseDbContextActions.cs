@@ -1107,6 +1107,103 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     /// <summary>
+    /// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
+    public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T>> selectExpression, TimeSpan? queryTimeout = null,
+        bool? splitQueryOverride = null, bool trackEntities = false)
+    {
+        IQueryable<T> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities);
+        List<T>? model = null;
+
+        try
+        {
+            model = await query.ToListAsync();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                    model = await query.ToListAsync();
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.TryAdd(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+        return model;
+    }
+
+    /// <summary>
+    /// Gets query to get all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
+    public IQueryable<T> GetQueryWithFilterFull(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T>> selectExpression, TimeSpan? queryTimeout = null,
+        bool? splitQueryOverride = null, bool handlingCircularRefException = false, bool trackEntities = false)
+    {
+        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
+
+        if (!handlingCircularRefException)
+        {
+            return splitQueryOverride switch
+            {
+                null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+                    context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct()
+            };
+        }
+        else
+        {
+            return splitQueryOverride switch
+            {
+                null => context.Set<T>().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct(),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context).Where(whereExpression).Select(selectExpression).Distinct()
+            };
+        }
+    }
+
+    /// <summary>
     /// Gets first record from the corresponding table that satisfy the conditions of the linq query expression.
     /// Same as running a SELECT * WHERE <condition> LIMIT 1 or SELECT TOP 1 * WHERE <condition> LIMIT 1 query.
     /// </summary>

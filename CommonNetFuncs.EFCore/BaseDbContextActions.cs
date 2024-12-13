@@ -522,6 +522,54 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         return !trackEntities ? context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
             context.Set<T>().Where(whereExpression).Select(selectExpression).Distinct();
     }
+    /// <summary>
+    /// Gets the navigation property of a different class and outputs a class of type T using the select expression.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class to return navigation property from.</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
+    public async Task<List<T>?> GetWithFilter<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
+        bool? splitQueryOverride = null, bool trackEntities = false) where T2 : class
+    {
+        IQueryable<T> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities);
+        List<T>? model = null;
+        try
+        {
+            model = await query.ToListAsync();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                    model = await query.ToListAsync();
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.TryAdd(typeof(T2), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+        return model;
+    }
 
     /// <summary>
     /// Gets the records specified by the skip and take parameters from the corresponding table that satisfy the conditions of the linq query expression.
@@ -1048,17 +1096,54 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             if (ioEx.HResult == -2146233079)
             {
+                query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                //model = await query.ToListAsync();
+                logger.Warn("{msg}", $"Adding {typeof(T2).Name} to circularReferencingEntities");
+                circularReferencingEntities.TryAdd(typeof(T2), true);
                 try
                 {
-                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync();
-                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-                    circularReferencingEntities.TryAdd(typeof(T2), true);
+                    await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+                    model = splitQueryOverride switch
+                    {
+                        //Need to add in navigation properties of the output type since they are not kept in the original query
+                        null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                            await query.IncludeNavigationProperties(context).Distinct().AsNoTracking().ToListAsync() :
+                            await query.IncludeNavigationProperties(context).Distinct().ToListAsync(),
+                        true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                            await query.AsSplitQuery().IncludeNavigationProperties(context).Distinct().AsNoTracking().ToListAsync() :
+                            await query.AsSplitQuery().IncludeNavigationProperties(context).Distinct().ToListAsync(),
+                        _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                            await query.AsSingleQuery().IncludeNavigationProperties(context).Distinct().AsNoTracking().ToListAsync() :
+                            await query.AsSingleQuery().IncludeNavigationProperties(context).Distinct().ToListAsync()
+                    };
                 }
-                catch (Exception ex2)
+                catch (InvalidOperationException ioEx2) //Error could be caused by navigation properties of the output type, so need to try that as well
                 {
-                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                    if (ioEx2.HResult == -2146233079)
+                    {
+                        try
+                        {
+                            logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                            circularReferencingEntities.TryAdd(typeof(T), true);
+                            await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+                            model = splitQueryOverride switch
+                            {
+                                null => await query.IncludeNavigationProperties(context).Distinct().ToListAsync(),
+                                true => await query.AsSplitQuery().IncludeNavigationProperties(context).Distinct().ToListAsync(),
+                                _ => await query.AsSingleQuery().IncludeNavigationProperties(context).Distinct().ToListAsync()
+                            };
+                        }
+                        catch (Exception ex2)
+                        {
+                            logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                            logger.Error(ioEx2, "{msg}", $"{ioEx2.GetLocationOfException()} Error1");
+                            logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                        }
+                    }
+                    else
+                    {
+                        logger.Error(ioEx2, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+                    }
                 }
             }
             else

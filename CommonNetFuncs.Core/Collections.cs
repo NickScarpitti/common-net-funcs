@@ -112,7 +112,7 @@ public static class Collections
     /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
     public static void AddRangeParallel<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null)
     {
-        Parallel.ForEach(toAdd.Where(x => x != null), parallelOptions ?? new(), item => concurrentBag.Add(item!));
+        Parallel.ForEach(toAdd.SelectNonNull(), parallelOptions ?? new(), item => concurrentBag.Add(item!));
     }
 
     /// <summary>
@@ -123,7 +123,7 @@ public static class Collections
     /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
     public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd)
     {
-        foreach (T? item in toAdd.Where(x => x != null))
+        foreach (T? item in toAdd.SelectNonNull())
         {
             concurrentBag.Add(item!);
         }

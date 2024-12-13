@@ -26,9 +26,9 @@
     <PackageTags>dotnet;helpers;web;api;rest;requests;response;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
-  
+
   <PropertyGroup>
-    <Version>3.1.1</Version>
+    <Version>3.1.2</Version>
     <MinVerTagPrefix>web.requests-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -36,14 +36,14 @@
     <PackageValidationBaselineVersion>3.1.0</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MemoryPack" Version="1.21.3" />
-    <PackageReference Include="MessagePack" Version="3.0.308" />
+    <PackageReference Include="MessagePack" Version="3.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.0" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>

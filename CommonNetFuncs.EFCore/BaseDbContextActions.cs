@@ -1028,7 +1028,21 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync();
+            //model = await query.ToListAsync();
+            using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+            model = splitQueryOverride switch
+            {
+                //Need to add in navigation properties of the output type since they are not kept in the original query
+                null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    await query.IncludeNavigationProperties(context).Distinct().AsNoTracking().ToListAsync() :
+                    await query.IncludeNavigationProperties(context).Distinct().ToListAsync(),
+                true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    await query.AsSplitQuery().IncludeNavigationProperties(context).Distinct().AsNoTracking().ToListAsync() :
+                    await query.AsSplitQuery().IncludeNavigationProperties(context).Distinct().ToListAsync(),
+                _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    await query.AsSingleQuery().IncludeNavigationProperties(context).Distinct().AsNoTracking().ToListAsync() :
+                    await query.AsSingleQuery().IncludeNavigationProperties(context).Distinct().ToListAsync()
+            };
         }
         catch (InvalidOperationException ioEx)
         {
@@ -1110,7 +1124,6 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
     /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
-    /// <typeparam name="T">Class type to return, specified by the selectExpression parameter</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
@@ -1160,7 +1173,6 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Gets query to get all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
     /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
-    /// <typeparam name="T">Class type to return, specified by the selectExpression parameter</typeparam>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>

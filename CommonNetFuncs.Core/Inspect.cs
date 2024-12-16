@@ -126,38 +126,117 @@ public static class Inspect
         return true;
     }
 
+    //public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
+    //{
+    //    // They're both null.
+    //    if (obj1 == null && obj2 == null)
+    //    {
+    //        return true;
+    //    }
+
+    //    // One is null, so they can't be the same.
+    //    if (obj1 == null || obj2 == null)
+    //    {
+    //        return false;
+    //    }
+
+    //    Type type = obj1.GetType();
+
+    //    // How can they be the same if they're different types?
+    //    if (type != obj2.GetType())
+    //    {
+    //        return false;
+    //    }
+
+    //    exemptProps ??= [];
+    //    Tuple<Type, bool, bool> key = Tuple.Create(type, ignoreStringCase, recursive);
+    //    if (!CompareDelegates.TryGetValue(key, out Func<object, object, IEnumerable<string>, bool>? compareDelegate))
+    //    {
+    //        compareDelegate = CreateCompareDelegate(type, ignoreStringCase, recursive);
+    //        CompareDelegates[key] = compareDelegate;
+    //    }
+
+    //    return compareDelegate(obj1, obj2, exemptProps);
+    //}
+
+    // This class is used to track object pairs being compared
+    private class ComparisonContext
+    {
+        private readonly HashSet<(object, object)> _comparingPairs = [];
+
+        public bool TryAddPair(object obj1, object obj2)
+        {
+            return _comparingPairs.Add((obj1, obj2));
+        }
+
+        public void RemovePair(object obj1, object obj2)
+        {
+            _comparingPairs.Remove((obj1, obj2));
+        }
+    }
+
+    private static readonly AsyncLocal<ComparisonContext?> CurrentContext = new();
     private static readonly ConcurrentDictionary<Tuple<Type, bool, bool>, Func<object, object, IEnumerable<string>, bool>> CompareDelegates = [];
+
     public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
     {
-        // They're both null.
-        if (obj1 == null && obj2 == null)
+        // Initialize context if this is the top-level call
+        bool isTopLevel = CurrentContext.Value == null;
+        if (isTopLevel)
         {
-            return true;
+            CurrentContext.Value = new ComparisonContext();
         }
 
-        // One is null, so they can't be the same.
-        if (obj1 == null || obj2 == null)
+        try
         {
-            return false;
+            // Null checks (same as before)
+            if (obj1 == null && obj2 == null)
+            {
+                return true;
+            }
+
+            if (obj1 == null || obj2 == null)
+            {
+                return false;
+            }
+
+            Type type = obj1.GetType();
+
+            if (type != obj2.GetType())
+            {
+                return false;
+            }
+
+            // If we're already comparing these objects, return true to break the cycle
+            if (!CurrentContext.Value!.TryAddPair(obj1, obj2))
+            {
+                return true;
+            }
+
+            exemptProps ??= [];
+            Tuple<Type, bool, bool> key = Tuple.Create(type, ignoreStringCase, recursive);
+            if (!CompareDelegates.TryGetValue(key, out Func<object, object, IEnumerable<string>, bool>? compareDelegate))
+            {
+                compareDelegate = CreateCompareDelegate(type, ignoreStringCase, recursive);
+                CompareDelegates[key] = compareDelegate;
+            }
+
+            return compareDelegate(obj1, obj2, exemptProps);
         }
-
-        Type type = obj1.GetType();
-
-        // How can they be the same if they're different types?
-        if (type != obj2.GetType())
+        finally
         {
-            return false;
-        }
+            // Clean up
+            if (obj1 != null && obj2 != null)
+            {
+                CurrentContext.Value?.RemovePair(obj1, obj2);
+            }
 
-        exemptProps ??= [];
-        Tuple<Type, bool, bool> key = Tuple.Create(type, ignoreStringCase, recursive);
-        if (!CompareDelegates.TryGetValue(key, out Func<object, object, IEnumerable<string>, bool>? compareDelegate))
-        {
-            compareDelegate = CreateCompareDelegate(type, ignoreStringCase, recursive);
-            CompareDelegates[key] = compareDelegate;
+            // Clear context if this was the top-level call
+            if (isTopLevel)
+            {
+                CurrentContext.Value = null;
+            }
         }
-
-        return compareDelegate(obj1, obj2, exemptProps);
     }
 
     private static Func<object, object, IEnumerable<string>, bool> CreateCompareDelegate(Type type, bool ignoreStringCase, bool recursive)

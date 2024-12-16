@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.1.4</Version>
+    <Version>3.1.5</Version>
     <MinVerTagPrefix>efcore-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -51,7 +51,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
-    <ProjectReference Include="..\CommonNetFuncs.DeepClone\CommonNetFuncs.DeepClone.csproj" />
   </ItemGroup>
 
   <ItemGroup>

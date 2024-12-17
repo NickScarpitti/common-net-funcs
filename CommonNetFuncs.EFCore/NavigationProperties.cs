@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
 using CommonNetFuncs.Core;
@@ -136,9 +135,9 @@ public static class NavigationProperties
     /// <param name="context">The DBContext being queried against.</param>
     /// <param name="maxDepth">The maximum number of navigations deep to follow. Default is 100 which should be more than enough to get all navigations in most scenarios.</param>
     /// <returns>IQueryable object with include statements for its navigation properties.</returns>
-    public static IQueryable<T> IncludeNavigationProperties<T>(this IQueryable<T> query, DbContext context, int maxDepth = 100) where T : class
+    public static IQueryable<T> IncludeNavigationProperties<T>(this IQueryable<T> query, DbContext context, int maxDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T : class
     {
-        HashSet<string> navigations = GetNavigations<T>(context, maxDepth);
+        HashSet<string> navigations = GetNavigations<T>(context, maxDepth, navPropAttributesToIgnore, useCaching);
         return navigations.Aggregate(query, (current, path) => current.Include(path));
     }
 

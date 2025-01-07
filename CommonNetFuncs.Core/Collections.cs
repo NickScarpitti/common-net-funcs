@@ -221,9 +221,22 @@ public static class Collections
     /// </summary>
     /// <typeparam name="T">Type to use in list</typeparam>
     /// <param name="obj">Object to turn into a single item list</param>
-    public static List<T> SingleToList<T>(this T obj)
+    public static List<T> SingleToList<T>(this T? obj)
     {
-        return [obj];
+        return obj != null ? [obj] : [];
+    }
+
+    /// <summary>
+    /// Create a single item list from an object
+    /// </summary>
+    /// <param name="obj">Object to turn into a single item list</param>
+    public static List<string> SingleToList(this string? obj, bool allowEmptyStrings = false)
+    {
+        if (!allowEmptyStrings)
+        {
+            return !obj.IsNullOrWhiteSpace() ? [obj] : [];
+        }
+        return obj != null ? [obj] : [];
     }
 
     /// <summary>

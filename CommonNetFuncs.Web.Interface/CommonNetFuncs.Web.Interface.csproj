@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.2.0</Version>
+    <Version>3.2.1</Version>
     <MinVerTagPrefix>web.interface-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -43,7 +43,7 @@
 
   <ItemGroup>
     <PackageReference Include="MemoryPack" Version="1.21.3" />
-    <PackageReference Include="MessagePack" Version="3.1.0" />
+    <PackageReference Include="MessagePack" Version="3.1.1" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

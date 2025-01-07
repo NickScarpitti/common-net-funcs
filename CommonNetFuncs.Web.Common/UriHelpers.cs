@@ -51,12 +51,12 @@ public static class UriHelpers
     [return: NotNullIfNotNull(nameof(date))]
     public static string? ToUriSafeString(this DateOnly? date, string? dateFormat = null)
     {
-        return date.ToNString(dateFormat ?? TimestampUrlFormat);
+        return date.ToNString(dateFormat ?? DateOnlyUrlFormat);
     }
 
     public static string ToUriSafeString(this DateOnly date, string? dateFormat = null)
     {
-        return date.ToString(dateFormat ?? TimestampUrlFormat);
+        return date.ToString(dateFormat ?? DateOnlyUrlFormat);
     }
 
     public static DateTime? ParseUriSafeDateTime(this string? urlSafeDateTime, string? dateFormat = null)

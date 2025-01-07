@@ -38,6 +38,7 @@ public enum EComparisonType
 public static partial class Strings
 {
     public const string TimestampUrlFormat = "yyyyMMddHHmmssFFF";
+    public const string DateOnlyUrlFormat = "yyyyMMdd";
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex MultiSpaceRegex();

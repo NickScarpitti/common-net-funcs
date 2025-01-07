@@ -70,7 +70,7 @@ public static class UriHelpers
 
     public static DateOnly? ParseUriSafeDateOnly(this string? urlSafeDateTime, string? dateFormat = null)
     {
-        if (DateOnly.TryParseExact(urlSafeDateTime, dateFormat ?? TimestampUrlFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly dateTime))
+        if (DateOnly.TryParseExact(urlSafeDateTime, dateFormat ?? DateOnlyUrlFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly dateTime))
         {
             return dateTime;
         }

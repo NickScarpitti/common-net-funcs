@@ -24,7 +24,7 @@ public static class DataTableHelpers
     /// </summary>
     /// <param name="request">HTTP request sent by DataTables</param>
     /// <returns>DataTableRequest object containing the parsed request values</returns>
-    public static DataTableRequest GetDataTableRequest(HttpRequest request)
+    public static DataTableRequest GetDataTableRequest(this HttpRequest request)
     {
         DataTableRequest dataTableRequest = new();
         try

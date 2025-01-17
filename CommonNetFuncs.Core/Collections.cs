@@ -290,52 +290,13 @@ public static class Collections
     /// <returns>List containing table values as the specified class</returns>
     public static List<T?> ToList<T>(this DataTable table, bool convertShortToBool = false) where T : class, new()
     {
-        List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
-
         List<T?> list = new(table.Rows.Count);
-
         if (table.Rows.Count > 0)
         {
-            DataRow firstRow = table.Rows[0];
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
-            {
-                if (table.Columns.Contains(propertyInfo.Name))
-                {
-                    if (convertShortToBool)
-                    {
-                        Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
-                        map.Add(new(table.Columns[propertyInfo.Name]!, propertyInfo, convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
-                    }
-                    else
-                    {
-                        map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, false));
-                    }
-                }
-            }
-
+            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
             foreach (DataRow row in table.AsEnumerable())
             {
-                if (row == null)
-                {
-                    list.Add(null);
-                    continue;
-                }
-                T item = new();
-                foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)
-                {
-                    object? value = row[pair.DataColumn!];
-
-                    //Handle issue where DB returns Int16 for boolean values
-                    if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
-                    {
-                        pair.PropertyInfo!.SetValue(item, value is not System.DBNull ? ToBoolean(value) : null);
-                    }
-                    else
-                    {
-                        pair.PropertyInfo!.SetValue(item, value is not System.DBNull ? value : null);
-                    }
-                }
-                list.Add(item);
+                list.Add(row.ParseRowValues<T>(map));
             }
         }
         return list;
@@ -351,98 +312,103 @@ public static class Collections
     /// <returns>List containing table values as the specified class</returns>
     public static List<T?> ToListParallel<T>(this DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false) where T : class, new()
     {
-        ConcurrentBag<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
-
         ConcurrentBag<T?> bag = [];
-
         if (table.Rows.Count > 0)
         {
-            DataRow firstRow = table.Rows[0];
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
+            Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row => bag.Add(row.ParseRowValues<T>(map)));
+        }
+        return bag.ToList();
+    }
+
+    private static List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> GetDataTableMap<T>(this DataTable table, bool convertShortToBool)
+    {
+        List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
+        DataRow firstRow = table.Rows[0];
+        foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+        {
+            if (table.Columns.Contains(propertyInfo.Name))
             {
-                if (table.Columns.Contains(propertyInfo.Name))
+                if (convertShortToBool)
                 {
-                    if (convertShortToBool)
+                    Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
+                    map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
+                }
+                else
+                {
+                    map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, false));
+                }
+            }
+        }
+        return map;
+    }
+
+    private static T? ParseRowValues<T>(this DataRow row, IEnumerable<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map) where T : class, new()
+    {
+        T? item = new();
+        if (row != null)
+        {
+            foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)
+            {
+                object? value = row[pair.DataColumn!];
+
+                //Handle issue where DB returns Int16 for boolean values
+                if (value is not System.DBNull)
+                {
+                    if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
                     {
-                        Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
-                        map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
+                        pair.PropertyInfo!.SetValue(item, ToBoolean(value));
                     }
                     else
                     {
-                        map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, false));
-                    }
-                }
-            }
-
-            Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row =>
-            {
-                T? item = new();
-                if (row != null)
-                {
-                    foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)
-                    {
-                        object? value = row[pair.DataColumn!];
-
-                        //Handle issue where DB returns Int16 for boolean values
-                        if (value is not System.DBNull)
+                        Type valueType = value.GetType();
+                        if ((pair.PropertyInfo.PropertyType == typeof(DateOnly) || pair.PropertyInfo.PropertyType == typeof(DateOnly?)) && valueType != typeof(DateOnly) && valueType != typeof(DateOnly?))
                         {
-                            if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
+                            if (valueType == typeof(DateTime) || valueType == typeof(DateTime?))
                             {
-                                pair.PropertyInfo!.SetValue(item, ToBoolean(value));
+                                pair.PropertyInfo!.SetValue(item, DateOnly.FromDateTime((DateTime)value));
+                            }
+                            else if (DateOnly.TryParse((string)value, out DateOnly dateOnlyValue))
+                            {
+                                pair.PropertyInfo!.SetValue(item, dateOnlyValue);
                             }
                             else
                             {
-                                Type valueType = value.GetType();
-                                if ((pair.PropertyInfo.PropertyType == typeof(DateOnly) || pair.PropertyInfo.PropertyType == typeof(DateOnly?)) && valueType != typeof(DateOnly) && valueType != typeof(DateOnly?))
-                                {
-                                    if (valueType == typeof(DateTime) || valueType == typeof(DateTime?))
-                                    {
-                                        pair.PropertyInfo!.SetValue(item, DateOnly.FromDateTime((DateTime)value));
-                                    }
-                                    else if (DateOnly.TryParse((string)value, out DateOnly dateOnlyValue))
-                                    {
-                                        pair.PropertyInfo!.SetValue(item, dateOnlyValue);
-                                    }
-                                    else
-                                    {
-                                        pair.PropertyInfo!.SetValue(item, null);
-                                    }
-                                }
-                                else if ((pair.PropertyInfo.PropertyType == typeof(DateTime) || pair.PropertyInfo.PropertyType == typeof(DateTime?)) && valueType != typeof(DateTime) && valueType != typeof(DateTime?))
-                                {
-                                    if (valueType == typeof(DateOnly) || valueType == typeof(DateOnly?))
-                                    {
-                                        pair.PropertyInfo!.SetValue(item, ((DateOnly)value).ToDateTime(TimeOnly.MinValue));
-                                    }
-                                    else if (DateTime.TryParse((string)value, out DateTime dateTimeValue))
-                                    {
-                                        pair.PropertyInfo!.SetValue(item, dateTimeValue);
-                                    }
-                                    else
-                                    {
-                                        pair.PropertyInfo!.SetValue(item, null);
-                                    }
-                                }
-                                else
-                                {
-                                    pair.PropertyInfo!.SetValue(item, value);
-                                }
+                                pair.PropertyInfo!.SetValue(item, null);
+                            }
+                        }
+                        else if ((pair.PropertyInfo.PropertyType == typeof(DateTime) || pair.PropertyInfo.PropertyType == typeof(DateTime?)) && valueType != typeof(DateTime) && valueType != typeof(DateTime?))
+                        {
+                            if (valueType == typeof(DateOnly) || valueType == typeof(DateOnly?))
+                            {
+                                pair.PropertyInfo!.SetValue(item, ((DateOnly)value).ToDateTime(TimeOnly.MinValue));
+                            }
+                            else if (DateTime.TryParse((string)value, out DateTime dateTimeValue))
+                            {
+                                pair.PropertyInfo!.SetValue(item, dateTimeValue);
+                            }
+                            else
+                            {
+                                pair.PropertyInfo!.SetValue(item, null);
                             }
                         }
                         else
                         {
-                            pair.PropertyInfo!.SetValue(item, null);
+                            pair.PropertyInfo!.SetValue(item, value);
                         }
                     }
                 }
                 else
                 {
-                    item = null;
+                    pair.PropertyInfo!.SetValue(item, null);
                 }
-                bag.Add(item);
-            });
+            }
         }
-        return bag.ToList();
+        else
+        {
+            item = null;
+        }
+        return item;
     }
 
     /// <summary>

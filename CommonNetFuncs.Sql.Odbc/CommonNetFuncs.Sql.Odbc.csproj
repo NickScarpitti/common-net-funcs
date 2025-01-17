@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.2.0</Version>
+    <Version>3.2.3</Version>
     <MinVerTagPrefix>sql.odbc-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -42,7 +42,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Data.Odbc" Version="9.0.0" />
+    <PackageReference Include="System.Data.Odbc" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -10,7 +10,7 @@ namespace CommonNetFuncs.Web.Requests;
 /// Source1: https://medium.com/@srikanth.gunnala/generic-wrapper-to-consume-asp-net-web-api-rest-service-641b50462c0
 /// Source2: https://stackoverflow.com/questions/43692053/how-can-i-create-a-jsonpatchdocument-from-comparing-two-c-sharp-objects
 /// </summary>
-public class RestHelpersCommon(HttpClient client)
+public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
 {
     private readonly HttpClient client = client;
 
@@ -352,4 +352,59 @@ public class RestHelpersCommon(HttpClient client)
         }
         return restObject;
     }
+
+    //private bool disposed;
+    //// Implement IAsyncDisposable pattern
+    //protected virtual ValueTask DisposeAsyncCore()
+    //{
+    //    // Since HttpClient only implements IDisposable, we'll use synchronous disposal
+    //    client?.Dispose();
+    //    return ValueTask.CompletedTask;
+    //}
+
+    //public async ValueTask DisposeAsync()
+    //{
+    //    if (!disposed)
+    //    {
+    //        disposed = true;
+    //        await DisposeAsyncCore().ConfigureAwait(false);
+    //        GC.SuppressFinalize(this);
+    //    }
+    //}
+
+    //protected void ThrowIfDisposed()
+    //{
+    //    if (!disposed)
+    //    {
+    //        return;
+    //    }
+    //    throw new ObjectDisposedException(nameof(RestHelpersCommon));
+    //}
 }
+
+public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null) : RestHelpersCommon(clientName.IsNullOrWhiteSpace() ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(clientName))
+{
+}
+//public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null)
+//{
+//    private readonly IHttpClientFactory httpClientFactory = httpClientFactory;
+//    private readonly string clientName = clientName ?? string.Empty;
+
+//    private RestHelpersCommon CreateHelper()
+//    {
+//        HttpClient client = string.IsNullOrEmpty(clientName) ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(clientName);
+//        return new RestHelpersCommon(client);
+//    }
+
+//    public async Task<T?> Get<T>(string url, string? bearerToken = null, double? timeout = null,
+//        Dictionary<string, string>? httpHeaders = null, bool useNewtonsoftDeserializer = false,
+//        bool expectTaskCancellation = false, bool logQuery = true,
+//        MsgPackOptions? msgPackOptions = null)
+//    {
+//        await using RestHelpersCommon helper = CreateHelper();
+//        return await helper.Get<T>(url, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer,
+//            expectTaskCancellation, logQuery, msgPackOptions);
+//    }
+
+//    // Implement other methods similarly, delegating to a new RestHelpersCommon instance
+//}

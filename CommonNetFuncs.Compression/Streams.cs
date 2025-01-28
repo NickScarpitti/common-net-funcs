@@ -26,25 +26,25 @@ public static class Streams
             case ECompressionType.Brotli:
                 await using (BrotliStream brotliStream = new(uncompressedStream, CompressionMode.Compress))
                 {
-                    brotliStream.CopyTo(compressedStream);
+                    await brotliStream.CopyToAsync(compressedStream);
                 }
                 break;
             case ECompressionType.Gzip:
                 await using (GZipStream gzipStream = new(uncompressedStream, CompressionMode.Compress))
                 {
-                    gzipStream.CopyTo(compressedStream);
+                    await gzipStream.CopyToAsync(compressedStream);
                 }
                 break;
             case ECompressionType.Deflate:
                 await using (DeflateStream deflateStream = new(uncompressedStream, CompressionMode.Compress))
                 {
-                    deflateStream.CopyTo(compressedStream);
+                    await deflateStream.CopyToAsync(compressedStream);
                 }
                 break;
             case ECompressionType.ZLib:
                 await using (ZLibStream zlibStream = new(uncompressedStream, CompressionMode.Compress))
                 {
-                    zlibStream.CopyTo(compressedStream);
+                    await zlibStream.CopyToAsync(compressedStream);
                 }
                 break;
         }
@@ -65,25 +65,25 @@ public static class Streams
             case ECompressionType.Brotli:
                 await using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress))
                 {
-                    brotliStream.CopyTo(decompressedStream);
+                    await brotliStream.CopyToAsync(decompressedStream);
                 }
                 break;
             case ECompressionType.Gzip:
                 await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress))
                 {
-                    gzipStream.CopyTo(decompressedStream);
+                    await gzipStream.CopyToAsync(decompressedStream);
                 }
                 break;
             case ECompressionType.Deflate:
                 await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress))
                 {
-                    deflateStream.CopyTo(decompressedStream);
+                    await deflateStream.CopyToAsync(decompressedStream);
                 }
                 break;
             case ECompressionType.ZLib:
                 await using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress))
                 {
-                    zlibStream.CopyTo(decompressedStream);
+                    await zlibStream.CopyToAsync(decompressedStream);
                 }
                 break;
         }

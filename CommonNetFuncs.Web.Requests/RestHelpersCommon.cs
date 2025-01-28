@@ -1,6 +1,7 @@
 ﻿using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Common;
 using NLog;
+using static CommonNetFuncs.Web.Requests.RestHelperConstants;
 using static CommonNetFuncs.Web.Requests.RestHelpersStatic;
 
 namespace CommonNetFuncs.Web.Requests;
@@ -41,6 +42,24 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
     }
 
     /// <summary>
+    /// Executes a GET request against the specified URL and returns the result
+    /// </summary>
+    /// <param name="url">API URL</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
+    public IAsyncEnumerable<T?> Get<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool expectTaskCancellation = false, bool logQuery = true)
+    {
+        return GenericStreamingRestRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
+    }
+
+    /// <summary>
     /// Executes a POST request against the provided URL with the postObject in the body and returns the result
     /// </summary>
     /// <param name="url">API URL</param>
@@ -60,6 +79,26 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
     {
         return GenericRestRequest<T?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
             expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody, msgPackOptions: msgPackOptions);
+    }
+
+    /// <summary>
+    /// Executes a POST request against the provided URL with the postObject in the body and returns the result
+    /// </summary>
+    /// <param name="url">API URL</param>
+    /// <param name="postObject">The object to be created</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
+    public IAsyncEnumerable<T?> PostRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true) where T : class
+    {
+        return GenericStreamingRestRequest<T?, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
     }
 
     /// <summary>
@@ -105,6 +144,23 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
     }
 
     /// <summary>
+    /// Executes a DELETE request against the provided URL with the deleteObject in the body and returns the result
+    /// </summary>
+    /// <param name="url">API URL</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
+    public IAsyncEnumerable<T?> DeleteRequest<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null, bool expectTaskCancellation = false, bool logQuery = true)
+    {
+        return GenericStreamingRestRequest<T?, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
+    }
+
+    /// <summary>
     /// Executes a PUT request against the provided URL with the putObject in the body
     /// </summary>
     /// <param name="url">API URL</param>
@@ -122,6 +178,24 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
     {
         return GenericRestRequest<T?, T>(url, HttpMethod.Put, putObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
             expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody, msgPackOptions: msgPackOptions);
+    }
+
+    /// <summary>
+    /// Executes a PUT request against the provided URL with the putObject in the body
+    /// </summary>
+    /// <param name="url">API URL</param>
+    /// <param name="putObject">The object to be edited</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    public IAsyncEnumerable<T?> PutRequest<T>(string url, T putObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null, bool expectTaskCancellation = false,
+        bool logQuery = true, bool logBody = true)
+    {
+        return GenericStreamingRestRequest<T?, T>(url, HttpMethod.Put, putObject, bearerToken, timeout, httpHeaders, expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
     }
 
     /// <summary>
@@ -198,6 +272,77 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
     }
 
     /// <summary>
+    /// Executes a POST request against the provided URL with the postObject in the body and returns the result RestObject
+    /// </summary>
+    /// <param name="url">API URL</param>
+    /// <param name="postObject">The object to be created</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="patchDoc">Patch document for making PATCH requests</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
+    /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    public async IAsyncEnumerable<T?> GenericStreamingRestRequest<T, UT>(string url, HttpMethod httpMethod, UT? postObject = default, string? bearerToken = null, double? timeout = null,
+        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+    {
+        IAsyncEnumerator<T?>? enumeratedReader = null;
+        try
+        {
+            logger.Info("{msg}", $"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && requestsWithBody.Contains(httpMethod) ?
+                $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject, JsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
+
+            //Ensure json header is being used
+            if (httpHeaders == null) {
+                httpHeaders = new(JsonAcceptHeader.SingleToList());
+            }
+            else if (httpHeaders.Remove(AcceptHeader))
+            {
+                httpHeaders.AddDictionaryItem(JsonAcceptHeader);
+            }
+
+            httpRequestMessage.AttachHeaders(bearerToken, httpHeaders);
+            httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
+
+            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            enumeratedReader = HandleResponseAsync<T>(response, httpMethod.ToString(), url).GetAsyncEnumerator();
+        }
+        catch (TaskCanceledException tcex)
+        {
+            string exceptionLocation = tcex.GetLocationOfException();
+            if (expectTaskCancellation)
+            {
+                logger.Info("{msg}", $"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
+            }
+            else
+            {
+                logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {url}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {url}");
+        }
+
+        if (enumeratedReader != null)
+        {
+            while (await enumeratedReader.MoveNextAsync())
+            {
+                yield return enumeratedReader!.Current;
+            }
+        }
+        else
+        {
+            yield break;
+        }
+    }
+
+    /// <summary>
     /// Executes a GET request against the specified URL and returns the result RestObject
     /// </summary>
     /// <param name="url">API URL</param>
@@ -215,6 +360,24 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
     {
         return GenericRestObjectRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
             expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false, msgPackOptions: msgPackOptions);
+    }
+
+    /// <summary>
+    /// Executes a GET request against the specified URL and returns the result RestObject
+    /// </summary>
+    /// <param name="url">API URL</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the GET request - Null if not success</returns>
+    public Task<StreamingRestObject<T>> GetRestObject<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool expectTaskCancellation = false, bool logQuery = true)
+    {
+        return GenericStreamingRestObjectRequest<T, T>(url, HttpMethod.Get, default, bearerToken, timeout, httpHeaders, expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
     }
 
     /// <summary>
@@ -237,6 +400,26 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
     {
         return GenericRestObjectRequest<T, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
             expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody, msgPackOptions: msgPackOptions);
+    }
+
+    /// <summary>
+    /// Executes a POST request against the provided URL with the postObject in the body and returns the result RestObject
+    /// </summary>
+    /// <param name="url">API URL</param>
+    /// <param name="postObject">The object to be created</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
+    public Task<StreamingRestObject<T>> PostRestObjectRequest<T>(string url, T postObject, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+    {
+        return GenericStreamingRestObjectRequest<T, T>(url, HttpMethod.Post, postObject, bearerToken, timeout, httpHeaders, expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: logBody);
     }
 
     /// <summary>
@@ -279,6 +462,24 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
     {
         return GenericRestObjectRequest<T, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, useNewtonsoftDeserializer: useNewtonsoftDeserializer,
             expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false, msgPackOptions: msgPackOptions);
+    }
+
+    /// <summary>
+    /// Executes a DELETE request against the provided URL with the deleteObject in the body and returns the result request RestObject
+    /// </summary>
+    /// <param name="url">API URL</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    /// <returns>Object of type T resulting from the DELETE request - Null if not success</returns>
+    public Task<StreamingRestObject<T>> DeleteRestObjectRequest<T>(string url, string? bearerToken = null, double? timeout = null, Dictionary<string, string>? httpHeaders = null,
+        bool expectTaskCancellation = false, bool logQuery = true)
+    {
+        return GenericStreamingRestObjectRequest<T, T>(url, HttpMethod.Delete, default, bearerToken, timeout, httpHeaders, expectTaskCancellation: expectTaskCancellation, logQuery: logQuery, logBody: false);
     }
 
     /// <summary>
@@ -350,6 +551,68 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {url}");
         }
+        return restObject;
+    }
+
+    /// <summary>
+    /// Executes a POST request against the provided URL with the postObject in the body and returns the result RestObject
+    /// </summary>
+    /// <param name="url">API URL</param>
+    /// <param name="postObject">The object to be created</param>
+    /// <param name="bearerToken">Bearer token to add to the request if provided</param>
+    /// <param name="timeout">Timeout setting for the request in seconds. Defaults to 100s if not provided</param>
+    /// <param name="httpHeaders">Custom HTTP Headers to send with the request</param>
+    /// <param name="patchDoc">Patch document for making PATCH requests</param>
+    /// <param name="expectTaskCancellation">If true, will only log info instead of an error when a TaskCanceledException exception is thrown</param>
+    /// <param name="logQuery">If true, logger will display the query string of request.</param>
+    /// <param name="logBody">If true, logger will display the body of the request.</param>
+    /// <returns>Object of type T resulting from the POST request - Null if not success</returns>
+    /// <exception cref="HttpRequestException">Ignore.</exception>
+    /// <exception cref="ObjectDisposedException">Ignore.</exception>
+    public async Task<StreamingRestObject<T>> GenericStreamingRestObjectRequest<T, UT>(string url, HttpMethod httpMethod, UT? postObject = default, string? bearerToken = null, double? timeout = null,
+        Dictionary<string, string>? httpHeaders = null, HttpContent? patchDoc = null, bool expectTaskCancellation = false, bool logQuery = true, bool logBody = true)
+    {
+        StreamingRestObject<T> restObject = new();
+        try
+        {
+            logger.Info("{msg}", $"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && requestsWithBody.Contains(httpMethod) ?
+                $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject, JsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
+            using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
+
+            //Ensure json header is being used
+            if (httpHeaders == null)
+            {
+                httpHeaders = new(JsonAcceptHeader.SingleToList());
+            }
+            else if (httpHeaders.Remove(AcceptHeader))
+            {
+                httpHeaders.AddDictionaryItem(JsonAcceptHeader);
+            }
+
+            httpRequestMessage.AttachHeaders(bearerToken, httpHeaders);
+            httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
+
+            restObject.Response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            restObject.Result = HandleResponseAsync<T>(restObject.Response, httpMethod.ToString(), url);
+        }
+        catch (TaskCanceledException tcex)
+        {
+            string exceptionLocation = tcex.GetLocationOfException();
+            if (expectTaskCancellation)
+            {
+                logger.Info("{msg}", $"Task was expectedly canceled for {httpMethod.ToString().ToUpper()} request to {url}");
+            }
+            else
+            {
+                logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {url}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {url}");
+        }
+
         return restObject;
     }
 

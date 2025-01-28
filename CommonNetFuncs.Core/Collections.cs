@@ -321,6 +321,52 @@ public static class Collections
         return bag.ToList();
     }
 
+    /// <summary>
+    /// Convert datatable to equivalent list of specified class using a Parallel.Foreach loop to get data from each row
+    /// </summary>
+    /// <typeparam name="T">Class to use in table conversion</typeparam>
+    /// <param name="table">Table to convert to list</param>
+    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
+    /// <returns>List containing table values as the specified class</returns>
+    public static IEnumerable<T?> ToEnumerableParallel<T>(this DataTable table, bool convertShortToBool = false) where T : class, new()
+    {
+        IEnumerable<T?> values = [];
+        if (table.Rows.Count > 0)
+        {
+            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
+            values = table.AsEnumerable().AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).Select(row => row.ParseRowValues<T>(map));
+        }
+        return values;
+    }
+
+    /// <summary>
+    /// Convert datatable to equivalent list of specified class using a Parallel.Foreach loop to get data from each row
+    /// </summary>
+    /// <typeparam name="T">Class to use in table conversion</typeparam>
+    /// <param name="table">Table to convert to list</param>
+    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
+    /// <returns>List containing table values as the specified class</returns>
+    public static IEnumerable<T?> ToEnumerableStreaming<T>(this DataTable table, bool convertShortToBool = false) where T : class, new()
+    {
+        if (table.Rows.Count > 0)
+        {
+            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
+            Task<T?>? outstandingItem = null;
+            T? transform(object x) => ParseRowValues<T>((DataRow)x, map);
+            foreach (DataRow row in table.AsEnumerable())
+            {
+                Task<T?>? tmp = outstandingItem;
+
+                // note: passed in as "state", not captured, so not a foreach/capture bug
+                outstandingItem = new (transform!, row);
+                outstandingItem.Start();
+
+                if (tmp != null) yield return tmp.Result;
+            }
+            if (outstandingItem != null) yield return outstandingItem.Result;
+        }
+    }
+
     private static List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> GetDataTableMap<T>(this DataTable table, bool convertShortToBool)
     {
         List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];

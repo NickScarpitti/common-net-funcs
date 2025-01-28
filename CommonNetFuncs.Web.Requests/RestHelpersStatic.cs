@@ -19,7 +19,7 @@ public static class RestHelpersStatic
 {
     public static System.Text.Json.JsonSerializerOptions? JsonSerializerOptions { get; set; }
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-    public static readonly System.Text.Json.JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles };
+    public static readonly System.Text.Json.JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles, PropertyNameCaseInsensitive = true };
 
     /// <summary>
     /// Checks if the HTTP request was successful and then parses the response if it is
@@ -65,8 +65,71 @@ public static class RestHelpersStatic
         return result;
     }
 
-    public static async Task<T?> ReadResponseStream<T>(Stream responseStream, string? contentType, string? contentEncoding, bool useNewtonsoftDeserializer, MsgPackOptions? msgPackOptions = null,
-        System.Text.Json.JsonSerializerOptions? jsonSerializerOptions = null)
+    /// <summary>
+    /// Checks if the HTTP request was successful and then parses the response if it is
+    /// </summary>
+    /// <typeparam name="T">Type of expected response content</typeparam>
+    /// <param name="response">Response message from the HTTP request</param>
+    /// <param name="httpMethod">HTTP method used to make the HTTP request</param>
+    /// <param name="url">URL HTTP request was made against</param>
+    /// <returns>Response content if HTTP request was successful</returns>
+    internal static async IAsyncEnumerable<T?> HandleResponseAsync<T>(HttpResponseMessage response, string httpMethod, string url, Dictionary<string, string>? httpHeaders = null)
+    {
+        Stream? responseStream = null;
+        try
+        {
+            IAsyncEnumerator<T?>? enumeratedReader = null;
+            try
+            {
+                string? contentType = response.Content.Headers.ContentType?.ToString();
+                string? contentEncoding = response.Content.Headers.ContentEncoding?.ToString();
+
+                response.Content.ReadFromJsonAsAsyncEnumerable<T>();
+
+                responseStream = await response.Content.ReadAsStreamAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    enumeratedReader = ReadResponseStreamAsync<T?>(responseStream, contentType, contentEncoding).GetAsyncEnumerator();
+                }
+                else
+                {
+                    string? errorMessage = null;
+                    if (contentType.ContainsInvariant(ContentTypes.JsonProblem))
+                    {
+                        ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, false) ?? new();
+                        errorMessage = $"({problemDetails.Status}) {problemDetails.Title}\n\t\t{string.Join("\n\t\t", problemDetails.Errors.Select(x => $"{x.Key}:\n\t\t\t{string.Join("\n\t\t\t", x.Value)}"))}";
+                    }
+                    else
+                    {
+                        errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, false);
+                    }
+                    logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(httpHeaders != null ? $"Headers: {string.Join(", ", httpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            }
+
+            if (enumeratedReader != null)
+            {
+                while (await enumeratedReader.MoveNextAsync())
+                {
+                    yield return enumeratedReader!.Current;
+                }
+            }
+            else
+            {
+                yield break;
+            }
+        }
+        finally
+        {
+            responseStream?.Dispose();
+        }
+    }
+
+    public static async Task<T?> ReadResponseStream<T>(Stream responseStream, string? contentType, string? contentEncoding, bool useNewtonsoftDeserializer, MsgPackOptions? msgPackOptions = null)
     {
         T? result = default;
         try
@@ -135,7 +198,7 @@ public static class RestHelpersStatic
                     }
                     else
                     {
-                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions);
+                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 1 ? outputStream : responseStream, JsonSerializerOptions ?? defaultJsonSerializerOptions);
                     }
                 }
                 else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
@@ -151,16 +214,8 @@ public static class RestHelpersStatic
                     }
 
                     string stringResult;
-                    if (outputStream.Length == 0)
-                    {
-                        using StreamReader reader = new(responseStream, Encoding.UTF8);
-                        stringResult = reader.ReadToEnd();
-                    }
-                    else
-                    {
-                        using StreamReader reader = new(outputStream, Encoding.UTF8);
-                        stringResult = reader.ReadToEnd();
-                    }
+                    using StreamReader reader = new(outputStream.Length == 0 ? responseStream : outputStream, Encoding.UTF8);
+                    stringResult = reader.ReadToEnd();
                     result = (T)(object)stringResult;
                 }
             }
@@ -170,6 +225,36 @@ public static class RestHelpersStatic
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return result;
+    }
+
+    public static async IAsyncEnumerable<T?> ReadResponseStreamAsync<T>(Stream responseStream, string? contentType, string? contentEncoding)
+    {
+        if (contentType.ContainsInvariant("json"))
+        {
+            await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
+
+            //Deserialize as stream - More memory efficient than string deserialization
+            if (contentEncoding.StrEq(EncodingTypes.GZip))
+            {
+                await responseStream.DecompressStream(outputStream, ECompressionType.Gzip);
+            }
+            else if (contentEncoding.StrEq(EncodingTypes.Brotli))
+            {
+                await responseStream.DecompressStream(outputStream, ECompressionType.Brotli);
+            }
+
+            await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(outputStream.Length > 1 ? outputStream : responseStream, JsonSerializerOptions ?? defaultJsonSerializerOptions))
+            {
+                if (item != null)
+                {
+                    yield return item;
+                }
+            }
+        }
+        else
+        {
+            throw new NotImplementedException($"Content type {contentType.UrlEncodeReadable()} is not available");
+        }
     }
 
     /// <summary>

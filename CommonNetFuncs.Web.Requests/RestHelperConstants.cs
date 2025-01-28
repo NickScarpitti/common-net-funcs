@@ -8,6 +8,7 @@ public static class RestHelperConstants
     public const string AcceptEncodingHeader = "Accept-Encoding";
     public const string AcceptHeader = "Accept";
 
+    public static readonly KeyValuePair<string, string> NoEncodingHeader = new(AcceptEncodingHeader, EncodingTypes.Identity);
     public static readonly KeyValuePair<string, string> BrotliEncodingHeader = new(AcceptEncodingHeader, EncodingTypes.Brotli);
     public static readonly KeyValuePair<string, string> GzipEncodingHeader = new(AcceptEncodingHeader, EncodingTypes.GZip);
 
@@ -22,4 +23,5 @@ public static class RestHelperConstants
     public static readonly Dictionary<string, string> MemPackHeaders = new([MemPackContentHeader, MemPackAcceptHeader]);
     public static readonly Dictionary<string, string> MsgPackHeaders = new([MsgPackContentHeader, MsgPackAcceptHeader]);
     public static readonly Dictionary<string, string> JsonHeaders = new([JsonContentHeader, JsonAcceptHeader]);
+    public static readonly Dictionary<string, string> JsonNoEncodeHeaders = new([JsonContentHeader, JsonAcceptHeader, NoEncodingHeader]);
 }

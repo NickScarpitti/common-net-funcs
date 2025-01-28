@@ -57,6 +57,7 @@ public static class ContentTypes
 /// </summary>
 public static class EncodingTypes
 {
+    public const string Identity = "identity";
     public const string Brotli = "br";
     public const string GZip = "gzip";
     public const string Deflate = "deflate";

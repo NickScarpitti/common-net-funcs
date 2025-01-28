@@ -119,7 +119,7 @@ public static class DirectQuery
     }
 
     /// <summary>
-    /// Returns a IAsyncEnumerable using the SQL and data connection passed to the function
+    /// Returns a IEnumerable of T resulting from the SQL query
     /// </summary>
     /// <param name="sql">Select query to retrieve populate datatable</param>
     /// <param name="connStr">Connection string to run the query on</param>

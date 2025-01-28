@@ -292,6 +292,21 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     /// <summary>
+    /// Gets all records from the corresponding table with or without navigation properties
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <param name="full">If true, will run "full" query that includes navigation properties</param>
+    /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
+    /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T.</returns>
+    public IAsyncEnumerable<T>? GetAllStreaming(bool full, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
+        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    {
+        return !full ? GetAllStreaming(queryTimeout, trackEntities) : GetAllFullStreaming(queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+    }
+
+    /// <summary>
     /// Gets all records from the corresponding table.
     /// Same as running a SELECT * query.
     /// </summary>
@@ -311,6 +326,35 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets all records from the corresponding table.
+    /// Same as running a SELECT * query.
+    /// </summary>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <returns>All records from the table corresponding to class T.</returns>
+    public async IAsyncEnumerable<T>? GetAllStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false)
+    {
+        IQueryable<T> query = GetQueryAll(queryTimeout, trackEntities);
+        IAsyncEnumerable<T>? enumeratedReader = null;
+        try
+        {
+            enumeratedReader = query.AsAsyncEnumerable();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
     }
 
     /// <summary>
@@ -378,6 +422,59 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     /// <summary>
+    /// Gets all records with navigation properties from the corresponding table.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T.</returns>
+    public async IAsyncEnumerable<T>? GetAllFullStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
+        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    {
+        IQueryable<T> query = GetQueryAllFull(queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IAsyncEnumerable<T>? enumeratedReader = null;
+        try
+        {
+            enumeratedReader = query.AsAsyncEnumerable();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    query = GetQueryAllFull(queryTimeout, splitQueryOverride, true);
+                    enumeratedReader = query.AsAsyncEnumerable();
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.TryAdd(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets query to get all records with navigation properties from the corresponding table.
     /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
@@ -441,6 +538,21 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     /// <summary>
+    /// Gets all records from the corresponding table with or without navigation properties.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <param name="full">If true, will run "full" query that includes navigation properties</param>
+    /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
+    /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T.</returns>
+    public IAsyncEnumerable<T2>? GetAllStreaming<T2>(bool full, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
+        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    {
+        return !full ? GetAllStreaming(selectExpression, queryTimeout, trackEntities) : GetAllFullStreaming(selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+    }
+
+    /// <summary>
     /// Gets all records from the corresponding table and transforms them into the type T2.
     /// Same as running a SELECT <SpecificFields> query.
     /// </summary>
@@ -462,6 +574,37 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets all records from the corresponding table and transforms them into the type T2.
+    /// Same as running a SELECT <SpecificFields> query.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <returns>All records from the table corresponding to class T2.</returns>
+    public async IAsyncEnumerable<T2>? GetAllStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false)
+    {
+        IQueryable<T2> query = GetQueryAll(selectExpression, queryTimeout, trackEntities);
+        IAsyncEnumerable<T2>? enumeratedReader = null;
+        try
+        {
+            enumeratedReader = query.AsAsyncEnumerable();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T2 enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
     }
 
     /// <summary>
@@ -533,6 +676,61 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     /// <summary>
+    /// Gets all records with navigation properties from the corresponding table and transforms them into the type T2.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T2.</returns>
+    public async IAsyncEnumerable<T2>? GetAllFullStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
+        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    {
+        IQueryable<T2> query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IAsyncEnumerable<T2>? enumeratedReader = null;
+        try
+        {
+            enumeratedReader = query.AsAsyncEnumerable();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, true);
+                    enumeratedReader = query.AsAsyncEnumerable();
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.TryAdd(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T2 enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets query to get all records with navigation properties from the corresponding table and transforms them into the type T2.
     /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
@@ -600,6 +798,23 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     /// <summary>
+    /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression with or without navigation properties.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <param name="full">If true, will run "full" query that includes navigation properties</param>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
+    /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
+    public IAsyncEnumerable<T>? GetWithFilterStreaming(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
+        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    {
+        return !full ? GetWithFilterStreaming(whereExpression, queryTimeout, trackEntities) :
+            GetWithFilterFullStreaming(whereExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+    }
+
+    /// <summary>
     /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression and transforms them into the type T2.
     /// Same as running a SELECT <SpecificFields> WHERE <condition> query.
     /// </summary>
@@ -620,6 +835,36 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression and transforms them into the type T2.
+    /// Same as running a SELECT <SpecificFields> WHERE <condition> query.
+    /// </summary>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
+    public async IAsyncEnumerable<T>? GetWithFilterStreaming(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null,bool trackEntities = false)
+    {
+        IQueryable<T> query = GetQueryWithFilter(whereExpression, queryTimeout, trackEntities);
+        IAsyncEnumerable<T>? enumeratedReader = null;
+        try
+        {
+            enumeratedReader = query.AsAsyncEnumerable();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
     }
 
     /// <summary>
@@ -686,6 +931,60 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
+    public async IAsyncEnumerable<T>? GetWithFilterFullStreaming(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
+        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    {
+        IQueryable<T> query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IAsyncEnumerable<T>? enumeratedReader = null;
+        try
+        {
+            enumeratedReader = query.AsAsyncEnumerable();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, true);
+                    enumeratedReader = query.AsAsyncEnumerable();
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.TryAdd(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
     }
 
     /// <summary>
@@ -756,6 +1055,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     /// <summary>
+    /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression with or without navigation properties, and then transforms them into the T2 class using the select expression
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
+    /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
+    public IAsyncEnumerable<T2>? GetWithFilterStreaming<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
+        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    {
+        return !full ? GetWithFilterStreaming(whereExpression, selectExpression, queryTimeout, trackEntities) :
+            GetWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+    }
+
+    /// <summary>
     /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression.
     /// Same as running a SELECT * WHERE <condition> query.
     /// </summary>
@@ -778,6 +1095,38 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression.
+    /// Same as running a SELECT * WHERE <condition> query.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
+    public async IAsyncEnumerable<T2>? GetWithFilterStreaming<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false)
+    {
+        IQueryable<T2> query = GetQueryWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities);
+        IAsyncEnumerable<T2>? enumeratedReader = null;
+        try
+        {
+            enumeratedReader = query.AsAsyncEnumerable();
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T2 enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
     }
 
     /// <summary>
@@ -850,6 +1199,63 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
+    public async IAsyncEnumerable<T2>? GetWithFilterFullStreaming<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
+        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    {
+        IQueryable<T2> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IAsyncEnumerable<T2>? enumeratedReader = null;
+
+        try
+        {
+            enumeratedReader = query.AsAsyncEnumerable();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                    enumeratedReader = query.AsAsyncEnumerable();
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.TryAdd(typeof(T), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T2 enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
     }
 
     /// <summary>
@@ -1017,6 +1423,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     /// <summary>
+    /// Gets the navigation property of a different class and outputs a class of type T with or without its navigation properties using the select expression.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class to return navigation property from.</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
+    /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
+    public IAsyncEnumerable<T>? GetNavigationWithFilterStreaming<T2>(bool full, Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
+        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+    {
+        return !full ? GetNavigationWithFilterStreaming(whereExpression, selectExpression, queryTimeout, trackEntities) :
+            GetNavigationWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+    }
+
+    /// <summary>
     /// Gets the navigation property of a different class and outputs a class of type T using the select expression.
     /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
@@ -1063,6 +1487,62 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets the navigation property of a different class and outputs a class of type T using the select expression.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class to return navigation property from.</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
+    public async IAsyncEnumerable<T>? GetNavigationWithFilterStreaming<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
+        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+    {
+        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IAsyncEnumerable<T>? enumeratedReader = null;
+        try
+        {
+            enumeratedReader = query.AsAsyncEnumerable();
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                try
+                {
+                    query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                    enumeratedReader = query.AsAsyncEnumerable();
+                    logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                    circularReferencingEntities.TryAdd(typeof(T2), true);
+                }
+                catch (Exception ex2)
+                {
+                    logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                    logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
     }
 
     /// <summary>
@@ -1163,6 +1643,113 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return model;
+    }
+
+    /// <summary>
+    /// Gets the navigation property of a different class and outputs a class of type T using the select expression.
+    /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
+    /// </summary>
+    /// <typeparam name="T2">Class to return navigation property from.</typeparam>
+    /// <param name="whereExpression">A linq expression used to filter query results.</param>
+    /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
+    /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
+    public async IAsyncEnumerable<T>? GetNavigationWithFilterFullStreaming<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
+        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+    {
+        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IAsyncEnumerable<T>? enumeratedReader = null;
+        try
+        {
+            //model = await query.ToListAsync();
+            using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+            enumeratedReader = splitQueryOverride switch
+            {
+                //Need to add in navigation properties of the output type since they are not kept in the original query
+                null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                    query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                    query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                    query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                    query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable()
+            };
+        }
+        catch (InvalidOperationException ioEx)
+        {
+            if (ioEx.HResult == -2146233079)
+            {
+                query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                //model = await query.ToListAsync();
+                logger.Warn("{msg}", $"Adding {typeof(T2).Name} to circularReferencingEntities");
+                circularReferencingEntities.TryAdd(typeof(T2), true);
+                try
+                {
+                    await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+                    enumeratedReader = splitQueryOverride switch
+                    {
+                        //Need to add in navigation properties of the output type since they are not kept in the original query
+                        null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                            query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                            query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                        true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                            query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                            query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                        _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
+                            query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                            query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable()
+                    };
+                }
+                catch (InvalidOperationException ioEx2) //Error could be caused by navigation properties of the output type, so need to try that as well
+                {
+                    if (ioEx2.HResult == -2146233079)
+                    {
+                        try
+                        {
+                            logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+                            circularReferencingEntities.TryAdd(typeof(T), true);
+                            await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+                            enumeratedReader = splitQueryOverride switch
+                            {
+                                null => query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                                true => query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                                _ => query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable()
+                            };
+                        }
+                        catch (Exception ex2)
+                        {
+                            logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
+                            logger.Error(ioEx2, "{msg}", $"{ioEx2.GetLocationOfException()} Error1");
+                            logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+                        }
+                    }
+                    else
+                    {
+                        logger.Error(ioEx2, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+                    }
+                }
+            }
+            else
+            {
+                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+
+        if (enumeratedReader != null)
+        {
+            await foreach (T enumerator in enumeratedReader)
+            {
+                yield return enumerator;
+            }
+        }
     }
 
     /// <summary>

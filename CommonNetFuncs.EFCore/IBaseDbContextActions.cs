@@ -20,45 +20,71 @@ public interface IBaseDbContextActions<T, UT> where T : class where UT : DbConte
 
     Task<List<T>?> GetAll(bool full, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
         List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
+    IAsyncEnumerable<T>? GetAllStreaming(bool full, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
+        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
     Task<List<T>?> GetAll(TimeSpan? queryTimeout = null, bool trackEntities = false);
+    IAsyncEnumerable<T>? GetAllStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false);
     IQueryable<T> GetQueryAll(TimeSpan? queryTimeout = null, bool trackEntities = false);
     Task<List<T>?> GetAllFull(TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
+        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
+    IAsyncEnumerable<T>? GetAllFullStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
         List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
     IQueryable<T> GetQueryAllFull(TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false, bool trackEntities = false, int maxNavigationDepth = 100,
         List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
 
     Task<List<T2>?> GetAll<T2>(bool full, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
         int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
+    IAsyncEnumerable<T2>? GetAllStreaming<T2>(bool full, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
+        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
     Task<List<T2>?> GetAll<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false);
+    IAsyncEnumerable<T2>? GetAllStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false);
     IQueryable<T2> GetQueryAll<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false);
     Task<List<T2>?> GetAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
+        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
+    IAsyncEnumerable<T2>? GetAllFullStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
         List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
     IQueryable<T2> GetQueryAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false,
         bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
 
     Task<List<T>?> GetWithFilter(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
         int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
+    IAsyncEnumerable<T>? GetWithFilterStreaming(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
+        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
     Task<List<T>?> GetWithFilter(Expression<Func<T, bool>> expression, TimeSpan? queryTimeout = null, bool trackEntities = false);
+    IAsyncEnumerable<T>? GetWithFilterStreaming(Expression<Func<T, bool>> expression, TimeSpan? queryTimeout = null, bool trackEntities = false);
     IQueryable<T> GetQueryWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false);
     Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> expression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
+        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
+    IAsyncEnumerable<T>? GetWithFilterFullStreaming(Expression<Func<T, bool>> expression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
         List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
     IQueryable<T> GetQueryWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false,
         bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
 
     Task<List<T2>?> GetWithFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
         bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
+    IAsyncEnumerable<T2>? GetWithFilterStreaming<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
     IQueryable<T2> GetQueryWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false);
     Task<List<T2>?> GetWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false);
+    IAsyncEnumerable<T2>? GetWithFilterStreaming<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false);
     Task<List<T2>?> GetWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
+    IAsyncEnumerable<T2>? GetWithFilterFullStreaming<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
         bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
     IQueryable<T2> GetQueryWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null,
         bool handlingCircularRefException = false, bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true);
 
     Task<List<T>?> GetNavigationWithFilter<T2>(bool full, Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
         bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class;
+    IAsyncEnumerable<T>? GetNavigationWithFilterStreaming<T2>(bool full, Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class;
     Task<List<T>?> GetNavigationWithFilter<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
         bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class;
+    IAsyncEnumerable<T>? GetNavigationWithFilterStreaming<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class;
     Task<List<T>?> GetNavigationWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class;
+    IAsyncEnumerable<T>? GetNavigationWithFilterFullStreaming<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
         bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class;
     IQueryable<T> GetQueryNavigationWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null,
         bool handlingCircularRefException = false, bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class;

@@ -135,7 +135,7 @@ public static class RestHelpersStatic
                     }
                     else
                     {
-                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions);
+                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 1 ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions);
                     }
                 }
                 else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
@@ -151,16 +151,8 @@ public static class RestHelpersStatic
                     }
 
                     string stringResult;
-                    if (outputStream.Length == 0)
-                    {
-                        using StreamReader reader = new(responseStream, Encoding.UTF8);
-                        stringResult = reader.ReadToEnd();
-                    }
-                    else
-                    {
-                        using StreamReader reader = new(outputStream, Encoding.UTF8);
-                        stringResult = reader.ReadToEnd();
-                    }
+                    using StreamReader reader = new(outputStream.Length == 0 ? responseStream : outputStream, Encoding.UTF8);
+                    stringResult = reader.ReadToEnd();
                     result = (T)(object)stringResult;
                 }
             }
@@ -170,6 +162,32 @@ public static class RestHelpersStatic
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return result;
+    }
+
+    public static async IAsyncEnumerable<T?> ReadResponseStreamAsync<T>(Stream responseStream, string? contentType, System.Text.Json.JsonSerializerOptions? jsonSerializerOptions = null)
+    {
+        try
+        {
+            if (responseStream.Length > 1)
+            {
+                if (contentType.ContainsInvariant("json"))
+                {
+                    IAsyncEnumerator<T?> enumeratedReader = System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions).GetAsyncEnumerator();
+                    while (await enumeratedReader.MoveNextAsync())
+                    {
+                        yield return enumeratedReader.Current;
+                    }
+                }
+                else
+                {
+                    throw new NotImplementedException($"Content type {contentType.UrlEncodeReadable()} is not available");
+                }
+            }
+        }
+        finally
+        {
+            responseStream.Dispose();
+        }
     }
 
     /// <summary>

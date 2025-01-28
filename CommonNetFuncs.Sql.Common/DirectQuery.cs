@@ -1,5 +1,9 @@
-﻿using System.Data;
+﻿using System.Collections.Concurrent;
+using System.Data;
 using System.Data.Common;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.Sql.Common;
@@ -213,5 +217,202 @@ public static class DirectQuery
             }
         }
         return new();
+    }
+
+    // Cache for compiled mapping delegates
+    private static readonly ConcurrentDictionary<Type, Delegate> _mappingCache = new();
+
+    // Creates a mapping delegate for a type and caches it
+    private static Func<IDataReader, T> CreateMapperDelegate<T>() where T : class, new()
+    {
+        Type type = typeof(T);
+
+        // Return from cache if exists
+        if (_mappingCache.TryGetValue(type, out Delegate? existing))
+        {
+            return (Func<IDataReader, T>)existing;
+        }
+
+        // Parameter expressions
+        ParameterExpression readerParam = Expression.Parameter(typeof(IDataReader), "reader");
+        MethodInfo getValueMethod = typeof(IDataRecord).GetMethod("GetValue")!;
+        MethodInfo getOrdinalMethod = typeof(IDataRecord).GetMethod("GetOrdinal")!;
+        MethodInfo isDBNullMethod = typeof(IDataRecord).GetMethod("IsDBNull")!;
+
+        // Create new instance expression
+        NewExpression instanceExp = Expression.New(type);
+
+        // Get all settable properties
+        IEnumerable<PropertyInfo> properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite);
+
+        // Create property assignments
+        List<MemberBinding> assignments = [];
+
+        foreach (PropertyInfo prop in properties)
+        {
+            // Create GetOrdinal call
+            MethodCallExpression getOrdinalCall = Expression.Call(
+                readerParam,
+                getOrdinalMethod,
+                Expression.Constant(prop.Name)
+            );
+
+            // Create IsDBNull check
+            MethodCallExpression isDbNullCall = Expression.Call(
+                readerParam,
+                isDBNullMethod,
+                getOrdinalCall
+            );
+
+            // Get value from reader
+            MethodCallExpression getValue = Expression.Call(
+                readerParam,
+                getValueMethod,
+                getOrdinalCall
+            );
+
+            // Convert value to property type if needed
+            UnaryExpression convertedValue = Expression.Convert(getValue, prop.PropertyType);
+
+            // Create conditional expression: if IsDBNull then default else converted value
+            ConditionalExpression assignValue = Expression.Condition(
+                isDbNullCall,
+                Expression.Default(prop.PropertyType),
+                convertedValue
+            );
+
+            // Create property binding
+            assignments.Add(Expression.Bind(prop, assignValue));
+        }
+
+        // Create member init expression
+        MemberInitExpression memberInit = Expression.MemberInit(instanceExp, assignments);
+
+        // Create and compile lambda
+        Expression<Func<IDataReader, T>> lambda = Expression.Lambda<Func<IDataReader, T>>(memberInit, readerParam);
+        Func<IDataReader, T> compiled = lambda.Compile();
+
+        // Cache the delegate
+        _mappingCache.TryAdd(type, compiled);
+
+        return compiled;
+    }
+
+    public static IEnumerable<T> GetDataStreamSynchronous<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30) where T : class, new()
+    {
+        DbDataReader? reader = null;
+        try
+        {
+            cmd.CommandTimeout = commandTimeoutSeconds;
+            conn.Open();
+            reader = cmd.ExecuteReader();
+            Func<IDataReader, T> mapper = CreateMapperDelegate<T>();
+
+            foreach (T item in EnumerateReaderSynchronous(reader, mapper))
+            {
+                yield return item;
+            }
+        }
+        finally
+        {
+            reader?.Dispose();
+            conn.Close();
+        }
+    }
+
+    public static async IAsyncEnumerable<T> GetDataStreamAsync<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
+    {
+        try
+        {
+            cmd.CommandTimeout = commandTimeoutSeconds;
+            await conn.OpenAsync(cancellationToken);
+            await using DbDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken);
+
+            Func<IDataReader, T> mapper = CreateMapperDelegate<T>();
+
+            IAsyncEnumerator<T> enumeratedReader = EnumerateReader(reader, mapper, cancellationToken).GetAsyncEnumerator(cancellationToken);
+            while(await enumeratedReader.MoveNextAsync())
+            {
+                yield return enumeratedReader.Current;
+            }
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    public static async Task<IEnumerable<T>> GetDataDirectAsync<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3) where T : class, new()
+    {
+        List<T> values = [];
+        for (int i = 0; i < maxRetry; i++)
+        {
+            try
+            {
+                cmd.CommandTimeout = commandTimeoutSeconds;
+                await conn.OpenAsync();
+                await using DbDataReader reader = await cmd.ExecuteReaderAsync();
+
+                Func<IDataReader, T> mapper = CreateMapperDelegate<T>();
+                while (await reader.ReadAsync())
+                {
+                    try
+                    {
+                        values.Add(mapper(reader));
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Error mapping data: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                        throw;
+                    }
+                }
+                break;
+            }
+            catch(Exception ex)
+            {
+                logger.Error(ex, "There was an error");
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+        }
+        return values;
+    }
+
+    private static async IAsyncEnumerable<T> EnumerateReader<T>(DbDataReader reader, Func<IDataReader, T> mapper, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
+    {
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            T result;
+            try
+            {
+                result = mapper(reader);
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Error mapping data: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                throw;
+            }
+            yield return result;
+        }
+    }
+
+    private static IEnumerable<T> EnumerateReaderSynchronous<T>(DbDataReader reader, Func<IDataReader, T> mapper) where T : class, new()
+    {
+        while (reader.Read())
+        {
+            T result;
+            try
+            {
+                result = mapper(reader);
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Error mapping data: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                throw;
+            }
+            yield return result;
+        }
     }
 }

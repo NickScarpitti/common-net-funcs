@@ -130,6 +130,20 @@ public static class Collections
     }
 
     /// <summary>
+    /// Adds AddRange functionality to HashSet similar to a list. Skips null items
+    /// </summary>
+    /// <typeparam name="T">Type of object being added</typeparam>
+    /// <param name="hashSet">HashSet to add list of items to</param>
+    /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
+    public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T?> toAdd)
+    {
+        foreach (T? item in toAdd.SelectNonNull())
+        {
+            hashSet.Add(item!);
+        }
+    }
+
+    /// <summary>
     /// Set values in an IEnumerable as an extension of linq
     /// </summary>
     /// <typeparam name="T">Type of object having values set</typeparam>
@@ -764,6 +778,39 @@ public static class Collections
         comparer ??= EqualityComparer<T>.Default;
         var found = collection.Select((a, i) => new { a, i }).FirstOrDefault(x => comparer.Equals(x.a, value));
         return found == null ? -1 : found.i;
+    }
+
+    public static HashSet<string> GetCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
+    {
+        // Convert to array for multiple enumeration and validation
+        string?[][] sourcesArray = sources.Select(x => x.Any() ? x.Distinct().ToArray() : [nullReplacement]).ToArray();
+
+        // Validate inputs
+        if (!sourcesArray.AnyFast()) return [];
+
+        // Calculate total possible combinations
+        long totalCombinations = sourcesArray.Aggregate(1L, (acc, curr) => acc * curr.Length);
+
+        // Check if total combinations exceed max (if specified)
+        if (maxCombinations.HasValue && totalCombinations > maxCombinations.Value)
+        {
+            throw new ArgumentException($"Total possible combinations ({totalCombinations}) exceeds maximum allowed ({maxCombinations.Value})");
+        }
+
+        // Get the number of elements we're combining
+        int length = sourcesArray.Length;
+
+        // Create initial combination with first sequence
+        List<List<string>> current = sourcesArray[0].Select(x => new[] { x?.ToString() ?? string.Empty }.ToList()).ToList();
+
+        // Build up combinations for remaining sequences
+        for (int i = 1; i < length; i++)
+        {
+            current = current.SelectMany(existingCombo => sourcesArray[i].Select(x => new List<string>(existingCombo) { x?.ToString() ?? string.Empty })).ToList();
+        }
+
+        // Convert the results to strings with separator and return as HashSet
+        return new HashSet<string>(current.Select(x => string.Join(separator, x)));
     }
 }
 

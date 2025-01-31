@@ -28,12 +28,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.2.7</Version>
+    <Version>3.2.8</Version>
     <MinVerTagPrefix>efcore-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.1.6</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.2.7</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
@@ -45,7 +45,7 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.15" PrivateAssets="all" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.0" PrivateAssets="all" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.0.1" PrivateAssets="all" />
     <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="9.103.7" PrivateAssets="all" />
   </ItemGroup>
 

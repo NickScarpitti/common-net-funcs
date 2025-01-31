@@ -13,10 +13,11 @@ public static class Async
     /// </summary>
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
-    public static async Task ObjectFill<T>(this T? obj, Task<T?> task)
+    public static async Task ObjectFill<T>(this T? obj, Task<T?> task, SemaphoreSlim? semaphore = null)
     {
         try
         {
+            if (semaphore != null) { await semaphore.WaitAsync(); }
             if (obj != null)
             {
                 T? resultObject = await task;
@@ -34,6 +35,10 @@ public static class Async
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
+        finally
+        {
+            semaphore?.Release();
+        }
     }
 
     /// <summary>
@@ -41,10 +46,11 @@ public static class Async
     /// </summary>
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
-    public static async Task ObjectFill<T>(this List<T>? obj, Task<List<T>?> task)
+    public static async Task ObjectFill<T>(this List<T>? obj, Task<List<T>?> task, SemaphoreSlim? semaphore = null)
     {
         try
         {
+            if (semaphore != null) { await semaphore.WaitAsync(); }
             if (obj != null)
             {
                 List<T>? resultObject = await task;
@@ -66,6 +72,10 @@ public static class Async
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
+        finally
+        {
+            semaphore?.Release();
+        }
     }
 
     /// <summary>
@@ -73,10 +83,11 @@ public static class Async
     /// </summary>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    public static async Task ObjectFill<T>(this List<T>? obj, Task<IEnumerable<T>?> task)
+    public static async Task ObjectFill<T>(this List<T>? obj, Task<IEnumerable<T>?> task, SemaphoreSlim? semaphore = null)
     {
         try
         {
+            if (semaphore != null) { await semaphore.WaitAsync(); }
             if (obj != null)
             {
                 IEnumerable<T>? resultObject = await task;
@@ -98,6 +109,10 @@ public static class Async
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
+        finally
+        {
+            semaphore?.Release();
+        }
     }
 
     /// <summary>
@@ -105,10 +120,11 @@ public static class Async
     /// </summary>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<IEnumerable<T>?> task)
+    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<IEnumerable<T>?> task, SemaphoreSlim? semaphore = null)
     {
         try
         {
+            if (semaphore != null) { await semaphore.WaitAsync(); }
             if (obj != null)
             {
                 IEnumerable<T>? resultObject = await task;
@@ -130,6 +146,10 @@ public static class Async
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
+        finally
+        {
+            semaphore?.Release();
+        }
     }
 
     /// <summary>
@@ -137,10 +157,11 @@ public static class Async
     /// </summary>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<ConcurrentBag<T>?> task)
+    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<ConcurrentBag<T>?> task, SemaphoreSlim? semaphore = null)
     {
         try
         {
+            if (semaphore != null) { await semaphore.WaitAsync(); }
             if (obj != null)
             {
                 ConcurrentBag<T>? resultObject = await task;
@@ -162,6 +183,10 @@ public static class Async
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
+        finally
+        {
+            semaphore?.Release();
+        }
     }
 
     /// <summary>
@@ -169,10 +194,11 @@ public static class Async
     /// </summary>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>?> task)
+    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>?> task, SemaphoreSlim? semaphore = null)
     {
         try
         {
+            if (semaphore != null) { await semaphore.WaitAsync(); }
             if (obj != null)
             {
                 List<T>? resultObject = await task;
@@ -194,6 +220,10 @@ public static class Async
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
+        finally
+        {
+            semaphore?.Release();
+        }
     }
 
     /// <summary>
@@ -201,10 +231,11 @@ public static class Async
     /// </summary>
     /// <param name="dt">DataTable to insert data into</param>
     /// <param name="task">Async task that returns a DataTable object to insert into dt</param>
-    public static async Task ObjectFill(this DataTable dt, Task<DataTable> task)
+    public static async Task ObjectFill(this DataTable dt, Task<DataTable> task, SemaphoreSlim? semaphore = null)
     {
         try
         {
+            if (semaphore != null) { await semaphore.WaitAsync(); }
             using DataTable resultTable = await task;
             if (resultTable != null)
             {
@@ -216,6 +247,10 @@ public static class Async
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
+        finally
+        {
+            semaphore?.Release();
+        }
     }
 
     /// <summary>
@@ -223,16 +258,21 @@ public static class Async
     /// </summary>
     /// <param name="ms">MemoryStream to insert data into</param>
     /// <param name="task">Async task that returns a MemoryStream object to insert into ms</param>
-    public static async Task ObjectFill(this MemoryStream ms, Task<MemoryStream> task)
+    public static async Task ObjectFill(this MemoryStream ms, Task<MemoryStream> task, SemaphoreSlim? semaphore = null)
     {
         try
         {
+            if (semaphore != null) { await semaphore.WaitAsync(); }
             await using MemoryStream resultObject = await task;
             resultObject?.WriteTo(ms);
         }
         catch (Exception ex)
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+        finally
+        {
+            semaphore?.Release();
         }
     }
 
@@ -242,10 +282,11 @@ public static class Async
     /// <param name="obj">Object to update</param>
     /// <param name="propertyName">Name of property to update within obj object</param>
     /// <param name="task">Async task to run that returns the value to assign to the property indicated</param>
-    public static async Task ObjectUpdate<T, UT>(this T? obj, string propertyName, Task<UT> task)
+    public static async Task ObjectUpdate<T, UT>(this T? obj, string propertyName, Task<UT> task, SemaphoreSlim? semaphore = null)
     {
         try
         {
+            if (semaphore != null) { await semaphore.WaitAsync(); }
             PropertyInfo[] props = typeof(T).GetProperties();
             if (props.Length > 0)
             {
@@ -268,6 +309,10 @@ public static class Async
         catch (Exception ex)
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+        finally
+        {
+            semaphore?.Release();
         }
     }
 }

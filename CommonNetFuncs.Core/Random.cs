@@ -53,6 +53,23 @@ public static class Random
     }
 
     /// <summary>
+    /// Generate a number of random integers between minValue and maxValue - 1
+    /// </summary>
+    /// <param name="minValue">Min value (inclusive) to return in result. Must be greater >= 0</param>
+    /// <param name="maxValue">Max value (non-inclusive) to return in result</param>
+    /// <returns>An enumerable of random number between minValue and maxValue - 1</returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public static IEnumerable<int> GetRandomInts(int numberToGenerate, int minValue = 0, int maxValue = int.MaxValue)
+    {
+        int[] ints = new int[numberToGenerate];
+        for (int i = 0; i < numberToGenerate; i++)
+        {
+            ints[i] = GetRandomInt(minValue, maxValue);
+        }
+        return ints;
+    }
+
+    /// <summary>
     /// Generates a random, 15 decimal place double with no whole number component
     /// </summary>
     /// <returns>A random 15 decimal place double with no whole number component</returns>
@@ -80,6 +97,22 @@ public static class Random
         decimalPlaces = decimalPlaces <= 15 ? decimalPlaces : 15;
         double result = GetRandomDouble();
         return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Generates a number of random doubles with the desired number of decimal places with no whole number component
+    /// </summary>
+    /// <param name="decimalPlaces">Number of decimal places to include in the results (max of 15)</param>
+    /// <returns>A random double with the desired number of decimal places with no whole number component</returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public static IEnumerable<double> GetRandomDoubles(int numberToGenerate, int decimalPlaces = 15)
+    {
+        double[] doubles = new double[numberToGenerate];
+        for (int i = 0; i < numberToGenerate; i++)
+        {
+            doubles[i] = GetRandomDouble(decimalPlaces);
+        }
+        return doubles;
     }
 
     /// <summary>
@@ -115,6 +148,22 @@ public static class Random
         decimalPlaces = decimalPlaces <= 28 ? decimalPlaces : 28;
         decimal result = GetRandomDecimal();
         return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Gets a number of random decimals with the specified number of decimal places with no whole number component.
+    /// </summary>
+    /// <param name="decimalPlaces">Number of decimal places to include in the randomly generated numbers (max of 28)</param>
+    /// <returns>An enumerable of random decimals with the specified number of decimal places with no whole number component.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public static IEnumerable<decimal> GetRandomDecimals(int numberToGenerate, int decimalPlaces = 28)
+    {
+        decimal[] decimals = new decimal[numberToGenerate];
+        for (int i = 0; i < numberToGenerate; i++)
+        {
+            decimals[i] = GetRandomDecimal(decimalPlaces);
+        }
+        return decimals;
     }
 
     /// <summary>
@@ -219,18 +268,31 @@ public static class Random
     /// <summary>
     /// Generates a random string of the indicated length using a range of ASCII characters
     /// </summary>
-    /// <param name="length">Length of the random string to be generated</param>
+    /// <param name="maxLength">Upper bound for length of strings to be generated</param>
+    /// <param name="minLength">Lower bound for length of strings to be generated</param>
     /// <param name="lowerAsciiBound">First decimal number for an ASCII character (inclusive) to use (max 126)</param>
     /// <param name="upperAsciiBound">Last decimal number for an ASCII character (inclusive) to use (max 126)</param>
     /// <param name="blacklistedCharacters">Characters that fall within the provided range that are to not be used</param>
     /// <returns>A random string of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static string GenerateRandomString(int length, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null)
+    public static string GenerateRandomString(int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null)
     {
         if (lowerAsciiBound < 0 || upperAsciiBound > 127 || lowerAsciiBound >= upperAsciiBound)
         {
             throw new ArgumentOutOfRangeException(nameof(upperAsciiBound), "Bounds must be between 0 and 127, and lowerBound must be less than upperBound.");
         }
+
+        if (maxLength < minLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxLength), "Max length must be greater than or equal to min length.");
+        }
+
+        if (maxLength <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxLength), "Max length must be greater than 0");
+        }
+
+        int length = minLength == -1 ? maxLength : GetRandomInt(minLength, maxLength);
 
         StringBuilder result = new(length);
 
@@ -261,6 +323,27 @@ public static class Random
         }
 
         return result.ToString();
+    }
+
+    /// <summary>
+    /// Generates a number of random strings of the indicated length using a range of ASCII characters
+    /// </summary>
+    /// <param name="numberToGenerate">Number of random strings to be generated</param>
+    /// <param name="maxLength">Upper bound for length of strings to be generated</param>
+    /// <param name="minLength">Lower bound for length of strings to be generated</param>
+    /// <param name="lowerAsciiBound">First decimal number for an ASCII character (inclusive) to use (max 126)</param>
+    /// <param name="upperAsciiBound">Last decimal number for an ASCII character (inclusive) to use (max 126)</param>
+    /// <param name="blacklistedCharacters">Characters that fall within the provided range that are to not be used</param>
+    /// <returns>An enumerable of random strings of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public static IEnumerable<string> GenerateRandomStrings(int numberToGenerate, int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null)
+    {
+        string[] strings = new string[numberToGenerate];
+        for (int i = 0; i < numberToGenerate; i++)
+        {
+            strings[i] = GenerateRandomString(maxLength, minLength, lowerAsciiBound, upperAsciiBound, blacklistedCharacters);
+        }
+        return strings;
     }
 
     /// <summary>

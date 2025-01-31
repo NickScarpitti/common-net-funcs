@@ -1,73 +1,144 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text.RegularExpressions;
+using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.Web.Common.ValidationAttributes;
 
-[AttributeUsage(AttributeTargets.All, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 
 /// <summary>
 /// Validates that all items in a list match the specified regular expression pattern
 /// </summary>
 public sealed class ListRegularExpressionAttribute : ValidationAttribute
 {
-    private readonly Regex _regex;
+    /// <summary>
+    ///     Gets or sets the timeout to use when matching the regular expression pattern (in milliseconds)
+    ///     (-1 means never timeout).
+    /// </summary>
+    public int MatchTimeoutInMilliseconds { get; set; }
 
-    public ListRegularExpressionAttribute(string pattern)
+    /// <summary>
+    /// Gets the timeout to use when matching the regular expression pattern
+    /// </summary>
+    public TimeSpan MatchTimeout => TimeSpan.FromMilliseconds(MatchTimeoutInMilliseconds);
+
+    /// <summary>
+    ///     Gets the regular expression pattern to use
+    /// </summary>
+    public string Pattern { get; }
+
+    private Regex? Regex { get; set; }
+
+    /// <summary>
+    ///     Constructor that accepts the regular expression pattern
+    /// </summary>
+    /// <param name="pattern">The regular expression to use.  It cannot be null.</param>
+    public ListRegularExpressionAttribute([StringSyntax(StringSyntaxAttribute.Regex)] string pattern)
     {
         ArgumentNullException.ThrowIfNull(pattern);
-        // Compile the regex for better performance when used multiple times
-        _regex = new Regex(pattern, RegexOptions.Compiled);
+        Pattern = pattern;
+        MatchTimeoutInMilliseconds = 2000;
     }
 
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
+        SetupRegex();
+
         if (value is null)
         {
             return ValidationResult.Success;
         }
 
-        int index = 0;
         string memberName = validationContext.MemberName ?? string.Empty;
 
         // Handle different types of collections
-        switch (value)
+        if (value is IEnumerable<string?> or IEnumerable<string>)
         {
-            case IEnumerable<string?> stringList:
-                foreach (string? item in stringList)
-                {
-                    if (item is not null && !_regex.IsMatch(item))
-                    {
-                        return new ValidationResult($"Item at index {index} does not match the required pattern", [memberName]);
-                    }
-                    index++;
-                }
-                break;
-
-            case IEnumerable<int> intList:
-                foreach (int item in intList)
-                {
-                    if (!_regex.IsMatch(item.ToString()))
-                    {
-                        return new ValidationResult($"Item at index {index} does not match the required pattern", new[] { memberName });
-                    }
-                    index++;
-                }
-                break;
-
-            case IEnumerable<double> doubleList:
-                foreach (double item in doubleList)
-                {
-                    if (!_regex.IsMatch(item.ToString()))
-                    {
-                        return new ValidationResult($"Item at index {index} does not match the required pattern", [memberName]);
-                    }
-                    index++;
-                }
-                break;
-
-                // Add more numeric types as needed
+            ValidationResult? result = ValidateEnumerable((IEnumerable<string?>)value, memberName);
+            if (result != null)
+            {
+                return ValidationResult.Success;
+            }
+            return result;
         }
+        else if (value.GetType().IsEnumerable())
+        {
+            ValidationResult? result = ValidateEnumerable(((IEnumerable<object?>)value).Select(x => Convert.ToString(x, CultureInfo.CurrentCulture)), memberName);
+            if (result != null)
+            {
+                return ValidationResult.Success;
+            }
+            return result;
+        }
+        throw new InvalidDataException($"${nameof(ListRegularExpressionAttribute)} can only be used on properties that implement IEnumerable");
+    }
 
-        return ValidationResult.Success;
+    private ValidationResult? ValidateEnumerable(IEnumerable<string?> values, string memberName)
+    {
+        int index = 0;
+        foreach (string? item in values)
+        {
+            if (!string.IsNullOrEmpty(item)) //Null / empty passes automatically
+            {
+                bool pass = false;
+
+                foreach (ValueMatch m in Regex!.EnumerateMatches(item))
+                {
+                    // We are looking for an exact match, not just a search hit. This matches what
+                    // the RegularExpressionValidator control does
+                    if (m.Index == 0 && m.Length == item.Length)
+                    {
+                        pass = true;
+                        break;
+                    }
+                }
+
+                if (!pass)
+                {
+                    return new ValidationResult($"Item at index {index} does not match the required pattern", [memberName]);
+                }
+            }
+            index++;
+        }
+        return null;
+    }
+
+    /// <summary>
+    ///     Override of <see cref="ValidationAttribute.FormatErrorMessage" />
+    /// </summary>
+    /// <remarks>This override provide a formatted error message describing the pattern</remarks>
+    /// <param name="name">The user-visible name to include in the formatted message.</param>
+    /// <returns>The localized message to present to the user</returns>
+    /// <exception cref="InvalidOperationException"> is thrown if the current attribute is ill-formed.</exception>
+    /// <exception cref="ArgumentException"> is thrown if the <see cref="Pattern" /> is not a valid regular expression.</exception>
+    public override string FormatErrorMessage(string name)
+    {
+        SetupRegex();
+
+        return string.Format(CultureInfo.CurrentCulture, ErrorMessageString, name, Pattern);
+    }
+
+    /// <summary>
+    ///     Sets up the <see cref="Regex" /> property from the <see cref="Pattern" /> property.
+    /// </summary>
+    /// <exception cref="ArgumentException"> is thrown if the current <see cref="Pattern" /> cannot be parsed</exception>
+    /// <exception cref="InvalidOperationException"> is thrown if the current attribute is ill-formed.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"> thrown if <see cref="MatchTimeoutInMilliseconds" /> is negative (except -1),
+    /// zero or greater than approximately 24 days </exception>
+    [MemberNotNull(nameof(Regex))]
+    private void SetupRegex()
+    {
+        // Compile the regex for better performance when used multiple times
+        if (Regex == null)
+        {
+            if (string.IsNullOrEmpty(Pattern))
+            {
+                throw new InvalidOperationException("Regex pattern cannot be null or empty");
+            }
+
+            Regex = MatchTimeoutInMilliseconds == -1 ? new Regex(Pattern, RegexOptions.Compiled) : new Regex(Pattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(MatchTimeoutInMilliseconds));
+        }
     }
 }

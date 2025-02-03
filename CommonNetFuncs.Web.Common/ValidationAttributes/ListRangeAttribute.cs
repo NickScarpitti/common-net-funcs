@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.Web.Common.ValidationAttributes;
@@ -238,7 +239,7 @@ public class ListRangeAttribute : ValidationAttribute
             if ((MinimumIsExclusive ? min.CompareTo(convertedValue) >= 0 : min.CompareTo(convertedValue) > 0) ||
                 (MaximumIsExclusive ? max.CompareTo(convertedValue) <= 0 : max.CompareTo(convertedValue) < 0))
             {
-                return new ValidationResult($"Item at index {index} must be between {min} and {max}", [memberName]);
+                return new ValidationResult($"Item at index {index} '{obj.ToNString().UrlEncodeReadable()}' must be between {min} and {max}", [memberName]);
             }
             index++;
         }

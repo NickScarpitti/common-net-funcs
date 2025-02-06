@@ -1090,7 +1090,7 @@ public static partial class ExcelHelper
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <returns>True if excel file was created successfully</returns>
     /// <exception cref="ArgumentException"></exception>
-    public static bool ExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data, bool createTable = false, string tableName = "Data")
+    public static bool ExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
     {
         try
         {
@@ -1104,7 +1104,7 @@ public static partial class ExcelHelper
                 uint x = 1;
                 uint y = 1;
 
-                PropertyInfo[] properties = typeof(T).GetProperties();
+                PropertyInfo[] properties = typeof(T).GetProperties().Where(x => !skipColumnNames.AnyFast() || !skipColumnNames.ContainsInvariant(x.Name)).ToArray();
 
                 // Write headers
                 foreach (PropertyInfo prop in properties)
@@ -1157,7 +1157,7 @@ public static partial class ExcelHelper
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <returns>True if excel file was created successfully</returns>
     /// <exception cref="ArgumentException"></exception>
-    public static bool ExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data, bool createTable = false, string tableName = "Data")
+    public static bool ExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
     {
         try
         {
@@ -1171,9 +1171,17 @@ public static partial class ExcelHelper
                 uint y = 1;
                 uint x = 1;
 
+                List<uint> skipColumns = [];
                 foreach (DataColumn column in data.Columns)
                 {
-                    sheetData.InsertCellValue(x, y, new(column.ColumnName), CellValues.SharedString, headerStyleId);
+                    if (!skipColumnNames.ContainsInvariant(column.ColumnName))
+                    {
+                        sheetData.InsertCellValue(x, y, new(column.ColumnName), CellValues.SharedString, headerStyleId);
+                    }
+                    else
+                    {
+                        skipColumns.Add(x);
+                    }
                     x++;
                 }
 
@@ -1184,7 +1192,7 @@ public static partial class ExcelHelper
                 {
                     foreach (object? value in row.ItemArray)
                     {
-                        if (value != null)
+                        if (value != null && !skipColumns.Contains(x))
                         {
                             sheetData.InsertCellValue(x, y, new(value.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
                         }

@@ -2,6 +2,8 @@
 
 public static class SecurityHeadersStore
 {
+    public const string XrfHeader = "X-XSRF-TOKEN";
+
     public static readonly Dictionary<string, string> SecurityHeaders = new()
     {
         //{ "Cache-Control", "no-cache, no-store" }, //This will prevent browser from caching JS files and is already added to controller responses

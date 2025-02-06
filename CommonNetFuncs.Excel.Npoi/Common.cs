@@ -579,9 +579,11 @@ public static partial class Common
     /// <param name="ws">Worksheet to insert the data into</param>
     /// <param name="createTable">Turn the output into an Excel table</param>
     /// <param name="tableName">Name of the table when createTable is true</param>
+    /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExcelExport<T>(this IEnumerable<T> data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data")
+    public static bool ExcelExport<T>(this IEnumerable<T> data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
     {
+        skipColumnNames ??= [];
         try
         {
             if (data?.Any() == true)
@@ -595,7 +597,7 @@ public static partial class Common
                 Dictionary<int, int> maxColumnWidths = [];
                 List<string> columnNames = [];
 
-                PropertyInfo[] props = typeof(T).GetProperties();
+                PropertyInfo[] props = typeof(T).GetProperties().Where(x => !skipColumnNames.AnyFast() || !skipColumnNames.ContainsInvariant(x.Name)).ToArray();
                 foreach (PropertyInfo prop in props)
                 {
                     //((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
@@ -675,9 +677,11 @@ public static partial class Common
     /// <param name="ws">Worksheet to insert the data into</param>
     /// <param name="createTable">Turn the output into an Excel table</param>
     /// <param name="tableName">Name of the table when createTable is true</param>
+    /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExcelExport(this DataTable data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data")
+    public static bool ExcelExport(this DataTable data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
     {
+        skipColumnNames ??= [];
         try
         {
             if (data?.Rows.Count > 0)
@@ -688,18 +692,27 @@ public static partial class Common
                 int x = 0;
                 int y = 0;
 
+
+                List<int> skipColumns = [];
                 Dictionary<int, int> maxColumnWidths = [];
                 List<string> columnNames = [];
                 foreach (DataColumn column in data.Columns)
                 {
-                    ICell? c = ws.GetCellFromCoordinates(x, y);
-                    if (c != null)
+                    if (!skipColumnNames.ContainsInvariant(column.ColumnName))
                     {
-                        c.SetCellValue(column.ColumnName);
-                        c.CellStyle = headerStyle;
-                        columnNames.Add(column.ColumnName);
+                        ICell? c = ws.GetCellFromCoordinates(x, y);
+                        if (c != null)
+                        {
+                            c.SetCellValue(column.ColumnName);
+                            c.CellStyle = headerStyle;
+                            columnNames.Add(column.ColumnName);
+                        }
+                        maxColumnWidths.Add(x, (column.ColumnName.Length + 6) * 256);
                     }
-                    maxColumnWidths.Add(x, (column.ColumnName.Length + 6) * 256);
+                    else
+                    {
+                        skipColumns.Add(x);
+                    }
                     x++;
                 }
 
@@ -710,7 +723,7 @@ public static partial class Common
                 {
                     foreach (object? value in row.ItemArray)
                     {
-                        if (value != null)
+                        if (value != null && !skipColumns.Contains(x))
                         {
                             ICell? c = ws.GetCellFromCoordinates(x, y);
                             if (c != null)

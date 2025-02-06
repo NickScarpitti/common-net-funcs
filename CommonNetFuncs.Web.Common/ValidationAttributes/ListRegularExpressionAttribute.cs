@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.Web.Common.ValidationAttributes;
@@ -97,7 +98,7 @@ public sealed class ListRegularExpressionAttribute : ValidationAttribute
 
                 if (!pass)
                 {
-                    return new ValidationResult($"Item at index {index} does not match the required pattern", [memberName]);
+                    return new ValidationResult($"Item at index {index} '{item.UrlEncodeReadable()}' does not match the required pattern '{Pattern}'", [memberName]);
                 }
             }
             index++;

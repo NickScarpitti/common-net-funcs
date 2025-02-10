@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -364,7 +363,7 @@ public static class Inspect
         if (value is IEnumerable enumerable && value is not string)
         {
             // Convert collection to list of sorted hashes
-            List<string> itemHashes = new List<string>();
+            List<string> itemHashes = [];
             foreach (object item in enumerable)
             {
                 using MemoryStream itemMs = new();

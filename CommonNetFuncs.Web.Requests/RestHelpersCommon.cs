@@ -250,7 +250,7 @@ public class RestHelpersCommon(HttpClient client, JsonSerializerOptions? jsonSer
             httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
 
             using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
-            result = await HandleResponse<T>(response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions);
+            result = await HandleResponse<T>(response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions).ConfigureAwait(false);
         }
         catch (TaskCanceledException tcex)
         {
@@ -331,7 +331,7 @@ public class RestHelpersCommon(HttpClient client, JsonSerializerOptions? jsonSer
 
         if (enumeratedReader != null)
         {
-            while (await enumeratedReader.MoveNextAsync())
+            while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
             {
                 yield return enumeratedReader!.Current;
             }
@@ -533,7 +533,7 @@ public class RestHelpersCommon(HttpClient client, JsonSerializerOptions? jsonSer
             httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
 
             restObject.Response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
-            restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions, httpHeaders);
+            restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions, httpHeaders).ConfigureAwait(false);
         }
         catch (TaskCanceledException tcex)
         {
@@ -645,9 +645,8 @@ public class RestHelpersCommon(HttpClient client, JsonSerializerOptions? jsonSer
     //}
 }
 
-public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null) : RestHelpersCommon(clientName.IsNullOrWhiteSpace() ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(clientName))
-{
-}
+public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null) : RestHelpersCommon(clientName.IsNullOrWhiteSpace() ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(clientName));
+
 //public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null)
 //{
 //    private readonly IHttpClientFactory httpClientFactory = httpClientFactory;

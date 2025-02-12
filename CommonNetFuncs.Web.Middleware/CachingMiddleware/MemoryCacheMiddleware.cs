@@ -35,12 +35,12 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         if (evictCachedValue || useCache)
         {
             // Generate cache key based on request
-            cacheKey = await GenerateCacheKey(context);
+            cacheKey = await GenerateCacheKey(context).ConfigureAwait(false);
 
             if (evictCachedValue)
             {
                 // Evict the cache entry
-                await EvictCacheAsync(context, cacheKey);
+                await EvictCacheAsync(context, cacheKey).ConfigureAwait(false);
             }
         }
 
@@ -58,17 +58,17 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 
                     if (cachedValue.CompressionType > 0)
                     {
-                        byte[] decompressedData = await cachedValue.Data.Decompress((ECompressionType)cachedValue.CompressionType);
-                        await context.Response.Body.WriteAsync(decompressedData.AsMemory(0, decompressedData.Length));
+                        byte[] decompressedData = await cachedValue.Data.Decompress((ECompressionType)cachedValue.CompressionType).ConfigureAwait(false);
+                        await context.Response.Body.WriteAsync(decompressedData.AsMemory(0, decompressedData.Length)).ConfigureAwait(false);
                     }
                     else
                     {
-                        await context.Response.Body.WriteAsync(cachedValue.Data.AsMemory(0, cachedValue.Data.Length));
+                        await context.Response.Body.WriteAsync(cachedValue.Data.AsMemory(0, cachedValue.Data.Length)).ConfigureAwait(false);
                     }
                 }
                 else
                 {
-                    await context.Response.Body.WriteAsync(null);
+                    await context.Response.Body.WriteAsync(null).ConfigureAwait(false);
                 }
                 return;
             }
@@ -98,7 +98,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 
             try
             {
-                await next(context);
+                await next(context).ConfigureAwait(false);
 
                 // Store the response value in cache if it was successful
                 if (context.Response.StatusCode == StatusCodes.Status200OK)
@@ -106,15 +106,15 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                     byte[] responseData = memoryStream.ToArray();
 
                     // Check if adding this would exceed cache size limit
-                    bool spaceAvailable = await EnsureCacheSpaceAvailableAsync(responseData.Length);
+                    bool spaceAvailable = await EnsureCacheSpaceAvailableAsync(responseData.Length).ConfigureAwait(false);
                     if (spaceAvailable)
                     {
-                        await cacheLock.WaitAsync();
+                        await cacheLock.WaitAsync().ConfigureAwait(false);
                         try
                         {
                             CacheEntry entry = new()
                             {
-                                Data = cacheOptions.UseCompression ? await responseData.Compress(cacheOptions.CompressionType) : responseData,
+                                Data = cacheOptions.UseCompression ? await responseData.Compress(cacheOptions.CompressionType).ConfigureAwait(false) : responseData,
                                 Tags = ExtractCacheTags(context),
                                 Headers = context.Response.Headers.Where(x => cacheOptions.HeadersToCache.ContainsInvariant(x.Key)).ToDictionary(h => h.Key, h => h.Value.ToString()), //Only cache needed headers
                                 CompressionType = cacheOptions.UseCompression ? (short)cacheOptions.CompressionType : (short)0
@@ -154,12 +154,12 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                     }
 
                     memoryStream.Position = 0;
-                    await memoryStream.CopyToAsync(originalBody);
+                    await memoryStream.CopyToAsync(originalBody).ConfigureAwait(false);
                 }
                 else
                 {
                     memoryStream.Position = 0;
-                    await memoryStream.CopyToAsync(originalBody);
+                    await memoryStream.CopyToAsync(originalBody).ConfigureAwait(false);
                 }
             }
             finally
@@ -170,7 +170,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         else
         {
             // Continue with the pipeline
-            await next(context);
+            await next(context).ConfigureAwait(false);
         }
     }
 
@@ -182,7 +182,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 
         if (tagsToEvict?.Length > 0)
         {
-            await cacheLock.WaitAsync();
+            await cacheLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 lock (tagLock)
@@ -219,7 +219,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
             // Single entry eviction
             if (cache.TryGetValue(cacheKey, out CacheEntry? entry))
             {
-                await cacheLock.WaitAsync();
+                await cacheLock.WaitAsync().ConfigureAwait(false);
                 try
                 {
                     cacheMetrics?.SubtractFromSize(entry?.Data.Length ?? 0);
@@ -283,7 +283,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
             return true;
         }
 
-        await cacheLock.WaitAsync();
+        await cacheLock.WaitAsync().ConfigureAwait(false);
         try
         {
             // Double check after acquiring lock
@@ -354,7 +354,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         stringBuilder.Append(context.Request.Path.Value);
 
         // Use StringValues directly instead of converting to string
-        IOrderedEnumerable<KeyValuePair<string, StringValues>> queryValues = context.Request.Query.Where(x => x.Key != cacheOptions.EvictionQueryParam).OrderBy(x => x.Key);
+        IOrderedEnumerable<KeyValuePair<string, StringValues>> queryValues = context.Request.Query.Where(x => !x.Key.StrComp(cacheOptions.EvictionQueryParam)).OrderBy(x => x.Key);
 
         if (queryValues.Any())
         {
@@ -366,7 +366,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         {
             context.Request.EnableBuffering();
             using StreamReader reader = new(context.Request.Body, leaveOpen: true);
-            string body = await reader.ReadToEndAsync();
+            string body = await reader.ReadToEndAsync().ConfigureAwait(false);
             context.Request.Body.Position = 0;
 
             stringBuilder.Append('|').Append(Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(body))));

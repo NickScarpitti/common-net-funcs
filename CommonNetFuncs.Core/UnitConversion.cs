@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using static System.Convert;
+﻿using static System.Convert;
 using static System.Math;
 
 namespace CommonNetFuncs.Core;

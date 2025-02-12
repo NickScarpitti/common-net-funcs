@@ -3,11 +3,12 @@ using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.FastMap;
 
-public static class ExpressionTreeMapper
+public static class FastMapper
 {
     private static readonly ConcurrentDictionary<(Type, Type), Delegate> mapperCache = [];
 
@@ -49,7 +50,7 @@ public static class ExpressionTreeMapper
         {
             foreach (PropertyInfo destProp in destinationProperties.Where(x => x.CanWrite))
             {
-                PropertyInfo? sourceProp = sourceProperties.FirstOrDefault(p => p.Name == destProp.Name && p.CanRead);
+                PropertyInfo? sourceProp = sourceProperties.FirstOrDefault(p => p.Name.StrComp(destProp.Name) && p.CanRead);
                 if (sourceProp != null)
                 {
                     Expression sourceAccess = Expression.Property(sourceParameter, sourceProp);
@@ -67,7 +68,7 @@ public static class ExpressionTreeMapper
                     }
                     else if (!sourceProp.PropertyType.IsValueType && !destProp.PropertyType.IsValueType) //Is a class, so recursively call FastMap
                     {
-                        MethodInfo nestedMapMethod = typeof(ExpressionTreeMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(sourceProp.PropertyType, destProp.PropertyType);
+                        MethodInfo nestedMapMethod = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(sourceProp.PropertyType, destProp.PropertyType);
                         assignExpression = Expression.Assign(destAccess, Expression.Call(null, nestedMapMethod, sourceAccess));
                     }
                     else
@@ -123,16 +124,16 @@ public static class ExpressionTreeMapper
             Expression keyAccess = Expression.Property(kvpParam, keyProp);
             Expression valueAccess = Expression.Property(kvpParam, valueProp);
 
-            MethodInfo mapMethod = typeof(ExpressionTreeMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(sourceValueType, destValueType);
+            MethodInfo mapMethod = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(sourceValueType, destValueType);
             Expression mappedValue = Expression.Call(null, mapMethod, valueAccess);
 
             NewExpression newKvp = Expression.New(destKvpType.GetConstructor([destKeyType, destValueType])!, keyAccess, mappedValue);
             LambdaExpression selectLambda = Expression.Lambda(newKvp, kvpParam);
 
-            MethodInfo selectMethod = typeof(Enumerable).GetMethods().First(m => m.Name == "Select" && m.GetParameters().Length == 2).MakeGenericMethod(kvpType, destKvpType);
+            MethodInfo selectMethod = typeof(Enumerable).GetMethods().First(x => x.Name.StrComp(nameof(Enumerable.Select)) && x.GetParameters().Length == 2).MakeGenericMethod(kvpType, destKvpType);
 
             MethodInfo toDictionaryMethod = typeof(Enumerable).GetMethods()
-                .First(m => m.Name == "ToDictionary" && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)
+                .First(m => m.Name.StrComp(nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)
                 .MakeGenericMethod(destKvpType, destKeyType, destValueType);
 
             ParameterExpression destKvpParam = Expression.Parameter(destKvpType, "destKvp");
@@ -146,8 +147,8 @@ public static class ExpressionTreeMapper
         }
         else
         {
-            MethodInfo mapMethod = typeof(ExpressionTreeMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(sourceElementType, destElementType);
-            MethodInfo selectMethod = typeof(Enumerable).GetMethods().First(m => m.Name == "Select" && m.GetParameters().Length == 2).MakeGenericMethod(sourceElementType, destElementType);
+            MethodInfo mapMethod = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(sourceElementType, destElementType);
+            MethodInfo selectMethod = typeof(Enumerable).GetMethods().First(m => m.Name.StrComp(nameof(Enumerable.Select)) && m.GetParameters().Length == 2).MakeGenericMethod(sourceElementType, destElementType);
 
             ParameterExpression itemParam = Expression.Parameter(sourceElementType, "item");
             MethodCallExpression mapCall = Expression.Call(null, mapMethod, itemParam);
@@ -161,7 +162,7 @@ public static class ExpressionTreeMapper
                 Type genericTypeDef = destType.GetGenericTypeDefinition();
                 if (genericTypeDef == typeof(HashSet<>))
                 {
-                    MethodInfo toHashSetMethod = typeof(Enumerable).GetMethods().First(m => m.Name == "ToHashSet" && m.GetParameters().Length == 1).MakeGenericMethod(destElementType);
+                    MethodInfo toHashSetMethod = typeof(Enumerable).GetMethods().First(m => m.Name.StrComp(nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1).MakeGenericMethod(destElementType);
                     finalExpression = Expression.Call(null, toHashSetMethod, selectCall);
                 }
                 else if (genericTypeDef == typeof(Stack<>))

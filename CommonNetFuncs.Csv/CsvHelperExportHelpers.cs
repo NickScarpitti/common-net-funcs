@@ -25,7 +25,7 @@ public static class CsvHelperExportHelpers
         await using CsvWriter csvWriter = new(streamWriter, CultureInfo.InvariantCulture);
         try
         {
-            await csvWriter.WriteRecordsAsync(dataList);
+            await csvWriter.WriteRecordsAsync(dataList).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -34,11 +34,11 @@ public static class CsvHelperExportHelpers
         finally
         {
             csvWriter.Flush();
-            await csvWriter.DisposeAsync();
+            await csvWriter.DisposeAsync().ConfigureAwait(false);
 
             streamWriter.Flush();
             streamWriter.Close();
-            await streamWriter.DisposeAsync();
+            await streamWriter.DisposeAsync().ConfigureAwait(false);
         }
         return memoryStream;
     }
@@ -59,13 +59,13 @@ public static class CsvHelperExportHelpers
             //Headers
             for (int i = 0; i < dataTable.Columns.Count; i++)
             {
-                await streamWriter.WriteAsync(dataTable.Columns[i]?.ToString() ?? string.Empty);
+                await streamWriter.WriteAsync(dataTable.Columns[i]?.ToString() ?? string.Empty).ConfigureAwait(false);
                 if (i < dataTable.Columns.Count - 1)
                 {
-                    await streamWriter.WriteAsync(",");
+                    await streamWriter.WriteAsync(",").ConfigureAwait(false);
                 }
             }
-            await streamWriter.WriteAsync(streamWriter.NewLine);
+            await streamWriter.WriteAsync(streamWriter.NewLine).ConfigureAwait(false);
             foreach (DataRow row in dataTable.Rows)
             {
                 for (int i = 0; i < dataTable.Columns.Count; i++)
@@ -75,25 +75,25 @@ public static class CsvHelperExportHelpers
                         string? value = row[i].ToString();
                         if (value?.Contains(',') ?? false)
                         {
-                            value = string.Format("\"{0}\"", value);
-                            await streamWriter.WriteAsync(value);
+                            value = $"\"{value}\"";
+                            await streamWriter.WriteAsync(value).ConfigureAwait(false);
                         }
                         else
                         {
-                            await streamWriter.WriteAsync(row[i]?.ToString() ?? string.Empty);
+                            await streamWriter.WriteAsync(row[i]?.ToString() ?? string.Empty).ConfigureAwait(false);
                         }
                     }
                     if (i < dataTable.Columns.Count - 1)
                     {
-                        await streamWriter.WriteAsync(",");
+                        await streamWriter.WriteAsync(",").ConfigureAwait(false);
                     }
                 }
-                await streamWriter.WriteAsync(streamWriter.NewLine);
+                await streamWriter.WriteAsync(streamWriter.NewLine).ConfigureAwait(false);
             }
 
-            await streamWriter.FlushAsync();
+            await streamWriter.FlushAsync().ConfigureAwait(false);
             sourceMemoryStream.Position = 0;
-            await memoryStream.WriteStreamToStream(sourceMemoryStream);
+            await memoryStream.WriteStreamToStream(sourceMemoryStream).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -102,10 +102,10 @@ public static class CsvHelperExportHelpers
         finally
         {
             streamWriter.Close();
-            await streamWriter.DisposeAsync();
+            await streamWriter.DisposeAsync().ConfigureAwait(false);
 
             sourceMemoryStream.Close();
-            await sourceMemoryStream.DisposeAsync();
+            await sourceMemoryStream.DisposeAsync().ConfigureAwait(false);
         }
 
         return memoryStream;

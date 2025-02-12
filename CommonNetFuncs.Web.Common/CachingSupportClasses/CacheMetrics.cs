@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace CommonNetFuncs.Web.Middleware.CachingMiddleware;
+namespace CommonNetFuncs.Web.Common.CachingSupportClasses;
 
 public class CacheMetrics(ConcurrentDictionary<string, HashSet<string>>? cacheTags = null)
 {

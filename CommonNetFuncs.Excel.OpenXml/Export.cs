@@ -5,7 +5,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using static CommonNetFuncs.Core.ExceptionLocation;
-using static CommonNetFuncs.Excel.OpenXml.ExcelHelper;
+using static CommonNetFuncs.Excel.OpenXml.Common;
 
 namespace CommonNetFuncs.Excel.OpenXml;
 
@@ -139,7 +139,7 @@ public static class Export
             string actualSheetName = sheetName;
             while (document.GetWorksheetByName(actualSheetName) != null)
             {
-                actualSheetName = sheetName + $" ({i})"; //Get safe new sheet name
+                actualSheetName = $"{sheetName} ({i})"; //Get safe new sheet name
                 i++;
             }
 

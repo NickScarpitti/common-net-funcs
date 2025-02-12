@@ -1,5 +1,6 @@
 ﻿namespace CommonNetFuncs.Excel.Common;
 
+#pragma warning disable CRR0048 // The type name does not correspond to the file name
 public enum EStyle
 {
     Header,
@@ -471,3 +472,4 @@ public enum EIndexedExcelColors
     Indigo = 62,
     Grey80Percent = 63
 }
+#pragma warning restore CRR0048 // The type name does not correspond to the file name

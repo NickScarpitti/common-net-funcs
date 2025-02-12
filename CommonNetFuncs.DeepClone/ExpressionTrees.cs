@@ -224,9 +224,7 @@ public static class ExpressionTrees
             (
                 Expression.Block
                 (
-#pragma warning disable IDE0301 // Simplify collection initialization
                     Array.Empty<ParameterExpression>(),
-#pragma warning restore IDE0301 // Simplify collection initialization
                     Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable), Expression.Break(endLabelForThisLoop)),
                     loopToEncapsulate,
                     Expression.PostIncrementAssign(indexVariable)
@@ -236,18 +234,14 @@ public static class ExpressionTrees
 
         BinaryExpression lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
         BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
-#pragma warning disable IDE0300 // Simplify collection initialization
         return Expression.Block(new[] { lengthVariable }, lengthAssignment, indexAssignment, newLoop);
-#pragma warning restore IDE0300 // Simplify collection initialization
     }
 
     private static BinaryExpression GetLengthForDimensionExpression(ParameterExpression lengthVariable, ParameterExpression inputParameter, int i)
     {
         MethodInfo? getLengthMethod = typeof(Array).GetMethod("GetLength", BindingFlags.Public | BindingFlags.Instance);
         ConstantExpression dimensionConstant = Expression.Constant(i);
-#pragma warning disable IDE0300 // Simplify collection initialization
         return Expression.Assign(lengthVariable, Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, new[] { dimensionConstant }));
-#pragma warning restore IDE0300 // Simplify collection initialization
     }
 
     private static void FieldsCopyExpressions(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, ParameterExpression boxingVariable, List<Expression> expressions)

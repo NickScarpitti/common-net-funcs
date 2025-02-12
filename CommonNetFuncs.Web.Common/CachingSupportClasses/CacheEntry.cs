@@ -1,4 +1,4 @@
-﻿namespace CommonNetFuncs.Web.Middleware;
+﻿namespace CommonNetFuncs.Web.Common.CachingSupportClasses;
 
 public class CacheEntry
 {

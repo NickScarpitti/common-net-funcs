@@ -40,6 +40,6 @@ public static class DistributedCacheExtensions
         byte[]? val = cache.Get(key);
         if (val == null) return default;
         await using MemoryStream stream = new(val);
-        return await JsonSerializer.DeserializeAsync<T>(stream, serializerOptions);
+        return await JsonSerializer.DeserializeAsync<T>(stream, serializerOptions).ConfigureAwait(false);
     }
 }

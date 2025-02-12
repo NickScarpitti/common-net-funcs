@@ -32,7 +32,7 @@ public class JwtManager : IJwtManager
 	public JwtToken? Authenticate(string? userName, string? password, string actualUserName, string actualPassword, string environment, string key, TimeSpan devTokenLifespan,
         TimeSpan stdTokenLifespan, string? issuer = null, string? email = null, string? audience = null)
     {
-        if (userName.IsNullOrWhiteSpace() || password.IsNullOrWhiteSpace() || userName != actualUserName || password != actualPassword)
+        if (userName.IsNullOrWhiteSpace() || password.IsNullOrWhiteSpace() || !userName.StrComp(actualUserName) || !password.StrComp(actualPassword))
         {
             return null;
         }

@@ -114,7 +114,7 @@ public static class Inspect
             {
                 //This will prevent issues with numbers with varying decimal places from being counted as a difference
                 if (aIsNumeric && bIsNumeric && decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!) ||
-                    !(aIsNumeric && bIsNumeric) && aPropValue.ToString() != bPropValue.ToString())
+                    !(aIsNumeric && bIsNumeric) && !aPropValue.ToString().StrComp(bPropValue.ToString()))
                 {
                     return false;
                 }

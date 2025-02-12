@@ -26,7 +26,7 @@ public static class CacheOptionDefaults
     public const string DefaultCacheQueryParam = "useCache";
     public const string DefaultCacheSecondsQueryParam = "cacheSeconds";
     public const string DefaultCacheMinutesQueryParam = "cacheMinutes";
-    public const string DefaultCacheHoursQueryParam = "useHours";
+    public const string DefaultCacheHoursQueryParam = "cacheHours";
     public const string DefaultCacheTagHeader = "X-Cache-Tags";
     public const string DefaultEvictTagQueryParam = "evictTags";
     public const long DefaultCacheSize = 100 * 1024 * 1024; //100MB

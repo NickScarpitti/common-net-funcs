@@ -4,15 +4,17 @@ using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using NLog;
 using static CommonNetFuncs.Compression.Streams;
 
 namespace CommonNetFuncs.Web.Middleware.CachingMiddleware;
 
-public class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, CacheOptions cacheOptions, CacheMetrics? cacheMetrics) : IDisposable
+internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, CacheOptions cacheOptions, CacheMetrics? cacheMetrics, CacheTracker cacheTracker) : IDisposable
 {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -21,8 +23,8 @@ public class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, Cac
     private readonly CacheOptions cacheOptions = cacheOptions;
     private readonly SemaphoreSlim cacheLock = new(1, 1);
     private readonly Lock tagLock = new();
-    private readonly CacheTracker cacheTracker = new();
     private readonly CacheMetrics? cacheMetrics = cacheMetrics;
+    private readonly CacheTracker cacheTracker = cacheTracker;
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -338,7 +340,7 @@ public class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, Cac
     private HashSet<string> ExtractCacheTags(HttpContext context)
     {
         // Extract from header
-        if (!context.Response.Headers.TryGetValue(cacheOptions.CacheTagHeader, out StringValues headerTags))
+        if (!context.Request.Headers.TryGetValue(cacheOptions.CacheTagHeader, out StringValues headerTags))
         {
             return [];
         }
@@ -392,11 +394,31 @@ public class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, Cac
 // Extension method for easy middleware registration
 public static class MemoryCacheEvictionMiddlewareExtensions
 {
-    public static IApplicationBuilder UseMemoryValueCaching(this IApplicationBuilder builder, CacheOptions? options = null, CacheMetrics? metrics = null)
+    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
+    public static IApplicationBuilder UseMemoryValueCaching(this IApplicationBuilder app, CacheOptions? options = null, bool trackMetrics = false)
     {
-        metrics ??= new();
         options ??= new();
-        return builder.UseMiddleware<MemoryCacheMiddleware>(options, metrics);
+        CacheMetrics? metrics = trackMetrics ? app.ApplicationServices.GetRequiredService<CacheMetrics>() : null;
+        CacheTracker tracker = app.ApplicationServices.GetRequiredService<CacheTracker>();
+        return app.UseMiddleware<MemoryCacheMiddleware>(options, metrics, tracker);
+    }
+
+    public static IServiceCollection MemoryValueCaching(this IServiceCollection services)
+    {
+        // Register IMemoryCache if not already registered
+        if (!services.Any(x => x.ServiceType == typeof(IMemoryCache)))
+        {
+            services.AddMemoryCache();
+        }
+
+        // Register CacheTracker as singleton
+        services.AddSingleton<CacheTracker>();
+
+        // Register CacheMetrics as singleton if using metrics
+        services.AddSingleton<CacheMetrics>();
+
+        return services;
     }
 
     public static IEndpointRouteBuilder MapCacheMetrics(this IEndpointRouteBuilder endpoints)
@@ -405,30 +427,148 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         {
             try
             {
-                var response = new
+                return Results.Ok(
+                new
                 {
-                    hits = metrics.CacheHits,
-                    misses = metrics.CacheMisses,
-                    hitRatio = metrics.CacheHits + metrics.CacheMisses == 0
+                    Hits = metrics.CacheHits,
+                    Misses = metrics.CacheMisses,
+                    HitRatio = metrics.CacheHits + metrics.CacheMisses == 0
                         ? 0
                         : (double)metrics.CacheHits / (metrics.CacheHits + metrics.CacheMisses),
-                    currentSizeBytes = metrics.CurrentCacheSize,
-                    currentSizeMB = Math.Round((double)metrics.CurrentCacheSize / (1024 * 1024), 2),
-                    tagCount = metrics.CacheTags.Count,
-                    tags = metrics.CacheTags.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count)
-                };
-
-                return Results.Ok(response);
+                    CurrentSizeBytes = metrics.CurrentCacheSize,
+                    CurrentSizeMB = Math.Round((double)metrics.CurrentCacheSize / (1024 * 1024), 2),
+                    TagCount = metrics.CacheTags.Count,
+                    Tags = metrics.CacheTags.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count)
+                });
             }
             catch (Exception ex)
             {
-                return Results.Problem(
-                    detail: ex.Message,
-                    statusCode: StatusCodes.Status500InternalServerError,
-                    title: "Error retrieving cache metrics");
+                return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving cache metrics");
             }
         })
         .WithName("GetMemoryCacheMetrics");
+
+        return endpoints;
+    }
+
+    //TODO:: Finish this up
+    public static IEndpointRouteBuilder MapEvictionEndpoints(this IEndpointRouteBuilder endpoints, string? authorizationPolicyName = null)
+    {
+        // New endpoint for evicting by key
+        RouteHandlerBuilder evictByKeyEndpoint = endpoints.MapPost("/memorycache/evict/key/{key}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string key) =>
+        {
+            try
+            {
+                //using StreamReader reader = new(context.Request.Body);
+                //string key = await reader.ReadToEndAsync();
+
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    return Results.BadRequest("Cache key is required");
+                }
+
+                if (cache.TryGetValue(key, out CacheEntry? entry))
+                {
+                    // Remove from cache
+                    cache.Remove(key);
+
+                    // Update metrics
+                    metrics?.SubtractFromSize(entry?.Data.Length ?? 0);
+
+                    // Remove from tags
+                    foreach (string tag in entry?.Tags ?? [])
+                    {
+                        if (tracker.CacheTags.TryGetValue(tag, out HashSet<string>? keys))
+                        {
+                            keys.Remove(key);
+                            if (keys.Count == 0)
+                            {
+                                tracker.CacheTags.TryRemove(tag, out _);
+                                metrics?.CacheTags.TryRemove(tag, out _);
+                            }
+                        }
+                    }
+
+                    logger.Info("Cache entry evicted for key: {key}", key);
+                    return Results.Ok(1);
+                }
+                logger.Info("No cache entry found for key: {key}", key);
+                return Results.Ok(0);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Error evicting cache entry by key");
+                return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error evicting cache entry");
+            }
+        })
+        .WithName("EvictCacheByKey")
+        .WithDisplayName("Evict Cache Entry by Key");
+
+        // New endpoint for evicting by tag
+        RouteHandlerBuilder evictByTagEndpoint = endpoints.MapPost("/memorycache/evict/tag/{tag}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string tag) =>
+        {
+            try
+            {
+                //using StreamReader reader = new(context.Request.Body);
+                //string tag = await reader.ReadToEndAsync();
+
+                if (string.IsNullOrWhiteSpace(tag))
+                {
+                    return Results.BadRequest("Cache tag is required");
+                }
+
+                if (tracker.CacheTags.TryGetValue(tag, out HashSet<string>? keysToEvict))
+                {
+                    int evictedCount = 0;
+
+                    foreach (string keyToEvict in keysToEvict.ToArray()) // Create a copy to avoid modification during enumeration
+                    {
+                        if (cache.TryGetValue(keyToEvict, out CacheEntry? entry))
+                        {
+                            // Remove from cache
+                            cache.Remove(keyToEvict);
+
+                            // Update metrics
+                            metrics?.SubtractFromSize(entry?.Data.Length ?? 0);
+
+                            // Remove from all associated tags
+                            foreach (string entryTag in entry?.Tags ?? [])
+                            {
+                                if (tracker.CacheTags.TryGetValue(entryTag, out HashSet<string>? tagKeys))
+                                {
+                                    tagKeys.Remove(keyToEvict);
+                                    if (tagKeys.Count == 0)
+                                    {
+                                        tracker.CacheTags.TryRemove(entryTag, out _);
+                                        metrics?.CacheTags.TryRemove(entryTag, out _);
+                                    }
+                                }
+                            }
+                            evictedCount++;
+                        }
+                    }
+
+                    logger.Info("Evicted {count} cache entries with tag: {tag}", evictedCount, tag);
+                    return Results.Ok(evictedCount);
+                }
+
+                logger.Info("No cache entries found with tag: {tag}", tag);
+                return Results.Ok(0);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Error evicting cache entries by tag");
+                return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error evicting cache entries");
+            }
+        })
+        .WithName("EvictCacheByTag")
+        .WithDisplayName("Evict Cache Entries by Tag");
+
+        if (!authorizationPolicyName.IsNullOrWhiteSpace())
+        {
+            evictByKeyEndpoint.RequireAuthorization(authorizationPolicyName);
+            evictByTagEndpoint.RequireAuthorization(authorizationPolicyName);
+        }
 
         return endpoints;
     }

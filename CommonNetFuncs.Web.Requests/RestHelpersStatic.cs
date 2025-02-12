@@ -198,7 +198,7 @@ public static class RestHelpersStatic
                     }
                     else
                     {
-                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 1 ? outputStream : responseStream, JsonSerializerOptions ?? defaultJsonSerializerOptions);
+                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 0 ? outputStream : responseStream, JsonSerializerOptions ?? defaultJsonSerializerOptions);
                     }
                 }
                 else if (contentType.ContainsInvariant("text")) //String encoding (error usually)

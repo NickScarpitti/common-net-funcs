@@ -1,4 +1,5 @@
-﻿using static System.Convert;
+﻿using System.Numerics;
+using static System.Convert;
 using static System.Math;
 
 namespace CommonNetFuncs.Core;
@@ -141,6 +142,16 @@ public static class UnitConversion
     }
 
     /// <summary>
+    /// Convert Kb to bytes
+    /// </summary>
+    /// <param name="kb">Number of Kb to convert to bytes</param>
+    /// <returns>Decimal representation of the number of Kb in bytes</returns>
+    public static long KbToBytes(this decimal kb)
+    {
+        return (long)(kb * 1024L);
+    }
+
+    /// <summary>
     /// Convert bytes to Mb
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Mb</param>
@@ -158,6 +169,16 @@ public static class UnitConversion
     public static decimal BytesToMb(this long bytes, int decimalPlaces = 1)
     {
         return Round(bytes / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Mb to bytes
+    /// </summary>
+    /// <param name="mb">Number of Mb to convert to bytes</param>
+    /// <returns>Decimal representation of the number of Mb in bytes</returns>
+    public static long MbToBytes(this decimal mb)
+    {
+        return (long)(mb * 1048576L);
     }
 
     /// <summary>
@@ -181,6 +202,16 @@ public static class UnitConversion
     }
 
     /// <summary>
+    /// Convert Gb to bytes
+    /// </summary>
+    /// <param name="gb">Number of Gb to convert to bytes</param>
+    /// <returns>Decimal representation of the number of Gb in bytes</returns>
+    public static long GbToBytes(this decimal gb)
+    {
+        return (long)(gb * 1073741824L);
+    }
+
+    /// <summary>
     /// Convert bytes to Tb
     /// </summary>
     /// <param name="bytes">Number of bytes to convert to Tb</param>
@@ -201,6 +232,16 @@ public static class UnitConversion
     }
 
     /// <summary>
+    /// Convert bytes to Tb
+    /// </summary>
+    /// <param name="tb">Number of Tb to convert to bytes</param>
+    /// <returns>Decimal representation of the number of Tb in bytes</returns>
+    public static long TbToBytes(this decimal tb)
+    {
+        return (long)(tb * 1099511627776L);
+    }
+
+    /// <summary>
     /// Convert Kb to Mb
     /// </summary>
     /// <param name="kb">Number of Kb to convert to Mb</param>
@@ -208,6 +249,16 @@ public static class UnitConversion
     public static decimal KbToMb(this decimal kb, int decimalPlaces = 1)
     {
         return Round(kb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Mb to Kb
+    /// </summary>
+    /// <param name="mb">Number of Mb to convert to Kb</param>
+    /// <returns>Decimal representation of the number of Mb in Kb</returns>
+    public static decimal MbToKb(this decimal mb, int decimalPlaces = 1)
+    {
+        return Round(mb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -221,6 +272,16 @@ public static class UnitConversion
     }
 
     /// <summary>
+    /// Convert Gb to Kb
+    /// </summary>
+    /// <param name="gb">Number of Gb to convert to Kb</param>
+    /// <returns>Decimal representation of the number of Gb in Kb</returns>
+    public static decimal GbToKb(this decimal gb, int decimalPlaces = 1)
+    {
+        return Round(gb / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
     /// Convert Kb to Tb
     /// </summary>
     /// <param name="kb">Number of Kb to convert to Tb</param>
@@ -231,13 +292,33 @@ public static class UnitConversion
     }
 
     /// <summary>
+    /// Convert Tb to Kb
+    /// </summary>
+    /// <param name="tb">Number of Tb to convert to Kb</param>
+    /// <returns>Decimal representation of the number of Tb in Kb</returns>
+    public static decimal TbToKb(this decimal tb, int decimalPlaces = 1)
+    {
+        return Round(tb * 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
     /// Convert Mb to Gb
     /// </summary>
-    /// <param name="mb">Number of Mb to convert to Gb</param>
+    /// <param name="gb">Number of Mb to convert to Gb</param>
     /// <returns>Decimal representation of the number of Mb in Gb</returns>
-    public static decimal MbToGb(this decimal mb, int decimalPlaces = 1)
+    public static decimal MbToGb(this decimal gb, int decimalPlaces = 1)
     {
-        return Round(mb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
+        return Round(gb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Gb to Mb
+    /// </summary>
+    /// <param name="gb">Number of Gb to convert to Mb</param>
+    /// <returns>Decimal representation of the number of Gb in Mb</returns>
+    public static decimal GbToMb(this decimal gb, int decimalPlaces = 1)
+    {
+        return Round(gb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -251,13 +332,33 @@ public static class UnitConversion
     }
 
     /// <summary>
-    /// Convert Mb to Tb
+    /// Convert Tb to Mb
+    /// </summary>
+    /// <param name="tb">Number of Tb to convert to Mb</param>
+    /// <returns>Decimal representation of the number of Tb in Mb</returns>
+    public static decimal TbToMb(this decimal tb, int decimalPlaces = 1)
+    {
+        return Round(tb * 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Gb to Tb
     /// </summary>
     /// <param name="gb">Number of Gb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Gb in Tb</returns>
     public static decimal GbToTb(this decimal gb, int decimalPlaces = 1)
     {
         return Round(gb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// Convert Tb to Gb
+    /// </summary>
+    /// <param name="tb">Number of Tb to convert to Gb</param>
+    /// <returns>Decimal representation of the number of Tb in Gb</returns>
+    public static decimal TbToGb(this decimal tb, int decimalPlaces = 1)
+    {
+        return Round(tb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>

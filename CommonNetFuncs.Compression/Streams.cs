@@ -4,12 +4,12 @@ namespace CommonNetFuncs.Compression;
 
 public static class Streams
 {
-    public enum ECompressionType
+    public enum ECompressionType : short
     {
-        Brotli,
-        Gzip,
-        Deflate,
-        ZLib
+        Brotli = 1,
+        Gzip = 2,
+        Deflate = 3,
+        ZLib = 4
     }
 
     /// <summary>
@@ -166,5 +166,73 @@ public static class Streams
                 break;
         }
         decompressedStream.Position = 0;
+    }
+
+    public static async Task<byte[]> Compress(this byte[] data, ECompressionType compressionType)
+    {
+        await using MemoryStream memoryStream = new();
+        switch (compressionType)
+        {
+            case ECompressionType.Brotli:
+                await using (BrotliStream brotliStream = new(memoryStream, CompressionLevel.Optimal))
+                {
+                    await brotliStream.WriteAsync(data);
+                }
+                break;
+            case ECompressionType.Gzip:
+                await using (GZipStream gzipStream = new(memoryStream, CompressionLevel.Optimal))
+                {
+                    await gzipStream.WriteAsync(data);
+                }
+                break;
+            case ECompressionType.Deflate:
+                await using (DeflateStream deflateStream = new(memoryStream, CompressionLevel.Optimal))
+                {
+                    await deflateStream.WriteAsync(data);
+                }
+                break;
+            case ECompressionType.ZLib:
+                await using (ZLibStream zlibStream = new(memoryStream, CompressionLevel.Optimal))
+                {
+                    await zlibStream.WriteAsync(data);
+                }
+                break;
+        }
+        return memoryStream.ToArray();
+    }
+
+    public static async Task<byte[]> Decompress(this byte[] compressedData, ECompressionType compressionType)
+    {
+        await using MemoryStream compressedStream = new(compressedData);
+        await using MemoryStream decompressStream = new();
+        switch (compressionType)
+        {
+            case ECompressionType.Brotli:
+                await using (BrotliStream brotliStream = new(compressedStream, CompressionLevel.Optimal))
+                {
+                    await brotliStream.CopyToAsync(decompressStream);
+                }
+                break;
+            case ECompressionType.Gzip:
+                await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress))
+                {
+                    await gzipStream.CopyToAsync(decompressStream);
+                }
+                break;
+            case ECompressionType.Deflate:
+                await using (DeflateStream deflateStream = new(compressedStream, CompressionLevel.Optimal))
+                {
+                    await deflateStream.CopyToAsync(decompressStream);
+                }
+                break;
+            case ECompressionType.ZLib:
+                await using (ZLibStream zlibStream = new(compressedStream, CompressionLevel.Optimal))
+                {
+                    await zlibStream.CopyToAsync(decompressStream);
+                }
+                break;
+        }
+
+        return decompressStream.ToArray();
     }
 }

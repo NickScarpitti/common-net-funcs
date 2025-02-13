@@ -3,6 +3,76 @@
 <Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Async.ObjectFill(System.Data.DataTable,System.Threading.Tasks.Task{System.Data.DataTable})</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Async.ObjectFill(System.IO.MemoryStream,System.Threading.Tasks.Task{System.IO.MemoryStream})</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Async.ObjectFill``1(``0,System.Threading.Tasks.Task{``0})</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Async.ObjectFill``1(System.Collections.Concurrent.ConcurrentBag{``0},System.Threading.Tasks.Task{System.Collections.Concurrent.ConcurrentBag{``0}})</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Async.ObjectFill``1(System.Collections.Concurrent.ConcurrentBag{``0},System.Threading.Tasks.Task{System.Collections.Generic.IEnumerable{``0}})</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Async.ObjectFill``1(System.Collections.Concurrent.ConcurrentBag{``0},System.Threading.Tasks.Task{System.Collections.Generic.List{``0}})</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Async.ObjectFill``1(System.Collections.Generic.List{``0},System.Threading.Tasks.Task{System.Collections.Generic.IEnumerable{``0}})</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Async.ObjectFill``1(System.Collections.Generic.List{``0},System.Threading.Tasks.Task{System.Collections.Generic.List{``0}})</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Async.ObjectUpdate``2(``0,System.String,System.Threading.Tasks.Task{``1})</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:CommonNetFuncs.Core.Random.GenerateRandomString(System.Int32,System.Int32,System.Int32,System.Char[])</Target>
+    <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
+    <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:CommonNetFuncs.Core.Streams.ReadStreamAsync(System.IO.Stream,System.Int32)</Target>
     <Left>lib/net9.0/CommonNetFuncs.Core.dll</Left>
     <Right>lib/net9.0/CommonNetFuncs.Core.dll</Right>

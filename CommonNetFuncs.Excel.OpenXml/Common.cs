@@ -12,9 +12,10 @@ using SixLabors.ImageSharp;
 using A = DocumentFormat.OpenXml.Drawing;
 using Color = DocumentFormat.OpenXml.Spreadsheet.Color; //Aliased to prevent issue with DocumentFormat.OpenXml.Spreadsheet.Color
 using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
+
 namespace CommonNetFuncs.Excel.OpenXml;
 
-public static partial class ExcelHelper
+public static partial class Common
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -299,7 +300,7 @@ public static partial class ExcelHelper
     {
         try
         {
-            if (startCell.Parent is Row row && row.Parent is SheetData sheetData && startCell.CellReference != null)
+            if (startCell.Parent is Row row && row.Parent is SheetData && startCell.CellReference != null)
             {
                 Worksheet worksheet = startCell.GetWorksheetFromCell();
                 CellReference startCellReference = new(startCell.CellReference!);
@@ -1090,7 +1091,7 @@ public static partial class ExcelHelper
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <returns>True if excel file was created successfully</returns>
     /// <exception cref="ArgumentException"></exception>
-    public static bool ExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data, bool createTable = false, string tableName = "Data")
+    public static bool ExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
     {
         try
         {
@@ -1104,7 +1105,7 @@ public static partial class ExcelHelper
                 uint x = 1;
                 uint y = 1;
 
-                PropertyInfo[] properties = typeof(T).GetProperties();
+                PropertyInfo[] properties = typeof(T).GetProperties().Where(x => !skipColumnNames.AnyFast() || !skipColumnNames.ContainsInvariant(x.Name)).ToArray();
 
                 // Write headers
                 foreach (PropertyInfo prop in properties)
@@ -1157,7 +1158,7 @@ public static partial class ExcelHelper
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <returns>True if excel file was created successfully</returns>
     /// <exception cref="ArgumentException"></exception>
-    public static bool ExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data, bool createTable = false, string tableName = "Data")
+    public static bool ExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
     {
         try
         {
@@ -1171,9 +1172,17 @@ public static partial class ExcelHelper
                 uint y = 1;
                 uint x = 1;
 
+                List<uint> skipColumns = [];
                 foreach (DataColumn column in data.Columns)
                 {
-                    sheetData.InsertCellValue(x, y, new(column.ColumnName), CellValues.SharedString, headerStyleId);
+                    if (!skipColumnNames.ContainsInvariant(column.ColumnName))
+                    {
+                        sheetData.InsertCellValue(x, y, new(column.ColumnName), CellValues.SharedString, headerStyleId);
+                    }
+                    else
+                    {
+                        skipColumns.Add(x);
+                    }
                     x++;
                 }
 
@@ -1184,7 +1193,7 @@ public static partial class ExcelHelper
                 {
                     foreach (object? value in row.ItemArray)
                     {
-                        if (value != null)
+                        if (value != null && !skipColumns.Contains(x))
                         {
                             sheetData.InsertCellValue(x, y, new(value.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
                         }
@@ -1250,7 +1259,7 @@ public static partial class ExcelHelper
             }
 
             // Check if the cell exists, create if not
-            cell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value == cellRef);
+            cell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value.StrComp(cellRef) ?? false);
             if (cell == null)
             {
                 // Cells must be in sequential order according to CellReference. Determine where to insert the new cell.
@@ -1383,13 +1392,11 @@ public static partial class ExcelHelper
         SharedStringTablePart shareStringTablePart = workbook.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault() ?? workbook.WorkbookPart?.AddNewPart<SharedStringTablePart>() ?? throw new InvalidOperationException("The WorkbookPart is missing.");
         shareStringTablePart.SharedStringTable ??= new();
 
-        int index = shareStringTablePart.SharedStringTable.Elements<SharedStringItem>().Select(x => x.InnerText).IndexOf(text);
-
         int i = 0;
         // Iterate through all the items in the SharedStringTable. If the text already exists, return its index.
         foreach (SharedStringItem item in shareStringTablePart.SharedStringTable.Elements<SharedStringItem>())
         {
-            if (item.InnerText == text) return i;
+            if (item.InnerText.StrComp(text)) return i;
             i++;
         }
 
@@ -1441,7 +1448,7 @@ public static partial class ExcelHelper
             tableColumns.Append(new TableColumn { Id = i + 1, Name = columnName });
         }
 
-        string tableRef = new CellReference(startCol, startRow) + ":" + new CellReference(endColumn, endRow);
+        string tableRef = $"{new CellReference(startCol, startRow)}:{new CellReference(endColumn, endRow)}";
         tableDefinitionPart.Table = new()
         {
             Id = tableParts.Count,
@@ -1476,7 +1483,7 @@ public static partial class ExcelHelper
     /// <param name="endColumn">Last column of auto filtered range</param>
     public static void SetAutoFilter(Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn)
     {
-        worksheet.Append(new AutoFilter() { Reference = new CellReference(startColumn, startRow) + ":" + new CellReference(endColumn, endRow) });
+        worksheet.Append(new AutoFilter() { Reference = $"{new CellReference(startColumn, startRow)}:{new CellReference(endColumn, endRow)}" });
     }
 
     /// <summary>
@@ -1759,7 +1766,7 @@ public static partial class ExcelHelper
 
         Xdr.Picture picture = new();
         Xdr.NonVisualPictureProperties nvPicPr = new(
-            new Xdr.NonVisualDrawingProperties { Id = imageId, Name = "Picture " + imageId },
+            new Xdr.NonVisualDrawingProperties { Id = imageId, Name = $"Picture {imageId}" },
             new Xdr.NonVisualPictureDrawingProperties(new A.PictureLocks { NoChangeAspect = true })
         );
 
@@ -1981,7 +1988,7 @@ public static partial class ExcelHelper
         if (cell.DataType != null)
         {
             string cellDataType = cell.DataType.Value.ToString();
-            if (cellDataType == CellValues.SharedString.ToString())
+            if (cellDataType.StrComp(CellValues.SharedString.ToString()))
             {
                 Worksheet worksheet = cell.GetWorksheetFromCell();
                 Workbook workbook = worksheet.GetWorkbookFromWorksheet();
@@ -1991,13 +1998,13 @@ public static partial class ExcelHelper
                     return stringTable.SharedStringTable.ElementAt(int.Parse(cell.InnerText)).InnerText;
                 }
             }
-            else if (cellDataType == CellValues.Boolean.ToString())
+            else if (cellDataType.StrComp(CellValues.Boolean.ToString()))
             {
-                return cell.InnerText == "1" ? "TRUE" : "FALSE";
+                return cell.InnerText.StrComp("1") ? "TRUE" : "FALSE";
             }
-            else if (cellDataType == CellValues.Error.ToString())
+            else if (cellDataType.StrComp(CellValues.Error.ToString()))
             {
-                return "ERROR: " + cell.InnerText;
+                return $"ERROR: {cell.InnerText}";
             }
             else // (cellDataType == CellValues.Number.ToString() || cellDataType == CellValues.String.ToString() || cellDataType == CellValues.InlineString.ToString())
             {
@@ -2391,7 +2398,7 @@ public static partial class ExcelHelper
             while (number >= 0)
             {
                 int remainder = number % 26;
-                columnName = Convert.ToChar('A' + remainder) + columnName;
+                columnName = $"{Convert.ToChar('A' + remainder)}{columnName}";
                 number = (number / 26) - 1;
                 if (number < 0) break;
             }

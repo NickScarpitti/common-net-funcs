@@ -17,7 +17,7 @@ public static class Async
     {
         try
         {
-            if (semaphore != null) { await semaphore.WaitAsync(); }
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
             if (obj != null)
             {
                 T? resultObject = await task;
@@ -50,22 +50,19 @@ public static class Async
     {
         try
         {
-            if (semaphore != null) { await semaphore.WaitAsync(); }
-            if (obj != null)
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
+            List<T>? resultObject = await task;
+            if (resultObject != null)
             {
-                List<T>? resultObject = await task;
-                if (resultObject != null)
+                if (obj != null)
                 {
-                    if(obj != null)
-                    {
-                        obj.AddRange(resultObject);
-                    }
-                    else
-                    {
-                        obj = new(resultObject);
-                    }
-                    resultObject = null;
+                    obj.AddRange(resultObject);
                 }
+                else
+                {
+                    obj = new(resultObject);
+                }
+                resultObject = null;
             }
         }
         catch (Exception ex)
@@ -87,22 +84,19 @@ public static class Async
     {
         try
         {
-            if (semaphore != null) { await semaphore.WaitAsync(); }
-            if (obj != null)
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
+            IEnumerable<T>? resultObject = await task;
+            if (resultObject != null)
             {
-                IEnumerable<T>? resultObject = await task;
-                if (resultObject != null)
+                if (obj != null)
                 {
-                    if (obj != null)
-                    {
-                        obj.AddRange(resultObject);
-                    }
-                    else
-                    {
-                        obj = new(resultObject);
-                    }
-                    resultObject = null;
+                    obj.AddRange(resultObject);
                 }
+                else
+                {
+                    obj = new(resultObject);
+                }
+                resultObject = null;
             }
         }
         catch (Exception ex)
@@ -124,22 +118,19 @@ public static class Async
     {
         try
         {
-            if (semaphore != null) { await semaphore.WaitAsync(); }
-            if (obj != null)
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
+            IEnumerable<T>? resultObject = await task;
+            if (resultObject != null)
             {
-                IEnumerable<T>? resultObject = await task;
-                if (resultObject != null)
+                if (obj != null)
                 {
-                    if (obj != null)
-                    {
-                        obj.AddRangeParallel(resultObject);
-                    }
-                    else
-                    {
-                        obj = new(resultObject);
-                    }
-                    resultObject = null;
+                    obj.AddRangeParallel(resultObject);
                 }
+                else
+                {
+                    obj = new(resultObject);
+                }
+                resultObject = null;
             }
         }
         catch (Exception ex)
@@ -161,22 +152,19 @@ public static class Async
     {
         try
         {
-            if (semaphore != null) { await semaphore.WaitAsync(); }
-            if (obj != null)
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
+            ConcurrentBag<T>? resultObject = await task;
+            if (resultObject != null)
             {
-                ConcurrentBag<T>? resultObject = await task;
-                if (resultObject != null)
+                if (obj != null)
                 {
-                    if (obj != null)
-                    {
-                        obj.AddRangeParallel(resultObject);
-                    }
-                    else
-                    {
-                        obj = new(resultObject);
-                    }
-                    resultObject = null;
+                    obj.AddRangeParallel(resultObject);
                 }
+                else
+                {
+                    obj = new(resultObject);
+                }
+                resultObject = null;
             }
         }
         catch (Exception ex)
@@ -198,22 +186,19 @@ public static class Async
     {
         try
         {
-            if (semaphore != null) { await semaphore.WaitAsync(); }
-            if (obj != null)
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
+            List<T>? resultObject = await task;
+            if (resultObject != null)
             {
-                List<T>? resultObject = await task;
-                if (resultObject != null)
+                if (obj != null)
                 {
-                    if (obj != null)
-                    {
-                        obj.AddRangeParallel(resultObject);
-                    }
-                    else
-                    {
-                        obj = new(resultObject);
-                    }
-                    resultObject = null;
+                    obj.AddRangeParallel(resultObject);
                 }
+                else
+                {
+                    obj = new(resultObject);
+                }
+                resultObject = null;
             }
         }
         catch (Exception ex)
@@ -235,7 +220,7 @@ public static class Async
     {
         try
         {
-            if (semaphore != null) { await semaphore.WaitAsync(); }
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
             using DataTable resultTable = await task;
             if (resultTable != null)
             {
@@ -262,7 +247,7 @@ public static class Async
     {
         try
         {
-            if (semaphore != null) { await semaphore.WaitAsync(); }
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
             await using MemoryStream resultObject = await task;
             resultObject?.WriteTo(ms);
         }
@@ -286,7 +271,7 @@ public static class Async
     {
         try
         {
-            if (semaphore != null) { await semaphore.WaitAsync(); }
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
             PropertyInfo[] props = typeof(T).GetProperties();
             if (props.Length > 0)
             {

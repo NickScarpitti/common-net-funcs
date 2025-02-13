@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Web.Common.ValidationAttributes
 {
@@ -44,7 +45,7 @@ namespace CommonNetFuncs.Web.Common.ValidationAttributes
                 int length = item.Length;
                 if (length < MinimumLength || length > MaximumLength)
                 {
-                    return new ValidationResult($"Item at index {index} must be between {MinimumLength} and {MaximumLength} characters", [validationContext.MemberName ?? string.Empty]);
+                    return new ValidationResult($"Item at index {index} '{item.UrlEncodeReadable()}' must be between {MinimumLength} and {MaximumLength} characters", [validationContext.MemberName ?? string.Empty]);
                 }
                 index++;
             }

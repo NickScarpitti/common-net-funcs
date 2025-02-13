@@ -61,7 +61,7 @@ public static partial class HtmlEmailBuilder
         if (text != null)
         {
             text = HtmlEncode(text);
-            text = text.Replace("\r\n", "\r").Replace("\n", "\r").Replace("\r", "<br>").Replace("\t", "&nbsp&nbsp&nbsp");
+            text = text.Replace(Environment.NewLine, "\r").Replace("\n", "\r").Replace("\r", "<br>").Replace("\t", "&nbsp&nbsp&nbsp");
         }
         return text ?? string.Empty;
     }

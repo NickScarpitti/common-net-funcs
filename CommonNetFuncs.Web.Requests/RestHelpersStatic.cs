@@ -38,22 +38,22 @@ public static class RestHelpersStatic
             string? contentType = response.Content.Headers.ContentType?.ToString();
             string? contentEncoding = response.Content.Headers.ContentEncoding?.ToString();
 
-            await using Stream responseStream = await response.Content.ReadAsStreamAsync();
+            await using Stream responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
-                result = await ReadResponseStream<T>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions);
+                result = await ReadResponseStream<T>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions).ConfigureAwait(false);
             }
             else
             {
                 string? errorMessage = null;
                 if (contentType.ContainsInvariant(ContentTypes.JsonProblem))
                 {
-                    ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions) ?? new();
+                    ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions).ConfigureAwait(false) ?? new();
                     errorMessage = $"({problemDetails.Status}) {problemDetails.Title}\n\t\t{string.Join("\n\t\t", problemDetails.Errors.Select(x => $"{x.Key}:\n\t\t\t{string.Join("\n\t\t\t", x.Value)}"))}";
                 }
                 else
                 {
-                    errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, useNewtonsoftDeserializer, msgPackOptions);
+                    errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, useNewtonsoftDeserializer, msgPackOptions).ConfigureAwait(false);
                 }
                 logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(httpHeaders != null ? $"Headers: {string.Join(", ", httpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
             }
@@ -86,7 +86,7 @@ public static class RestHelpersStatic
 
                 response.Content.ReadFromJsonAsAsyncEnumerable<T>();
 
-                responseStream = await response.Content.ReadAsStreamAsync();
+                responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     enumeratedReader = ReadResponseStreamAsync<T?>(responseStream, contentType, contentEncoding).GetAsyncEnumerator();
@@ -96,12 +96,12 @@ public static class RestHelpersStatic
                     string? errorMessage = null;
                     if (contentType.ContainsInvariant(ContentTypes.JsonProblem))
                     {
-                        ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, false) ?? new();
+                        ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, false).ConfigureAwait(false) ?? new();
                         errorMessage = $"({problemDetails.Status}) {problemDetails.Title}\n\t\t{string.Join("\n\t\t", problemDetails.Errors.Select(x => $"{x.Key}:\n\t\t\t{string.Join("\n\t\t\t", x.Value)}"))}";
                     }
                     else
                     {
-                        errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, false);
+                        errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, false).ConfigureAwait(false);
                     }
                     logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(httpHeaders != null ? $"Headers: {string.Join(", ", httpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
                 }
@@ -113,7 +113,7 @@ public static class RestHelpersStatic
 
             if (enumeratedReader != null)
             {
-                while (await enumeratedReader.MoveNextAsync())
+                while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
                 {
                     yield return enumeratedReader!.Current;
                 }
@@ -150,11 +150,11 @@ public static class RestHelpersStatic
                         {
                             messagePackOptions = messagePackOptions.WithSecurity(MessagePackSecurity.UntrustedData);
                         }
-                        result = await MessagePackSerializer.DeserializeAsync<T>(responseStream, messagePackOptions);
+                        result = await MessagePackSerializer.DeserializeAsync<T>(responseStream, messagePackOptions).ConfigureAwait(false);
                     }
                     else
                     {
-                        result = await MessagePackSerializer.DeserializeAsync<T>(responseStream);
+                        result = await MessagePackSerializer.DeserializeAsync<T>(responseStream).ConfigureAwait(false);
                     }
                 }
                 else if (contentType.StrEq(ContentTypes.MemPack)) //NOTE:: Will fail if trying to deserialize null value, ensure NoContent is sent back for nulls
@@ -162,18 +162,18 @@ public static class RestHelpersStatic
                     if (contentEncoding.StrEq(EncodingTypes.GZip))
                     {
                         await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Gzip);
+                        await responseStream.DecompressStream(outputStream, ECompressionType.Gzip).ConfigureAwait(false);
                         result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
                     }
                     else if (contentEncoding.StrEq(EncodingTypes.Brotli))
                     {
                         BrotliDecompressor decompressor = new();
-                        ReadOnlySequence<byte> decompressedBuffer = decompressor.Decompress(new ReadOnlySpan<byte>(await responseStream.ReadStreamAsync()));
+                        ReadOnlySequence<byte> decompressedBuffer = decompressor.Decompress(new ReadOnlySpan<byte>(await responseStream.ReadStreamAsync().ConfigureAwait(false)));
                         result = MemoryPackSerializer.Deserialize<T>(decompressedBuffer);
                     }
                     else
                     {
-                        result = await MemoryPackSerializer.DeserializeAsync<T>(responseStream);
+                        result = await MemoryPackSerializer.DeserializeAsync<T>(responseStream).ConfigureAwait(false);
                     }
                 }
                 else if (contentType.ContainsInvariant("json"))//Assume JSON
@@ -182,11 +182,11 @@ public static class RestHelpersStatic
                     await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
                     if (contentEncoding.StrEq(EncodingTypes.GZip))
                     {
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Gzip);
+                        await responseStream.DecompressStream(outputStream, ECompressionType.Gzip).ConfigureAwait(false);
                     }
                     else if (contentEncoding.StrEq(EncodingTypes.Brotli))
                     {
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Brotli);
+                        await responseStream.DecompressStream(outputStream, ECompressionType.Brotli).ConfigureAwait(false);
                     }
 
                     if (useNewtonsoftDeserializer)
@@ -198,7 +198,7 @@ public static class RestHelpersStatic
                     }
                     else
                     {
-                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 1 ? outputStream : responseStream, JsonSerializerOptions ?? defaultJsonSerializerOptions);
+                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 0 ? outputStream : responseStream, JsonSerializerOptions ?? defaultJsonSerializerOptions).ConfigureAwait(false);
                     }
                 }
                 else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
@@ -206,11 +206,11 @@ public static class RestHelpersStatic
                     await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
                     if (contentEncoding.StrEq(EncodingTypes.GZip))
                     {
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Gzip);
+                        await responseStream.DecompressStream(outputStream, ECompressionType.Gzip).ConfigureAwait(false);
                     }
                     else if (contentEncoding.StrEq(EncodingTypes.Brotli))
                     {
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Brotli);
+                        await responseStream.DecompressStream(outputStream, ECompressionType.Brotli).ConfigureAwait(false);
                     }
 
                     string stringResult;
@@ -236,11 +236,11 @@ public static class RestHelpersStatic
             //Deserialize as stream - More memory efficient than string deserialization
             if (contentEncoding.StrEq(EncodingTypes.GZip))
             {
-                await responseStream.DecompressStream(outputStream, ECompressionType.Gzip);
+                await responseStream.DecompressStream(outputStream, ECompressionType.Gzip).ConfigureAwait(false);
             }
             else if (contentEncoding.StrEq(EncodingTypes.Brotli))
             {
-                await responseStream.DecompressStream(outputStream, ECompressionType.Brotli);
+                await responseStream.DecompressStream(outputStream, ECompressionType.Brotli).ConfigureAwait(false);
             }
 
             await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(outputStream.Length > 1 ? outputStream : responseStream, JsonSerializerOptions ?? defaultJsonSerializerOptions))

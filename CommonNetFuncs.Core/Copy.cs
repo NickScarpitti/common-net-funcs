@@ -17,9 +17,9 @@ public static class Copy
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
         IEnumerable<PropertyInfo> destProps = typeof(UT).GetProperties().Where(x => x.CanWrite);
 
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
         {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
             destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
         }
     }
@@ -35,9 +35,9 @@ public static class Copy
         IEnumerable<PropertyInfo> destProps = typeof(T).GetProperties().Where(x => x.CanWrite);
 
         T dest = new();
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
         {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
             destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
         }
         return dest;
@@ -54,9 +54,9 @@ public static class Copy
         IEnumerable<PropertyInfo> destProps = typeof(UT).GetProperties().Where(x => x.CanWrite);
 
         UT dest = new();
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
         {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
             destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
         }
         return dest;
@@ -100,9 +100,9 @@ public static class Copy
             IEnumerable<PropertyInfo> sourceProps = sourceType.GetProperties().Where(x => x.CanRead);
             IEnumerable<PropertyInfo> destProps = destType.GetProperties().Where(x => x.CanWrite);
 
-            foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name == x.Name)))
+            foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
             {
-                PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name == sourceProp.Name);
+                PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
                 if (destProp == null) continue;
 
                 object? value = sourceProp.GetValue(source, null);

@@ -45,7 +45,7 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:silent
 dotnet_style_readonly_field = true:suggestion
 # Expression-level preferences
 dotnet_style_object_initializer = true:suggestion
-dotnet_style_collection_initializer = true:suggestion
+dotnet_style_collection_initializer = true:none
 dotnet_style_explicit_tuple_names = true:suggestion
 dotnet_style_null_propagation = true:suggestion
 dotnet_style_coalesce_expression = true:suggestion
@@ -84,6 +84,16 @@ dotnet_code_quality_unused_parameters = all:suggestion
 # IDE0305: Simplify collection initialization
 dotnet_diagnostic.IDE0305.severity = none
 dotnet_diagnostic.CA1016.severity = none
+
+dotnet_diagnostic.VSSpell001.severity = none
+dotnet_diagnostic.VSSpell002.severity = none
+dotnet_style_prefer_collection_expression = when_types_exactly_match:none
+
+# IDE0028: Simplify collection initialization
+dotnet_diagnostic.IDE0028.severity = none
+
+# IDE0306: Simplify collection initialization
+dotnet_diagnostic.IDE0306.severity = none
 
 [*.cs]
 # var preferences
@@ -249,10 +259,26 @@ dotnet_diagnostic.IDE0005.severity = suggestion
 
 # CA1848: Use the LoggerMessage delegates
 dotnet_diagnostic.CA1848.severity = none
+csharp_prefer_system_threading_lock = true:suggestion
+
+# CRR0039: The 'await' expression is missing a cancellation token
+dotnet_diagnostic.CRR0039.severity = silent
+
+# CRR0034: An asynchronous method's name is missing an 'Async' suffix
+dotnet_diagnostic.CRR0034.severity = none
+
+# CRR0035: No CancellationToken parameter in the asynchronous method
+dotnet_diagnostic.CRR0035.severity = none
+
+# RCS1217: Convert interpolated string to concatenation
+dotnet_diagnostic.RCS1217.severity = none
+
+# CRR0047: The type can be moved to a separate file
+dotnet_diagnostic.CRR0047.severity = none
+
+# CRR0038: CancellationToken parameter is never used.
+dotnet_diagnostic.CRR0038.severity = none
 
 [*.vb]
 # Modifier preferences
 visual_basic_preferred_modifier_order = Partial,Default,Private,Protected,Public,Friend,NotOverridable,Overridable,MustOverride,Overloads,Overrides,MustInherit,NotInheritable,Static,Shared,Shadows,ReadOnly,WriteOnly,Dim,Const,WithEvents,Widening,Narrowing,Custom,Async:suggestion
-
-dotnet_diagnostic.VSSpell001.severity = none
-dotnet_diagnostic.VSSpell002.severity = none

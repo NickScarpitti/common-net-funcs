@@ -1,7 +1,7 @@
 ﻿using CliWrap;
 using CliWrap.Buffered;
-using static CommonNetFuncs.Core.Strings;
 using CommonNetFuncs.Core;
+using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Images;
 public static class Optimizer
@@ -37,7 +37,7 @@ public static class Optimizer
             {
                 gifsicleArgs = gifsicleArgs.Append(file);
             }
-            result = await Cli.Wrap(commandType).WithArguments(gifsicleArgs).ExecuteBufferedAsync();
+            result = await Cli.Wrap(commandType).WithArguments(gifsicleArgs).ExecuteBufferedAsync().ConfigureAwait(false);
         }
         else if (JpegoptimExtensions.ContainsInvariant(extension))
         {
@@ -47,11 +47,11 @@ public static class Optimizer
             {
                 jpegoptimArgs = ["--preserve-perms", "--preserve", file];
             }
-            else if(!jpegoptimArgs.Any(x => x.StrEq(file)))
+            else if (!jpegoptimArgs.Any(x => x.StrEq(file)))
             {
                 jpegoptimArgs = jpegoptimArgs.Append(file);
             }
-            result = await Cli.Wrap(commandType).WithArguments(jpegoptimArgs).ExecuteBufferedAsync();
+            result = await Cli.Wrap(commandType).WithArguments(jpegoptimArgs).ExecuteBufferedAsync().ConfigureAwait(false);
         }
         else if (OptipngExtensions.ContainsInvariant(extension))
         {
@@ -61,11 +61,11 @@ public static class Optimizer
             {
                 optipngArgs = ["-fix", "-o5", file];
             }
-            else if(!optipngArgs.Any(x => x.StrEq(file)))
+            else if (!optipngArgs.Any(x => x.StrEq(file)))
             {
                 optipngArgs = optipngArgs.Append(file);
             }
-            result = await Cli.Wrap(commandType).WithArguments(optipngArgs).ExecuteBufferedAsync();
+            result = await Cli.Wrap(commandType).WithArguments(optipngArgs).ExecuteBufferedAsync().ConfigureAwait(false);
         }
 
         if (!commandType.IsNullOrWhiteSpace())

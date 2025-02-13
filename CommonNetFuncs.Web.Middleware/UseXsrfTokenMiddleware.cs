@@ -14,7 +14,7 @@ public class UseXsrfTokenMiddleware(RequestDelegate next, IAntiforgery antiforge
     {
         AntiforgeryTokenSet tokenSet = antiforgery.GetAndStoreTokens(context);
         context.Response.Cookies.Append("XSRF-TOKEN", tokenSet.RequestToken!, new CookieOptions { HttpOnly = httpOnly });
-        await next(context);
+        await next(context).ConfigureAwait(false);
     }
 }
 

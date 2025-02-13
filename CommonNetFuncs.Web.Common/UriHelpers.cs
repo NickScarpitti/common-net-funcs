@@ -96,7 +96,7 @@ public static class UriHelpers
                 queryParameters.Set(queryParameters.GetKey(i), redactedString); //Replace values with redactedString value
             }
 
-            return uri.GetLeftPart(UriPartial.Path) + "?" + queryParameters;
+            return $"{uri.GetLeftPart(UriPartial.Path)}?{queryParameters}";
         }
         else
         {

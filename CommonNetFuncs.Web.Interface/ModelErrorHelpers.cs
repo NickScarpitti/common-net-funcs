@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using static CommonNetFuncs.Core.Strings;
+﻿using System.Text;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CommonNetFuncs.Web.Interface;
 
@@ -20,16 +20,17 @@ public static class ModelErrorHelpers
             ModelStateEntry? value = modelState[modelStateKey];
             if (value?.Errors.Count > 0)
             {
-                string? errText = null;
+                StringBuilder stringBuilder = new();
                 foreach (ModelError error in value.Errors)
                 {
-                    errText += error.ErrorMessage + "";
+                    stringBuilder.Append($"{error.ErrorMessage} ");
                 }
-                if (errText.Right(1) == ".")
+
+                if (stringBuilder[^1] == '.')
                 {
-                    errText = errText![0..^1]; //Removes last character
+                    stringBuilder.Remove(stringBuilder.Length - 1, 1);
                 }
-                errors.Add(modelStateKey, errText);
+                errors.Add(modelStateKey, stringBuilder.ToString());
             }
         }
         errors.Add("", "Invalid model state");

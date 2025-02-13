@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Web.Common.ValidationAttributes;
 
@@ -125,7 +126,7 @@ public sealed class ListMaxLengthAttribute : ValidationAttribute
 
             if (MaxAllowableLength != Length && length > Length)
             {
-                return new ValidationResult($"Item at index {index} exceeds the maximum length of {MaxAllowableLength}", [memberName]);
+                return new ValidationResult($"Item at index {index} '{item.UrlEncodeReadable()}' exceeds the maximum length of {MaxAllowableLength}", [memberName]);
             }
             index++;
         }

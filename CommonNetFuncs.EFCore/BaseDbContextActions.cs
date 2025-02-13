@@ -61,7 +61,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = await context.Set<T>().FindAsync(primaryKey);
+            model = await context.Set<T>().FindAsync(primaryKey).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -92,7 +92,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = await GetByKey(primaryKey);
+            model = await GetByKey(primaryKey).ConfigureAwait(false);
             if (model != null)
             {
                 model = splitQueryOverride switch
@@ -115,7 +115,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = await GetByKey(primaryKey);
+                    model = await GetByKey(primaryKey).ConfigureAwait(false);
                     if (model != null)
                     {
                         model = splitQueryOverride switch
@@ -185,7 +185,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = await context.Set<T>().FindAsync(primaryKey);
+            model = await context.Set<T>().FindAsync(primaryKey).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -216,7 +216,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = await GetByKey(primaryKey);
+            model = await GetByKey(primaryKey).ConfigureAwait(false);
             if (model != null)
             {
                 model = splitQueryOverride switch
@@ -239,7 +239,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = await GetByKey(primaryKey);
+                    model = await GetByKey(primaryKey).ConfigureAwait(false);
                     if (model != null)
                     {
                         model = splitQueryOverride switch
@@ -319,7 +319,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync();
+            model = await query.ToListAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -390,7 +390,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync();
+            model = await query.ToListAsync().ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -399,7 +399,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 try
                 {
                     query = GetQueryAllFull(queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync();
+                    model = await query.ToListAsync().ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
                 }
@@ -567,7 +567,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         List<T2>? model = null;
         try
         {
-            model = await query.ToListAsync();
+            model = await query.ToListAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -644,7 +644,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         List<T2>? model = null;
         try
         {
-            model = await query.ToListAsync();
+            model = await query.ToListAsync().ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -653,7 +653,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 try
                 {
                     query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync();
+                    model = await query.ToListAsync().ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
                 }
@@ -828,7 +828,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync();
+            model = await query.ToListAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -902,7 +902,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync();
+            model = await query.ToListAsync().ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -911,7 +911,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 try
                 {
                     query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync();
+                    model = await query.ToListAsync().ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
                 }
@@ -1088,7 +1088,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         List<T2>? model = null;
         try
         {
-            model = await query.ToListAsync();
+            model = await query.ToListAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -1170,7 +1170,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         try
         {
-            model = await query.ToListAsync();
+            model = await query.ToListAsync().ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -1179,7 +1179,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 try
                 {
                     query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync();
+                    model = await query.ToListAsync().ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
                 }
@@ -1458,7 +1458,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync();
+            model = await query.ToListAsync().ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -1467,7 +1467,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 try
                 {
                     query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync();
+                    model = await query.ToListAsync().ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T2), true);
                 }
@@ -1569,14 +1569,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 //Need to add in navigation properties of the output type since they are not kept in the original query
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync() :
-                    await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync(),
+                    await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
+                    await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync() :
-                    await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync(),
+                    await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
+                    await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync() :
-                    await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync()
+                    await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
+                    await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false)
             };
         }
         catch (InvalidOperationException ioEx)
@@ -1594,14 +1594,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     {
                         //Need to add in navigation properties of the output type since they are not kept in the original query
                         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync() :
-                            await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync(),
+                            await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
+                            await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
                         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync() :
-                            await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync(),
+                            await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
+                            await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
                         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync() :
-                            await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync()
+                            await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
+                            await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false)
                     };
                 }
                 catch (InvalidOperationException ioEx2) //Error could be caused by navigation properties of the output type, so need to try that as well
@@ -1615,9 +1615,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                             await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
                             model = splitQueryOverride switch
                             {
-                                null => await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync(),
-                                true => await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync(),
-                                _ => await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync()
+                                null => await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
+                                true => await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
+                                _ => await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false)
                             };
                         }
                         catch (Exception ex2)
@@ -1853,9 +1853,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             IQueryable<T2> qModel = !trackEntities ? context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression) : context.Set<T>().Where(whereExpression).Select(selectExpression);
 
             var results = await qModel.OrderBy(orderByString ?? string.Empty).Select(x => new { Entities = x, TotalCount = qModel.Count() })
-                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync();
+                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
             model.Entities = results.ConvertAll(x => x.Entities);
         }
         catch (Exception ex)
@@ -1888,9 +1888,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
 
-            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync();
+            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
             model.Entities = results.ConvertAll(x => x.Entities);
         }
         catch (InvalidOperationException ioEx)
@@ -1900,9 +1900,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 try
                 {
                     qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, splitQueryOverride, true);
-                    var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync();
+                    var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
 
-                    model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
+                    model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
                     model.Entities = results.ConvertAll(x => x.Entities);
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
@@ -2029,9 +2029,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression);
 
             var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() })
-                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync();
+                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
             model.Entities = results.ConvertAll(x => x.Entities);
         }
         catch (Exception ex)
@@ -2064,9 +2064,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
 
-            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync();
+            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
             model.Entities = results.ConvertAll(x => x.Entities);
         }
         catch (InvalidOperationException ioEx)
@@ -2076,9 +2076,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 try
                 {
                     qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, splitQueryOverride, true);
-                    var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync();
+                    var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
 
-                    model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync();
+                    model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
                     model.Entities = results.ConvertAll(x => x.Entities);
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
@@ -2189,7 +2189,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = trackEntities ? await context.Set<T>().FirstOrDefaultAsync(whereExpression) : await context.Set<T>().AsNoTracking().FirstOrDefaultAsync(whereExpression);
+            model = trackEntities ? await context.Set<T>().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false) : await context.Set<T>().AsNoTracking().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2221,14 +2221,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             model = splitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().FirstOrDefaultAsync(whereExpression) :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression),
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().FirstOrDefaultAsync(whereExpression) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().FirstOrDefaultAsync(whereExpression) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2239,9 +2239,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     model = splitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2305,8 +2305,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T2? model = default;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync() :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync();
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false) :
+                await context.Set<T>().AsNoTracking().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2341,14 +2341,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             model = splitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync() :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(),
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync() :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync() :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2359,9 +2359,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     model = splitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2425,8 +2425,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync() :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync();
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false) :
+                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2461,14 +2461,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             model = splitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync() :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(),
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync() :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync() :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2479,9 +2479,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     model = splitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2545,8 +2545,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync() :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync();
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false) :
+                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2581,14 +2581,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             model = splitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync() :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(),
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync() :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync() :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2599,9 +2599,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     model = splitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2665,7 +2665,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T2? model = default;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).MaxAsync(maxExpression) : await context.Set<T>().AsNoTracking().Where(whereExpression).MaxAsync(maxExpression);
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false) : await context.Set<T>().AsNoTracking().Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2699,14 +2699,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             model = splitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression) :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression),
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression).ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression).ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression).ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2717,9 +2717,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     model = splitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2780,7 +2780,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T2? model = default;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).MinAsync(minExpression) : await context.Set<T>().AsNoTracking().Where(whereExpression).MinAsync(minExpression);
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false) : await context.Set<T>().AsNoTracking().Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2814,14 +2814,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             model = splitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MinAsync(minExpression) :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression),
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MinAsync(minExpression).ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MinAsync(minExpression) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MinAsync(minExpression).ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MinAsync(minExpression) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MinAsync(minExpression).ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2832,9 +2832,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 {
                     model = splitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2876,7 +2876,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         int count = 0;
         try
         {
-            count = await context.Set<T>().Where(whereExpression).AsNoTracking().CountAsync();
+            count = await context.Set<T>().Where(whereExpression).AsNoTracking().CountAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2903,7 +2903,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         try
         {
-            await context.Set<T>().AddAsync(model);
+            await context.Set<T>().AddAsync(model).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2926,7 +2926,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         try
         {
             //await context.Set<T>().BulkInsertAsync(model); //Doesn't give updated identity values. EF Core Extensions (Paid)
-            await context.Set<T>().AddRangeAsync(model);
+            await context.Set<T>().AddRangeAsync(model).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2967,7 +2967,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         bool success = false;
         try
         {
-            T? deleteItem = await table.FindAsync(key);
+            T? deleteItem = await table.FindAsync(key).ConfigureAwait(false);
             if (deleteItem != null)
             {
                 table.Remove(deleteItem);
@@ -3018,7 +3018,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 models.SetValue(x => x.RemoveNavigationProperties(context));
             }
-            await context.Set<T>().DeleteRangeByKeyAsync(models); //EF Core +, Does not require separate save
+            await context.Set<T>().DeleteRangeByKeyAsync(models).ConfigureAwait(false); //EF Core +, Does not require separate save
             return true;
         }
         catch (Exception ex)
@@ -3037,7 +3037,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         try
         {
-            await context.Set<T>().DeleteRangeByKeyAsync(keys); //EF Core +, Does not require separate save
+            await context.Set<T>().DeleteRangeByKeyAsync(keys).ConfigureAwait(false); //EF Core +, Does not require separate save
             return true;
         }
         catch (Exception ex)
@@ -3101,7 +3101,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         bool result = false;
         try
         {
-            result = await context.SaveChangesAsync() > 0;
+            result = await context.SaveChangesAsync().ConfigureAwait(false) > 0;
         }
         catch (DbUpdateException duex)
         {

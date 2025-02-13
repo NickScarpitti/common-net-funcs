@@ -27,7 +27,7 @@ public class UseCustomHeadersMiddleware(RequestDelegate next, IDictionary<string
             }
         }
 
-        await next(context);
+        await next(context).ConfigureAwait(false);
     }
 }
 

@@ -79,7 +79,7 @@ public class UseResponseSizeLoggingMiddleware(RequestDelegate next, ILogger<UseR
 
         try
         {
-            await next(context);
+            await next(context).ConfigureAwait(false);
 
             logger.LogWarning("{msg}", $"Response to {HtmlEncode(context.Request.Path)} [{HtmlEncode(context.Request.Method)}] of type [{HtmlEncode(context.Request.Headers.Accept)}{(string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + {HtmlEncode(context.Request.Headers.AcceptEncoding)}")}] " +
                 $"with Size: {countingStream.BytesWritten.GetFileSizeFromBytesWithUnits(2)}");

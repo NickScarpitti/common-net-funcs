@@ -106,7 +106,7 @@ public static class DimensionScale
         decimal maxWidth, decimal maxHeight, decimal maxDepth, bool scaleUpToFit = true, int? resultDecimalPlaces = null)
     {
         // If the object dimensions are exactly the same as the container, or if all dimensions are smaller, return the original dimensions.
-        if (originalWidth == maxWidth && originalHeight == maxHeight && originalDepth == maxDepth || !scaleUpToFit && originalWidth <= maxWidth && originalHeight <= maxHeight && originalDepth <= maxDepth)
+        if ((originalWidth == maxWidth && originalHeight == maxHeight && originalDepth == maxDepth) || !scaleUpToFit && originalWidth <= maxWidth && originalHeight <= maxHeight && originalDepth <= maxDepth)
         {
             return (originalWidth, originalHeight, originalDepth);
         }

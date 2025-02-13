@@ -22,7 +22,7 @@ public static class DateTimeHelpers
         DateTime sDate = (DateTime)startDate;
         DateTime eDate = (DateTime)endDate;
 
-        decimal calcBusinessDays = 1 + ((decimal)(eDate - sDate).TotalDays * 5m - (sDate.DayOfWeek - eDate.DayOfWeek) * 2m) / 7m;
+        decimal calcBusinessDays = 1 + (((decimal)(eDate - sDate).TotalDays * 5m) - (sDate.DayOfWeek - eDate.DayOfWeek) * 2m) / 7m;
 
         if (eDate.DayOfWeek == DayOfWeek.Saturday)
         {

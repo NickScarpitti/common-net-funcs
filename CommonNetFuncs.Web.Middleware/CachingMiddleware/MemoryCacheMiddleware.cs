@@ -170,7 +170,17 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         else
         {
             // Continue with the pipeline
-            await next(context).ConfigureAwait(false);
+            try
+            {
+                await next(context).ConfigureAwait(false);
+            }
+            catch (TaskCanceledException ex)
+            {
+                if (!cacheOptions.SuppressLogs)
+                {
+                    logger.Warn(ex, "Task was canceled in memory cache middleware");
+                }
+            }
         }
     }
 

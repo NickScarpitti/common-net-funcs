@@ -218,6 +218,6 @@ public class CountingStream(Stream innerStream) : Stream
 
     private void ThrowIfDisposed()
     {
-        ObjectDisposedException.Throwif (_disposed, this);
+        ObjectDisposedException.ThrowIf(_disposed, this);
     }
 }

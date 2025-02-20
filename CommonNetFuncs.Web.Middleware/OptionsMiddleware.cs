@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Web.Middleware;
 
@@ -12,27 +13,23 @@ public static class OptionsMiddlewareExtensions
     }
 }
 
-public class OptionsMiddleware
+public class OptionsMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-
-    public OptionsMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
+    private readonly RequestDelegate _next = next;
 
     public async Task InvokeAsync(HttpContext context)
     {
         if (context.Request.Method.StrComp("OPTIONS"))
         {
-            context.Response.Headers.Add("Access-Control-Allow-Origin", context.Request.Headers["Origin"].ToString());
-            context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-            context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+            context.Response.Headers.Append("Access-Control-Allow-Origin", context.Request.Headers.Origin.ToString());
+            context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN");
+            context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+            context.Response.Headers.Append("Access-Control-Max-Age", "3600");
             context.Response.StatusCode = 200;
             return;
         }
 
-        await _next(context);
+        await _next(context).ConfigureAwait(false);
     }
 }

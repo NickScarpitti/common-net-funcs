@@ -1,7 +1,9 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using NLog;
 
 namespace CommonNetFuncs.Core;
@@ -111,8 +113,8 @@ public static class Inspect
             try
             {
                 //This will prevent issues with numbers with varying decimal places from being counted as a difference
-                if (aIsNumeric && bIsNumeric && decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!) ||
-                    !(aIsNumeric && bIsNumeric) && aPropValue.ToString() != bPropValue.ToString())
+                if ((aIsNumeric && bIsNumeric && decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!)) ||
+                    (!(aIsNumeric && bIsNumeric) && !aPropValue.ToString().StrComp(bPropValue.ToString())))
                 {
                     return false;
                 }
@@ -323,5 +325,88 @@ public static class Inspect
             }
         }
         return allProps?.GetHashCode() ?? 0;
+    }
+
+    public static string GetHashForObject<T>(this T obj)
+    {
+        if (obj == null) return "null";
+        IOrderedEnumerable<PropertyInfo> properties = typeof(T).GetProperties()
+            .Where(p => p.CanRead)
+            .OrderBy(p => p.Name);
+
+        using MemoryStream ms = new();
+        using BinaryWriter writer = new(ms);
+        foreach (PropertyInfo property in properties)
+        {
+            object? value = property.GetValue(obj);
+            if (value != null)
+            {
+                WriteValue(writer, value);
+            }
+        }
+
+        byte[] hash = MD5.HashData(ms.ToArray());
+        return Convert.ToHexStringLower(hash);
+    }
+
+    private static void WriteValue(BinaryWriter writer, object value)
+    {
+        if (value == null)
+        {
+            writer.Write("null");
+            return;
+        }
+
+        Type type = value.GetType();
+
+        // Handle collections
+        if (value is IEnumerable enumerable && value is not string)
+        {
+            // Convert collection to list of sorted hashes
+            List<string> itemHashes = [];
+            foreach (object item in enumerable)
+            {
+                using MemoryStream itemMs = new();
+                using BinaryWriter itemWriter = new(itemMs);
+                WriteValue(itemWriter, item);
+                byte[] itemHash = MD5.HashData(itemMs.ToArray());
+                itemHashes.Add(BitConverter.ToString(itemHash));
+            }
+
+            // Sort the hashes to ensure order independence
+            itemHashes.Sort();
+
+            // Write the sorted collection
+            writer.Write("[");
+            foreach (string itemHash in itemHashes)
+            {
+                writer.Write(itemHash);
+                writer.Write(",");
+            }
+            writer.Write("]");
+            return;
+        }
+
+        // Handle primitive types and strings
+        if (type.IsPrimitive || value is string || value is decimal)
+        {
+            writer.Write(value.ToString()!);
+            return;
+        }
+
+        // Handle complex objects recursively
+        IOrderedEnumerable<PropertyInfo> properties = type.GetProperties()
+            .Where(p => p.CanRead)
+            .OrderBy(p => p.Name);
+
+        writer.Write("{");
+        foreach (PropertyInfo property in properties)
+        {
+            writer.Write(property.Name);
+            writer.Write(":");
+            WriteValue(writer, property.GetValue(value)!);
+            writer.Write(",");
+        }
+        writer.Write("}");
     }
 }

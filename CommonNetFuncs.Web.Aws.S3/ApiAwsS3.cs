@@ -30,11 +30,11 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         try
         {
             validatedBuckets ??= ValidatedBuckets;
-            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets))
+            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false))
             {
-                if (await S3FileExists(bucketName, fileName))
+                if (await S3FileExists(bucketName, fileName).ConfigureAwait(false))
                 {
-                    await DeleteS3File(bucketName, fileName);
+                    await DeleteS3File(bucketName, fileName).ConfigureAwait(false);
                 }
 
                 PutObjectRequest request = new()
@@ -46,7 +46,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                     ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256
                 };
 
-                PutObjectResponse? response = await s3Client.PutObjectAsync(request);
+                PutObjectResponse? response = await s3Client.PutObjectAsync(request).ConfigureAwait(false);
                 success = response?.HttpStatusCode == HttpStatusCode.OK;
 
                 if (!success)
@@ -78,7 +78,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         try
         {
             validatedBuckets ??= ValidatedBuckets;
-            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets))
+            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false))
             {
                 GetObjectRequest request = new()
                 {
@@ -86,13 +86,13 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                     Key = fileName
                 };
 
-                GetObjectResponse? response = await s3Client.GetObjectAsync(request);
+                GetObjectResponse? response = await s3Client.GetObjectAsync(request).ConfigureAwait(false);
                 if (response != null)
                 {
                     await using Stream responseStream = response.ResponseStream;
                     //responseStream.Position = 0;
-                    await responseStream.CopyToAsync(fileData);
-                    await fileData.FlushAsync();
+                    await responseStream.CopyToAsync(fileData).ConfigureAwait(false);
+                    await fileData.FlushAsync().ConfigureAwait(false);
                     fileData.Position = 0;
                 }
             }
@@ -128,9 +128,9 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         try
         {
             validatedBuckets ??= ValidatedBuckets;
-            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets) && await S3FileExists(bucketName, fileName))
+            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false) && await S3FileExists(bucketName, fileName).ConfigureAwait(false))
             {
-                await s3Client.DeleteObjectAsync(bucketName, fileName);
+                await s3Client.DeleteObjectAsync(bucketName, fileName).ConfigureAwait(false);
                 success = true;
             }
         }
@@ -173,7 +173,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                     VersionId = !versionId.IsNullOrEmpty() ? versionId : null
                 };
 
-                GetObjectMetadataResponse? response = await s3Client.GetObjectMetadataAsync(request);
+                GetObjectMetadataResponse? response = await s3Client.GetObjectMetadataAsync(request).ConfigureAwait(false);
                 success = response?.HttpStatusCode == HttpStatusCode.OK;
             }
         }
@@ -213,7 +213,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
 
                 do
                 {
-                    response = await s3Client.ListObjectsV2Async(request);
+                    response = await s3Client.ListObjectsV2Async(request).ConfigureAwait(false);
                     fileNames.AddRange(response?.S3Objects.ConvertAll(x => x.Key) ?? []);
                     request.ContinuationToken = response?.NextContinuationToken;
                 } while (response?.IsTruncated ?? false);
@@ -246,7 +246,7 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
         try
         {
             validatedBuckets ??= ValidatedBuckets;
-            if (await IsBucketValid(bucketName, validatedBuckets))
+            if (await IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false))
             {
                 GetPreSignedUrlRequest request = new()
                 {
@@ -296,14 +296,14 @@ public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
                 }
                 else
                 {
-                    isValid = await DoesS3BucketExistV2Async(s3Client, bucketName);
+                    isValid = await DoesS3BucketExistV2Async(s3Client, bucketName).ConfigureAwait(false);
                     validatedBuckets.TryAdd(bucketName, isValid);
                 }
             }
 
             if (!isValid) //Retry in case of intermittent outage
             {
-                isValid = await DoesS3BucketExistV2Async(s3Client, bucketName);
+                isValid = await DoesS3BucketExistV2Async(s3Client, bucketName).ConfigureAwait(false);
                 if (validatedBuckets != null)
                 {
                     validatedBuckets[bucketName] = isValid;

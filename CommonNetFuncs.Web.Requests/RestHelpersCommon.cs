@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Core;
+﻿using System.Text.Json;
+using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Common;
 using NLog;
 using static CommonNetFuncs.Web.Requests.RestHelperConstants;
@@ -11,15 +12,14 @@ namespace CommonNetFuncs.Web.Requests;
 /// Source1: https://medium.com/@srikanth.gunnala/generic-wrapper-to-consume-asp-net-web-api-rest-service-641b50462c0
 /// Source2: https://stackoverflow.com/questions/43692053/how-can-i-create-a-jsonpatchdocument-from-comparing-two-c-sharp-objects
 /// </summary>
-public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
+public class RestHelpersCommon(HttpClient client, JsonSerializerOptions? jsonSerializerOptions = null) //: IAsyncDisposable
 {
-    private readonly HttpClient client = client;
-
+    public readonly HttpClient client = client;
+    public readonly JsonSerializerOptions? jsonSerializerOptions = jsonSerializerOptions;
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
     //Use static client here instead of individual using statements to prevent maxing out the number of connections
     private const double DefaultRequestTimeout = 100; //Default timeout for HttpClient
     private static readonly HttpMethod[] requestsWithBody = [HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch];
-    public static System.Text.Json.JsonSerializerOptions? JsonSerializerOptions { get; set; }
 
     /// <summary>
     /// Executes a GET request against the specified URL and returns the result
@@ -243,14 +243,14 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
         try
         {
             logger.Info("{msg}", $"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && requestsWithBody.Contains(httpMethod) ?
-                $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject, JsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
+                $" | {(postObject != null ? JsonSerializer.Serialize(postObject, jsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
             httpRequestMessage.AttachHeaders(bearerToken, httpHeaders);
             httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
 
             using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
-            result = await HandleResponse<T>(response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions);
+            result = await HandleResponse<T>(response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions).ConfigureAwait(false);
         }
         catch (TaskCanceledException tcex)
         {
@@ -293,7 +293,7 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
         try
         {
             logger.Info("{msg}", $"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && requestsWithBody.Contains(httpMethod) ?
-                $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject, JsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
+                $" | {(postObject != null ? JsonSerializer.Serialize(postObject, jsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
 
@@ -331,7 +331,7 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
 
         if (enumeratedReader != null)
         {
-            while (await enumeratedReader.MoveNextAsync())
+            while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
             {
                 yield return enumeratedReader!.Current;
             }
@@ -526,14 +526,14 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
         try
         {
             logger.Info("{msg}", $"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && requestsWithBody.Contains(httpMethod) ?
-                $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject, JsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
+                $" | {(postObject != null ? JsonSerializer.Serialize(postObject, jsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
             httpRequestMessage.AttachHeaders(bearerToken, httpHeaders);
             httpRequestMessage.AddContent(httpMethod, httpHeaders, postObject, patchDoc);
 
             restObject.Response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
-            restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions, httpHeaders);
+            restObject.Result = await HandleResponse<T>(restObject.Response, httpMethod.ToString(), url, useNewtonsoftDeserializer, msgPackOptions, httpHeaders).ConfigureAwait(false);
         }
         catch (TaskCanceledException tcex)
         {
@@ -576,7 +576,7 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
         try
         {
             logger.Info("{msg}", $"{httpMethod.ToString().ToUpper()} URL: {(logQuery ? url : url.GetRedactedUri())}" + (logBody && requestsWithBody.Contains(httpMethod) ?
-                $" | {(postObject != null ? System.Text.Json.JsonSerializer.Serialize(postObject, JsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
+                $" | {(postObject != null ? JsonSerializer.Serialize(postObject, jsonSerializerOptions ?? defaultJsonSerializerOptions) : patchDoc?.ReadAsStringAsync().Result)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(timeout == null || timeout <= 0 ? DefaultRequestTimeout : (double)timeout));
             using HttpRequestMessage httpRequestMessage = new(httpMethod, url);
 
@@ -645,9 +645,8 @@ public class RestHelpersCommon(HttpClient client) //: IAsyncDisposable
     //}
 }
 
-public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null) : RestHelpersCommon(clientName.IsNullOrWhiteSpace() ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(clientName))
-{
-}
+public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null) : RestHelpersCommon(clientName.IsNullOrWhiteSpace() ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(clientName));
+
 //public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null)
 //{
 //    private readonly IHttpClientFactory httpClientFactory = httpClientFactory;

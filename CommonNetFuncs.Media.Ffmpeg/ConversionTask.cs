@@ -43,12 +43,12 @@ public static class ConversionTask
     /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
     /// <returns>True if conversion successfully completed</returns>
-    public static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string workingPath, VideoCodec codec, Format outputFormat = Format.mp4,
+    public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string workingPath, VideoCodec codec, Format outputFormat = Format.mp4,
         ConversionPreset conversionPreset = ConversionPreset.Slower, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1,
         bool cancelIfLarger = true, string? taskDescription = null, bool strict = true, bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal,
         HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null, CancellationTokenSource? cancellationTokenSource = null)
     {
-        return await FfmpegConversionTask(fileToConvert, outputFileName, workingPath, codec, outputFormat, conversionPreset, conversionIndex, fpsDict, mediaInfo, null, numberOfThreads, cancelIfLarger,
+        return FfmpegConversionTask(fileToConvert, outputFileName, workingPath, codec, outputFormat, conversionPreset, conversionIndex, fpsDict, mediaInfo, null, numberOfThreads, cancelIfLarger,
             taskDescription, strict, overwriteOutput, processPriority, hardwareAccelerationValues, conversionOutputs, additionalLogText, cancellationTokenSource);
     }
 
@@ -73,12 +73,12 @@ public static class ConversionTask
     /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
     /// <returns>True if conversion successfully completed</returns>
-    public static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string workingPath, string? ffmpegCommand, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null,
+    public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string workingPath, string? ffmpegCommand, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null,
         IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true, bool overwriteOutput = true,
         ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null,
         string? additionalLogText = null, CancellationTokenSource ? cancellationTokenSource = null)
     {
-        return await FfmpegConversionTask(fileToConvert, outputFileName, workingPath, null, null, null, conversionIndex, fpsDict, mediaInfo, ffmpegCommand, numberOfThreads, cancelIfLarger,
+        return FfmpegConversionTask(fileToConvert, outputFileName, workingPath, null, null, null, conversionIndex, fpsDict, mediaInfo, ffmpegCommand, numberOfThreads, cancelIfLarger,
             taskDescription, strict, overwriteOutput, processPriority, hardwareAccelerationValues, conversionOutputs, additionalLogText, cancellationTokenSource);
     }
 
@@ -97,9 +97,8 @@ public static class ConversionTask
             DateTime lastOutput2 = DateTime.Now.AddSeconds(-6);
             DateTime lastOutput3 = DateTime.Now.AddSeconds(-6);
 
-            string fullOutputFileName = Path.Combine(workingPath, outputFileName);
             Conversion conversion = new();
-            mediaInfo ??= await FFmpeg.GetMediaInfo($"{fileToConvert.@FullName}");
+            mediaInfo ??= await FFmpeg.GetMediaInfo($"{fileToConvert.@FullName}").ConfigureAwait(false);
             IVideoStream? videoStream = mediaInfo.VideoStreams.FirstOrDefault();
             IAudioStream? audioStream = mediaInfo.AudioStreams.FirstOrDefault();
 
@@ -134,6 +133,7 @@ public static class ConversionTask
                 conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
             }
 
+            #pragma warning disable CRR0052 // String interpolation can be used
             //Add log to OnProgress
             conversion.OnProgress += (sender, args) =>
             {
@@ -239,7 +239,7 @@ public static class ConversionTask
                             (conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty) +
                             $"[Total FPS: {GetTotalFps(fpsDict)}]");
 
-                        if (DateTime.Now > lastOutput2.AddSeconds(30))
+                        if (DateTime.Now > lastOutput3.AddSeconds(30))
                         {
                             logger.Info($"#{conversionIndex} ETA={timeLeftString} {normalizedData[..(normalizedData.Contains("bitrate=") ? normalizedData.IndexOf("bitrate=") : normalizedData.Length)]} - " +
                                 $"[{fileToConvert.Name}]" +
@@ -249,6 +249,7 @@ public static class ConversionTask
                                 $"[Total FPS: {GetTotalFps(fpsDict)}]");
                             lastOutput3 = DateTime.Now;
                         }
+                        #pragma warning restore CRR0052 // String interpolation can be used
                     }
                     lastOutput2 = DateTime.Now;
                 }
@@ -257,18 +258,16 @@ public static class ConversionTask
             //Start conversion
             logger.Info($"Starting ffmpeg conversion with command: {ffmpegCommand}");
 
-            CancellationToken token = cancellationTokenSource.Token;
-
             try
             {
                 if (strict)
                 {
                     conversion.AddParameter("-strict -2");
-                    await conversion.Start(cancellationTokenSource.Token);
+                    await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
                 }
                 else
                 {
-                    await conversion.Start(cancellationTokenSource.Token);
+                    await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException ex)

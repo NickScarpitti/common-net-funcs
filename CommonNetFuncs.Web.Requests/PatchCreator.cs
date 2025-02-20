@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.JsonPatch;
+﻿using CommonNetFuncs.Core;
+using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Web.Requests;
 
@@ -48,14 +50,14 @@ public static class PatchCreator
         foreach (string? k in origNames.Except(modNames))
         {
             JProperty? prop = orig.Property(k);
-            patch.Remove(path + prop!.Name);
+            patch.Remove($"{path}{prop!.Name}");
         }
 
         // Names added in modified
         foreach (string? k in modNames.Except(origNames))
         {
             JProperty? prop = mod.Property(k);
-            patch.Add(path + prop!.Name, prop.Value);
+            patch.Add($"{path}{prop!.Name}", prop.Value);
         }
 
         // Present in both
@@ -66,7 +68,7 @@ public static class PatchCreator
 
             if (origProp?.Value.Type != modProp?.Value.Type)
             {
-                patch.Replace(path + modProp?.Name, modProp?.Value);
+                patch.Replace($"{path}{modProp?.Name}", modProp?.Value);
             }
             else if (origProp?.Value.Type == JTokenType.Float)
             {
@@ -86,26 +88,26 @@ public static class PatchCreator
                     if (origProp?.Value.Type == JTokenType.Object)
                     {
                         // Recurse into objects
-                        FillPatchForObject(origProp.Value as JObject ?? [], modProp?.Value as JObject ?? [], patch, path + modProp?.Name + "/");
+                        FillPatchForObject(origProp.Value as JObject ?? [], modProp?.Value as JObject ?? [], patch, $"{path}{modProp?.Name}/");
                     }
                     else
                     {
                         // Replace values directly
-                        patch.Replace(path + modProp?.Name, modProp?.Value);
+                        patch.Replace($"{path}{modProp?.Name}", modProp?.Value);
                     }
                 }
             }
-            else if ((origProp?.Value.ToString(Formatting.None) ?? null) != modProp?.Value.ToString(Formatting.None) && origProp?.Value.Type != JTokenType.Date)
+            else if (!(origProp?.Value.ToString(Formatting.None)).StrComp(modProp?.Value.ToString(Formatting.None)) && origProp?.Value.Type != JTokenType.Date)
             {
                 if (origProp?.Value.Type == JTokenType.Object)
                 {
                     // Recurse into objects
-                    FillPatchForObject(origProp.Value as JObject ?? [], modProp?.Value as JObject ?? [], patch, path + modProp?.Name + "/");
+                    FillPatchForObject(origProp.Value as JObject ?? [], modProp?.Value as JObject ?? [], patch, $"{path}{modProp?.Name}/");
                 }
                 else
                 {
                     // Replace values directly
-                    patch.Replace(path + modProp?.Name, modProp?.Value);
+                    patch.Replace($"{path}{modProp?.Name}", modProp?.Value);
                 }
             }
             else if (origProp?.Value.Type == JTokenType.Date && modProp?.Value.Type == JTokenType.Date)
@@ -116,10 +118,10 @@ public static class PatchCreator
                 bool originalSucceed = DateTime.TryParse(originalDts, out DateTime originalDate);
                 bool modSucceed = DateTime.TryParse(modDts, out DateTime modDate);
 
-                if (modSucceed && originalDate != modDate)
+                if (modSucceed && (originalSucceed ? originalDate : null) != modDate)
                 {
                     // Replace values directly
-                    patch.Replace(path + modProp.Name, modProp.Value);
+                    patch.Replace($"{path}{modProp.Name}", modProp.Value);
                 }
             }
         }

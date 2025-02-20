@@ -26,7 +26,7 @@ public static class DirectQuery
     {
         await using SqlConnection sqlConn = new(connStr);
         await using SqlCommand sqlCmd = new(sql, sqlConn);
-        return await GetDataTableInternal(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry);
+        return await GetDataTableInternal(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public static class DirectQuery
     {
         await using SqlConnection sqlConn = new(connStr);
         await using SqlCommand sqlCmd = new(sql, sqlConn);
-        return await RunUpdateQueryInternal(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry);
+        return await RunUpdateQueryInternal(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -97,17 +97,17 @@ public static class DirectQuery
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"DB Error: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error getting datatable: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"Error getting datatable: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
             }
         }
 
         if (enumeratedReader != null)
         {
-            while (await enumeratedReader.MoveNextAsync())
+            while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
             {
                 yield return enumeratedReader!.Current;
             }
@@ -141,11 +141,11 @@ public static class DirectQuery
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"DB Error: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error getting datatable: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"Error getting datatable: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
             }
         }
 
@@ -164,6 +164,6 @@ public static class DirectQuery
     {
         await using SqlConnection sqlConn = new(connStr);
         await using SqlCommand sqlCmd = new(sql, sqlConn);
-        return await GetDataDirectAsync<T>(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry);
+        return await GetDataDirectAsync<T>(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry).ConfigureAwait(false);
     }
 }

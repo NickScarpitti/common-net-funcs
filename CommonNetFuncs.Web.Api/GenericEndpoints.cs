@@ -25,8 +25,8 @@ public class GenericEndpoints : ControllerBase
     {
         try
         {
-            await baseAppDbContextActions.CreateMany(models, removeNavigationProps);
-            if (await baseAppDbContextActions.SaveChanges())
+            await baseAppDbContextActions.CreateMany(models, removeNavigationProps).ConfigureAwait(false);
+            if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
             {
                 return Ok(models);
             }
@@ -51,7 +51,7 @@ public class GenericEndpoints : ControllerBase
         try
         {
             baseAppDbContextActions.DeleteByObject(model, removeNavigationProps);
-            if (await baseAppDbContextActions.SaveChanges())
+            if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
             {
                 return Ok(model);
             }
@@ -75,7 +75,7 @@ public class GenericEndpoints : ControllerBase
     {
         try
         {
-            if (models.Any() && baseAppDbContextActions.DeleteMany(models, removeNavigationProps) && await baseAppDbContextActions.SaveChanges())
+            if (models.Any() && baseAppDbContextActions.DeleteMany(models, removeNavigationProps) && await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
             {
                 return Ok(models);
             }
@@ -99,7 +99,7 @@ public class GenericEndpoints : ControllerBase
     {
         try
         {
-            if (models.Any() && await baseAppDbContextActions.DeleteManyByKeys(models)) //Does not work with PostgreSQL
+            if (models.Any() && await baseAppDbContextActions.DeleteManyByKeys(models).ConfigureAwait(false)) //Does not work with PostgreSQL
             {
                 return Ok(models);
             }
@@ -122,8 +122,8 @@ public class GenericEndpoints : ControllerBase
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
-        T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
-        return await PatchInternal(dbModel, patch, baseAppDbContextActions);
+        T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
+        return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -137,8 +137,8 @@ public class GenericEndpoints : ControllerBase
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
     {
-        T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey);
-        return await PatchInternal(dbModel, patch, baseAppDbContextActions);
+        T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
+        return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -178,7 +178,7 @@ public class GenericEndpoints : ControllerBase
 
             updateModel.CopyPropertiesTo(dbModel);
             baseAppDbContextActions.Update(dbModel);
-            if (await baseAppDbContextActions.SaveChanges())
+            if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
             {
                 return Ok(dbModel);
             }

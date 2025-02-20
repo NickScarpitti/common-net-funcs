@@ -45,12 +45,12 @@ public static class Helpers
 
     public static async Task RecordResults(string fileName, bool success, ConcurrentBag<string> conversionOutputs, string logFile, long? originalSize = null, long? endSize = null)
     {
-        await RecordResults(fileName, success, conversionOutputs, originalSize, endSize, logFile);
+        await RecordResults(fileName, success, conversionOutputs, originalSize, endSize, logFile).ConfigureAwait(false);
     }
 
     public static async Task RecordResults(string fileName, bool success, ConcurrentBag<string> conversionOutputs, long? originalSize = null, long? endSize = null)
     {
-        await RecordResults(fileName, success, conversionOutputs, originalSize, endSize, null);
+        await RecordResults(fileName, success, conversionOutputs, originalSize, endSize, null).ConfigureAwait(false);
     }
 
     private static async Task RecordResults(string fileName, bool success, ConcurrentBag<string> conversionOutputs, long? originalSize = null, long? endSize = null, string? logFile = null)
@@ -66,8 +66,8 @@ public static class Helpers
                 File.Create(logFile).Dispose();
             }
             await using StreamWriter streamWriter = new(logFile, true);
-            await streamWriter.WriteLineAsync(outputString);
-            await streamWriter.FlushAsync();
+            await streamWriter.WriteLineAsync(outputString).ConfigureAwait(false);
+            await streamWriter.FlushAsync().ConfigureAwait(false);
             streamWriter.Close();
         }
     }
@@ -82,7 +82,7 @@ public static class Helpers
     {
         try
         {
-            return await Probe.New().Start($@"-v quiet -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries stream={videoMetadataItem.ToString().ToLowerInvariant()} ""{fileName}""");
+            return await Probe.New().Start($@"-v quiet -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries stream={videoMetadataItem.ToString().ToLowerInvariant()} ""{fileName}""").ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -100,10 +100,10 @@ public static class Helpers
     {
         try
         {
-            string? frameRate = await fileName.GetVideoMetadata(EVideoMetadata.Avg_Frame_Rate);
+            string? frameRate = await fileName.GetVideoMetadata(EVideoMetadata.Avg_Frame_Rate).ConfigureAwait(false);
             if (frameRate != null)
             {
-                frameRate = frameRate.Replace("\r\n", "");
+                frameRate = frameRate.Replace(Environment.NewLine, "");
                 return Math.Round(decimal.Parse(frameRate.Split("/")[0]) / decimal.Parse(frameRate.Split("/")[1]), 2, MidpointRounding.AwayFromZero);
             }
         }
@@ -121,12 +121,12 @@ public static class Helpers
     /// <returns>The average number of frames between keyframes</returns>
     public static async Task<decimal> GetKeyFrameSpacing(this string fileName, int numberOfSamples = -1, int sampleLengthSec = -1)
     {
-        decimal frameRate = await fileName.GetFrameRate();
+        decimal frameRate = await fileName.GetFrameRate().ConfigureAwait(false);
         try
         {
             if (numberOfSamples == -1)
             {
-                string probeResult = (await Probe.New().Start($"-v quiet -hide_banner -skip_frame nokey -select_streams v:0 -show_entries frame=pts_time -of csv=p=0 \"{fileName}\"")).Replace("\"", string.Empty).Replace(",", string.Empty);
+                string probeResult = (await Probe.New().Start($"-v quiet -hide_banner -skip_frame nokey -select_streams v:0 -show_entries frame=pts_time -of csv=p=0 \"{fileName}\"").ConfigureAwait(false)).Replace("\"", string.Empty).Replace(",", string.Empty);
                 List<decimal> keyFrameTimeStamps = ParseKeyFrameProbe(probeResult);
                 return GetAverageFramesToNextKeyFrame(keyFrameTimeStamps, frameRate);
             }
@@ -137,21 +137,21 @@ public static class Helpers
                     sampleLengthSec = 10;
                 }
 
-                IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(fileName);
+                IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(fileName).ConfigureAwait(false);
                 IVideoStream? videoStream = mediaInfo.VideoStreams.FirstOrDefault();
                 TimeSpan videoTimespan = videoStream?.Duration ?? TimeSpan.FromSeconds(0);
 
                 List<string> probeResults = [];
                 if (numberOfSamples * sampleLengthSec >= videoTimespan.TotalSeconds)
                 {
-                    probeResults.Add((await Probe.New().Start($"-v quiet -hide_banner -skip_frame nokey -select_streams v:0 -show_entries frame=pts_time -of csv=p=0 \"{fileName}\"")).Replace("\"", string.Empty).Replace(",", string.Empty));
+                    probeResults.Add((await Probe.New().Start($"-v quiet -hide_banner -skip_frame nokey -select_streams v:0 -show_entries frame=pts_time -of csv=p=0 \"{fileName}\"").ConfigureAwait(false)).Replace("\"", string.Empty).Replace(",", string.Empty));
                 }
                 else
                 {
                     int secondsBetween = (int)Math.Floor(videoTimespan.TotalSeconds / numberOfSamples);
                     for (int i = 0; i < numberOfSamples; i++)
                     {
-                        probeResults.Add((await Probe.New().Start($"-read_intervals {i * secondsBetween}%+{(i * secondsBetween) + sampleLengthSec} -v quiet -hide_banner -skip_frame nokey -select_streams v:0 -show_entries frame=pts_time -of csv=p=0 \"{fileName}\"")).Replace("\"", string.Empty).Replace(",", string.Empty));
+                        probeResults.Add((await Probe.New().Start($"-read_intervals {i * secondsBetween}%+{(i * secondsBetween) + sampleLengthSec} -v quiet -hide_banner -skip_frame nokey -select_streams v:0 -show_entries frame=pts_time -of csv=p=0 \"{fileName}\"").ConfigureAwait(false)).Replace("\"", string.Empty).Replace(",", string.Empty));
                     }
                 }
 

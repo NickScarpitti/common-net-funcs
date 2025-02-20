@@ -44,24 +44,24 @@ public static class DirectQuery
             try
             {
                 cmd.CommandTimeout = commandTimeoutSeconds;
-                await conn.OpenAsync();
-                await using DbDataReader reader = await cmd.ExecuteReaderAsync();
+                await conn.OpenAsync().ConfigureAwait(false);
+                await using DbDataReader reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
                 dt.Load(reader);
                 break;
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"DB Error: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
                 dt.Clear();
             }
             catch (Exception ex)
             {
-                logger.Error("Error getting datatable: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"Error getting datatable: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
                 dt.Clear();
             }
             finally
             {
-                await conn.CloseAsync();
+                await conn.CloseAsync().ConfigureAwait(false);
             }
         }
         return dt;
@@ -103,12 +103,12 @@ public static class DirectQuery
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"DB Error: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
                 dt.Clear();
             }
             catch (Exception ex)
             {
-                logger.Error("Error getting datatable: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"Error getting datatable: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
                 dt.Clear();
             }
             finally
@@ -148,22 +148,22 @@ public static class DirectQuery
             {
                 UpdateResult updateResult = new();
                 cmd.CommandTimeout = commandTimeoutSeconds;
-                await conn.OpenAsync();
-                updateResult.RecordsChanged = await cmd.ExecuteNonQueryAsync();
+                await conn.OpenAsync().ConfigureAwait(false);
+                updateResult.RecordsChanged = await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
                 updateResult.Success = true;
                 return updateResult;
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"DB Error: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error executing update query: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"Error executing update query: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             finally
             {
-                await conn.CloseAsync();
+                await conn.CloseAsync().ConfigureAwait(false);
             }
         }
         return new();
@@ -205,11 +205,11 @@ public static class DirectQuery
             }
             catch (DbException ex)
             {
-                logger.Error("DB Error: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"DB Error: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             catch (Exception ex)
             {
-                logger.Error("Error executing update query: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"Error executing update query: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
             }
             finally
             {
@@ -325,20 +325,20 @@ public static class DirectQuery
         try
         {
             cmd.CommandTimeout = commandTimeoutSeconds;
-            await conn.OpenAsync(cancellationToken);
-            await using DbDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using DbDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
             Func<IDataReader, T> mapper = CreateMapperDelegate<T>();
 
             IAsyncEnumerator<T> enumeratedReader = EnumerateReader(reader, mapper, cancellationToken).GetAsyncEnumerator(cancellationToken);
-            while(await enumeratedReader.MoveNextAsync())
+            while(await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
             {
                 yield return enumeratedReader.Current;
             }
         }
         finally
         {
-            await conn.CloseAsync();
+            await conn.CloseAsync().ConfigureAwait(false);
         }
     }
 
@@ -350,11 +350,11 @@ public static class DirectQuery
             try
             {
                 cmd.CommandTimeout = commandTimeoutSeconds;
-                await conn.OpenAsync();
-                await using DbDataReader reader = await cmd.ExecuteReaderAsync();
+                await conn.OpenAsync().ConfigureAwait(false);
+                await using DbDataReader reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
 
                 Func<IDataReader, T> mapper = CreateMapperDelegate<T>();
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync().ConfigureAwait(false))
                 {
                     try
                     {
@@ -362,7 +362,7 @@ public static class DirectQuery
                     }
                     catch (Exception ex)
                     {
-                        logger.Error("Error mapping data: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                        logger.Error($"Error mapping data: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
                         throw;
                     }
                 }
@@ -374,7 +374,7 @@ public static class DirectQuery
             }
             finally
             {
-                await conn.CloseAsync();
+                await conn.CloseAsync().ConfigureAwait(false);
             }
         }
         return values;
@@ -382,7 +382,7 @@ public static class DirectQuery
 
     private static async IAsyncEnumerable<T> EnumerateReader<T>(DbDataReader reader, Func<IDataReader, T> mapper, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
-        while (await reader.ReadAsync(cancellationToken))
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             T result;
             try
@@ -391,7 +391,7 @@ public static class DirectQuery
             }
             catch (Exception ex)
             {
-                logger.Error("Error mapping data: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"Error mapping data: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
                 throw;
             }
             yield return result;
@@ -409,7 +409,7 @@ public static class DirectQuery
             }
             catch (Exception ex)
             {
-                logger.Error("Error mapping data: " + ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                logger.Error($"Error mapping data: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
                 throw;
             }
             yield return result;

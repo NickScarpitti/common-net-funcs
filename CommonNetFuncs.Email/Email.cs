@@ -132,7 +132,7 @@ public static class Email
                 if (bodyIsHtml) { bodyBuilder.HtmlBody = body; }
                 else { bodyBuilder.TextBody = body; }
 
-                await AddAttachments(attachments, bodyBuilder, zipAttachments);
+                await AddAttachments(attachments, bodyBuilder, zipAttachments).ConfigureAwait(false);
 
                 email.Body = bodyBuilder.ToMessageBody();
 
@@ -148,15 +148,15 @@ public static class Email
                         using SmtpClient smtpClient = new();
                         if (!string.IsNullOrWhiteSpace(smtpUser) && !string.IsNullOrWhiteSpace(smtpPassword))
                         {
-                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls);
-                            await smtpClient.AuthenticateAsync(smtpUser, smtpPassword);
+                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls).ConfigureAwait(false);
+                            await smtpClient.AuthenticateAsync(smtpUser, smtpPassword).ConfigureAwait(false);
                         }
                         else
                         {
-                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.None);
+                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.None).ConfigureAwait(false);
                         }
-                        await smtpClient.SendAsync(email);
-                        await smtpClient.DisconnectAsync(true);
+                        await smtpClient.SendAsync(email).ConfigureAwait(false);
+                        await smtpClient.DisconnectAsync(true).ConfigureAwait(false);
                         break;
                     }
                     catch (Exception ex)
@@ -224,14 +224,14 @@ public static class Email
                             i++;
                         }
                     }
-                    await Task.WhenAll(tasks);
+                    await Task.WhenAll(tasks).ConfigureAwait(false);
                 }
                 else
                 {
                     await using MemoryStream memoryStream = new();
                     using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
 
-                    await attachments.Where(x => !string.IsNullOrWhiteSpace(x.AttachmentName)).Select(x => (x.AttachmentStream, x.AttachmentName!)).AddFilesToZip(archive, CompressionLevel.SmallestSize);
+                    await attachments.Where(x => !string.IsNullOrWhiteSpace(x.AttachmentName)).Select(x => (x.AttachmentStream, x.AttachmentName!)).AddFilesToZip(archive, CompressionLevel.SmallestSize).ConfigureAwait(false);
 
                     //foreach (MailAttachment attachment in attachments)
                     //{
@@ -247,7 +247,7 @@ public static class Email
                     //}
                     archive.Dispose();
                     memoryStream.Position = 0;
-                    await bodyBuilder.Attachments.AddAsync("Files.zip", memoryStream);
+                    await bodyBuilder.Attachments.AddAsync("Files.zip", memoryStream).ConfigureAwait(false);
                 }
             }
         }

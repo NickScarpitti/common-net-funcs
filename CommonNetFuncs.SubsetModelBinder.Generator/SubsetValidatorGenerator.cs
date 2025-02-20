@@ -41,7 +41,7 @@ public class SubsetValidatorGenerator : IIncrementalGenerator
                     INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
                     string fullName = attributeContainingTypeSymbol.ToDisplayString();
 
-                    if (fullName == FullyQualifiedAttributeName)
+                    if (string.Equals(fullName, FullyQualifiedAttributeName))
                     {
                         return classDeclarationSyntax;
                     }
@@ -73,7 +73,7 @@ public class SubsetValidatorGenerator : IIncrementalGenerator
                 ReportDiagnosticOnce(context, "SG0003", "Class must be partial", $"The class '{subsetClassSymbol.Name}' decorated with SubsetOf attribute must be marked as partial", subsetClass.Identifier.GetLocation(), reportedDiagnostics);
             }
 
-            AttributeData? subsetOfAttribute = subsetClassSymbol.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == AttributeName);
+            AttributeData? subsetOfAttribute = subsetClassSymbol.GetAttributes().FirstOrDefault(a => string.Equals(a.AttributeClass?.Name, AttributeName));
 
             if (subsetOfAttribute == null) continue;
 
@@ -90,14 +90,13 @@ public class SubsetValidatorGenerator : IIncrementalGenerator
             {
                 if (!originalProperties.TryGetValue(subsetProperty.Name, out IPropertySymbol? originalProperty))
                 {
-                    ReportDiagnosticOnce(context, "SG0002", "Property not found", $"Property '{subsetProperty.Name}' is not present in the parent class '{originalTypeSymbol.Name}'" +
-                        (allowInheritedProperties ? " or its base classes" : ""), subsetProperty.Locations.FirstOrDefault(), reportedDiagnostics);
+                    ReportDiagnosticOnce(context, "SG0002", "Property not found", $"Property '{subsetProperty.Name}' is not present in the parent class '{originalTypeSymbol.Name}'{(allowInheritedProperties ? " or its base classes" : "")}",
+                        subsetProperty.Locations.FirstOrDefault(), reportedDiagnostics);
                 }
                 else if (!ignoreType && !SymbolEqualityComparer.Default.Equals(subsetProperty.Type, originalProperty.Type))
                 {
-                    ReportDiagnosticOnce(context, "SG0001", "Property type mismatch", $"Property '{subsetProperty.Name}' has a different type than in the original class '{originalTypeSymbol.Name}'" +
-                        (allowInheritedProperties ? " or its base classes" : "") + $". Expected: {originalProperty.Type.Name}, Found: {subsetProperty.Type.Name}", subsetProperty.Locations.FirstOrDefault(),
-                        reportedDiagnostics);
+                    ReportDiagnosticOnce(context, "SG0001", "Property type mismatch", $"Property '{subsetProperty.Name}' has a different type than in the original class '{originalTypeSymbol.Name}'{(allowInheritedProperties ? " or its base classes" : "")}. Expected: {originalProperty.Type.Name}, Found: {subsetProperty.Type.Name}",
+                        subsetProperty.Locations.FirstOrDefault(), reportedDiagnostics);
                 }
             }
 

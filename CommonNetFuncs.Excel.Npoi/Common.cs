@@ -336,7 +336,7 @@ public static partial class Common
             XSSFCellStyle xssfStyle = (XSSFCellStyle)wb.CreateCellStyle();
             if (alignment != null) { xssfStyle.Alignment = (HorizontalAlignment)alignment; }
 
-            if(fillPattern != null)
+            if (fillPattern != null)
             {
                 xssfStyle.FillPattern = (FillPattern)fillPattern;
             }
@@ -647,7 +647,7 @@ public static partial class Common
 
                 try
                 {
-                    foreach (PropertyInfo prop in props)
+                    for (int i = 0; i < props.Length; i++)
                     {
                         //ws.AutoSizeColumn(x, true);
                         ws.SetColumnWidth(x, maxColumnWidths[x] <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] : MaxCellWidthInExcelUnits);
@@ -691,7 +691,6 @@ public static partial class Common
 
                 int x = 0;
                 int y = 0;
-
 
                 List<int> skipColumns = [];
                 Dictionary<int, int> maxColumnWidths = [];
@@ -754,7 +753,7 @@ public static partial class Common
 
                 try
                 {
-                    foreach (DataColumn column in data.Columns)
+                    for (int i = 0; i < data.Columns.Count; i++)
                     {
                         //ws.AutoSizeColumn(x, true);
                         ws.SetColumnWidth(x, maxColumnWidths[x] + XSSFShape.EMU_PER_PIXEL * 3 <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] + XSSFShape.EMU_PER_PIXEL * 3 : MaxCellWidthInExcelUnits);
@@ -857,11 +856,11 @@ public static partial class Common
     {
         await using MemoryStream tempStream = new();
         wb.Write(tempStream, true);
-        await tempStream.FlushAsync();
+        await tempStream.FlushAsync().ConfigureAwait(false);
         tempStream.Position = 0;
-        await tempStream.CopyToAsync(memoryStream);
-        await tempStream.DisposeAsync();
-        await memoryStream.FlushAsync();
+        await tempStream.CopyToAsync(memoryStream).ConfigureAwait(false);
+        await tempStream.DisposeAsync().ConfigureAwait(false);
+        await memoryStream.FlushAsync().ConfigureAwait(false);
         memoryStream.Position = 0;
     }
 
@@ -1413,7 +1412,7 @@ public static partial class Common
     /// <returns>True if stream is an XLSX file</returns>
     public static bool IsXlsx(this IWorkbook workbook)
     {
-        return workbook.GetType().Name != typeof(HSSFWorkbook).Name;
+        return !workbook.GetType().Name.StrComp(typeof(HSSFWorkbook).Name);
     }
 
     private static readonly Dictionary<string, HSSFColor> HssfColorCache = [];

@@ -780,6 +780,11 @@ public static class Collections
         return found == null ? -1 : found.i;
     }
 
+    public static bool IsIn<T>(this object value) where T: Enum
+    {
+        return Enum.IsDefined(typeof(T), value);
+    }
+
     public static HashSet<string> GetCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
     {
         // Convert to array for multiple enumeration and validation

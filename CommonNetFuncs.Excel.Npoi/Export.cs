@@ -37,7 +37,7 @@ public static class Export
                 return null;
             }
 
-            await memoryStream.WriteFileToMemoryStreamAsync(wb);
+            await memoryStream.WriteFileToMemoryStreamAsync(wb).ConfigureAwait(false);
             wb.Close();
 
             return memoryStream;
@@ -72,7 +72,7 @@ public static class Export
                 return null;
             }
 
-            await memoryStream.WriteFileToMemoryStreamAsync(wb);
+            await memoryStream.WriteFileToMemoryStreamAsync(wb).ConfigureAwait(false);
             wb.Close();
 
             return memoryStream;
@@ -170,7 +170,7 @@ public static class Export
             string actualSheetName = sheetName;
             while (wb.GetSheet(actualSheetName) != null)
             {
-                actualSheetName = sheetName + $" ({i})"; //Get safe new sheet name
+                actualSheetName = $"{sheetName} ({i})"; //Get safe new sheet name
                 i++;
             }
 

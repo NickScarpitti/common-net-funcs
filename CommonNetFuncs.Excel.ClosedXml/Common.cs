@@ -212,7 +212,7 @@ public static class Common
 
                 try
                 {
-                    foreach (PropertyInfo prop in props)
+                    for (int i = props.Length - 1; i >= 0; i--)
                     {
                         ws.Column(x).AdjustToContents();
                         x++;
@@ -309,7 +309,7 @@ public static class Common
 
                     try
                     {
-                        foreach (DataColumn column in data.Columns)
+                        for (int i = 0; i < data.Columns.Count; i++)
                         {
                             ws.Column(x).AdjustToContents();
                             x++;
@@ -347,11 +347,11 @@ public static class Common
         };
 
         wb.SaveAs(tempStream, options);
-        await tempStream.FlushAsync();
+        await tempStream.FlushAsync().ConfigureAwait(false);
         tempStream.Position = 0;
-        await tempStream.CopyToAsync(memoryStream);
-        await tempStream.DisposeAsync();
-        await memoryStream.FlushAsync();
+        await tempStream.CopyToAsync(memoryStream).ConfigureAwait(false);
+        await tempStream.DisposeAsync().ConfigureAwait(false);
+        await memoryStream.FlushAsync().ConfigureAwait(false);
         memoryStream.Position = 0;
     }
 

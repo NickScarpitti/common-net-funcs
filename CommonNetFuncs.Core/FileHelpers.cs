@@ -65,13 +65,13 @@ public static class FileHelpers
                     logger.Info("{msg}", $"[{testPath}] exists, checking with iterator [{i}]");
                 }
                 Regex regex = new(incrementingPattern, RegexOptions.IgnoreCase);
-                if (regex.IsMatch(oldCleanFileName + ext)) //File already has an iterator
+                if (regex.IsMatch($"{oldCleanFileName}{ext}")) //File already has an iterator
                 {
-                    testPath = Path.GetFullPath(Regex.Replace(oldCleanFileName + ext, incrementingPattern, $"({i}){ext}"));
+                    testPath = Path.GetFullPath(Regex.Replace($"{oldCleanFileName}{ext}", incrementingPattern, $"({i}){ext}"));
                 }
                 else
                 {
-                    testPath = Path.GetFullPath(originalFullFileName.Replace(oldCleanFileName + ext, $"{oldCleanFileName} ({i}){ext}"));
+                    testPath = Path.GetFullPath(originalFullFileName.Replace($"{oldCleanFileName}{ext}", $"{oldCleanFileName} ({i}){ext}"));
                 }
 
                 if (!supressLogging)
@@ -79,7 +79,7 @@ public static class FileHelpers
                     logger.Info("{msg}", $"Checking new testPath [{testPath}] with iterator [{i}]]");
                 }
 
-                if (lastTestPath == testPath)
+                if (lastTestPath.StrComp(testPath))
                 {
                     logger.Warn("{msg}", $"File name [{testPath}] not changing, breaking out of loop.");
                     break;
@@ -156,7 +156,7 @@ public static class FileHelpers
                     logger.Info("{msg}", $"Checking new testPath [{testPath}] with iterator [{i}]]");
                 }
 
-                if (lastTestPath == testPath)
+                if (lastTestPath.StrComp(testPath))
                 {
                     logger.Warn("{msg}", $"File name [{testPath}] not changing, breaking out of loop.");
                     break;
@@ -195,7 +195,7 @@ public static class FileHelpers
         await using FileStream fileStream = new(fileName, FileMode.Open, FileAccess.Read);
         try
         {
-            hash = await fileStream.GetHashFromStream(algorithm);
+            hash = await fileStream.GetHashFromStream(algorithm).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -204,7 +204,7 @@ public static class FileHelpers
         finally
         {
             fileStream.Close();
-            await fileStream.DisposeAsync();
+            await fileStream.DisposeAsync().ConfigureAwait(false);
         }
         return hash ?? string.Empty;
     }
@@ -221,27 +221,27 @@ public static class FileHelpers
         if (hashAlgorithm == EHashAlgorithm.SHA1)
         {
             using HashAlgorithm algorithm = SHA1.Create();
-            data = await algorithm.ComputeHashAsync(stream);
+            data = await algorithm.ComputeHashAsync(stream).ConfigureAwait(false);
         }
         else if (hashAlgorithm == EHashAlgorithm.MD5)
         {
             using HashAlgorithm algorithm = MD5.Create();
-            data = await algorithm.ComputeHashAsync(stream);
+            data = await algorithm.ComputeHashAsync(stream).ConfigureAwait(false);
         }
         else if (hashAlgorithm == EHashAlgorithm.SHA256)
         {
             using HashAlgorithm algorithm = SHA256.Create();
-            data = await algorithm.ComputeHashAsync(stream);
+            data = await algorithm.ComputeHashAsync(stream).ConfigureAwait(false);
         }
         else if (hashAlgorithm == EHashAlgorithm.SHA384)
         {
             using HashAlgorithm algorithm = SHA384.Create();
-            data = await algorithm.ComputeHashAsync(stream);
+            data = await algorithm.ComputeHashAsync(stream).ConfigureAwait(false);
         }
         else
         {
             using HashAlgorithm algorithm = SHA512.Create();
-            data = await algorithm.ComputeHashAsync(stream);
+            data = await algorithm.ComputeHashAsync(stream).ConfigureAwait(false);
         }
 
         StringBuilder stringBuilder = new();

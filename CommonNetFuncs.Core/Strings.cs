@@ -174,7 +174,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ParsePascalCase(this string? s)
     {
-        return !s.IsNullOrWhiteSpace() ? string.Concat(s.Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' ') : s;
+        return !s.IsNullOrWhiteSpace() ? string.Concat(s.Select(x => char.IsUpper(x) ? $" {x}" : x.ToString())).TrimStart(' ') : s;
     }
 
     /// <summary>
@@ -302,7 +302,7 @@ public static partial class Strings
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static int IndexOfInvariant(this string? s, char? textToFind)
     {
-        return textToFind != null && textToFind != null ? s?.IndexOf((char)textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
+        return textToFind != null ? s?.IndexOf((char)textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
     }
 
     /// <summary>
@@ -329,7 +329,7 @@ public static partial class Strings
         {
             foreach (string textToFind in textsToFind)
             {
-                if(s.ContainsInvariant(textToFind))
+                if (s.ContainsInvariant(textToFind))
                 {
                     return true;
                 }
@@ -371,6 +371,28 @@ public static partial class Strings
     public static bool StrEq(this string? s1, string? s2)
     {
         return string.Equals(s1?.Trim() ?? string.Empty, s2?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
+    }
+
+    /// <summary>
+    /// Compare two strings for string equality
+    /// </summary>
+    /// <param name="s1">First string to compare</param>
+    /// <param name="s2">Second string to compare</param>
+    /// <returns>True if the strings are equal</returns>
+    public static bool StrComp(this string? s1, string? s2)
+    {
+        return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Compare two strings with optional stringComparison parameter
+    /// </summary>
+    /// <param name="s1">First string to compare</param>
+    /// <param name="s2">Second string to compare</param>
+    /// <returns>True if the strings are equal based on the stringComparison value</returns>
+    public static bool StrComp(this string? s1, string? s2, StringComparison stringComparison)
+    {
+        return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison);
     }
 
     /// <summary>
@@ -756,12 +778,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this int? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -772,12 +789,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this long? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -788,12 +800,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this double? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -804,12 +811,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this decimal? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -820,12 +822,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this bool? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -836,12 +833,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this object? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -1066,24 +1058,24 @@ public static partial class Strings
         if (t.Days > 0)
         {
             days = t.Days.ToString();
-            if (days[..1] == "0")
+            if (days[..1].StrComp("0"))
             {
                 days = days[1..];
             }
         }
         else
         {
-            if (stringForm[..3] == "00:")
+            if (stringForm[..3].StrComp("00:"))
             {
                 stringForm = stringForm[3..];  //Remove hours if there aren't any
-                if (stringForm[..1] == "0")
+                if (stringForm[..1].StrComp("0"))
                 {
                     stringForm = stringForm[1..]; //Remove leading 0 in minutes
                 }
             }
         }
 
-        return string.IsNullOrWhiteSpace(days) ? stringForm : days + ":" + stringForm;
+        return string.IsNullOrWhiteSpace(days) ? stringForm : $"{days}:{stringForm}";
     }
 
     /// <summary>

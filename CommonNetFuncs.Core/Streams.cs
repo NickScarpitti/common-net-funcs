@@ -37,16 +37,16 @@ public static class Streams
         try
         {
             int read;
-            while ((read = await stream.ReadAsync(buffer.AsMemory())) > 0)
+            while ((read = await stream.ReadAsync(buffer.AsMemory()).ConfigureAwait(false)) > 0)
             {
-                await ms.WriteAsync(buffer.AsMemory(0, read));
+                await ms.WriteAsync(buffer.AsMemory(0, read)).ConfigureAwait(false);
             }
             return ms.ToArray();
         }
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
-            await ms.DisposeAsync();
+            await ms.DisposeAsync().ConfigureAwait(false);
         }
     }
 
@@ -62,12 +62,12 @@ public static class Streams
         sourceStream.Position = 0;
 
         //wb.SaveAs(tempStream, options);
-        await tempStream.WriteAsync(sourceStream.ToArray());
-        await tempStream.FlushAsync();
+        await tempStream.WriteAsync(sourceStream.ToArray()).ConfigureAwait(false);
+        await tempStream.FlushAsync().ConfigureAwait(false);
         tempStream.Position = 0;
-        await tempStream.CopyToAsync(targetStream);
-        await tempStream.DisposeAsync();
-        await targetStream.FlushAsync();
+        await tempStream.CopyToAsync(targetStream).ConfigureAwait(false);
+        await tempStream.DisposeAsync().ConfigureAwait(false);
+        await targetStream.FlushAsync().ConfigureAwait(false);
         targetStream.Position = 0;
     }
 
@@ -83,12 +83,12 @@ public static class Streams
         sourceStream.Position = 0;
 
         //wb.SaveAs(tempStream, options);
-        await tempStream.WriteAsync(await sourceStream.ReadStreamAsync());
-        await tempStream.FlushAsync();
+        await tempStream.WriteAsync(await sourceStream.ReadStreamAsync().ConfigureAwait(false)).ConfigureAwait(false);
+        await tempStream.FlushAsync().ConfigureAwait(false);
         tempStream.Position = 0;
-        await tempStream.CopyToAsync(targetStream);
-        await tempStream.DisposeAsync();
-        await targetStream.FlushAsync();
+        await tempStream.CopyToAsync(targetStream).ConfigureAwait(false);
+        await tempStream.DisposeAsync().ConfigureAwait(false);
+        await targetStream.FlushAsync().ConfigureAwait(false);
         targetStream.Position = 0;
     }
 }
@@ -149,13 +149,15 @@ public class CountingStream(Stream innerStream) : Stream
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         ThrowIfDisposed();
+        #pragma warning disable CRR0030 // Redundant 'await'
         return await _innerStream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+        #pragma warning restore CRR0030 // Redundant 'await'
     }
 
-    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        return await _innerStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+        return _innerStream.ReadAsync(buffer, cancellationToken);
     }
 
     public override long Seek(long offset, SeekOrigin origin)

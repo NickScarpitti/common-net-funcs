@@ -12,7 +12,7 @@ public static class Validation
         if (obj == null) { return obj; }
         ValidationContext context = new(obj);
         List<ValidationResult> validationResults = [];
-        if(!Validator.TryValidateObject(obj, context, validationResults, validateAll))
+        if (!Validator.TryValidateObject(obj, context, validationResults, validateAll))
         {
             IEnumerable<string> propertiesToSetToDefault = validationResults.SelectMany(x => x.MemberNames).Distinct();
             foreach (PropertyInfo prop in typeof(T).GetProperties().Where(x => propertiesToSetToDefault.Contains(x.Name)))

@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.2.13</Version>
+    <Version>3.2.14</Version>
     <MinVerTagPrefix>web.common-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -42,6 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
     <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
   </ItemGroup>
 

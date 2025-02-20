@@ -28,7 +28,7 @@ public static class Random
         byte[] randomNumber = new byte[4]; // 4 bytes for an integer
         rng.GetBytes(randomNumber);
         int result = BitConverter.ToInt32(randomNumber, 0) & 0x7FFFFFFF; // Ensure it's non-negative
-        return minValue + result % (maxValue - minValue);
+        return minValue + (result % (maxValue - minValue));
     }
 
     /// <summary>

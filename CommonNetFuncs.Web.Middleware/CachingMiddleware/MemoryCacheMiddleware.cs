@@ -171,7 +171,17 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         else
         {
             // Continue with the pipeline
-            await next(context).ConfigureAwait(false);
+            try
+            {
+                await next(context).ConfigureAwait(false);
+            }
+            catch (TaskCanceledException ex)
+            {
+                if (!cacheOptions.SuppressLogs)
+                {
+                    logger.Warn(ex, "Task was canceled in memory cache middleware");
+                }
+            }
         }
     }
 
@@ -452,7 +462,6 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         return endpoints;
     }
 
-    //TODO:: Finish this up
     public static IEndpointRouteBuilder MapEvictionEndpoints(this IEndpointRouteBuilder endpoints, string? authorizationPolicyName = null)
     {
         // New endpoint for evicting by key
@@ -460,9 +469,6 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         {
             try
             {
-                //using StreamReader reader = new(context.Request.Body);
-                //string key = await reader.ReadToEndAsync();
-
                 if (string.IsNullOrWhiteSpace(key))
                 {
                     return Results.BadRequest("Cache key is required");
@@ -510,9 +516,6 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         {
             try
             {
-                //using StreamReader reader = new(context.Request.Body);
-                //string tag = await reader.ReadToEndAsync();
-
                 if (string.IsNullOrWhiteSpace(tag))
                 {
                     return Results.BadRequest("Cache tag is required");

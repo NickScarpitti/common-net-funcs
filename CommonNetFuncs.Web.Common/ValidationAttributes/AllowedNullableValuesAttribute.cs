@@ -25,7 +25,9 @@ public sealed class AllowedNullableValuesAttribute : ValidationAttribute
     public AllowedNullableValuesAttribute(Type enumType) : this(true, enumType)
     {
         if (!enumType.IsEnum)
+        {
             throw new ArgumentException("Type must be an enum", nameof(enumType));
+        }
     }
 
     // New enum constructor with null configuration

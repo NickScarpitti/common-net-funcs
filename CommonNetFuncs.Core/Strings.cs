@@ -778,12 +778,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this int? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -794,12 +789,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this long? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -810,12 +800,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this double? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -826,12 +811,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this decimal? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -842,12 +822,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this bool? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>
@@ -858,12 +833,7 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? ToNString(this object? value)
     {
-        string? output = null;
-        if (value != null)
-        {
-            output = value.ToString();
-        }
-        return output;
+        return value?.ToString();
     }
 
     /// <summary>

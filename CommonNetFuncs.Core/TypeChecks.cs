@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Globalization;
 
 namespace CommonNetFuncs.Core;
 
@@ -58,16 +57,33 @@ public static class TypeChecks
     /// <summary>
     /// Check if an object is a numeric type
     /// </summary>
-    /// <param name="testObject">Object to check to see if it's numeric</param>
-    /// <returns>True if testObject is a numeric type</returns>
-    public static bool IsNumeric(this object? testObject)
+    /// <param name="value">Object to check to see if it's numeric</param>
+    /// <returns>True if value is a numeric type</returns>
+    public static bool IsNumeric(this object? value)
     {
-        bool isNumeric = false;
-        if (!string.IsNullOrWhiteSpace(testObject?.ToString()))
+        return (value?.GetType()).IsNumericType();
+    }
+
+    /// <summary>
+    /// Check if a type is a numeric type
+    /// </summary>
+    /// <param name="type">Type to check to see if it's numeric</param>
+    /// <returns>True if type is a numeric type</returns>
+    public static bool IsNumericType(this Type? type)
+    {
+        if (type == null) return false;
+
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
-            isNumeric = decimal.TryParse(testObject.ToString(), NumberStyles.Number, NumberFormatInfo.InvariantInfo, out _);
+            type = Nullable.GetUnderlyingType(type);
         }
-        return isNumeric;
+
+        return Type.GetTypeCode(type) switch
+        {
+            TypeCode.Byte or TypeCode.SByte or TypeCode.UInt16 or TypeCode.UInt32 or TypeCode.UInt64 or TypeCode.Int16 or
+            TypeCode.Int32 or TypeCode.Int64 or TypeCode.Single or TypeCode.Double or TypeCode.Decimal => true,
+            _ => false,
+        };
     }
 
     /// <summary>

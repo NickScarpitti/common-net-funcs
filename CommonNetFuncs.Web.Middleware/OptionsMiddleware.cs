@@ -21,7 +21,14 @@ public class OptionsMiddleware(RequestDelegate next)
     {
         if (context.Request.Method.StrComp("OPTIONS"))
         {
-            context.Response.Headers.Append("Access-Control-Allow-Origin", context.Request.Headers.Origin.ToString());
+            // Get origin, defaulting to "*" if null
+            string origin = context.Request.Headers.Origin.ToString();
+            if (string.IsNullOrWhiteSpace(origin))
+            {
+                origin = "*";
+            }
+
+            context.Response.Headers.Append("Access-Control-Allow-Origin", origin);
             context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN");
             context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
             context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");

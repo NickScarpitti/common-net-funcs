@@ -60,7 +60,7 @@ public static class Email
     /// <returns>Email sent success bool</returns>
     public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false,
         IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false,
-        string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false)
+        string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false, bool autoDisposeAttachments = true)
     {
         bool success = true;
         try
@@ -177,6 +177,15 @@ public static class Email
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
             success = false;
         }
+
+        if (autoDisposeAttachments)
+        {
+            foreach (MailAttachment attachment in attachments?.Where(x => x.AttachmentStream != null) ?? [])
+            {
+                await attachment.AttachmentStream!.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+
         return success;
     }
 

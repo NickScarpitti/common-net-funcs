@@ -33,7 +33,7 @@
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.2.10</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.2.14</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 

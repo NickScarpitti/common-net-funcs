@@ -613,6 +613,62 @@ public static class Async
             semaphore?.Release();
         }
     }
+
+    public static async Task<ConcurrentBag<T>> RunAll<T>(this IEnumerable<Func<Task<T>>> tasks, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false)
+    {
+        semaphore ??= new(1, 1);
+        cancellationTokenSource ??= new();
+        ConcurrentBag<T> results = [];
+        CancellationToken token = cancellationTokenSource.Token;
+        await Parallel.ForEachAsync(tasks, async (task, _) =>
+        {
+            try
+            {
+                await semaphore.WaitAsync(token).ConfigureAwait(false);
+                results.Add(await task().ConfigureAwait(false));
+            }
+            catch (Exception ex)
+            {
+                if (breakOnError)
+                {
+                    await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
+                }
+                logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }).ConfigureAwait(false);
+        return results;
+    }
+
+    public static async Task RunAll(this IEnumerable<Func<Task>> tasks, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false)
+    {
+        semaphore ??= new(1, 1);
+        cancellationTokenSource ??= new();
+        CancellationToken token = cancellationTokenSource.Token;
+        await Parallel.ForEachAsync(tasks, async (task, _) =>
+        {
+            try
+            {
+                await semaphore.WaitAsync(token).ConfigureAwait(false);
+                await task().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                if (breakOnError)
+                {
+                    await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
+                }
+                logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }).ConfigureAwait(false);
+    }
 }
 
 public class AsyncIntString

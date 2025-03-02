@@ -81,6 +81,9 @@ public static class OptionsMiddlewareExtensions
     }
 }
 
+/// <summary>
+/// This is to set the rules for the redirect to the authentication authority
+/// </summary>
 public class OptionsMiddleware(RequestDelegate next)
 {
     private readonly RequestDelegate next = next;
@@ -97,7 +100,7 @@ public class OptionsMiddleware(RequestDelegate next)
             }
 
             context.Response.Headers.AccessControlAllowOrigin = origin;
-            context.Response.Headers.AccessControlAllowHeaders = "Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN";
+            context.Response.Headers.AccessControlAllowHeaders = "Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN"; // , X-Return-Url"; //For custom header
             context.Response.Headers.AccessControlAllowMethods = "GET, POST, PUT, DELETE, OPTIONS";
             context.Response.Headers.AccessControlAllowCredentials = "true";
             context.Response.Headers.AccessControlMaxAge = "3600";

@@ -42,7 +42,7 @@ public class OptionsMiddleware(RequestDelegate next, string defaultAllowedOrigin
             }
 
             context.Response.Headers.AccessControlAllowOrigin = origin;
-            context.Response.Headers.AccessControlAllowHeaders = allowedHeaders; // , X-Return-Url"; //For custom header
+            context.Response.Headers.AccessControlAllowHeaders = allowedHeaders;
             context.Response.Headers.AccessControlAllowMethods = allowedMethods;
             context.Response.Headers.AccessControlAllowCredentials = allowCredentials;
             context.Response.Headers.AccessControlMaxAge = maxAge;

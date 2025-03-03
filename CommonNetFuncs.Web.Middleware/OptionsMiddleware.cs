@@ -55,7 +55,7 @@ public class OptionsMiddleware(RequestDelegate next, string defaultAllowedOrigin
         if (!string.IsNullOrWhiteSpace(requestOrigin))
         {
             context.Response.Headers.AccessControlAllowOrigin = requestOrigin;
-            context.Response.Headers.AccessControlAllowCredentials = "true";
+            context.Response.Headers.AccessControlAllowCredentials = allowCredentials;
         }
 
         await next(context).ConfigureAwait(false);

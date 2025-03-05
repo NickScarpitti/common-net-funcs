@@ -46,7 +46,7 @@ public class OptionsMiddleware(RequestDelegate next, string defaultAllowedOrigin
             context.Response.Headers.AccessControlAllowMethods = allowedMethods;
             context.Response.Headers.AccessControlAllowCredentials = allowCredentials;
             context.Response.Headers.AccessControlMaxAge = maxAge;
-            context.Response.StatusCode = (int)defaultStatusCode;
+            context.Response.StatusCode = defaultStatusCode;
             return;
         }
 

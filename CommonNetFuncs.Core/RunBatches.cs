@@ -5,7 +5,7 @@ namespace CommonNetFuncs.Core;
 public static class RunBatches
 {
     public delegate bool BatchedProcess<T>(List<T> itemsToProcess);
-    public delegate Task<bool> AsyncBatchedProcess<T>(List<T> itemsToProcess);
+    public delegate Task<bool> AsyncBatchedProcess<T>(IEnumerable<T> itemsToProcess);
 
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 

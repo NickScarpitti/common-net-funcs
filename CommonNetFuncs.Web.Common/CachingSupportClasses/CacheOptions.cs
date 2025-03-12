@@ -3,7 +3,7 @@ using static CommonNetFuncs.Web.Common.CachingSupportClasses.CacheOptionDefaults
 
 namespace CommonNetFuncs.Web.Common.CachingSupportClasses;
 
-public class CacheOptions
+public sealed class CacheOptions
 {
     public string EvictionQueryParam { get; set; } = DefaultEvictionQueryParam;
     public string UseCacheQueryParam { get; set; } = DefaultCacheQueryParam;

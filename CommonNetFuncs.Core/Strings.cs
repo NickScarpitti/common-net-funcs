@@ -1086,7 +1086,7 @@ public static partial class Strings
     /// <returns>Hash string</returns>
     public static string GetHash(this string originalString, EHashAlgorithm algorithm)
     {
-        byte[] bytes = algorithm switch
+        ReadOnlySpan<byte> bytes = algorithm switch
         {
             EHashAlgorithm.SHA1 => SHA1.HashData(Encoding.UTF8.GetBytes(originalString)),
             EHashAlgorithm.SHA256 => SHA256.HashData(Encoding.UTF8.GetBytes(originalString)),

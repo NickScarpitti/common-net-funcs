@@ -93,7 +93,7 @@ public static class Streams
     }
 }
 
-public class CountingStream(Stream innerStream) : Stream
+public sealed class CountingStream(Stream innerStream) : Stream
 {
     private readonly Stream _innerStream = innerStream ?? throw new ArgumentNullException(nameof(innerStream));
     private long _bytesWritten;

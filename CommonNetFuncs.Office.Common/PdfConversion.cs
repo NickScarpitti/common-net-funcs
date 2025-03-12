@@ -83,7 +83,7 @@ public static class PdfConversion
         }
     }
 
-    public class LibreOfficeFailedException : Exception
+    public sealed class LibreOfficeFailedException : Exception
     {
         public LibreOfficeFailedException()
         {

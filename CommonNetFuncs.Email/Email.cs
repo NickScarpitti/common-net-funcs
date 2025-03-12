@@ -19,7 +19,7 @@ public static class EmailConstants
 /// <summary>
 /// Class that stores both fields of a Mail Address
 /// </summary>
-public class MailAddress
+public sealed class MailAddress
 {
     public string? Name { get; set; }
 
@@ -29,7 +29,7 @@ public class MailAddress
     public string? Email { get; set; }
 }
 
-public class MailAttachment
+public sealed class MailAttachment
 {
     public string? AttachmentName { get; set; }
     public Stream? AttachmentStream { get; set; }

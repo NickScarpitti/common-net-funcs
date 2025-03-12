@@ -1,6 +1,6 @@
 ﻿namespace CommonNetFuncs.DeepClone;
 
-public class ReferenceEqualityComparer : EqualityComparer<object>
+public sealed class ReferenceEqualityComparer : EqualityComparer<object>
 {
     public override bool Equals(object? x, object? y)
     {

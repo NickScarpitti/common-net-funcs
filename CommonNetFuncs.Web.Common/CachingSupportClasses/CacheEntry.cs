@@ -1,6 +1,6 @@
 ﻿namespace CommonNetFuncs.Web.Common.CachingSupportClasses;
 
-public class CacheEntry
+public sealed class CacheEntry
 {
     public byte[] Data { get; set; } = [];
     public HashSet<string> Tags { get; set; } = [];

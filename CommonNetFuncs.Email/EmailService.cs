@@ -22,7 +22,7 @@ public interface IEmailService
 /// <summary>
 /// Implementation of IEmailService that can be used with dependency injection in order to speed up sending multiple emails
 /// </summary>
-public class EmailService : IEmailService
+public sealed class EmailService : IEmailService
 {
     public Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress fromAddress, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false,
         IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false, string? readReceiptEmail = null,

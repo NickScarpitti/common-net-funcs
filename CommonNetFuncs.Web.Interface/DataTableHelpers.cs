@@ -105,7 +105,7 @@ public static class DataTableHelpers
 
 #region Classes
 
-public class DataTableRequest
+public sealed class DataTableRequest
 {
     public DataTableRequest()
     {
@@ -122,7 +122,7 @@ public class DataTableRequest
     public Dictionary<string, string?> SearchValues { get; set; }
 }
 
-public class DataTableReturnData<T>
+public sealed class DataTableReturnData<T>
 {
     [JsonPropertyName("draw")]
     public string? Draw { get; set; }

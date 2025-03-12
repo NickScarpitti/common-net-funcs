@@ -3,7 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace CommonNetFuncs.Web.Common.CachingSupportClasses;
 
-public class CacheMetrics(ConcurrentDictionary<string, HashSet<string>>? cacheTags = null)
+public sealed class CacheMetrics(ConcurrentDictionary<string, HashSet<string>>? cacheTags = null)
 {
     private long _cacheHits;
     private long _cacheMisses;

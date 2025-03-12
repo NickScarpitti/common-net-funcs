@@ -645,9 +645,9 @@ public class RestHelpersCommon(HttpClient client, JsonSerializerOptions? jsonSer
     //}
 }
 
-public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null) : RestHelpersCommon(clientName.IsNullOrWhiteSpace() ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(clientName));
+public sealed class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null) : RestHelpersCommon(clientName.IsNullOrWhiteSpace() ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(clientName));
 
-//public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null)
+//public sealed class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? clientName = null)
 //{
 //    private readonly IHttpClientFactory httpClientFactory = httpClientFactory;
 //    private readonly string clientName = clientName ?? string.Empty;

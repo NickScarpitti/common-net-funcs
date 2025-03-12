@@ -217,7 +217,7 @@ public static class FileHelpers
     /// <returns>Hash for the contents of the stream</returns>
     public static async Task<string> GetHashFromStream(this Stream stream, EHashAlgorithm hashAlgorithm = EHashAlgorithm.SHA512)
     {
-        byte[] data;
+        ReadOnlySpan<byte> data;
         if (hashAlgorithm == EHashAlgorithm.SHA1)
         {
             using HashAlgorithm algorithm = SHA1.Create();

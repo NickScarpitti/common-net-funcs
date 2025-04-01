@@ -102,7 +102,7 @@ public static class Async
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object</param>
     /// <param name="semaphore">Semaphore to limit number of concurrent operations</param>
-    public static async Task ObjectFill<T>(this ConcurrentBag<T?> obj, Func<Task<T>> task, SemaphoreSlim semaphore)
+    public static async Task ObjectFill<T>(this ConcurrentBag<T?> obj, Func<Task<T?>> task, SemaphoreSlim semaphore)
     {
         try
         {
@@ -129,7 +129,7 @@ public static class Async
     /// </summary>
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
-    public static async Task ObjectFill<T>(this List<T>? obj, Task<List<T>> task)
+    public static async Task ObjectFill<T>(this List<T>? obj, Task<List<T>?> task)
     {
         try
         {
@@ -321,7 +321,7 @@ public static class Async
     /// </summary>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<ConcurrentBag<T>> task)
+    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<ConcurrentBag<T>?> task)
     {
         try
         {
@@ -385,7 +385,7 @@ public static class Async
     /// </summary>
     /// <param name="obj">List object to insert data into</param>
     /// <param name="task">Async task that returns the list of values to insert into obj object</param>
-    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>> task)
+    public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>?> task)
     {
         try
         {

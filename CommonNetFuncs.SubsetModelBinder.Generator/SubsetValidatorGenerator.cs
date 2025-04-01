@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace CommonNetFuncs.SubsetModelBinder;
 
 [Generator(LanguageNames.CSharp)]
-public class SubsetValidatorGenerator : IIncrementalGenerator
+public sealed class SubsetValidatorGenerator : IIncrementalGenerator
 {
     private const string FullyQualifiedAttributeName = "CommonNetFuncs.SubsetModelBinder.SubsetOfAttribute"; //typeof(SubsetOfAttribute).Namespace + "." + nameof(SubsetOfAttribute);//"CommonNetFuncs.SubsetModelBinder.SubsetOfAttribute"; //typeof(SubsetOfAttribute).Namespace + nameof(SubsetOfAttribute);
     private const string AttributeName = "SubsetOfAttribute"; //typeof(SubsetOfAttribute).Namespace + "." + nameof(SubsetOfAttribute);//"CommonNetFuncs.SubsetModelBinder.SubsetOfAttribute"; //typeof(SubsetOfAttribute).Namespace + nameof(SubsetOfAttribute);
@@ -161,7 +161,7 @@ public class SubsetValidatorGenerator : IIncrementalGenerator
 
 //Less efficient ISourceGenerator
 //[Generator]
-//public class SubsetValidatorGenerator : ISourceGenerator
+//public sealed class SubsetValidatorGenerator : ISourceGenerator
 //{
 //    public void Initialize(GeneratorInitializationContext context)
 //    {
@@ -267,7 +267,7 @@ public class SubsetValidatorGenerator : IIncrementalGenerator
 //    }
 //}
 
-//public class SyntaxReceiver : ISyntaxReceiver
+//public sealed class SyntaxReceiver : ISyntaxReceiver
 //{
 //    public List<ClassDeclarationSyntax> CandidateClasses { get; } = [];
 

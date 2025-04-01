@@ -30,7 +30,7 @@ public static class Base64
                     using Image image = Image.Load(ms);
                     if (image?.Height > 0 && image.Width > 0)
                     {
-                        byte[] imageBytes = ms.ToArray();
+                        ReadOnlySpan<byte> imageBytes = ms.ToArray();
                         return ToBase64String(imageBytes);
                     }
                 }
@@ -58,7 +58,7 @@ public static class Base64
                 using Image image = Image.Load(ms);
                 if (image?.Height > 0 && image.Width > 0)
                 {
-                    byte[] imageBytes = ms.ToArray();
+                    ReadOnlySpan<byte> imageBytes = ms.ToArray();
                     return ToBase64String(imageBytes);
                 }
             }
@@ -96,7 +96,7 @@ public static class Base64
     {
         try
         {
-            byte[] bytes = FromBase64String(imageBase64);
+            ReadOnlySpan<byte> bytes = FromBase64String(imageBase64);
 
             using Image image = Image.Load(bytes);
             if (image?.Width > 0 && image.Height > 0)

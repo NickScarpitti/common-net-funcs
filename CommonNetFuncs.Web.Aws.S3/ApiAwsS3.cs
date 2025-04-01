@@ -9,7 +9,7 @@ using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Web.Aws.S3;
 
-public class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
+public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAwsS3
 {
     private readonly IAmazonS3 s3Client = s3Client;
     private readonly ILogger<ApiAwsS3> logger = logger;

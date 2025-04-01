@@ -7,7 +7,7 @@ namespace CommonNetFuncs.Web.Middleware;
 /// <summary>
 /// Logging to highlight long wait times for responses
 /// </summary>
-public class UseResponseLoggingFilter(ILogger<UseResponseLoggingFilter> logger, IResponseLoggingConfig config) : IActionFilter
+public sealed class UseResponseLoggingFilter(ILogger<UseResponseLoggingFilter> logger, IResponseLoggingConfig config) : IActionFilter
 {
     private readonly ILogger<UseResponseLoggingFilter> logger = logger;
     private readonly IResponseLoggingConfig config = config;

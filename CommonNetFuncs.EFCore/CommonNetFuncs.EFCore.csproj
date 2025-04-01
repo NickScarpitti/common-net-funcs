@@ -28,17 +28,17 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.2.21</Version>
+    <Version>3.2.22</Version>
     <MinVerTagPrefix>efcore-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.2.7</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.2.22</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" PrivateAssets="all" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -37,6 +37,8 @@ public static class ContentTypes
     public const string TransportStream = "video/mp2t";
     public const string Mpeg = "video/mpeg";
     public const string Mp4 = "video/mp4";
+    public const string Webm = "video/webm";
+    public const string Flv = "video/x-flv";
     public const string Avi = "video/x-msvideo";
     public const string Mp3 = "audio/mpeg";
     public const string Aac = "audio/aac";

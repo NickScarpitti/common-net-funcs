@@ -28,12 +28,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.2.21</Version>
+    <Version>3.2.22</Version>
     <MinVerTagPrefix>email-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.2.15</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.2.22</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 

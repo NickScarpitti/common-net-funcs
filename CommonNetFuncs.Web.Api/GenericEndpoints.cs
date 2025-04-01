@@ -9,7 +9,7 @@ using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.DeepClone.ExpressionTrees;
 
 namespace CommonNetFuncs.Web.Api;
-public class GenericEndpoints : ControllerBase
+public sealed class GenericEndpoints : ControllerBase
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

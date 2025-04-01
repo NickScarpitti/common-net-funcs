@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace CommonNetFuncs.Web.Middleware;
 
-public class UseXsrfTokenMiddleware(RequestDelegate next, IAntiforgery antiforgery, bool httpOnly)
+public sealed class UseXsrfTokenMiddleware(RequestDelegate next, IAntiforgery antiforgery, bool httpOnly)
 {
     private readonly RequestDelegate next = next;
     private readonly IAntiforgery antiforgery = antiforgery;

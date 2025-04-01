@@ -330,9 +330,7 @@ public static class Inspect
     public static string GetHashForObject<T>(this T obj)
     {
         if (obj == null) return "null";
-        IOrderedEnumerable<PropertyInfo> properties = typeof(T).GetProperties()
-            .Where(p => p.CanRead)
-            .OrderBy(p => p.Name);
+        IOrderedEnumerable<PropertyInfo> properties = typeof(T).GetProperties().Where(x => x.CanRead).OrderBy(x => x.Name);
 
         using MemoryStream ms = new();
         using BinaryWriter writer = new(ms);
@@ -345,8 +343,7 @@ public static class Inspect
             }
         }
 
-        byte[] hash = MD5.HashData(ms.ToArray());
-        return Convert.ToHexStringLower(hash);
+        return Convert.ToHexStringLower(MD5.HashData(ms.ToArray()));
     }
 
     private static void WriteValue(BinaryWriter writer, object value)
@@ -369,8 +366,7 @@ public static class Inspect
                 using MemoryStream itemMs = new();
                 using BinaryWriter itemWriter = new(itemMs);
                 WriteValue(itemWriter, item);
-                byte[] itemHash = MD5.HashData(itemMs.ToArray());
-                itemHashes.Add(BitConverter.ToString(itemHash));
+                itemHashes.Add(BitConverter.ToString(MD5.HashData(itemMs.ToArray())));
             }
 
             // Sort the hashes to ensure order independence

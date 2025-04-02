@@ -140,4 +140,22 @@ public static class MathHelpers
         }
         return Enumerable.Range(start, end - start + 1);
     }
+
+    public static void GreatestCommonDenominator(ref long Numerator, ref long Denominator, out long greatestCommonDenominator)
+    {
+        greatestCommonDenominator = 0;
+        for (int x = 1; x <= Denominator; x++)
+        {
+            if ((Numerator % x == 0) && (Denominator % x == 0))
+            {
+                greatestCommonDenominator = x;
+            }
+        }
+
+        if (greatestCommonDenominator != 0)
+        {
+            Numerator /= greatestCommonDenominator;
+            Denominator /= greatestCommonDenominator;
+        }
+    }
 }

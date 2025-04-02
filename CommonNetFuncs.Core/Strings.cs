@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using static System.Convert;
 using static System.Web.HttpUtility;
+using static CommonNetFuncs.Core.MathHelpers;
 
 namespace CommonNetFuncs.Core;
 
@@ -75,6 +76,12 @@ public static partial class Strings
 
     [GeneratedRegex(@"(\d{2})(\d{3})(\d{3})(\d{4})")]
     private static partial Regex TwelveDigitPhoneNumberRegex();
+
+    [GeneratedRegex("[A-Za-z]")]
+    private static partial Regex RemoveLettersRegex();
+
+    [GeneratedRegex("[0-9]")]
+    private static partial Regex RemoveNumbersRegex();
 
     /// <summary>
     /// Clone of VBA Left() function that gets n characters from the left side of the string
@@ -1355,5 +1362,121 @@ public static partial class Strings
         {
             yield return line;
         }
+    }
+
+    [return: NotNullIfNotNull(nameof(number))]
+    public static string? ToFractionString(this decimal? number, int maxNumberOfDecimalsToConsider)
+    {
+        if (number == null) return null;
+        int wholeNumberPart = (int)number;
+        decimal decimalNumberPart = (decimal)number - ToDecimal(wholeNumberPart);
+        long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
+        long numerator = (long)(decimalNumberPart * denominator);
+        GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+        return $"{wholeNumberPart} {numerator}/{denominator}";
+    }
+
+    [return: NotNullIfNotNull(nameof(number))]
+    public static string? ToFractionString(this double? number, int maxNumberOfDecimalsToConsider)
+    {
+        if (number == null) return null;
+        int wholeNumberPart = (int)number;
+        double decimalNumberPart = (double)number - ToDouble(wholeNumberPart);
+        long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
+        long numerator = (long)(decimalNumberPart * denominator);
+        GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+        return $"{wholeNumberPart} {numerator}/{denominator}";
+    }
+
+    [return: NotNullIfNotNull(nameof(fractionString))]
+    public static decimal? FractionToDecimal(this string? fractionString)
+    {
+        if (fractionString == null) return null;
+        if (decimal.TryParse(fractionString, out decimal result))
+        {
+            return result;
+        }
+
+        string[] split = fractionString.Split([' ', '/']);
+
+        if (split.Length == 2 || split.Length == 3)
+        {
+            if (int.TryParse(split[0], out int a) && int.TryParse(split[1], out int b))
+            {
+                if (split.Length == 2)
+                {
+                    return (decimal)a / b;
+                }
+
+
+                if (int.TryParse(split[2], out int c))
+                {
+                    return a + (decimal)b / c;
+                }
+            }
+        }
+
+        throw new FormatException("Not a valid fraction.");
+    }
+
+    public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal? result)
+    {
+        result = null;
+        bool success = true;
+        try
+        {
+            result = fractionString.FractionToDecimal();
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+
+    [return: NotNullIfNotNull(nameof(fractionString))]
+    public static double? FractionToDouble(this string? fractionString)
+    {
+        if (fractionString == null) return null;
+        if (double.TryParse(fractionString, out double result))
+        {
+            return result;
+        }
+
+        string[] split = fractionString.Split([' ', '/']);
+
+        if (split.Length == 2 || split.Length == 3)
+        {
+            if (int.TryParse(split[0], out int a) && int.TryParse(split[1], out int b))
+            {
+                if (split.Length == 2)
+                {
+                    return (double)a / b;
+                }
+
+
+                if (int.TryParse(split[2], out int c))
+                {
+                    return a + (double)b / c;
+                }
+            }
+        }
+
+        throw new FormatException("Not a valid fraction.");
+    }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? RemoveLetters(this string? value)
+    {
+        if (value.IsNullOrWhiteSpace()) return null;
+        return RemoveLettersRegex().Replace(value, string.Empty);
+    }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? RemoveNumbers(this string? value)
+    {
+        if (value.IsNullOrWhiteSpace()) return null;
+        return RemoveNumbersRegex().Replace(value, string.Empty);
     }
 }

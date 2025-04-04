@@ -83,6 +83,15 @@ public static partial class Strings
     [GeneratedRegex("[0-9]")]
     private static partial Regex RemoveNumbersRegex();
 
+    [GeneratedRegex("[A-Za-z ]")]
+    private static partial Regex LettersOnlyRegex();
+
+    [GeneratedRegex(@"[0-9]*\.?[0-9]+")]
+    private static partial Regex NumbersOnlyRegex();
+
+    [GeneratedRegex(@"[0-9]*\.?[0-9 ]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
+    private static partial Regex NumbersWithFractionsOnlyRegex();
+
     /// <summary>
     /// Clone of VBA Left() function that gets n characters from the left side of the string
     /// </summary>
@@ -1478,5 +1487,19 @@ public static partial class Strings
     {
         if (value.IsNullOrWhiteSpace()) return null;
         return RemoveNumbersRegex().Replace(value, string.Empty);
+    }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? GetOnlyLetters(this string? value)
+    {
+        if (value.IsNullOrWhiteSpace()) return null;
+        return LettersOnlyRegex().Match(value).Value.Trim();
+    }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? GetOnlyNumbers(this string? value, bool allowFractions = false)
+    {
+        if (value.IsNullOrWhiteSpace()) return null;
+        return !allowFractions ? NumbersOnlyRegex().Match(value).Value.Trim() : NumbersWithFractionsOnlyRegex().Match(value).Value.Trim();
     }
 }

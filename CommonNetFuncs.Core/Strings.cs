@@ -1386,9 +1386,31 @@ public static partial class Strings
     }
 
     [return: NotNullIfNotNull(nameof(number))]
+    public static string? ToFractionString(this decimal number, int maxNumberOfDecimalsToConsider)
+    {
+        int wholeNumberPart = (int)number;
+        decimal decimalNumberPart = (decimal)number - ToDecimal(wholeNumberPart);
+        long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
+        long numerator = (long)(decimalNumberPart * denominator);
+        GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+        return $"{wholeNumberPart} {numerator}/{denominator}";
+    }
+
+    [return: NotNullIfNotNull(nameof(number))]
     public static string? ToFractionString(this double? number, int maxNumberOfDecimalsToConsider)
     {
         if (number == null) return null;
+        int wholeNumberPart = (int)number;
+        double decimalNumberPart = (double)number - ToDouble(wholeNumberPart);
+        long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
+        long numerator = (long)(decimalNumberPart * denominator);
+        GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+        return $"{wholeNumberPart} {numerator}/{denominator}";
+    }
+
+    [return: NotNullIfNotNull(nameof(number))]
+    public static string? ToFractionString(this double number, int maxNumberOfDecimalsToConsider)
+    {
         int wholeNumberPart = (int)number;
         double decimalNumberPart = (double)number - ToDouble(wholeNumberPart);
         long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
@@ -1417,7 +1439,6 @@ public static partial class Strings
                     return (decimal)a / b;
                 }
 
-
                 if (int.TryParse(split[2], out int c))
                 {
                     return a + (decimal)b / c;
@@ -1443,7 +1464,6 @@ public static partial class Strings
         return success;
     }
 
-
     [return: NotNullIfNotNull(nameof(fractionString))]
     public static double? FractionToDouble(this string? fractionString)
     {
@@ -1463,7 +1483,6 @@ public static partial class Strings
                 {
                     return (double)a / b;
                 }
-
 
                 if (int.TryParse(split[2], out int c))
                 {

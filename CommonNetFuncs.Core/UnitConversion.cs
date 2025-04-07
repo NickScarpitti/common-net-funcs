@@ -109,11 +109,11 @@ public static class UnitConversion
     /// </summary>
     /// <param name="lenIns">Length in inches to convert to mm</param>
     /// <returns>Decimal representation of the length in inches converted to mm</returns>
-    public static decimal InsToMm(this decimal? lenIns)
+    public static decimal InsToMm(this decimal? lenIns, int decimalPlaces = 1)
     {
         if (lenIns != null)
         {
-            return ToDecimal(lenIns) * InToMmConst;
+            return Round(ToDecimal(lenIns) * InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
         }
         else
         {
@@ -128,7 +128,7 @@ public static class UnitConversion
     /// <returns>Decimal representation of the length in mm converted to inches</returns>
     public static decimal MmToIns(this decimal lenMm, int decimalPlaces = 1)
     {
-        return ToDecimal(lenMm) / InToMmConst;
+        return Round(ToDecimal(lenMm) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
 
@@ -141,7 +141,7 @@ public static class UnitConversion
     {
         if (lenMm != null)
         {
-            return ToDecimal(lenMm) / InToMmConst;
+            return Round(ToDecimal(lenMm) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
         }
         else
         {

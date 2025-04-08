@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography;
 using System.Text;
 using CommonNetFuncs.Compression;
 using CommonNetFuncs.Core;
@@ -570,13 +571,23 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 
         RouteHandlerBuilder evictAllCacheEndpoint = endpoints.MapPost("/memorycache/evict/all", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics) =>
         {
-            if (cache is MemoryCache concreteMemoryCache)
+            try
             {
-                concreteMemoryCache.Clear();
+                int cacheSize = 0;
+                if (cache is MemoryCache concreteMemoryCache)
+                {
+                    cacheSize = concreteMemoryCache.Count;
+                    concreteMemoryCache.Clear();
+                    tracker = new();
+                    metrics = new();
+                    return Results.Ok(cacheSize);
+                }
             }
-
-            tracker = new();
-            metrics = new();
+            catch (Exception ex)
+            {
+                return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error evicting cache entries");
+            }
+            return Results.Problem(detail: "Unable to evict all cache items from concrete MemoryCache object", statusCode: StatusCodes.Status500InternalServerError, title: "Error evicting cache entries");
         })
         .WithName("EvictAllCache")
         .WithDisplayName("Evict All Cache Entries");

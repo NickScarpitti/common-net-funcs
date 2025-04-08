@@ -568,10 +568,24 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         .WithName("EvictCacheByTag")
         .WithDisplayName("Evict Cache Entries by Tag");
 
+        RouteHandlerBuilder evictAllCacheEndpoint = endpoints.MapPost("/memorycache/evict/all", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics) =>
+        {
+            if (cache is MemoryCache concreteMemoryCache)
+            {
+                concreteMemoryCache.Clear();
+            }
+
+            tracker = new();
+            metrics = new();
+        })
+        .WithName("EvictAllCache")
+        .WithDisplayName("Evict All Cache Entries");
+
         if (!authorizationPolicyName.IsNullOrWhiteSpace())
         {
             evictByKeyEndpoint.RequireAuthorization(authorizationPolicyName);
             evictByTagEndpoint.RequireAuthorization(authorizationPolicyName);
+            evictAllCacheEndpoint.RequireAuthorization(authorizationPolicyName);
         }
 
         return endpoints;

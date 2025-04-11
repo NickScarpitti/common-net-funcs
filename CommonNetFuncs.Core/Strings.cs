@@ -89,7 +89,7 @@ public static partial class Strings
     [GeneratedRegex(@"[0-9]*\.?[0-9]+")]
     private static partial Regex NumbersOnlyRegex();
 
-    [GeneratedRegex(@"[0-9]*\.?[0-9 ]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
+    [GeneratedRegex(@"[0-9]*\.?[0-9]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
     private static partial Regex NumbersWithFractionsOnlyRegex();
 
     /// <summary>

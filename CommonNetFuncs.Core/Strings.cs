@@ -89,7 +89,7 @@ public static partial class Strings
     [GeneratedRegex(@"[0-9]*\.?[0-9]+")]
     private static partial Regex NumbersOnlyRegex();
 
-    [GeneratedRegex(@"[0-9]*\.?[0-9 ]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
+    [GeneratedRegex(@"[0-9]*\.?[0-9]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
     private static partial Regex NumbersWithFractionsOnlyRegex();
 
     /// <summary>
@@ -1520,5 +1520,25 @@ public static partial class Strings
     {
         if (value.IsNullOrWhiteSpace()) return null;
         return !allowFractions ? NumbersOnlyRegex().Match(value).Value.Trim() : NumbersWithFractionsOnlyRegex().Match(value).Value.Trim();
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? RemoveLeadingNonAlphanumeric(this string? input)
+    {
+        if (input.IsNullOrWhiteSpace()) return input;
+
+        ReadOnlySpan<char> span = input.AsSpan();
+        int index = 0;
+        while (index < span.Length && !char.IsLetterOrDigit(span[index]))
+        {
+            index++;
+        }
+
+        return input[index..];
     }
 }

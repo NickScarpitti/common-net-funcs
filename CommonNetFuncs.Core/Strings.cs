@@ -373,9 +373,50 @@ public static partial class Strings
     /// <param name="newValue">String to replace any substrings matching oldValue with</param>
     /// <returns></returns>
     [return: NotNullIfNotNull(nameof(s))]
-    public static string? ReplaceInvariant(this string? s, string oldValue, string newValue)
+    public static string? ReplaceInvariant(this string? s, string oldValue, string newValue, bool replaceAllInstances = true)
     {
-        return s?.Replace(oldValue, newValue, StringComparison.InvariantCultureIgnoreCase);
+        return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances);
+    }
+
+    /// <summary>
+    /// Replace multiple substrings with another string, ignoring the case and culture when finding the substrings to replace.
+    /// </summary>
+    /// <param name="s">String to search for substrings to replace.</param>
+    /// <param name="oldValues">Collection of substrings to search for in string s, ignoring culture and case.</param>
+    /// <param name="newValue">String to replace any substrings matching any value in oldValues with.</param>
+    /// <returns>String with all occurrences of substrings in oldValues replaced by newValue.</returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static string? ReplaceInvariant(this string? s, IEnumerable<string> oldValues, string newValue, bool replaceAllInstances = true)
+    {
+        if (s.IsNullOrEmpty() || oldValues.All(x => x.IsNullOrEmpty()))
+        {
+            return s;
+        }
+
+        // Use StringBuilder to avoid creating multiple string copies
+        StringBuilder stringBuilder = new(s);
+
+        foreach (string oldValue in oldValues.Where(x => !x.IsNullOrEmpty()))
+        {
+            int index = stringBuilder.ToString().IndexOf(oldValue, StringComparison.InvariantCultureIgnoreCase);
+            while (index != -1)
+            {
+                // Replace the oldValue with newValue
+                stringBuilder.Remove(index, oldValue.Length);
+                stringBuilder.Insert(index, newValue);
+
+                // Continue searching for the next occurrence
+                string currentString = stringBuilder.ToString();
+                if (currentString.IsNullOrEmpty())
+                {
+                    return currentString; //No string left so stop processing
+                }
+                if (!replaceAllInstances) break;
+                index = currentString.IndexOf(oldValue, index + newValue.Length, StringComparison.InvariantCultureIgnoreCase);
+            }
+        }
+
+        return stringBuilder.ToString();
     }
 
     /// <summary>

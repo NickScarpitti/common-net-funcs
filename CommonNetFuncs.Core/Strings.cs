@@ -1473,16 +1473,16 @@ public static partial class Strings
 
         if (split.Length == 2 || split.Length == 3)
         {
-            if (int.TryParse(split[0], out int a) && int.TryParse(split[1], out int b))
+            if (int.TryParse(split[0], out int numeratorOrWhole) && int.TryParse(split[1], out int denominatorOrNumerator))
             {
                 if (split.Length == 2)
                 {
-                    return (decimal)a / b;
+                    return (decimal)numeratorOrWhole / denominatorOrNumerator;
                 }
 
-                if (int.TryParse(split[2], out int c))
+                if (int.TryParse(split[2], out int denominator))
                 {
-                    return a + (decimal)b / c;
+                    return numeratorOrWhole + (decimal)denominatorOrNumerator / denominator;
                 }
             }
         }

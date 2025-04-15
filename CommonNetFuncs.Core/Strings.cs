@@ -1473,16 +1473,16 @@ public static partial class Strings
 
         if (split.Length == 2 || split.Length == 3)
         {
-            if (int.TryParse(split[0], out int a) && int.TryParse(split[1], out int b))
+            if (int.TryParse(split[0], out int numeratorOrWhole) && int.TryParse(split[1], out int denominatorOrNumerator))
             {
                 if (split.Length == 2)
                 {
-                    return (decimal)a / b;
+                    return (decimal)numeratorOrWhole / denominatorOrNumerator;
                 }
 
-                if (int.TryParse(split[2], out int c))
+                if (int.TryParse(split[2], out int denominator))
                 {
-                    return a + (decimal)b / c;
+                    return numeratorOrWhole + (decimal)denominatorOrNumerator / denominator;
                 }
             }
         }
@@ -1497,6 +1497,21 @@ public static partial class Strings
         try
         {
             result = fractionString.FractionToDecimal();
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal result)
+    {
+        result = default;
+        bool success = true;
+        try
+        {
+            result = fractionString.FractionToDecimal() ?? default;
         }
         catch (Exception)
         {
@@ -1581,5 +1596,36 @@ public static partial class Strings
         }
 
         return input[index..];
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? RemoveTrailingNonAlphanumeric(this string? input)
+    {
+        if (input.IsNullOrWhiteSpace()) return input;
+
+        ReadOnlySpan<char> span = input.AsSpan();
+        int index = span.Length -1;
+        while (index > 0 && !char.IsLetterOrDigit(span[index]))
+        {
+            index--;
+        }
+
+        return input[..(index + 1)];
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? TrimOuterNonAlphanumeric(this string? input)
+    {
+        return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric();
     }
 }

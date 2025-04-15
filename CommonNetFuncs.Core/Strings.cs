@@ -1505,6 +1505,21 @@ public static partial class Strings
         return success;
     }
 
+    public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal result)
+    {
+        result = default;
+        bool success = true;
+        try
+        {
+            result = fractionString.FractionToDecimal() ?? default;
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
     [return: NotNullIfNotNull(nameof(fractionString))]
     public static double? FractionToDouble(this string? fractionString)
     {
@@ -1581,5 +1596,36 @@ public static partial class Strings
         }
 
         return input[index..];
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? RemoveTrailingNonAlphanumeric(this string? input)
+    {
+        if (input.IsNullOrWhiteSpace()) return input;
+
+        ReadOnlySpan<char> span = input.AsSpan();
+        int index = span.Length -1;
+        while (index > 0 && !char.IsLetterOrDigit(span[index]))
+        {
+            index--;
+        }
+
+        return input[..(index + 1)];
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? TrimOuterNonAlphanumeric(this string? input)
+    {
+        return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric();
     }
 }

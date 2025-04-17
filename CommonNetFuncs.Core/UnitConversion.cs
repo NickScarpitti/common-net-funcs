@@ -10,6 +10,7 @@ public static class UnitConversion
 {
     public const decimal KgToLbsConst = 2.20462m;
     public const decimal FtToInConst = 12;
+    public const decimal InToMmConst = 25.4m;
     public const decimal MetersToMilesConst = 0.000621371m;
 
     /// <summary>
@@ -86,6 +87,61 @@ public static class UnitConversion
         if (lenIns != null)
         {
             return ToDecimal(lenIns) / FtToInConst;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Convert length in inches to mm
+    /// </summary>
+    /// <param name="lenIns">Length in inches to convert to mm</param>
+    /// <returns>Decimal representation of the length in inches converted to mm</returns>
+    public static decimal InsToMm(this decimal lenIns)
+    {
+        return ToDecimal(lenIns) * InToMmConst;
+    }
+
+    /// <summary>
+    /// Convert length in inches to mm
+    /// </summary>
+    /// <param name="lenIns">Length in inches to convert to mm</param>
+    /// <returns>Decimal representation of the length in inches converted to mm</returns>
+    public static decimal InsToMm(this decimal? lenIns, int decimalPlaces = 1)
+    {
+        if (lenIns != null)
+        {
+            return Round(ToDecimal(lenIns) * InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Convert length in mm to inches
+    /// </summary>
+    /// <param name="lenMm<">Length in mm to convert to inches</param>
+    /// <returns>Decimal representation of the length in mm converted to inches</returns>
+    public static decimal MmToIns(this decimal lenMm, int decimalPlaces = 1)
+    {
+        return Round(ToDecimal(lenMm) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
+    }
+
+
+    /// <summary>
+    /// Convert length in mm to inches
+    /// </summary>
+    /// <param name="lenMm<">Length in mm to convert to inches</param>
+    /// <returns>Decimal representation of the length in mm converted to inches</returns>
+    public static decimal MmToIns(this decimal? lenMm, int decimalPlaces = 1)
+    {
+        if (lenMm != null)
+        {
+            return Round(ToDecimal(lenMm) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
         }
         else
         {

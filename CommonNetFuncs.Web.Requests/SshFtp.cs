@@ -32,7 +32,6 @@ public class SshFtp<T>
         if (IsConnected())
         {
             this.Client!.Disconnect();
-            this.Client.Dispose();
         }
         SftpClient client = new SftpClient(Connection.HostName, Connection.Port, Connection.UserName, Connection.Password);
         client.Connect();
@@ -57,7 +56,6 @@ public class SshFtp<T>
         if (IsConnected())
         {
             Client!.Disconnect();
-            Client.Dispose();
         }
         return IsConnected();
     }

@@ -89,7 +89,7 @@ public static partial class Strings
     [GeneratedRegex(@"[0-9]*\.?[0-9]+")]
     private static partial Regex NumbersOnlyRegex();
 
-    [GeneratedRegex(@"[0-9]*\.?[0-9]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
+    [GeneratedRegex(@"[0-9 ]*\.?[0-9]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
     private static partial Regex NumbersWithFractionsOnlyRegex();
 
     /// <summary>
@@ -1490,13 +1490,14 @@ public static partial class Strings
         throw new FormatException("Not a valid fraction.");
     }
 
-    public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal? result)
+    public static bool TryFractionToDecimal(this string? inputString, [NotNullWhen(true)] out decimal? result)
     {
         result = null;
+        if (inputString.IsNullOrWhiteSpace()) return false;
         bool success = true;
         try
         {
-            result = fractionString.FractionToDecimal();
+            result = inputString.FractionToDecimal();
         }
         catch (Exception)
         {
@@ -1508,10 +1509,50 @@ public static partial class Strings
     public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal result)
     {
         result = default;
+        if (fractionString.IsNullOrWhiteSpace()) return false;
+
         bool success = true;
         try
         {
             result = fractionString.FractionToDecimal() ?? default;
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    public static bool TryStringToDecimal(this string? inputString, [NotNullWhen(true)] out decimal? result)
+    {
+        result = null;
+        bool success = true;
+        if (inputString.IsNullOrWhiteSpace()) return false;
+        try
+        {
+            //Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
+            result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
+                decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
+                null;
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    public static bool TryStringToDecimal(this string? inputString, [NotNullWhen(true)] out decimal result)
+    {
+        result = default;
+        bool success = true;
+        if (inputString.IsNullOrWhiteSpace()) return false;
+        try
+        {
+            //Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
+            result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
+                decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
+                default;
         }
         catch (Exception)
         {
@@ -1575,7 +1616,7 @@ public static partial class Strings
     public static string? GetOnlyNumbers(this string? value, bool allowFractions = false)
     {
         if (value.IsNullOrWhiteSpace()) return null;
-        return !allowFractions ? NumbersOnlyRegex().Match(value).Value.Trim() : NumbersWithFractionsOnlyRegex().Match(value).Value.Trim();
+        return !allowFractions ? NumbersOnlyRegex().Match(value.Trim()).Value.Trim() : NumbersWithFractionsOnlyRegex().Match(value.Trim()).Value.Trim();
     }
 
     /// <summary>

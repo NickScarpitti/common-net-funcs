@@ -400,6 +400,11 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
             cacheLock.Dispose();
         }
     }
+
+    ~MemoryCacheMiddleware()
+    {
+        Dispose(false);
+    }
 }
 
 // Extension method for easy middleware registration

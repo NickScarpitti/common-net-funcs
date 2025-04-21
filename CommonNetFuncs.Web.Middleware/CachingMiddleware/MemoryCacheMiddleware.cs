@@ -439,7 +439,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 
     public static IEndpointRouteBuilder MapCacheMetrics(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/memory-cache-metrics", (CacheMetrics metrics) =>
+        endpoints.MapGet("/api/memory-cache-metrics", (CacheMetrics metrics) =>
         {
             try
             {
@@ -470,7 +470,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
     public static IEndpointRouteBuilder MapEvictionEndpoints(this IEndpointRouteBuilder endpoints, string? authorizationPolicyName = null)
     {
         // New endpoint for evicting by key
-        RouteHandlerBuilder evictByKeyEndpoint = endpoints.MapPost("/memorycache/evict/key/{key}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string key) =>
+        RouteHandlerBuilder evictByKeyEndpoint = endpoints.MapPost("/api/memorycache/evict/key/{key}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string key) =>
         {
             try
             {
@@ -517,7 +517,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         .WithDisplayName("Evict Cache Entry by Key");
 
         // New endpoint for evicting by tag
-        RouteHandlerBuilder evictByTagEndpoint = endpoints.MapPost("/memorycache/evict/tag/{tag}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string tag) =>
+        RouteHandlerBuilder evictByTagEndpoint = endpoints.MapPost("/api/memorycache/evict/tag/{tag}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string tag) =>
         {
             try
             {
@@ -573,7 +573,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         .WithName("EvictCacheByTag")
         .WithDisplayName("Evict Cache Entries by Tag");
 
-        RouteHandlerBuilder evictAllCacheEndpoint = endpoints.MapPost("/memorycache/evict/all", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics) =>
+        RouteHandlerBuilder evictAllCacheEndpoint = endpoints.MapPost("/api/memorycache/evict/all", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics) =>
         {
             try
             {

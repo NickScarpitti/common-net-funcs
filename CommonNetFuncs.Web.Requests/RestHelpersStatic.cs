@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using CommonNetFuncs.Compression;
 using CommonNetFuncs.Core;
@@ -12,14 +13,220 @@ using MessagePack;
 using Newtonsoft.Json;
 using NLog;
 using static CommonNetFuncs.Compression.Streams;
+using static CommonNetFuncs.Web.Requests.RestHelperConstants;
 
 namespace CommonNetFuncs.Web.Requests;
 
 public static class RestHelpersStatic
 {
-    public static System.Text.Json.JsonSerializerOptions? JsonSerializerOptions { get; set; }
+    private static readonly HttpMethod[] requestsWithBody = [HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch];
+    private const double DefaultRequestTimeout = 100;
+
+    //public static JsonSerializerOptions? JsonSerializerOptions { get; set; }
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-    public static readonly System.Text.Json.JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles, PropertyNameCaseInsensitive = true };
+    public static readonly JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles, PropertyNameCaseInsensitive = true };
+
+    /// <summary>
+    /// Executes a REST request against the provided URL with the requestOptions
+    /// </summary>
+    /// <typeparam name="T">Type of return object</typeparam>
+    /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
+    /// <param name="client">HttpClient to execute REST request with</param>
+    /// <param name="requestOptions">Configuration parameters for the REST request</param>
+    /// <returns>Object of type T resulting from the request - Null if not success</returns>
+    public static async Task<T?> RestRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions)
+    {
+        T? result = default;
+        try
+        {
+            logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
+                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument?.ReadAsStringAsync().Result)}" : string.Empty));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
+            using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
+            httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
+            httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+
+            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            result = await HandleResponse<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url, requestOptions.UseNewtonsoftDeserializer, requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions).ConfigureAwait(false);
+        }
+        catch (TaskCanceledException tcex)
+        {
+            string exceptionLocation = tcex.GetLocationOfException();
+            if (requestOptions.ExpectTaskCancellation)
+            {
+                logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+            }
+            else
+            {
+                logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Executes a REST request against the provided URL with the requestOptions and streams the results using IAsyncEnumerable
+    /// </summary>
+    /// <typeparam name="T">Type of return object</typeparam>
+    /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
+    /// <param name="client">HttpClient to execute REST request with</param>
+    /// <param name="requestOptions">Configuration parameters for the REST request</param>
+    /// <returns>An IAsyncEnumerable of the Object of type T resulting from the request - Null if not success</returns>
+    public static async IAsyncEnumerable<T?> StreamingRestRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions)
+    {
+        IAsyncEnumerator<T?>? enumeratedReader = null;
+        try
+        {
+            logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
+                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument?.ReadAsStringAsync().Result)}" : string.Empty));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
+            using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
+
+            //Ensure json header is being used
+            if (requestOptions.HttpHeaders == null)
+            {
+                requestOptions.HttpHeaders = new(JsonAcceptHeader.SingleToList());
+            }
+            else if (requestOptions.HttpHeaders.Remove(AcceptHeader))
+            {
+                requestOptions.HttpHeaders.AddDictionaryItem(JsonAcceptHeader);
+            }
+
+            httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
+            httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+
+            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            enumeratedReader = HandleResponseAsync<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url).GetAsyncEnumerator();
+        }
+        catch (TaskCanceledException tcex)
+        {
+            string exceptionLocation = tcex.GetLocationOfException();
+            if (requestOptions.ExpectTaskCancellation)
+            {
+                logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+            }
+            else
+            {
+                logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+        }
+
+        if (enumeratedReader != null)
+        {
+            while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
+            {
+                yield return enumeratedReader!.Current;
+            }
+        }
+        else
+        {
+            yield break;
+        }
+    }
+
+    /// <summary>
+    /// Executes a REST request against the provided URL with the requestOptions
+    /// </summary>
+    /// <typeparam name="T">Type of return object</typeparam>
+    /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
+    /// <param name="client">HttpClient to execute REST request with</param>
+    /// <param name="requestOptions">Configuration parameters for the REST request</param>
+    /// <returns>Object of type T resulting from the request - Null if not success</returns>
+    public static async Task<RestObject<T>> RestObjectRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions)
+    {
+        RestObject<T> restObject = new();
+        try
+        {
+            logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
+                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument?.ReadAsStringAsync().Result)}" : string.Empty));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
+            using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
+            httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
+            httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+
+            restObject.Response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            restObject.Result = await HandleResponse<T>(restObject.Response, requestOptions.HttpMethod.ToString(), requestOptions.Url, requestOptions.UseNewtonsoftDeserializer, requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, requestOptions.HttpHeaders).ConfigureAwait(false);
+        }
+        catch (TaskCanceledException tcex)
+        {
+            string exceptionLocation = tcex.GetLocationOfException();
+            if (requestOptions.ExpectTaskCancellation)
+            {
+                logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+            }
+            else
+            {
+                logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+        }
+        return restObject;
+    }
+
+    /// <summary>
+    /// Executes a REST request against the provided URL with the requestOptions and streams the results using IAsyncEnumerable
+    /// </summary>
+    /// <typeparam name="T">Type of return object</typeparam>
+    /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
+    /// <param name="client">HttpClient to execute REST request with</param>
+    /// <param name="requestOptions">Configuration parameters for the REST request</param>
+    /// <returns>An IAsyncEnumerable of the Object of type T resulting from the request - Null if not success</returns>
+    public static async Task<StreamingRestObject<T>> StreamingRestObjectRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions)
+    {
+        StreamingRestObject<T> restObject = new();
+        try
+        {
+            logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
+                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument?.ReadAsStringAsync().Result)}" : string.Empty));
+            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
+            using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
+
+            //Ensure json header is being used
+            if (requestOptions.HttpHeaders == null)
+            {
+                requestOptions.HttpHeaders = new(JsonAcceptHeader.SingleToList());
+            }
+            else if (requestOptions.HttpHeaders.Remove(AcceptHeader))
+            {
+                requestOptions.HttpHeaders.AddDictionaryItem(JsonAcceptHeader);
+            }
+
+            httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
+            httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+
+            restObject.Response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            restObject.Result = HandleResponseAsync<T>(restObject.Response, requestOptions.HttpMethod.ToString(), requestOptions.Url);
+        }
+        catch (TaskCanceledException tcex)
+        {
+            string exceptionLocation = tcex.GetLocationOfException();
+            if (requestOptions.ExpectTaskCancellation)
+            {
+                logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+            }
+            else
+            {
+                logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+        }
+
+        return restObject;
+    }
 
     /// <summary>
     /// Checks if the HTTP request was successful and then parses the response if it is
@@ -30,7 +237,7 @@ public static class RestHelpersStatic
     /// <param name="url">URL HTTP request was made against</param>
     /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
     /// <returns>Response content if HTTP request was successful</returns>
-    internal static async Task<T?> HandleResponse<T>(HttpResponseMessage response, string httpMethod, string url, bool useNewtonsoftDeserializer, MsgPackOptions? msgPackOptions = null, Dictionary<string, string>? httpHeaders = null)
+    internal static async Task<T?> HandleResponse<T>(this HttpResponseMessage response, string httpMethod, string url, bool useNewtonsoftDeserializer, JsonSerializerOptions? jsonSerializerOptions = null, MsgPackOptions? msgPackOptions = null, Dictionary<string, string>? httpHeaders = null)
     {
         T? result = default;
         try
@@ -41,19 +248,19 @@ public static class RestHelpersStatic
             await using Stream responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
-                result = await ReadResponseStream<T>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions).ConfigureAwait(false);
+                result = await ReadResponseStream<T>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, jsonSerializerOptions, msgPackOptions).ConfigureAwait(false);
             }
             else
             {
                 string? errorMessage = null;
                 if (contentType.ContainsInvariant(ContentTypes.JsonProblem))
                 {
-                    ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, msgPackOptions).ConfigureAwait(false) ?? new();
+                    ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, jsonSerializerOptions, msgPackOptions).ConfigureAwait(false) ?? new();
                     errorMessage = $"({problemDetails.Status}) {problemDetails.Title}\n\t\t{string.Join("\n\t\t", problemDetails.Errors.Select(x => $"{x.Key}:\n\t\t\t{string.Join("\n\t\t\t", x.Value)}"))}";
                 }
                 else
                 {
-                    errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, useNewtonsoftDeserializer, msgPackOptions).ConfigureAwait(false);
+                    errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, useNewtonsoftDeserializer, jsonSerializerOptions, msgPackOptions).ConfigureAwait(false);
                 }
                 logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(httpHeaders != null ? $"Headers: {string.Join(", ", httpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
             }
@@ -73,7 +280,7 @@ public static class RestHelpersStatic
     /// <param name="httpMethod">HTTP method used to make the HTTP request</param>
     /// <param name="url">URL HTTP request was made against</param>
     /// <returns>Response content if HTTP request was successful</returns>
-    internal static async IAsyncEnumerable<T?> HandleResponseAsync<T>(HttpResponseMessage response, string httpMethod, string url, Dictionary<string, string>? httpHeaders = null)
+    internal static async IAsyncEnumerable<T?> HandleResponseAsync<T>(this HttpResponseMessage response, string httpMethod, string url, Dictionary<string, string>? httpHeaders = null, JsonSerializerOptions? jsonSerializerOptions = null)
     {
         Stream? responseStream = null;
         try
@@ -89,7 +296,7 @@ public static class RestHelpersStatic
                 responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
-                    enumeratedReader = ReadResponseStreamAsync<T?>(responseStream, contentType, contentEncoding).GetAsyncEnumerator();
+                    enumeratedReader = responseStream.ReadResponseStreamAsync<T?>(contentType, contentEncoding, jsonSerializerOptions).GetAsyncEnumerator();
                 }
                 else
                 {
@@ -129,7 +336,7 @@ public static class RestHelpersStatic
         }
     }
 
-    public static async Task<T?> ReadResponseStream<T>(Stream responseStream, string? contentType, string? contentEncoding, bool useNewtonsoftDeserializer, MsgPackOptions? msgPackOptions = null)
+    public static async Task<T?> ReadResponseStream<T>(this Stream responseStream, string? contentType, string? contentEncoding, bool useNewtonsoftDeserializer, JsonSerializerOptions? jsonSerializerOptions = null, MsgPackOptions? msgPackOptions = null)
     {
         T? result = default;
         try
@@ -193,12 +400,12 @@ public static class RestHelpersStatic
                     {
                         using StreamReader streamReader = new(outputStream.Length > 1 ? outputStream : responseStream);
                         await using JsonTextReader jsonReader = new(streamReader); //Newtonsoft
-                        JsonSerializer serializer = new(); //Newtonsoft
+                        Newtonsoft.Json.JsonSerializer serializer = new(); //Newtonsoft
                         result = serializer.Deserialize<T>(jsonReader); //using static Newtonsoft.Json.JsonSerializer;
                     }
                     else
                     {
-                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 0 ? outputStream : responseStream, JsonSerializerOptions ?? defaultJsonSerializerOptions).ConfigureAwait(false);
+                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 0 ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions).ConfigureAwait(false);
                     }
                 }
                 else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
@@ -227,7 +434,7 @@ public static class RestHelpersStatic
         return result;
     }
 
-    public static async IAsyncEnumerable<T?> ReadResponseStreamAsync<T>(Stream responseStream, string? contentType, string? contentEncoding)
+    public static async IAsyncEnumerable<T?> ReadResponseStreamAsync<T>(this Stream responseStream, string? contentType, string? contentEncoding, JsonSerializerOptions? jsonSerializerOptions)
     {
         if (contentType.ContainsInvariant("json"))
         {
@@ -243,7 +450,7 @@ public static class RestHelpersStatic
                 await responseStream.DecompressStream(outputStream, ECompressionType.Brotli).ConfigureAwait(false);
             }
 
-            await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(outputStream.Length > 1 ? outputStream : responseStream, JsonSerializerOptions ?? defaultJsonSerializerOptions))
+            await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(outputStream.Length > 1 ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions))
             {
                 if (item != null)
                 {

@@ -12,7 +12,9 @@ public static class CsvReadHelpers
         {
             HasHeaderRecord = hasHeader
         });
-        return csv.GetRecords<T>();
+        {
+            return csv.GetRecords<T>();
+        }
     }
 
     public static IEnumerable<T> ReadCsvFromStream<T>(Stream stream, bool hasHeader = true, CultureInfo? cultureInfo = null)
@@ -22,6 +24,8 @@ public static class CsvReadHelpers
         {
             HasHeaderRecord = hasHeader
         });
-        return csv.GetRecords<T>();
+        {
+            return csv.GetRecords<T>();
+        }
     }
 }

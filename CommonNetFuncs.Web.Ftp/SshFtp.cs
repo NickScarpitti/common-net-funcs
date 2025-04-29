@@ -47,7 +47,7 @@ public static class SshFtp
         if (sftpClient.IsConnected())
         {
             sftpClient.Disconnect();
-            sftpClient.Dispose();
+            //sftpClient.Dispose();
         }
         return sftpClient.IsConnected();
     }

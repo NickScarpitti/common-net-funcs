@@ -44,6 +44,10 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
 
     public SftpClient Connect()
     {
+        if (IsConnected())
+        {
+            DisconnectClient();
+        }
         return client.Connect(connection);
     }
 

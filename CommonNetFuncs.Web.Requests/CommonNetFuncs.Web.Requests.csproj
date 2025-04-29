@@ -11,7 +11,7 @@
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Authors>Nick_Scarpitti</Authors>
+    <Authors>NickScarpitti</Authors>
     <PackageIcon>TTLogo.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
@@ -28,12 +28,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.2.38</Version>
+    <Version>3.3.0</Version>
     <MinVerTagPrefix>web.requests-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.2.28</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.3.0</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 

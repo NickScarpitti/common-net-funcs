@@ -1,5 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Formats.Asn1;
+using System.Globalization;
 using CommonNetFuncs.Core;
+using CsvHelper;
+using CsvHelper.Configuration;
 using Renci.SshNet;
 using Renci.SshNet.Sftp;
 using static CommonNetFuncs.Csv.CsvReadHelpers;
@@ -102,16 +106,37 @@ public static class SshFtp
         }
     }
 
-    public static async Task<IEnumerable<T>> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true)
+    //public static async Task<IEnumerable<T>> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true)
+    //{
+    //    if (!remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryExistsAsync(remoteFilePath).ConfigureAwait(false))
+    //    {
+    //        throw new Exception($"File {remoteFilePath} is not a csv file.  Please use DownloadStream instead.");
+    //    }
+    //    //string[] data = Client.ReadAllLines(remoteFilePath);
+
+    //    await using SftpFileStream stream = sftpClient!.OpenRead(remoteFilePath);
+    //    return ReadCsvFromStream<T>(stream, csvHasHeaderRow);
+
+    //}
+
+    public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient,string remoteFilePath, bool csvHasHeaderRow = true)
     {
-        if (!remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryExistsAsync(remoteFilePath).ConfigureAwait(false))
+        if (!remoteFilePath.EndsWith(".csv") || !sftpClient.Exists(remoteFilePath))
         {
             throw new Exception($"File {remoteFilePath} is not a csv file.  Please use DownloadStream instead.");
         }
         //string[] data = Client.ReadAllLines(remoteFilePath);
 
-        await using SftpFileStream stream = sftpClient!.OpenRead(remoteFilePath);
-        return ReadCsvFromStream<T>(stream, csvHasHeaderRow);
+        using (SftpFileStream stream = sftpClient.OpenRead(remoteFilePath))
+        using (StreamReader reader = new StreamReader(stream))
+        using (CsvReader csvReader = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            HasHeaderRecord = csvHasHeaderRow,
+        }))
+        {
+            return new List<T>(csvReader.GetRecords<T>());
+        }
+
     }
 
     public static bool DeleteSftpFile(this SftpClient? sftpClient, string remoteFilePath)

@@ -24,8 +24,6 @@ public static class CsvReadHelpers
         {
             HasHeaderRecord = hasHeader
         });
-        {
-            return csv.GetRecords<T>();
-        }
+        return csv.GetRecords<T>();
     }
 }

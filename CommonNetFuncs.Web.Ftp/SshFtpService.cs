@@ -14,7 +14,7 @@ public interface ISshFtpService
     Task<bool> DirectoryExistsAsync(string path);
     IEnumerable<string> GetFileList(string path, string extension = "*");
     IAsyncEnumerable<string> GetFileListAsync(string path, string extension = "*", CancellationTokenSource? cancellationTokenSource = null);
-    Task<IEnumerable<T>> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true);
+    List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true);
     bool DeleteFile(string remoteFilePath);
     Task<bool> DeleteFileAsync(string remoteFilePath);
     void Dispose();
@@ -81,7 +81,7 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
         return client.GetFileListAsync(path, extension, cancellationTokenSource);
     }
 
-    public Task<IEnumerable<T>> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true)
+    public List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true)
     {
         return client.GetDataFromCsv<T>(remoteFilePath, csvHasHeaderRow);
     }

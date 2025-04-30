@@ -2,7 +2,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -1668,5 +1670,53 @@ public static partial class Strings
     public static string? TrimOuterNonAlphanumeric(this string? input)
     {
         return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric();
+    }
+
+
+    /// <summary>
+    /// Counts the occurrences of a specific character in the given string.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
+    public static int CountChars(this ReadOnlySpan<char> input, char charToFind)
+    {
+        if (input.Length == 0) return 0;
+        int count = 0;
+        foreach (char @char in input)
+        {
+            if (@char == charToFind)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// Counts the occurrences of a specific character in the given string.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
+    public static int CountChars(this string? input, char charToFind)
+    {
+        if(input.IsNullOrEmpty()) return 0;
+        return input.AsSpan().CountChars(charToFind);
+    }
+
+    /// <summary>
+    /// Counts the occurrences of a specific character in the given string.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
+    public static int CountChars(this string? input, string charToFind)
+    {
+        if (charToFind.Length > 1)
+        {
+            throw new InvalidDataException("charToFind must be a single character");
+        }
+        return input.CountChars(charToFind[0]);
     }
 }

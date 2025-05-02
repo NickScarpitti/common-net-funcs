@@ -63,12 +63,12 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
 
     public bool DirectoryExists(string path)
     {
-        return client.DirectoryExists(path);
+        return client.DirectoryOrFileExists(path);
     }
 
     public Task<bool> DirectoryExistsAsync(string path)
     {
-        return client.DirectoryExistsAsync(path);
+        return client.DirectoryOrFileExistsAsync(path);
     }
 
     public IEnumerable<string> GetFileList(string path, string extension = "*")
@@ -79,6 +79,11 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
     public IAsyncEnumerable<string> GetFileListAsync(string path, string extension = "*", CancellationTokenSource? cancellationTokenSource = null)
     {
         return client.GetFileListAsync(path, extension, cancellationTokenSource);
+    }
+
+    public Task<List<T>> GetDataFromCsvAsync<T>(string remoteFilePath, bool csvHasHeaderRow = true)
+    {
+        return client.GetDataFromCsvAsync<T>(remoteFilePath, csvHasHeaderRow);
     }
 
     public List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true)

@@ -119,7 +119,7 @@ public static class SshFtp
 
     //}
 
-    public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient,string remoteFilePath, bool csvHasHeaderRow = true)
+    public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true)
     {
         if (!remoteFilePath.EndsWith(".csv") || !sftpClient.Exists(remoteFilePath))
         {

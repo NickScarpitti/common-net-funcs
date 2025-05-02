@@ -131,7 +131,6 @@ public static class UnitConversion
         return Round(ToDecimal(lenMm) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
     }
 
-
     /// <summary>
     /// Convert length in mm to inches
     /// </summary>

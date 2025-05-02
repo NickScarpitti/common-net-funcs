@@ -124,6 +124,7 @@ public static class SshFtp
             throw new Exception($"File {remoteFilePath} is not a csv file.  Please use DownloadStream instead.");
         }
 
+        //TODO:: See if this can be replaced by ReadCsvFromStream
         using SftpFileStream stream = sftpClient.OpenRead(remoteFilePath);
         using StreamReader reader = new(stream);
         using CsvReader csvReader = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture)

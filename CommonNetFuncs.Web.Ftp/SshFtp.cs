@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using CommonNetFuncs.Core;
+using CsvHelper;
+using CsvHelper.Configuration;
 using Renci.SshNet;
 using Renci.SshNet.Sftp;
 using static CommonNetFuncs.Csv.CsvReadHelpers;
@@ -47,17 +50,17 @@ public static class SshFtp
         if (sftpClient.IsConnected())
         {
             sftpClient.Disconnect();
-            sftpClient.Dispose();
+            //sftpClient.Dispose();
         }
         return sftpClient.IsConnected();
     }
 
-    public static bool DirectoryExists([NotNullWhen(true)] this SftpClient? sftpClient, string path)
+    public static bool DirectoryOrFileExists([NotNullWhen(true)] this SftpClient? sftpClient, string path)
     {
         return sftpClient?.Exists(path) ?? false;
     }
 
-    public static async Task<bool> DirectoryExistsAsync([NotNullWhen(true)] this SftpClient? sftpClient, string path)
+    public static async Task<bool> DirectoryOrFileExistsAsync([NotNullWhen(true)] this SftpClient? sftpClient, string path)
     {
         return sftpClient != null && await sftpClient.ExistsAsync(path).ConfigureAwait(false);
     }
@@ -102,16 +105,32 @@ public static class SshFtp
         }
     }
 
-    public static async Task<IEnumerable<T>> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true)
+    public static async Task<List<T>> GetDataFromCsvAsync<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true)
     {
-        if (!remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryExistsAsync(remoteFilePath).ConfigureAwait(false))
+        if (!remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryOrFileExistsAsync(remoteFilePath).ConfigureAwait(false))
         {
             throw new Exception($"File {remoteFilePath} is not a csv file.  Please use DownloadStream instead.");
         }
-        //string[] data = Client.ReadAllLines(remoteFilePath);
 
         await using SftpFileStream stream = sftpClient!.OpenRead(remoteFilePath);
         return ReadCsvFromStream<T>(stream, csvHasHeaderRow);
+    }
+
+    public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient,string remoteFilePath, bool csvHasHeaderRow = true)
+    {
+        if (!remoteFilePath.EndsWith(".csv") || !sftpClient.DirectoryOrFileExists(remoteFilePath))
+        {
+            throw new Exception($"File {remoteFilePath} is not a csv file.  Please use DownloadStream instead.");
+        }
+
+        //TODO:: See if this can be replaced by ReadCsvFromStream
+        using SftpFileStream stream = sftpClient.OpenRead(remoteFilePath);
+        using StreamReader reader = new(stream);
+        using CsvReader csvReader = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            HasHeaderRecord = csvHasHeaderRow,
+        });
+        return new List<T>(csvReader.GetRecords<T>());
     }
 
     public static bool DeleteSftpFile(this SftpClient? sftpClient, string remoteFilePath)

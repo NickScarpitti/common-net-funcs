@@ -1670,7 +1670,6 @@ public static partial class Strings
         return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric();
     }
 
-
     /// <summary>
     /// Counts the occurrences of a specific character in the given string.
     /// </summary>

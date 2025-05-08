@@ -91,6 +91,7 @@ public static class ConversionTask
         bool sizeFailure = false;
         fpsDict ??= new();
         cancellationTokenSource ??= new();
+        IConversionResult? conversionResult = null;
         try
         {
             DateTime lastOutput1 = DateTime.Now.AddSeconds(-6);
@@ -263,11 +264,11 @@ public static class ConversionTask
                 if (strict)
                 {
                     conversion.AddParameter("-strict -2");
-                    await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
+                    conversionResult = await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
                 }
                 else
                 {
-                    await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
+                    conversionResult = await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException ex)
@@ -279,6 +280,7 @@ public static class ConversionTask
 
             //await Console.Out.WriteLineAsync($"Finished conversion file [{fileToConvert.Name}]");
             logger.Info($"Finished conversion for #{conversionIndex} [{fileToConvert.Name}] with {(conversionFailed ? "[FAILED]" : "[SUCCESS]")} Status");
+            logger.Info($"Conversion with command: {conversionResult?.Arguments} completed after {conversionResult?.Duration}");
         }
         catch (ConversionException cex)
         {

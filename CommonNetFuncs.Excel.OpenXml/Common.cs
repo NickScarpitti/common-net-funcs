@@ -911,7 +911,7 @@ public static partial class Common
 
     private static ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCustomFormatCaches = new();
 
-    public class WorkbookStyleCache
+    public sealed class WorkbookStyleCache
     {
         public Dictionary<int, uint> FontCache { get; } = [];
         public Dictionary<int, uint> FillCache { get; } = [];

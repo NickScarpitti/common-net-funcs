@@ -8,7 +8,7 @@ public interface IResponseLoggingConfig
 /// <summary>
 /// Config options for ResponseLoggingFilter
 /// </summary>
-public class ResponseLoggingConfig : IResponseLoggingConfig
+public sealed class ResponseLoggingConfig : IResponseLoggingConfig
 {
     public double ThresholdInSeconds { get; set; }
 }

@@ -12,7 +12,7 @@ namespace CommonNetFuncs.Web.Common.ValidationAttributes;
 /// <summary>
 /// Validates that all numeric values in a list fall within the specified range
 /// </summary>
-public class ListRangeAttribute : ValidationAttribute
+public sealed class ListRangeAttribute : ValidationAttribute
 {
     /// <summary>
     ///     Constructor that takes integer minimum and maximum values

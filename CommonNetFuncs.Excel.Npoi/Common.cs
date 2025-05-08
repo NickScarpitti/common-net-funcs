@@ -22,7 +22,7 @@ using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Excel.Npoi;
 
-public class NpoiBorderStyles()
+public sealed class NpoiBorderStyles()
 {
     public BorderStyle? BorderTop { get; set; }
     public BorderStyle? BorderLeft { get; set; }

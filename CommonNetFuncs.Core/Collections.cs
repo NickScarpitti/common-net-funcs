@@ -819,7 +819,7 @@ public static class Collections
     }
 }
 
-public class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor
+public sealed class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor
 {
     private readonly ParameterExpression _oldParameter = oldParameter;
     private readonly ParameterExpression _newParameter = newParameter;

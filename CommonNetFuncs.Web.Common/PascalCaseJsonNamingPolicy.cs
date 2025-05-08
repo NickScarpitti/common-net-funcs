@@ -2,7 +2,7 @@
 
 namespace CommonNetFuncs.Web.Common
 {
-    public class PascalCaseJsonNamingPolicy: JsonNamingPolicy
+    public sealed class PascalCaseJsonNamingPolicy: JsonNamingPolicy
     {
         public override string ConvertName(string name)
         {

@@ -3117,7 +3117,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     #endregion Write
 }
 
-public class GenericPagingModel<T> where T : class
+public sealed class GenericPagingModel<T> where T : class
 {
     public GenericPagingModel()
     {

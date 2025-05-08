@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using static System.Convert;
 using static System.Web.HttpUtility;
+using static CommonNetFuncs.Core.MathHelpers;
 
 namespace CommonNetFuncs.Core;
 
@@ -75,6 +76,21 @@ public static partial class Strings
 
     [GeneratedRegex(@"(\d{2})(\d{3})(\d{3})(\d{4})")]
     private static partial Regex TwelveDigitPhoneNumberRegex();
+
+    [GeneratedRegex("[A-Za-z]")]
+    private static partial Regex RemoveLettersRegex();
+
+    [GeneratedRegex("[0-9]")]
+    private static partial Regex RemoveNumbersRegex();
+
+    [GeneratedRegex("[A-Za-z ]")]
+    private static partial Regex LettersOnlyRegex();
+
+    [GeneratedRegex(@"[0-9]*\.?[0-9]+")]
+    private static partial Regex NumbersOnlyRegex();
+
+    [GeneratedRegex(@"[0-9 ]*\.?[0-9]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
+    private static partial Regex NumbersWithFractionsOnlyRegex();
 
     /// <summary>
     /// Clone of VBA Left() function that gets n characters from the left side of the string
@@ -357,9 +373,50 @@ public static partial class Strings
     /// <param name="newValue">String to replace any substrings matching oldValue with</param>
     /// <returns></returns>
     [return: NotNullIfNotNull(nameof(s))]
-    public static string? ReplaceInvariant(this string? s, string oldValue, string newValue)
+    public static string? ReplaceInvariant(this string? s, string oldValue, string newValue, bool replaceAllInstances = true)
     {
-        return s?.Replace(oldValue, newValue, StringComparison.InvariantCultureIgnoreCase);
+        return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances);
+    }
+
+    /// <summary>
+    /// Replace multiple substrings with another string, ignoring the case and culture when finding the substrings to replace.
+    /// </summary>
+    /// <param name="s">String to search for substrings to replace.</param>
+    /// <param name="oldValues">Collection of substrings to search for in string s, ignoring culture and case.</param>
+    /// <param name="newValue">String to replace any substrings matching any value in oldValues with.</param>
+    /// <returns>String with all occurrences of substrings in oldValues replaced by newValue.</returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static string? ReplaceInvariant(this string? s, IEnumerable<string> oldValues, string newValue, bool replaceAllInstances = true)
+    {
+        if (s.IsNullOrEmpty() || oldValues.All(x => x.IsNullOrEmpty()))
+        {
+            return s;
+        }
+
+        // Use StringBuilder to avoid creating multiple string copies
+        StringBuilder stringBuilder = new(s);
+
+        foreach (string oldValue in oldValues.Where(x => !x.IsNullOrEmpty()))
+        {
+            int index = stringBuilder.ToString().IndexOf(oldValue, StringComparison.InvariantCultureIgnoreCase);
+            while (index != -1)
+            {
+                // Replace the oldValue with newValue
+                stringBuilder.Remove(index, oldValue.Length);
+                stringBuilder.Insert(index, newValue);
+
+                // Continue searching for the next occurrence
+                string currentString = stringBuilder.ToString();
+                if (currentString.IsNullOrEmpty())
+                {
+                    return currentString; //No string left so stop processing
+                }
+                if (!replaceAllInstances) break;
+                index = currentString.IndexOf(oldValue, index + newValue.Length, StringComparison.InvariantCultureIgnoreCase);
+            }
+        }
+
+        return stringBuilder.ToString();
     }
 
     /// <summary>
@@ -1086,7 +1143,7 @@ public static partial class Strings
     /// <returns>Hash string</returns>
     public static string GetHash(this string originalString, EHashAlgorithm algorithm)
     {
-        byte[] bytes = algorithm switch
+        ReadOnlySpan<byte> bytes = algorithm switch
         {
             EHashAlgorithm.SHA1 => SHA1.HashData(Encoding.UTF8.GetBytes(originalString)),
             EHashAlgorithm.SHA256 => SHA256.HashData(Encoding.UTF8.GetBytes(originalString)),
@@ -1355,5 +1412,308 @@ public static partial class Strings
         {
             yield return line;
         }
+    }
+
+    [return: NotNullIfNotNull(nameof(number))]
+    public static string? ToFractionString(this decimal? number, int maxNumberOfDecimalsToConsider)
+    {
+        if (number == null) return null;
+        int wholeNumberPart = (int)number;
+        decimal decimalNumberPart = (decimal)number - ToDecimal(wholeNumberPart);
+        long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
+        long numerator = (long)(decimalNumberPart * denominator);
+        GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+        return $"{wholeNumberPart} {numerator}/{denominator}";
+    }
+
+    [return: NotNullIfNotNull(nameof(number))]
+    public static string? ToFractionString(this decimal number, int maxNumberOfDecimalsToConsider)
+    {
+        int wholeNumberPart = (int)number;
+        decimal decimalNumberPart = (decimal)number - ToDecimal(wholeNumberPart);
+        long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
+        long numerator = (long)(decimalNumberPart * denominator);
+        GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+        return $"{wholeNumberPart} {numerator}/{denominator}";
+    }
+
+    [return: NotNullIfNotNull(nameof(number))]
+    public static string? ToFractionString(this double? number, int maxNumberOfDecimalsToConsider)
+    {
+        if (number == null) return null;
+        int wholeNumberPart = (int)number;
+        double decimalNumberPart = (double)number - ToDouble(wholeNumberPart);
+        long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
+        long numerator = (long)(decimalNumberPart * denominator);
+        GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+        return $"{wholeNumberPart} {numerator}/{denominator}";
+    }
+
+    [return: NotNullIfNotNull(nameof(number))]
+    public static string? ToFractionString(this double number, int maxNumberOfDecimalsToConsider)
+    {
+        int wholeNumberPart = (int)number;
+        double decimalNumberPart = (double)number - ToDouble(wholeNumberPart);
+        long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
+        long numerator = (long)(decimalNumberPart * denominator);
+        GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+        return $"{wholeNumberPart} {numerator}/{denominator}";
+    }
+
+    [return: NotNullIfNotNull(nameof(fractionString))]
+    public static decimal? FractionToDecimal(this string? fractionString)
+    {
+        if (fractionString == null) return null;
+        if (decimal.TryParse(fractionString, out decimal result))
+        {
+            return result;
+        }
+
+        string[] split = fractionString.Split([' ', '/']);
+
+        if (split.Length == 2 || split.Length == 3)
+        {
+            if (int.TryParse(split[0], out int numeratorOrWhole) && int.TryParse(split[1], out int denominatorOrNumerator))
+            {
+                if (split.Length == 2)
+                {
+                    return (decimal)numeratorOrWhole / denominatorOrNumerator;
+                }
+
+                if (int.TryParse(split[2], out int denominator))
+                {
+                    return numeratorOrWhole + (decimal)denominatorOrNumerator / denominator;
+                }
+            }
+        }
+
+        throw new FormatException("Not a valid fraction.");
+    }
+
+    public static bool TryFractionToDecimal(this string? inputString, [NotNullWhen(true)] out decimal? result)
+    {
+        result = null;
+        if (inputString.IsNullOrWhiteSpace()) return false;
+        bool success = true;
+        try
+        {
+            result = inputString.FractionToDecimal();
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal result)
+    {
+        result = default;
+        if (fractionString.IsNullOrWhiteSpace()) return false;
+
+        bool success = true;
+        try
+        {
+            result = fractionString.FractionToDecimal() ?? default;
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    public static bool TryStringToDecimal(this string? inputString, [NotNullWhen(true)] out decimal? result)
+    {
+        result = null;
+        bool success = true;
+        if (inputString.IsNullOrWhiteSpace()) return false;
+        try
+        {
+            //Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
+            result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
+                decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
+                null;
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    public static bool TryStringToDecimal(this string? inputString, [NotNullWhen(true)] out decimal result)
+    {
+        result = default;
+        bool success = true;
+        if (inputString.IsNullOrWhiteSpace()) return false;
+        try
+        {
+            //Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
+            result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
+                decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
+                default;
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    [return: NotNullIfNotNull(nameof(fractionString))]
+    public static double? FractionToDouble(this string? fractionString)
+    {
+        if (fractionString == null) return null;
+        if (double.TryParse(fractionString, out double result))
+        {
+            return result;
+        }
+
+        string[] split = fractionString.Split([' ', '/']);
+
+        if (split.Length == 2 || split.Length == 3)
+        {
+            if (int.TryParse(split[0], out int a) && int.TryParse(split[1], out int b))
+            {
+                if (split.Length == 2)
+                {
+                    return (double)a / b;
+                }
+
+                if (int.TryParse(split[2], out int c))
+                {
+                    return a + (double)b / c;
+                }
+            }
+        }
+
+        throw new FormatException("Not a valid fraction.");
+    }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? RemoveLetters(this string? value)
+    {
+        if (value.IsNullOrWhiteSpace()) return null;
+        return RemoveLettersRegex().Replace(value, string.Empty);
+    }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? RemoveNumbers(this string? value)
+    {
+        if (value.IsNullOrWhiteSpace()) return null;
+        return RemoveNumbersRegex().Replace(value, string.Empty);
+    }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? GetOnlyLetters(this string? value)
+    {
+        if (value.IsNullOrWhiteSpace()) return null;
+        return LettersOnlyRegex().Match(value).Value.Trim();
+    }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    public static string? GetOnlyNumbers(this string? value, bool allowFractions = false)
+    {
+        if (value.IsNullOrWhiteSpace()) return null;
+        return !allowFractions ? NumbersOnlyRegex().Match(value.Trim()).Value.Trim() : NumbersWithFractionsOnlyRegex().Match(value.Trim()).Value.Trim();
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? RemoveLeadingNonAlphanumeric(this string? input)
+    {
+        if (input.IsNullOrWhiteSpace()) return input;
+
+        ReadOnlySpan<char> span = input.AsSpan();
+        int index = 0;
+        while (index < span.Length && !char.IsLetterOrDigit(span[index]))
+        {
+            index++;
+        }
+
+        return input[index..];
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? RemoveTrailingNonAlphanumeric(this string? input)
+    {
+        if (input.IsNullOrWhiteSpace()) return input;
+
+        ReadOnlySpan<char> span = input.AsSpan();
+        int index = span.Length -1;
+        while (index > 0 && !char.IsLetterOrDigit(span[index]))
+        {
+            index--;
+        }
+
+        return input[..(index + 1)];
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? TrimOuterNonAlphanumeric(this string? input)
+    {
+        return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric();
+    }
+
+    /// <summary>
+    /// Counts the occurrences of a specific character in the given string.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
+    public static int CountChars(this ReadOnlySpan<char> input, char charToFind)
+    {
+        if (input.Length == 0) return 0;
+        int count = 0;
+        foreach (char @char in input)
+        {
+            if (@char == charToFind)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// Counts the occurrences of a specific character in the given string.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
+    public static int CountChars(this string? input, char charToFind)
+    {
+        if(input.IsNullOrEmpty()) return 0;
+        return input.AsSpan().CountChars(charToFind);
+    }
+
+    /// <summary>
+    /// Counts the occurrences of a specific character in the given string.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
+    public static int CountChars(this string? input, string charToFind)
+    {
+        if (charToFind.Length > 1)
+        {
+            throw new InvalidDataException("charToFind must be a single character");
+        }
+        return input.CountChars(charToFind[0]);
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace CommonNetFuncs.Web.Middleware;
 
-public class UseCustomHeadersMiddleware(RequestDelegate next, IDictionary<string, string>? addHeaders = null, IEnumerable<string>? removeHeaders = null)
+public sealed class UseCustomHeadersMiddleware(RequestDelegate next, IDictionary<string, string>? addHeaders = null, IEnumerable<string>? removeHeaders = null)
 {
     private readonly RequestDelegate next = next;
     private readonly IEnumerable<string>? removeHeaders = removeHeaders;

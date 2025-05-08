@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Compression;
 
@@ -21,30 +22,42 @@ public static class Streams
     /// <exception cref="NotSupportedException"></exception>
     public static async Task CompressStream(this Stream uncompressedStream, Stream compressedStream, ECompressionType compressionType)
     {
+        if (!compressedStream.CanWrite)
+        {
+            throw new NotSupportedException("Compressed stream does not support writing.");
+        }
+
+        if (!uncompressedStream.CanRead)
+        {
+            throw new NotSupportedException("Uncompressed stream does not support reading.");
+        }
+
+        await uncompressedStream.FlushAsync().ConfigureAwait(false); //Ensure the stream is flushed before compressing
+        uncompressedStream.Position = 0; //Reset the position of the uncompressed stream to the beginning
         switch (compressionType)
         {
             case ECompressionType.Brotli:
-                await using (BrotliStream brotliStream = new(uncompressedStream, CompressionMode.Compress))
+                await using (BrotliStream brotliStream = new(compressedStream, CompressionLevel.Optimal, true))
                 {
-                    await brotliStream.CopyToAsync(compressedStream).ConfigureAwait(false);
+                    await uncompressedStream.CopyToAsync(brotliStream).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.Gzip:
-                await using (GZipStream gzipStream = new(uncompressedStream, CompressionMode.Compress))
+                await using (GZipStream gzipStream = new(compressedStream, CompressionLevel.Optimal, true))
                 {
-                    await gzipStream.CopyToAsync(compressedStream).ConfigureAwait(false);
+                    await uncompressedStream.CopyToAsync(gzipStream).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.Deflate:
-                await using (DeflateStream deflateStream = new(uncompressedStream, CompressionMode.Compress))
+                await using (DeflateStream deflateStream = new(compressedStream, CompressionLevel.Optimal, true))
                 {
-                    await deflateStream.CopyToAsync(compressedStream).ConfigureAwait(false);
+                    await uncompressedStream.CopyToAsync(deflateStream).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.ZLib:
-                await using (ZLibStream zlibStream = new(uncompressedStream, CompressionMode.Compress))
+                await using (ZLibStream zlibStream = new(compressedStream, CompressionLevel.Optimal, true))
                 {
-                    await zlibStream.CopyToAsync(compressedStream).ConfigureAwait(false);
+                    await uncompressedStream.CopyToAsync(zlibStream).ConfigureAwait(false);
                 }
                 break;
         }
@@ -60,30 +73,43 @@ public static class Streams
     /// <exception cref="NotSupportedException"></exception>
     public static void CompressStreamSynchronous(this Stream uncompressedStream, Stream compressedStream, ECompressionType compressionType)
     {
+        if (!compressedStream.CanWrite)
+        {
+            throw new NotSupportedException("Compressed stream does not support writing.");
+        }
+
+        if (!uncompressedStream.CanRead)
+        {
+            throw new NotSupportedException("Uncompressed stream does not support reading.");
+        }
+
+        uncompressedStream.Flush(); //Ensure the stream is flushed before compressing
+        uncompressedStream.Position = 0; //Reset the position of the uncompressed stream to the beginning
+
         switch (compressionType)
         {
             case ECompressionType.Brotli:
-                using (BrotliStream brotliStream = new(uncompressedStream, CompressionMode.Compress))
+                using (BrotliStream brotliStream = new(compressedStream, CompressionLevel.Optimal, true))
                 {
-                    brotliStream.CopyTo(compressedStream);
+                    uncompressedStream.CopyTo(brotliStream);
                 }
                 break;
             case ECompressionType.Gzip:
-                using (GZipStream gzipStream = new(uncompressedStream, CompressionMode.Compress))
+                using (GZipStream gzipStream = new(compressedStream, CompressionLevel.Optimal, true))
                 {
-                    gzipStream.CopyTo(compressedStream);
+                    uncompressedStream.CopyTo(gzipStream);
                 }
                 break;
             case ECompressionType.Deflate:
-                using (DeflateStream deflateStream = new(uncompressedStream, CompressionMode.Compress))
+                using (DeflateStream deflateStream = new(compressedStream, CompressionLevel.Optimal, true))
                 {
-                    deflateStream.CopyTo(compressedStream);
+                    uncompressedStream.CopyTo(deflateStream);
                 }
                 break;
             case ECompressionType.ZLib:
-                using (ZLibStream zlibStream = new(uncompressedStream, CompressionMode.Compress))
+                using (ZLibStream zlibStream = new(compressedStream, CompressionLevel.Optimal, true))
                 {
-                    zlibStream.CopyTo(compressedStream);
+                    uncompressedStream.CopyTo(zlibStream);
                 }
                 break;
         }
@@ -99,28 +125,41 @@ public static class Streams
     /// <exception cref="NotSupportedException"></exception>
     public static async Task DecompressStream(this Stream compressedStream, Stream decompressedStream, ECompressionType compressionType)
     {
+        if (!decompressedStream.CanWrite)
+        {
+            throw new NotSupportedException("Decompressed stream does not support writing.");
+        }
+
+        if (!compressedStream.CanRead)
+        {
+            throw new NotSupportedException("Uncompressed stream does not support reading.");
+        }
+
+        compressedStream.Flush(); //Ensure the stream is flushed before compressing
+        compressedStream.Position = 0; //Reset the position of the uncompressed stream to the beginning
+
         switch (compressionType)
         {
             case ECompressionType.Brotli:
-                await using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress))
+                await using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
                     await brotliStream.CopyToAsync(decompressedStream).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.Gzip:
-                await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress))
+                await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
                     await gzipStream.CopyToAsync(decompressedStream).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.Deflate:
-                await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress))
+                await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
                     await deflateStream.CopyToAsync(decompressedStream).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.ZLib:
-                await using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress))
+                await using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
                     await zlibStream.CopyToAsync(decompressedStream).ConfigureAwait(false);
                 }
@@ -138,28 +177,41 @@ public static class Streams
     /// <exception cref="NotSupportedException"></exception>
     public static void DecompressStreamSynchronous(this Stream compressedStream, Stream decompressedStream, ECompressionType compressionType)
     {
+        if (!decompressedStream.CanWrite)
+        {
+            throw new NotSupportedException("Decompressed stream does not support writing.");
+        }
+
+        if (!compressedStream.CanRead)
+        {
+            throw new NotSupportedException("Uncompressed stream does not support reading.");
+        }
+
+        compressedStream.Flush(); //Ensure the stream is flushed before compressing
+        compressedStream.Position = 0; //Reset the position of the uncompressed stream to the beginning
+
         switch (compressionType)
         {
             case ECompressionType.Brotli:
-                using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress))
+                using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
                     brotliStream.CopyTo(decompressedStream);
                 }
                 break;
             case ECompressionType.Gzip:
-                using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress))
+                using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
                     gzipStream.CopyTo(decompressedStream);
                 }
                 break;
             case ECompressionType.Deflate:
-                using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress))
+                using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
                     deflateStream.CopyTo(decompressedStream);
                 }
                 break;
             case ECompressionType.ZLib:
-                using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress))
+                using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
                     zlibStream.CopyTo(decompressedStream);
                 }
@@ -174,25 +226,25 @@ public static class Streams
         switch (compressionType)
         {
             case ECompressionType.Brotli:
-                await using (BrotliStream brotliStream = new(memoryStream, CompressionLevel.Optimal))
+                await using (BrotliStream brotliStream = new(memoryStream, CompressionLevel.Optimal, true))
                 {
                     await brotliStream.WriteAsync(data).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.Gzip:
-                await using (GZipStream gzipStream = new(memoryStream, CompressionLevel.Optimal))
+                await using (GZipStream gzipStream = new(memoryStream, CompressionLevel.Optimal, true))
                 {
                     await gzipStream.WriteAsync(data).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.Deflate:
-                await using (DeflateStream deflateStream = new(memoryStream, CompressionLevel.Optimal))
+                await using (DeflateStream deflateStream = new(memoryStream, CompressionLevel.Optimal, true))
                 {
                     await deflateStream.WriteAsync(data).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.ZLib:
-                await using (ZLibStream zlibStream = new(memoryStream, CompressionLevel.Optimal))
+                await using (ZLibStream zlibStream = new(memoryStream, CompressionLevel.Optimal, true))
                 {
                     await zlibStream.WriteAsync(data).ConfigureAwait(false);
                 }
@@ -204,35 +256,35 @@ public static class Streams
     public static async Task<byte[]> Decompress(this byte[] compressedData, ECompressionType compressionType)
     {
         await using MemoryStream compressedStream = new(compressedData);
-        await using MemoryStream decompressStream = new();
+        await using MemoryStream decompressedStream = new();
         switch (compressionType)
         {
             case ECompressionType.Brotli:
-                await using (BrotliStream brotliStream = new(compressedStream, CompressionLevel.Optimal))
+                await using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
-                    await brotliStream.CopyToAsync(decompressStream).ConfigureAwait(false);
+                    await brotliStream.CopyToAsync(decompressedStream).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.Gzip:
-                await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress))
+                await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
-                    await gzipStream.CopyToAsync(decompressStream).ConfigureAwait(false);
+                    await gzipStream.CopyToAsync(decompressedStream).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.Deflate:
-                await using (DeflateStream deflateStream = new(compressedStream, CompressionLevel.Optimal))
+                await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
-                    await deflateStream.CopyToAsync(decompressStream).ConfigureAwait(false);
+                    await deflateStream.CopyToAsync(decompressedStream).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.ZLib:
-                await using (ZLibStream zlibStream = new(compressedStream, CompressionLevel.Optimal))
+                await using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
-                    await zlibStream.CopyToAsync(decompressStream).ConfigureAwait(false);
+                    await zlibStream.CopyToAsync(decompressedStream).ConfigureAwait(false);
                 }
                 break;
         }
 
-        return decompressStream.ToArray();
+        return decompressedStream.ToArray();
     }
 }

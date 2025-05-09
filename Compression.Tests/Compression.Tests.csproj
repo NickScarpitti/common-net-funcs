@@ -36,4 +36,7 @@
     <Using Include="AutoFixture" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove=".editorconfig" />
+  </ItemGroup>
 </Project>

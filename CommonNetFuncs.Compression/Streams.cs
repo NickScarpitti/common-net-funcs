@@ -155,7 +155,7 @@ public static class Streams
             case ECompressionType.Deflate:
                 await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
-                    await deflateStream.CopyToAsync(decompressedStream).ConfigureAwait(false);
+                    await deflateStream.CopyToAsync(decompressedStream).ConfigureAwait(true);
                 }
                 break;
             case ECompressionType.ZLib:
@@ -165,7 +165,6 @@ public static class Streams
                 }
                 break;
         }
-        decompressedStream.Position = 0;
     }
 
     /// <summary>

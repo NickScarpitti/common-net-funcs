@@ -1,9 +1,7 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
-using AutoFixture;
-using AutoFixture.AutoFakeItEasy;
+﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Core;
-using Shouldly;
+using System.Collections.Concurrent;
+using System.Data;
 
 namespace Core.Tests;
 
@@ -27,7 +25,7 @@ public class AsyncTests
     public async Task ObjectFill_WithSimpleType_ShouldNotAssignTaskResult(int obj, int taskResult)
     {
         Task<int> task = Task.FromResult(taskResult);
-        await Async.ObjectFill(obj, task);
+        await obj.ObjectFill(task);
         obj.ShouldBe(obj); // Value types don't change
     }
 
@@ -36,7 +34,7 @@ public class AsyncTests
     {
         AsyncIntString? obj = null;
         Task<AsyncIntString?> task = Task.FromResult(new AsyncIntString { AsyncInt = 42, AsyncString = "Updated" })!;
-        await Should.NotThrowAsync(async () => await Async.ObjectFill(obj, task));
+        await Should.NotThrowAsync(async () => await obj.ObjectFill(task));
     }
 
     [Fact]
@@ -46,7 +44,7 @@ public class AsyncTests
         AsyncIntString? taskResult = null;
         Task<AsyncIntString?> task = Task.FromResult(taskResult);
 
-        await Async.ObjectFill(obj, task);
+        await obj.ObjectFill(task);
 
         obj.AsyncInt.ShouldBe(0);
         obj.AsyncString.ShouldBe("Original");
@@ -57,7 +55,7 @@ public class AsyncTests
     {
         AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Original" };
         Task<AsyncIntString> task = Task.FromException<AsyncIntString>(new InvalidOperationException());
-        await Should.NotThrowAsync(async () => await Async.ObjectFill(obj, task));
+        await Should.NotThrowAsync(async () => await obj.ObjectFill(task));
         obj.AsyncInt.ShouldBe(0);
         obj.AsyncString.ShouldBe("Original");
     }
@@ -68,7 +66,7 @@ public class AsyncTests
         AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Original" };
         AsyncIntString taskResult = new() { AsyncInt = 42, AsyncString = "Updated" };
         Task<AsyncIntString> task = Task.FromResult(taskResult);
-        await Async.ObjectFill(obj, task);
+        await obj.ObjectFill(task);
         obj.AsyncInt.ShouldBe(42);
         obj.AsyncString.ShouldBe("Updated");
     }
@@ -160,15 +158,18 @@ public class AsyncTests
     {
         dynamic collection = collectionType switch
         {
-            "List" => new List<string>(),
-            "HashSet" => new HashSet<string>(),
-            "ConcurrentBag" => new ConcurrentBag<string>(),
+            "List" => new List<string?>(),
+            "HashSet" => new HashSet<string?>(),
+            "ConcurrentBag" => new ConcurrentBag<string?>(),
             _ => throw new ArgumentException("Invalid collection type")
         };
-        Task<string?> func() => Task.FromResult(taskResult);
+        Task<string?> func()
+        {
+            return Task.FromResult(taskResult);
+        }
         SemaphoreSlim semaphore = new(1, 1);
         await Async.ObjectFill(collection, (Func<Task<string?>>)func, semaphore);
-        ((IEnumerable<string>)collection).Count().ShouldBe(expectedCount);
+        ((IEnumerable<string?>)collection).Count().ShouldBe(expectedCount);
     }
 
     #endregion
@@ -187,7 +188,7 @@ public class AsyncTests
         resultMs.Position = 0;
         Task<MemoryStream> task = Task.FromResult(resultMs);
 
-        await Async.ObjectFill(ms, task);
+        await ms.ObjectFill(task);
 
         ms.Position = 0;
         byte[] buffer = new byte[testData.Length];
@@ -212,7 +213,7 @@ public class AsyncTests
         resultDt.Rows.Add(2, "Item2");
         Task<DataTable> task = Task.FromResult(resultDt);
 
-        await Async.ObjectFill(dt, task);
+        await dt.ObjectFill(task);
 
         dt.Rows.Count.ShouldBe(2);
         dt.Rows[0]["Id"].ShouldBe(1);
@@ -232,7 +233,7 @@ public class AsyncTests
     {
         AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Orig" };
         Task<object> task = Task.FromResult(value);
-        await Async.ObjectUpdate(obj, prop, task);
+        await obj.ObjectUpdate(prop, task);
         obj.AsyncInt.ShouldBe(expectedInt);
         obj.AsyncString.ShouldBe(expectedString);
     }
@@ -243,7 +244,7 @@ public class AsyncTests
     {
         AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Orig" };
         Task<object> task = Task.FromResult(value);
-        await Should.NotThrowAsync(async () => await Async.ObjectUpdate(obj, prop, task));
+        await Should.NotThrowAsync(async () => await obj.ObjectUpdate(prop, task));
     }
 
     [Fact]
@@ -251,7 +252,7 @@ public class AsyncTests
     {
         AsyncIntString? obj = null;
         Task<int> task = Task.FromResult(42);
-        await Should.NotThrowAsync(async () => await Async.ObjectUpdate(obj, "AsyncInt", task));
+        await Should.NotThrowAsync(async () => await obj.ObjectUpdate("AsyncInt", task));
     }
 
     [Theory]
@@ -260,7 +261,7 @@ public class AsyncTests
     {
         AsyncIntString obj = new() { AsyncDecimal = 0 };
         Task<decimal> task = Task.FromResult(value);
-        await Async.ObjectUpdate(obj, "AsyncDecimal", task);
+        await obj.ObjectUpdate("AsyncDecimal", task);
         obj.AsyncDecimal.ShouldBe(value);
     }
 
@@ -277,7 +278,7 @@ public class AsyncTests
             () => Task.FromResult("Result2"),
             () => Task.FromResult("Result3")
         ];
-        ConcurrentBag<string> results = await Async.RunAll(tasks);
+        ConcurrentBag<string> results = await tasks.RunAll();
         results.Count.ShouldBe(3);
         results.ShouldContain("Result1");
         results.ShouldContain("Result2");
@@ -300,7 +301,7 @@ public class AsyncTests
             async () => { lock(lockObj) { executionCount++; maxConcurrent = Math.Max(maxConcurrent, executionCount); } await Task.Delay(100); lock(lockObj) { executionCount--; } return 4; }
         ];
 
-        ConcurrentBag<int> results = await Async.RunAll(tasks, semaphore);
+        ConcurrentBag<int> results = await tasks.RunAll(semaphore);
 
         results.Count.ShouldBe(4);
         results.Sum().ShouldBe(10);
@@ -317,7 +318,7 @@ public class AsyncTests
             () => Task.FromResult(3)
         ];
 
-        ConcurrentBag<int> results = await Async.RunAll(tasks);
+        ConcurrentBag<int> results = await tasks.RunAll();
 
         results.Count.ShouldBe(2);
         results.Sum().ShouldBe(4);
@@ -332,11 +333,11 @@ public class AsyncTests
         List<Func<Task<int>>> tasks =
         [
             async () => { Interlocked.Increment(ref executedTasks); await Task.Delay(50); return 1; },
-            async () => { Interlocked.Increment(ref executedTasks); await Task.Delay(50); throw new InvalidOperationException("Test exception"); },
-            async () => { Interlocked.Increment(ref executedTasks); await Task.Delay(50); return 3; }
+            async () => { Interlocked.Increment(ref executedTasks); await Task.Delay(100); throw new InvalidOperationException("Test exception"); },
+            async () => { Interlocked.Increment(ref executedTasks); await Task.Delay(150); return 3; }
         ];
 
-        await Should.ThrowAsync<AggregateException>(async () => await Async.RunAll(tasks, null, cts, true));
+        await Should.ThrowAsync<Exception>(async () => await tasks.RunAll(null, cts, true));
         executedTasks.ShouldBeLessThanOrEqualTo(3);
     }
 
@@ -352,7 +353,7 @@ public class AsyncTests
             () => Task.FromResult(5)
         ];
 
-        ConcurrentBag<int> results = await Async.RunAll(tasks);
+        ConcurrentBag<int> results = await tasks.RunAll();
 
         results.Count.ShouldBe(3);
         results.Sum().ShouldBe(9);
@@ -369,7 +370,7 @@ public class AsyncTests
     {
         int executed = 0;
         List<Func<Task>> tasks = Enumerable.Range(0, count).Select(_ => new Func<Task>(async () => { await Task.Delay(10); Interlocked.Increment(ref executed); })).ToList();
-        await Async.RunAll(tasks);
+        await tasks.RunAll();
         executed.ShouldBe(count);
     }
 

@@ -20,8 +20,8 @@ public class StreamsTests
     {
         // Arrange
         byte[] uncompressedData = _fixture.CreateMany<byte>(100).ToArray();
-        MemoryStream uncompressedStream = new(uncompressedData);
-        MemoryStream compressedStream = new();
+        await using MemoryStream uncompressedStream = new(uncompressedData);
+        await using MemoryStream compressedStream = new();
 
         // Act
         await uncompressedStream.CompressStream(compressedStream, compressionType);
@@ -39,8 +39,8 @@ public class StreamsTests
     {
         // Arrange
         byte[] uncompressedData = _fixture.CreateMany<byte>(100).ToArray();
-        MemoryStream uncompressedStream = new(uncompressedData);
-        MemoryStream compressedStream = new();
+        using MemoryStream uncompressedStream = new(uncompressedData);
+        using MemoryStream compressedStream = new();
 
         // Act
         uncompressedStream.CompressStreamSynchronous(compressedStream, compressionType);
@@ -58,9 +58,9 @@ public class StreamsTests
     {
         // Arrange
         byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
-        MemoryStream uncompressedStream = new(originalData);
-        MemoryStream compressedStream = new();
-        MemoryStream decompressedStream = new();
+        await using MemoryStream uncompressedStream = new(originalData);
+        await using MemoryStream compressedStream = new();
+        await using MemoryStream decompressedStream = new();
 
         await uncompressedStream.CompressStream(compressedStream, compressionType);
         compressedStream.Position = 0;
@@ -70,6 +70,39 @@ public class StreamsTests
 
         // Assert
         decompressedStream.ToArray().ShouldBe(originalData);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task DecompressStream_Should_Throw_Error(bool canWriteDecompressedStream, bool canReadCompressedStream)
+    {
+        // Arrange
+        byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
+        MemoryStream uncompressedStream = new(originalData);
+        MemoryStream compressedStream = new();
+
+        MemoryStream decompressedStream = !canWriteDecompressedStream ? new([], false): new();
+
+        await uncompressedStream.CompressStream(compressedStream, Streams.ECompressionType.Deflate);
+        compressedStream.Position = 0;
+
+        if (!canReadCompressedStream)
+        {
+            compressedStream.Close();
+        }
+
+        // Act & Assert
+        if (!canWriteDecompressedStream || !canReadCompressedStream)
+        {
+            await Should.ThrowAsync<NotSupportedException>(async () => await compressedStream.DecompressStream(decompressedStream, Streams.ECompressionType.Deflate));
+        }
+        else
+        {
+            await Should.NotThrowAsync(compressedStream.DecompressStream(decompressedStream, Streams.ECompressionType.Deflate));
+            decompressedStream.ToArray().ShouldBe(originalData);
+        }
     }
 
     [Theory]

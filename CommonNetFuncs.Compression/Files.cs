@@ -1,12 +1,9 @@
 ﻿using System.IO.Compression;
-using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.Compression;
 
 public static class Files
 {
-    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
     /// <summary>
     /// Compress a file in the form of a stream into a memory stream
     /// </summary>
@@ -27,10 +24,7 @@ public static class Files
     /// <param name="compressionLevel">Configure compression preference</param>
     public static async Task ZipFiles(this IEnumerable<(Stream? fileStream, string fileName)> files, MemoryStream? zipFileStream = null, CompressionLevel compressionLevel = CompressionLevel.Optimal)
     {
-        try
-        {
             zipFileStream ??= new();
-
             if (files.Any())
             {
                 await using MemoryStream memoryStream = new();
@@ -41,11 +35,6 @@ public static class Files
                 await memoryStream.CopyToAsync(zipFileStream).ConfigureAwait(false); //Copy to output stream
                 zipFileStream.Position = 0;
             }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-        }
     }
 
     /// <summary>
@@ -71,8 +60,6 @@ public static class Files
     /// <param name="compressionLevel">Configure compression preference</param>
     public static async Task AddFileToZip(this Stream? fileStream, ZipArchive archive, string fileName, CompressionLevel compressionLevel = CompressionLevel.Optimal)
     {
-        try
-        {
             if (fileStream != null)
             {
                 fileStream.Position = 0; //Must have this to prevent errors writing data to the attachment
@@ -81,10 +68,5 @@ public static class Files
                 await fileStream.CopyToAsync(entryStream).ConfigureAwait(false);
                 await entryStream.FlushAsync().ConfigureAwait(false);
             }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-        }
     }
 }

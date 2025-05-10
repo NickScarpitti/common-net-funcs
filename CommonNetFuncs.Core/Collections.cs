@@ -15,10 +15,7 @@ public static class Collections
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="collection">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
-    public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? collection)
-    {
-        return collection?.Count > 0;
-    }
+    public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? collection) { return collection?.Count > 0; }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -26,10 +23,7 @@ public static class Collections
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="list">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
-    public static bool AnyFast<T>([NotNullWhen(true)] this IList<T>? list)
-    {
-        return list?.Count > 0;
-    }
+    public static bool AnyFast<T>([NotNullWhen(true)] this IList<T>? list) { return list?.Count > 0; }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -37,10 +31,7 @@ public static class Collections
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="bag">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
-    public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? bag)
-    {
-        return bag?.Count > 0;
-    }
+    public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? bag) { return bag?.Count > 0; }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -48,10 +39,7 @@ public static class Collections
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="array">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
-    public static bool AnyFast<T>([NotNullWhen(true)] this T[]? array)
-    {
-        return array?.Length > 0;
-    }
+    public static bool AnyFast<T>([NotNullWhen(true)] this T[]? array) { return array?.Length > 0; }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -61,9 +49,7 @@ public static class Collections
     /// <param name="dict">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this IDictionary<TKey, T>? dict) where TKey : notnull
-    {
-        return dict?.Count > 0;
-    }
+    { return dict?.Count > 0; }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -73,9 +59,7 @@ public static class Collections
     /// <param name="dict">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this ConcurrentDictionary<TKey, T>? dict) where TKey : notnull
-    {
-        return dict?.Count > 0;
-    }
+    { return dict?.Count > 0; }
 
     /// <summary>
     /// Provides a safe way to add a new Dictionary key without having to worry about duplication
@@ -83,9 +67,7 @@ public static class Collections
     /// <param name="dict">Dictionary to add item to</param>
     /// <param name="keyValuePair">Key value pair to add to dictionary</param>
     public static void AddDictionaryItem<K, V>(this IDictionary<K, V> dict, KeyValuePair<K, V> keyValuePair) where K : notnull
-    {
-        dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
-    }
+    { dict.TryAdd(keyValuePair.Key, keyValuePair.Value); }
 
     /// <summary>
     /// Provides a safe way to add a new Dictionary key without having to worry about duplication
@@ -111,9 +93,7 @@ public static class Collections
     /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
     /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
     public static void AddRangeParallel<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null)
-    {
-        Parallel.ForEach(toAdd.SelectNonNull(), parallelOptions ?? new(), item => concurrentBag.Add(item!));
-    }
+    { Parallel.ForEach(toAdd.SelectNonNull(), parallelOptions ?? new(), item => concurrentBag.Add(item!)); }
 
     /// <summary>
     /// Adds AddRange functionality to ConcurrentBag similar to a list. Skips null items
@@ -195,29 +175,35 @@ public static class Collections
     }
 
     /// <summary>
-    /// <para>Allows you to act upon every element in an Array</para>
-    /// <para>Used like outerArray.SetValue((array, indices) => array.SetValue(SomeMethod(outerArray.GetValue(indices)), indices))</para>
+    /// <para>Allows you to act upon every element in an Array</para> <para>Used like outerArray.SetValue((array,
+    /// indices) => array.SetValue(SomeMethod(outerArray.GetValue(indices)), indices))</para>
     /// </summary>
     /// <param name="array">Array to act upon</param>
     /// <param name="action">Action to perform on each element of the array</param>
     public static void SetValue(this Array array, Action<Array, int[]> action)
     {
-        if (array.LongLength == 0) { return; }
+        if (array.LongLength == 0)
+        {
+            return;
+        }
         ArrayTraverse walker = new(array);
-        do { action(array, walker.Position); }
-        while (walker.Step());
+        do
+        {
+            action(array, walker.Position);
+        } while (walker.Step());
     }
 
     /// <summary>
     /// Select only strings that are not null, empty, or only whitespace
     /// </summary>
     /// <param name="items">Enumerable of strings to select from</param>
-    /// <returns>An enumerable containing all string values from the original collection that are not null, empty, or only whitespace</returns>
+    /// <returns>
+    /// An enumerable containing all string values from the original collection that are not null, empty, or only
+    /// whitespace
+    /// </returns>
     [return: NotNullIfNotNull(nameof(items))]
     public static IEnumerable<string>? SelectNonEmpty(this IEnumerable<string?>? items)
-    {
-        return items?.Where(x => !x.IsNullOrWhiteSpace()).Select(x => x!);
-    }
+    { return items?.Where(x => !x.IsNullOrWhiteSpace()).Select(x => x!); }
 
     /// <summary>
     /// Select only objects that are not null
@@ -226,19 +212,14 @@ public static class Collections
     /// <returns>An enumerable containing all object values from the original collection that are not null</returns>
     [return: NotNullIfNotNull(nameof(items))]
     public static IEnumerable<T>? SelectNonNull<T>(this IEnumerable<T?>? items)
-    {
-        return items?.Where(x => x != null).Select(x => x!);
-    }
+    { return items?.Where(x => x != null).Select(x => x!); }
 
     /// <summary>
     /// Create a single item list from an object
     /// </summary>
     /// <typeparam name="T">Type to use in list</typeparam>
     /// <param name="obj">Object to turn into a single item list</param>
-    public static List<T> SingleToList<T>(this T? obj)
-    {
-        return obj != null ? [obj] : [];
-    }
+    public static List<T> SingleToList<T>(this T? obj) { return (obj != null) ? [obj] : []; }
 
     /// <summary>
     /// Create a single item list from an object
@@ -248,19 +229,21 @@ public static class Collections
     {
         if (!allowEmptyStrings)
         {
-            return !obj.IsNullOrWhiteSpace() ? [obj] : [];
+            return (!obj.IsNullOrWhiteSpace()) ? [obj] : [];
         }
-        return obj != null ? [obj] : [];
+        return (obj != null) ? [obj] : [];
     }
 
     /// <summary>
-    /// Select object from a collection by matching all non-null fields to an object of the same type comprising the collection
+    /// Select object from a collection by matching all non-null fields to an object of the same type comprising the
+    /// collection
     /// </summary>
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="queryable">Queryable collection to select from</param>
     /// <param name="partialObject">Object with fields to match with objects in the queryable collection</param>
+    /// <param name="ignoreDefaultValues">Ignore default values in retrieval when true</param>
     /// <returns>First object that matches all non-null fields in partialObject</returns>
-    public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject) where T : class
+    public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject, bool ignoreDefaultValues = false) where T : class
     {
         // Get the properties of the object using reflection
         PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -274,15 +257,31 @@ public static class Collections
             // Get the value of the property from the partial object
             object? partialValue = property.GetValue(partialObject);
 
-            //Only compare non-null values since these are going to be the ones that matter
-            if (partialValue != null)
+            // Skip null values
+            if (partialValue == null)
             {
-                // Build the condition for this property
-                BinaryExpression? condition = Expression.Equal(Expression.Property(parameter, property), Expression.Constant(partialValue, property.PropertyType));
-
-                // Combine the conditions using 'AndAlso' if this is not the first condition
-                conditions = conditions == null ? condition : Expression.AndAlso(conditions, condition);
+                continue;
             }
+
+            // Skip default values if ignoreDefaultValues is true
+            if (ignoreDefaultValues)
+            {
+                // Get the default value for this property type
+                object? defaultValue = property.PropertyType.IsValueType ? Activator.CreateInstance(property.PropertyType) : null;
+
+                // Skip if the value equals the default value for its type
+                if (Equals(partialValue, defaultValue))
+                {
+                    continue;
+                }
+            }
+
+            // Only compare non-null (and potentially non-default) values since these are going to be the ones that matter
+            // Build the condition for this property
+            BinaryExpression? condition = Expression.Equal(Expression.Property(parameter, property), Expression.Constant(partialValue, property.PropertyType));
+
+            // Combine the conditions using 'AndAlso' if this is not the first condition
+            conditions = (conditions == null) ? condition : Expression.AndAlso(conditions, condition);
         }
 
         T? model = null;
@@ -366,18 +365,25 @@ public static class Collections
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
             Task<T?>? outstandingItem = null;
-            T? transform(object x) => ParseRowValues<T>((DataRow)x, map);
+            T? transform(object x) { return ParseRowValues<T>((DataRow)x, map); }
+
             foreach (DataRow row in table.AsEnumerable())
             {
                 Task<T?>? tmp = outstandingItem;
 
                 // note: passed in as "state", not captured, so not a foreach/capture bug
-                outstandingItem = new (transform!, row);
+                outstandingItem = new(transform!, row);
                 outstandingItem.Start();
 
-                if (tmp != null) yield return tmp.Result;
+                if (tmp != null)
+                {
+                    yield return tmp.Result;
+                }
             }
-            if (outstandingItem != null) yield return outstandingItem.Result;
+            if (outstandingItem != null)
+            {
+                yield return outstandingItem.Result;
+            }
         }
     }
 
@@ -392,7 +398,7 @@ public static class Collections
                 if (convertShortToBool)
                 {
                     Type colType = firstRow[table.Columns[propertyInfo.Name]!].GetType();
-                    map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, convertShortToBool && (colType == typeof(short) || colType == typeof(short?))));
+                    map.Add((table.Columns[propertyInfo.Name]!, propertyInfo, convertShortToBool && ((colType == typeof(short)) || (colType == typeof(short?)))));
                 }
                 else
                 {
@@ -412,19 +418,19 @@ public static class Collections
             {
                 object? value = row[pair.DataColumn!];
 
-                //Handle issue where DB returns Int16 for boolean values
+                // Handle issue where DB returns Int16 for boolean values
                 if (value is not System.DBNull)
                 {
-                    if (pair.IsShort && (pair.PropertyInfo!.PropertyType == typeof(bool) || pair.PropertyInfo!.PropertyType == typeof(bool?)))
+                    if (pair.IsShort && ((pair.PropertyInfo!.PropertyType == typeof(bool)) || (pair.PropertyInfo!.PropertyType == typeof(bool?))))
                     {
                         pair.PropertyInfo!.SetValue(item, ToBoolean(value));
                     }
                     else
                     {
                         Type valueType = value.GetType();
-                        if ((pair.PropertyInfo.PropertyType == typeof(DateOnly) || pair.PropertyInfo.PropertyType == typeof(DateOnly?)) && valueType != typeof(DateOnly) && valueType != typeof(DateOnly?))
+                        if (((pair.PropertyInfo.PropertyType == typeof(DateOnly)) || (pair.PropertyInfo.PropertyType == typeof(DateOnly?))) && (valueType != typeof(DateOnly)) && (valueType != typeof(DateOnly?)))
                         {
-                            if (valueType == typeof(DateTime) || valueType == typeof(DateTime?))
+                            if ((valueType == typeof(DateTime)) || (valueType == typeof(DateTime?)))
                             {
                                 pair.PropertyInfo!.SetValue(item, DateOnly.FromDateTime((DateTime)value));
                             }
@@ -437,9 +443,9 @@ public static class Collections
                                 pair.PropertyInfo!.SetValue(item, null);
                             }
                         }
-                        else if ((pair.PropertyInfo.PropertyType == typeof(DateTime) || pair.PropertyInfo.PropertyType == typeof(DateTime?)) && valueType != typeof(DateTime) && valueType != typeof(DateTime?))
+                        else if (((pair.PropertyInfo.PropertyType == typeof(DateTime)) || (pair.PropertyInfo.PropertyType == typeof(DateTime?))) && (valueType != typeof(DateTime)) && (valueType != typeof(DateTime?)))
                         {
-                            if (valueType == typeof(DateOnly) || valueType == typeof(DateOnly?))
+                            if ((valueType == typeof(DateOnly)) || (valueType == typeof(DateOnly?)))
                             {
                                 pair.PropertyInfo!.SetValue(item, ((DateOnly)value).ToDateTime(TimeOnly.MinValue));
                             }
@@ -482,10 +488,14 @@ public static class Collections
     /// <param name="approximateCount">Used for pre-allocating variable size when using parallelization, default is data.Count()</param>
     /// <param name="degreeOfParallelism">Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine)</param>
     /// <returns>A DaataTable representation of the collection that was passed in</returns>
-    [return:NotNullIfNotNull(nameof(data))]
+    [return: NotNullIfNotNull(nameof(data))]
     public static DataTable? ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1) where T : class, new()
     {
-        if (data == null) return null;
+        if (data == null)
+        {
+            return null;
+        }
+
         dataTable ??= new();
         return useExpressionTrees ? data.ToDataTableExpressionTrees(dataTable, useParallel, approximateCount, degreeOfParallelism) : data.ToDataTableReflection(dataTable, useParallel, approximateCount, degreeOfParallelism);
     }
@@ -520,7 +530,7 @@ public static class Collections
             List<object[]> rows = new(approximateCount ?? data.Count());
             object lockObj = new();
 
-            ParallelOptions options = new() { MaxDegreeOfParallelism = degreeOfParallelism == -1 ? Environment.ProcessorCount : degreeOfParallelism };
+            ParallelOptions options = new() { MaxDegreeOfParallelism = (degreeOfParallelism == -1) ? Environment.ProcessorCount : degreeOfParallelism };
             Parallel.ForEach(data, options, () => new List<object[]>(), (item, _, localRows) =>
             {
                 object[] rowValues = new object[columnCount];
@@ -591,12 +601,25 @@ public static class Collections
         }
     }
 
+    /// <summary>
+    /// Convert a collection into equivalent DataTable object using expression trees
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="data">Collection to be turned into a DataTable</param>
+    /// <param name="dataTable"></param>
+    /// <param name="useParallel"></param>
+    /// <param name="approximateCount"></param>
+    /// <param name="degreeOfParallelism"></param>
+    /// <returns></returns>
     private static DataTable ToDataTableExpressionTrees<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism) where T : class, new()
     {
         TypeAccessor typeAccessor = _typeAccessorCache.GetOrAdd(typeof(T), t => new TypeAccessor(t));
         foreach (DataColumn col in typeAccessor.ColumnDefinitions)
         {
-            dataTable.Columns.Add(new DataColumn(col.ColumnName, col.DataType));
+            if (!dataTable.Columns.Contains(col.ColumnName))
+            {
+                dataTable.Columns.Add(new DataColumn(col.ColumnName, col.DataType));
+            }
         }
 
         Func<object, object>[] propertyGetters = typeAccessor.PropertyGetters;
@@ -621,7 +644,7 @@ public static class Collections
             List<object[]> rows = new(approximateCount ?? data.Count());
             object lockObj = new();
 
-            ParallelOptions options = new() { MaxDegreeOfParallelism = degreeOfParallelism == -1 ? Environment.ProcessorCount : degreeOfParallelism };
+            ParallelOptions options = new() { MaxDegreeOfParallelism = (degreeOfParallelism == -1) ? Environment.ProcessorCount : degreeOfParallelism };
             Parallel.ForEach(data, options, () => new List<object[]>(), (item, _, localRows) =>
             {
                 object[] rowValues = new object[columnCount];
@@ -690,9 +713,7 @@ public static class Collections
     /// <param name="separator">String value used between aggregated values</param>
     /// <returns>List with specified property aggregated</returns>
     public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string propToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
-    {
-        return collection.StringAggProps([propToAgg], separator, distinct, parallel);
-    }
+    { return collection.StringAggProps([propToAgg], separator, distinct, parallel); }
 
     /// <summary>
     /// Performs a string aggregation on the designated properties, using all other properties as the group by
@@ -716,14 +737,14 @@ public static class Collections
         PropertyInfo[] properties = typeof(T).GetProperties();
         PropertyInfo[] groupingProperties = properties.Where(p => !propsToAgg.Contains(p.Name)).ToArray();
 
-        if (!groupingProperties.AnyFast() || propsToAgg.Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Length)
+        if (!groupingProperties.AnyFast() || (propsToAgg.Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Length))
         {
             throw new ArgumentException($"Invalid aggregate property values. All values in propsToAgg must be present in type {typeof(T)}", nameof(propsToAgg));
         }
 
         if (!parallel)
         {
-            return collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? "")) })
+            return collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? string.Empty)) })
                 .Select(g =>
                 {
                     T result = new();
@@ -731,8 +752,8 @@ public static class Collections
                     {
                         if (propsToAgg.Contains(prop.Name))
                         {
-                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? "").Distinct()) :
-                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? ""));
+                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty).Distinct()) :
+                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty));
                             prop.SetValue(result, aggregatedValue);
                         }
                         else
@@ -746,7 +767,7 @@ public static class Collections
         else
         {
             return collection.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered)
-                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? "")) })
+                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? string.Empty)) })
                 .Select(g =>
                 {
                     T result = new();
@@ -754,8 +775,8 @@ public static class Collections
                     {
                         if (propsToAgg.Contains(prop.Name))
                         {
-                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? "").Distinct()) :
-                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? ""));
+                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty).Distinct()) :
+                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty));
                             prop.SetValue(result, aggregatedValue);
                         }
                         else
@@ -768,36 +789,33 @@ public static class Collections
         }
     }
 
-    public static int IndexOf<T>(this IEnumerable<T> collection, T value)
-    {
-        return collection.IndexOf(value, null);
-    }
+    public static int IndexOf<T>(this IEnumerable<T> collection, T value) { return collection.IndexOf(value, null); }
 
     public static int IndexOf<T>(this IEnumerable<T> collection, T value, IEqualityComparer<T>? comparer)
     {
         comparer ??= EqualityComparer<T>.Default;
         var found = collection.Select((a, i) => new { a, i }).FirstOrDefault(x => comparer.Equals(x.a, value));
-        return found == null ? -1 : found.i;
+        return (found == null) ? (-1) : found.i;
     }
 
-    public static bool IsIn<T>(this object value) where T: Enum
-    {
-        return Enum.IsDefined(typeof(T), value);
-    }
+    public static bool IsIn<T>(this object value) where T : Enum { return Enum.IsDefined(typeof(T), value); }
 
     public static HashSet<string> GetCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
     {
         // Convert to array for multiple enumeration and validation
-        string?[][] sourcesArray = sources.Select(x => x.Any() ? x.Distinct().ToArray() : [nullReplacement]).ToArray();
+        string?[][] sourcesArray = sources.Select(x => x.Any() ? x.Distinct().Select(x => x ?? nullReplacement).ToArray() : [nullReplacement]).ToArray();
 
         // Validate inputs
-        if (!sourcesArray.AnyFast()) return [];
+        if (!sourcesArray.AnyFast())
+        {
+            return [];
+        }
 
         // Calculate total possible combinations
         long totalCombinations = sourcesArray.Aggregate(1L, (acc, curr) => acc * curr.Length);
 
         // Check if total combinations exceed max (if specified)
-        if (maxCombinations.HasValue && totalCombinations > maxCombinations.Value)
+        if (maxCombinations.HasValue && (totalCombinations > maxCombinations.Value))
         {
             throw new ArgumentException($"Total possible combinations ({totalCombinations}) exceeds maximum allowed ({maxCombinations.Value})");
         }
@@ -825,12 +843,10 @@ public sealed class ReplaceParameterVisitor(ParameterExpression oldParameter, Pa
     private readonly ParameterExpression _newParameter = newParameter;
 
     protected override Expression VisitParameter(ParameterExpression node)
-    {
-        return node == _oldParameter ? _newParameter : node;
-    }
+    { return (node == _oldParameter) ? _newParameter : node; }
 }
 
-internal class ArrayTraverse
+public sealed class ArrayTraverse
 {
     public int[] Position;
     private readonly int[] maxLengths;

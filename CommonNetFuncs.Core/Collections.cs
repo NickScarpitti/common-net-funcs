@@ -614,6 +614,15 @@ public static class Collections
     private static DataTable ToDataTableExpressionTrees<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism) where T : class, new()
     {
         TypeAccessor typeAccessor = _typeAccessorCache.GetOrAdd(typeof(T), t => new TypeAccessor(t));
+
+        foreach (DataColumn col in dataTable.Columns)
+        {
+            if (!typeAccessor.ColumnDefinitions.)
+            {
+
+            }
+        }
+        
         foreach (DataColumn col in typeAccessor.ColumnDefinitions)
         {
             if (!dataTable.Columns.Contains(col.ColumnName))

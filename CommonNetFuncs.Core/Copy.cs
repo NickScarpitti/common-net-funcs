@@ -43,6 +43,11 @@ public static class Copy
     /// <param name="source">Object to copy common properties from</param>
     public static T CopyPropertiesToNew<T>(this T source) where T : new()
     {
+        if (source == null)
+        {
+            return default!;
+        }
+
         IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
         IEnumerable<PropertyInfo> destProps = typeof(T).GetProperties().Where(x => x.CanWrite);
 
@@ -147,9 +152,13 @@ public static class Copy
                     object? nestedValue = CopyObject(value, destProp.PropertyType, depth + 1, maxDepth);
                     destProp.SetValue(dest, nestedValue, null);
                 }
-                else
+                else if (!sourceProp.PropertyType.IsClass && destProp.GetType() == value.GetType()) //Only do direct assignment if the types are the same and not a class
                 {
                     destProp.SetValue(dest, value, null);
+                }
+                else
+                {
+                    destProp.SetValue(dest, default, null); //Set to default if the types are not the same
                 }
             }
         }
@@ -184,13 +193,18 @@ public static class Copy
             Type kvpType = typeof(KeyValuePair<,>).MakeGenericType(sourceKeyType, sourceValueType);
 
             // Copy key-value pairs
+
+            bool? keyIsSimpleType= null;
+            bool? valueIsSimpleType= null;
             foreach (object item in sourceCollection)
             {
                 object key = kvpType.GetProperty("Key")!.GetValue(item, null)!;
                 object? value = kvpType.GetProperty("Value")!.GetValue(item, null);
+                keyIsSimpleType ??= key.GetType().IsSimpleType();
+                valueIsSimpleType ??= value?.GetType().IsSimpleType();
 
-                object copiedKey = CopyObject(key, destKeyType, 1, maxDepth)!;
-                object? copiedValue = (value == null) ? null : CopyObject(value, destValueType, 0, maxDepth);
+                object copiedKey = (bool)keyIsSimpleType ? key : CopyObject(key, destKeyType, 1, maxDepth)!;
+                object? copiedValue = value == null ? null : (bool)valueIsSimpleType! ? value : CopyObject(value, destValueType, 0, maxDepth);
                 destDictionary.Add(copiedKey, copiedValue);
             }
 
@@ -202,9 +216,11 @@ public static class Copy
             Type listType = typeof(List<>).MakeGenericType(elementType);
             IList list = (IList)Activator.CreateInstance(listType)!;
 
-            foreach (object item in sourceCollection)
+            bool? itemIsSimpleType = null;
+            foreach (object? item in sourceCollection)
             {
-                object? copiedItem = CopyObject(item, elementType, 0, maxDepth);
+                itemIsSimpleType ??= item?.GetType().IsSimpleType();
+                object? copiedItem = item == null ? null : (bool)itemIsSimpleType! ? item : CopyObject(item, elementType, 0, maxDepth);
 
                 list.Add(copiedItem);
             }
@@ -236,8 +252,8 @@ public static class Copy
     }
 
     /// <summary>
-    /// <para>UNTESTED - Merge the field values from one instance into another of the same object</para> <para>Only
-    /// default values will be overridden by mergeFromObjs</para>
+    /// <para>Merge the field values from one instance into another of the same object</para>
+    /// <para>Only default values will be overridden by mergeFromObjects</para>
     /// </summary>
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="mergeIntoObject">Object to merge properties into</param>
@@ -246,24 +262,15 @@ public static class Copy
     {
         foreach (T instance in mergeFromObjects)
         {
-            foreach (PropertyInfo property in typeof(T).GetProperties())
-            {
-                object? value = property.GetValue(instance);
-                object? mergedValue = property.GetValue(mergeIntoObject);
-
-                if ((value != default) && (mergedValue == default))
-                {
-                    property.SetValue(mergeIntoObject, value);
-                }
-            }
+            mergeIntoObject.MergeInstances(instance);
         }
 
         return mergeIntoObject;
     }
 
     /// <summary>
-    /// <para>UNTESTED - Merge the field values from one instance into another of the same object</para> <para>Only
-    /// default values will be overridden by mergeFromObj</para>
+    /// <para>Merge the field values from one instance into another of the same object</para>
+    /// <para>Only default values will be overridden by mergeFromObject</para>
     /// </summary>
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="mergeIntoObject">Object to merge properties into</param>
@@ -275,7 +282,9 @@ public static class Copy
             object? value = property.GetValue(mergeFromObject);
             object? mergedValue = property.GetValue(mergeIntoObject);
 
-            if ((value != default) && (mergedValue == default))
+            object? defaultValue = property.PropertyType.IsValueType ? Activator.CreateInstance(property.PropertyType) : null;
+
+            if ((value != default) && (mergedValue?.Equals(defaultValue) != false))
             {
                 property.SetValue(mergeIntoObject, value);
             }

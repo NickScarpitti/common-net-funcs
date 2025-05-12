@@ -134,7 +134,7 @@ public class CopyTests
     }
 
     [Fact]
-    public void CopyPropertiesToNew_WithNullSource_ShouldReturnNewInstanceWithDefaultValues()
+    public void CopyPropertiesToNew_WithNullSource_ShouldReturnNull()
     {
         // Arrange
         SourceClass? source = null;
@@ -143,10 +143,7 @@ public class CopyTests
         SourceClass? result = source.CopyPropertiesToNew();
 
         // Assert
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(0);
-        result.Name.ShouldBeNull();
-        result.Description.ShouldBeNull();
+        result.ShouldBeNull();
     }
 
     #endregion
@@ -177,7 +174,7 @@ public class CopyTests
     }
 
     [Fact]
-    public void CopyPropertiesToNew_Generic_WithNullSource_ShouldReturnNewInstanceWithDefaultValues()
+    public void CopyPropertiesToNew_Generic_WithNullSource_ShouldReturnNull()
     {
         // Arrange
         SourceClass? source = null;
@@ -186,10 +183,7 @@ public class CopyTests
         DestinationClass? result = source?.CopyPropertiesToNew<SourceClass, DestinationClass>();
 
         // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<DestinationClass>();
-        result.Id.ShouldBe(0);
-        result.Name.ShouldBeNull();
+        result.ShouldBeNull();
     }
 
     #endregion

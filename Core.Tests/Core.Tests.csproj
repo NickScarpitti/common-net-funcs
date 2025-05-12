@@ -5,7 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RunSettingsFilePath>C:\Users\NickS\source\repos\VS2022 Repo\common-net-funcs\Core.Tests\bin\Debug\net9.0\fine-code-coverage\coverage-tool-output\Core.Tests-fcc-mscodecoverage-generated.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <ItemGroup>

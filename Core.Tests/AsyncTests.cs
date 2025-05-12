@@ -5,8 +5,7 @@ using System.Data;
 
 namespace Core.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
+#pragma warning disable CRR1000 // The name does not correspond to naming conventions
 public class AsyncTests
 {
     private readonly Fixture _fixture;
@@ -163,10 +162,8 @@ public class AsyncTests
             "ConcurrentBag" => new ConcurrentBag<string?>(),
             _ => throw new ArgumentException("Invalid collection type")
         };
-        Task<string?> func()
-        {
-            return Task.FromResult(taskResult);
-        }
+        Task<string?> func() { return Task.FromResult(taskResult); }
+
         SemaphoreSlim semaphore = new(1, 1);
         await Async.ObjectFill(collection, (Func<Task<string?>>)func, semaphore);
         ((IEnumerable<string?>)collection).Count().ShouldBe(expectedCount);
@@ -295,10 +292,62 @@ public class AsyncTests
 
         List<Func<Task<int>>> tasks =
         [
-            async () => { lock(lockObj) { executionCount++; maxConcurrent = Math.Max(maxConcurrent, executionCount); } await Task.Delay(100); lock(lockObj) { executionCount--; } return 1; },
-            async () => { lock(lockObj) { executionCount++; maxConcurrent = Math.Max(maxConcurrent, executionCount); } await Task.Delay(100); lock(lockObj) { executionCount--; } return 2; },
-            async () => { lock(lockObj) { executionCount++; maxConcurrent = Math.Max(maxConcurrent, executionCount); } await Task.Delay(100); lock(lockObj) { executionCount--; } return 3; },
-            async () => { lock(lockObj) { executionCount++; maxConcurrent = Math.Max(maxConcurrent, executionCount); } await Task.Delay(100); lock(lockObj) { executionCount--; } return 4; }
+            async () =>
+            {
+                lock (lockObj)
+                {
+                    executionCount++;
+                    maxConcurrent = Math.Max(maxConcurrent, executionCount);
+                }
+                await Task.Delay(100);
+                lock (lockObj)
+                {
+                    executionCount--;
+                }
+                return 1;
+            },
+            async () =>
+            {
+                lock (lockObj)
+                {
+                    executionCount++;
+                    maxConcurrent = Math.Max(maxConcurrent, executionCount);
+                }
+                await Task.Delay(100);
+                lock (lockObj)
+                {
+                    executionCount--;
+                }
+                return 2;
+            },
+            async () =>
+            {
+                lock (lockObj)
+                {
+                    executionCount++;
+                    maxConcurrent = Math.Max(maxConcurrent, executionCount);
+                }
+                await Task.Delay(100);
+                lock (lockObj)
+                {
+                    executionCount--;
+                }
+                return 3;
+            },
+            async () =>
+            {
+                lock (lockObj)
+                {
+                    executionCount++;
+                    maxConcurrent = Math.Max(maxConcurrent, executionCount);
+                }
+                await Task.Delay(100);
+                lock (lockObj)
+                {
+                    executionCount--;
+                }
+                return 4;
+            }
         ];
 
         ConcurrentBag<int> results = await tasks.RunAll(semaphore);
@@ -332,9 +381,24 @@ public class AsyncTests
 
         List<Func<Task<int>>> tasks =
         [
-            async () => { Interlocked.Increment(ref executedTasks); await Task.Delay(50); return 1; },
-            async () => { Interlocked.Increment(ref executedTasks); await Task.Delay(100); throw new InvalidOperationException("Test exception"); },
-            async () => { Interlocked.Increment(ref executedTasks); await Task.Delay(150); return 3; }
+            async () =>
+            {
+                Interlocked.Increment(ref executedTasks);
+                await Task.Delay(50);
+                return 1;
+            },
+            async () =>
+            {
+                Interlocked.Increment(ref executedTasks);
+                await Task.Delay(100);
+                throw new InvalidOperationException("Test exception");
+            },
+            async () =>
+            {
+                Interlocked.Increment(ref executedTasks);
+                await Task.Delay(150);
+                return 3;
+            }
         ];
 
         await Should.ThrowAsync<Exception>(async () => await tasks.RunAll(null, cts, true));
@@ -369,11 +433,15 @@ public class AsyncTests
     public async Task RunAll_VoidTasks_ShouldExecuteAllTasks(int count)
     {
         int executed = 0;
-        List<Func<Task>> tasks = Enumerable.Range(0, count).Select(_ => new Func<Task>(async () => { await Task.Delay(10); Interlocked.Increment(ref executed); })).ToList();
+        List<Func<Task>> tasks = Enumerable.Range(0, count).Select(_ => new Func<Task>(async () =>
+        {
+            await Task.Delay(10);
+            Interlocked.Increment(ref executed);
+        })).ToList();
         await tasks.RunAll();
         executed.ShouldBe(count);
     }
 
     #endregion
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly
+#pragma warning restore CRR1000 // The name does not correspond to naming conventions

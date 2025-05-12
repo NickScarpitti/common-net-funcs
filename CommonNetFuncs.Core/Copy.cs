@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace CommonNetFuncs.Core;
+
 public static class Copy
 {
     /// <summary>
@@ -14,13 +15,24 @@ public static class Copy
     /// <param name="dest">Object to copy common properties to</param>
     public static void CopyPropertiesTo<T, UT>(this T source, UT dest)
     {
-        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = typeof(UT).GetProperties().Where(x => x.CanWrite);
-
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
+        if (source == null)
         {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
-            destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
+            dest = default!;
+        }
+        else
+        {
+            dest ??= Activator.CreateInstance<UT>();
+            IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
+            IEnumerable<PropertyInfo> destProps = typeof(UT).GetProperties().Where(x => x.CanWrite);
+
+            foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
+            {
+                PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
+                if ((destProp != null) && (destProp.PropertyType == sourceProp.PropertyType))
+                {
+                    destProp.SetValue(dest, sourceProp.GetValue(source, null), null);
+                }
+            }
         }
     }
 
@@ -62,7 +74,7 @@ public static class Copy
         return dest;
     }
 
-    //Can handle collections
+    // Can handle collections
     /// <summary>
     /// Copies properties of one class to a new instance of a class using reflection based on property name matching
     /// </summary>
@@ -74,9 +86,12 @@ public static class Copy
     [return: NotNullIfNotNull(nameof(source))]
     public static UT? CopyPropertiesToNewRecursive<T, UT>(this T source, int maxDepth = -1) where UT : new()
     {
-        if (source == null) return default;
+        if (source == null)
+        {
+            return default;
+        }
 
-        if (typeof(IEnumerable).IsAssignableFrom(typeof(T)) && typeof(IEnumerable).IsAssignableFrom(typeof(UT)) && typeof(T) != typeof(string) && typeof(UT) != typeof(string))
+        if (typeof(IEnumerable).IsAssignableFrom(typeof(T)) && typeof(IEnumerable).IsAssignableFrom(typeof(UT)) && (typeof(T) != typeof(string)) && (typeof(UT) != typeof(string)))
         {
             return (UT?)CopyCollection(source, typeof(UT), maxDepth) ?? new();
         }
@@ -86,7 +101,10 @@ public static class Copy
 
     private static object? CopyObject(object source, Type destType, int depth, int maxDepth)
     {
-        if (source == null) return null;
+        if (source == null)
+        {
+            return null;
+        }
 
         Type sourceType = source.GetType();
         object? dest = Activator.CreateInstance(destType);
@@ -103,7 +121,10 @@ public static class Copy
             foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
             {
                 PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
-                if (destProp == null) continue;
+                if (destProp == null)
+                {
+                    continue;
+                }
 
                 object? value = sourceProp.GetValue(source, null);
                 if (value == null)
@@ -121,7 +142,7 @@ public static class Copy
                     object? collectionValue = CopyCollection(value, destProp.PropertyType, maxDepth);
                     destProp.SetValue(dest, collectionValue, null);
                 }
-                else if ((maxDepth == -1 || depth < maxDepth) && sourceProp.PropertyType.IsClass)
+                else if (((maxDepth == -1) || (depth < maxDepth)) && sourceProp.PropertyType.IsClass)
                 {
                     object? nestedValue = CopyObject(value, destProp.PropertyType, depth + 1, maxDepth);
                     destProp.SetValue(dest, nestedValue, null);
@@ -138,12 +159,15 @@ public static class Copy
 
     private static object? CopyCollection(object source, Type destType, int maxDepth)
     {
-        if (source == null) return null;
+        if (source == null)
+        {
+            return null;
+        }
 
         IEnumerable sourceCollection = (IEnumerable)source;
 
         // Check if the destination type is a dictionary
-        if (destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+        if (destType.IsGenericType && (destType.GetGenericTypeDefinition() == typeof(Dictionary<,>)))
         {
             Type[] sourceGenericArgs = source.GetType().GetGenericArguments();
             Type sourceKeyType = sourceGenericArgs[0];
@@ -166,7 +190,7 @@ public static class Copy
                 object? value = kvpType.GetProperty("Value")!.GetValue(item, null);
 
                 object copiedKey = CopyObject(key, destKeyType, 1, maxDepth)!;
-                object? copiedValue = value == null ? null : CopyObject(value, destValueType, 0, maxDepth);
+                object? copiedValue = (value == null) ? null : CopyObject(value, destValueType, 0, maxDepth);
                 destDictionary.Add(copiedKey, copiedValue);
             }
 
@@ -174,7 +198,7 @@ public static class Copy
         }
         else
         {
-            Type elementType = destType.IsArray ? destType.GetElementType() ?? typeof(object) : destType.GetGenericArguments()[0];
+            Type elementType = destType.IsArray ? (destType.GetElementType() ?? typeof(object)) : destType.GetGenericArguments()[0];
             Type listType = typeof(List<>).MakeGenericType(elementType);
             IList list = (IList)Activator.CreateInstance(listType)!;
 
@@ -185,7 +209,7 @@ public static class Copy
                 list.Add(copiedItem);
             }
 
-            if (destType.IsInterface || destType == listType)
+            if (destType.IsInterface || (destType == listType))
             {
                 return list;
             }
@@ -212,8 +236,8 @@ public static class Copy
     }
 
     /// <summary>
-    /// <para>UNTESTED - Merge the field values from one instance into another of the same object</para>
-    /// <para>Only default values will be overridden by mergeFromObjs</para>
+    /// <para>UNTESTED - Merge the field values from one instance into another of the same object</para> <para>Only
+    /// default values will be overridden by mergeFromObjs</para>
     /// </summary>
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="mergeIntoObject">Object to merge properties into</param>
@@ -227,7 +251,7 @@ public static class Copy
                 object? value = property.GetValue(instance);
                 object? mergedValue = property.GetValue(mergeIntoObject);
 
-                if (value != default && mergedValue == default)
+                if ((value != default) && (mergedValue == default))
                 {
                     property.SetValue(mergeIntoObject, value);
                 }
@@ -238,8 +262,8 @@ public static class Copy
     }
 
     /// <summary>
-    /// <para>UNTESTED - Merge the field values from one instance into another of the same object</para>
-    /// <para>Only default values will be overridden by mergeFromObj</para>
+    /// <para>UNTESTED - Merge the field values from one instance into another of the same object</para> <para>Only
+    /// default values will be overridden by mergeFromObj</para>
     /// </summary>
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="mergeIntoObject">Object to merge properties into</param>
@@ -251,7 +275,7 @@ public static class Copy
             object? value = property.GetValue(mergeFromObject);
             object? mergedValue = property.GetValue(mergeIntoObject);
 
-            if (value != default && mergedValue == default)
+            if ((value != default) && (mergedValue == default))
             {
                 property.SetValue(mergeIntoObject, value);
             }

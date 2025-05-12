@@ -17,7 +17,13 @@ public class TestClass
     public int Value { get; set; }
 
     public bool IsActive { get; set; }
+
+    public DateTime Date { get; set; }
+
+    public DateOnly DateOnly { get; set; }
 }
+
+#pragma warning disable CRR1000 // The name does not correspond to naming conventions
 
 public enum TestEnum
 {
@@ -302,7 +308,7 @@ public class CollectionsTests
     {
         // Arrange
         ConcurrentBag<string> bag = new();
-        List<string> items = new() { "test1", "test2", null };
+        List<string?> items = new() { "test1", "test2", null };
 
         // Act
         bag.AddRange(items);
@@ -351,7 +357,7 @@ public class CollectionsTests
     {
         // Arrange
         HashSet<string> hashSet = new();
-        List<string> items = new() { "test1", "test2", null };
+        List<string?> items = new() { "test1", "test2", null };
 
         // Act
         hashSet.AddRange(items);
@@ -373,7 +379,7 @@ public class CollectionsTests
         List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
         // Act
-        IEnumerable<TestClass> result = items.SetValue(item => item.Name = item.Name.ToUpper());
+        IEnumerable<TestClass> result = items.SetValue(item => item.Name = item.Name?.ToUpper());
 
         // Assert
         result.ShouldBeSameAs(items);
@@ -403,7 +409,7 @@ public class CollectionsTests
         List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
         // Act
-        IEnumerable<TestClass> result = items.SetValueParallel(item => item.Name = item.Name.ToUpper());
+        IEnumerable<TestClass> result = items.SetValueParallel(item => item.Name = item.Name?.ToUpper());
 
         // Assert
         result.Count().ShouldBe(2);
@@ -418,7 +424,7 @@ public class CollectionsTests
         List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
         // Act
-        IEnumerable<TestClass> result = items.SetValueParallel(item => item.Name = item.Name.ToUpper(), 2);
+        IEnumerable<TestClass> result = items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), 2);
 
         // Assert
         result.Count().ShouldBe(2);
@@ -453,11 +459,7 @@ public class CollectionsTests
         int[] array = Array.Empty<int>();
 
         // Act & Assert (should not throw)
-        Should.NotThrow(
-            () => array.SetValue(
-                (arr, indices) =>
-        {
-        }));
+        Should.NotThrow(() => array.SetValue((arr, indices) => arr = indices));
     }
 
     #endregion
@@ -678,13 +680,14 @@ public class CollectionsTests
     public void ToList_ConvertsDataTableToList()
     {
         // Arrange
-        DataTable dataTable = new();
-        dataTable.Columns.Add("Id", typeof(int));
-        dataTable.Columns.Add("Name", typeof(string));
-        dataTable.Columns.Add("IsActive", typeof(bool));
+        using DataTable dataTable = new();
+        dataTable.Columns.Add(nameof(TestClass.Id), typeof(int));
+        dataTable.Columns.Add(nameof(TestClass.Name), typeof(string));
+        dataTable.Columns.Add(nameof(TestClass.IsActive), typeof(bool));
+        dataTable.Columns.Add(nameof(TestClass.Description), typeof(string));
 
-        dataTable.Rows.Add(1, "test1", true);
-        dataTable.Rows.Add(2, "test2", false);
+        dataTable.Rows.Add(1, "test1", true, null);
+        dataTable.Rows.Add(2, "test2", false, null);
 
         // Act
         List<TestClass?> result = dataTable.ToList<TestClass>();
@@ -694,22 +697,26 @@ public class CollectionsTests
         result[0]!.Id.ShouldBe(1);
         result[0]!.Name.ShouldBe("test1");
         result[0]!.IsActive.ShouldBeTrue();
+        result[0]!.Description.ShouldBeNull();
         result[1]!.Id.ShouldBe(2);
         result[1]!.Name.ShouldBe("test2");
         result[1]!.IsActive.ShouldBeFalse();
+        result[1]!.Description.ShouldBeNull();
     }
 
     [Fact]
     public void ToList_WithConvertShortToBool_ConvertsCorrectly()
     {
         // Arrange
-        DataTable dataTable = new();
-        dataTable.Columns.Add("Id", typeof(int));
-        dataTable.Columns.Add("Name", typeof(string));
-        dataTable.Columns.Add("IsActive", typeof(short));
+        using DataTable dataTable = new();
+        dataTable.Columns.Add(nameof(TestClass.Id), typeof(int));
+        dataTable.Columns.Add(nameof(TestClass.Name), typeof(string));
+        dataTable.Columns.Add(nameof(TestClass.IsActive), typeof(short));
+        dataTable.Columns.Add(nameof(TestClass.Date), typeof(DateTime));
+        dataTable.Columns.Add(nameof(TestClass.DateOnly), typeof(DateOnly));
 
-        dataTable.Rows.Add(1, "test1", (short)1);
-        dataTable.Rows.Add(2, "test2", (short)0);
+        dataTable.Rows.Add(1, "test1", (short)1, DateTime.MinValue, DateOnly.MinValue);
+        dataTable.Rows.Add(2, "test2", (short)0, DateTime.MaxValue, DateOnly.MaxValue);
 
         // Act
         List<TestClass?> result = dataTable.ToList<TestClass>(convertShortToBool: true);
@@ -719,19 +726,138 @@ public class CollectionsTests
         result[0]!.Id.ShouldBe(1);
         result[0]!.Name.ShouldBe("test1");
         result[0]!.IsActive.ShouldBeTrue();
+        result[0]!.Date.ShouldBe(DateTime.MinValue);
+        result[0]!.DateOnly.ShouldBe(DateOnly.MinValue);
         result[1]!.Id.ShouldBe(2);
         result[1]!.Name.ShouldBe("test2");
         result[1]!.IsActive.ShouldBeFalse();
+        result[1]!.Date.ShouldBe(DateTime.MaxValue);
+        result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
+    }
+
+    [Fact]
+    public void ToList_WithConvertShortToBoolMixedDateTypes_ConvertsCorrectly()
+    {
+        // Arrange
+        using DataTable dataTable = new();
+        dataTable.Columns.Add(nameof(TestClass.Id), typeof(int));
+        dataTable.Columns.Add(nameof(TestClass.Name), typeof(string));
+        dataTable.Columns.Add(nameof(TestClass.IsActive), typeof(short));
+        dataTable.Columns.Add(nameof(TestClass.Date), typeof(DateOnly));
+        dataTable.Columns.Add(nameof(TestClass.DateOnly), typeof(DateTime));
+
+        dataTable.Rows.Add(1, "test1", (short)1, DateOnly.MinValue, DateTime.MinValue);
+        dataTable.Rows.Add(2, "test2", (short)0, DateOnly.MaxValue, DateTime.MaxValue);
+
+        // Act
+        List<TestClass?> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+
+        // Assert
+        result.Count.ShouldBe(2);
+        result[0]!.Id.ShouldBe(1);
+        result[0]!.Name.ShouldBe("test1");
+        result[0]!.IsActive.ShouldBeTrue();
+        result[0]!.Date.ShouldBe(DateTime.MinValue);
+        result[0]!.DateOnly.ShouldBe(DateOnly.MinValue);
+        result[1]!.Id.ShouldBe(2);
+        result[1]!.Name.ShouldBe("test2");
+        result[1]!.IsActive.ShouldBeFalse();
+        result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
+        result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void ToList_WithConvertShortToBoolMixedStringDateTypes_ConvertsCorrectly(bool badFirstDate, bool badSecondDate)
+    {
+        // Arrange
+        using DataTable dataTable = new();
+        dataTable.Columns.Add(nameof(TestClass.Id), typeof(int));
+        dataTable.Columns.Add(nameof(TestClass.Name), typeof(string));
+        dataTable.Columns.Add(nameof(TestClass.IsActive), typeof(short));
+        dataTable.Columns.Add(nameof(TestClass.Date), typeof(string));
+        dataTable.Columns.Add(nameof(TestClass.DateOnly), typeof(string));
+
+        dataTable.Rows.Add(1, "test1", (short)1, $"{DateOnly.MinValue:o}{((!badFirstDate) ? string.Empty : "badDate")}", $"{DateTime.MinValue:o}{((!badSecondDate) ? string.Empty : "badDate")}");
+        dataTable.Rows.Add(2, "test2", (short)0, $"{DateOnly.MaxValue:o}{((!badFirstDate) ? string.Empty : "badDate")}", $"{DateTime.MaxValue:o}{((!badSecondDate) ? string.Empty : "badDate")}");
+
+        if (!badFirstDate && !badSecondDate)
+        {
+            // Act
+            List<TestClass?> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+
+            // Assert
+            result.Count.ShouldBe(2);
+            result[0]!.Id.ShouldBe(1);
+            result[0]!.Name.ShouldBe("test1");
+            result[0]!.IsActive.ShouldBeTrue();
+            result[0]!.Date.ShouldBe(DateTime.MinValue);
+            result[0]!.DateOnly.ShouldBe(DateOnly.MinValue);
+            result[1]!.Id.ShouldBe(2);
+            result[1]!.Name.ShouldBe("test2");
+            result[1]!.IsActive.ShouldBeFalse();
+            result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
+            result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
+        }
+        else
+        {
+            // Act & Assert
+            Should.Throw<InvalidCastException>(() => dataTable.ToList<TestClass>(convertShortToBool: true));
+        }
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void ToList_WithConvertShortToBoolStringDateTypes_ConvertsCorrectly(bool badFirstDate, bool badSecondDate)
+    {
+        // Arrange
+        using DataTable dataTable = new();
+        dataTable.Columns.Add(nameof(TestClass.Id), typeof(int));
+        dataTable.Columns.Add(nameof(TestClass.Name), typeof(string));
+        dataTable.Columns.Add(nameof(TestClass.IsActive), typeof(short));
+        dataTable.Columns.Add(nameof(TestClass.Date), typeof(string));
+        dataTable.Columns.Add(nameof(TestClass.DateOnly), typeof(string));
+
+        dataTable.Rows.Add(1, "test1", (short)1, $"{DateTime.MinValue:o}{((!badFirstDate) ? string.Empty : "badDate")}", $"{DateOnly.MinValue:o}{((!badSecondDate) ? string.Empty : "badDate")}");
+        dataTable.Rows.Add(2, "test2", (short)0, $"{DateTime.MaxValue:o}{((!badFirstDate) ? string.Empty : "badDate")}", $"{DateOnly.MaxValue:o}{((!badSecondDate) ? string.Empty : "badDate")}");
+
+        if (!badFirstDate && !badSecondDate)
+        {
+            // Act
+            List<TestClass?> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+
+            // Assert
+            result.Count.ShouldBe(2);
+            result[0]!.Id.ShouldBe(1);
+            result[0]!.Name.ShouldBe("test1");
+            result[0]!.IsActive.ShouldBeTrue();
+            result[0]!.Date.ShouldBe(DateTime.MinValue);
+            result[0]!.DateOnly.ShouldBe(DateOnly.MinValue);
+            result[1]!.Id.ShouldBe(2);
+            result[1]!.Name.ShouldBe("test2");
+            result[1]!.IsActive.ShouldBeFalse();
+            result[1]!.Date.ShouldBe(DateTime.MaxValue);
+            result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
+        }
+        else
+        {
+            // Act & Assert
+            Should.Throw<InvalidCastException>(() => dataTable.ToList<TestClass>(convertShortToBool: true));
+        }
     }
 
     [Fact]
     public void ToListParallel_ConvertsDataTableToList()
     {
         // Arrange
-        DataTable dataTable = new();
-        dataTable.Columns.Add("Id", typeof(int));
-        dataTable.Columns.Add("Name", typeof(string));
-        dataTable.Columns.Add("IsActive", typeof(bool));
+        using DataTable dataTable = new();
+        dataTable.Columns.Add(nameof(TestClass.Id), typeof(int));
+        dataTable.Columns.Add(nameof(TestClass.Name), typeof(string));
+        dataTable.Columns.Add(nameof(TestClass.IsActive), typeof(bool));
 
         dataTable.Rows.Add(1, "test1", true);
         dataTable.Rows.Add(2, "test2", false);
@@ -749,9 +875,9 @@ public class CollectionsTests
     public void ToEnumerableParallel_ConvertsDataTableToEnumerable()
     {
         // Arrange
-        DataTable dataTable = new();
-        dataTable.Columns.Add("Id", typeof(int));
-        dataTable.Columns.Add("Name", typeof(string));
+        using DataTable dataTable = new();
+        dataTable.Columns.Add(nameof(TestClass.Id), typeof(int));
+        dataTable.Columns.Add(nameof(TestClass.Name), typeof(string));
 
         dataTable.Rows.Add(1, "test1");
         dataTable.Rows.Add(2, "test2");
@@ -769,9 +895,9 @@ public class CollectionsTests
     public void ToEnumerableStreaming_ConvertsDataTableToEnumerable()
     {
         // Arrange
-        DataTable dataTable = new();
-        dataTable.Columns.Add("Id", typeof(int));
-        dataTable.Columns.Add("Name", typeof(string));
+        using DataTable dataTable = new();
+        dataTable.Columns.Add(nameof(TestClass.Id), typeof(int));
+        dataTable.Columns.Add(nameof(TestClass.Name), typeof(string));
 
         dataTable.Rows.Add(1, "test1");
         dataTable.Rows.Add(2, "test2");
@@ -789,8 +915,10 @@ public class CollectionsTests
 
     #region ToDataTable Tests
 
-    [Fact]
-    public void ToDataTable_ConvertsCollectionToDataTable()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ToDataTable_ConvertsCollectionToDataTable(bool useExpressionTrees)
     {
         // Arrange
         List<TestClass> collection = new()
@@ -800,11 +928,11 @@ public class CollectionsTests
         };
 
         // Act
-        using DataTable result = collection.ToDataTable();
+        using DataTable result = collection.ToDataTable(useExpressionTrees: useExpressionTrees);
 
         // Assert
         result.ShouldNotBeNull();
-        result.Columns.Count.ShouldBe(5); // Id, Name, IsActive
+        result.Columns.Count.ShouldBe(7); // Id, Name, IsActive
         result.Rows.Count.ShouldBe(2);
 
         result.Rows[0]["Id"].ShouldBe(1);
@@ -817,10 +945,13 @@ public class CollectionsTests
     }
 
     [Theory]
-    [InlineData("Id", "Name")]
-    [InlineData("NotInTestClass1", "NotInTestClass2")] //This is not working, update code to remove bad column names from existing table
-    [InlineData(null, null)]
-    public void ToDataTable_WithExistingDataTable_AddsRowsToIt(string? column1Name, string? column2Name)
+    [InlineData(nameof(TestClass.Id), nameof(TestClass.Name), false)]
+    [InlineData(nameof(TestClass.Id), nameof(TestClass.Name), true)]
+    [InlineData($"{nameof(TestClass.Id)}NotInTestClass1", $"{nameof(TestClass.Name)}NotInTestClass2", false)]
+    [InlineData($"{nameof(TestClass.Id)}NotInTestClass1", $"{nameof(TestClass.Name)}NotInTestClass2", true)]
+    [InlineData(null, null, false)]
+    [InlineData(null, null, true)]
+    public void ToDataTable_WithExistingDataTable_AddsRowsToIt(string? column1Name, string? column2Name, bool useExpressionTrees)
     {
         // Arrange
         List<TestClass> collection = new()
@@ -842,7 +973,7 @@ public class CollectionsTests
         }
 
         // Act
-        using DataTable result = collection.ToDataTable(dataTable);
+        using DataTable result = collection.ToDataTable(dataTable, useExpressionTrees: useExpressionTrees);
 
         // Assert
         result.ShouldBeSameAs(dataTable);
@@ -853,8 +984,10 @@ public class CollectionsTests
         result.Rows[1]["Name"].ShouldBe("test2");
     }
 
-    [Fact]
-    public void ToDataTable_WithParallel_ConvertsCollectionToDataTable()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ToDataTable_WithParallel_ConvertsCollectionToDataTable(bool useExpressionTrees)
     {
         // Arrange
         List<TestClass> collection = new()
@@ -864,7 +997,7 @@ public class CollectionsTests
         };
 
         // Act
-        DataTable result = collection.ToDataTable(useParallel: true);
+        DataTable result = collection.ToDataTable(useExpressionTrees: useExpressionTrees, useParallel: true);
 
         // Assert
         result.ShouldNotBeNull();
@@ -890,11 +1023,13 @@ public class CollectionsTests
         foundRow2.ShouldBeTrue();
     }
 
-    [Fact]
-    public void ToDataTable_WithNullCollection_ReturnsNull()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ToDataTable_WithNullCollection_ReturnsNull(bool useExpressionTrees)
     {
         // Act
-        DataTable? result = Collections.ToDataTable<TestClass>(null);
+        using DataTable? result = Collections.ToDataTable<TestClass>(null, useExpressionTrees: useExpressionTrees);
 
         // Assert
         result.ShouldBeNull();
@@ -1178,23 +1313,35 @@ public class CollectionsTests
         result.ShouldBeEmpty();
     }
 
-    [Fact]
-    public void StringAggProps_WithMultipleProperties_AggregatesAllSpecifiedProperties()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void StringAggProps_WithMultipleProperties_AggregatesAllSpecifiedProperties(bool distinct)
     {
         // Arrange
         List<TestClass> collection = new()
         {
             new TestClass { Id = 1, Name = "test1", Description = "desc1" },
-            new TestClass { Id = 1, Name = "test2", Description = "desc2" }
+            new TestClass { Id = 1, Name = "test2", Description = "desc2" },
+            new TestClass { Id = 1, Name = "test1", Description = "desc1" }
         };
 
         // Act
-        List<TestClass> result = collection.StringAggProps(["Name", "Description"]).ToList();
+        List<TestClass> result = collection.StringAggProps(["Name", "Description"], distinct: distinct).ToList();
 
         // Assert
-        result.Count.ShouldBe(1);
-        result[0].Name.ShouldBe("test1;test2");
-        result[0].Description.ShouldBe("desc1;desc2");
+        if (distinct)
+        {
+            result.Count.ShouldBe(1);
+            result[0].Name.ShouldBe("test1;test2");
+            result[0].Description.ShouldBe("desc1;desc2");
+        }
+        else
+        {
+            result.Count.ShouldBe(1);
+            result[0].Name.ShouldBe("test1;test2;test1");
+            result[0].Description.ShouldBe("desc1;desc2;desc1");
+        }
     }
 
     [Fact]
@@ -1279,7 +1426,6 @@ public class CollectionsTests
         // Assert
         result.ShouldBe(expected);
     }
-
 
     [Theory]
     [InlineData(DayOfWeek.Monday, true)]
@@ -1404,14 +1550,14 @@ public class CollectionsTests
 
         // Act
         Expression<Func<TestClass, bool>>? combinedExpr = Collections.CombineExpressions<TestClass>(expressions);
-        Func<TestClass, bool> func = combinedExpr.Compile();
+        Func<TestClass, bool>? func = combinedExpr?.Compile();
 
         // Assert
         combinedExpr.ShouldNotBeNull();
 
         // Test with valid object
         TestClass validObj = new() { Id = 1, Name = "test" };
-        func(validObj).ShouldBeTrue();
+        func!(validObj).ShouldBeTrue();
 
         // Test with invalid object (Id = 0)
         TestClass invalidObj1 = new() { Id = 0, Name = "test" };
@@ -1531,3 +1677,5 @@ public class CollectionsTests
 
     #endregion
 }
+
+#pragma warning restore CRR1000 // The name does not correspond to naming conventions

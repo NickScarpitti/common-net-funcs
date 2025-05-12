@@ -1,5 +1,4 @@
 ﻿using System.IO.Compression;
-using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Compression;
 

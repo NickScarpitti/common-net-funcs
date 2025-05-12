@@ -365,14 +365,14 @@ public static class Collections
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
             Task<T?>? outstandingItem = null;
-            T? transform(object x) { return ParseRowValues<T>((DataRow)x, map); }
+            T? Transform(object x) { return ParseRowValues<T>((DataRow)x, map); }
 
             foreach (DataRow row in table.AsEnumerable())
             {
                 Task<T?>? tmp = outstandingItem;
 
                 // note: passed in as "state", not captured, so not a foreach/capture bug
-                outstandingItem = new(transform!, row);
+                outstandingItem = new(Transform!, row);
                 outstandingItem.Start();
 
                 if (tmp != null)
@@ -412,67 +412,61 @@ public static class Collections
     private static T? ParseRowValues<T>(this DataRow row, IEnumerable<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map) where T : class, new()
     {
         T? item = new();
-        if (row != null)
-        {
-            foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)
-            {
-                object? value = row[pair.DataColumn!];
 
-                // Handle issue where DB returns Int16 for boolean values
-                if (value is not System.DBNull)
+        foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)
+        {
+            object? value = row[pair.DataColumn!];
+
+            // Handle issue where DB returns Int16 for boolean values
+            if (value is not System.DBNull)
+            {
+                if (pair.IsShort && ((pair.PropertyInfo!.PropertyType == typeof(bool)) || (pair.PropertyInfo!.PropertyType == typeof(bool?))))
                 {
-                    if (pair.IsShort && ((pair.PropertyInfo!.PropertyType == typeof(bool)) || (pair.PropertyInfo!.PropertyType == typeof(bool?))))
-                    {
-                        pair.PropertyInfo!.SetValue(item, ToBoolean(value));
-                    }
-                    else
-                    {
-                        Type valueType = value.GetType();
-                        if (((pair.PropertyInfo.PropertyType == typeof(DateOnly)) || (pair.PropertyInfo.PropertyType == typeof(DateOnly?))) && (valueType != typeof(DateOnly)) && (valueType != typeof(DateOnly?)))
-                        {
-                            if ((valueType == typeof(DateTime)) || (valueType == typeof(DateTime?)))
-                            {
-                                pair.PropertyInfo!.SetValue(item, DateOnly.FromDateTime((DateTime)value));
-                            }
-                            else if (DateOnly.TryParse((string)value, out DateOnly dateOnlyValue))
-                            {
-                                pair.PropertyInfo!.SetValue(item, dateOnlyValue);
-                            }
-                            else
-                            {
-                                pair.PropertyInfo!.SetValue(item, null);
-                            }
-                        }
-                        else if (((pair.PropertyInfo.PropertyType == typeof(DateTime)) || (pair.PropertyInfo.PropertyType == typeof(DateTime?))) && (valueType != typeof(DateTime)) && (valueType != typeof(DateTime?)))
-                        {
-                            if ((valueType == typeof(DateOnly)) || (valueType == typeof(DateOnly?)))
-                            {
-                                pair.PropertyInfo!.SetValue(item, ((DateOnly)value).ToDateTime(TimeOnly.MinValue));
-                            }
-                            else if (DateTime.TryParse((string)value, out DateTime dateTimeValue))
-                            {
-                                pair.PropertyInfo!.SetValue(item, dateTimeValue);
-                            }
-                            else
-                            {
-                                pair.PropertyInfo!.SetValue(item, null);
-                            }
-                        }
-                        else
-                        {
-                            pair.PropertyInfo!.SetValue(item, value);
-                        }
-                    }
+                    pair.PropertyInfo!.SetValue(item, ToBoolean(value));
                 }
                 else
                 {
-                    pair.PropertyInfo!.SetValue(item, null);
+                    Type valueType = value.GetType();
+                    if (((pair.PropertyInfo.PropertyType == typeof(DateOnly)) || (pair.PropertyInfo.PropertyType == typeof(DateOnly?))) && (valueType != typeof(DateOnly)) && (valueType != typeof(DateOnly?)))
+                    {
+                        if ((valueType == typeof(DateTime)) || (valueType == typeof(DateTime?)))
+                        {
+                            pair.PropertyInfo!.SetValue(item, DateOnly.FromDateTime((DateTime)value));
+                        }
+                        else if (DateOnly.TryParse((string)value, out DateOnly dateOnlyValue))
+                        {
+                            pair.PropertyInfo!.SetValue(item, dateOnlyValue);
+                        }
+                        else
+                        {
+                            throw new InvalidCastException($"Unable to convert value '{value}' to DateOnly for property '{pair.PropertyInfo.Name}'");
+                        }
+                    }
+                    else if (((pair.PropertyInfo.PropertyType == typeof(DateTime)) || (pair.PropertyInfo.PropertyType == typeof(DateTime?))) && (valueType != typeof(DateTime)) && (valueType != typeof(DateTime?)))
+                    {
+                        if ((valueType == typeof(DateOnly)) || (valueType == typeof(DateOnly?)))
+                        {
+                            pair.PropertyInfo!.SetValue(item, ((DateOnly)value).ToDateTime(TimeOnly.MinValue));
+                        }
+                        else if (DateTime.TryParse((string)value, out DateTime dateTimeValue))
+                        {
+                            pair.PropertyInfo!.SetValue(item, dateTimeValue);
+                        }
+                        else
+                        {
+                            throw new InvalidCastException($"Unable to convert value '{value}' to DateTime for property '{pair.PropertyInfo.Name}'");
+                        }
+                    }
+                    else
+                    {
+                        pair.PropertyInfo!.SetValue(item, value);
+                    }
                 }
             }
-        }
-        else
-        {
-            item = null;
+            else
+            {
+                pair.PropertyInfo!.SetValue(item, null);
+            }
         }
         return item;
     }
@@ -504,10 +498,25 @@ public static class Collections
     {
         PropertyInfo[] properties = typeof(T).GetProperties();
 
+        // Remove invalid columns
+        IEnumerable<string> propertyNames = properties.Select(x => x.Name);
+        DataColumn[] columns = new DataColumn[dataTable.Columns.Count];
+        dataTable.Columns.CopyTo(columns, 0);
+        foreach (DataColumn col in columns)
+        {
+            if (!propertyNames.Contains(col.ColumnName))
+            {
+                dataTable.Columns.Remove(col.ColumnName);
+            }
+        }
+
         // Create columns
         foreach (PropertyInfo prop in properties)
         {
-            dataTable.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+            if (!dataTable.Columns.Contains(prop.Name))
+            {
+                dataTable.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+            }
         }
 
         // Add rows
@@ -601,28 +610,21 @@ public static class Collections
         }
     }
 
-    /// <summary>
-    /// Convert a collection into equivalent DataTable object using expression trees
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="data">Collection to be turned into a DataTable</param>
-    /// <param name="dataTable"></param>
-    /// <param name="useParallel"></param>
-    /// <param name="approximateCount"></param>
-    /// <param name="degreeOfParallelism"></param>
-    /// <returns></returns>
     private static DataTable ToDataTableExpressionTrees<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism) where T : class, new()
     {
         TypeAccessor typeAccessor = _typeAccessorCache.GetOrAdd(typeof(T), t => new TypeAccessor(t));
 
-        foreach (DataColumn col in dataTable.Columns)
+        // Remove invalid columns
+        DataColumn[] columns = new DataColumn[dataTable.Columns.Count];
+        dataTable.Columns.CopyTo(columns, 0);
+        foreach (DataColumn col in columns)
         {
-            if (!typeAccessor.ColumnDefinitions.)
+            if (!typeAccessor.PropertyNames.Contains(col.ColumnName))
             {
-
+                dataTable.Columns.Remove(col.ColumnName);
             }
         }
-        
+
         foreach (DataColumn col in typeAccessor.ColumnDefinitions)
         {
             if (!dataTable.Columns.Contains(col.ColumnName))

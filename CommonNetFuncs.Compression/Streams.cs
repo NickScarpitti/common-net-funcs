@@ -164,6 +164,7 @@ public static class Streams
                 }
                 break;
         }
+        decompressedStream.Position = 0;
     }
 
     /// <summary>

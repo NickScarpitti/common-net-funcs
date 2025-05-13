@@ -101,4 +101,12 @@ public static class DateTimeHelpers
     /// <returns>True if double passed in represents a valid OA Date</returns>
     public static bool IsValidOaDate(this double? oaDate)
     { return (oaDate != null) && (oaDate >= 657435.0) && (oaDate <= 2958465.99999999); }
+
+    /// <summary>
+    /// Returns whether or not the provided double value is a valid OADate
+    /// </summary>
+    /// <param name="oaDate">Double to check as OADate</param>
+    /// <returns>True if double passed in represents a valid OA Date</returns>
+    public static bool IsValidOaDate(this double oaDate)
+    { return (oaDate >= 657435.0) && (oaDate <= 2958465.99999999); }
 }

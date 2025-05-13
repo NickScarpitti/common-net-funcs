@@ -83,14 +83,14 @@ public class ExceptionLocationTests
     private static Exception CreateExceptionWithNullReflectedType()
     {
         // Create a DynamicMethod with no ReflectedType
-        DynamicMethod dm = new System.Reflection.Emit.DynamicMethod("DynamicThrow", null, null);
-        ILGenerator il = dm.GetILGenerator();
-        il.Emit(System.Reflection.Emit.OpCodes.Newobj, typeof(Exception).GetConstructor(Type.EmptyTypes)!);
-        il.Emit(System.Reflection.Emit.OpCodes.Throw);
+        DynamicMethod dynamicMethod = new("DynamicThrow", null, null);
+        ILGenerator ilGenerator = dynamicMethod.GetILGenerator();
+        ilGenerator.Emit(OpCodes.Newobj, typeof(Exception).GetConstructor(Type.EmptyTypes)!);
+        ilGenerator.Emit(OpCodes.Throw);
 
         try
         {
-            dm.Invoke(null, null);
+            dynamicMethod.Invoke(null, null);
         }
         catch (Exception ex)
         {

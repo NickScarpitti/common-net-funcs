@@ -123,7 +123,8 @@ public class ExceptionLocationTests
         // Arrange
         Exception ex = CreateExceptionFromMethod(() =>
         {
-            Action lambda = () => throw new ApplicationException("From lambda");
+            static void lambda() { throw new ApplicationException("From lambda"); }
+
             lambda();
         });
 

@@ -1,11 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.IO.Compression;
-using System.Text.RegularExpressions;
-using MailKit.Net.Smtp;
+﻿using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
-using static CommonNetFuncs.Core.ExceptionLocation;
+using System.ComponentModel.DataAnnotations;
+using System.IO.Compression;
+using System.Text.RegularExpressions;
 using static CommonNetFuncs.Compression.Files;
+using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Email.EmailConstants;
 
 namespace CommonNetFuncs.Email;
@@ -19,20 +19,21 @@ public static class EmailConstants
 /// <summary>
 /// Class that stores both fields of a Mail Address
 /// </summary>
-public sealed class MailAddress
+public sealed class MailAddress(string? Name = null, string? Email = null)
 {
-    public string? Name { get; set; }
+    public string? Name { get; set; } = Name;
 
     [MaxLength(MaxEmailLength, ErrorMessage = "Invalid email format")]
     [RegularExpression(EmailRegex, ErrorMessage = "Invalid email format")]
     [EmailAddress(ErrorMessage = "Invalid email format")]
-    public string? Email { get; set; }
+    public string? Email { get; set; } = Email;
 }
 
-public sealed class MailAttachment
+public sealed class MailAttachment(string? AttachmentName = null, Stream? AttachmentStream = null)
 {
-    public string? AttachmentName { get; set; }
-    public Stream? AttachmentStream { get; set; }
+    public string? AttachmentName { get; set; } = AttachmentName;
+
+    public Stream? AttachmentStream { get; set; } = AttachmentStream;
 }
 
 public static class Email
@@ -44,7 +45,10 @@ public static class Email
     /// </summary>
     /// <param name="smtpServer">The address of the SMTP server to use to sent the email</param>
     /// <param name="smtpPort">Port to use when connecting to the SMPT server</param>
-    /// <param name="from">The MailAddress indicating the email address to use in the From field (does not need to be an actual email address)</param>
+    /// <param name="from">
+    /// The MailAddress indicating the email address to use in the From field (does not need to be an actual email
+    /// address)
+    /// </param>
     /// <param name="toAddresses">List of MailAdresses that indicates who to add as direct recipients of the email</param>
     /// <param name="subject">Text to be used as the subject of the email</param>
     /// <param name="body">Text to be used for the body of the email. Can be HTML or plain text (see bodyIsHtml parameter)</param>
@@ -65,7 +69,7 @@ public static class Email
         bool success = true;
         try
         {
-            //Confirm emails
+            // Confirm emails
             if (!from.Email.IsValidEmail())
             {
                 success = false;
@@ -83,7 +87,7 @@ public static class Email
                 }
             }
 
-            if (success && ccAddresses != null)
+            if (success && (ccAddresses != null))
             {
                 if (ccAddresses.Any())
                 {
@@ -98,7 +102,7 @@ public static class Email
                 }
             }
 
-            if (success && bccAddresses != null)
+            if (success && (bccAddresses != null))
             {
                 if (bccAddresses.Any())
                 {
@@ -129,8 +133,14 @@ public static class Email
                 email.Subject = subject;
 
                 BodyBuilder bodyBuilder = new();
-                if (bodyIsHtml) { bodyBuilder.HtmlBody = body; }
-                else { bodyBuilder.TextBody = body; }
+                if (bodyIsHtml)
+                {
+                    bodyBuilder.HtmlBody = body;
+                }
+                else
+                {
+                    bodyBuilder.TextBody = body;
+                }
 
                 await AddAttachments(attachments, bodyBuilder, zipAttachments).ConfigureAwait(false);
 
@@ -199,7 +209,7 @@ public static class Email
         bool isValid = false;
         try
         {
-            isValid = Regex.IsMatch(email ?? "", EmailRegex, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+            isValid = Regex.IsMatch(email ?? string.Empty, EmailRegex, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
         }
         catch (Exception ex)
         {

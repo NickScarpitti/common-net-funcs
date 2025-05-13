@@ -41,7 +41,7 @@ public static class Async
     /// </summary>
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
-    public static async Task ObjectFill<T>(this IList<T?> obj, Task<T> task)
+    public static async Task ObjectFill<T>(this IList<T?> obj, Task<T?> task)
     {
         try
         {
@@ -59,7 +59,25 @@ public static class Async
     /// </summary>
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Async task that returns the value to insert into obj object</param>
-    public static async Task ObjectFill<T>(this HashSet<T?> obj, Task<T> task)
+    public static async Task ObjectFill<T>(this ConcurrentBag<T?> obj, Task<T?> task)
+    {
+        try
+        {
+            T? resultObject = await task;
+            lock (obj) obj.Add(resultObject);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+    }
+
+    /// <summary>
+    /// Task to fill obj variable asynchronously
+    /// </summary>
+    /// <param name="obj">Object to insert data into</param>
+    /// <param name="task">Async task that returns the value to insert into obj object</param>
+    public static async Task ObjectFill<T>(this HashSet<T?> obj, Task<T?> task)
     {
         try
         {
@@ -78,12 +96,11 @@ public static class Async
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object</param>
     /// <param name="semaphore">Semaphore to limit number of concurrent operations</param>
-    public static async Task ObjectFill<T>(this T obj, Func<Task<T>> task, SemaphoreSlim semaphore)
+    public static async Task ObjectFill<T>(this T obj, Func<Task<T>> task, SemaphoreSlim? semaphore)
     {
         try
         {
-            semaphore ??= new(1, 1);
-            await semaphore.WaitAsync().ConfigureAwait(false);
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
             if (obj != null)
             {
                 T? resultObject = await task().ConfigureAwait(false);
@@ -113,12 +130,11 @@ public static class Async
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object</param>
     /// <param name="semaphore">Semaphore to limit number of concurrent operations</param>
-    public static async Task ObjectFill<T>(this ConcurrentBag<T?> obj, Func<Task<T?>> task, SemaphoreSlim semaphore)
+    public static async Task ObjectFill<T>(this ConcurrentBag<T?> obj, Func<Task<T?>> task, SemaphoreSlim? semaphore)
     {
         try
         {
-            semaphore ??= new(1, 1);
-            await semaphore.WaitAsync().ConfigureAwait(false);
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
             if (obj != null)
             {
                 T? resultObject = await task().ConfigureAwait(false);
@@ -141,12 +157,38 @@ public static class Async
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object</param>
     /// <param name="semaphore">Semaphore to limit number of concurrent operations</param>
-    public static async Task ObjectFill<T>(this HashSet<T?> obj, Func<Task<T?>> task, SemaphoreSlim semaphore)
+    public static async Task ObjectFill<T>(this IList<T?> obj, Func<Task<T?>> task, SemaphoreSlim? semaphore)
     {
         try
         {
-            semaphore ??= new(1, 1);
-            await semaphore.WaitAsync().ConfigureAwait(false);
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
+            if (obj != null)
+            {
+                T? resultObject = await task().ConfigureAwait(false);
+                obj.Add(resultObject);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+        }
+        finally
+        {
+            semaphore?.Release();
+        }
+    }
+
+    /// <summary>
+    /// Task to fill obj variable asynchronously
+    /// </summary>
+    /// <param name="obj">Object to insert data into</param>
+    /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object</param>
+    /// <param name="semaphore">Semaphore to limit number of concurrent operations</param>
+    public static async Task ObjectFill<T>(this HashSet<T?> obj, Func<Task<T?>> task, SemaphoreSlim? semaphore)
+    {
+        try
+        {
+            if (semaphore != null) { await semaphore.WaitAsync().ConfigureAwait(false); }
             if (obj != null)
             {
                 T? resultObject = await task().ConfigureAwait(false);
@@ -232,7 +274,7 @@ public static class Async
     /// <param name="obj">Object to insert data into</param>
     /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object</param>
     /// <param name="semaphore">Semaphore to limit number of concurrent operations</param>
-    public static async Task ObjectFill<T>(this List<T> obj, Func<Task<List<T>>> task, SemaphoreSlim semaphore)
+    public static async Task ObjectFill<T>(this List<T> obj, Func<Task<List<T>>> task, SemaphoreSlim? semaphore)
     {
         try
         {

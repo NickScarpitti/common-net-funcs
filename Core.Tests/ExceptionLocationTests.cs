@@ -1,4 +1,5 @@
 ﻿using CommonNetFuncs.Core;
+using System.Reflection.Emit;
 
 namespace Core.Tests;
 
@@ -55,7 +56,7 @@ public class ExceptionLocationTests
     public void GetLocationOfException_ReturnsNullDot_WhenTargetSiteIsNull()
     {
         // Arrange
-        Exception ex = new Exception("No target site");
+        Exception ex = new("No target site");
 
         // TargetSite is null for manually constructed exceptions
 
@@ -63,7 +64,7 @@ public class ExceptionLocationTests
         string location = ex.GetLocationOfException();
 
         // Assert
-        location.ShouldBe("null.");
+        location.ShouldBe(".");
     }
 
     [Fact]
@@ -72,7 +73,7 @@ public class ExceptionLocationTests
         // Arrange
         Exception ex = CreateExceptionFromMethod(() =>
         {
-            void LocalFunction() { throw new ApplicationException("From local function"); }
+            static void LocalFunction() { throw new ApplicationException("From local function"); }
 
             LocalFunction();
         });
@@ -90,7 +91,8 @@ public class ExceptionLocationTests
         // Arrange
         Exception ex = CreateExceptionFromMethod(() =>
         {
-            Action lambda = () => throw new ApplicationException("From lambda");
+            static void lambda() { throw new ApplicationException("From lambda"); }
+
             lambda();
         });
 

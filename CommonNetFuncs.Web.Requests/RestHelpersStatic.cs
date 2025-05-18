@@ -539,7 +539,9 @@ public static class RestHelpersStatic
     /// Gets the number of chunks and items per chunk to return with yield return to fit within MvcOptions.MaxIAsyncEnumerableBufferLimit
     /// </summary>
     /// <param name="itemCount">Total number of items to transmit</param>
-    /// <param name="startingitemsPerChunk">Minimum chunk size to see if it fits within the buffer limit.<br/>Will increase from initial value until the number of chunks fits within the buffer limit</param>
+    /// <param name="startingitemsPerChunk">
+    /// Minimum chunk size to see if it fits within the buffer limit.<br/>Will increase from initial value until the number of chunks fits within the buffer limit
+    /// </param>
     /// <param name="bufferLimit">Maximum number of buffer operations allowed by IAsyncEnumerable. Default = 8192</param>
     /// <returns>itemsPerChunk and numberOfChunks</returns>
     public static (int itemsPerChunk, int numberOfChunks) GetChunkingParameters(int itemCount, int startingitemsPerChunk = 10000, int bufferLimit = 8192)

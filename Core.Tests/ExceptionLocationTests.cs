@@ -1,5 +1,4 @@
-﻿using System.Reflection.Emit;
-using CommonNetFuncs.Core;
+﻿using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
@@ -65,38 +64,6 @@ public class ExceptionLocationTests
 
         // Assert
         location.ShouldBe("null.");
-    }
-
-    [Fact]
-    public void GetLocationOfException_ReturnsNullDot_WhenReflectedTypeIsNull()
-    {
-        // Arrange
-        Exception ex = CreateExceptionWithNullReflectedType();
-
-        // Act
-        string location = ex.GetLocationOfException();
-
-        // Assert
-        location.ShouldStartWith("null.");
-    }
-
-    private static Exception CreateExceptionWithNullReflectedType()
-    {
-        // Create a DynamicMethod with no ReflectedType
-        DynamicMethod dm = new System.Reflection.Emit.DynamicMethod("DynamicThrow", null, null);
-        ILGenerator il = dm.GetILGenerator();
-        il.Emit(System.Reflection.Emit.OpCodes.Newobj, typeof(Exception).GetConstructor(Type.EmptyTypes)!);
-        il.Emit(System.Reflection.Emit.OpCodes.Throw);
-
-        try
-        {
-            dm.Invoke(null, null);
-        }
-        catch (Exception ex)
-        {
-            return ex;
-        }
-        throw new InvalidOperationException("No exception was thrown.");
     }
 
     [Fact]

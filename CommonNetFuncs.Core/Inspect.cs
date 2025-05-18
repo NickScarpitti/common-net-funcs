@@ -18,18 +18,20 @@ public static class Inspect
     /// <param name="type">Type to get the default value of</param>
     /// <returns>The default value of the provided type</returns>
     public static object? GetDefaultValue(this Type type)
-    {
-        return type.IsValueType ? RuntimeHelpers.GetUninitializedObject(type) : null;
-    }
+    { return type.IsValueType ? RuntimeHelpers.GetUninitializedObject(type) : null; }
 
     /// <summary>
     /// Get the number of properties in a class that are set to their default value
     /// </summary>
     /// <param name="obj">Object to count default properties in</param>
     /// <returns>Number of properties in a class that are set to their default value</returns>
+    //public static int CountDefaultProps<T>(this T obj) where T : class
+    // {
+    // return typeof(T).GetProperties().Count(x => x.CanWrite && x.GetValue(obj) == x.PropertyType.GetDefaultValue());
+    // }
     public static int CountDefaultProps<T>(this T obj) where T : class
     {
-        return typeof(T).GetProperties().Count(x => x.CanWrite && x.GetValue(obj) == x.PropertyType.GetDefaultValue());
+        return typeof(T).GetProperties().Count(x => x.CanWrite && Equals(x.GetValue(obj), x.PropertyType.GetDefaultValue()));
     }
 
     /// <summary>
@@ -64,10 +66,7 @@ public static class Inspect
     /// <param name="obj1">First object to compare for value equality</param>
     /// <param name="obj2">Second object to compare for value equality</param>
     /// <returns>True if the two objects have the same value for all elements</returns>
-    public static bool IsEqualR(this object? obj1, object? obj2)
-    {
-        return obj1.IsEqualR(obj2, null);
-    }
+    public static bool IsEqualR(this object? obj1, object? obj2) { return obj1.IsEqualR(obj2, null); }
 
     /// <summary>
     /// Compare two class objects for value equality
@@ -79,13 +78,13 @@ public static class Inspect
     public static bool IsEqualR(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
     {
         // They're both null.
-        if (obj1 == null && obj2 == null)
+        if ((obj1 == null) && (obj2 == null))
         {
             return true;
         }
 
         // One is null, so they can't be the same.
-        if (obj1 == null || obj2 == null)
+        if ((obj1 == null) || (obj2 == null))
         {
             return false;
         }
@@ -112,8 +111,8 @@ public static class Inspect
 
             try
             {
-                //This will prevent issues with numbers with varying decimal places from being counted as a difference
-                if ((aIsNumeric && bIsNumeric && decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!)) ||
+                // This will prevent issues with numbers with varying decimal places from being counted as a difference
+                if ((aIsNumeric && bIsNumeric && (decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!))) ||
                     (!(aIsNumeric && bIsNumeric) && !aPropValue.ToString().StrComp(bPropValue.ToString())))
                 {
                     return false;
@@ -128,53 +127,47 @@ public static class Inspect
         return true;
     }
 
-    //public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
-    //{
-    //    // They're both null.
-    //    if (obj1 == null && obj2 == null)
-    //    {
-    //        return true;
-    //    }
+    // public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
+    // {
+    // // They're both null.
+    // if (obj1 == null && obj2 == null)
+    // {
+    // return true;
+    // }
 
-    //    // One is null, so they can't be the same.
-    //    if (obj1 == null || obj2 == null)
-    //    {
-    //        return false;
-    //    }
+    // // One is null, so they can't be the same.
+    // if (obj1 == null || obj2 == null)
+    // {
+    // return false;
+    // }
 
-    //    Type type = obj1.GetType();
+    // Type type = obj1.GetType();
 
-    //    // How can they be the same if they're different types?
-    //    if (type != obj2.GetType())
-    //    {
-    //        return false;
-    //    }
+    // // How can they be the same if they're different types?
+    // if (type != obj2.GetType())
+    // {
+    // return false;
+    // }
 
-    //    exemptProps ??= [];
-    //    Tuple<Type, bool, bool> key = Tuple.Create(type, ignoreStringCase, recursive);
-    //    if (!CompareDelegates.TryGetValue(key, out Func<object, object, IEnumerable<string>, bool>? compareDelegate))
-    //    {
-    //        compareDelegate = CreateCompareDelegate(type, ignoreStringCase, recursive);
-    //        CompareDelegates[key] = compareDelegate;
-    //    }
+    // exemptProps ??= [];
+    // Tuple<Type, bool, bool> key = Tuple.Create(type, ignoreStringCase, recursive);
+    // if (!CompareDelegates.TryGetValue(key, out Func<object, object, IEnumerable<string>, bool>? compareDelegate))
+    // {
+    // compareDelegate = CreateCompareDelegate(type, ignoreStringCase, recursive);
+    // CompareDelegates[key] = compareDelegate;
+    // }
 
-    //    return compareDelegate(obj1, obj2, exemptProps);
-    //}
+    // return compareDelegate(obj1, obj2, exemptProps);
+    // }
 
     // This class is used to track object pairs being compared
     private class ComparisonContext
     {
         private readonly HashSet<(object, object)> _comparingPairs = [];
 
-        public bool TryAddPair(object obj1, object obj2)
-        {
-            return _comparingPairs.Add((obj1, obj2));
-        }
+        public bool TryAddPair(object obj1, object obj2) { return _comparingPairs.Add((obj1, obj2)); }
 
-        public void RemovePair(object obj1, object obj2)
-        {
-            _comparingPairs.Remove((obj1, obj2));
-        }
+        public void RemovePair(object obj1, object obj2) { _comparingPairs.Remove((obj1, obj2)); }
     }
 
     private static readonly AsyncLocal<ComparisonContext?> CurrentContext = new();
@@ -192,12 +185,12 @@ public static class Inspect
         try
         {
             // Null checks (same as before)
-            if (obj1 == null && obj2 == null)
+            if ((obj1 == null) && (obj2 == null))
             {
                 return true;
             }
 
-            if (obj1 == null || obj2 == null)
+            if ((obj1 == null) || (obj2 == null))
             {
                 return false;
             }
@@ -228,7 +221,7 @@ public static class Inspect
         finally
         {
             // Clean up
-            if (obj1 != null && obj2 != null)
+            if ((obj1 != null) && (obj2 != null))
             {
                 CurrentContext.Value?.RemovePair(obj1, obj2);
             }
@@ -250,7 +243,7 @@ public static class Inspect
         UnaryExpression typedObj1 = Expression.Convert(obj1Param, type);
         UnaryExpression typedObj2 = Expression.Convert(obj2Param, type);
 
-        IEnumerable<PropertyInfo> properties = type.GetProperties().Where(p => p.CanRead && p.GetIndexParameters().Length == 0);
+        IEnumerable<PropertyInfo> properties = type.GetProperties().Where(p => p.CanRead && (p.GetIndexParameters().Length == 0));
 
         List<Expression> comparisons = [];
 
@@ -284,14 +277,14 @@ public static class Inspect
             {
                 comparison = Expression.Equal(Expression.Call(value1, "CompareTo", null, value2), Expression.Constant(0));
             }
-            else if (recursive && !prop.PropertyType.IsValueType && prop.PropertyType != typeof(string))
+            else if (recursive && !prop.PropertyType.IsValueType && (prop.PropertyType != typeof(string)))
             {
                 MethodInfo? isEqualMethod = typeof(Inspect).GetMethod(nameof(IsEqual), [typeof(object), typeof(object), typeof(IEnumerable<string>), typeof(bool), typeof(bool)])!;
                 comparison = Expression.Call(isEqualMethod, value1, value2, Expression.Constant(null, typeof(IEnumerable<string>)), Expression.Constant(ignoreStringCase), Expression.Constant(recursive));
             }
             else
             {
-                //comparison = Expression.Equal(value1, value2);
+                // comparison = Expression.Equal(value1, value2);
                 comparison = Expression.Constant(true);
             }
 
@@ -306,30 +299,22 @@ public static class Inspect
         return lambda.Compile();
     }
 
-    /// <summary>
-    /// Get hash of an object
-    /// </summary>
-    /// <param name="obj">Object to get hash code of</param>
-    /// <returns>Hash string of object</returns>
-    public static int GetHashCode<T>(this T obj)
+    public static string GetHashForObject<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
     {
-        PropertyInfo[]? props = obj?.GetType().GetProperties();
-        string? allProps = null;
-        if (props != null)
+        if (obj == null)
         {
-            //Order by here makes this consistent
-            foreach (PropertyInfo prop in props.OrderBy(x => x.Name))
-            {
-                object propValue = prop.GetValue(obj) ?? string.Empty;
-                allProps += propValue;
-            }
+            return "null";
         }
-        return allProps?.GetHashCode() ?? 0;
-    }
 
-    public static string GetHashForObject<T>(this T obj)
-    {
-        if (obj == null) return "null";
+        HashAlgorithm algorithm = hashAlgorithm switch
+        {
+            EHashAlgorithm.SHA1 => SHA1.Create(),
+            EHashAlgorithm.MD5 => MD5.Create(),
+            EHashAlgorithm.SHA256 => SHA256.Create(),
+            EHashAlgorithm.SHA384 => SHA384.Create(),
+            _ => SHA512.Create()
+        };
+
         IOrderedEnumerable<PropertyInfo> properties = typeof(T).GetProperties().Where(x => x.CanRead).OrderBy(x => x.Name);
 
         using MemoryStream ms = new();
@@ -343,7 +328,40 @@ public static class Inspect
             }
         }
 
-        return Convert.ToHexStringLower(MD5.HashData(ms.ToArray()));
+        return Convert.ToHexStringLower(algorithm.ComputeHash(ms.ToArray()));
+    }
+
+    public static async Task<string> GetHashForObjectAsync<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
+    {
+        if (obj == null)
+        {
+            return "null";
+        }
+
+        HashAlgorithm algorithm = hashAlgorithm switch
+        {
+            EHashAlgorithm.SHA1 => SHA1.Create(),
+            EHashAlgorithm.MD5 => MD5.Create(),
+            EHashAlgorithm.SHA256 => SHA256.Create(),
+            EHashAlgorithm.SHA384 => SHA384.Create(),
+            _ => SHA512.Create()
+        };
+
+        IOrderedEnumerable<PropertyInfo> properties = typeof(T).GetProperties().Where(x => x.CanRead).OrderBy(x => x.Name);
+
+        await using MemoryStream ms = new();
+        await using BinaryWriter writer = new(ms);
+        foreach (PropertyInfo property in properties)
+        {
+            object? value = property.GetValue(obj);
+            if (value != null)
+            {
+                WriteValue(writer, value);
+            }
+        }
+        await ms.FlushAsync();
+        ms.Position = 0; // Reset stream position for reading
+        return Convert.ToHexStringLower(await algorithm.ComputeHashAsync(ms));
     }
 
     private static void WriteValue(BinaryWriter writer, object value)
@@ -357,7 +375,7 @@ public static class Inspect
         Type type = value.GetType();
 
         // Handle collections
-        if (value is IEnumerable enumerable && value is not string)
+        if ((value is IEnumerable enumerable) && (value is not string))
         {
             // Convert collection to list of sorted hashes
             List<string> itemHashes = [];
@@ -384,7 +402,7 @@ public static class Inspect
         }
 
         // Handle primitive types and strings
-        if (type.IsPrimitive || value is string || value is decimal)
+        if (type.IsPrimitive || (value is string) || (value is decimal))
         {
             writer.Write(value.ToString()!);
             return;

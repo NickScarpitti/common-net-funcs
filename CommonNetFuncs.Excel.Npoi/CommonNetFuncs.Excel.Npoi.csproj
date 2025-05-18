@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.3.0</Version>
+    <Version>3.3.8</Version>
     <MinVerTagPrefix>excel.npoi-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -45,7 +45,7 @@
     <PackageReference Include="NLog.Extensions.Logging" Version="5.4.0" PrivateAssets="all" />
     <PackageReference Include="NPOI" Version="2.7.3" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8" PrivateAssets="all" />
-    <PackageReference Include="System.Formats.Asn1" Version="9.0.4" PrivateAssets="all" />
+    <PackageReference Include="System.Formats.Asn1" Version="9.0.5" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

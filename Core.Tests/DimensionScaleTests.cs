@@ -2,8 +2,6 @@
 
 namespace Core.Tests;
 
-#pragma warning disable CRR1000 // The name does not correspond to naming conventions
-
 public class DimensionScaleTests
 {
     // 2D int tests
@@ -82,7 +80,7 @@ public class DimensionScaleTests
     [InlineData(200.0, 200.0, 200.0, 100.0, 100.0, 100.0, false, null, 100.0, 100.0, 100.0)]
     [InlineData(100.0, 100.0, 100.0, 200.0, 200.0, 200.0, true, 1, 200.0, 200.0, 200.0)]
     [InlineData(200.0, 100.0, 100.0, 100.0, 100.0, 100.0, true, 2, 100.00, 50.00, 50.00)]
-    public void ScaleDimensionsToConstraint_Decimal3D_Works(decimal originalWidth, decimal originalHeight, decimal originalDepth, decimal maxWidth, decimal maxHeight, decimal maxDepth, bool scaleUpToFit, 
+    public void ScaleDimensionsToConstraint_Decimal3D_Works(decimal originalWidth, decimal originalHeight, decimal originalDepth, decimal maxWidth, decimal maxHeight, decimal maxDepth, bool scaleUpToFit,
         int? decimalPlaces, decimal expectedWidth, decimal expectedHeight, decimal expectedDepth)
     {
         // Act
@@ -154,4 +152,3 @@ public class DimensionScaleTests
         Should.Throw<ArgumentException>(() => DimensionScale.ScaleDimensionsToConstraint(originalWidth, originalHeight, originalDepth, maxWidth, maxHeight, maxDepth));
     }
 }
-#pragma warning restore CRR1000 // The name does not correspond to naming conventions

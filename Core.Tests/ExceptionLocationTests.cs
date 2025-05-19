@@ -1,9 +1,6 @@
 ﻿using CommonNetFuncs.Core;
-using System.Reflection.Emit;
 
 namespace Core.Tests;
-
-#pragma warning disable CRR1000 // The name does not correspond to naming conventions
 
 public class ExceptionLocationTests
 {
@@ -103,5 +100,3 @@ public class ExceptionLocationTests
         location.ShouldContain(nameof(ExceptionLocationTests));
     }
 }
-
-#pragma warning restore CRR1000 // The name does not correspond to naming conventions

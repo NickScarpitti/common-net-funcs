@@ -15,23 +15,29 @@ using NPOI.SS.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
 using SixLabors.ImageSharp;
-using static System.Convert;
-using static System.Math;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Strings;
+using static System.Convert;
+using static System.Math;
 
 namespace CommonNetFuncs.Excel.Npoi;
 
 public sealed class NpoiBorderStyles()
 {
     public BorderStyle? BorderTop { get; set; }
+
     public BorderStyle? BorderLeft { get; set; }
+
     public BorderStyle? BorderRight { get; set; }
+
     public BorderStyle? BorderBottom { get; set; }
 
     public short? BorderTopColor { get; set; }
+
     public short? BorderLeftColor { get; set; }
+
     public short? BorderRightColor { get; set; }
+
     public short? BorderBottomColor { get; set; }
 }
 
@@ -52,7 +58,7 @@ public static partial class Common
     /// </summary>
     /// <param name="cell">Cell to check if it is empty</param>
     /// <returns>True if cell is empty</returns>
-    public static bool IsCellEmpty(this ICell cell) => cell.GetStringValue().IsNullOrWhiteSpace();
+    public static bool IsCellEmpty(this ICell cell) { return cell.GetStringValue().IsNullOrWhiteSpace(); }
 
     /// <summary>
     /// Get ICell offset from cellReference
@@ -150,9 +156,7 @@ public static partial class Common
     /// <param name="colName">Column name of the column to find the last populated row in</param>
     /// <returns>0 based index of the last row with a non-blank value</returns>
     public static int GetLastPopulatedRowInColumn(this ISheet ws, string colName)
-    {
-        return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber());
-    }
+    { return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber()); }
 
     /// <summary>
     /// Get ICell offset from the cell with named reference cellName
@@ -267,10 +271,7 @@ public static partial class Common
     /// <param name="row">Row to create cell in</param>
     /// <param name="columnIndex">0 based column index of the cell to create</param>
     /// <returns>ICell object of the cell that was created</returns>
-    public static ICell CreateCell(this IRow row, int columnIndex)
-    {
-        return row.CreateCell(columnIndex);
-    }
+    public static ICell CreateCell(this IRow row, int columnIndex) { return row.CreateCell(columnIndex); }
 
     /// <summary>
     /// Writes an excel file to the specified path
@@ -334,13 +335,19 @@ public static partial class Common
         if (wb.IsXlsx())
         {
             XSSFCellStyle xssfStyle = (XSSFCellStyle)wb.CreateCellStyle();
-            if (alignment != null) { xssfStyle.Alignment = (HorizontalAlignment)alignment; }
+            if (alignment != null)
+            {
+                xssfStyle.Alignment = (HorizontalAlignment)alignment;
+            }
 
             if (fillPattern != null)
             {
                 xssfStyle.FillPattern = (FillPattern)fillPattern;
             }
-            if (font != null) { xssfStyle.SetFont(font); }
+            if (font != null)
+            {
+                xssfStyle.SetFont(font);
+            }
             cellStyle = xssfStyle;
 
             if (borderStyles != null)
@@ -385,13 +392,19 @@ public static partial class Common
         else
         {
             HSSFCellStyle hssfStyle = (HSSFCellStyle)wb.CreateCellStyle();
-            if (alignment != null) { hssfStyle.Alignment = (HorizontalAlignment)alignment; }
+            if (alignment != null)
+            {
+                hssfStyle.Alignment = (HorizontalAlignment)alignment;
+            }
 
             if (fillPattern != null)
             {
                 hssfStyle.FillPattern = (FillPattern)fillPattern;
             }
-            if (font != null) { hssfStyle.SetFont(font); }
+            if (font != null)
+            {
+                hssfStyle.SetFont(font);
+            }
             cellStyle = hssfStyle;
         }
 
@@ -449,7 +462,7 @@ public static partial class Common
     public static ICellStyle GetCustomStyle(this IWorkbook wb, short? hssfColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
         FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null)
     {
-        ICellStyle cellStyle = wb.GetCustomStyle(cellLocked, font, alignment, fillPattern, borderStyles );
+        ICellStyle cellStyle = wb.GetCustomStyle(cellLocked, font, alignment, fillPattern, borderStyles);
         if (hssfColor != null)
         {
             cellStyle.FillForegroundColor = (short)hssfColor;
@@ -756,7 +769,7 @@ public static partial class Common
                     for (int i = 0; i < data.Columns.Count; i++)
                     {
                         //ws.AutoSizeColumn(x, true);
-                        ws.SetColumnWidth(x, maxColumnWidths[x] + XSSFShape.EMU_PER_PIXEL * 3 <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] + XSSFShape.EMU_PER_PIXEL * 3 : MaxCellWidthInExcelUnits);
+                        ws.SetColumnWidth(x, maxColumnWidths[x] + (XSSFShape.EMU_PER_PIXEL * 3) <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] + XSSFShape.EMU_PER_PIXEL * 3 : MaxCellWidthInExcelUnits);
                         x++;
                     }
                 }
@@ -871,9 +884,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cellName">Named range to insert image at</param>
     public static void AddImage(this IWorkbook wb, byte[] imageData, string cellName, AnchorType anchorType = AnchorType.MoveAndResize)
-    {
-        wb.AddImages([imageData], [cellName], anchorType);
-    }
+    { wb.AddImages([imageData], [cellName], anchorType); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -917,9 +928,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, string range, AnchorType anchorType = AnchorType.MoveAndResize)
-    {
-        wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType);
-    }
+    { wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -928,9 +937,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, CellRangeAddress range, AnchorType anchorType = AnchorType.MoveAndResize)
-    {
-        wb.AddImages(ws, [imageData], [range], anchorType);
-    }
+    { wb.AddImages(ws, [imageData], [range], anchorType); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -939,9 +946,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cell">Cell in range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, ICell cell, AnchorType anchorType = AnchorType.MoveAndResize)
-    {
-        wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType);
-    }
+    { wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -1162,7 +1167,10 @@ public static partial class Common
     /// Reads tabular data from an unformatted excel sheet to a DataTable object similar to Python Pandas
     /// </summary>
     /// <param name="fileStream">Stream of Excel file being read</param>
-    /// <param name="hasHeaders">Does the data being read have headers. Will be used for data table column names instead of default 'Column0', 'Column1'... if true. If no headers specified, first row of data must have a value for all columns in order to read all columns correctly./></param>
+    /// <param name="hasHeaders">
+    /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0', 'Column1'... if true. If no headers specified, first row of data must have a value for
+    /// all columns in order to read all columns correctly./>
+    /// </param>
     /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
     /// <param name="startCellReference">Top left corner containing data to read in A1 notation. Will use A1 if not specified.</param>
     /// <param name="endCellReference">Bottom right cell containing data to read in A1 notation. Will read to first full empty row if not specified.</param>
@@ -1350,7 +1358,7 @@ public static partial class Common
                     for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex++)
                     {
                         ws = wb.GetSheetAt(sheetIndex);
-                        foreach (XSSFTable t in (List<XSSFTable>)((XSSFSheet)ws).GetTables())
+                        foreach (XSSFTable t in ((XSSFSheet)ws).GetTables())
                         {
                             tableName = t.Name;
                         }
@@ -1400,10 +1408,7 @@ public static partial class Common
     /// </summary>
     /// <param name="fileStream">Stream representation of a file</param>
     /// <returns>True if stream is an XLSX file</returns>
-    public static bool IsXlsx(this Stream fileStream)
-    {
-        return DocumentFactoryHelper.HasOOXMLHeader(fileStream);
-    }
+    public static bool IsXlsx(this Stream fileStream) { return DocumentFactoryHelper.HasOOXMLHeader(fileStream); }
 
     /// <summary>
     /// Gets whether or not the stream passed in represents an XLSX type file or not
@@ -1411,9 +1416,7 @@ public static partial class Common
     /// <param name="workbook">NPOI Workbook Object</param>
     /// <returns>True if stream is an XLSX file</returns>
     public static bool IsXlsx(this IWorkbook workbook)
-    {
-        return !workbook.GetType().Name.StrComp(typeof(HSSFWorkbook).Name);
-    }
+    { return !workbook.GetType().Name.StrComp(typeof(HSSFWorkbook).Name); }
 
     private static readonly Dictionary<string, HSSFColor> HssfColorCache = [];
 

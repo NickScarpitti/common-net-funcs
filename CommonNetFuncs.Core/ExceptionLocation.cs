@@ -1,4 +1,6 @@
-﻿namespace CommonNetFuncs.Core;
+﻿using System.Reflection;
+
+namespace CommonNetFuncs.Core;
 
 public static class ExceptionLocation
 {
@@ -9,6 +11,18 @@ public static class ExceptionLocation
     /// <returns>Name of the method where the exception occurred</returns>
     public static string GetLocationOfException(this Exception ex)
     {
-        return $"{ex.TargetSite?.ReflectedType?.ReflectedType?.FullName}.{ex.TargetSite?.ReflectedType?.Name.ExtractBetween("<", ">")}";
+        MethodBase? method = ex.TargetSite;
+        Type? type = method?.ReflectedType;
+        if (method == null)
+        {
+            return "null.";
+        }
+
+        if (type == null)
+        {
+            return $"null.{method.Name}";
+        }
+
+        return $"{type.FullName}.{method.Name}";
     }
 }

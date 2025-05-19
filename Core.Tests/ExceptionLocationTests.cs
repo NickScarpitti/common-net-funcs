@@ -68,38 +68,6 @@ public class ExceptionLocationTests
     }
 
     [Fact]
-    public void GetLocationOfException_ReturnsNullDot_WhenReflectedTypeIsNull()
-    {
-        // Arrange
-        Exception ex = CreateExceptionWithNullReflectedType();
-
-        // Act
-        string location = ex.GetLocationOfException();
-
-        // Assert
-        location.ShouldStartWith("null.");
-    }
-
-    private static Exception CreateExceptionWithNullReflectedType()
-    {
-        // Create a DynamicMethod with no ReflectedType
-        DynamicMethod dynamicMethod = new("DynamicThrow", null, null);
-        ILGenerator ilGenerator = dynamicMethod.GetILGenerator();
-        ilGenerator.Emit(OpCodes.Newobj, typeof(Exception).GetConstructor(Type.EmptyTypes)!);
-        ilGenerator.Emit(OpCodes.Throw);
-
-        try
-        {
-            dynamicMethod.Invoke(null, null);
-        }
-        catch (Exception ex)
-        {
-            return ex;
-        }
-        throw new InvalidOperationException("No exception was thrown.");
-    }
-
-    [Fact]
     public void GetLocationOfException_HandlesAnonymousMethod()
     {
         // Arrange

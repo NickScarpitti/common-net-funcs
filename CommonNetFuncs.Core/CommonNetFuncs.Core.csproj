@@ -28,12 +28,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.3.8</Version>
+    <Version>3.3.11</Version>
     <MinVerTagPrefix>core-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.3.7</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.3.11</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 

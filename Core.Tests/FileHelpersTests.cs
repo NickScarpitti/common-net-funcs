@@ -3,8 +3,6 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-#pragma warning disable CRR1000 // The name does not correspond to naming conventions
-
 public class FileHelpersTests : IDisposable
 {
     private readonly string _tempDir;
@@ -74,7 +72,7 @@ public class FileHelpersTests : IDisposable
     public void GetSafeSaveName_PathAndFileName_ReturnsUniqueName_WhenFileExists()
     {
         // Arrange
-        string fileName = "test2.txt";
+        const string fileName = "test2.txt";
         string filePath = Path.Combine(_tempDir, fileName);
         File.WriteAllText(filePath, "data");
 
@@ -91,7 +89,7 @@ public class FileHelpersTests : IDisposable
     {
         // Arrange
         string newDir = Path.Combine(_tempDir, "newsubdir2");
-        string fileName = "file2.txt";
+        const string fileName = "file2.txt";
 
         // Act
         string safeName = FileHelpers.GetSafeSaveName(newDir, fileName, createPathIfMissing: true);
@@ -106,7 +104,7 @@ public class FileHelpersTests : IDisposable
     {
         // Arrange
         string newDir = Path.Combine(_tempDir, "missingdir2");
-        string fileName = "file3.txt";
+        const string fileName = "file3.txt";
 
         // Act
         string safeName = FileHelpers.GetSafeSaveName(newDir, fileName, createPathIfMissing: false);
@@ -139,7 +137,7 @@ public class FileHelpersTests : IDisposable
     {
         // Arrange
         string fileName = Path.Combine(_tempDir, $"hash_{algo}.txt");
-        string content = "hash test content";
+        const string content = "hash test content";
         await File.WriteAllTextAsync(fileName, content, Encoding.UTF8);
 
         // Act
@@ -227,7 +225,7 @@ public class FileHelpersTests : IDisposable
     public void GetSafeSaveName_PathAndFileName_StartFromExistingNumber()
     {
         // Arrange
-        string fileName = "test (3).txt";
+        const string fileName = "test (3).txt";
         string filePath = Path.Combine(_tempDir, fileName);
         File.WriteAllText(filePath, "data");
 
@@ -243,7 +241,7 @@ public class FileHelpersTests : IDisposable
     public void GetSafeSaveName_PathAndFileName_AlreadyHasIterator()
     {
         // Arrange
-        string fileName = "test (1).txt";
+        const string fileName = "test (1).txt";
         string filePath = Path.Combine(_tempDir, fileName);
         File.WriteAllText(filePath, "data");
 
@@ -261,7 +259,7 @@ public class FileHelpersTests : IDisposable
         // Arrange
         // Simulate a scenario where StrComp returns true (file name doesn't change)
         // This is tricky to simulate directly, so we can use a file name that matches the incrementing pattern but doesn't actually change after replacement.
-        string fileName = "test (0).txt";
+        const string fileName = "test (0).txt";
         string filePath = Path.Combine(_tempDir, fileName);
         File.WriteAllText(filePath, "data");
 
@@ -274,5 +272,3 @@ public class FileHelpersTests : IDisposable
         safeName.ShouldEndWith(".txt");
     }
 }
-
-#pragma warning restore CRR1000 // The name does not correspond to naming conventions

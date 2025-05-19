@@ -124,7 +124,7 @@ public static class Random
         uint fracPart = BitConverter.ToUInt32(randomBytes, 8); // Convert the next 4 bytes to a uint for the fractional part
 
         // Combine the parts to create a decimal in the range [0, 1)
-        return (intPart / 1000000000000000000m) + (decimal)fracPart / uint.MaxValue / 1000000000000000000m;
+        return (intPart / 1000000000000000000m) + ((decimal)fracPart / uint.MaxValue / 1000000000000000000m);
     }
 
     /// <summary>

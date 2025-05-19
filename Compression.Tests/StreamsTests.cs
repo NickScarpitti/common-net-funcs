@@ -2,8 +2,6 @@
 
 namespace Compression.Tests;
 
-#pragma warning disable CRR1000 // The name does not correspond to naming conventions
-
 public class StreamsTests
 {
     private readonly Fixture _fixture;
@@ -225,4 +223,3 @@ public class StreamsTests
         decompressedData.ShouldBe(originalData);
     }
 }
-#pragma warning restore CRR1000 // The name does not correspond to naming conventions

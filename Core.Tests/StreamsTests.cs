@@ -16,7 +16,7 @@ public class StreamsTests
     {
         // Arrange
         byte[] data = _fixture.CreateMany<byte>(length).ToArray();
-        using MemoryStream stream = new(data);
+        await using MemoryStream stream = new(data);
 
         // Act
         byte[] result = await stream.ReadStreamAsync();
@@ -33,7 +33,7 @@ public class StreamsTests
     {
         // Arrange
         byte[] data = _fixture.CreateMany<byte>(bufferSize * 2).ToArray();
-        using MemoryStream stream = new(data);
+        await using MemoryStream stream = new(data);
 
         // Act
         byte[] result = await stream.ReadStreamAsync(bufferSize);
@@ -46,7 +46,7 @@ public class StreamsTests
     public async Task ReadStreamAsync_ReturnsEmptyArrayForEmptyStream()
     {
         // Arrange
-        using MemoryStream stream = new();
+        await using MemoryStream stream = new();
 
         // Act
         byte[] result = await stream.ReadStreamAsync();
@@ -60,8 +60,8 @@ public class StreamsTests
     {
         // Arrange
         byte[] data = _fixture.CreateMany<byte>(1024).ToArray();
-        using MemoryStream source = new(data);
-        using MemoryStream target = new();
+        await using MemoryStream source = new(data);
+        await using MemoryStream target = new();
 
         // Act
         await target.WriteStreamToStream(source);
@@ -76,8 +76,8 @@ public class StreamsTests
     {
         // Arrange
         byte[] data = _fixture.CreateMany<byte>(2048).ToArray();
-        using MemoryStream source = new(data);
-        using MemoryStream target = new();
+        await using MemoryStream source = new(data);
+        await using MemoryStream target = new();
 
         // Act
         await target.WriteStreamToStream(source);
@@ -92,8 +92,8 @@ public class StreamsTests
     {
         // Arrange
         byte[] data = _fixture.CreateMany<byte>(128).ToArray();
-        using MemoryStream source = new(data);
-        using MemoryStream target = new();
+        await using MemoryStream source = new(data);
+        await using MemoryStream target = new();
 
         // Move position to end
         source.Position = source.Length;
@@ -126,13 +126,13 @@ public class StreamsTests
     public async Task CountingStream_TracksBytesWrittenAsync()
     {
         // Arrange
-        using MemoryStream inner = new();
-        using CountingStream counting = new(inner);
+        await using MemoryStream inner = new();
+        await using CountingStream counting = new(inner);
 
         byte[] buffer = _fixture.CreateMany<byte>(200).ToArray();
 
         // Act
-        await counting.WriteAsync(buffer, 0, buffer.Length, CancellationToken.None);
+        await counting.WriteAsync(buffer, CancellationToken.None);
 
         // Assert
         counting.BytesWritten.ShouldBe(buffer.Length);
@@ -142,8 +142,8 @@ public class StreamsTests
     public async Task CountingStream_TracksBytesWritten_ValueTask()
     {
         // Arrange
-        using MemoryStream inner = new();
-        using CountingStream counting = new(inner);
+        await using MemoryStream inner = new();
+        await using CountingStream counting = new(inner);
 
         byte[] buffer = _fixture.CreateMany<byte>(300).ToArray();
 
@@ -180,9 +180,9 @@ public class StreamsTests
     {
         // Arrange
         byte[] data = _fixture.CreateMany<byte>(256).ToArray();
-        using MemoryStream inner = new(data);
-        using CountingStream counting = new(inner);
-        using MemoryStream dest = new();
+        await using MemoryStream inner = new(data);
+        await using CountingStream counting = new(inner);
+        await using MemoryStream dest = new();
 
         // Act
         await counting.CopyToAsync(dest, 128, CancellationToken.None);
@@ -209,7 +209,7 @@ public class StreamsTests
     public async Task CountingStream_DisposeAsync_SetsDisposed()
     {
         // Arrange
-        using MemoryStream inner = new();
+        await using MemoryStream inner = new();
         CountingStream counting = new(inner);
 
         // Act

@@ -2,7 +2,6 @@
 
 namespace Core.Tests;
 
-#pragma warning disable CRR1000 // The name does not correspond to naming conventions
 public class CopyTests
 {
     private readonly Fixture _fixture;
@@ -510,4 +509,3 @@ public class CopyTests
 
     #endregion
 }
-#pragma warning restore CRR1000 // The name does not correspond to naming conventions

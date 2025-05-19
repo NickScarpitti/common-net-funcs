@@ -995,7 +995,7 @@ public static class Async
     /// <param name="semaphore">Semaphore to limit concurrent processes</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation token source for concurrent operations</param>
     /// <param name="breakOnError">Optional: If true, will cancel operations using the same CancellationTokenSource</param>
-    public static async Task RunAsyncWithSemaphore(this Task task, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false)
+    public static async Task RunAsyncWithSemaphore(this Task task, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false, string? errorText = null)
     {
         semaphore ??= new(1, 1);
         cancellationTokenSource ??= new();
@@ -1011,7 +1011,7 @@ public static class Async
             {
                 await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
             }
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error{(errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}")}");
         }
         finally
         {

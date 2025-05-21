@@ -2,8 +2,10 @@
 using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
+using CommonNetFuncs.Compression;
 using Microsoft.Extensions.Logging;
 using static Amazon.S3.Util.AmazonS3Util;
+using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Strings;
 
@@ -23,9 +25,16 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="fileName">Name to save the file as in the S3 bucket</param>
     /// <param name="fileData">Stream containing the data for the file to be uploaded</param>
     /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
+    /// <param name="compressSteam">Optional: If true, will compress stream sent to S3 bucket. Default = true</param>
+    /// <param name="compressionType">Optional: Specifies which compression type to use when compressSteam = true. Does nothing if compressSteam = false. Valid values are GZip and Deflate</param>
     /// <returns>True if file was successfully uploaded</returns>
-    public async Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null)
+    public async Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip)
     {
+        if (compressSteam && compressionType is not ECompressionType.Gzip or ECompressionType.Deflate)
+        {
+            throw new NotSupportedException($"Compression type {compressionType} is not valid for this method.\n\tSupported types are:\n\t\t{ECompressionType.Gzip},\n\t\t{ECompressionType.Deflate}");
+        }
+
         bool success = false;
         try
         {
@@ -37,14 +46,24 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                     await DeleteS3File(bucketName, fileName).ConfigureAwait(false);
                 }
 
+                await using MemoryStream compressedStream = new();
+                if (compressSteam)
+                {
+                    await fileData.CompressStream(compressedStream, compressionType).ConfigureAwait(false);
+                }
+
                 PutObjectRequest request = new()
                 {
                     BucketName = bucketName,
                     Key = fileName,
-                    InputStream = fileData,
+                    InputStream = compressedStream.Length > 0 && compressedStream.Length < fileData.Length ? compressedStream : fileData,
                     BucketKeyEnabled = true,
                     ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256
                 };
+
+                //request.Headers.Keys.Add("content-encoding");
+                request.Headers["Content-Encoding"] = "gzip";
+                request.Headers["Content-Length"] = request.InputStream.Length.ToString();
 
                 PutObjectResponse? response = await s3Client.PutObjectAsync(request).ConfigureAwait(false);
                 success = response?.HttpStatusCode == HttpStatusCode.OK;
@@ -73,7 +92,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="fileName">Name of the file to retrieve from the S3 bucket</param>
     /// <param name="fileData">Stream to receive the file data retrieved from the S3 bucket</param>
     /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
-    public async Task GetS3File(string bucketName, string? fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null)
+    public async Task GetS3File(string bucketName, string? fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool decompressGzipData = true)
     {
         try
         {
@@ -90,8 +109,21 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                 if (response != null)
                 {
                     await using Stream responseStream = response.ResponseStream;
-                    //responseStream.Position = 0;
-                    await responseStream.CopyToAsync(fileData).ConfigureAwait(false);
+
+                    if (decompressGzipData && response.Headers.ContentEncoding.ContainsInvariant(["gzip", "deflate"]))
+                    {
+                        //await using MemoryStream decompressedStream = new();
+                        await using MemoryStream intermediateStream = new();
+                        await responseStream.CopyToAsync(intermediateStream).ConfigureAwait(false);
+                        await intermediateStream.FlushAsync().ConfigureAwait(false);
+                        intermediateStream.Position = 0;
+                        await intermediateStream.DecompressStream(fileData, response.Headers.ContentEncoding.ContainsInvariant("gzip") ? ECompressionType.Gzip : ECompressionType.Deflate);
+                        //await decompressedStream.CopyToAsync(fileData).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await responseStream.CopyToAsync(fileData).ConfigureAwait(false);
+                    }
                     await fileData.FlushAsync().ConfigureAwait(false);
                     fileData.Position = 0;
                 }

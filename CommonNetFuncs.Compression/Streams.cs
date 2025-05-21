@@ -60,6 +60,7 @@ public static class Streams
                 }
                 break;
         }
+        await compressedStream.FlushAsync().ConfigureAwait(false);
         compressedStream.Position = 0;
     }
 
@@ -112,6 +113,7 @@ public static class Streams
                 }
                 break;
         }
+        compressedStream.Flush();
         compressedStream.Position = 0;
     }
 
@@ -164,6 +166,7 @@ public static class Streams
                 }
                 break;
         }
+        await decompressedStream.FlushAsync().ConfigureAwait(false);
         decompressedStream.Position = 0;
     }
 
@@ -216,6 +219,7 @@ public static class Streams
                 }
                 break;
         }
+        decompressedStream.Flush();
         decompressedStream.Position = 0;
     }
 

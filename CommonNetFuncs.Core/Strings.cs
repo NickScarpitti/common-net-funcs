@@ -6,9 +6,9 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using static CommonNetFuncs.Core.MathHelpers;
 using static System.Convert;
 using static System.Web.HttpUtility;
-using static CommonNetFuncs.Core.MathHelpers;
 
 namespace CommonNetFuncs.Core;
 
@@ -31,6 +31,13 @@ public enum EComparisonType
 {
     OR,
     AND
+}
+
+public enum TitleCaseUppercaseWordHandling
+{
+    IgnoreUppercase,
+    ConvertAllUppercase,
+    ConvertByLength
 }
 
 /// <summary>
@@ -91,6 +98,12 @@ public static partial class Strings
 
     [GeneratedRegex(@"[0-9 ]*\.?[0-9]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
     private static partial Regex NumbersWithFractionsOnlyRegex();
+
+    [GeneratedRegex(@"(\s+|[^\w\s])")]
+    private static partial Regex TitleCaseSplitRegex();
+
+    [GeneratedRegex(@"\w")]
+    private static partial Regex TitleCaseWordRegex();
 
     /// <summary>
     /// Clone of VBA Left() function that gets n characters from the left side of the string
@@ -163,7 +176,7 @@ public static partial class Strings
             int sStartEndIndex = sStartStartIndex + sStart.Length;//Add the length of the word1 to starting index to find the end of the word1
             int sEndStartIndex = s.LastIndexOf(sEnd);//Find the beginning index of word2
             int length = sEndStartIndex - sStartEndIndex;//Length of the sub string by subtracting index beginning of word2 from the end of word1
-            if (sStartStartIndex != -1 && sEndStartIndex != -1 && length > 0 && sStartEndIndex + length <= s.Length -1)
+            if (sStartStartIndex != -1 && sEndStartIndex != -1 && length > 0 && sStartEndIndex + length <= s.Length - 1)
             {
                 ReadOnlySpan<char> textToSlice = s.ToCharArray();
                 result = textToSlice.Slice(sStartEndIndex, length).ToString();//Get the substring based on the end of word1 and length
@@ -179,7 +192,7 @@ public static partial class Strings
     /// <returns>Null if the string passed in is null or is the word null with no other text characters other than whitespace</returns>
     public static string? MakeNullNull(this string? s)
     {
-        return s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", "")?.Length == 0 || s.Trim().StrEq("Null") ? null : s;
+        return s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0 || s.Trim().StrEq("Null") ? null : s;
     }
 
     /// <summary>
@@ -193,21 +206,93 @@ public static partial class Strings
         return !s.IsNullOrWhiteSpace() ? string.Concat(s.Select(x => char.IsUpper(x) ? $" {x}" : x.ToString())).TrimStart(' ') : s;
     }
 
+    ///// <summary>
+    ///// Converts string to title case using the specified culture
+    ///// </summary>
+    ///// <param name="s">String to convert to title case</param>
+    ///// <param name="cultureString">String representation of the culture to use when converting string to title case</param>
+    ///// <returns>String converted to title case</returns>
+    //[return: NotNullIfNotNull(nameof(s))]
+    //public static string? ToTitleCase(this string? s, string cultureString = "en-US")
+    //{
+    //    if (!s.IsNullOrWhiteSpace())
+    //    {
+    //        TextInfo textinfo = new CultureInfo(cultureString, false).TextInfo;
+    //        s = textinfo.ToTitleCase(s);
+    //    }
+    //    return s;
+    //}
+
     /// <summary>
-    /// Converts string to title case using the specified culture
+    /// Converts a string to title case with options for handling uppercase words.
     /// </summary>
-    /// <param name="s">String to convert to title case</param>
-    /// <param name="cultureString">String representation of the culture to use when converting string to title case</param>
-    /// <returns>String converted to title case</returns>
-    [return: NotNullIfNotNull(nameof(s))]
-    public static string? ToTitleCase(this string? s, string cultureString = "en-US")
+    /// <param name="input">The input string to convert.</param>
+    /// <param name="uppercaseHandling">How to handle uppercase words.</param>
+    /// <param name="maxLengthToConvert">Maximum length of uppercase words to convert (used with UppercaseHandling.ConvertByLength).</param>
+    /// <returns>The title-cased string.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? ToTitleCase(this string? input, string cultureString = "en-US", TitleCaseUppercaseWordHandling uppercaseHandling = TitleCaseUppercaseWordHandling.IgnoreUppercase, int maxLengthToConvert = 0)
     {
-        if (!s.IsNullOrWhiteSpace())
+        if (input.IsNullOrWhiteSpace())
         {
-            TextInfo textinfo = new CultureInfo(cultureString, false).TextInfo;
-            s = textinfo.ToTitleCase(s);
+            return input;
         }
-        return s;
+
+        // Use TextInfo for culture-aware title casing
+        TextInfo textInfo = new CultureInfo(cultureString, false).TextInfo;
+
+        if (uppercaseHandling == TitleCaseUppercaseWordHandling.IgnoreUppercase)
+        {
+            return textInfo.ToTitleCase(input);
+        }
+
+        // Split the input by word boundaries
+        string[] words = TitleCaseSplitRegex().Split(input);
+        StringBuilder result = new();
+
+        foreach (string word in words)
+        {
+            if (string.IsNullOrEmpty(word))
+            {
+                continue;
+            }
+
+            bool isAllUppercase = word.Length > 0 && word.StrComp(word.ToUpper()) && !word.StrComp(word.ToLower());
+            if (isAllUppercase)
+            {
+                switch (uppercaseHandling)
+                {
+                    case TitleCaseUppercaseWordHandling.ConvertAllUppercase:
+                        result.Append(textInfo.ToTitleCase(word.ToLower()));
+                        break;
+                    case TitleCaseUppercaseWordHandling.ConvertByLength:
+                        if (word.Length <= maxLengthToConvert)
+                        {
+                            result.Append(textInfo.ToTitleCase(word.ToLower()));
+                        }
+                        else
+                        {
+                            result.Append(word);
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                // For non-uppercase words, always convert to title case
+                if (TitleCaseWordRegex().IsMatch(word))
+                {
+                    result.Append(textInfo.ToTitleCase(word.ToLower()));
+                }
+                else
+                {
+                    // Preserve non-word characters
+                    result.Append(word);
+                }
+            }
+        }
+
+        return result.ToString();
     }
 
     /// <summary>
@@ -327,12 +412,11 @@ public static partial class Strings
     /// <param name="s">String to search</param>
     /// <param name="textsToFind">Strings to find in s</param>
     /// <param name="useOrComparison">
-    /// <para>If true, will check if any of the textsToFind values are in s. (OR configuration)</para>
-    /// <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
+    /// <para>If true, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
     /// </param>
     /// <returns>
-    /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para>
-    /// <para>True if s contains all of the strings in textsToFind when useOrComparison = False</para>
+    /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
+    /// False</para>
     /// </returns>
     public static bool ContainsInvariant(this string? s, IEnumerable<string> textsToFind, bool useOrComparison = true)
     {
@@ -411,7 +495,11 @@ public static partial class Strings
                 {
                     return currentString; //No string left so stop processing
                 }
-                if (!replaceAllInstances) break;
+                if (!replaceAllInstances)
+                {
+                    break;
+                }
+
                 index = currentString.IndexOf(oldValue, index + newValue.Length, StringComparison.InvariantCultureIgnoreCase);
             }
         }
@@ -494,7 +582,10 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ExtractToLastInstance(this string? s, char charToFind)
     {
-        if (s == null) { return null; }
+        if (s == null)
+        {
+            return null;
+        }
         int lastIndex = s.LastIndexOf(charToFind);
         return lastIndex != -1 ? s[..lastIndex] : s;
     }
@@ -508,7 +599,10 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ExtractFromLastInstance(this string? s, char charToFind)
     {
-        if (s == null) { return null; }
+        if (s == null)
+        {
+            return null;
+        }
         int lastIndex = s.LastIndexOf(charToFind);
         return lastIndex != -1 ? s[(lastIndex + 1)..] : s;
     }
@@ -550,7 +644,10 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? TrimObjectStrings<T>(this T? obj, bool recursive = false)
     {
-        if (obj == null) return obj;
+        if (obj == null)
+        {
+            return obj;
+        }
 
         Type type = typeof(T);
         (Type type, bool recursive) key = (type, recursive);
@@ -631,7 +728,10 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? NormalizeObjectStrings<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false)
     {
-        if (obj == null) return obj;
+        if (obj == null)
+        {
+            return obj;
+        }
 
         Type type = typeof(T);
         (Type type, bool enableTrim, NormalizationForm normalizationForm, bool recursive) key = (type, enableTrim, normalizationForm, recursive);
@@ -734,7 +834,10 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? MakeObjectNullNull<T>(this T? obj, bool recursive = false)
     {
-        if (obj == null) return obj;
+        if (obj == null)
+        {
+            return obj;
+        }
 
         Type type = typeof(T);
         (Type type, bool recursive) key = (type, recursive);
@@ -920,11 +1023,7 @@ public static partial class Strings
     /// <returns>Nullable int parsed from a string</returns>
     public static int? ToNInt(this string? value)
     {
-        if (!string.IsNullOrWhiteSpace(value) && int.TryParse(value, out int i))
-        {
-            return i;
-        }
-        return null;
+        return !string.IsNullOrWhiteSpace(value) && int.TryParse(value, out int i) ? i : null;
     }
 
     /// <summary>
@@ -934,11 +1033,7 @@ public static partial class Strings
     /// <returns>Nullable double parsed from a string</returns>
     public static double? ToNDouble(this string? value)
     {
-        if (!string.IsNullOrWhiteSpace(value) && double.TryParse(value, out double i))
-        {
-            return i;
-        }
-        return null;
+        return !string.IsNullOrWhiteSpace(value) && double.TryParse(value, out double i) ? i : null;
     }
 
     /// <summary>
@@ -948,11 +1043,7 @@ public static partial class Strings
     /// <returns>Nullable decimal parsed from a string</returns>
     public static decimal? ToNDecimal(this string? value)
     {
-        if (!string.IsNullOrWhiteSpace(value) && decimal.TryParse(value, out decimal i))
-        {
-            return i;
-        }
-        return null;
+        return !string.IsNullOrWhiteSpace(value) && decimal.TryParse(value, out decimal i) ? i : null;
     }
 
     /// <summary>
@@ -1020,11 +1111,7 @@ public static partial class Strings
     /// <returns>"Yes" if true, "No" if false</returns>
     public static string BoolToYesNo(this bool value)
     {
-        if (value)
-        {
-            return nameof(EYesNo.Yes);
-        }
-        return nameof(EYesNo.No);
+        return value ? nameof(EYesNo.Yes) : nameof(EYesNo.No);
     }
 
     /// <summary>
@@ -1034,11 +1121,7 @@ public static partial class Strings
     /// <returns>"Y" if true, "N" if false</returns>
     public static string BoolToYN(this bool value)
     {
-        if (value)
-        {
-            return "Y";
-        }
-        return "N";
+        return value ? "Y" : "N";
     }
 
     /// <summary>
@@ -1087,7 +1170,7 @@ public static partial class Strings
     /// <returns>Shortened string representation of the timespan</returns>
     public static string TimespanToShortForm(this TimeSpan? t)
     {
-        string shortForm = "";
+        string shortForm = string.Empty;
         if (t != null)
         {
             shortForm = ((TimeSpan)t).TimespanToShortForm();
@@ -1166,7 +1249,10 @@ public static partial class Strings
     /// <returns>String without excess whitespace</returns>
     public static string NormalizeWhiteSpace(this string? input)
     {
-        if (input == null) { return string.Empty; }
+        if (input == null)
+        {
+            return string.Empty;
+        }
 
         input = input.Trim();
 
@@ -1250,7 +1336,11 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(input))]
     public static string? ReplaceInverse(this string? input, string regexPattern, string? replacement = "", bool matchFirstOnly = false)
     {
-        if (input.IsNullOrEmpty()) return input;
+        if (input.IsNullOrEmpty())
+        {
+            return input;
+        }
+
         Regex regex = new(regexPattern);
         return regex.ReplaceInverse(input, replacement, matchFirstOnly);
     }
@@ -1266,7 +1356,11 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(input))]
     public static string? ReplaceInverse(this Regex regex, string? input, string? replacement = "", bool matchFirstOnly = false)
     {
-        if (input.IsNullOrEmpty()) return input;
+        if (input.IsNullOrEmpty())
+        {
+            return input;
+        }
+
         replacement ??= string.Empty;
 
         // Use StringBuilder to build the result
@@ -1308,18 +1402,22 @@ public static partial class Strings
     /// </summary>
     /// <param name="input">Input string to be URL encoded</param>
     /// <param name="replaceEscapeSequences">
-    /// <para>List of key value pairs where the key is the escape sequence to replace and the value is the value to replace the escape sequence with.</para>
-    /// <para>If null or empty, will use default escape sequence replacements "%20" -> " ", "%2F" -> "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
+    /// <para>List of key value pairs where the key is the escape sequence to replace and the value is the value to replace the escape sequence with.</para> <para>If null or empty, will use default escape
+    /// sequence replacements "%20" -> " ", "%2F" -> "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
     /// </param>
     /// <param name="appendDefaultEscapeSequences">
-    /// <para>If true, will append the default escape sequence replacements to any passed in through replaceEscapeSequences</para>
-    /// <para>The default escape sequence replacements are "%20" -> " ", "%2F" -> "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
+    /// <para>If true, will append the default escape sequence replacements to any passed in through replaceEscapeSequences</para> <para>The default escape sequence replacements are "%20" -> " ", "%2F" ->
+    /// "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
     /// </param>
     /// <returns>URL encoded string with the specified escape sequences replaced with their given values</returns>
     [return: NotNullIfNotNull(nameof(input))]
     public static string? UrlEncodeReadable(this string? input, List<KeyValuePair<string, string>>? replaceEscapeSequences = null, bool appendDefaultEscapeSequences = true)
     {
-        if (input.IsNullOrWhiteSpace()) { return input; }
+        if (input.IsNullOrWhiteSpace())
+        {
+            return input;
+        }
+
         List<KeyValuePair<string, string>> defaultEscapeSequences = [new("%20", " "), new("+", " "), new("%2F", "/"), new("%5C", @"\"), new("%7C", "|"), new("%28", "("), new("%29", "("), new("%2A", "*")];
         if (replaceEscapeSequences == null || replaceEscapeSequences.Count == 0)
         {
@@ -1389,7 +1487,6 @@ public static partial class Strings
                     input += $"x{extension}";
                 }
                 return input;
-
         }
         input = phoneParser.Replace(input, format);
         if (extension != null)
@@ -1417,7 +1514,11 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(number))]
     public static string? ToFractionString(this decimal? number, int maxNumberOfDecimalsToConsider)
     {
-        if (number == null) return null;
+        if (number == null)
+        {
+            return null;
+        }
+
         int wholeNumberPart = (int)number;
         decimal decimalNumberPart = (decimal)number - ToDecimal(wholeNumberPart);
         long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
@@ -1430,7 +1531,7 @@ public static partial class Strings
     public static string? ToFractionString(this decimal number, int maxNumberOfDecimalsToConsider)
     {
         int wholeNumberPart = (int)number;
-        decimal decimalNumberPart = (decimal)number - ToDecimal(wholeNumberPart);
+        decimal decimalNumberPart = number - ToDecimal(wholeNumberPart);
         long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
         long numerator = (long)(decimalNumberPart * denominator);
         GreatestCommonDenominator(ref numerator, ref denominator, out long _);
@@ -1440,7 +1541,11 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(number))]
     public static string? ToFractionString(this double? number, int maxNumberOfDecimalsToConsider)
     {
-        if (number == null) return null;
+        if (number == null)
+        {
+            return null;
+        }
+
         int wholeNumberPart = (int)number;
         double decimalNumberPart = (double)number - ToDouble(wholeNumberPart);
         long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
@@ -1453,7 +1558,7 @@ public static partial class Strings
     public static string? ToFractionString(this double number, int maxNumberOfDecimalsToConsider)
     {
         int wholeNumberPart = (int)number;
-        double decimalNumberPart = (double)number - ToDouble(wholeNumberPart);
+        double decimalNumberPart = number - ToDouble(wholeNumberPart);
         long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
         long numerator = (long)(decimalNumberPart * denominator);
         GreatestCommonDenominator(ref numerator, ref denominator, out long _);
@@ -1463,7 +1568,11 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(fractionString))]
     public static decimal? FractionToDecimal(this string? fractionString)
     {
-        if (fractionString == null) return null;
+        if (fractionString == null)
+        {
+            return null;
+        }
+
         if (decimal.TryParse(fractionString, out decimal result))
         {
             return result;
@@ -1482,7 +1591,7 @@ public static partial class Strings
 
                 if (int.TryParse(split[2], out int denominator))
                 {
-                    return numeratorOrWhole + (decimal)denominatorOrNumerator / denominator;
+                    return numeratorOrWhole + ((decimal)denominatorOrNumerator / denominator);
                 }
             }
         }
@@ -1493,7 +1602,11 @@ public static partial class Strings
     public static bool TryFractionToDecimal(this string? inputString, [NotNullWhen(true)] out decimal? result)
     {
         result = null;
-        if (inputString.IsNullOrWhiteSpace()) return false;
+        if (inputString.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
         bool success = true;
         try
         {
@@ -1509,7 +1622,10 @@ public static partial class Strings
     public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal result)
     {
         result = default;
-        if (fractionString.IsNullOrWhiteSpace()) return false;
+        if (fractionString.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
 
         bool success = true;
         try
@@ -1527,7 +1643,11 @@ public static partial class Strings
     {
         result = null;
         bool success = true;
-        if (inputString.IsNullOrWhiteSpace()) return false;
+        if (inputString.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
         try
         {
             //Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
@@ -1546,7 +1666,11 @@ public static partial class Strings
     {
         result = default;
         bool success = true;
-        if (inputString.IsNullOrWhiteSpace()) return false;
+        if (inputString.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
         try
         {
             //Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
@@ -1564,7 +1688,11 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(fractionString))]
     public static double? FractionToDouble(this string? fractionString)
     {
-        if (fractionString == null) return null;
+        if (fractionString == null)
+        {
+            return null;
+        }
+
         if (double.TryParse(fractionString, out double result))
         {
             return result;
@@ -1594,28 +1722,44 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(value))]
     public static string? RemoveLetters(this string? value)
     {
-        if (value.IsNullOrWhiteSpace()) return null;
+        if (value.IsNullOrWhiteSpace())
+        {
+            return null;
+        }
+
         return RemoveLettersRegex().Replace(value, string.Empty);
     }
 
     [return: NotNullIfNotNull(nameof(value))]
     public static string? RemoveNumbers(this string? value)
     {
-        if (value.IsNullOrWhiteSpace()) return null;
+        if (value.IsNullOrWhiteSpace())
+        {
+            return null;
+        }
+
         return RemoveNumbersRegex().Replace(value, string.Empty);
     }
 
     [return: NotNullIfNotNull(nameof(value))]
     public static string? GetOnlyLetters(this string? value)
     {
-        if (value.IsNullOrWhiteSpace()) return null;
+        if (value.IsNullOrWhiteSpace())
+        {
+            return null;
+        }
+
         return LettersOnlyRegex().Match(value).Value.Trim();
     }
 
     [return: NotNullIfNotNull(nameof(value))]
     public static string? GetOnlyNumbers(this string? value, bool allowFractions = false)
     {
-        if (value.IsNullOrWhiteSpace()) return null;
+        if (value.IsNullOrWhiteSpace())
+        {
+            return null;
+        }
+
         return !allowFractions ? NumbersOnlyRegex().Match(value.Trim()).Value.Trim() : NumbersWithFractionsOnlyRegex().Match(value.Trim()).Value.Trim();
     }
 
@@ -1627,7 +1771,10 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(input))]
     public static string? RemoveLeadingNonAlphanumeric(this string? input)
     {
-        if (input.IsNullOrWhiteSpace()) return input;
+        if (input.IsNullOrWhiteSpace())
+        {
+            return input;
+        }
 
         ReadOnlySpan<char> span = input.AsSpan();
         int index = 0;
@@ -1647,10 +1794,13 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(input))]
     public static string? RemoveTrailingNonAlphanumeric(this string? input)
     {
-        if (input.IsNullOrWhiteSpace()) return input;
+        if (input.IsNullOrWhiteSpace())
+        {
+            return input;
+        }
 
         ReadOnlySpan<char> span = input.AsSpan();
-        int index = span.Length -1;
+        int index = span.Length - 1;
         while (index > 0 && !char.IsLetterOrDigit(span[index]))
         {
             index--;
@@ -1678,7 +1828,11 @@ public static partial class Strings
     /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
     public static int CountChars(this ReadOnlySpan<char> input, char charToFind)
     {
-        if (input.Length == 0) return 0;
+        if (input.Length == 0)
+        {
+            return 0;
+        }
+
         int count = 0;
         foreach (char @char in input)
         {
@@ -1698,7 +1852,11 @@ public static partial class Strings
     /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
     public static int CountChars(this string? input, char charToFind)
     {
-        if(input.IsNullOrEmpty()) return 0;
+        if (input.IsNullOrEmpty())
+        {
+            return 0;
+        }
+
         return input.AsSpan().CountChars(charToFind);
     }
 

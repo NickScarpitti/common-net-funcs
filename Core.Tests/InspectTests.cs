@@ -3,9 +3,7 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-#pragma warning disable CRR1000 // The name does not correspond to naming conventions
 #pragma warning disable IDE0079 // Remove unnecessary suppression
-#pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
 public class InspectTests
 {
     // Helper classes for testing
@@ -22,7 +20,6 @@ public class InspectTests
 
         public SimpleClass? Child { get; set; }
     }
-
 
     public static readonly TheoryData<(Type, object?)> defaultValueTestData = new()
     {
@@ -68,12 +65,16 @@ public class InspectTests
 
     [Theory]
 
+    #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     [MemberData(nameof(IsEqualRTestData))]
+    #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public void IsEqualR_Works(object? a, object? b, IEnumerable<string>? exempt, bool expected)
     { a.IsEqualR(b, exempt).ShouldBe(expected); }
 
     [Theory]
+    #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     [MemberData(nameof(IsEqualRTestData))]
+    #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public void IsEqualR_And_IsEqual_Consistency(object? a, object? b, IEnumerable<string>? exempt, bool expected)
     { a.IsEqual(b, exemptProps: exempt).ShouldBe(expected); }
 
@@ -131,7 +132,9 @@ public class InspectTests
     };
 
     [Theory]
+    #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     [MemberData(nameof(HashTestData))]
+    #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public void GetHashCode_And_GetHashForObject_Consistency(SimpleClass a, SimpleClass b, bool shouldMatch)
     {
         // a.GetHashCode().ShouldBe(b.GetHashCode(), shouldMatch ? "Hashes should match" : "Hashes should not match");
@@ -148,7 +151,9 @@ public class InspectTests
     }
 
     [Theory]
+    #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     [MemberData(nameof(HashTestData))]
+    #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public async Task GetHashCode_And_GetHashForObjectAsync_Consistency(SimpleClass a, SimpleClass b, bool shouldMatch)
     {
         // a.GetHashCode().ShouldBe(b.GetHashCode(), shouldMatch ? "Hashes should match" : "Hashes should not match");
@@ -181,9 +186,7 @@ public class InspectTests
 
     // Helper types for attribute and cycle tests
     [Description("desc")]
-    private class ClassWithDescription
-    {
-    }
+    private class ClassWithDescription;
 
     private class CyclicClass
     {
@@ -196,6 +199,4 @@ public class InspectTests
     }
 }
 
-#pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
 #pragma warning restore IDE0079 // Remove unnecessary suppression
-#pragma warning restore CRR1000 // The name does not correspond to naming conventions

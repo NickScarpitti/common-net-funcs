@@ -5,7 +5,6 @@ using System.Data;
 
 namespace Core.Tests;
 
-#pragma warning disable CRR1000 // The name does not correspond to naming conventions
 public class AsyncTests
 {
     private readonly Fixture _fixture;
@@ -444,4 +443,3 @@ public class AsyncTests
 
     #endregion
 }
-#pragma warning restore CRR1000 // The name does not correspond to naming conventions

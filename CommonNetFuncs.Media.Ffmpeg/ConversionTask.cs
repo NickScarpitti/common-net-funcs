@@ -11,8 +11,11 @@ namespace CommonNetFuncs.Media.Ffmpeg;
 public sealed class HardwareAccelerationValues()
 {
     public HardwareAccelerator hardwareAccelerator { get; set; }
+
     public VideoCodec decoder { get; set; }
+
     public VideoCodec encoder { get; set; }
+
     public int device { get; set; }
 }
 
@@ -133,20 +136,13 @@ public static class ConversionTask
                 conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
             }
 
-            #pragma warning disable CRR0052 // String interpolation can be used
             //Add log to OnProgress
             conversion.OnProgress += (sender, args) =>
             {
                 if (DateTime.Now > lastOutput1.AddSeconds(5))
                 {
                     //Show all output from FFmpeg to console
-                    logger.Info($"#{conversionIndex} Progress:" +
-                        $"[{args.Duration}/{args.TotalLength}]" +
-                        $"[{args.Percent}%]-[{fileToConvert.Name}]" +
-                        (!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty) +
-                        (!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty) +
-                        (conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty) +
-                        $"[Total FPS: {GetTotalFps(fpsDict)}]");
+                    logger.Info($"#{conversionIndex} Progress:[{args.Duration}/{args.TotalLength}][{args.Percent}%]-[{fileToConvert.Name}]{(!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty)}{(!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty)}{(conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty)}[Total FPS: {GetTotalFps(fpsDict)}]");
                     lastOutput1 = DateTime.Now;
                 }
             };
@@ -157,7 +153,7 @@ public static class ConversionTask
                 {
                     //Example output:
                     //frame=   48 fps=5.8 q=0.0 size=       1kB time=00:00:01.77 bitrate=   4.5kbits/s dup=0 drop=45 speed=0.215x
-                    string unbrokenData = args.Data?.Replace(" ", "") ?? string.Empty;
+                    string unbrokenData = args.Data?.Replace(" ", string.Empty) ?? string.Empty;
                     int outputSize = 0;
 
                     if (unbrokenData.Contains("kBtime=") && unbrokenData.Contains("size="))
@@ -203,7 +199,7 @@ public static class ConversionTask
                     }
                     else
                     {
-                        string normalizedData = args.Data.NormalizeWhiteSpace().Replace("00:", "");
+                        string normalizedData = args.Data.NormalizeWhiteSpace().Replace("00:", string.Empty);
 
                         //round((totalTime - time) / speed)
                         decimal speed = 1m;
@@ -232,24 +228,13 @@ public static class ConversionTask
                             }
                         }
 
-                        logger.Debug($"#{conversionIndex} ETA={timeLeftString} {normalizedData[..(normalizedData.Contains("bitrate=") ? normalizedData.IndexOf("bitrate=") : normalizedData.Length)]} - " +
-                            $"[{fileToConvert.Name}]" +
-                            (!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty) +
-                            (!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty) +
-                            (conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty) +
-                            $"[Total FPS: {GetTotalFps(fpsDict)}]");
+                        logger.Debug($"#{conversionIndex} ETA={timeLeftString} {normalizedData[..(normalizedData.Contains("bitrate=") ? normalizedData.IndexOf("bitrate=") : normalizedData.Length)]} - [{fileToConvert.Name}]{(!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty)}{(!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty)}{(conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty)}[Total FPS: {GetTotalFps(fpsDict)}]");
 
                         if (DateTime.Now > lastOutput3.AddSeconds(30))
                         {
-                            logger.Info($"#{conversionIndex} ETA={timeLeftString} {normalizedData[..(normalizedData.Contains("bitrate=") ? normalizedData.IndexOf("bitrate=") : normalizedData.Length)]} - " +
-                                $"[{fileToConvert.Name}]" +
-                                (!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty) +
-                                (!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty) +
-                                (conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty) +
-                                $"[Total FPS: {GetTotalFps(fpsDict)}]");
+                            logger.Info($"#{conversionIndex} ETA={timeLeftString} {normalizedData[..(normalizedData.Contains("bitrate=") ? normalizedData.IndexOf("bitrate=") : normalizedData.Length)]} - [{fileToConvert.Name}]{(!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty)}{(!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty)}{(conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty)}[Total FPS: {GetTotalFps(fpsDict)}]");
                             lastOutput3 = DateTime.Now;
                         }
-                        #pragma warning restore CRR0052 // String interpolation can be used
                     }
                     lastOutput2 = DateTime.Now;
                 }

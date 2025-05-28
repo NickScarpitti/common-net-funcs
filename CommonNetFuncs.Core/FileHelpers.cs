@@ -11,13 +11,11 @@ public static partial class FileHelpers
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
-    /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same
-    /// name exists already
+    /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same name exists already
     /// </summary>
     /// <param name="originalFullFileName">Full path and file name</param>
     /// <param name="startFromZero">
-    /// Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of
-    /// parentheses directly before the extension if such value is present.
+    /// Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.
     /// </param>
     /// <param name="suppressLogging">Will prevent this method from emitting logs</param>
     /// <param name="createPathIfMissing">Will create the file path if it does not exist</param>
@@ -53,7 +51,7 @@ public static partial class FileHelpers
             // Update name
             string ext = Path.GetExtension(originalFullFileName);
             string fileNameWithoutExt = Path.GetFileNameWithoutExtension(originalFullFileName);
-            string incrementingPattern = @"\([0-9]+\)\{ext}";
+            string incrementingPattern = @$"\(([0-9]+)\)\{ext}";
             int i = 0;
             string? lastTestPath = null;
 
@@ -117,14 +115,12 @@ public static partial class FileHelpers
     }
 
     /// <summary>
-    /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same
-    /// name exists already
+    /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same name exists already
     /// </summary>
     /// <param name="path">Full path to look in for duplicated file names</param>
     /// <param name="fileName">The file name to check for uniqueness with in the given file path</param>
     /// <param name="startFromZero">
-    /// Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of
-    /// parentheses directly before the extension if such value is present.
+    /// Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.
     /// </param>
     /// <param name="suppressLogging">Will prevent this method from emitting logs</param>
     /// <param name="createPathIfMissing">Will create the file path if it does not exist</param>
@@ -176,9 +172,7 @@ public static partial class FileHelpers
 
                 if (hasIterator)
                 {
-                    testPath = Path.GetFullPath(Path.Combine(
-                        path,
-                        Regex.Replace(fileName, incrementingPattern, $"({i}){ext}")));
+                    testPath = Path.GetFullPath(Path.Combine(path, Regex.Replace(fileName, incrementingPattern, $"({i}){ext}")));
                 }
                 else
                 {
@@ -242,7 +236,7 @@ public static partial class FileHelpers
 
         try
         {
-            using FileStream fileStream = new(fileName, FileMode.Open, FileAccess.Read);
+            await using FileStream fileStream = new(fileName, FileMode.Open, FileAccess.Read);
             return await fileStream.GetHashFromStream(algorithm).ConfigureAwait(false);
         }
         catch (Exception ex)

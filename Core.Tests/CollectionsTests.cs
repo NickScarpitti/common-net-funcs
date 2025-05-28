@@ -23,8 +23,6 @@ public class TestClass
     public DateOnly DateOnly { get; set; }
 }
 
-#pragma warning disable CRR1000 // The name does not correspond to naming conventions
-
 public enum TestEnum
 {
     Monday = DayOfWeek.Monday,
@@ -1677,5 +1675,3 @@ public class CollectionsTests
 
     #endregion
 }
-
-#pragma warning restore CRR1000 // The name does not correspond to naming conventions

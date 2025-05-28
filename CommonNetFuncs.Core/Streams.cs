@@ -23,8 +23,8 @@ public static class Streams
     //}
 
     /// <summary>
-    /// Read a stream into a byte array asynchronously
-    /// </summary>
+/// Read a stream into a byte array asynchronously
+/// </summary>
     /// <param name="stream">Stream to read from</param>
     /// <param name="bufferSize">Buffer size to use when reading from the stream</param>
     /// <returns>Byte array containing contents of stream</returns>
@@ -105,14 +105,14 @@ public sealed class CountingStream(Stream innerStream) : Stream
     public long BytesWritten => Interlocked.Read(ref _bytesWritten);
 
     public override bool CanRead => _innerStream.CanRead;
+
     public override bool CanSeek => _innerStream.CanSeek;
+
     public override bool CanWrite => _innerStream.CanWrite;
+
     public override long Length => _innerStream.Length;
-    public override long Position
-    {
-        get => _innerStream.Position;
-        set => _innerStream.Position = value;
-    }
+
+    public override long Position { get => _innerStream.Position; set => _innerStream.Position = value; }
 
     // Implement CopyToAsync for better performance when copying streams
     public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
@@ -149,9 +149,7 @@ public sealed class CountingStream(Stream innerStream) : Stream
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         ThrowIfDisposed();
-        #pragma warning disable CRR0030 // Redundant 'await'
         return await _innerStream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
-        #pragma warning restore CRR0030 // Redundant 'await'
     }
 
     public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
@@ -216,8 +214,5 @@ public sealed class CountingStream(Stream innerStream) : Stream
         }
     }
 
-    private void ThrowIfDisposed()
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-    }
+    private void ThrowIfDisposed() { ObjectDisposedException.ThrowIf(_disposed, this); }
 }

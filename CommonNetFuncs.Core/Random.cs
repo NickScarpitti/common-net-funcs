@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-using static System.Random;
 using static System.Math;
+using static System.Random;
 
 namespace CommonNetFuncs.Core;
 
@@ -37,20 +37,14 @@ public static class Random
     /// <param name="maxValue">Max value (non-inclusive) to return</param>
     /// <returns>Random number between 0 and maxValue - 1</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static int GetRandomInt(int maxValue = int.MaxValue)
-    {
-        return GetRandomInt(0, maxValue);
-    }
+    public static int GetRandomInt(int maxValue = int.MaxValue) { return GetRandomInt(0, maxValue); }
 
     /// <summary>
     /// Generate a random integer between 0 and int.MaxValue - 1
     /// </summary>
     /// <returns>Random number between 0 and int.MaxValue - 1</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static int GetRandomInt()
-    {
-        return GetRandomInt(0, int.MaxValue);
-    }
+    public static int GetRandomInt() { return GetRandomInt(0, int.MaxValue); }
 
     /// <summary>
     /// Generate a number of random integers between minValue and maxValue - 1
@@ -130,7 +124,7 @@ public static class Random
         uint fracPart = BitConverter.ToUInt32(randomBytes, 8); // Convert the next 4 bytes to a uint for the fractional part
 
         // Combine the parts to create a decimal in the range [0, 1)
-        return intPart / 1000000000000000000m + (decimal)fracPart / uint.MaxValue / 1000000000000000000m;
+        return (intPart / 1000000000000000000m) + ((decimal)fracPart / uint.MaxValue / 1000000000000000000m);
     }
 
     /// <summary>
@@ -216,10 +210,7 @@ public static class Random
     /// <typeparam name="T">Type of objects being shuffled</typeparam>
     /// <param name="items">Items to shuffle</param>
     /// <returns>Shuffled IEnumerable of items</returns>
-    public static void Shuffle<T>(this T[] items)
-    {
-        Shared.Shuffle(items);
-    }
+    public static void Shuffle<T>(this T[] items) { Shared.Shuffle(items); }
 
     /// <summary>
     /// Randomly shuffle a span of objects in place using the Random.Shared.Shuffle method
@@ -227,10 +218,7 @@ public static class Random
     /// <typeparam name="T">Type of objects being shuffled</typeparam>
     /// <param name="items">Items to shuffle</param>
     /// <returns>Shuffled IEnumerable of items</returns>
-    public static void Shuffle<T>(this Span<T> items)
-    {
-        Shared.Shuffle(items);
-    }
+    public static void Shuffle<T>(this Span<T> items) { Shared.Shuffle(items); }
 
     /// <summary>
     /// Randomly shuffle a collection of objects in place using linq
@@ -239,9 +227,7 @@ public static class Random
     /// <param name="items">Items to shuffle</param>
     /// <returns>Shuffled IEnumerable of items</returns>
     public static IEnumerable<T> ShuffleLinq<T>(this IEnumerable<T> items)
-    {
-        return items.OrderBy(_ => GetRandomInt()).ToList();
-    }
+    { return items.OrderBy(_ => GetRandomInt()).ToList(); }
 
     /// <summary>
     /// Select a random object from a IEnumerable of objects
@@ -250,9 +236,7 @@ public static class Random
     /// <param name="items">Items to select from</param>
     /// <returns>Randomly selected object</returns>
     public static T? GetRandomElement<T>(this IEnumerable<T> items)
-    {
-        return items.Skip(GetRandomInt(0, items.Count())).First();
-    }
+    { return items.Skip(GetRandomInt(0, items.Count())).First(); }
 
     /// <summary>
     /// Select a random object from a IEnumerable of objects
@@ -261,9 +245,7 @@ public static class Random
     /// <param name="items">Items to select from</param>
     /// <returns>Randomly selected objects</returns>
     public static IEnumerable<T> GetRandomElements<T>(this IEnumerable<T> items, int selectQuantity = 1)
-    {
-        return Shared.GetItems(items.ToArray(), selectQuantity);
-    }
+    { return Shared.GetItems(items.ToArray(), selectQuantity); }
 
     /// <summary>
     /// Generates a random string of the indicated length using a range of ASCII characters

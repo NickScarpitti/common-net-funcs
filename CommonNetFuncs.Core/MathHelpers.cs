@@ -20,12 +20,12 @@ public static class MathHelpers
 
         if (significance == 0)
         {
-            return System.Math.Ceiling((double)value);
+            return Math.Ceiling((double)value);
         }
 
         if (value % significance != 0)
         {
-            return ((int)(value / significance) * significance) + significance;
+            return ((int)(value / significance) * significance) + (value > 0 ? significance : 0);
         }
 
         return ToDouble(value);
@@ -43,12 +43,12 @@ public static class MathHelpers
 
         if (significance == 0)
         {
-            return System.Math.Ceiling((decimal)value);
+            return Math.Ceiling((decimal)value);
         }
 
         if (value % significance != 0)
         {
-            return ((int)(value / significance) * significance) + significance;
+            return ((int)(value / significance) * significance) + (value > 0 ? significance : 0);
         }
 
         return ToDecimal(value);
@@ -66,12 +66,12 @@ public static class MathHelpers
 
         if (significance == 0)
         {
-            return System.Math.Floor((double)value);
+            return Math.Floor((double)value);
         }
 
         if (value % significance != 0)
         {
-            return (int)(value / significance) * significance;
+            return (int)(value / significance) * significance - (value > 0 ? 0 : significance);
         }
 
         return ToDouble(value);
@@ -89,12 +89,12 @@ public static class MathHelpers
 
         if (significance == 0)
         {
-            return System.Math.Floor((decimal)value);
+            return Math.Floor((decimal)value);
         }
 
         if (value % significance != 0)
         {
-            return (int)(value / significance) * significance;
+            return (int)(value / significance) * significance - (value > 0 ? 0 : significance);
         }
 
         return ToDecimal(value);
@@ -107,7 +107,10 @@ public static class MathHelpers
     /// <returns>The number of decimal places of the given double value</returns>
     public static int GetPrecision(this decimal? value)
     {
-        if (value == null) { return 0; }
+        if (value == null)
+        {
+            return 0;
+        }
         string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
         int position = value.ToString()!.IndexOf(decimalSeparator);
         return position == -1 ? 0 : value.ToString()!.Length - position - 1;
@@ -120,7 +123,34 @@ public static class MathHelpers
     /// <returns>The number of decimal places of the given double value</returns>
     public static int GetPrecision(this double? value)
     {
-        if (value == null) { return 0; }
+        if (value == null)
+        {
+            return 0;
+        }
+        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
+        int position = value.ToString()!.IndexOf(decimalSeparator);
+        return position == -1 ? 0 : value.ToString()!.Length - position - 1;
+    }
+
+    /// <summary>
+    /// Get the number of decimal places of a decimal value
+    /// </summary>
+    /// <param name="value">Value to get the precision of</param>
+    /// <returns>The number of decimal places of the given double value</returns>
+    public static int GetPrecision(this decimal value)
+    {
+        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
+        int position = value.ToString()!.IndexOf(decimalSeparator);
+        return position == -1 ? 0 : value.ToString()!.Length - position - 1;
+    }
+
+    /// <summary>
+    /// Get the number of decimal places of a double value
+    /// </summary>
+    /// <param name="value">Value to get the precision of</param>
+    /// <returns>The number of decimal places of the given double value</returns>
+    public static int GetPrecision(this double value)
+    {
         string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
         int position = value.ToString()!.IndexOf(decimalSeparator);
         return position == -1 ? 0 : value.ToString()!.Length - position - 1;

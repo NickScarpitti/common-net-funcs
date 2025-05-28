@@ -33,6 +33,13 @@ public enum EComparisonType
     AND
 }
 
+public enum TitleCaseUppercaseWordHandling
+{
+    IgnoreUppercase,
+    ConvertAllUppercase,
+    ConvertByLength
+}
+
 /// <summary>
 /// Methods for complex string manipulation
 /// </summary>
@@ -91,6 +98,12 @@ public static partial class Strings
 
     [GeneratedRegex(@"[0-9 ]*\.?[0-9]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
     private static partial Regex NumbersWithFractionsOnlyRegex();
+
+    [GeneratedRegex(@"(\s+|[^\w\s])")]
+    private static partial Regex TitleCaseSplitRegex();
+
+    [GeneratedRegex(@"\w")]
+    private static partial Regex TitleCaseWordRegex();
 
     /// <summary>
     /// Clone of VBA Left() function that gets n characters from the left side of the string
@@ -193,21 +206,93 @@ public static partial class Strings
         return !s.IsNullOrWhiteSpace() ? string.Concat(s.Select(x => char.IsUpper(x) ? $" {x}" : x.ToString())).TrimStart(' ') : s;
     }
 
+    ///// <summary>
+    ///// Converts string to title case using the specified culture
+    ///// </summary>
+    ///// <param name="s">String to convert to title case</param>
+    ///// <param name="cultureString">String representation of the culture to use when converting string to title case</param>
+    ///// <returns>String converted to title case</returns>
+    //[return: NotNullIfNotNull(nameof(s))]
+    //public static string? ToTitleCase(this string? s, string cultureString = "en-US")
+    //{
+    //    if (!s.IsNullOrWhiteSpace())
+    //    {
+    //        TextInfo textinfo = new CultureInfo(cultureString, false).TextInfo;
+    //        s = textinfo.ToTitleCase(s);
+    //    }
+    //    return s;
+    //}
+
     /// <summary>
-    /// Converts string to title case using the specified culture
+    /// Converts a string to title case with options for handling uppercase words.
     /// </summary>
-    /// <param name="s">String to convert to title case</param>
-    /// <param name="cultureString">String representation of the culture to use when converting string to title case</param>
-    /// <returns>String converted to title case</returns>
-    [return: NotNullIfNotNull(nameof(s))]
-    public static string? ToTitleCase(this string? s, string cultureString = "en-US")
+    /// <param name="input">The input string to convert.</param>
+    /// <param name="uppercaseHandling">How to handle uppercase words.</param>
+    /// <param name="maxLengthToConvert">Maximum length of uppercase words to convert (used with UppercaseHandling.ConvertByLength).</param>
+    /// <returns>The title-cased string.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? ToTitleCase(this string? input, string cultureString = "en-US", TitleCaseUppercaseWordHandling uppercaseHandling = TitleCaseUppercaseWordHandling.IgnoreUppercase, int maxLengthToConvert = 0)
     {
-        if (!s.IsNullOrWhiteSpace())
+        if (input.IsNullOrWhiteSpace())
         {
-            TextInfo textinfo = new CultureInfo(cultureString, false).TextInfo;
-            s = textinfo.ToTitleCase(s);
+            return input;
         }
-        return s;
+
+        // Use TextInfo for culture-aware title casing
+        TextInfo textInfo = new CultureInfo(cultureString, false).TextInfo;
+
+        if (uppercaseHandling == TitleCaseUppercaseWordHandling.IgnoreUppercase)
+        {
+            return textInfo.ToTitleCase(input);
+        }
+
+        // Split the input by word boundaries
+        string[] words = TitleCaseSplitRegex().Split(input);
+        StringBuilder result = new();
+
+        foreach (string word in words)
+        {
+            if (string.IsNullOrEmpty(word))
+            {
+                continue;
+            }
+
+            bool isAllUppercase = word.Length > 0 && word.StrComp(word.ToUpper()) && !word.StrComp(word.ToLower());
+            if (isAllUppercase)
+            {
+                switch (uppercaseHandling)
+                {
+                    case TitleCaseUppercaseWordHandling.ConvertAllUppercase:
+                        result.Append(textInfo.ToTitleCase(word.ToLower()));
+                        break;
+                    case TitleCaseUppercaseWordHandling.ConvertByLength:
+                        if (word.Length <= maxLengthToConvert)
+                        {
+                            result.Append(textInfo.ToTitleCase(word.ToLower()));
+                        }
+                        else
+                        {
+                            result.Append(word);
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                // For non-uppercase words, always convert to title case
+                if (TitleCaseWordRegex().IsMatch(word))
+                {
+                    result.Append(textInfo.ToTitleCase(word.ToLower()));
+                }
+                else
+                {
+                    // Preserve non-word characters
+                    result.Append(word);
+                }
+            }
+        }
+
+        return result.ToString();
     }
 
     /// <summary>
@@ -230,14 +315,20 @@ public static partial class Strings
     /// </summary>
     /// <param name="s">The string to test</param>
     /// <returns>True if s is null, a zero length string, or consists only of white-space characters</returns>
-    public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? s) { return string.IsNullOrWhiteSpace(s); }
+    public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? s)
+    {
+        return string.IsNullOrWhiteSpace(s);
+    }
 
     /// <summary>
     /// Indicates whether a specified string is null or a zero length string
     /// </summary>
     /// <param name="s">The string to test</param>
     /// <returns>True if s is null or a zero length string</returns>
-    public static bool IsNullOrEmpty([NotNullWhen(false)] this string? s) { return string.IsNullOrEmpty(s); }
+    public static bool IsNullOrEmpty([NotNullWhen(false)] this string? s)
+    {
+        return string.IsNullOrEmpty(s);
+    }
 
     /// <summary>
     /// Indicates whether a specified string is null or a zero length string
@@ -245,7 +336,9 @@ public static partial class Strings
     /// <param name="enumerable">Collection to check if it's null or has no elements</param>
     /// <returns>True if s is null or a zero length string</returns>
     public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? enumerable)
-    { return enumerable?.Any() != true; }
+    {
+        return enumerable?.Any() != true;
+    }
 
     /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
@@ -254,7 +347,9 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static bool ContainsInvariant(this string? s, string? textToFind)
-    { return textToFind != null && (s?.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false); }
+    {
+        return textToFind != null && (s?.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
+    }
 
     /// <summary>
     /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
@@ -263,7 +358,9 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static bool ContainsInvariant(this IEnumerable<string?>? s, string? textToFind)
-    { return s?.Contains(textToFind, StringComparer.InvariantCultureIgnoreCase) ?? false; }
+    {
+        return s?.Contains(textToFind, StringComparer.InvariantCultureIgnoreCase) ?? false;
+    }
 
     /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
@@ -272,7 +369,9 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static bool StartsWithInvariant(this string? s, string? textToFind)
-    { return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false); }
+    {
+        return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
+    }
 
     /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
@@ -281,7 +380,9 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static bool EndsWithInvariant(this string? s, string? textToFind)
-    { return textToFind != null && (s?.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false); }
+    {
+        return textToFind != null && (s?.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
+    }
 
     /// <summary>
     /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
@@ -290,7 +391,9 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static int IndexOfInvariant(this string? s, string? textToFind)
-    { return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0; }
+    {
+        return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
+    }
 
     /// <summary>
     /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
@@ -299,7 +402,9 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static int IndexOfInvariant(this string? s, char? textToFind)
-    { return textToFind != null ? s?.IndexOf((char)textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0; }
+    {
+        return textToFind != null ? s?.IndexOf((char)textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
+    }
 
     /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
@@ -353,7 +458,9 @@ public static partial class Strings
     /// <returns></returns>
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ReplaceInvariant(this string? s, string oldValue, string newValue, bool replaceAllInstances = true)
-    { return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances); }
+    {
+        return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances);
+    }
 
     /// <summary>
     /// Replace multiple substrings with another string, ignoring the case and culture when finding the substrings to replace.
@@ -418,7 +525,9 @@ public static partial class Strings
     /// <param name="s2">Second string to compare</param>
     /// <returns>True if the strings are equal</returns>
     public static bool StrComp(this string? s1, string? s2)
-    { return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty); }
+    {
+        return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty);
+    }
 
     /// <summary>
     /// Compare two strings with optional stringComparison parameter
@@ -427,7 +536,9 @@ public static partial class Strings
     /// <param name="s2">Second string to compare</param>
     /// <returns>True if the strings are equal based on the stringComparison value</returns>
     public static bool StrComp(this string? s1, string? s2, StringComparison stringComparison)
-    { return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison); }
+    {
+        return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison);
+    }
 
     /// <summary>
     /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
@@ -825,7 +936,10 @@ public static partial class Strings
     /// <param name="value">Integer to convert to string</param>
     /// <returns>String representation of the passed in nullable int</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this int? value) { return value?.ToString(); }
+    public static string? ToNString(this int? value)
+    {
+        return value?.ToString();
+    }
 
     /// <summary>
     /// Converts nullable long to string
@@ -833,7 +947,10 @@ public static partial class Strings
     /// <param name="value">Long to convert to string</param>
     /// <returns>String representation of the passed in nullable long</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this long? value) { return value?.ToString(); }
+    public static string? ToNString(this long? value)
+    {
+        return value?.ToString();
+    }
 
     /// <summary>
     /// Converts nullable double to string
@@ -841,7 +958,10 @@ public static partial class Strings
     /// <param name="value">Double to convert to string</param>
     /// <returns>String representation of the passed in nullable double</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this double? value) { return value?.ToString(); }
+    public static string? ToNString(this double? value)
+    {
+        return value?.ToString();
+    }
 
     /// <summary>
     /// Converts nullable decimal to string
@@ -849,7 +969,10 @@ public static partial class Strings
     /// <param name="value">Decimal to convert to string</param>
     /// <returns>String representation of the passed in nullable decimal</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this decimal? value) { return value?.ToString(); }
+    public static string? ToNString(this decimal? value)
+    {
+        return value?.ToString();
+    }
 
     /// <summary>
     /// Converts nullable object to string
@@ -857,7 +980,10 @@ public static partial class Strings
     /// <param name="value">Boolean to turn into a string</param>
     /// <returns>String representation of the passed in nullable object</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this bool? value) { return value?.ToString(); }
+    public static string? ToNString(this bool? value)
+    {
+        return value?.ToString();
+    }
 
     /// <summary>
     /// Converts nullable object to string
@@ -865,7 +991,10 @@ public static partial class Strings
     /// <param name="value">Object to turn into a string</param>
     /// <returns>String representation of the passed in nullable object</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this object? value) { return value?.ToString(); }
+    public static string? ToNString(this object? value)
+    {
+        return value?.ToString();
+    }
 
     /// <summary>
     /// Converts list of string representations of integers into list of integers
@@ -893,7 +1022,9 @@ public static partial class Strings
     /// <param name="value">String value to be converted to nullable int</param>
     /// <returns>Nullable int parsed from a string</returns>
     public static int? ToNInt(this string? value)
-    { return !string.IsNullOrWhiteSpace(value) && int.TryParse(value, out int i) ? i : null; }
+    {
+        return !string.IsNullOrWhiteSpace(value) && int.TryParse(value, out int i) ? i : null;
+    }
 
     /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable doubles
@@ -901,7 +1032,9 @@ public static partial class Strings
     /// <param name="value">String value to be converted to nullable double</param>
     /// <returns>Nullable double parsed from a string</returns>
     public static double? ToNDouble(this string? value)
-    { return !string.IsNullOrWhiteSpace(value) && double.TryParse(value, out double i) ? i : null; }
+    {
+        return !string.IsNullOrWhiteSpace(value) && double.TryParse(value, out double i) ? i : null;
+    }
 
     /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable decimals
@@ -909,7 +1042,9 @@ public static partial class Strings
     /// <param name="value">String value to be converted to nullable decimal</param>
     /// <returns>Nullable decimal parsed from a string</returns>
     public static decimal? ToNDecimal(this string? value)
-    { return !string.IsNullOrWhiteSpace(value) && decimal.TryParse(value, out decimal i) ? i : null; }
+    {
+        return !string.IsNullOrWhiteSpace(value) && decimal.TryParse(value, out decimal i) ? i : null;
+    }
 
     /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
@@ -965,28 +1100,39 @@ public static partial class Strings
     /// <param name="value">"Y"/"N" string to convert into a boolean</param>
     /// <returns>Bool representation of string value passed in</returns>
     public static bool YNToBool(this string? value)
-    { return string.Equals(value?.Trim() ?? string.Empty, "Y", StringComparison.InvariantCultureIgnoreCase); }
+    {
+        return string.Equals(value?.Trim() ?? string.Empty, "Y", StringComparison.InvariantCultureIgnoreCase);
+    }
 
     /// <summary>
     /// Convert bool to "Yes" or "No"
     /// </summary>
     /// <param name="value">Boolean to convert to "Yes" or "No"</param>
     /// <returns>"Yes" if true, "No" if false</returns>
-    public static string BoolToYesNo(this bool value) { return value ? nameof(EYesNo.Yes) : nameof(EYesNo.No); }
+    public static string BoolToYesNo(this bool value)
+    {
+        return value ? nameof(EYesNo.Yes) : nameof(EYesNo.No);
+    }
 
     /// <summary>
     /// Convert bool to "Y" or "N"
     /// </summary>
     /// <param name="value">Boolean to convert to "Yes" or "No"</param>
     /// <returns>"Y" if true, "N" if false</returns>
-    public static string BoolToYN(this bool value) { return value ? "Y" : "N"; }
+    public static string BoolToYN(this bool value)
+    {
+        return value ? "Y" : "N";
+    }
 
     /// <summary>
     /// Convert bool to 1 or 0
     /// </summary>
     /// <param name="value">Integer to convert to "Yes" or "No"</param>
     /// <returns>"Yes" if true, "No" if false</returns>
-    public static int BoolToInt(this bool value) { return ToInt32(value); }
+    public static int BoolToInt(this bool value)
+    {
+        return ToInt32(value);
+    }
 
     /// <summary>
     /// Get file name safe date in the chosen format
@@ -994,7 +1140,9 @@ public static partial class Strings
     /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
     /// <returns>File name safe formatted date</returns>
     public static string GetSafeDate(string dateFormat)
-    { return DateTime.Today.ToString(dateFormat).Replace("/", "-"); }
+    {
+        return DateTime.Today.ToString(dateFormat).Replace("/", "-");
+    }
 
     /// <summary>
     /// Adds number in () at the end of a file name if it would create a duplicate in the savePath
@@ -1668,7 +1816,9 @@ public static partial class Strings
     /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
     [return: NotNullIfNotNull(nameof(input))]
     public static string? TrimOuterNonAlphanumeric(this string? input)
-    { return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric(); }
+    {
+        return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric();
+    }
 
     /// <summary>
     /// Counts the occurrences of a specific character in the given string.

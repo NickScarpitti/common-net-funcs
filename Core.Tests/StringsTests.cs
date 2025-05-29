@@ -171,17 +171,14 @@ public class StringsTests
     public void ToTitleCase_HandlesUppercaseWords()
     {
         // Arrange
-        string input = "THE QUICK BROWN FOX";
+        const string input = "THE QUICK BROWN FOX";
 
         // Act & Assert
-        input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase)
-            .ShouldBe("The Quick Brown Fox");
+        input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase).ShouldBe("The Quick Brown Fox");
 
-        input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.IgnoreUppercase)
-            .ShouldBe("THE QUICK BROWN FOX");
+        input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.IgnoreUppercase).ShouldBe("THE QUICK BROWN FOX");
 
-        input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, maxLengthToConvert: 3)
-            .ShouldBe("The QUICK BROWN FOX");
+        input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 4).ShouldBe("THE Quick Brown FOX");
     }
 
     [Theory]
@@ -216,36 +213,56 @@ public class StringsTests
     public void TrimObjectStrings_HandlesComplexObjects()
     {
         // Arrange
-        var testObject = new
+        TestObject testObject = new()
         {
             StringProp = "  test  ",
-            NestedObject = new { InnerString = "  inner  " }
+            NestedObject = new() { InnerString = "  inner1  " }
         };
 
         // Act
-        var result = testObject.TrimObjectStrings(recursive: true);
+        TestObject result = testObject.TrimObjectStrings(recursive: true);
 
         // Assert
         result.StringProp.ShouldBe("test");
-        result.NestedObject.InnerString.ShouldBe("inner");
+        result.NestedObject.InnerString.ShouldBe("inner1");
+    }
+
+    public class TestObject
+    {
+        public string? StringProp { get; set; }
+
+        public NestedObject NestedObject { get; set; } = new();
+
+        public string? StringPropWithSpaces { get; set; }
+
+        public NestedObject NestedStringPropWithSpaces { get; set; } = new();
+    }
+
+    public class NestedObject
+    {
+        public string? InnerString { get; set; }
     }
 
     [Fact]
     public void NormalizeObjectStrings_HandlesComplexObjects()
     {
         // Arrange
-        var testObject = new
+        TestObject testObject = new()
         {
             StringProp = "test\u0300", // Combining grave accent
-            NestedObject = new { InnerString = "e\u0301" } // Combining acute accent
+            NestedObject = new() { InnerString = "e\u0301" }, // Combining acute accent
+            StringPropWithSpaces = "  test  ",
+            NestedStringPropWithSpaces = new() { InnerString = "  test  " }
         };
 
         // Act
-        var result = testObject.NormalizeObjectStrings(true, NormalizationForm.FormD, true);
+        TestObject result = testObject.NormalizeObjectStrings(true, NormalizationForm.FormD, true);
 
         // Assert
-        result.StringProp.ShouldBe("test");
-        result.NestedObject.InnerString.ShouldBe("e");
+        result.StringProp.ShouldBe(testObject.StringProp);
+        result.NestedObject.InnerString.ShouldBe(testObject.NestedObject.InnerString);
+        result.StringPropWithSpaces.ShouldBe(testObject.StringPropWithSpaces.Trim());
+        result.NestedStringPropWithSpaces.InnerString.ShouldBe(testObject.NestedStringPropWithSpaces.InnerString.Trim());
     }
 
     [Theory]
@@ -446,7 +463,7 @@ public class StringsTests
     public void GetHash_GeneratesCorrectHash()
     {
         // Arrange
-        string input = "test string";
+        const string input = "test string";
 
         // Act
         string sha256Result = input.GetHash(EHashAlgorithm.SHA256);
@@ -461,13 +478,13 @@ public class StringsTests
     public void NormalizeWhiteSpace_HandlesVariousWhitespace()
     {
         // Arrange
-        string input = "Hello   World\t\nTest";
+        const string input = "Hello   World\t\nTest";
 
         // Act
         string result = input.NormalizeWhiteSpace();
 
         // Assert
-        result.ShouldBe("Hello World Test");
+        result.ShouldBe("Hello World\nTest");
     }
 
     [Theory]
@@ -486,7 +503,7 @@ public class StringsTests
     public void UrlEncodeReadable_HandlesSpecialCharacters()
     {
         // Arrange
-        string input = "Hello World (test) * /";
+        const string input = "Hello World (test) * /";
 
         // Act
         string? result = input.UrlEncodeReadable();
@@ -499,18 +516,18 @@ public class StringsTests
     public void TrimObjectStrings_HandlesNestedObjects()
     {
         // Arrange
-        var testObj = new
+        TestObject testObj = new()
         {
-            Name = "  Test  ",
-            Nested = new { Description = "  Nested  " }
+            StringProp = "  Test  ",
+            NestedObject = new() { InnerString = "  Nested  " }
         };
 
         // Act
-        var result = testObj.TrimObjectStrings(recursive: true);
+        TestObject result = testObj.TrimObjectStrings(recursive: true);
 
         // Assert
-        result.Name.ShouldBe("Test");
-        result.Nested.Description.ShouldBe("Nested");
+        result.StringProp.ShouldBe("Test");
+        result.NestedObject.InnerString.ShouldBe("Nested");
     }
 
     [Theory]

@@ -932,7 +932,7 @@ public static class Async
 
     public static async Task<ConcurrentBag<T>> RunAll<T>(this IEnumerable<Func<Task<T>>> tasks, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false)
     {
-        semaphore ??= new(1, 1);
+        semaphore ??= new(1);
         cancellationTokenSource ??= new();
         ConcurrentBag<T> results = [];
         CancellationToken token = cancellationTokenSource.Token;
@@ -940,6 +940,10 @@ public static class Async
         {
             try
             {
+                if (token.IsCancellationRequested)
+                {
+                    return; // Exit if cancellation is requested
+                }
                 await semaphore.WaitAsync(token).ConfigureAwait(false);
                 results.Add(await task().ConfigureAwait(false));
             }

@@ -24,6 +24,16 @@ public static class Random
             throw new ArgumentOutOfRangeException(nameof(maxValue), "Max value must be greater than 0.");
         }
 
+        if (minValue > maxValue)
+        {
+            throw new ArgumentException($"{nameof(minValue)} must be less than or equal to {nameof(maxValue)}", nameof(minValue));
+        }
+
+        if (minValue == maxValue)
+        {
+            return minValue; //There is only one possible value, so just return that
+        }
+
         using RandomNumberGenerator rng = RandomNumberGenerator.Create();
         byte[] randomNumber = new byte[4]; // 4 bytes for an integer
         rng.GetBytes(randomNumber);

@@ -175,8 +175,7 @@ public static class Collections
     }
 
     /// <summary>
-    /// <para>Allows you to act upon every element in an Array</para> <para>Used like outerArray.SetValue((array,
-    /// indices) => array.SetValue(SomeMethod(outerArray.GetValue(indices)), indices))</para>
+    /// <para>Allows you to act upon every element in an Array</para> <para>Used like outerArray.SetValue((array, indices) => array.SetValue(SomeMethod(outerArray.GetValue(indices)), indices))</para>
     /// </summary>
     /// <param name="array">Array to act upon</param>
     /// <param name="action">Action to perform on each element of the array</param>
@@ -198,8 +197,7 @@ public static class Collections
     /// </summary>
     /// <param name="items">Enumerable of strings to select from</param>
     /// <returns>
-    /// An enumerable containing all string values from the original collection that are not null, empty, or only
-    /// whitespace
+    /// An enumerable containing all string values from the original collection that are not null, empty, or only whitespace
     /// </returns>
     [return: NotNullIfNotNull(nameof(items))]
     public static IEnumerable<string>? SelectNonEmpty(this IEnumerable<string?>? items)
@@ -235,8 +233,7 @@ public static class Collections
     }
 
     /// <summary>
-    /// Select object from a collection by matching all non-null fields to an object of the same type comprising the
-    /// collection
+    /// Select object from a collection by matching all non-null fields to an object of the same type comprising the collection
     /// </summary>
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="queryable">Queryable collection to select from</param>

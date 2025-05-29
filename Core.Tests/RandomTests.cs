@@ -274,8 +274,8 @@ public class RandomTests
     { Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength)); }
 
     [Theory]
-    [InlineData(5, 10)]
     [InlineData(10, 5)]
+    [InlineData(0, 0)]
     public void GenerateRandomString_WithInvalidLengthRange_ThrowsException(int minLength, int maxLength)
     { Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength, minLength)); }
 }

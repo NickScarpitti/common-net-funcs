@@ -112,14 +112,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 model = fullQueryOptions.SplitQueryOverride switch
                 {
                     null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
                     true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
                     _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
                 };
             }
         }
@@ -134,9 +134,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     {
                         model = fullQueryOptions.SplitQueryOverride switch
                         {
-                            null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
-                            true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
-                            _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                            null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+                            true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+                            _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
                         };
                     }
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
@@ -238,14 +238,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 model = fullQueryOptions.SplitQueryOverride switch
                 {
                     null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
                     true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
                     _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
                 };
             }
         }
@@ -260,9 +260,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                     {
                         model = fullQueryOptions.SplitQueryOverride switch
                         {
-                            null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
-                            true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
-                            _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                            null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+                            true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+                            _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
                         };
                     }
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");

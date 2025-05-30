@@ -346,11 +346,11 @@ public static class Collections
         List<T?> list = new(table.Rows.Count);
         if (table.Rows.Count > 0)
         {
-            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
+            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken: cancellationToken);
             foreach (DataRow row in table.AsEnumerable())
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                list.Add(row.ParseRowValues<T>(map));
+                list.Add(row.ParseRowValues<T>(map, cancellationToken: cancellationToken));
             }
         }
         return list;
@@ -369,7 +369,7 @@ public static class Collections
         ConcurrentBag<T?> bag = [];
         if (table.Rows.Count > 0)
         {
-            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
+            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken: cancellationToken);
             Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row => bag.Add(row.ParseRowValues<T>(map, cancellationToken)));
         }
         return bag.ToList();
@@ -387,7 +387,7 @@ public static class Collections
         IEnumerable<T?> values = [];
         if (table.Rows.Count > 0)
         {
-            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
+            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken: cancellationToken);
             values = table.AsEnumerable().AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).Select(row => row.ParseRowValues<T>(map, cancellationToken));
         }
         return values;
@@ -404,11 +404,11 @@ public static class Collections
     {
         if (table.Rows.Count > 0)
         {
-            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
+            IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken);
             Task<T?>? outstandingItem = null;
             T? Transform(object x)
             {
-                return ParseRowValues<T>((DataRow)x, map);
+                return ParseRowValues<T>((DataRow)x, map, cancellationToken);
             }
 
             foreach (DataRow row in table.AsEnumerable())

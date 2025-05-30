@@ -359,7 +359,7 @@ public static class Async
             {
                 lock (obj)
                 {
-                    obj.AddRange(resultObject);
+                    obj.AddRange(resultObject, cancellationToken: cancellationToken);
                 }
             }
         }
@@ -392,7 +392,7 @@ public static class Async
             {
                 lock (obj)
                 {
-                    obj.AddRange(resultObject);
+                    obj.AddRange(resultObject, cancellationToken: cancellationToken);
                 }
             }
         }
@@ -506,7 +506,7 @@ public static class Async
             {
                 lock (obj)
                 {
-                    obj.AddRange(resultObject);
+                    obj.AddRange(resultObject, cancellationToken: cancellationToken);
                 }
             }
         }
@@ -567,7 +567,7 @@ public static class Async
             {
                 if (obj != null)
                 {
-                    obj.AddRangeParallel(resultObject);
+                    obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
                 }
                 else
                 {
@@ -656,7 +656,7 @@ public static class Async
             {
                 if (obj != null)
                 {
-                    obj.AddRangeParallel(resultObject);
+                    obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
                 }
                 else
                 {
@@ -721,7 +721,7 @@ public static class Async
             {
                 if (obj != null)
                 {
-                    obj.AddRangeParallel(resultObject);
+                    obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
                 }
                 else
                 {

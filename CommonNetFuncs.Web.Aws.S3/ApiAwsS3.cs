@@ -28,7 +28,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="compressSteam">Optional: If true, will compress stream sent to S3 bucket. Default = true</param>
     /// <param name="compressionType">Optional: Specifies which compression type to use when compressSteam = true. Does nothing if compressSteam = false. Valid values are GZip and Deflate</param>
     /// <returns>True if file was successfully uploaded</returns>
-    public async Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip)
+    public async Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip, CancellationToken cancellationToken = default)
     {
         if (compressSteam && compressionType is not ECompressionType.Gzip or ECompressionType.Deflate)
         {
@@ -41,15 +41,15 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
             validatedBuckets ??= ValidatedBuckets;
             if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false))
             {
-                if (await S3FileExists(bucketName, fileName).ConfigureAwait(false))
+                if (await S3FileExists(bucketName, fileName, cancellationToken: cancellationToken).ConfigureAwait(false))
                 {
-                    await DeleteS3File(bucketName, fileName).ConfigureAwait(false);
+                    await DeleteS3File(bucketName, fileName, cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
 
                 await using MemoryStream compressedStream = new();
                 if (compressSteam)
                 {
-                    await fileData.CompressStream(compressedStream, compressionType).ConfigureAwait(false);
+                    await fileData.CompressStream(compressedStream, compressionType, cancellationToken).ConfigureAwait(false);
                 }
 
                 PutObjectRequest request = new()
@@ -65,7 +65,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                 request.Headers["Content-Encoding"] = "gzip";
                 request.Headers["Content-Length"] = request.InputStream.Length.ToString();
 
-                PutObjectResponse? response = await s3Client.PutObjectAsync(request).ConfigureAwait(false);
+                PutObjectResponse? response = await s3Client.PutObjectAsync(request, cancellationToken).ConfigureAwait(false);
                 success = response?.HttpStatusCode == HttpStatusCode.OK;
 
                 if (!success)
@@ -92,7 +92,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="fileName">Name of the file to retrieve from the S3 bucket</param>
     /// <param name="fileData">Stream to receive the file data retrieved from the S3 bucket</param>
     /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
-    public async Task GetS3File(string bucketName, string? fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool decompressGzipData = true)
+    public async Task GetS3File(string bucketName, string? fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool decompressGzipData = true, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -105,7 +105,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                     Key = fileName
                 };
 
-                GetObjectResponse? response = await s3Client.GetObjectAsync(request).ConfigureAwait(false);
+                GetObjectResponse? response = await s3Client.GetObjectAsync(request, cancellationToken).ConfigureAwait(false);
                 if (response != null)
                 {
                     await using Stream responseStream = response.ResponseStream;
@@ -114,17 +114,17 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                     {
                         //await using MemoryStream decompressedStream = new();
                         await using MemoryStream intermediateStream = new();
-                        await responseStream.CopyToAsync(intermediateStream).ConfigureAwait(false);
-                        await intermediateStream.FlushAsync().ConfigureAwait(false);
+                        await responseStream.CopyToAsync(intermediateStream, cancellationToken).ConfigureAwait(false);
+                        await intermediateStream.FlushAsync(cancellationToken).ConfigureAwait(false);
                         intermediateStream.Position = 0;
-                        await intermediateStream.DecompressStream(fileData, response.Headers.ContentEncoding.ContainsInvariant("gzip") ? ECompressionType.Gzip : ECompressionType.Deflate);
+                        await intermediateStream.DecompressStream(fileData, response.Headers.ContentEncoding.ContainsInvariant("gzip") ? ECompressionType.Gzip : ECompressionType.Deflate, cancellationToken: cancellationToken);
                         //await decompressedStream.CopyToAsync(fileData).ConfigureAwait(false);
                     }
                     else
                     {
-                        await responseStream.CopyToAsync(fileData).ConfigureAwait(false);
+                        await responseStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
                     }
-                    await fileData.FlushAsync().ConfigureAwait(false);
+                    await fileData.FlushAsync(cancellationToken).ConfigureAwait(false);
                     fileData.Position = 0;
                 }
             }
@@ -137,8 +137,8 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
             }
             else
             {
-                logger.LogTrace(awsEx, "{msg}", $"Unable to get file {fileName.UrlEncodeReadable()} from {bucketName.UrlEncodeReadable()} bucket in {awsEx.GetLocationOfException()}");
-                logger.LogWarning("{msg}", $"Unable to get file {fileName.UrlEncodeReadable()} from {bucketName.UrlEncodeReadable()} bucket in {awsEx.GetLocationOfException()}");
+                logger.LogTrace(awsEx, "{msg}", $"Unable to get file {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket in {awsEx.GetLocationOfException()}");
+                logger.LogWarning("{msg}", $"Unable to get file {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket in {awsEx.GetLocationOfException()}");
             }
         }
         catch (Exception ex)
@@ -154,15 +154,15 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="fileName">Name of the file to delete from the S3 bucket</param>
     /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
     /// <returns>True if file was deleted successfully</returns>
-    public async Task<bool> DeleteS3File(string bucketName, string fileName, ConcurrentDictionary<string, bool>? validatedBuckets = null)
+    public async Task<bool> DeleteS3File(string bucketName, string fileName, ConcurrentDictionary<string, bool>? validatedBuckets = null, CancellationToken cancellationToken = default)
     {
         bool success = false;
         try
         {
             validatedBuckets ??= ValidatedBuckets;
-            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false) && await S3FileExists(bucketName, fileName).ConfigureAwait(false))
+            if (!fileName.IsNullOrWhiteSpace() && await IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false) && await S3FileExists(bucketName, fileName, cancellationToken: cancellationToken).ConfigureAwait(false))
             {
-                await s3Client.DeleteObjectAsync(bucketName, fileName).ConfigureAwait(false);
+                await s3Client.DeleteObjectAsync(bucketName, fileName, cancellationToken).ConfigureAwait(false);
                 success = true;
             }
         }
@@ -170,7 +170,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
         {
             if (awsEx.StatusCode == HttpStatusCode.NotFound)
             {
-                logger.LogWarning("{msg}", $"{fileName.UrlEncodeReadable()} not found for deletion");
+                logger.LogWarning("{msg}", $"{fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} not found for deletion");
             }
             else
             {
@@ -191,7 +191,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="fileName">Name of the file to look for in the S3 bucket</param>
     /// <param name="versionId">Optional: Version ID for the file being searched for</param>
     /// <returns>True if the file exists within the given S3 bucket</returns>
-    public async Task<bool> S3FileExists(string bucketName, string fileName, string? versionId = null)
+    public async Task<bool> S3FileExists(string bucketName, string fileName, string? versionId = null, CancellationToken cancellationToken = default)
     {
         bool success = false;
         try
@@ -205,7 +205,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                     VersionId = !versionId.IsNullOrEmpty() ? versionId : null
                 };
 
-                GetObjectMetadataResponse? response = await s3Client.GetObjectMetadataAsync(request).ConfigureAwait(false);
+                GetObjectMetadataResponse? response = await s3Client.GetObjectMetadataAsync(request, cancellationToken).ConfigureAwait(false);
                 success = response?.HttpStatusCode == HttpStatusCode.OK;
             }
         }
@@ -229,7 +229,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="bucketName">Name of the S3 bucket to get file list from</param>
     /// <param name="maxKeysPerQuery">Number of records to return per request</param>
     /// <returns>List containing the names of every file within the given S3 bucket</returns>
-    public async Task<List<string>?> GetAllS3BucketFiles(string bucketName, int maxKeysPerQuery = 1000)
+    public async Task<List<string>?> GetAllS3BucketFiles(string bucketName, int maxKeysPerQuery = 1000, CancellationToken cancellationToken = default)
     {
         List<string> fileNames = [];
         try
@@ -245,7 +245,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
 
                 do
                 {
-                    response = await s3Client.ListObjectsV2Async(request).ConfigureAwait(false);
+                    response = await s3Client.ListObjectsV2Async(request, cancellationToken).ConfigureAwait(false);
                     fileNames.AddRange(response?.S3Objects.ConvertAll(x => x.Key) ?? []);
                     request.ContinuationToken = response?.NextContinuationToken;
                 } while (response?.IsTruncated ?? false);

@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
@@ -51,14 +50,15 @@ public static partial class Common
 
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-    private const int MaxCellWidthInExcelUnits = 65280;
-
     /// <summary>
     /// Checks if cell is empty
     /// </summary>
     /// <param name="cell">Cell to check if it is empty</param>
     /// <returns>True if cell is empty</returns>
-    public static bool IsCellEmpty(this ICell cell) { return cell.GetStringValue().IsNullOrWhiteSpace(); }
+    public static bool IsCellEmpty(this ICell cell)
+    {
+        return cell.GetStringValue().IsNullOrWhiteSpace();
+    }
 
     /// <summary>
     /// Get ICell offset from cellReference
@@ -156,7 +156,9 @@ public static partial class Common
     /// <param name="colName">Column name of the column to find the last populated row in</param>
     /// <returns>0 based index of the last row with a non-blank value</returns>
     public static int GetLastPopulatedRowInColumn(this ISheet ws, string colName)
-    { return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber()); }
+    {
+        return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber());
+    }
 
     /// <summary>
     /// Get ICell offset from the cell with named reference cellName
@@ -271,7 +273,10 @@ public static partial class Common
     /// <param name="row">Row to create cell in</param>
     /// <param name="columnIndex">0 based column index of the cell to create</param>
     /// <returns>ICell object of the cell that was created</returns>
-    public static ICell CreateCell(this IRow row, int columnIndex) { return row.CreateCell(columnIndex); }
+    public static ICell CreateCell(this IRow row, int columnIndex)
+    {
+        return row.CreateCell(columnIndex);
+    }
 
     /// <summary>
     /// Writes an excel file to the specified path
@@ -584,211 +589,6 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Generates a simple excel file containing the passed in data in a tabular format
-    /// </summary>
-    /// <typeparam name="T">Type of data inside of list to be inserted into the workbook</typeparam>
-    /// <param name="data">Data to be inserted into the workbook</param>
-    /// <param name="wb">Workbook to insert the data into</param>
-    /// <param name="ws">Worksheet to insert the data into</param>
-    /// <param name="createTable">Turn the output into an Excel table</param>
-    /// <param name="tableName">Name of the table when createTable is true</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>True if excel file was created successfully</returns>
-    public static bool ExcelExport<T>(this IEnumerable<T> data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
-    {
-        skipColumnNames ??= [];
-        try
-        {
-            if (data?.Any() == true)
-            {
-                ICellStyle headerStyle = wb.GetStandardCellStyle(EStyle.Header);
-                ICellStyle bodyStyle = wb.GetStandardCellStyle(EStyle.Body);
-
-                int x = 0;
-                int y = 0;
-
-                Dictionary<int, int> maxColumnWidths = [];
-                List<string> columnNames = [];
-
-                PropertyInfo[] props = typeof(T).GetProperties().Where(x => !skipColumnNames.AnyFast() || !skipColumnNames.ContainsInvariant(x.Name)).ToArray();
-                foreach (PropertyInfo prop in props)
-                {
-                    //((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
-                    ICell? c = ws.GetCellFromCoordinates(x, y);
-                    if (c != null)
-                    {
-                        c.SetCellValue(prop.Name);
-                        c.CellStyle = headerStyle;
-                        columnNames.Add(prop.Name);
-                    }
-                    maxColumnWidths[x] = (prop.Name.Length + 6) * 256;
-                    x++;
-                }
-                x = 0;
-                y++;
-
-                foreach (T item in data)
-                {
-                    foreach (PropertyInfo prop in props)
-                    {
-                        object value = prop.GetValue(item) ?? string.Empty;
-                        ICell? c = ws.GetCellFromCoordinates(x, y);
-                        if (c != null)
-                        {
-                            c.SetCellValue(value.ToString());
-                            c.CellStyle = bodyStyle;
-                            int newVal = (value.ToString()?.Length ?? 1 + 6) * 256;
-                            if (maxColumnWidths[x] < newVal)
-                            {
-                                maxColumnWidths[x] = newVal;
-                            }
-                        }
-                        x++;
-                    }
-                    x = 0;
-                    y++;
-                }
-
-                if (!createTable)
-                {
-                    ws.SetAutoFilter(new(0, 0, 0, props.Length - 1));
-                }
-                else
-                {
-                    wb.XssfWorkbook.CreateTable(ws.SheetName, tableName, 0, props.Length - 1, 0, y - 1, columnNames);
-                }
-
-                try
-                {
-                    for (int i = 0; i < props.Length; i++)
-                    {
-                        //ws.AutoSizeColumn(x, true);
-                        ws.SetColumnWidth(x, maxColumnWidths[x] <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] : MaxCellWidthInExcelUnits);
-                        x++;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfException()}");
-                    logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
-                }
-            }
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Generates a simple excel file containing the passed in data in a tabular format
-    /// </summary>
-    /// <param name="data">Data as DataTable to be inserted into the workbook</param>
-    /// <param name="wb">Workbook to insert the data into</param>
-    /// <param name="ws">Worksheet to insert the data into</param>
-    /// <param name="createTable">Turn the output into an Excel table</param>
-    /// <param name="tableName">Name of the table when createTable is true</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>True if excel file was created successfully</returns>
-    public static bool ExcelExport(this DataTable data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
-    {
-        skipColumnNames ??= [];
-        try
-        {
-            if (data?.Rows.Count > 0)
-            {
-                ICellStyle headerStyle = wb.GetStandardCellStyle(EStyle.Header);
-                ICellStyle bodyStyle = wb.GetStandardCellStyle(EStyle.Body);
-
-                int x = 0;
-                int y = 0;
-
-                List<int> skipColumns = [];
-                Dictionary<int, int> maxColumnWidths = [];
-                List<string> columnNames = [];
-                foreach (DataColumn column in data.Columns)
-                {
-                    if (!skipColumnNames.ContainsInvariant(column.ColumnName))
-                    {
-                        ICell? c = ws.GetCellFromCoordinates(x, y);
-                        if (c != null)
-                        {
-                            c.SetCellValue(column.ColumnName);
-                            c.CellStyle = headerStyle;
-                            columnNames.Add(column.ColumnName);
-                        }
-                        maxColumnWidths.Add(x, (column.ColumnName.Length + 6) * 256);
-                    }
-                    else
-                    {
-                        skipColumns.Add(x);
-                    }
-                    x++;
-                }
-
-                x = 0;
-                y++;
-
-                foreach (DataRow row in data.Rows)
-                {
-                    foreach (object? value in row.ItemArray)
-                    {
-                        if (value != null && !skipColumns.Contains(x))
-                        {
-                            ICell? c = ws.GetCellFromCoordinates(x, y);
-                            if (c != null)
-                            {
-                                c.SetCellValue(value.ToString());
-                                c.CellStyle = bodyStyle;
-                                int newVal = (value.ToString()?.Length ?? 1 + 6) * 256;
-                                if (maxColumnWidths[x] < newVal)
-                                {
-                                    maxColumnWidths[x] = newVal;
-                                }
-                            }
-                        }
-                        x++;
-                    }
-                    x = 0;
-                    y++;
-                }
-
-                if (!createTable)
-                {
-                    ws.SetAutoFilter(new(0, 0, 0, data.Columns.Count - 1));
-                }
-                else
-                {
-                    wb.XssfWorkbook.CreateTable(ws.SheetName, tableName, 0, data.Columns.Count - 1, 0, y - 1, columnNames);
-                }
-
-                try
-                {
-                    for (int i = 0; i < data.Columns.Count; i++)
-                    {
-                        //ws.AutoSizeColumn(x, true);
-                        ws.SetColumnWidth(x, maxColumnWidths[x] + (XSSFShape.EMU_PER_PIXEL * 3) <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] + XSSFShape.EMU_PER_PIXEL * 3 : MaxCellWidthInExcelUnits);
-                        x++;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfException()}");
-                    logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
-                }
-            }
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-            return false;
-        }
-    }
-
-    /// <summary>
     /// Create a table for the specified sheet in an XSSFWorkbook
     /// </summary>
     /// <param name="xssfWorkbook">Workbook to add table to</param>
@@ -865,15 +665,15 @@ public static partial class Common
     /// </summary>
     /// <param name="memoryStream">MemoryStream object to write SXSSFWorkbook object to</param>
     /// <param name="wb">XSSFWorkbook object to write into a MemoryStream</param>
-    public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, IWorkbook wb)
+    public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, IWorkbook wb, CancellationToken cancellationToken = default)
     {
         await using MemoryStream tempStream = new();
         wb.Write(tempStream, true);
-        await tempStream.FlushAsync().ConfigureAwait(false);
+        await tempStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         tempStream.Position = 0;
-        await tempStream.CopyToAsync(memoryStream).ConfigureAwait(false);
+        await tempStream.CopyToAsync(memoryStream, cancellationToken).ConfigureAwait(false);
         await tempStream.DisposeAsync().ConfigureAwait(false);
-        await memoryStream.FlushAsync().ConfigureAwait(false);
+        await memoryStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         memoryStream.Position = 0;
     }
 
@@ -884,7 +684,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cellName">Named range to insert image at</param>
     public static void AddImage(this IWorkbook wb, byte[] imageData, string cellName, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages([imageData], [cellName], anchorType); }
+    {
+        wb.AddImages([imageData], [cellName], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -928,7 +730,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, string range, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType); }
+    {
+        wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -937,7 +741,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, CellRangeAddress range, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages(ws, [imageData], [range], anchorType); }
+    {
+        wb.AddImages(ws, [imageData], [range], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -946,7 +752,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cell">Cell in range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, ICell cell, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType); }
+    {
+        wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -1175,7 +983,7 @@ public static partial class Common
     /// <param name="startCellReference">Top left corner containing data to read in A1 notation. Will use A1 if not specified.</param>
     /// <param name="endCellReference">Bottom right cell containing data to read in A1 notation. Will read to first full empty row if not specified.</param>
     /// <returns>DataTable representation of the data read from the excel file</returns>
-    public static DataTable ReadExcelFileToDataTable(this Stream fileStream, bool hasHeaders = true, string? sheetName = null, string? startCellReference = null, string? endCellReference = null)
+    public static DataTable ReadExcelFileToDataTable(this Stream fileStream, bool hasHeaders = true, string? sheetName = null, string? startCellReference = null, string? endCellReference = null, CancellationToken cancellationToken = default)
     {
         DataTable dataTable = new();
 
@@ -1297,6 +1105,7 @@ public static partial class Common
 
                             while (rowIsNotNull)
                             {
+                                cancellationToken.ThrowIfCancellationRequested();
                                 rowIsNotNull = false;
 
                                 string?[] newRowData = new string?[(int)endColIndex! + 1 - startColIndex];
@@ -1335,7 +1144,7 @@ public static partial class Common
     /// <param name="fileStream">Stream of Excel file being read</param>
     /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
     /// <returns>DataTable object containing the data read from Excel stream</returns>
-    public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null)
+    public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null, CancellationToken cancellationToken = default)
     {
         DataTable dataTable = new();
 
@@ -1383,6 +1192,7 @@ public static partial class Common
                     //Get body data
                     for (int i = table.StartRowIndex + 1; i < table.EndRowIndex + 1; i++)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         string?[] newRowData = new string?[table.EndColIndex + 1 - table.StartColIndex];
 
                         for (int n = table.StartColIndex; n < table.EndColIndex + 1; n++)
@@ -1408,7 +1218,10 @@ public static partial class Common
     /// </summary>
     /// <param name="fileStream">Stream representation of a file</param>
     /// <returns>True if stream is an XLSX file</returns>
-    public static bool IsXlsx(this Stream fileStream) { return DocumentFactoryHelper.HasOOXMLHeader(fileStream); }
+    public static bool IsXlsx(this Stream fileStream)
+    {
+        return DocumentFactoryHelper.HasOOXMLHeader(fileStream);
+    }
 
     /// <summary>
     /// Gets whether or not the stream passed in represents an XLSX type file or not
@@ -1416,7 +1229,9 @@ public static partial class Common
     /// <param name="workbook">NPOI Workbook Object</param>
     /// <returns>True if stream is an XLSX file</returns>
     public static bool IsXlsx(this IWorkbook workbook)
-    { return !workbook.GetType().Name.StrComp(typeof(HSSFWorkbook).Name); }
+    {
+        return !workbook.GetType().Name.StrComp(typeof(HSSFWorkbook).Name);
+    }
 
     private static readonly Dictionary<string, HSSFColor> HssfColorCache = [];
 

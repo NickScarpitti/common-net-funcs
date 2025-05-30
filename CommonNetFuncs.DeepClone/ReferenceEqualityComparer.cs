@@ -6,6 +6,7 @@ public sealed class ReferenceEqualityComparer : EqualityComparer<object>
     {
         return ReferenceEquals(x, y);
     }
+
     public override int GetHashCode(object obj)
     {
         if (obj == null)

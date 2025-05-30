@@ -28,7 +28,7 @@ public static class Streams
     /// <param name="stream">Stream to read from</param>
     /// <param name="bufferSize">Buffer size to use when reading from the stream</param>
     /// <returns>Byte array containing contents of stream</returns>
-    public static async ValueTask<byte[]> ReadStreamAsync(this Stream stream, int bufferSize = 4096)
+    public static async ValueTask<byte[]> ReadStreamAsync(this Stream stream, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         // If stream length is known, use it to pre-allocate
         MemoryStream ms = stream.CanSeek ? new MemoryStream(capacity: (int)stream.Length) : new MemoryStream();
@@ -37,9 +37,9 @@ public static class Streams
         try
         {
             int read;
-            while ((read = await stream.ReadAsync(buffer.AsMemory()).ConfigureAwait(false)) > 0)
+            while ((read = await stream.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false)) > 0)
             {
-                await ms.WriteAsync(buffer.AsMemory(0, read)).ConfigureAwait(false);
+                await ms.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
             }
             return ms.ToArray();
         }
@@ -55,19 +55,19 @@ public static class Streams
     /// </summary>
     /// <param name="targetStream">Stream to copy from</param>
     /// <param name="sourceStream">MemoryStream to copy to</param>
-    public static async Task WriteStreamToStream(this Stream targetStream, MemoryStream sourceStream)
+    public static async Task WriteStreamToStream(this Stream targetStream, MemoryStream sourceStream, CancellationToken cancellationToken = default)
     {
         await using MemoryStream tempStream = new();
 
         sourceStream.Position = 0;
 
         //wb.SaveAs(tempStream, options);
-        await tempStream.WriteAsync(sourceStream.ToArray()).ConfigureAwait(false);
-        await tempStream.FlushAsync().ConfigureAwait(false);
+        await tempStream.WriteAsync(sourceStream.ToArray(), cancellationToken).ConfigureAwait(false);
+        await tempStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         tempStream.Position = 0;
-        await tempStream.CopyToAsync(targetStream).ConfigureAwait(false);
+        await tempStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
         await tempStream.DisposeAsync().ConfigureAwait(false);
-        await targetStream.FlushAsync().ConfigureAwait(false);
+        await targetStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         targetStream.Position = 0;
     }
 
@@ -76,19 +76,19 @@ public static class Streams
     /// </summary>
     /// <param name="targetStream">Stream to copy from</param>
     /// <param name="sourceStream">Stream to copy to</param>
-    public static async Task WriteStreamToStream(this Stream targetStream, Stream sourceStream)
+    public static async Task WriteStreamToStream(this Stream targetStream, Stream sourceStream, CancellationToken cancellationToken = default)
     {
         await using MemoryStream tempStream = new();
 
         sourceStream.Position = 0;
 
         //wb.SaveAs(tempStream, options);
-        await tempStream.WriteAsync(await sourceStream.ReadStreamAsync().ConfigureAwait(false)).ConfigureAwait(false);
-        await tempStream.FlushAsync().ConfigureAwait(false);
+        await tempStream.WriteAsync(await sourceStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+        await tempStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         tempStream.Position = 0;
-        await tempStream.CopyToAsync(targetStream).ConfigureAwait(false);
+        await tempStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
         await tempStream.DisposeAsync().ConfigureAwait(false);
-        await targetStream.FlushAsync().ConfigureAwait(false);
+        await targetStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         targetStream.Position = 0;
     }
 }
@@ -214,5 +214,8 @@ public sealed class CountingStream(Stream innerStream) : Stream
         }
     }
 
-    private void ThrowIfDisposed() { ObjectDisposedException.ThrowIf(_disposed, this); }
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+    }
 }

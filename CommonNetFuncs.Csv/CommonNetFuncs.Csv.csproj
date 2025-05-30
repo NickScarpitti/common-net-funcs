@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.3.11</Version>
+    <Version>3.4.0</Version>
     <MinVerTagPrefix>csv-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -43,7 +43,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.4.0" PrivateAssets="all" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

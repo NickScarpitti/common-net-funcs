@@ -1,9 +1,9 @@
 ﻿using System.Data;
 using System.Globalization;
 using CsvHelper;
-using static System.Convert;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Streams;
+using static System.Convert;
 
 namespace CommonNetFuncs.Csv;
 
@@ -18,14 +18,14 @@ public static class CsvHelperExportHelpers
     /// <param name="dataList">Data to be inserted into the CSV file</param>
     /// <param name="memoryStream">Stream to contain the CSV file data</param>
     /// <returns>MemoryStream containing the CSV file data</returns>
-    public static async Task<MemoryStream> ExportListToCsv<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null)
+    public static async Task<MemoryStream> ExportListToCsv<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, CancellationToken cancellationToken = default)
     {
         memoryStream ??= new();
         await using StreamWriter streamWriter = new(memoryStream);
         await using CsvWriter csvWriter = new(streamWriter, CultureInfo.InvariantCulture);
         try
         {
-            await csvWriter.WriteRecordsAsync(dataList).ConfigureAwait(false);
+            await csvWriter.WriteRecordsAsync(dataList, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -49,7 +49,7 @@ public static class CsvHelperExportHelpers
     /// <param name="dataTable">Data to be inserted into the CSV file</param>
     /// <param name="memoryStream">Stream to contain the CSV file data</param>
     /// <returns>MemoryStream containing the CSV file data</returns>
-    public static async Task<MemoryStream> ExportListToCsv(this DataTable dataTable, MemoryStream? memoryStream = null)
+    public static async Task<MemoryStream> ExportListToCsv(this DataTable dataTable, MemoryStream? memoryStream = null, CancellationToken cancellationToken = default)
     {
         memoryStream ??= new();
         await using MemoryStream sourceMemoryStream = new();
@@ -59,6 +59,7 @@ public static class CsvHelperExportHelpers
             //Headers
             for (int i = 0; i < dataTable.Columns.Count; i++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 await streamWriter.WriteAsync(dataTable.Columns[i]?.ToString() ?? string.Empty).ConfigureAwait(false);
                 if (i < dataTable.Columns.Count - 1)
                 {
@@ -68,6 +69,7 @@ public static class CsvHelperExportHelpers
             await streamWriter.WriteAsync(streamWriter.NewLine).ConfigureAwait(false);
             foreach (DataRow row in dataTable.Rows)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 for (int i = 0; i < dataTable.Columns.Count; i++)
                 {
                     if (!IsDBNull(row[i]))
@@ -91,9 +93,9 @@ public static class CsvHelperExportHelpers
                 await streamWriter.WriteAsync(streamWriter.NewLine).ConfigureAwait(false);
             }
 
-            await streamWriter.FlushAsync().ConfigureAwait(false);
+            await streamWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
             sourceMemoryStream.Position = 0;
-            await memoryStream.WriteStreamToStream(sourceMemoryStream).ConfigureAwait(false);
+            await memoryStream.WriteStreamToStream(sourceMemoryStream, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

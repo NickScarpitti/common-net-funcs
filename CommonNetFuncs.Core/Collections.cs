@@ -92,10 +92,11 @@ public static class Collections
     /// </summary>
     /// <param name="dict">Dictionary to add item to</param>
     /// <param name="keyValuePairs">Enumerable of items to add to dictionary</param>
-    public static void AddDictionaryItems<K, V>(this IDictionary<K, V> dict, IEnumerable<KeyValuePair<K, V>> keyValuePairs) where K : notnull
+    public static void AddDictionaryItems<K, V>(this IDictionary<K, V> dict, IEnumerable<KeyValuePair<K, V>> keyValuePairs, CancellationToken cancellationToken = default) where K : notnull
     {
         foreach (KeyValuePair<K, V> keyValuePair in keyValuePairs)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!dict.ContainsKey(keyValuePair.Key))
             {
                 dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
@@ -110,9 +111,13 @@ public static class Collections
     /// <param name="concurrentBag">ConcurrentBag to add list of items to</param>
     /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
     /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
-    public static void AddRangeParallel<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null)
+    public static void AddRangeParallel<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null, CancellationToken cancellationToken = default)
     {
-        Parallel.ForEach(toAdd.SelectNonNull(), parallelOptions ?? new(), item => concurrentBag.Add(item!));
+        Parallel.ForEach(toAdd.SelectNonNull(), parallelOptions ?? new(), item =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            concurrentBag.Add(item!);
+        });
     }
 
     /// <summary>
@@ -121,10 +126,11 @@ public static class Collections
     /// <typeparam name="T">Type of object being added</typeparam>
     /// <param name="concurrentBag">ConcurrentBag to add list of items to</param>
     /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
-    public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd)
+    public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, CancellationToken cancellationToken = default)
     {
         foreach (T? item in toAdd.SelectNonNull())
         {
+            cancellationToken.ThrowIfCancellationRequested();
             concurrentBag.Add(item!);
         }
     }
@@ -135,10 +141,11 @@ public static class Collections
     /// <typeparam name="T">Type of object being added</typeparam>
     /// <param name="hashSet">HashSet to add list of items to</param>
     /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
-    public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T?> toAdd)
+    public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T?> toAdd, CancellationToken cancellationToken = default)
     {
         foreach (T? item in toAdd.SelectNonNull())
         {
+            cancellationToken.ThrowIfCancellationRequested();
             hashSet.Add(item!);
         }
     }
@@ -150,10 +157,11 @@ public static class Collections
     /// <param name="items">Items to have the updateMethod expression performed on</param>
     /// <param name="updateMethod">Lambda expression of the action to perform</param>
     /// <returns>IEnumerable with values updated according to updateMethod</returns>
-    public static IEnumerable<T> SetValue<T>(this IEnumerable<T> items, Action<T> updateMethod)
+    public static IEnumerable<T> SetValue<T>(this IEnumerable<T> items, Action<T> updateMethod, CancellationToken cancellationToken = default)
     {
         foreach (T item in items)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             updateMethod(item);
         }
         return items;
@@ -165,7 +173,7 @@ public static class Collections
     /// <param name="items">Items to have the updateMethod expression performed on</param>
     /// <param name="updateMethod">Lambda expression of the action to perform</param>
     /// <returns>IEnumerable with values updated according to updateMethod</returns>
-    public static List<string?> SetValue(this IEnumerable<string?> items, Func<string?, string?> updateMethod)
+    public static List<string?> SetValue(this IEnumerable<string?> items, Func<string?, string?> updateMethod, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(updateMethod);
@@ -174,6 +182,7 @@ public static class Collections
 
         for (int i = 0; i < list.Count; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             list[i] = updateMethod(list[i]);
         }
         return list.ToList();
@@ -187,10 +196,14 @@ public static class Collections
     /// <param name="updateMethod">Lambda expression of the action to perform</param>
     /// <param name="maxDegreeOfParallelism">Integer setting the max number of parallel operations allowed. Default of -1 allows maximum possible.</param>
     /// <returns>IEnumerable with values updated according to updateMethod</returns>
-    public static IEnumerable<T> SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1)
+    public static IEnumerable<T> SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1, CancellationToken cancellationToken = default)
     {
         ConcurrentBag<T> concurrentBag = new(items);
-        Parallel.ForEach(concurrentBag, new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item => updateMethod(item));
+        Parallel.ForEach(concurrentBag, new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            updateMethod(item);
+        });
         return concurrentBag;
     }
 
@@ -199,7 +212,7 @@ public static class Collections
     /// </summary>
     /// <param name="array">Array to act upon</param>
     /// <param name="action">Action to perform on each element of the array</param>
-    public static void SetValue(this Array array, Action<Array, int[]> action)
+    public static void SetValue(this Array array, Action<Array, int[]> action, CancellationToken cancellationToken = default)
     {
         if (array.LongLength == 0)
         {
@@ -208,6 +221,7 @@ public static class Collections
         ArrayTraverse walker = new(array);
         do
         {
+            cancellationToken.ThrowIfCancellationRequested();
             action(array, walker.Position);
         } while (walker.Step());
     }
@@ -267,7 +281,7 @@ public static class Collections
     /// <param name="partialObject">Object with fields to match with objects in the queryable collection</param>
     /// <param name="ignoreDefaultValues">Ignore default values in retrieval when true</param>
     /// <returns>First object that matches all non-null fields in partialObject</returns>
-    public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject, bool ignoreDefaultValues = false) where T : class
+    public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject, bool ignoreDefaultValues = false, CancellationToken cancellationToken = default) where T : class
     {
         // Get the properties of the object using reflection
         PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -278,6 +292,8 @@ public static class Collections
 
         foreach (PropertyInfo property in properties)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Get the value of the property from the partial object
             object? partialValue = property.GetValue(partialObject);
 
@@ -325,7 +341,7 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ToList<T>(this DataTable table, bool convertShortToBool = false) where T : class, new()
+    public static List<T?> ToList<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         List<T?> list = new(table.Rows.Count);
         if (table.Rows.Count > 0)
@@ -333,6 +349,7 @@ public static class Collections
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
             foreach (DataRow row in table.AsEnumerable())
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 list.Add(row.ParseRowValues<T>(map));
             }
         }
@@ -347,13 +364,13 @@ public static class Collections
     /// <param name="maxDegreeOfParallelism">Parallelism parameter to be used in Parallel.Foreach loop</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ToListParallel<T>(this DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false) where T : class, new()
+    public static List<T?> ToListParallel<T>(this DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         ConcurrentBag<T?> bag = [];
         if (table.Rows.Count > 0)
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
-            Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row => bag.Add(row.ParseRowValues<T>(map)));
+            Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row => bag.Add(row.ParseRowValues<T>(map, cancellationToken)));
         }
         return bag.ToList();
     }
@@ -365,13 +382,13 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static IEnumerable<T?> ToEnumerableParallel<T>(this DataTable table, bool convertShortToBool = false) where T : class, new()
+    public static IEnumerable<T?> ToEnumerableParallel<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         IEnumerable<T?> values = [];
         if (table.Rows.Count > 0)
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
-            values = table.AsEnumerable().AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).Select(row => row.ParseRowValues<T>(map));
+            values = table.AsEnumerable().AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).Select(row => row.ParseRowValues<T>(map, cancellationToken));
         }
         return values;
     }
@@ -383,7 +400,7 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static IEnumerable<T?> ToEnumerableStreaming<T>(this DataTable table, bool convertShortToBool = false) where T : class, new()
+    public static IEnumerable<T?> ToEnumerableStreaming<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         if (table.Rows.Count > 0)
         {
@@ -396,6 +413,7 @@ public static class Collections
 
             foreach (DataRow row in table.AsEnumerable())
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 Task<T?>? tmp = outstandingItem;
 
                 // note: passed in as "state", not captured, so not a foreach/capture bug
@@ -407,19 +425,22 @@ public static class Collections
                     yield return tmp.Result;
                 }
             }
+
             if (outstandingItem != null)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 yield return outstandingItem.Result;
             }
         }
     }
 
-    private static List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> GetDataTableMap<T>(this DataTable table, bool convertShortToBool)
+    private static List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> GetDataTableMap<T>(this DataTable table, bool convertShortToBool, CancellationToken cancellationToken = default)
     {
         List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
         DataRow firstRow = table.Rows[0];
         foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (table.Columns.Contains(propertyInfo.Name))
             {
                 if (convertShortToBool)
@@ -436,12 +457,13 @@ public static class Collections
         return map;
     }
 
-    private static T? ParseRowValues<T>(this DataRow row, IEnumerable<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map) where T : class, new()
+    private static T? ParseRowValues<T>(this DataRow row, IEnumerable<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map, CancellationToken cancellationToken = default) where T : class, new()
     {
         T? item = new();
 
         foreach ((DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort) pair in map)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             object? value = row[pair.DataColumn!];
 
             // Handle issue where DB returns Int16 for boolean values
@@ -510,7 +532,7 @@ public static class Collections
     /// <param name="degreeOfParallelism">Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine)</param>
     /// <returns>A DaataTable representation of the collection that was passed in</returns>
     [return: NotNullIfNotNull(nameof(data))]
-    public static DataTable? ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1) where T : class, new()
+    public static DataTable? ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
     {
         if (data == null)
         {
@@ -518,10 +540,10 @@ public static class Collections
         }
 
         dataTable ??= new();
-        return useExpressionTrees ? data.ToDataTableExpressionTrees(dataTable, useParallel, approximateCount, degreeOfParallelism) : data.ToDataTableReflection(dataTable, useParallel, approximateCount, degreeOfParallelism);
+        return useExpressionTrees ? data.ToDataTableExpressionTrees(dataTable, useParallel, approximateCount, degreeOfParallelism, cancellationToken) : data.ToDataTableReflection(dataTable, useParallel, approximateCount, degreeOfParallelism, cancellationToken);
     }
 
-    private static DataTable ToDataTableReflection<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism) where T : class, new()
+    private static DataTable ToDataTableReflection<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism, CancellationToken cancellationToken = default) where T : class, new()
     {
         PropertyInfo[] properties = typeof(T).GetProperties();
 
@@ -551,6 +573,7 @@ public static class Collections
         {
             foreach (T item in data)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 DataRow row = dataTable.NewRow();
                 foreach (PropertyInfo prop in properties)
                 {
@@ -569,6 +592,7 @@ public static class Collections
             ParallelOptions options = new() { MaxDegreeOfParallelism = (degreeOfParallelism == -1) ? Environment.ProcessorCount : degreeOfParallelism };
             Parallel.ForEach(data, options, () => new List<object[]>(), (item, _, localRows) =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 object[] rowValues = new object[columnCount];
                 for (int i = 0; i < columnCount; i++)
                 {
@@ -589,6 +613,7 @@ public static class Collections
             // Add all rows to the table
             foreach (object[] rowValues in rows)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 dataTable.Rows.Add(rowValues);
             }
         }
@@ -637,7 +662,7 @@ public static class Collections
         }
     }
 
-    private static DataTable ToDataTableExpressionTrees<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism) where T : class, new()
+    private static DataTable ToDataTableExpressionTrees<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism, CancellationToken cancellationToken = default) where T : class, new()
     {
         TypeAccessor typeAccessor = _typeAccessorCache.GetOrAdd(typeof(T), t => new TypeAccessor(t));
 
@@ -669,6 +694,7 @@ public static class Collections
         {
             foreach (T item in data)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 for (int i = 0; i < columnCount; i++)
                 {
                     rowValues[i] = propertyGetters[i](item) ?? System.DBNull.Value;
@@ -685,6 +711,7 @@ public static class Collections
             ParallelOptions options = new() { MaxDegreeOfParallelism = (degreeOfParallelism == -1) ? Environment.ProcessorCount : degreeOfParallelism };
             Parallel.ForEach(data, options, () => new List<object[]>(), (item, _, localRows) =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 object[] rowValues = new object[columnCount];
                 for (int i = 0; i < columnCount; i++)
                 {
@@ -704,6 +731,7 @@ public static class Collections
             // Add all rows to the table
             foreach (object[] rowVals in rows)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 dataTable.Rows.Add(rowVals);
             }
         }

@@ -227,10 +227,8 @@ public static class ExpressionTrees
                     Array.Empty<ParameterExpression>(),
                     Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable), Expression.Break(endLabelForThisLoop)),
                     loopToEncapsulate,
-                    Expression.PostIncrementAssign(indexVariable)
-                ),
-                endLabelForThisLoop
-            );
+                    Expression.PostIncrementAssign(indexVariable)),
+                endLabelForThisLoop);
 
         BinaryExpression lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
         BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
@@ -341,8 +339,7 @@ public static class ExpressionTrees
                 Expression.Constant(field, FieldInfoType),
                 SetValueMethod!,
                 boxingVariable,
-                Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary)
-            );
+                Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary));
 
         expressions.Add(fieldDeepCopyExpression);
     }
@@ -373,9 +370,7 @@ public static class ExpressionTrees
                 Expression.Convert
                 (
                     Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary),
-                    fieldType
-                )
-            );
+                    fieldType));
 
         expressions.Add(fieldDeepCopyExpression);
     }

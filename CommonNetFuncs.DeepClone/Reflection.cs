@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using static CommonNetFuncs.Core.TypeChecks;
 using static CommonNetFuncs.Core.Collections;
+using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.DeepClone;
 

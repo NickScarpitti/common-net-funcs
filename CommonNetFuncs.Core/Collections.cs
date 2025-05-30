@@ -15,7 +15,10 @@ public static class Collections
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="collection">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
-    public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? collection) { return collection?.Count > 0; }
+    public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? collection)
+    {
+        return collection?.Count > 0;
+    }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -23,7 +26,10 @@ public static class Collections
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="list">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
-    public static bool AnyFast<T>([NotNullWhen(true)] this IList<T>? list) { return list?.Count > 0; }
+    public static bool AnyFast<T>([NotNullWhen(true)] this IList<T>? list)
+    {
+        return list?.Count > 0;
+    }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -31,7 +37,10 @@ public static class Collections
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="bag">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
-    public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? bag) { return bag?.Count > 0; }
+    public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? bag)
+    {
+        return bag?.Count > 0;
+    }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -39,7 +48,10 @@ public static class Collections
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="array">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
-    public static bool AnyFast<T>([NotNullWhen(true)] this T[]? array) { return array?.Length > 0; }
+    public static bool AnyFast<T>([NotNullWhen(true)] this T[]? array)
+    {
+        return array?.Length > 0;
+    }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -49,7 +61,9 @@ public static class Collections
     /// <param name="dict">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this IDictionary<TKey, T>? dict) where TKey : notnull
-    { return dict?.Count > 0; }
+    {
+        return dict?.Count > 0;
+    }
 
     /// <summary>
     /// Faster alternative to using the .Any() linq method
@@ -59,7 +73,9 @@ public static class Collections
     /// <param name="dict">Collection being checked for having elements</param>
     /// <returns>True if collection has any objects in it</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this ConcurrentDictionary<TKey, T>? dict) where TKey : notnull
-    { return dict?.Count > 0; }
+    {
+        return dict?.Count > 0;
+    }
 
     /// <summary>
     /// Provides a safe way to add a new Dictionary key without having to worry about duplication
@@ -67,7 +83,9 @@ public static class Collections
     /// <param name="dict">Dictionary to add item to</param>
     /// <param name="keyValuePair">Key value pair to add to dictionary</param>
     public static void AddDictionaryItem<K, V>(this IDictionary<K, V> dict, KeyValuePair<K, V> keyValuePair) where K : notnull
-    { dict.TryAdd(keyValuePair.Key, keyValuePair.Value); }
+    {
+        dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
+    }
 
     /// <summary>
     /// Provides a safe way to add a new Dictionary key without having to worry about duplication
@@ -93,7 +111,9 @@ public static class Collections
     /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
     /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
     public static void AddRangeParallel<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null)
-    { Parallel.ForEach(toAdd.SelectNonNull(), parallelOptions ?? new(), item => concurrentBag.Add(item!)); }
+    {
+        Parallel.ForEach(toAdd.SelectNonNull(), parallelOptions ?? new(), item => concurrentBag.Add(item!));
+    }
 
     /// <summary>
     /// Adds AddRange functionality to ConcurrentBag similar to a list. Skips null items
@@ -201,7 +221,9 @@ public static class Collections
     /// </returns>
     [return: NotNullIfNotNull(nameof(items))]
     public static IEnumerable<string>? SelectNonEmpty(this IEnumerable<string?>? items)
-    { return items?.Where(x => !x.IsNullOrWhiteSpace()).Select(x => x!); }
+    {
+        return items?.Where(x => !x.IsNullOrWhiteSpace()).Select(x => x!);
+    }
 
     /// <summary>
     /// Select only objects that are not null
@@ -210,14 +232,19 @@ public static class Collections
     /// <returns>An enumerable containing all object values from the original collection that are not null</returns>
     [return: NotNullIfNotNull(nameof(items))]
     public static IEnumerable<T>? SelectNonNull<T>(this IEnumerable<T?>? items)
-    { return items?.Where(x => x != null).Select(x => x!); }
+    {
+        return items?.Where(x => x != null).Select(x => x!);
+    }
 
     /// <summary>
     /// Create a single item list from an object
     /// </summary>
     /// <typeparam name="T">Type to use in list</typeparam>
     /// <param name="obj">Object to turn into a single item list</param>
-    public static List<T> SingleToList<T>(this T? obj) { return (obj != null) ? [obj] : []; }
+    public static List<T> SingleToList<T>(this T? obj)
+    {
+        return (obj != null) ? [obj] : [];
+    }
 
     /// <summary>
     /// Create a single item list from an object
@@ -362,7 +389,10 @@ public static class Collections
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool);
             Task<T?>? outstandingItem = null;
-            T? Transform(object x) { return ParseRowValues<T>((DataRow)x, map); }
+            T? Transform(object x)
+            {
+                return ParseRowValues<T>((DataRow)x, map);
+            }
 
             foreach (DataRow row in table.AsEnumerable())
             {
@@ -721,7 +751,9 @@ public static class Collections
     /// <param name="separator">String value used between aggregated values</param>
     /// <returns>List with specified property aggregated</returns>
     public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string propToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
-    { return collection.StringAggProps([propToAgg], separator, distinct, parallel); }
+    {
+        return collection.StringAggProps([propToAgg], separator, distinct, parallel);
+    }
 
     /// <summary>
     /// Performs a string aggregation on the designated properties, using all other properties as the group by
@@ -797,7 +829,10 @@ public static class Collections
         }
     }
 
-    public static int IndexOf<T>(this IEnumerable<T> collection, T value) { return collection.IndexOf(value, null); }
+    public static int IndexOf<T>(this IEnumerable<T> collection, T value)
+    {
+        return collection.IndexOf(value, null);
+    }
 
     public static int IndexOf<T>(this IEnumerable<T> collection, T value, IEqualityComparer<T>? comparer)
     {
@@ -806,7 +841,10 @@ public static class Collections
         return (found == null) ? (-1) : found.i;
     }
 
-    public static bool IsIn<T>(this object value) where T : Enum { return Enum.IsDefined(typeof(T), value); }
+    public static bool IsIn<T>(this object value) where T : Enum
+    {
+        return Enum.IsDefined(typeof(T), value);
+    }
 
     public static HashSet<string> GetCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
     {
@@ -851,7 +889,9 @@ public sealed class ReplaceParameterVisitor(ParameterExpression oldParameter, Pa
     private readonly ParameterExpression _newParameter = newParameter;
 
     protected override Expression VisitParameter(ParameterExpression node)
-    { return (node == _oldParameter) ? _newParameter : node; }
+    {
+        return (node == _oldParameter) ? _newParameter : node;
+    }
 }
 
 public sealed class ArrayTraverse

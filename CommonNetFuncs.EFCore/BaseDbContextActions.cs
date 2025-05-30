@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CommonNetFuncs.Core;
@@ -11,6 +12,17 @@ using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.EFCore;
+
+/// <summary>
+/// Optional configurations for the BaseDbContextActions class
+/// </summary>
+public sealed class FullQueryOptions(bool? splitQueryOverride = null) : NavigationPropertiesOptions
+{
+    /// <summary>
+    /// Optional: Override the database default split query behavior. Only used when running "full" queries that include navigation properties.
+    /// </summary>
+    public bool? SplitQueryOverride { get; set; } = splitQueryOverride;
+}
 
 /// <summary>
 /// Common EF Core interactions with a database. Must be using dependency injection for this class to work.
@@ -36,12 +48,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="primaryKey">Primary key of the record to be returned.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: Used only when running "full" query. If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
-    public Task<T?> GetByKey(bool full, object primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
-        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<T?> GetByKey(bool full, object primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetByKey(primaryKey, queryTimeout) : GetByKeyFull(primaryKey, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetByKey(primaryKey, queryTimeout, cancellationToken) : GetByKeyFull(primaryKey, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -49,8 +61,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// </summary>
     /// <param name="primaryKey">Primary key of the record to be returned.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
-    public async Task<T?> GetByKey(object primaryKey, TimeSpan? queryTimeout = null)
+    public async Task<T?> GetByKey(object primaryKey, TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -61,7 +74,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = await context.Set<T>().FindAsync(primaryKey).ConfigureAwait(false);
+            model = await context.Set<T>().FindAsync(new object?[] { primaryKey }, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -78,11 +91,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="primaryKey">Primary key of the record to be returned.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
-    public async Task<T?> GetByKeyFull(object primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
-        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<T?> GetByKeyFull(object primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
+        fullQueryOptions ??= new();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -92,20 +106,20 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = await GetByKey(primaryKey).ConfigureAwait(false);
+            model = await GetByKey(primaryKey, queryTimeout, cancellationToken).ConfigureAwait(false);
             if (model != null)
             {
-                model = splitQueryOverride switch
+                model = fullQueryOptions.SplitQueryOverride switch
                 {
                     null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
+                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
+                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
                     true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
+                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
+                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
                     _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
+                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
+                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
                 };
             }
         }
@@ -115,14 +129,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = await GetByKey(primaryKey).ConfigureAwait(false);
+                    model = await GetByKey(primaryKey, queryTimeout, cancellationToken).ConfigureAwait(false);
                     if (model != null)
                     {
-                        model = splitQueryOverride switch
+                        model = fullQueryOptions.SplitQueryOverride switch
                         {
-                            null => context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
-                            true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
-                            _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
+                            null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                            true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                            _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
                         };
                     }
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
@@ -159,12 +173,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="primaryKey">Primary key of the record to be returned.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: Used only when running "full" query. If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
-    public Task<T?> GetByKey(bool full, object[] primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
-        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<T?> GetByKey(bool full, object[] primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetByKey(primaryKey, queryTimeout) : GetByKeyFull(primaryKey, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetByKey(primaryKey, queryTimeout, cancellationToken) : GetByKeyFull(primaryKey, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -173,8 +187,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// </summary>
     /// <param name="primaryKey">Primary key of the record to be returned.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
-    public async Task<T?> GetByKey(object[] primaryKey, TimeSpan? queryTimeout = null)
+    public async Task<T?> GetByKey(object[] primaryKey, TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -185,7 +200,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = await context.Set<T>().FindAsync(primaryKey).ConfigureAwait(false);
+            model = await context.Set<T>().FindAsync(primaryKey, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -202,11 +217,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="primaryKey">Primary key of the record to be returned.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
-    public async Task<T?> GetByKeyFull(object[] primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
-        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<T?> GetByKeyFull(object[] primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -216,20 +232,20 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = await GetByKey(primaryKey).ConfigureAwait(false);
+            model = await GetByKey(primaryKey, queryTimeout, cancellationToken).ConfigureAwait(false);
             if (model != null)
             {
-                model = splitQueryOverride switch
+                model = fullQueryOptions.SplitQueryOverride switch
                 {
                     null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
+                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
+                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
                     true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
+                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
+                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
                     _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().GetObjectByPartial(model) :
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
+                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model) :
+                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
                 };
             }
         }
@@ -239,14 +255,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = await GetByKey(primaryKey).ConfigureAwait(false);
+                    model = await GetByKey(primaryKey, queryTimeout, cancellationToken).ConfigureAwait(false);
                     if (model != null)
                     {
-                        model = splitQueryOverride switch
+                        model = fullQueryOptions.SplitQueryOverride switch
                         {
-                            null => context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
-                            true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
-                            _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).GetObjectByPartial(model),
+                            null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                            true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
+                            _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model),
                         };
                     }
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
@@ -283,12 +299,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="full">If true, will run "full" query that includes navigation properties</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T.</returns>
-    public Task<List<T>?> GetAll(bool full, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
-        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<List<T>?> GetAll(bool full, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetAll(queryTimeout, trackEntities) : GetAllFull(queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetAll(queryTimeout, trackEntities, cancellationToken) : GetAllFull(queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -298,12 +314,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="full">If true, will run "full" query that includes navigation properties</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
     /// <returns>All records from the table corresponding to class T.</returns>
-    public IAsyncEnumerable<T>? GetAllStreaming(bool full, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
-        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public IAsyncEnumerable<T>? GetAllStreaming(bool full, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetAllStreaming(queryTimeout, trackEntities) : GetAllFullStreaming(queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetAllStreaming(queryTimeout, trackEntities, cancellationToken) : GetAllFullStreaming(queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -312,14 +327,15 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// </summary>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T.</returns>
-    public async Task<List<T>?> GetAll(TimeSpan? queryTimeout = null, bool trackEntities = false)
+    public async Task<List<T>?> GetAll(TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = GetQueryAll(queryTimeout, trackEntities);
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync().ConfigureAwait(false);
+            model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -334,8 +350,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// </summary>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T.</returns>
-    public async IAsyncEnumerable<T>? GetAllStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false)
+    public async IAsyncEnumerable<T>? GetAllStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = GetQueryAll(queryTimeout, trackEntities);
         IAsyncEnumerable<T>? enumeratedReader = null;
@@ -352,7 +369,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -381,16 +405,16 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// </summary>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T.</returns>
-    public async Task<List<T>?> GetAllFull(TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
-        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<List<T>?> GetAllFull(TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        IQueryable<T> query = GetQueryAllFull(queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T> query = GetQueryAllFull(queryTimeout, false, trackEntities, fullQueryOptions);
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync().ConfigureAwait(false);
+            model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -398,8 +422,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryAllFull(queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync().ConfigureAwait(false);
+                    query = GetQueryAllFull(queryTimeout, true, fullQueryOptions: fullQueryOptions);
+                    model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
                 }
@@ -427,12 +451,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// </summary>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T.</returns>
-    public async IAsyncEnumerable<T>? GetAllFullStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100,
-        List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async IAsyncEnumerable<T>? GetAllFullStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        IQueryable<T> query = GetQueryAllFull(queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T> query = GetQueryAllFull(queryTimeout, false, trackEntities, fullQueryOptions);
         IAsyncEnumerable<T>? enumeratedReader = null;
         try
         {
@@ -444,7 +468,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryAllFull(queryTimeout, splitQueryOverride, true);
+                    query = GetQueryAllFull(queryTimeout, true, fullQueryOptions: fullQueryOptions);
                     enumeratedReader = query.AsAsyncEnumerable();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -469,7 +493,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -479,13 +510,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
     /// </summary>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
     /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
     /// <returns>All records from the table corresponding to class T.</returns>
-    public IQueryable<T> GetQueryAllFull(TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false, bool trackEntities = false,
-        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public IQueryable<T> GetQueryAllFull(TimeSpan? queryTimeout = null, bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -494,26 +525,26 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (!handlingCircularRefException)
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking() :
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore),
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking() :
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking() :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore),
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking() :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking() :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore)
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking() :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions)
             };
         }
         else
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
-                null => context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore),
-                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore),
-                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore)
+                null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions)
             };
         }
     }
@@ -529,12 +560,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="full">If true, will run "full" query that includes navigation properties</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T.</returns>
-    public Task<List<T2>?> GetAll<T2>(bool full, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
-        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<List<T2>?> GetAll<T2>(bool full, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetAll(selectExpression, queryTimeout, trackEntities) : GetAllFull(selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetAll(selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetAllFull(selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -544,12 +577,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="full">If true, will run "full" query that includes navigation properties</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T.</returns>
-    public IAsyncEnumerable<T2>? GetAllStreaming<T2>(bool full, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
-        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public IAsyncEnumerable<T2>? GetAllStreaming<T2>(bool full, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetAllStreaming(selectExpression, queryTimeout, trackEntities) : GetAllFullStreaming(selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetAllStreaming(selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetAllFullStreaming(selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -560,14 +595,15 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T2.</returns>
-    public async Task<List<T2>?> GetAll<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false)
+    public async Task<List<T2>?> GetAll<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default)
     {
         IQueryable<T2> query = GetQueryAll(selectExpression, queryTimeout, trackEntities);
         List<T2>? model = null;
         try
         {
-            model = await query.ToListAsync().ConfigureAwait(false);
+            model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -584,8 +620,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T2.</returns>
-    public async IAsyncEnumerable<T2>? GetAllStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false)
+    public async IAsyncEnumerable<T2>? GetAllStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IQueryable<T2> query = GetQueryAll(selectExpression, queryTimeout, trackEntities);
         IAsyncEnumerable<T2>? enumeratedReader = null;
@@ -602,7 +639,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T2 enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -635,16 +679,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T2.</returns>
-    public async Task<List<T2>?> GetAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
-        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<List<T2>?> GetAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        IQueryable<T2> query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T2> query = GetQueryAllFull(selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         List<T2>? model = null;
         try
         {
-            model = await query.ToListAsync().ConfigureAwait(false);
+            model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -652,8 +697,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync().ConfigureAwait(false);
+                    query = GetQueryAllFull(selectExpression, queryTimeout, true);
+                    model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
                 }
@@ -683,12 +728,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T2.</returns>
-    public async IAsyncEnumerable<T2>? GetAllFullStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
-        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async IAsyncEnumerable<T2>? GetAllFullStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        IQueryable<T2> query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T2> query = GetQueryAllFull(selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         IAsyncEnumerable<T2>? enumeratedReader = null;
         try
         {
@@ -700,7 +746,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryAllFull(selectExpression, queryTimeout, splitQueryOverride, true);
+                    query = GetQueryAllFull(selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
                     enumeratedReader = query.AsAsyncEnumerable();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -725,7 +771,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T2 enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -737,13 +790,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <typeparam name="T2">Class type to return, specified by the selectExpression parameter</typeparam>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
     /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
     /// <returns>All records from the table corresponding to class T2.</returns>
-    public IQueryable<T2> GetQueryAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null,
-        bool handlingCircularRefException = false, bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public IQueryable<T2> GetQueryAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool handlingCircularRefException = false,
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -752,26 +806,26 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (!handlingCircularRefException)
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Select(selectExpression),
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Select(selectExpression),
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Select(selectExpression)
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression)
             };
         }
         else
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
-                null => context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Select(selectExpression),
-                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Select(selectExpression),
-                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Select(selectExpression)
+                null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression)
             };
         }
     }
@@ -788,13 +842,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
-    public Task<List<T>?> GetWithFilter(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
-        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<List<T>?> GetWithFilter(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetWithFilter(whereExpression, queryTimeout, trackEntities) :
-            GetWithFilterFull(whereExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetWithFilter(whereExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetWithFilterFull(whereExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -805,13 +860,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
-    public IAsyncEnumerable<T>? GetWithFilterStreaming(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
-        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public IAsyncEnumerable<T>? GetWithFilterStreaming(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetWithFilterStreaming(whereExpression, queryTimeout, trackEntities) :
-            GetWithFilterFullStreaming(whereExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetWithFilterStreaming(whereExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetWithFilterFullStreaming(whereExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -821,14 +877,15 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
-    public async Task<List<T>?> GetWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null,bool trackEntities = false)
+    public async Task<List<T>?> GetWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = GetQueryWithFilter(whereExpression, queryTimeout, trackEntities);
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync().ConfigureAwait(false);
+            model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -844,8 +901,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
-    public async IAsyncEnumerable<T>? GetWithFilterStreaming(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null,bool trackEntities = false)
+    public async IAsyncEnumerable<T>? GetWithFilterStreaming(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = GetQueryWithFilter(whereExpression, queryTimeout, trackEntities);
         IAsyncEnumerable<T>? enumeratedReader = null;
@@ -862,7 +920,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -893,16 +958,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
-    public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
-        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        IQueryable<T> query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T> query = GetQueryWithFilterFull(whereExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync().ConfigureAwait(false);
+            model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -910,8 +976,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync().ConfigureAwait(false);
+                    query = GetQueryWithFilterFull(whereExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
+                    model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
                 }
@@ -940,12 +1006,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
-    public async IAsyncEnumerable<T>? GetWithFilterFullStreaming(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null,
-        int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async IAsyncEnumerable<T>? GetWithFilterFullStreaming(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        IQueryable<T> query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T> query = GetQueryWithFilterFull(whereExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         IAsyncEnumerable<T>? enumeratedReader = null;
         try
         {
@@ -957,7 +1024,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryWithFilterFull(whereExpression, queryTimeout, splitQueryOverride, true);
+                    query = GetQueryWithFilterFull(whereExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
                     enumeratedReader = query.AsAsyncEnumerable();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -982,7 +1049,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -993,13 +1067,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// </summary>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
     /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
-    public IQueryable<T> GetQueryWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool? splitQueryOverride = null,
-        bool handlingCircularRefException = false, bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public IQueryable<T> GetQueryWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool handlingCircularRefException = false,
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -1008,26 +1083,26 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (!handlingCircularRefException)
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking() :
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression),
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking() :
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking() :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression),
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking() :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking() :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression)
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking() :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression)
             };
         }
         else
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
-                null => context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression),
-                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression),
-                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression)
+                null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression)
             };
         }
     }
@@ -1045,13 +1120,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
-    public Task<List<T2>?> GetWithFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<List<T2>?> GetWithFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities) :
-            GetWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -1063,13 +1139,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
     public IAsyncEnumerable<T2>? GetWithFilterStreaming<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetWithFilterStreaming(whereExpression, selectExpression, queryTimeout, trackEntities) :
-            GetWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetWithFilterStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -1081,14 +1158,15 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
-    public async Task<List<T2>?> GetWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false)
+    public async Task<List<T2>?> GetWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default)
     {
         IQueryable<T2> query = GetQueryWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities);
         List<T2>? model = null;
         try
         {
-            model = await query.ToListAsync().ConfigureAwait(false);
+            model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -1106,8 +1184,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression.</returns>
-    public async IAsyncEnumerable<T2>? GetWithFilterStreaming<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false)
+    public async IAsyncEnumerable<T2>? GetWithFilterStreaming<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
+        bool trackEntities = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IQueryable<T2> query = GetQueryWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities);
         IAsyncEnumerable<T2>? enumeratedReader = null;
@@ -1124,7 +1204,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T2 enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -1160,17 +1247,18 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
-    public async Task<List<T2>?> GetWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<List<T2>?> GetWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        IQueryable<T2> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T2> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         List<T2>? model = null;
 
         try
         {
-            model = await query.ToListAsync().ConfigureAwait(false);
+            model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -1178,8 +1266,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync().ConfigureAwait(false);
+                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
+                    model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
                 }
@@ -1210,12 +1298,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
     public async IAsyncEnumerable<T2>? GetWithFilterFullStreaming<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        IQueryable<T2> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T2> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         IAsyncEnumerable<T2>? enumeratedReader = null;
 
         try
@@ -1228,7 +1317,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                    query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
                     enumeratedReader = query.AsAsyncEnumerable();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -1253,7 +1342,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T2 enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -1266,13 +1362,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
     /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
     /// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
     public IQueryable<T2> GetQueryWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool? splitQueryOverride = null, bool handlingCircularRefException = false, bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+        bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -1281,124 +1378,29 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (!handlingCircularRefException)
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct()
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct()
             };
         }
         else
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
-                null => context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
-                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
-                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct()
+                null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct()
             };
         }
     }
-
-    ///// <summary>
-    ///// Gets all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
-    ///// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
-    ///// </summary>
-    ///// <param name="whereExpression">A linq expression used to filter query results.</param>
-    ///// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-    ///// <param name="queryTimeout">Override the database default for query timeout.</param>
-    ///// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
-    ///// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    ///// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
-    //public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T>> selectExpression, TimeSpan? queryTimeout = null,
-    //    bool trackEntities = false, bool? splitQueryOverride = null)
-    //{
-    //    IQueryable<T> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities);
-    //    List<T>? model = null;
-
-    //    try
-    //    {
-    //        model = await query.ToListAsync();
-    //    }
-    //    catch (InvalidOperationException ioEx)
-    //    {
-    //        if (ioEx.HResult == -2146233079)
-    //        {
-    //            try
-    //            {
-    //                query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
-    //                model = await query.ToListAsync();
-    //                logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
-    //                circularReferencingEntities.TryAdd(typeof(T), true);
-    //            }
-    //            catch (Exception ex2)
-    //            {
-    //                logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-    //                logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
-    //            }
-    //        }
-    //        else
-    //        {
-    //            logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
-    //        }
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-    //    }
-    //    return model;
-    //}
-
-    ///// <summary>
-    ///// Gets query to get all records with navigation properties from the corresponding table that satisfy the conditions of the linq query expression, and then transforms them into the T2 class using the select expression.
-    ///// Navigation properties using newtonsoft.Json [JsonIgnore] attributes will not be included.
-    ///// </summary>
-    ///// <param name="whereExpression">A linq expression used to filter query results.</param>
-    ///// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-    ///// <param name="queryTimeout">Override the database default for query timeout.</param>
-    ///// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
-    ///// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
-    ///// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    ///// <returns>All records from the table corresponding to class T that also satisfy the conditions of linq query expression and have been transformed in to the T2 class with the select expression.</returns>
-    //public IQueryable<T> GetQueryWithFilterFull(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T>> selectExpression, TimeSpan? queryTimeout = null,
-    //    bool? splitQueryOverride = null, bool handlingCircularRefException = false, bool trackEntities = false)
-    //{
-    //    using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-    //    if (queryTimeout != null)
-    //    {
-    //        context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
-    //    }
-
-    //    if (!handlingCircularRefException)
-    //    {
-    //        return splitQueryOverride switch
-    //        {
-    //            null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-    //                context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-    //                context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
-    //            true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-    //                context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-    //                context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
-    //            _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-    //                context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-    //                context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct()
-    //        };
-    //    }
-    //    else
-    //    {
-    //        return splitQueryOverride switch
-    //        {
-    //            null => context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
-    //            true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
-    //            _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct()
-    //        };
-    //    }
-    //}
 
     #endregion
 
@@ -1413,13 +1415,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
     /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
     public Task<List<T>?> GetNavigationWithFilter<T2>(bool full, Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
     {
-        return !full ? GetNavigationWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities) :
-            GetNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetNavigationWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -1431,13 +1433,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
     public IAsyncEnumerable<T>? GetNavigationWithFilterStreaming<T2>(bool full, Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
     {
-        return !full ? GetNavigationWithFilterStreaming(whereExpression, selectExpression, queryTimeout, trackEntities) :
-            GetNavigationWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetNavigationWithFilterStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetNavigationWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -1449,16 +1452,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
     public async Task<List<T>?> GetNavigationWithFilter<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
     {
-        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         List<T>? model = null;
         try
         {
-            model = await query.ToListAsync().ConfigureAwait(false);
+            model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -1466,8 +1470,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
-                    model = await query.ToListAsync().ConfigureAwait(false);
+                    query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
+                    model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T2), true);
                 }
@@ -1498,12 +1502,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
     public async IAsyncEnumerable<T>? GetNavigationWithFilterStreaming<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T2 : class
     {
-        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         IAsyncEnumerable<T>? enumeratedReader = null;
         try
         {
@@ -1515,7 +1520,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                    query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
                     enumeratedReader = query.AsAsyncEnumerable();
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T2), true);
@@ -1540,7 +1545,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -1554,54 +1566,56 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
     public async Task<List<T>?> GetNavigationWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
     {
-        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        fullQueryOptions ??= new FullQueryOptions();
+        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         List<T>? model = null;
         try
         {
             //model = await query.ToListAsync();
             using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-            model = splitQueryOverride switch
+            model = fullQueryOptions.SplitQueryOverride switch
             {
                 //Need to add in navigation properties of the output type since they are not kept in the original query
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
-                    await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
+                    await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+                    await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
-                    await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
+                    await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+                    await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
-                    await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false)
+                    await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+                    await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false)
             };
         }
         catch (InvalidOperationException ioEx)
         {
             if (ioEx.HResult == -2146233079)
             {
-                query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
                 //model = await query.ToListAsync();
                 logger.Warn("{msg}", $"Adding {typeof(T2).Name} to circularReferencingEntities");
                 circularReferencingEntities.TryAdd(typeof(T2), true);
                 try
                 {
                     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-                    model = splitQueryOverride switch
+                    model = fullQueryOptions.SplitQueryOverride switch
                     {
                         //Need to add in navigation properties of the output type since they are not kept in the original query
                         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
-                            await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
+                            await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+                            await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
                         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
-                            await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
+                            await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+                            await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
                         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().ToListAsync().ConfigureAwait(false) :
-                            await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false)
+                            await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+                            await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false)
                     };
                 }
                 catch (InvalidOperationException ioEx2) //Error could be caused by navigation properties of the output type, so need to try that as well
@@ -1613,11 +1627,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                             logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                             circularReferencingEntities.TryAdd(typeof(T), true);
                             await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-                            model = splitQueryOverride switch
+                            model = fullQueryOptions.SplitQueryOverride switch
                             {
-                                null => await query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
-                                true => await query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false),
-                                _ => await query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().ToListAsync().ConfigureAwait(false)
+                                null => await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
+                                true => await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
+                                _ => await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false)
                             };
                         }
                         catch (Exception ex2)
@@ -1654,54 +1668,56 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
     public async IAsyncEnumerable<T>? GetNavigationWithFilterFullStreaming<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T2 : class
     {
-        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        fullQueryOptions ??= new FullQueryOptions();
+        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
         IAsyncEnumerable<T>? enumeratedReader = null;
         try
         {
             //model = await query.ToListAsync();
             using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-            enumeratedReader = splitQueryOverride switch
+            enumeratedReader = fullQueryOptions.SplitQueryOverride switch
             {
                 //Need to add in navigation properties of the output type since they are not kept in the original query
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                    query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                    query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                    query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                    query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                    query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                    query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                    query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable()
+                    query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                    query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable()
             };
         }
         catch (InvalidOperationException ioEx)
         {
             if (ioEx.HResult == -2146233079)
             {
-                query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, splitQueryOverride, true);
+                query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
                 //model = await query.ToListAsync();
                 logger.Warn("{msg}", $"Adding {typeof(T2).Name} to circularReferencingEntities");
                 circularReferencingEntities.TryAdd(typeof(T2), true);
                 try
                 {
                     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-                    enumeratedReader = splitQueryOverride switch
+                    enumeratedReader = fullQueryOptions.SplitQueryOverride switch
                     {
                         //Need to add in navigation properties of the output type since they are not kept in the original query
                         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                            query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                            query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                            query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
                         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                            query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
+                            query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                            query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
                         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                            query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable()
+                            query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+                            query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable()
                     };
                 }
                 catch (InvalidOperationException ioEx2) //Error could be caused by navigation properties of the output type, so need to try that as well
@@ -1713,11 +1729,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                             logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                             circularReferencingEntities.TryAdd(typeof(T), true);
                             await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-                            enumeratedReader = splitQueryOverride switch
+                            enumeratedReader = fullQueryOptions.SplitQueryOverride switch
                             {
-                                null => query.IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
-                                true => query.AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable(),
-                                _ => query.AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Distinct().AsAsyncEnumerable()
+                                null => query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
+                                true => query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
+                                _ => query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable()
                             };
                         }
                         catch (Exception ex2)
@@ -1747,7 +1763,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             await foreach (T enumerator in enumeratedReader)
             {
-                yield return enumerator;
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return enumerator;
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
     }
@@ -1760,13 +1783,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
     /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
     /// <returns>All records from the table corresponding to class T2 that also satisfy the conditions of linq query expression and have been transformed in to the T class with the select expression.</returns>
     public IQueryable<T> GetQueryNavigationWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool? splitQueryOverride = null, bool handlingCircularRefException = false, bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -1775,26 +1799,26 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (!handlingCircularRefException)
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
-                    context.Set<T2>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
-                    context.Set<T2>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
+                    context.Set<T2>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
+                    context.Set<T2>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
-                    context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
-                    context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
+                    context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
+                    context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
-                    context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
-                    context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct()
+                    context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
+                    context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct()
             };
         }
         else
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
-                null => context.Set<T2>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
-                true => context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct(),
-                _ => context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).Distinct()
+                null => context.Set<T2>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
+                true => context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
+                _ => context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct()
             };
         }
     }
@@ -1814,15 +1838,16 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="orderByString">EF Core expression for order by statement to keep results consistent.</param>
     /// <param name="skip">How many records to skip before the ones that should be returned.</param>
     /// <param name="pageSize">How many records to take after the skipped records.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
-    public Task<GenericPagingModel<T2>> GetWithPagingFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+    public Task<GenericPagingModel<T2>> GetWithPagingFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, string? orderByString = null, int skip = 0,
+        int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
     {
-        return !full ? GetWithPagingFilter(whereExpression, selectExpression, orderByString, skip, pageSize, queryTimeout, trackEntities) :
-            GetWithPagingFilterFull(whereExpression, selectExpression, orderByString, skip, pageSize, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetWithPagingFilter(whereExpression, selectExpression, orderByString, skip, pageSize, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetWithPagingFilterFull(whereExpression, selectExpression, orderByString, skip, pageSize, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -1837,9 +1862,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="pageSize">How many records to take after the skipped records.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
     public async Task<GenericPagingModel<T2>> GetWithPagingFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false) where T2 : class
+        string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -1853,9 +1879,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             IQueryable<T2> qModel = !trackEntities ? context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression) : context.Set<T>().Where(whereExpression).Select(selectExpression);
 
             var results = await qModel.OrderBy(orderByString ?? string.Empty).Select(x => new { Entities = x, TotalCount = qModel.Count() })
-                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
+                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
             model.Entities = results.ConvertAll(x => x.Entities);
         }
         catch (Exception ex)
@@ -1878,19 +1904,21 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="pageSize">How many records to take after the skipped records.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
-    public async Task<GenericPagingModel<T2>> GetWithPagingFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+    public async Task<GenericPagingModel<T2>> GetWithPagingFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, string? orderByString = null, int skip = 0,
+        int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
     {
         IQueryable<T2> qModel;
         GenericPagingModel<T2> model = new();
         try
         {
-            qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+            qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, false, trackEntities, fullQueryOptions);
 
-            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
+            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
             model.Entities = results.ConvertAll(x => x.Entities);
         }
         catch (InvalidOperationException ioEx)
@@ -1899,10 +1927,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, splitQueryOverride, true);
-                    var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
+                    qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, true, fullQueryOptions: fullQueryOptions);
+                    var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-                    model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
+                    model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
                     model.Entities = results.ConvertAll(x => x.Entities);
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
@@ -1934,13 +1962,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="orderByString">EF Core expression for order by statement to keep results consistent.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
     /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
     /// <returns>The query to get the records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
     public IQueryable<T2> GetQueryPagingWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, string? orderByString,
-        TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false, bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2: class
+        TimeSpan? queryTimeout = null, bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -1949,26 +1978,26 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (!handlingCircularRefException)
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression)
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression)
             };
         }
         else
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
-                null => context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
-                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
-                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression)
+                null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression)
             };
         }
     }
@@ -1988,15 +2017,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
     /// <param name="skip">How many records to skip before the ones that should be returned.</param>
     /// <param name="pageSize">How many records to take after the skipped records.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
     public Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
     {
-        return !full ? GetWithPagingFilter(whereExpression, selectExpression, ascendingOrderEpression, skip, pageSize, queryTimeout, trackEntities) :
-            GetWithPagingFilterFull(whereExpression, selectExpression, ascendingOrderEpression, skip, pageSize, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetWithPagingFilter(whereExpression, selectExpression, ascendingOrderEpression, skip, pageSize, queryTimeout, trackEntities, cancellationToken) :
+            GetWithPagingFilterFull(whereExpression, selectExpression, ascendingOrderEpression, skip, pageSize, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -2012,9 +2043,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="pageSize">How many records to take after the skipped records.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
     public async Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false) where T2 : class
+        Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -2029,9 +2061,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
                 context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression);
 
             var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() })
-                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
+                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
             model.Entities = results.ConvertAll(x => x.Entities);
         }
         catch (Exception ex)
@@ -2054,19 +2086,22 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="pageSize">How many records to take after the skipped records.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
     public async Task<GenericPagingModel<T2>> GetWithPagingFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null,
+        CancellationToken cancellationToken = default) where T2 : class
     {
         IQueryable<T2> qModel;
         GenericPagingModel<T2> model = new();
         try
         {
-            qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, splitQueryOverride, false, trackEntities, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+            qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, false, trackEntities, fullQueryOptions);
 
-            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
+            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
+            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
             model.Entities = results.ConvertAll(x => x.Entities);
         }
         catch (InvalidOperationException ioEx)
@@ -2075,10 +2110,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, splitQueryOverride, true);
-                    var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync().ConfigureAwait(false);
+                    qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
+                    var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-                    model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync().ConfigureAwait(false);
+                    model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
                     model.Entities = results.ConvertAll(x => x.Entities);
 
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
@@ -2111,13 +2146,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
     /// <param name="handlingCircularRefException">If handling InvalidOperationException where .AsNoTracking() can't be used</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
     /// <returns>The query to get the records specified by the skip and take parameters from the table corresponding to class T that also satisfy the conditions of linq query expression, which are converted to T2.</returns>
     public IQueryable<T2> GetQueryPagingWithFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderEpression,
-        TimeSpan? queryTimeout = null, bool? splitQueryOverride = null, bool handlingCircularRefException = false, bool trackEntities = false, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T2 : class
+        TimeSpan? queryTimeout = null, bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -2126,26 +2162,26 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (!handlingCircularRefException)
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression)
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
+                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression)
             };
         }
         else
         {
-            return splitQueryOverride switch
+            return fullQueryOptions.SplitQueryOverride switch
             {
-                null => context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
-                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
-                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression)
+                null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
+                true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
+                _ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression)
             };
         }
     }
@@ -2161,13 +2197,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>First record from the table corresponding to class T with or without navigation properties that also satisfies the conditions of the linq query expression.</returns>
-    public Task<T?> GetOneWithFilter(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null,
-    bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<T?> GetOneWithFilter(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetOneWithFilter(whereExpression, queryTimeout, trackEntities) :
-            GetOneWithFilterFull(whereExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetOneWithFilter(whereExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetOneWithFilterFull(whereExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -2178,7 +2215,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
     /// <returns>First record from the table corresponding to class T that also satisfy the conditions of the linq query expression.</returns>
-    public async Task<T?> GetOneWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = true)
+    public async Task<T?> GetOneWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -2189,7 +2226,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = trackEntities ? await context.Set<T>().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false) : await context.Set<T>().AsNoTracking().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false);
+            model = trackEntities ? await context.Set<T>().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
+                await context.Set<T>().AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2205,10 +2243,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>First record from the table corresponding to class T with its navigation properties that also satisfies the conditions of the linq query expression.</returns>
-    public async Task<T?> GetOneWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<T?> GetOneWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>();
         if (queryTimeout != null)
         {
@@ -2218,17 +2259,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = splitQueryOverride switch
+            model = fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).AsNoTracking().FirstOrDefaultAsync(whereExpression).ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2237,11 +2278,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = splitQueryOverride switch
+                    model = fullQueryOptions.SplitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).FirstOrDefaultAsync(whereExpression).ConfigureAwait(false),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2276,13 +2317,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>First record from the table corresponding to class T with or without navigation properties that also satisfies the conditions of the linq query expression and has been transformed into the T2 class.</returns>
-    public Task<T2?> GetOneWithFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<T2?> GetOneWithFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetOneWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities) :
-            GetOneWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetOneWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetOneWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -2293,8 +2335,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>First record from the table corresponding to class T that also satisfy the conditions of the linq query expression that has been transformed into the T2 class with the select expression.</returns>
-    public async Task<T2?> GetOneWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = true)
+    public async Task<T2?> GetOneWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -2305,8 +2348,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T2? model = default;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false) :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false);
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                await context.Set<T>().AsNoTracking().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2324,11 +2367,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>First record from the table corresponding to class T with its navigation properties that also satisfies the conditions of the linq query expression and has been transformed into the T2 class.</returns>
-    public async Task<T2?> GetOneWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<T2?> GetOneWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -2338,17 +2383,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T2? model = default;
         try
         {
-            model = splitQueryOverride switch
+            model = fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2357,11 +2402,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = splitQueryOverride switch
+                    model = fullQueryOptions.SplitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2396,13 +2441,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="descendingOrderEpression">A linq expression used to order the query results with before taking the top result</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The record that contains the maximum value according to the ascending order expression with or without navigation properties</returns>
-    public Task<T?> GetMaxByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<T?> GetMaxByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetMaxByOrder(whereExpression, descendingOrderEpression, queryTimeout, trackEntities) :
-            GetMaxByOrderFull(whereExpression, descendingOrderEpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetMaxByOrder(whereExpression, descendingOrderEpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetMaxByOrderFull(whereExpression, descendingOrderEpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -2414,7 +2460,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
     /// <returns>The record that contains the maximum value according to the ascending order expression</returns>
-    public async Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true)
+    public async Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -2425,8 +2471,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false) :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false);
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2444,11 +2490,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="descendingOrderEpression">A linq expression used to order the query results with before taking the top result</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The record that contains the maximum value according to the ascending order expression with it's navigation properties</returns>
-    public async Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -2458,17 +2506,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = splitQueryOverride switch
+            model = fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2477,11 +2525,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = splitQueryOverride switch
+                    model = fullQueryOptions.SplitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2516,13 +2564,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="ascendingOrderEpression">A linq expression used to order the query results with before taking the top result</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The record that contains the minimum value according to the ascending order expression with or without navigation properties</returns>
-    public Task<T?> GetMinByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<T?> GetMinByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetMinByOrder(whereExpression, ascendingOrderEpression, queryTimeout, trackEntities) :
-            GetMinByOrderFull(whereExpression, ascendingOrderEpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetMinByOrder(whereExpression, ascendingOrderEpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetMinByOrderFull(whereExpression, ascendingOrderEpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -2533,8 +2582,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="ascendingOrderEpression">A linq expression used to order the query results with before taking the top result</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The record that contains the minimum value according to the ascending order expression</returns>
-    public async Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true)
+    public async Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -2545,8 +2595,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false) :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false);
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2564,11 +2614,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="ascendingOrderEpression">A linq expression used to order the query results with before taking the top result</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The record that contains the minimum value according to the ascending order expression with it's navigation properties</returns>
-    public async Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -2578,17 +2630,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T? model = null;
         try
         {
-            model = splitQueryOverride switch
+            model = fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync().ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2597,11 +2649,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = splitQueryOverride switch
+                    model = fullQueryOptions.SplitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync().ConfigureAwait(false),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2636,13 +2688,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="maxExpression">A linq expression used in the .Max() function</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The maximum object specified by the max expression with or without navigation properties</returns>
-    public Task<T2?> GetMax<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<T2?> GetMax<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetMax(whereExpression, maxExpression, queryTimeout, trackEntities) :
-            GetMaxFull(whereExpression, maxExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetMax(whereExpression, maxExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetMaxFull(whereExpression, maxExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -2653,8 +2706,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="maxExpression">A linq expression used in the .Max() function</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The maximum value specified by the max expression</returns>
-    public async Task<T2?> GetMax<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null, bool trackEntities = true)
+    public async Task<T2?> GetMax<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -2665,7 +2719,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T2? model = default;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false) : await context.Set<T>().AsNoTracking().Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false);
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) : await context.Set<T>().AsNoTracking().Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2682,11 +2736,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="maxExpression">A linq expression used in the .Max() function</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The maximum object specified by the min expression</returns>
-    public async Task<T2?> GetMaxFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<T2?> GetMaxFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -2696,17 +2752,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T2? model = default;
         try
         {
-            model = splitQueryOverride switch
+            model = fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression).ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression).ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression).ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2715,11 +2771,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = splitQueryOverride switch
+                    model = fullQueryOptions.SplitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MaxAsync(maxExpression).ConfigureAwait(false),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2754,13 +2810,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="minExpression">A linq expression used in the .Min() function</param>
     /// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
     /// <param name="trackEntities">Optional: If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Optional: Used only when running "full" query. Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Used only when running "full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The minimum object specified by the min expression with or without navigation properties</returns>
-    public Task<T2?> GetMin<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public Task<T2?> GetMin<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
-        return !full ? GetMin(whereExpression, minExpression, queryTimeout, trackEntities) :
-            GetMinFull(whereExpression, minExpression, queryTimeout, trackEntities, splitQueryOverride, maxNavigationDepth, navPropAttributesToIgnore, useCaching);
+        return !full ? GetMin(whereExpression, minExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+            GetMinFull(whereExpression, minExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
     }
 
     /// <summary>
@@ -2771,16 +2828,21 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="minExpression">A linq expression used in the .Min() function</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The minimum value specified by the min expression</returns>
-    public async Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null, bool trackEntities = true)
+    public async Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-        if (queryTimeout != null) { context.Database.SetCommandTimeout((TimeSpan)queryTimeout); }
+        if (queryTimeout != null)
+        {
+            context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+        }
 
         T2? model = default;
         try
         {
-            model = trackEntities ? await context.Set<T>().Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false) : await context.Set<T>().AsNoTracking().Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false);
+            model = trackEntities ? await context.Set<T>().Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
+                await context.Set<T>().AsNoTracking().Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -2797,11 +2859,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="minExpression">A linq expression used in the .Min() function</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
     /// <param name="trackEntities">If true, entities will be tracked in memory. Default is false for "Full" queries, and queries that return more than one entity.</param>
-    /// <param name="splitQueryOverride">Override for the default query splitting behavior of the database context. Value of true will split queries, false will prevent splitting.</param>
+    /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The minimum object specified by the min expression</returns>
-    public async Task<T2?> GetMinFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, bool? splitQueryOverride = null, int maxNavigationDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
+    public async Task<T2?> GetMinFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
+        fullQueryOptions ??= new FullQueryOptions();
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
@@ -2811,17 +2875,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         T2? model = default;
         try
         {
-            model = splitQueryOverride switch
+            model = fullQueryOptions.SplitQueryOverride switch
             {
                 null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MinAsync(minExpression).ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
                 true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MinAsync(minExpression).ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
                 _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).AsNoTracking().MinAsync(minExpression).ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
+                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
             };
         }
         catch (InvalidOperationException ioEx)
@@ -2830,11 +2894,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             {
                 try
                 {
-                    model = splitQueryOverride switch
+                    model = fullQueryOptions.SplitQueryOverride switch
                     {
-                        null => await context.Set<T>().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
-                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
-                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, maxNavigationDepth, navPropAttributesToIgnore).Where(whereExpression).MinAsync(minExpression).ConfigureAwait(false),
+                        null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
+                        true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
+                        _ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
                     };
                     logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
                     circularReferencingEntities.TryAdd(typeof(T), true);
@@ -2864,8 +2928,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// </summary>
     /// <param name="whereExpression">A linq expression used to filter query results.</param>
     /// <param name="queryTimeout">Override the database default for query timeout.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>The number of records that satisfy the where expression.</returns>
-    public async Task<int> GetCount(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null)
+    public async Task<int> GetCount(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default)
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
@@ -2876,7 +2941,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         int count = 0;
         try
         {
-            count = await context.Set<T>().Where(whereExpression).AsNoTracking().CountAsync().ConfigureAwait(false);
+            count = await context.Set<T>().Where(whereExpression).AsNoTracking().CountAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -3125,5 +3190,6 @@ public sealed class GenericPagingModel<T> where T : class
     }
 
     public List<T> Entities { get; set; }
+
     public int TotalRecords { get; set; }
 }

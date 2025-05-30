@@ -47,7 +47,7 @@ public static class RestHelpersStatic
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
-            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
             result = await HandleResponse<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url, requestOptions.UseNewtonsoftDeserializer, requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         catch (TaskCanceledException tcex)
@@ -100,7 +100,7 @@ public static class RestHelpersStatic
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
-            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
             enumeratedReader = HandleResponseAsync<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url, cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
         }
         catch (TaskCanceledException tcex)
@@ -153,7 +153,7 @@ public static class RestHelpersStatic
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
-            restObject.Response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
             restObject.Result = await HandleResponse<T>(restObject.Response, requestOptions.HttpMethod.ToString(), requestOptions.Url, requestOptions.UseNewtonsoftDeserializer, requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, requestOptions.HttpHeaders, cancellationToken).ConfigureAwait(false);
         }
         catch (TaskCanceledException tcex)
@@ -206,7 +206,7 @@ public static class RestHelpersStatic
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
-            restObject.Response = await client.SendAsync(httpRequestMessage, tokenSource.Token).ConfigureAwait(false) ?? new();
+            restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
             restObject.Result = HandleResponseAsync<T>(restObject.Response, requestOptions.HttpMethod.ToString(), requestOptions.Url, cancellationToken: cancellationToken);
         }
         catch (TaskCanceledException tcex)

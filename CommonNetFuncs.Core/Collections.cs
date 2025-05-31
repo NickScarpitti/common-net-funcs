@@ -3,6 +3,7 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using FastExpressionCompiler;
 using static System.Convert;
 
 namespace CommonNetFuncs.Core;
@@ -603,7 +604,7 @@ public static class Collections
             UnaryExpression convertInstance = Expression.Convert(instance, type);
             MemberExpression propertyAccess = Expression.Property(convertInstance, property);
             UnaryExpression convertProperty = Expression.Convert(propertyAccess, typeof(object));
-            return Expression.Lambda<Func<object, object>>(convertProperty, instance).Compile();
+            return Expression.Lambda<Func<object, object>>(convertProperty, instance).CompileFast();
         }
     }
 

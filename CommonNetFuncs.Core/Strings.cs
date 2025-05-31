@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using FastExpressionCompiler;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -652,7 +653,7 @@ public static partial class Strings
         Type type = typeof(T);
         (Type type, bool recursive) key = (type, recursive);
 
-        Action<T> action = (Action<T>)trimObjectStringsCache.GetOrAdd(key, _ => CreateTrimObjectStringsExpression<T>(recursive).Compile());
+        Action<T> action = (Action<T>)trimObjectStringsCache.GetOrAdd(key, _ => CreateTrimObjectStringsExpression<T>(recursive).CompileFast());
         action(obj);
 
         return obj;
@@ -736,7 +737,7 @@ public static partial class Strings
         Type type = typeof(T);
         (Type type, bool enableTrim, NormalizationForm normalizationForm, bool recursive) key = (type, enableTrim, normalizationForm, recursive);
 
-        Action<T> action = (Action<T>)normalizeObjectStringsCache.GetOrAdd(key, _ => CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive).Compile());
+        Action<T> action = (Action<T>)normalizeObjectStringsCache.GetOrAdd(key, _ => CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive).CompileFast());
         action(obj);
 
         return obj;
@@ -842,7 +843,7 @@ public static partial class Strings
         Type type = typeof(T);
         (Type type, bool recursive) key = (type, recursive);
 
-        Action<T> action = (Action<T>)makeObjectNullNullCache.GetOrAdd(key, _ => CreateMakeObjectNullNullExpression<T>(recursive).Compile());
+        Action<T> action = (Action<T>)makeObjectNullNullCache.GetOrAdd(key, _ => CreateMakeObjectNullNullExpression<T>(recursive).CompileFast());
         action(obj);
 
         return obj;

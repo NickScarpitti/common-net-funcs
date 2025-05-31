@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using FastExpressionCompiler;
 using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.DeepClone;
@@ -76,7 +77,7 @@ public static class ExpressionTrees
                 if (!CompiledCopyFunctionsDictionary.TryGetValue(type, out compiledCopyFunction))
                 {
                     Expression<Func<object, Dictionary<object, object>, object>> uncompiledCopyFunction = CreateCompiledLambdaCopyFunctionForType(type);
-                    compiledCopyFunction = uncompiledCopyFunction.Compile();
+                    compiledCopyFunction = uncompiledCopyFunction.CompileFast();
 
                     Dictionary<Type, Func<object, Dictionary<object, object>, object>> dictionaryCopy = CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
                     dictionaryCopy.Add(type, compiledCopyFunction);
@@ -227,10 +228,8 @@ public static class ExpressionTrees
                     Array.Empty<ParameterExpression>(),
                     Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable), Expression.Break(endLabelForThisLoop)),
                     loopToEncapsulate,
-                    Expression.PostIncrementAssign(indexVariable)
-                ),
-                endLabelForThisLoop
-            );
+                    Expression.PostIncrementAssign(indexVariable)),
+                endLabelForThisLoop);
 
         BinaryExpression lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
         BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
@@ -303,10 +302,7 @@ public static class ExpressionTrees
         return fieldsList.ToArray();
     }
 
-    private static FieldInfo[] GetAllFields(Type type)
-    {
-        return GetAllRelevantFields(type, forceAllFields: true);
-    }
+    private static FieldInfo[] GetAllFields(Type type) { return GetAllRelevantFields(type, forceAllFields: true); }
 
     private static readonly Type FieldInfoType = typeof(FieldInfo);
     private static readonly MethodInfo? SetValueMethod = FieldInfoType.GetMethod("SetValue", [ObjectType, ObjectType]);
@@ -341,8 +337,7 @@ public static class ExpressionTrees
                 Expression.Constant(field, FieldInfoType),
                 SetValueMethod!,
                 boxingVariable,
-                Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary)
-            );
+                Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary));
 
         expressions.Add(fieldDeepCopyExpression);
     }
@@ -373,17 +368,13 @@ public static class ExpressionTrees
                 Expression.Convert
                 (
                     Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary),
-                    fieldType
-                )
-            );
+                    fieldType));
 
         expressions.Add(fieldDeepCopyExpression);
     }
 
     private static bool IsTypeToDeepCopy(this Type? type)
-    {
-        return type.IsClassOtherThanString() || type.IsStructWhichNeedsDeepCopy();
-    }
+    { return type.IsClassOtherThanString() || type.IsStructWhichNeedsDeepCopy(); }
 
     private static bool IsStructWhichNeedsDeepCopy(this Type? type)
     {
@@ -410,14 +401,10 @@ public static class ExpressionTrees
     }
 
     private static bool IsStructWhichNeedsDeepCopy_NoDictionaryUsed(this Type type)
-    {
-        return type.IsStructOtherThanBasicValueTypes() && type.HasInItsHierarchyFieldsWithClasses();
-    }
+    { return type.IsStructOtherThanBasicValueTypes() && type.HasInItsHierarchyFieldsWithClasses(); }
 
     private static bool IsStructOtherThanBasicValueTypes(this Type type)
-    {
-        return type.IsValueType && !type.IsPrimitive && !type.IsEnum && type != typeof(decimal);
-    }
+    { return type.IsValueType && !type.IsPrimitive && !type.IsEnum && type != typeof(decimal); }
 
     private static bool HasInItsHierarchyFieldsWithClasses(this Type type, HashSet<Type>? alreadyCheckedTypes = null)
     {

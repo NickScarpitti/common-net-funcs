@@ -43,7 +43,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.4.0" PrivateAssets="all" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" PrivateAssets="all" />
     <PackageReference Include="Xabe.FFmpeg" Version="6.0.1" />
   </ItemGroup>
 

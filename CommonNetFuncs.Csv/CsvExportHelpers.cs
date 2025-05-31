@@ -1,13 +1,13 @@
 ﻿using System.Data;
 using System.Globalization;
 using CsvHelper;
-using static System.Convert;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Streams;
+using static System.Convert;
 
 namespace CommonNetFuncs.Csv;
 
-public static class CsvHelperExportHelpers
+public static class CsvExportHelpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -21,25 +21,19 @@ public static class CsvHelperExportHelpers
     public static async Task<MemoryStream> ExportListToCsv<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null)
     {
         memoryStream ??= new();
-        await using StreamWriter streamWriter = new(memoryStream);
+        await using StreamWriter streamWriter = new(memoryStream, leaveOpen: true);
         await using CsvWriter csvWriter = new(streamWriter, CultureInfo.InvariantCulture);
         try
         {
             await csvWriter.WriteRecordsAsync(dataList).ConfigureAwait(false);
+            await csvWriter.FlushAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
-        finally
-        {
-            csvWriter.Flush();
-            await csvWriter.DisposeAsync().ConfigureAwait(false);
 
-            streamWriter.Flush();
-            streamWriter.Close();
-            await streamWriter.DisposeAsync().ConfigureAwait(false);
-        }
+        memoryStream.Position = 0;
         return memoryStream;
     }
 

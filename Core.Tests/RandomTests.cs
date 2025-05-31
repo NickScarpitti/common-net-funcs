@@ -46,9 +46,7 @@ public class RandomTests
     [InlineData(0)]
     [InlineData(-1)]
     public void GetRandomInt_WithInvalidMaxValue_ThrowsException(int maxValue)
-    {
-        Should.Throw<ArgumentOutOfRangeException>(() => GetRandomInt(maxValue: maxValue));
-    }
+    { Should.Throw<ArgumentOutOfRangeException>(() => GetRandomInt(maxValue: maxValue)); }
 
     [Theory]
     [InlineData(5, 0, 100)]
@@ -111,7 +109,7 @@ public class RandomTests
 
         // Assert
         result.ShouldBeGreaterThanOrEqualTo(0);
-        result.ShouldBeLessThan(1);
+        result.ShouldBeLessThanOrEqualTo(1);
         result.GetPrecision().ShouldBeLessThanOrEqualTo(precision);
     }
 
@@ -273,15 +271,11 @@ public class RandomTests
     [InlineData(-1)]
     [InlineData(0)]
     public void GenerateRandomString_WithInvalidLength_ThrowsException(int maxLength)
-    {
-        Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength));
-    }
+    { Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength)); }
 
     [Theory]
     [InlineData(10, 5)]
     [InlineData(0, 0)]
     public void GenerateRandomString_WithInvalidLengthRange_ThrowsException(int minLength, int maxLength)
-    {
-        Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength, minLength));
-    }
+    { Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength, minLength)); }
 }

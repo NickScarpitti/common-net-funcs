@@ -1,7 +1,8 @@
-﻿using CommonNetFuncs.Core;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Linq.Expressions;
+using CommonNetFuncs.Core;
+using FastExpressionCompiler;
 
 namespace Core.Tests;
 
@@ -1548,7 +1549,7 @@ public class CollectionsTests
 
         // Act
         Expression<Func<TestClass, bool>>? combinedExpr = Collections.CombineExpressions<TestClass>(expressions);
-        Func<TestClass, bool>? func = combinedExpr?.Compile();
+        Func<TestClass, bool>? func = combinedExpr?.CompileFast();
 
         // Assert
         combinedExpr.ShouldNotBeNull();
@@ -1575,7 +1576,7 @@ public class CollectionsTests
 
         // Act
         Expression<Func<TestClass, bool>>? result = Collections.CombineExpressions(expressions);
-        Func<TestClass, bool>? func = result?.Compile();
+        Func<TestClass, bool>? func = result?.CompileFast();
 
         // Assert
         result.ShouldNotBeNull();
@@ -1667,7 +1668,7 @@ public class CollectionsTests
 
         // Check that the parameter was replaced
         Expression<Func<TestClass, bool>> lambda = Expression.Lambda<Func<TestClass, bool>>(result, newParam);
-        Func<TestClass, bool> func = lambda.Compile();
+        Func<TestClass, bool> func = lambda.CompileFast();
 
         TestClass testObj = new() { Id = 1 };
         func(testObj).ShouldBeTrue();

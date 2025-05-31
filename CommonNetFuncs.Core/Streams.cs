@@ -10,24 +10,6 @@ public static class Streams
     /// <param name="stream">Stream to read from</param>
     /// <param name="bufferSize">Buffer size to use when reading from the stream</param>
     /// <returns>Byte array containing contents of stream</returns>
-    //public static async Task<byte[]> ReadStreamAsync(this Stream stream, int bufferSize = 4096)
-    //{
-    //    int read;
-    //    await using MemoryStream ms = new();
-    //    byte[] buffer = new byte[bufferSize];
-    //    while ((read = await stream.ReadAsync(buffer)) > 0)
-    //    {
-    //        await ms.WriteAsync(buffer.AsMemory(0, read));
-    //    }
-    //    return ms.ToArray();
-    //}
-
-    /// <summary>
-/// Read a stream into a byte array asynchronously
-/// </summary>
-    /// <param name="stream">Stream to read from</param>
-    /// <param name="bufferSize">Buffer size to use when reading from the stream</param>
-    /// <returns>Byte array containing contents of stream</returns>
     public static async ValueTask<byte[]> ReadStreamAsync(this Stream stream, int bufferSize = 4096)
     {
         // If stream length is known, use it to pre-allocate

@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using CommonNetFuncs.Core;
+using FastExpressionCompiler;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
@@ -128,8 +129,8 @@ public static class NavigationProperties
     //}
 
     /// <summary>
-    /// Adds navigation properties onto an EF Core query.
-    /// </summary>
+/// Adds navigation properties onto an EF Core query.
+/// </summary>
     /// <typeparam name="T">The entity to use as the starting point for getting navigation properties.</typeparam>
     /// <param name="query">IQueryable representing the EF core query.</param>
     /// <param name="context">The DBContext being queried against.</param>
@@ -150,7 +151,10 @@ public static class NavigationProperties
     /// <typeparam name="T">The entity to use as the starting point for getting navigation properties.</typeparam>
     /// <param name="context">The context that contains the definition for entity T.</param>
     /// <param name="maxDepth">The maximum number of navigations deep to follow. Default is 100 which should be more than enough to get all navigations in most scenarios.</param>
-    /// <param name="navPropAttributesToIgnore">Optional: The attribute types used to ignore class properties when navigating through the object tree. If null, uses System.Text.Json.Serialization.JsonIgnoreAttribute and Newtonsoft.Json.JsonIgnoreAttribute</param>
+    /// <param name="navPropAttributesToIgnore">
+    /// Optional: The attribute types used to ignore class properties when navigating through the object tree. If null, uses System.Text.Json.Serialization.JsonIgnoreAttribute and
+    /// Newtonsoft.Json.JsonIgnoreAttribute
+    /// </param>
     /// <param name="useCaching">If true, store the results of the GetNavigations operation by entity type so they can be looked up on subsequent calls instead of repeating the discovery process.</param>
     /// <returns>A HashSet of strings containing all of the navigations of entity T that can be directly used as Include statements in an EF Core query.</returns>
     public static HashSet<string> GetNavigations<T>(DbContext context, int maxDepth = 100, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true) where T : class
@@ -166,10 +170,16 @@ public static class NavigationProperties
 
         void TraverseNavigations(Type entityType, Stack<string> currentPath, int depth)
         {
-            if (depth > maxDepth) return;
+            if (depth > maxDepth)
+            {
+                return;
+            }
 
             IEntityType? entityTypeInfo = context.Model.FindEntityType(entityType);
-            if (entityTypeInfo == null) return;
+            if (entityTypeInfo == null)
+            {
+                return;
+            }
 
             foreach (INavigation navigation in entityTypeInfo.GetNavigations())
             {
@@ -192,7 +202,10 @@ public static class NavigationProperties
                 NavigationNode node = new(navigation.Name, targetType);
 
                 // Check for circular reference using both name and type
-                if (!visitedNode.Add(node)) { continue; }
+                if (!visitedNode.Add(node))
+                {
+                    continue;
+                }
 
                 currentPath.Push(navigation.Name);
                 paths.Add(string.Join(".", currentPath.Reverse())); //Reverse order since Stack is LIFO
@@ -256,7 +269,10 @@ public static class NavigationProperties
     /// <param name="context">The context that contains the definition for entity T.</param>
     public static void RemoveNavigationProperties<T>(this T obj, DbContext context) where T : class
     {
-        if (obj == null) return;
+        if (obj == null)
+        {
+            return;
+        }
 
         Action<T> setter = _navigationSetterCache.GetOrAdd(typeof(T), type =>
         {
@@ -284,14 +300,16 @@ public static class NavigationProperties
             // If no valid assignments, return empty action
             if (!assignments.AnyFast())
             {
-                return new Action<object>(_ => { });
+                return new Action<object>(_ =>
+                {
+                });
             }
 
             // Create a block with all assignments
             BlockExpression block = Expression.Block(assignments.SelectNonNull());
 
             // Compile the expression tree into a delegate
-            return Expression.Lambda<Action<object>>(block, parameter).Compile();
+            return Expression.Lambda<Action<object>>(block, parameter).CompileFast();
         });
 
         // Execute the cached setter

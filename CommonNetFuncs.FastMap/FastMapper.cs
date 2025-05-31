@@ -24,7 +24,7 @@ public static class FastMapper
         public override bool Equals(object? obj)
         { return obj is MapperCacheKey mapperCacheKey && Equals(mapperCacheKey); }
 
-        public override int GetHashCode() { return GetHashCode(); }
+        public override int GetHashCode() { return SourceType.GetHashCode() + DestType.GetHashCode(); }
     }
 
     private static readonly ConcurrentDictionary<MapperCacheKey, Delegate> mapperCache = [];

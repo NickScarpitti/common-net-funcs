@@ -25,9 +25,7 @@ public static class DirectQuery
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the database command</returns>
     public static Task<DataTable> GetDataTable(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
-    {
-        return GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
-    }
+    { return GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken); }
 
     /// <summary>
     /// Reads data using into a DataTable object using the provided database connection and command
@@ -127,9 +125,7 @@ public static class DirectQuery
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
     public static Task<UpdateResult> RunUpdateQuery(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
-    {
-        return RunUpdateQueryInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
-    }
+    { return RunUpdateQueryInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken); }
 
     /// <summary>
     /// Execute an update query asynchronously
@@ -270,12 +266,6 @@ public static class DirectQuery
 
             // Create conditional expression: if IsDBNull then default else converted value
             ConditionalExpression assignValue = Expression.Condition(isDbNullCall, Expression.Default(prop.PropertyType), convertedValue);
-            );
-            );
-            );
-            );
-            );
-            );
 
             // Create property binding
             assignments.Add(Expression.Bind(prop, assignValue));
@@ -321,6 +311,12 @@ public static class DirectQuery
         try
         {
             cmd.CommandTimeout = commandTimeoutSeconds;
+            await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using DbDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            Func<IDataReader, T> mapper = CreateMapperDelegate<T>();
+
+            IAsyncEnumerator<T> enumeratedReader = EnumerateReader(reader, mapper, cancellationToken).GetAsyncEnumerator(cancellationToken);
             while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
             {
                 if (!cancellationToken.IsCancellationRequested)
@@ -331,12 +327,6 @@ public static class DirectQuery
                 {
                     yield break; // Exit if cancellation is requested
                 }
-            }
-
-            IAsyncEnumerator<T> enumeratedReader = EnumerateReader(reader, mapper, cancellationToken).GetAsyncEnumerator(cancellationToken);
-            while(await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
-            {
-                yield return enumeratedReader.Current;
             }
         }
         finally

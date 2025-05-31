@@ -10,7 +10,7 @@ public static class Streams
     /// <param name="stream">Stream to read from</param>
     /// <param name="bufferSize">Buffer size to use when reading from the stream</param>
     /// <returns>Byte array containing contents of stream</returns>
-    public static async ValueTask<byte[]> ReadStreamAsync(this Stream stream, int bufferSize = 4096)
+    public static async ValueTask<byte[]> ReadStreamAsync(this Stream stream, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         // If stream length is known, use it to pre-allocate
         MemoryStream ms = stream.CanSeek ? new MemoryStream(capacity: (int)stream.Length) : new MemoryStream();
@@ -196,8 +196,5 @@ public sealed class CountingStream(Stream innerStream) : Stream
         }
     }
 
-    private void ThrowIfDisposed()
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-    }
+    private void ThrowIfDisposed() { ObjectDisposedException.ThrowIf(_disposed, this); }
 }

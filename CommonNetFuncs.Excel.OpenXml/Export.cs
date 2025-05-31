@@ -1,6 +1,8 @@
 ﻿using System.Data;
 using System.IO.Packaging;
+using System.Reflection;
 using CommonNetFuncs.Core;
+using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -165,5 +167,149 @@ public static class Export
             logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
         }
         return success;
+    }
+
+    /// <summary>
+    /// Generates a simple excel file containing the passed in data in a tabular format
+    /// </summary>
+    /// <typeparam name="T">Type of data inside of list to be inserted into the workbook</typeparam>
+    /// <param name="document">Document to insert data into</param>
+    /// <param name="worksheet">Worksheet to insert the data into</param>
+    /// <param name="data">Data to be inserted into the workbook</param>
+    /// <param name="createTable">Turn the output into an Excel table</param>
+    /// <param name="tableName">Name of the table when createTable is true</param>
+    /// <returns>True if excel file was created successfully</returns>
+    /// <exception cref="ArgumentException"></exception>
+    public static bool ExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (data?.Any() == true)
+            {
+                SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
+
+                uint headerStyleId = GetStandardCellStyle(EStyle.Header, document);
+                uint bodyStyleId = GetStandardCellStyle(EStyle.Body, document);
+
+                uint x = 1;
+                uint y = 1;
+
+                PropertyInfo[] properties = typeof(T).GetProperties().Where(x => !skipColumnNames.AnyFast() || !skipColumnNames.ContainsInvariant(x.Name)).ToArray();
+
+                // Write headers
+                foreach (PropertyInfo prop in properties)
+                {
+                    sheetData.InsertCellValue(x, y, new CellValue(prop.Name), CellValues.SharedString, headerStyleId);
+                    x++;
+                }
+                x = 1;
+                y++;
+
+                // Write data
+                foreach (T item in data)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    foreach (PropertyInfo prop in properties)
+                    {
+                        sheetData.InsertCellValue(x, y, new CellValue(prop.GetValue(item)?.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
+                        x++;
+                    }
+                    x = 1;
+                    y++;
+                }
+
+                if (createTable)
+                {
+                    CreateTable(worksheet, 1, 1, y - 1, (uint)properties.Length, tableName);
+                }
+                else
+                {
+                    SetAutoFilter(worksheet, 1, 1, y - 1, (uint)properties.Length);
+                }
+                worksheet.AutoFitColumns();
+            }
+            ClearStandardFormatCacheForWorkbook(document);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Generates a simple excel file containing the passed in data in a tabular format
+    /// </summary>
+    /// <param name="document">Document to insert data into</param>
+    /// <param name="worksheet">Worksheet to insert the data into</param>
+    /// <param name="data">Data as DataTable to be inserted into the workbook</param>
+    /// <param name="createTable">Turn the output into an Excel table</param>
+    /// <param name="tableName">Name of the table when createTable is true</param>
+    /// <returns>True if excel file was created successfully</returns>
+    /// <exception cref="ArgumentException"></exception>
+    public static bool ExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (data?.Rows.Count > 0)
+            {
+                SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
+
+                uint headerStyleId = GetStandardCellStyle(EStyle.Header, document);
+                uint bodyStyleId = GetStandardCellStyle(EStyle.Body, document);
+
+                uint y = 1;
+                uint x = 1;
+
+                List<uint> skipColumns = [];
+                foreach (DataColumn column in data.Columns)
+                {
+                    if (!skipColumnNames.ContainsInvariant(column.ColumnName))
+                    {
+                        sheetData.InsertCellValue(x, y, new(column.ColumnName), CellValues.SharedString, headerStyleId);
+                    }
+                    else
+                    {
+                        skipColumns.Add(x);
+                    }
+                    x++;
+                }
+
+                x = 1;
+                y++;
+
+                foreach (DataRow row in data.Rows)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    foreach (object? value in row.ItemArray)
+                    {
+                        if (value != null && !skipColumns.Contains(x))
+                        {
+                            sheetData.InsertCellValue(x, y, new(value.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
+                        }
+                        x++;
+                    }
+                    x = 1;
+                    y++;
+                }
+
+                if (createTable)
+                {
+                    CreateTable(worksheet, 1, 1, y - 1, (uint)data.Columns.Count, tableName);
+                }
+                else
+                {
+                    SetAutoFilter(worksheet, 1, 1, y - 1, (uint)data.Columns.Count);
+                }
+                worksheet.AutoFitColumns();
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            return false;
+        }
     }
 }

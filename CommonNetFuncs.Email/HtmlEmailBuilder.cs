@@ -16,12 +16,12 @@ public static partial class HtmlEmailBuilder
     /// <param name="footer">Any text to be displayed under the table or after the body</param>
     /// <param name="tableData">Data to be formatted into an HTML table</param>
     /// <returns>HTML Body of an email</returns>
-    public static string BuildHtmlEmail(string body, string? footer = null, DataTable? tableData = null)
+    public static string BuildHtmlEmail(string body, string? footer = null, DataTable? tableData = null, CancellationToken cancellationToken = default)
     {
         string text = "<html><body>";
         text += body.StringtoHtml();
         text += tableData == null || tableData.Rows.Count == 0 ? string.Empty : "<br><br>";
-        text += tableData.CreateHtmlTable();
+        text += tableData.CreateHtmlTable(cancellationToken: cancellationToken);
         text += !string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty;
         text += footer.StringtoHtml();
         text += "</body></html>";
@@ -36,14 +36,14 @@ public static partial class HtmlEmailBuilder
     /// <param name="footer">Any text to be displayed under the table or after the body</param>
     /// <param name="tableData">Data to be formatted into a table. First item should be the header data</param>
     /// <returns>HTML Body of an email</returns>
-    public static string BuildHtmlEmail(string body, string? footer = null, List<List<string>>? tableData = null)
+    public static string BuildHtmlEmail(string body, string? footer = null, List<List<string>>? tableData = null, CancellationToken cancellationToken = default)
     {
         tableData ??= [];
 
         string text = "<html><body>";
         text += body.StringtoHtml();
         text += tableData.Count == 0 ? string.Empty : "<br><br>";
-        text += tableData.CreateHtmlTable();
+        text += tableData.CreateHtmlTable(cancellationToken: cancellationToken);
         text += !string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty;
         text += footer.StringtoHtml();
         text += "</body></html>";
@@ -101,7 +101,7 @@ public static partial class HtmlEmailBuilder
     /// <param name="applyTableCss">Apply CSS styling to table</param>
     /// <param name="customCss">Custom CSS to apply to the table. If not provided, default will be used.</param>
     /// <returns>HTML table based on the data passed in</returns>
-    public static string CreateHtmlTable(this DataTable? tableData, bool applyTableCss = true, string? customCss = null)
+    public static string CreateHtmlTable(this DataTable? tableData, bool applyTableCss = true, string? customCss = null, CancellationToken cancellationToken = default)
     {
         string tableHtml = string.Empty;
 
@@ -137,6 +137,7 @@ public static partial class HtmlEmailBuilder
             //Add data rows
             foreach (DataRow rowData in tableData.Rows)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 tableHtml += "<tr>";
                 tableHtml += string.Concat(rowData.ItemArray.Select(x => $"<td>{x?.ToString()}</td>"));
                 tableHtml += "</tr>";
@@ -153,7 +154,7 @@ public static partial class HtmlEmailBuilder
     /// <param name="applyTableCss">Apply CSS styling to table</param>
     /// <param name="customCss">Custom CSS to apply to the table. If not provided, default will be used.</param>
     /// <returns>HTML table based on the data passed in</returns>
-    public static string CreateHtmlTable(this List<List<string>>? tableData, bool applyTableCss = true, string? customCss = null)
+    public static string CreateHtmlTable(this List<List<string>>? tableData, bool applyTableCss = true, string? customCss = null, CancellationToken cancellationToken = default)
     {
         tableData ??= [];
         string tableHtml = string.Empty;
@@ -188,6 +189,7 @@ public static partial class HtmlEmailBuilder
             //Add data rows
             foreach (List<string> rowData in tableData.Skip(1))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 tableHtml += "<tr>";
                 tableHtml += string.Concat(rowData.Select(x => $"<td>{x}</td>"));
                 tableHtml += "</tr>";

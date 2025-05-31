@@ -14,7 +14,10 @@ public static class Serialize
     [return: NotNullIfNotNull(nameof(original))]
     public static T? DeepClone<T>(this T? original) where T : class
     {
-        if (original == null) { return null; }
+        if (original == null)
+        {
+            return null;
+        }
         string serialized = JsonSerializer.Serialize(original);
         return JsonSerializer.Deserialize<T>(serialized) ?? throw new JsonException("Unable to deserialize cloned object");
     }

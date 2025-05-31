@@ -232,7 +232,7 @@ public static partial class Strings
     /// <param name="minLengthToConvert">Minimum length of uppercase words to convert (used only with UppercaseHandling.ConvertByLength).</param>
     /// <returns>The title-cased string.</returns>
     [return: NotNullIfNotNull(nameof(input))]
-    public static string? ToTitleCase(this string? input, string cultureString = "en-US", TitleCaseUppercaseWordHandling uppercaseHandling = TitleCaseUppercaseWordHandling.IgnoreUppercase, int minLengthToConvert = 0)
+    public static string? ToTitleCase(this string? input, string cultureString = "en-US", TitleCaseUppercaseWordHandling uppercaseHandling = TitleCaseUppercaseWordHandling.IgnoreUppercase, int minLengthToConvert = 0, CancellationToken cancellationToken = default)
     {
         if (input.IsNullOrWhiteSpace())
         {
@@ -253,6 +253,7 @@ public static partial class Strings
 
         foreach (string word in words)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrEmpty(word))
             {
                 continue;
@@ -458,9 +459,9 @@ public static partial class Strings
     /// <param name="newValue">String to replace any substrings matching oldValue with</param>
     /// <returns></returns>
     [return: NotNullIfNotNull(nameof(s))]
-    public static string? ReplaceInvariant(this string? s, string oldValue, string newValue, bool replaceAllInstances = true)
+    public static string? ReplaceInvariant(this string? s, string oldValue, string newValue, bool replaceAllInstances = true, CancellationToken cancellationToken = default)
     {
-        return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances);
+        return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances, cancellationToken);
     }
 
     /// <summary>
@@ -471,7 +472,7 @@ public static partial class Strings
     /// <param name="newValue">String to replace any substrings matching any value in oldValues with.</param>
     /// <returns>String with all occurrences of substrings in oldValues replaced by newValue.</returns>
     [return: NotNullIfNotNull(nameof(s))]
-    public static string? ReplaceInvariant(this string? s, IEnumerable<string> oldValues, string newValue, bool replaceAllInstances = true)
+    public static string? ReplaceInvariant(this string? s, IEnumerable<string> oldValues, string newValue, bool replaceAllInstances = true, CancellationToken cancellationToken = default)
     {
         if (s.IsNullOrEmpty() || oldValues.All(x => x.IsNullOrEmpty()))
         {
@@ -483,6 +484,7 @@ public static partial class Strings
 
         foreach (string oldValue in oldValues.Where(x => !x.IsNullOrEmpty()))
         {
+            cancellationToken.ThrowIfCancellationRequested();
             int index = stringBuilder.ToString().IndexOf(oldValue, StringComparison.InvariantCultureIgnoreCase);
             while (index != -1)
             {
@@ -1412,7 +1414,7 @@ public static partial class Strings
     /// </param>
     /// <returns>URL encoded string with the specified escape sequences replaced with their given values</returns>
     [return: NotNullIfNotNull(nameof(input))]
-    public static string? UrlEncodeReadable(this string? input, List<KeyValuePair<string, string>>? replaceEscapeSequences = null, bool appendDefaultEscapeSequences = true)
+    public static string? UrlEncodeReadable(this string? input, List<KeyValuePair<string, string>>? replaceEscapeSequences = null, bool appendDefaultEscapeSequences = true, CancellationToken cancellationToken = default)
     {
         if (input.IsNullOrWhiteSpace())
         {
@@ -1432,7 +1434,7 @@ public static partial class Strings
         string output = UrlEncode(input);
         foreach (KeyValuePair<string, string> replaceEscapeSequence in replaceEscapeSequences)
         {
-            output = output.ReplaceInvariant(replaceEscapeSequence.Key, replaceEscapeSequence.Value);
+            output = output.ReplaceInvariant(replaceEscapeSequence.Key, replaceEscapeSequence.Value, cancellationToken: cancellationToken);
         }
 
         return output;
@@ -1498,7 +1500,7 @@ public static partial class Strings
     }
 
     [return: NotNullIfNotNull(nameof(input))]
-    public static IEnumerable<string> SplitLines(this string? input)
+    public static IEnumerable<string> SplitLines(this string? input, CancellationToken cancellationToken = default)
     {
         if (input == null)
         {
@@ -1508,6 +1510,7 @@ public static partial class Strings
         using StringReader sr = new(input);
         while ((line = sr.ReadLine()) != null)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             yield return line;
         }
     }

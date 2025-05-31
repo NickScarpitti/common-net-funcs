@@ -28,12 +28,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.3.12</Version>
+    <Version>3.4.1</Version>
     <MinVerTagPrefix>excel.npoi-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.2.22</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.4.0</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 

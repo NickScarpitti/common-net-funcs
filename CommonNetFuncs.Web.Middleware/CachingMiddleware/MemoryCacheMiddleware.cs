@@ -251,7 +251,11 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 
     private void HandleEviction(object key, object? value, EvictionReason reason, object? state)
     {
-        if (value is not CacheEntry entry) return;
+        if (value is not CacheEntry entry)
+        {
+            return;
+        }
+
         cacheMetrics?.SubtractFromSize(entry.Data.Length);
         RemoveCacheTags(key.ToString() ?? string.Empty, entry.Tags);
         if (!cacheOptions.SuppressLogs)
@@ -517,7 +521,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         .WithDisplayName("Evict Cache Entry by Key");
 
         // New endpoint for evicting by tag
-        RouteHandlerBuilder evictByTagEndpoint = endpoints.MapPost("/api/memorycache/evict/tag/{tag}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string tag) =>
+        RouteHandlerBuilder evictByTagEndpoint = endpoints.MapPost("/api/memorycache/evict/tag/{tag}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string tag, CancellationToken cancellationToken = default) =>
         {
             try
             {
@@ -532,6 +536,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 
                     foreach (string keyToEvict in keysToEvict.ToArray()) // Create a copy to avoid modification during enumeration
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         if (cache.TryGetValue(keyToEvict, out CacheEntry? entry))
                         {
                             // Remove from cache

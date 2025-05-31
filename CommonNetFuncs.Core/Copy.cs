@@ -166,7 +166,7 @@ public static class Copy
         return dest;
     }
 
-    private static object? CopyCollection(object source, Type destType, int maxDepth)
+    private static object? CopyCollection(object source, Type destType, int maxDepth, CancellationToken cancellationToken = default)
     {
         if (source == null)
         {
@@ -194,10 +194,11 @@ public static class Copy
 
             // Copy key-value pairs
 
-            bool? keyIsSimpleType= null;
-            bool? valueIsSimpleType= null;
+            bool? keyIsSimpleType = null;
+            bool? valueIsSimpleType = null;
             foreach (object item in sourceCollection)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 object key = kvpType.GetProperty("Key")!.GetValue(item, null)!;
                 object? value = kvpType.GetProperty("Value")!.GetValue(item, null);
                 keyIsSimpleType ??= key.GetType().IsSimpleType();
@@ -219,6 +220,7 @@ public static class Copy
             bool? itemIsSimpleType = null;
             foreach (object? item in sourceCollection)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 itemIsSimpleType ??= item?.GetType().IsSimpleType();
                 object? copiedItem = item == null ? null : (bool)itemIsSimpleType! ? item : CopyObject(item, elementType, 0, maxDepth);
 
@@ -243,6 +245,7 @@ public static class Copy
             {
                 foreach (object? item in list)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     addMethod.Invoke(destCollection, [item]);
                 }
             }
@@ -258,11 +261,11 @@ public static class Copy
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="mergeIntoObject">Object to merge properties into</param>
     /// <param name="mergeFromObjects">Objects to merge properties from</param>
-    public static T MergeInstances<T>(this T mergeIntoObject, IEnumerable<T> mergeFromObjects) where T : class
+    public static T MergeInstances<T>(this T mergeIntoObject, IEnumerable<T> mergeFromObjects, CancellationToken cancellationToken = default) where T : class
     {
         foreach (T instance in mergeFromObjects)
         {
-            mergeIntoObject.MergeInstances(instance);
+            mergeIntoObject.MergeInstances(instance, cancellationToken);
         }
 
         return mergeIntoObject;
@@ -275,10 +278,11 @@ public static class Copy
     /// <typeparam name="T">Object type</typeparam>
     /// <param name="mergeIntoObject">Object to merge properties into</param>
     /// <param name="mergeFromObject">Object to merge properties from</param>
-    public static T MergeInstances<T>(this T mergeIntoObject, T mergeFromObject) where T : class
+    public static T MergeInstances<T>(this T mergeIntoObject, T mergeFromObject, CancellationToken cancellationToken = default) where T : class
     {
         foreach (PropertyInfo property in typeof(T).GetProperties())
         {
+            cancellationToken.ThrowIfCancellationRequested();
             object? value = property.GetValue(mergeFromObject);
             object? mergedValue = property.GetValue(mergeIntoObject);
 

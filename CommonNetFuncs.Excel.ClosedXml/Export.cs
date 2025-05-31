@@ -1,7 +1,9 @@
-﻿//using System.Data;
-//using System.Reflection;
-//using ClosedXML.Excel;
-//
+﻿using System.Data;
+using System.Reflection;
+using ClosedXML.Excel;
+using CommonNetFuncs.Excel.Common;
+using static CommonNetFuncs.Core.ExceptionLocation;
+using static CommonNetFuncs.Excel.ClosedXml.Common;
 
 namespace CommonNetFuncs.Excel.ClosedXml;
 
@@ -10,144 +12,201 @@ namespace CommonNetFuncs.Excel.ClosedXml;
 ///// </summary>
 public static class Export
 {
-    //    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-    //    /// <summary>
-    //    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
-    //    /// </summary>
-    //    /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
-    //    /// <param name="dataList">Data to export as a table</param>
-    //    /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
-    //    /// <param name="createTable">If true, will format the exported data into an Excel table</param>
-    //    /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
-    //    public static async Task<MemoryStream?> GenericExcelExport<T>(List<T> dataList, MemoryStream? memoryStream = null, bool createTable = false)
-    //    {
-    //        try
-    //        {
-    //            memoryStream ??= new();
+    /// <summary>
+    /// Generates a simple excel file containing the passed in data in a tabular format
+    /// </summary>
+    /// <typeparam name="T">Object to transform into a table</typeparam>
+    /// <param name="wb">IXLWorkbook object to place data into</param>
+    /// <param name="ws">IXLWorksheet object to place data into</param>
+    /// <param name="data">Data to be exported</param>
+    /// <param name="createTable">Make the exported data into an Excel table</param>
+    /// <returns>True if excel file was created successfully</returns>
+    public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, IEnumerable<T> data, bool createTable = false, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (data?.Any() == true)
+            {
+                IXLStyle? headerStyle = GetStyle(EStyle.Header, wb);
+                IXLStyle? bodyStyle = GetStyle(EStyle.Body, wb);
 
-    //            using XLWorkbook wb = new();
-    //            IXLWorksheet ws = wb.AddWorksheet("Data");
-    //            if (dataList != null)
-    //            {
-    //                if (!ClosedXmlCommonHelpers.ExportFromTable(wb, ws, dataList, createTable))
-    //                {
-    //                    return null;
-    //                }
-    //            }
+                int x = 1;
+                int y = 1;
 
-    //            await memoryStream.WriteFileToMemoryStreamAsync(wb);
+                PropertyInfo[] props = typeof(T).GetProperties();
+                foreach (PropertyInfo prop in props)
+                {
+                    IXLCell c = ws.Cell(y, x);
+                    c.Value = prop.Name;
+                    if (!createTable)
+                    {
+                        c.Style = headerStyle;
 
-    //            return memoryStream;
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-    //        }
+                        if (c.Style != null)
+                        {
+                            c.Style.Fill.BackgroundColor = headerStyle?.Fill.BackgroundColor;
+                        }
+                    }
+                    else
+                    {
+                        c.Style = bodyStyle; //Use body style since main characteristics will be determined by table style
+                    }
+                    x++;
+                }
+                x = 1;
+                y++;
 
-    //        return new MemoryStream();
-    //    }
+                foreach (T item in data)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    foreach (PropertyInfo prop in props)
+                    {
+                        object val = prop.GetValue(item) ?? string.Empty;
+                        IXLCell c = ws.Cell(y, x);
+                        c.Value = val.ToString();
+                        c.Style = bodyStyle;
+                        x++;
+                    }
+                    x = 1;
+                    y++;
+                }
 
-    //    /// <summary>
-    //    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
-    //    /// </summary>
-    //    /// <param name="datatable">Data to export as a table</param>
-    //    /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
-    //    /// <param name="createTable">If true, will format the exported data into an Excel table</param>
-    //    /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
-    //    public static async Task<MemoryStream?> GenericExcelExport(DataTable datatable, MemoryStream? memoryStream = null, bool createTable = false)
-    //    {
-    //        try
-    //        {
-    //            memoryStream ??= new();
+                if (!createTable)
+                {
+                    //Not compatible with table
+                    ws.Range(1, 1, 1, props.Length - 1).SetAutoFilter();
+                }
+                else
+                {
+                    //Based on code found here: https://github.com/ClosedXML/ClosedXML/wiki/Using-Tables
+                    IXLTable table = ws.Range(1, 1, y - 1, props.Length).CreateTable();
+                    table.ShowTotalsRow = false;
+                    table.ShowRowStripes = true;
+                    table.Theme = XLTableTheme.TableStyleMedium1;
+                    table.ShowAutoFilter = true;
+                }
 
-    //            using XLWorkbook wb = new();
-    //            IXLWorksheet ws = wb.AddWorksheet("Data");
-    //            if (datatable != null)
-    //            {
-    //                if (!ClosedXmlCommonHelpers.ExportFromTable(wb, ws, datatable, createTable))
-    //                {
-    //                    return null;
-    //                }
-    //            }
+                try
+                {
+                    for (int i = props.Length - 1; i >= 0; i--)
+                    {
+                        ws.Column(x).AdjustToContents();
+                        x++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error("Error using NPOI AutoSizeColumn", ex);
+                    logger.Warn("libgdiplus library required to use ClosedXML AutoSizeColumn method");
+                }
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            return false;
+        }
+    }
 
-    //            await memoryStream.WriteFileToMemoryStreamAsync(wb);
-    //            return memoryStream;
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-    //        }
+    /// <summary>
+    /// Generates a simple excel file containing the passed in data in a tabular format
+    /// </summary>
+    /// <param name="wb">IXLWorkbook object to place data into</param>
+    /// <param name="ws">IXLWorksheet object to place data into</param>
+    /// <param name="data">Data to be exported</param>
+    /// <param name="createTable">Make the exported data into an Excel table</param>
+    /// <returns>True if excel file was created successfully</returns>
+    public static bool ExportFromTable(IXLWorkbook wb, IXLWorksheet ws, DataTable data, bool createTable = false, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (data != null)
+            {
+                if (data.Rows.Count > 0)
+                {
+                    IXLStyle? headerStyle = GetStyle(EStyle.Header, wb);
+                    IXLStyle? bodyStyle = GetStyle(EStyle.Body, wb);
 
-    //        return new MemoryStream();
-    //    }
+                    int x = 1;
+                    int y = 1;
 
-    //    /// <summary>
-    //    /// Add data to a new sheet in a workbook
-    //    /// </summary>
-    //    /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
-    //    /// <param name="wb">Workbook to add sheet to</param>
-    //    /// <param name="dataList">Data to insert into workbook</param>
-    //    /// <param name="sheetName">Name of sheet to add data into</param>
-    //    /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
-    //    public static bool AddGenericTable<T>(IXLWorkbook wb, List<T> dataList, string sheetName, bool createTable = false)
-    //    {
-    //        bool success = false;
-    //        try
-    //        {
-    //            int i = 1;
-    //            string actualSheetName = sheetName;
-    //            while (wb.Worksheets.Any() && wb.Worksheets.Any(x => x.Name.StrEq(actualSheetName)))
-    //            {
-    //                actualSheetName = sheetName + $" ({i})"; //Get safe new sheet name
-    //                i++;
-    //            }
+                    foreach (DataColumn column in data.Columns)
+                    {
+                        IXLCell? c = ws.Cell(y, x);
+                        c.Value = column.ColumnName;
+                        if (!createTable)
+                        {
+                            c.Style = headerStyle;
 
-    //            IXLWorksheet ws = wb.AddWorksheet(actualSheetName);
-    //            if (dataList != null)
-    //            {
-    //                success = ClosedXmlCommonHelpers.ExportFromTable(wb, ws, dataList, createTable);
-    //            }
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-    //        }
-    //        return success;
-    //    }
+                            if (c.Style != null)
+                            {
+                                c.Style.Fill.BackgroundColor = headerStyle?.Fill.BackgroundColor;
+                            }
+                        }
+                        else
+                        {
+                            c.Style = bodyStyle; //Use body style since main characteristics will be determined by table style
+                        }
+                        x++;
+                    }
 
-    //    /// <summary>
-    //    /// Add data to a new sheet in a workbook
-    //    /// </summary>
-    //    /// <param name="wb">Workbook to add sheet to</param>
-    //    /// <param name="dataTable">Data to insert into workbook</param>
-    //    /// <param name="sheetName">Name of sheet to add data into</param>
-    //    /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
-    //    /// <returns></returns>
-    //    public static bool AddGenericTable(IXLWorkbook wb, DataTable dataTable, string sheetName, bool createTable = false)
-    //    {
-    //        bool success = false;
-    //        try
-    //        {
-    //            int i = 1;
-    //            string actualSheetName = sheetName;
+                    x = 1;
+                    y++;
 
-    //            while (wb.Worksheets.Any() && wb.Worksheets.Any(x => x.Name.StrEq(actualSheetName)))
-    //            {
-    //                actualSheetName = sheetName + $" ({i})"; //Get safe new sheet name
-    //                i++;
-    //            }
+                    foreach (DataRow row in data.Rows)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        foreach (object? value in row.ItemArray)
+                        {
+                            string val = value?.ToString() ?? string.Empty;
+                            IXLCell c = ws.Cell(y, x);
+                            c.Value = val;
+                            c.Style = bodyStyle;
+                            x++;
+                        }
+                        x = 1;
+                        y++;
+                    }
 
-    //            IXLWorksheet ws = wb.AddWorksheet(actualSheetName);
-    //            if (dataTable != null)
-    //            {
-    //                success = ClosedXmlCommonHelpers.ExportFromTable(wb, ws, dataTable, createTable);
-    //            }
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-    //        }
-    //        return success;
-    //    }
+                    if (!createTable)
+                    {
+                        //Not compatible with table
+                        ws.Range(1, 1, 1, data.Columns.Count - 1).SetAutoFilter();
+                    }
+                    else
+                    {
+                        //Based on code found here: https://github.com/ClosedXML/ClosedXML/wiki/Using-Tables
+                        IXLTable table = ws.Range(1, 1, y - 1, data.Columns.Count).CreateTable();
+                        table.ShowTotalsRow = false;
+                        table.ShowRowStripes = true;
+                        table.Theme = XLTableTheme.TableStyleMedium1;
+                        table.ShowAutoFilter = true;
+                    }
+
+                    try
+                    {
+                        for (int i = 0; i < data.Columns.Count; i++)
+                        {
+                            ws.Column(x).AdjustToContents();
+                            x++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Error using NPOI AutoSizeColumn", ex);
+                        logger.Warn("libgdiplus library required to use ClosedXML AutoSizeColumn method");
+                    }
+                }
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            return false;
+        }
+    }
 }

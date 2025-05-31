@@ -116,7 +116,7 @@ public static class SshFtp
         return ReadCsvFromStream<T>(stream, csvHasHeaderRow);
     }
 
-    public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient,string remoteFilePath, bool csvHasHeaderRow = true)
+    public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true)
     {
         if (!remoteFilePath.EndsWith(".csv") || !sftpClient.DirectoryOrFileExists(remoteFilePath))
         {
@@ -135,7 +135,11 @@ public static class SshFtp
 
     public static bool DeleteSftpFile(this SftpClient? sftpClient, string remoteFilePath)
     {
-        if (sftpClient == null) return false;
+        if (sftpClient == null)
+        {
+            return false;
+        }
+
         if (sftpClient.Exists(remoteFilePath))
         {
             sftpClient.Delete(remoteFilePath);
@@ -145,7 +149,11 @@ public static class SshFtp
 
     public static async Task<bool> DeleteFileAsync(this SftpClient? sftpClient, string remoteFilePath)
     {
-        if (sftpClient == null) return false;
+        if (sftpClient == null)
+        {
+            return false;
+        }
+
         if (await sftpClient.ExistsAsync(remoteFilePath).ConfigureAwait(false))
         {
             await sftpClient.DeleteAsync(remoteFilePath).ConfigureAwait(false);

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
@@ -9,7 +8,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SixLabors.ImageSharp;
-using A = DocumentFormat.OpenXml.Drawing;
+using Dwg = DocumentFormat.OpenXml.Drawing;
 using Color = DocumentFormat.OpenXml.Spreadsheet.Color; //Aliased to prevent issue with DocumentFormat.OpenXml.Spreadsheet.Color
 using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
 
@@ -117,7 +116,10 @@ public static partial class Common
         WorkbookPart? workbookPart = document.WorkbookPart ?? throw new ArgumentException("The document does not contain a WorkbookPart.");
         Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.SheetId != null && s.SheetId.Value == sheetId);
 
-        if (sheet == null) return null;
+        if (sheet == null)
+        {
+            return null;
+        }
 
         WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
         return worksheetPart.Worksheet;
@@ -891,8 +893,16 @@ public static partial class Common
     /// <returns>True if both Alignment objects are the same</returns>
     public static bool FormatAlignmentsAreEqual(Alignment? alignment1, Alignment? alignment2)
     {
-        if (alignment1 == null && alignment2 == null) return true;
-        if (alignment1 == null || alignment2 == null) return false;
+        if (alignment1 == null && alignment2 == null)
+        {
+            return true;
+        }
+
+        if (alignment1 == null || alignment2 == null)
+        {
+            return false;
+        }
+
         return alignment1.Horizontal == alignment2.Horizontal;
     }
 
@@ -904,8 +914,16 @@ public static partial class Common
     /// <returns>True if both Protection objects are the same</returns>
     public static bool FormatProtectionsAreEqual(Protection? protection1, Protection? protection2)
     {
-        if (protection1 == null && protection2 == null) return true;
-        if (protection1 == null || protection2 == null) return false;
+        if (protection1 == null && protection2 == null)
+        {
+            return true;
+        }
+
+        if (protection1 == null || protection2 == null)
+        {
+            return false;
+        }
+
         return protection1.Locked == protection2.Locked;
     }
 
@@ -914,8 +932,11 @@ public static partial class Common
     public sealed class WorkbookStyleCache
     {
         public Dictionary<int, uint> FontCache { get; } = [];
+
         public Dictionary<int, uint> FillCache { get; } = [];
+
         public Dictionary<int, uint> BorderCache { get; } = [];
+
         public Dictionary<string, uint> CellFormatCache { get; } = [];
     }
 
@@ -934,7 +955,10 @@ public static partial class Common
     {
         Stylesheet? stylesheet = document.GetStylesheet();
 
-        if (stylesheet == null) return null;
+        if (stylesheet == null)
+        {
+            return null;
+        }
 
         string workbookId = GetWorkbookId(document);
         WorkbookStyleCache cache = WorkbookCustomFormatCaches.GetOrAdd(workbookId, _ => new WorkbookStyleCache());
@@ -991,7 +1015,10 @@ public static partial class Common
     /// <returns>ID of the new or retrieved Font</returns>
     public static uint GetOrAddFont(this Stylesheet stylesheet, WorkbookStyleCache cache, Font? font)
     {
-        if (font == null) return 0; // Default font
+        if (font == null)
+        {
+            return 0; // Default font
+        }
 
         int fontHash = font.GetHashCode();
         if (cache.FontCache.TryGetValue(fontHash, out uint existingFontId))
@@ -1016,7 +1043,10 @@ public static partial class Common
     /// <returns>ID of the new or retrieved Fill</returns>
     public static uint GetOrAddFill(this Stylesheet stylesheet, WorkbookStyleCache cache, Fill? fill)
     {
-        if (fill == null) return 0; // Default fill
+        if (fill == null)
+        {
+            return 0; // Default fill
+        }
 
         int fillHash = fill.GetHashCode();
         if (cache.FillCache.TryGetValue(fillHash, out uint existingFillId))
@@ -1041,7 +1071,10 @@ public static partial class Common
     /// <returns>ID of the new or retrieved Border</returns>
     public static uint GetOrAddBorder(this Stylesheet stylesheet, WorkbookStyleCache cache, Border? border)
     {
-        if (border == null) return 0; // Default border
+        if (border == null)
+        {
+            return 0; // Default border
+        }
 
         int borderHash = border.GetHashCode();
         if (cache.BorderCache.TryGetValue(borderHash, out uint existingBorderId))
@@ -1075,151 +1108,9 @@ public static partial class Common
     public static string GetWorkbookId(SpreadsheetDocument document)
     {
         // Use a combination of the file path (if available) and creation time
-        string filePath = document.PackageProperties.Identifier ?? "";
-        string creationTime = document.PackageProperties.Created?.ToString() ?? "";
+        string filePath = document.PackageProperties.Identifier ?? string.Empty;
+        string creationTime = document.PackageProperties.Created?.ToString() ?? string.Empty;
         return $"{filePath}_{creationTime}";
-    }
-
-    /// <summary>
-    /// Generates a simple excel file containing the passed in data in a tabular format
-    /// </summary>
-    /// <typeparam name="T">Type of data inside of list to be inserted into the workbook</typeparam>
-    /// <param name="document">Document to insert data into</param>
-    /// <param name="worksheet">Worksheet to insert the data into</param>
-    /// <param name="data">Data to be inserted into the workbook</param>
-    /// <param name="createTable">Turn the output into an Excel table</param>
-    /// <param name="tableName">Name of the table when createTable is true</param>
-    /// <returns>True if excel file was created successfully</returns>
-    /// <exception cref="ArgumentException"></exception>
-    public static bool ExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
-    {
-        try
-        {
-            if (data?.Any() == true)
-            {
-                SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
-
-                uint headerStyleId = GetStandardCellStyle(EStyle.Header, document);
-                uint bodyStyleId = GetStandardCellStyle(EStyle.Body, document);
-
-                uint x = 1;
-                uint y = 1;
-
-                PropertyInfo[] properties = typeof(T).GetProperties().Where(x => !skipColumnNames.AnyFast() || !skipColumnNames.ContainsInvariant(x.Name)).ToArray();
-
-                // Write headers
-                foreach (PropertyInfo prop in properties)
-                {
-                    sheetData.InsertCellValue(x, y, new CellValue(prop.Name), CellValues.SharedString, headerStyleId);
-                    x++;
-                }
-                x = 1;
-                y++;
-
-                // Write data
-                foreach (T item in data)
-                {
-                    foreach (PropertyInfo prop in properties)
-                    {
-                        sheetData.InsertCellValue(x, y, new CellValue(prop.GetValue(item)?.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
-                        x++;
-                    }
-                    x = 1;
-                    y++;
-                }
-
-                if (createTable)
-                {
-                    CreateTable(worksheet, 1, 1, y - 1, (uint)properties.Length, tableName);
-                }
-                else
-                {
-                    SetAutoFilter(worksheet, 1, 1, y - 1, (uint)properties.Length);
-                }
-                worksheet.AutoFitColumns();
-            }
-            ClearStandardFormatCacheForWorkbook(document);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Generates a simple excel file containing the passed in data in a tabular format
-    /// </summary>
-    /// <param name="document">Document to insert data into</param>
-    /// <param name="worksheet">Worksheet to insert the data into</param>
-    /// <param name="data">Data as DataTable to be inserted into the workbook</param>
-    /// <param name="createTable">Turn the output into an Excel table</param>
-    /// <param name="tableName">Name of the table when createTable is true</param>
-    /// <returns>True if excel file was created successfully</returns>
-    /// <exception cref="ArgumentException"></exception>
-    public static bool ExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
-    {
-        try
-        {
-            if (data?.Rows.Count > 0)
-            {
-                SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
-
-                uint headerStyleId = GetStandardCellStyle(EStyle.Header, document);
-                uint bodyStyleId = GetStandardCellStyle(EStyle.Body, document);
-
-                uint y = 1;
-                uint x = 1;
-
-                List<uint> skipColumns = [];
-                foreach (DataColumn column in data.Columns)
-                {
-                    if (!skipColumnNames.ContainsInvariant(column.ColumnName))
-                    {
-                        sheetData.InsertCellValue(x, y, new(column.ColumnName), CellValues.SharedString, headerStyleId);
-                    }
-                    else
-                    {
-                        skipColumns.Add(x);
-                    }
-                    x++;
-                }
-
-                x = 1;
-                y++;
-
-                foreach (DataRow row in data.Rows)
-                {
-                    foreach (object? value in row.ItemArray)
-                    {
-                        if (value != null && !skipColumns.Contains(x))
-                        {
-                            sheetData.InsertCellValue(x, y, new(value.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
-                        }
-                        x++;
-                    }
-                    x = 1;
-                    y++;
-                }
-
-                if (createTable)
-                {
-                    CreateTable(worksheet, 1, 1, y - 1, (uint)data.Columns.Count, tableName);
-                }
-                else
-                {
-                    SetAutoFilter(worksheet, 1, 1, y - 1, (uint)data.Columns.Count);
-                }
-                worksheet.AutoFitColumns();
-            }
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
-            return false;
-        }
     }
 
     /// <summary>
@@ -1396,7 +1287,11 @@ public static partial class Common
         // Iterate through all the items in the SharedStringTable. If the text already exists, return its index.
         foreach (SharedStringItem item in shareStringTablePart.SharedStringTable.Elements<SharedStringItem>())
         {
-            if (item.InnerText.StrComp(text)) return i;
+            if (item.InnerText.StrComp(text))
+            {
+                return i;
+            }
+
             i++;
         }
 
@@ -1749,7 +1644,7 @@ public static partial class Common
         {
             FromMarker = new Xdr.FromMarker
             {
-                ColumnId = new Xdr.ColumnId { Text = (fromCell.ColumnIndex -1).ToString() },
+                ColumnId = new Xdr.ColumnId { Text = (fromCell.ColumnIndex - 1).ToString() },
                 RowId = new Xdr.RowId { Text = (fromCell.RowIndex - 1).ToString() },
                 ColumnOffset = new Xdr.ColumnOffset { Text = xMargin.ToString() },
                 RowOffset = new Xdr.RowOffset { Text = yMargin.ToString() }
@@ -1767,21 +1662,17 @@ public static partial class Common
         Xdr.Picture picture = new();
         Xdr.NonVisualPictureProperties nvPicPr = new(
             new Xdr.NonVisualDrawingProperties { Id = imageId, Name = $"Picture {imageId}" },
-            new Xdr.NonVisualPictureDrawingProperties(new A.PictureLocks { NoChangeAspect = true })
-        );
+            new Xdr.NonVisualPictureDrawingProperties(new Dwg.PictureLocks { NoChangeAspect = true }));
 
         Xdr.BlipFill blipFill = new(
-            new A.Blip { Embed = relationshipId },
-            new A.Stretch(new A.FillRectangle())
-        );
+            new Dwg.Blip { Embed = relationshipId },
+            new Dwg.Stretch(new Dwg.FillRectangle()));
 
         Xdr.ShapeProperties spPr = new(
-            new A.Transform2D(
-                new A.Offset { X = 0, Y = 0 },
-                new A.Extents { Cx = width, Cy = height }
-            ),
-            new A.PresetGeometry { Preset = A.ShapeTypeValues.Rectangle }
-        );
+            new Dwg.Transform2D(
+                new Dwg.Offset { X = 0, Y = 0 },
+                new Dwg.Extents { Cx = width, Cy = height }),
+            new Dwg.PresetGeometry { Preset = Dwg.ShapeTypeValues.Rectangle });
 
         picture.Append(nvPicPr, blipFill, spPr);
         anchor.Append(picture);
@@ -1947,7 +1838,10 @@ public static partial class Common
     /// <returns>String value of the cell</returns>
     public static string GetCellValue(this Cell? cell)
     {
-        if (cell?.CellValue == null) return string.Empty;
+        if (cell?.CellValue == null)
+        {
+            return string.Empty;
+        }
 
         string value = cell.CellValue.Text;
 
@@ -1983,7 +1877,10 @@ public static partial class Common
     /// <returns>Stylized string value of a cell</returns>
     public static string? GetStringValue(this Cell? cell)
     {
-        if (cell == null) return null;
+        if (cell == null)
+        {
+            return null;
+        }
 
         if (cell.DataType != null)
         {
@@ -2021,7 +1918,7 @@ public static partial class Common
     /// <param name="fileStream">Stream of Excel file being read</param>
     /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
     /// <returns>DataTable object containing the data read from Excel stream</returns>
-    public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null)
+    public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null, CancellationToken cancellationToken = default)
     {
         DataTable dataTable = new();
 
@@ -2029,7 +1926,7 @@ public static partial class Common
         {
             using SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(fileStream, false);
             WorkbookPart? workbookPart = spreadsheetDocument.WorkbookPart ?? throw new InvalidOperationException("The workbook part is missing.");
-            Table? table = workbookPart.FindTable(tableName) ?? throw new InvalidOperationException($"Table '{tableName ?? ""}' not found.");
+            Table? table = workbookPart.FindTable(tableName) ?? throw new InvalidOperationException($"Table '{tableName ?? string.Empty}' not found.");
             Sheet? sheet = spreadsheetDocument.GetSheetByName(table.Name);
             if (sheet?.Id?.Value == null)
             {
@@ -2062,6 +1959,7 @@ public static partial class Common
             // Get body data
             for (uint row = startCell.RowIndex + 1; row <= endCell.RowIndex; row++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 DataRow dataRow = dataTable.NewRow();
                 for (uint col = startCell.ColumnIndex; col <= endCell.ColumnIndex; col++)
                 {
@@ -2126,7 +2024,11 @@ public static partial class Common
     /// <returns>Cell specified from the row and column index</returns>
     public static Cell? GetCell(this Row row, uint columnIndex)
     {
-        if (row.RowIndex == null) return null;
+        if (row.RowIndex == null)
+        {
+            return null;
+        }
+
         string cellReference = new CellReference(columnIndex, row.RowIndex.Value).ToString();
         return row.Elements<Cell>().FirstOrDefault(c => c.CellReference == cellReference);
     }
@@ -2139,7 +2041,10 @@ public static partial class Common
     public static void AutoFitColumns(this Worksheet worksheet, double maxWidth = 100)
     {
         SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
-        if (sheetData == null) return;
+        if (sheetData == null)
+        {
+            return;
+        }
 
         // Dictionary to store maximum width of each column
         ConcurrentDictionary<uint, double> columnWidths = [];
@@ -2149,7 +2054,10 @@ public static partial class Common
         {
             foreach (Cell cell in row.Elements<Cell>())
             {
-                if(string.IsNullOrEmpty(cell.CellReference?.Value)) continue;
+                if (string.IsNullOrEmpty(cell.CellReference?.Value))
+                {
+                    continue;
+                }
 
                 CellReference cellRef = new(cell.CellReference!.Value!);
                 uint columnIndex = cellRef.ColumnIndex - 1;
@@ -2285,7 +2193,10 @@ public static partial class Common
     /// <returns>Fitted width of the cell</returns>
     public static double CalculateWidth(string text, uint? styleIndex = null)
     {
-        if (string.IsNullOrEmpty(text)) return 0;
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
 
         const int padding = 1; // Extra padding
         uint[] numberStyles = [5, 6, 7, 8]; //styles that will add extra chars
@@ -2300,7 +2211,7 @@ public static partial class Common
 
         if (styleIndex != null && numberStyles.Contains((uint)styleIndex))
         {
-            int thousandCount = (int)Math.Truncate((double)width / 4);
+            int thousandCount = (int)Math.Truncate(width / 4);
 
             //add 3 for '.00'
             width += (3 + thousandCount);
@@ -2326,7 +2237,7 @@ public static partial class Common
 
         public uint RowIndex
         {
-            get { return _RowIndex; }
+            get => _RowIndex;
             set
             {
                 if (value < 1 || value > 1048576)
@@ -2341,7 +2252,7 @@ public static partial class Common
 
         public uint ColumnIndex
         {
-            get { return _ColumnIndex; }
+            get => _ColumnIndex;
             set
             {
                 if (value < 1 || value > 16384)
@@ -2394,13 +2305,16 @@ public static partial class Common
         public static string NumberToColumnName(uint columnNumber)
         {
             int number = (int)columnNumber - 1; //Make this 1 based to avoid confusion
-            string columnName = "";
+            string columnName = string.Empty;
             while (number >= 0)
             {
                 int remainder = number % 26;
                 columnName = $"{Convert.ToChar('A' + remainder)}{columnName}";
                 number = (number / 26) - 1;
-                if (number < 0) break;
+                if (number < 0)
+                {
+                    break;
+                }
             }
             return columnName;
         }

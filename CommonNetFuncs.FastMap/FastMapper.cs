@@ -188,12 +188,12 @@ public static class FastMapper
                 Expression destAccess = Expression.Property(destinationVariable, destProp);
                 if (!destProp.PropertyType.IsValueType) // If the property is reference type and not value type, and not already assigned, assign default if null
                 {
-                    ConstructorInfo? ctor = destProp.PropertyType.GetConstructor(Type.EmptyTypes);
-                    if (ctor != null)
+                    ConstructorInfo? constructorInfo = destProp.PropertyType.GetConstructor(Type.EmptyTypes);
+                    if (constructorInfo != null)
                     {
                         ConditionalExpression assignIfNull = Expression.IfThen(
                             Expression.Equal(destAccess, Expression.Constant(null, destProp.PropertyType)),
-                            Expression.Assign(destAccess, Expression.New(ctor)));
+                            Expression.Assign(destAccess, Expression.New(constructorInfo)));
                         bindings.Add(assignIfNull);
                     }
                 }

@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using FastExpressionCompiler;
 using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.DeepClone;
@@ -77,7 +76,7 @@ public static class ExpressionTrees
                 if (!CompiledCopyFunctionsDictionary.TryGetValue(type, out compiledCopyFunction))
                 {
                     Expression<Func<object, Dictionary<object, object>, object>> uncompiledCopyFunction = CreateCompiledLambdaCopyFunctionForType(type);
-                    compiledCopyFunction = uncompiledCopyFunction.CompileFast();
+                    compiledCopyFunction = uncompiledCopyFunction.Compile();
 
                     Dictionary<Type, Func<object, Dictionary<object, object>, object>> dictionaryCopy = CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
                     dictionaryCopy.Add(type, compiledCopyFunction);

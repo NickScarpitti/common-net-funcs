@@ -24,7 +24,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="CsvHelper" Version="33.0.1" PrivateAssets="all" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

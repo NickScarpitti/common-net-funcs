@@ -214,25 +214,6 @@ public static class FastMapper
         return lambda.CompileFast();
     }
 
-    private static bool IsNullableReferenceType(PropertyInfo property)
-    {
-        CustomAttributeData? nullable = property.CustomAttributes.FirstOrDefault(x => x.AttributeType.FullName == "System.Runtime.CompilerServices.NullableAttribute");
-        if (nullable?.ConstructorArguments.Count == 1)
-        {
-            CustomAttributeTypedArgument arg = nullable.ConstructorArguments[0];
-            if (arg.ArgumentType == typeof(byte[]))
-            {
-                ReadOnlyCollection<CustomAttributeTypedArgument> args = (ReadOnlyCollection<CustomAttributeTypedArgument>)arg.Value!;
-                return args.Count > 0 && args[0].Value is byte b && b == 2;
-            }
-            else if (arg.ArgumentType == typeof(byte))
-            {
-                return (byte)arg.Value! == 2;
-            }
-        }
-        return false;
-    }
-
     private static BinaryExpression CreateCollectionMapping(Expression sourceAccess, Expression destAccess, Type sourceType, Type destType)
     {
         Type sourceElementType = GetElementType(sourceType);

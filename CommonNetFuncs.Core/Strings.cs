@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using FastExpressionCompiler;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -192,7 +193,7 @@ public static partial class Strings
     /// <returns>Null if the string passed in is null or is the word null with no other text characters other than whitespace</returns>
     public static string? MakeNullNull(this string? s)
     {
-        return s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0 || s.Trim().StrEq("Null") ? null : s;
+        return !s.IsNullOrWhiteSpace() && (s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0 || s.Trim().StrEq("Null")) ? null : s;
     }
 
     /// <summary>
@@ -228,10 +229,10 @@ public static partial class Strings
     /// </summary>
     /// <param name="input">The input string to convert.</param>
     /// <param name="uppercaseHandling">How to handle uppercase words.</param>
-    /// <param name="maxLengthToConvert">Maximum length of uppercase words to convert (used with UppercaseHandling.ConvertByLength).</param>
+    /// <param name="minLengthToConvert">Minimum length of uppercase words to convert (used only with UppercaseHandling.ConvertByLength).</param>
     /// <returns>The title-cased string.</returns>
     [return: NotNullIfNotNull(nameof(input))]
-    public static string? ToTitleCase(this string? input, string cultureString = "en-US", TitleCaseUppercaseWordHandling uppercaseHandling = TitleCaseUppercaseWordHandling.IgnoreUppercase, int maxLengthToConvert = 0)
+    public static string? ToTitleCase(this string? input, string cultureString = "en-US", TitleCaseUppercaseWordHandling uppercaseHandling = TitleCaseUppercaseWordHandling.IgnoreUppercase, int minLengthToConvert = 0, CancellationToken cancellationToken = default)
     {
         if (input.IsNullOrWhiteSpace())
         {
@@ -252,6 +253,7 @@ public static partial class Strings
 
         foreach (string word in words)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrEmpty(word))
             {
                 continue;
@@ -266,13 +268,13 @@ public static partial class Strings
                         result.Append(textInfo.ToTitleCase(word.ToLower()));
                         break;
                     case TitleCaseUppercaseWordHandling.ConvertByLength:
-                        if (word.Length <= maxLengthToConvert)
+                        if (word.Length >= minLengthToConvert)
                         {
                             result.Append(textInfo.ToTitleCase(word.ToLower()));
                         }
                         else
                         {
-                            result.Append(word);
+                            result.Append(word); // Leave casing as is
                         }
                         break;
                 }
@@ -457,9 +459,9 @@ public static partial class Strings
     /// <param name="newValue">String to replace any substrings matching oldValue with</param>
     /// <returns></returns>
     [return: NotNullIfNotNull(nameof(s))]
-    public static string? ReplaceInvariant(this string? s, string oldValue, string newValue, bool replaceAllInstances = true)
+    public static string? ReplaceInvariant(this string? s, string oldValue, string newValue, bool replaceAllInstances = true, CancellationToken cancellationToken = default)
     {
-        return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances);
+        return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances, cancellationToken);
     }
 
     /// <summary>
@@ -470,7 +472,7 @@ public static partial class Strings
     /// <param name="newValue">String to replace any substrings matching any value in oldValues with.</param>
     /// <returns>String with all occurrences of substrings in oldValues replaced by newValue.</returns>
     [return: NotNullIfNotNull(nameof(s))]
-    public static string? ReplaceInvariant(this string? s, IEnumerable<string> oldValues, string newValue, bool replaceAllInstances = true)
+    public static string? ReplaceInvariant(this string? s, IEnumerable<string> oldValues, string newValue, bool replaceAllInstances = true, CancellationToken cancellationToken = default)
     {
         if (s.IsNullOrEmpty() || oldValues.All(x => x.IsNullOrEmpty()))
         {
@@ -482,6 +484,7 @@ public static partial class Strings
 
         foreach (string oldValue in oldValues.Where(x => !x.IsNullOrEmpty()))
         {
+            cancellationToken.ThrowIfCancellationRequested();
             int index = stringBuilder.ToString().IndexOf(oldValue, StringComparison.InvariantCultureIgnoreCase);
             while (index != -1)
             {
@@ -652,7 +655,7 @@ public static partial class Strings
         Type type = typeof(T);
         (Type type, bool recursive) key = (type, recursive);
 
-        Action<T> action = (Action<T>)trimObjectStringsCache.GetOrAdd(key, _ => CreateTrimObjectStringsExpression<T>(recursive).Compile());
+        Action<T> action = (Action<T>)trimObjectStringsCache.GetOrAdd(key, _ => CreateTrimObjectStringsExpression<T>(recursive).CompileFast());
         action(obj);
 
         return obj;
@@ -736,7 +739,7 @@ public static partial class Strings
         Type type = typeof(T);
         (Type type, bool enableTrim, NormalizationForm normalizationForm, bool recursive) key = (type, enableTrim, normalizationForm, recursive);
 
-        Action<T> action = (Action<T>)normalizeObjectStringsCache.GetOrAdd(key, _ => CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive).Compile());
+        Action<T> action = (Action<T>)normalizeObjectStringsCache.GetOrAdd(key, _ => CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive).CompileFast());
         action(obj);
 
         return obj;
@@ -750,7 +753,7 @@ public static partial class Strings
 
         foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.PropertyType == typeof(string) || (recursive && x.PropertyType.IsClass)))
         {
-            if (prop.PropertyType == typeof(string))
+            if (prop.PropertyType == typeof(string) && prop.CanWrite)
             {
                 MemberExpression propExpr = Expression.Property(objParam, prop);
 
@@ -842,7 +845,7 @@ public static partial class Strings
         Type type = typeof(T);
         (Type type, bool recursive) key = (type, recursive);
 
-        Action<T> action = (Action<T>)makeObjectNullNullCache.GetOrAdd(key, _ => CreateMakeObjectNullNullExpression<T>(recursive).Compile());
+        Action<T> action = (Action<T>)makeObjectNullNullCache.GetOrAdd(key, _ => CreateMakeObjectNullNullExpression<T>(recursive).CompileFast());
         action(obj);
 
         return obj;
@@ -1254,20 +1257,20 @@ public static partial class Strings
             return string.Empty;
         }
 
-        input = input.Trim();
+        input = input.Trim().Replace("\t", string.Empty);
 
         int len = input.Length;
         int index = 0;
         int i = 0;
 
-        char[] src = input.ToCharArray();
+        char[] sourceCharArray = input.ToCharArray();
         bool skip = false;
-        char ch;
+        char character;
 
         for (; i < len; i++)
         {
-            ch = src[i];
-            switch (ch)
+            character = sourceCharArray[i];
+            switch (character)
             {
                 case '\u0020':
                 case '\u00A0':
@@ -1299,17 +1302,17 @@ public static partial class Strings
                         continue;
                     }
 
-                    src[index++] = ch;
+                    sourceCharArray[index++] = character;
                     skip = true;
                     continue;
 
                 default:
                     skip = false;
-                    src[index++] = ch;
+                    sourceCharArray[index++] = character;
                     continue;
             }
         }
-        return new(src, 0, index);
+        return new(sourceCharArray, 0, index);
     }
 
     /// <summary>
@@ -1411,7 +1414,7 @@ public static partial class Strings
     /// </param>
     /// <returns>URL encoded string with the specified escape sequences replaced with their given values</returns>
     [return: NotNullIfNotNull(nameof(input))]
-    public static string? UrlEncodeReadable(this string? input, List<KeyValuePair<string, string>>? replaceEscapeSequences = null, bool appendDefaultEscapeSequences = true)
+    public static string? UrlEncodeReadable(this string? input, List<KeyValuePair<string, string>>? replaceEscapeSequences = null, bool appendDefaultEscapeSequences = true, CancellationToken cancellationToken = default)
     {
         if (input.IsNullOrWhiteSpace())
         {
@@ -1431,7 +1434,7 @@ public static partial class Strings
         string output = UrlEncode(input);
         foreach (KeyValuePair<string, string> replaceEscapeSequence in replaceEscapeSequences)
         {
-            output = output.ReplaceInvariant(replaceEscapeSequence.Key, replaceEscapeSequence.Value);
+            output = output.ReplaceInvariant(replaceEscapeSequence.Key, replaceEscapeSequence.Value, cancellationToken: cancellationToken);
         }
 
         return output;
@@ -1497,7 +1500,7 @@ public static partial class Strings
     }
 
     [return: NotNullIfNotNull(nameof(input))]
-    public static IEnumerable<string> SplitLines(this string? input)
+    public static IEnumerable<string> SplitLines(this string? input, CancellationToken cancellationToken = default)
     {
         if (input == null)
         {
@@ -1507,6 +1510,7 @@ public static partial class Strings
         using StringReader sr = new(input);
         while ((line = sr.ReadLine()) != null)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             yield return line;
         }
     }
@@ -1748,8 +1752,7 @@ public static partial class Strings
         {
             return null;
         }
-
-        return LettersOnlyRegex().Match(value).Value.Trim();
+        return string.Concat(LettersOnlyRegex().Matches(value.Trim())).Trim();
     }
 
     [return: NotNullIfNotNull(nameof(value))]
@@ -1760,7 +1763,7 @@ public static partial class Strings
             return null;
         }
 
-        return !allowFractions ? NumbersOnlyRegex().Match(value.Trim()).Value.Trim() : NumbersWithFractionsOnlyRegex().Match(value.Trim()).Value.Trim();
+        return string.Concat(!allowFractions ? NumbersOnlyRegex().Matches(value.Trim()) : NumbersWithFractionsOnlyRegex().Matches(value.Trim())).Trim();
     }
 
     /// <summary>

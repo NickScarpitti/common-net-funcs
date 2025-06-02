@@ -4,6 +4,7 @@ using CommonNetFuncs.Core;
 using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Images;
+
 public static class Optimizer
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -17,7 +18,7 @@ public static class Optimizer
     /// </summary>
     /// <param name="file">Path to the file that will be optimized</param>
     /// <remarks>Need to have gifsicle, jpegoptim, and optipng installed for these to work</remarks>
-    public static async Task OptimizeImage(string file, IEnumerable<string>? gifsicleArgs = null, IEnumerable<string>? jpegoptimArgs = null, IEnumerable<string>? optipngArgs = null)
+    public static async Task OptimizeImage(string file, IEnumerable<string>? gifsicleArgs = null, IEnumerable<string>? jpegoptimArgs = null, IEnumerable<string>? optipngArgs = null, CancellationToken cancellationToken = default)
     {
         FileInfo originalFileInfo = new(file);
         long originalFileSize = originalFileInfo.Length;
@@ -37,7 +38,7 @@ public static class Optimizer
             {
                 gifsicleArgs = gifsicleArgs.Append(file);
             }
-            result = await Cli.Wrap(commandType).WithArguments(gifsicleArgs).ExecuteBufferedAsync().ConfigureAwait(false);
+            result = await Cli.Wrap(commandType).WithArguments(gifsicleArgs).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         else if (JpegoptimExtensions.ContainsInvariant(extension))
         {
@@ -51,7 +52,7 @@ public static class Optimizer
             {
                 jpegoptimArgs = jpegoptimArgs.Append(file);
             }
-            result = await Cli.Wrap(commandType).WithArguments(jpegoptimArgs).ExecuteBufferedAsync().ConfigureAwait(false);
+            result = await Cli.Wrap(commandType).WithArguments(jpegoptimArgs).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         else if (OptipngExtensions.ContainsInvariant(extension))
         {
@@ -65,7 +66,7 @@ public static class Optimizer
             {
                 optipngArgs = optipngArgs.Append(file);
             }
-            result = await Cli.Wrap(commandType).WithArguments(optipngArgs).ExecuteBufferedAsync().ConfigureAwait(false);
+            result = await Cli.Wrap(commandType).WithArguments(optipngArgs).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         if (!commandType.IsNullOrWhiteSpace())

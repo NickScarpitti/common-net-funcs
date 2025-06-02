@@ -1,9 +1,9 @@
-﻿using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 using static CommonNetFuncs.Compression.Files;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Email.EmailConstants;
@@ -64,7 +64,7 @@ public static class Email
     /// <returns>Email sent success bool</returns>
     public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false,
         IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false,
-        string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false, bool autoDisposeAttachments = true)
+        string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false, bool autoDisposeAttachments = true, CancellationToken cancellationToken = default)
     {
         bool success = true;
         try
@@ -142,7 +142,7 @@ public static class Email
                     bodyBuilder.TextBody = body;
                 }
 
-                await AddAttachments(attachments, bodyBuilder, zipAttachments).ConfigureAwait(false);
+                await AddAttachments(attachments, bodyBuilder, zipAttachments, cancellationToken).ConfigureAwait(false);
 
                 email.Body = bodyBuilder.ToMessageBody();
 
@@ -158,15 +158,15 @@ public static class Email
                         using SmtpClient smtpClient = new();
                         if (!string.IsNullOrWhiteSpace(smtpUser) && !string.IsNullOrWhiteSpace(smtpPassword))
                         {
-                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls).ConfigureAwait(false);
-                            await smtpClient.AuthenticateAsync(smtpUser, smtpPassword).ConfigureAwait(false);
+                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls, cancellationToken).ConfigureAwait(false);
+                            await smtpClient.AuthenticateAsync(smtpUser, smtpPassword, cancellationToken).ConfigureAwait(false);
                         }
                         else
                         {
-                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.None).ConfigureAwait(false);
+                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.None, cancellationToken).ConfigureAwait(false);
                         }
-                        await smtpClient.SendAsync(email).ConfigureAwait(false);
-                        await smtpClient.DisconnectAsync(true).ConfigureAwait(false);
+                        await smtpClient.SendAsync(email, cancellationToken).ConfigureAwait(false);
+                        await smtpClient.DisconnectAsync(true, cancellationToken).ConfigureAwait(false);
                         break;
                     }
                     catch (Exception ex)
@@ -224,7 +224,7 @@ public static class Email
     /// <param name="attachments">Attachments to add to the email</param>
     /// <param name="bodyBuilder">Builder for the email to add attachments to</param>
     /// <param name="zipAttachments">If true, will perform zip compression on the attachment files before adding them to the email</param>
-    private static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments)
+    private static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -239,7 +239,7 @@ public static class Email
                         if (attachment.AttachmentStream != null)
                         {
                             attachment.AttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
-                            tasks.Add(bodyBuilder.Attachments.AddAsync(attachment.AttachmentName ?? $"File {i}", attachment.AttachmentStream));
+                            tasks.Add(bodyBuilder.Attachments.AddAsync(attachment.AttachmentName ?? $"File {i}", attachment.AttachmentStream, cancellationToken));
                             i++;
                         }
                     }
@@ -250,7 +250,7 @@ public static class Email
                     await using MemoryStream memoryStream = new();
                     using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
 
-                    await attachments.Where(x => !string.IsNullOrWhiteSpace(x.AttachmentName)).Select(x => (x.AttachmentStream, x.AttachmentName!)).AddFilesToZip(archive, CompressionLevel.SmallestSize).ConfigureAwait(false);
+                    await attachments.Where(x => !string.IsNullOrWhiteSpace(x.AttachmentName)).Select(x => (x.AttachmentStream, x.AttachmentName!)).AddFilesToZip(archive, CompressionLevel.SmallestSize, cancellationToken).ConfigureAwait(false);
 
                     //foreach (MailAttachment attachment in attachments)
                     //{
@@ -266,7 +266,7 @@ public static class Email
                     //}
                     archive.Dispose();
                     memoryStream.Position = 0;
-                    await bodyBuilder.Attachments.AddAsync("Files.zip", memoryStream).ConfigureAwait(false);
+                    await bodyBuilder.Attachments.AddAsync("Files.zip", memoryStream, cancellationToken).ConfigureAwait(false);
                 }
             }
         }

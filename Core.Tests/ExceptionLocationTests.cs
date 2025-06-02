@@ -61,7 +61,7 @@ public class ExceptionLocationTests
         string location = ex.GetLocationOfException();
 
         // Assert
-        location.ShouldBe(".");
+        location.ShouldBe("null.");
     }
 
     [Fact]

@@ -1,22 +1,33 @@
-﻿
-using Renci.SshNet;
+﻿using Renci.SshNet;
 
 namespace CommonNetFuncs.Web.Ftp;
 
 public interface ISshFtpService
 {
     string GetHostName();
+
     bool IsConnected();
+
     SftpClient Connect();
+
     Task<SftpClient> ConnectAsync(CancellationTokenSource? cancellationTokenSource);
+
     bool DisconnectClient();
+
     bool DirectoryExists(string path);
+
     Task<bool> DirectoryExistsAsync(string path);
+
     IEnumerable<string> GetFileList(string path, string extension = "*");
+
     IAsyncEnumerable<string> GetFileListAsync(string path, string extension = "*", CancellationTokenSource? cancellationTokenSource = null);
+
     List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true);
+
     bool DeleteFile(string remoteFilePath);
+
     Task<bool> DeleteFileAsync(string remoteFilePath);
+
     void Dispose();
 }
 

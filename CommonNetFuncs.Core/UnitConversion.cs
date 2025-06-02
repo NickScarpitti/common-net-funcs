@@ -18,10 +18,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="massLbs">Mass in lbs to convert to kg</param>
     /// <returns>Decimal representation of the mass in lbs converted to kg</returns>
-    public static decimal LbsToKg(this decimal massLbs)
-    {
-        return massLbs / KgToLbsConst;
-    }
+    public static decimal LbsToKg(this decimal massLbs) { return massLbs / KgToLbsConst; }
 
     /// <summary>
     /// Convert mass in lbs to kg
@@ -45,10 +42,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="massKg">Mass in kg to convert to lbs</param>
     /// <returns>Decimal representation of the mass in kg converted to lbs</returns>
-    public static decimal KgToLbs(this decimal massKg)
-    {
-        return massKg * KgToLbsConst;
-    }
+    public static decimal KgToLbs(this decimal massKg) { return massKg * KgToLbsConst; }
 
     /// <summary>
     /// Convert mass in kg to lbs
@@ -72,10 +66,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="lenIns">Length in inches to convert to feet</param>
     /// <returns>Decimal representation of the length in inches converted to feet</returns>
-    public static decimal InsToFt(this decimal lenIns)
-    {
-        return lenIns / FtToInConst;
-    }
+    public static decimal InsToFt(this decimal lenIns) { return lenIns / FtToInConst; }
 
     /// <summary>
     /// Convert length in inches to feet
@@ -99,10 +90,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="lenIns">Length in inches to convert to mm</param>
     /// <returns>Decimal representation of the length in inches converted to mm</returns>
-    public static decimal InsToMm(this decimal lenIns)
-    {
-        return ToDecimal(lenIns) * InToMmConst;
-    }
+    public static decimal InsToMm(this decimal lenIns) { return ToDecimal(lenIns) * InToMmConst; }
 
     /// <summary>
     /// Convert length in inches to mm
@@ -127,9 +115,7 @@ public static class UnitConversion
     /// <param name="lenMm<">Length in mm to convert to inches</param>
     /// <returns>Decimal representation of the length in mm converted to inches</returns>
     public static decimal MmToIns(this decimal lenMm, int decimalPlaces = 1)
-    {
-        return Round(ToDecimal(lenMm) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(ToDecimal(lenMm) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert length in mm to inches
@@ -153,10 +139,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="lenFt">Length in feet to convert to inches</param>
     /// <returns>Decimal representation of the length in feet converted to inches</returns>
-    public static decimal FtToIns(this decimal lenFt)
-    {
-        return lenFt * FtToInConst;
-    }
+    public static decimal FtToIns(this decimal lenFt) { return lenFt * FtToInConst; }
 
     /// <summary>
     /// Convert length in feet to inches
@@ -181,9 +164,7 @@ public static class UnitConversion
     /// <param name="bytes">Number of bytes to convert to Kb</param>
     /// <returns>Decimal representation of the number of bytes in Kb</returns>
     public static decimal BytesToKb(this int bytes, int decimalPlaces = 1)
-    {
-        return Round(bytes / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(bytes / 1024m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert bytes to Kb
@@ -191,19 +172,14 @@ public static class UnitConversion
     /// <param name="bytes">Number of bytes to convert to Kb</param>
     /// <returns>Decimal representation of the number of bytes in Kb</returns>
     public static decimal BytesToKb(this long bytes, int decimalPlaces = 1)
-    {
-        return Round(bytes / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(bytes / 1024m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Kb to bytes
     /// </summary>
     /// <param name="kb">Number of Kb to convert to bytes</param>
     /// <returns>Decimal representation of the number of Kb in bytes</returns>
-    public static long KbToBytes(this decimal kb)
-    {
-        return (long)(kb * 1024L);
-    }
+    public static long KbToBytes(this decimal kb) { return (long)(kb * 1024L); }
 
     /// <summary>
     /// Convert bytes to Mb
@@ -211,9 +187,7 @@ public static class UnitConversion
     /// <param name="bytes">Number of bytes to convert to Mb</param>
     /// <returns>Decimal representation of the number of bytes in Mb</returns>
     public static decimal BytesToMb(this int bytes, int decimalPlaces = 1)
-    {
-        return Round(bytes / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(bytes / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert bytes to Mb
@@ -221,19 +195,14 @@ public static class UnitConversion
     /// <param name="bytes">Number of bytes to convert to Mb</param>
     /// <returns>Decimal representation of the number of bytes in Mb</returns>
     public static decimal BytesToMb(this long bytes, int decimalPlaces = 1)
-    {
-        return Round(bytes / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(bytes / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Mb to bytes
     /// </summary>
     /// <param name="mb">Number of Mb to convert to bytes</param>
     /// <returns>Decimal representation of the number of Mb in bytes</returns>
-    public static long MbToBytes(this decimal mb)
-    {
-        return (long)(mb * 1048576L);
-    }
+    public static long MbToBytes(this decimal mb) { return (long)(mb * 1048576L); }
 
     /// <summary>
     /// Convert bytes to Gb
@@ -241,9 +210,7 @@ public static class UnitConversion
     /// <param name="bytes">Number of bytes to convert to Gb</param>
     /// <returns>Decimal representation of the number of bytes in Gb</returns>
     public static decimal BytesToGb(this int bytes, int decimalPlaces = 1)
-    {
-        return Round(bytes / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(bytes / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert bytes to Gb
@@ -251,19 +218,14 @@ public static class UnitConversion
     /// <param name="bytes">Number of bytes to convert to Gb</param>
     /// <returns>Decimal representation of the number of bytes in Gb</returns>
     public static decimal BytesToGb(this long bytes, int decimalPlaces = 1)
-    {
-        return Round(bytes / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(bytes / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Gb to bytes
     /// </summary>
     /// <param name="gb">Number of Gb to convert to bytes</param>
     /// <returns>Decimal representation of the number of Gb in bytes</returns>
-    public static long GbToBytes(this decimal gb)
-    {
-        return (long)(gb * 1073741824L);
-    }
+    public static long GbToBytes(this decimal gb) { return (long)(gb * 1073741824L); }
 
     /// <summary>
     /// Convert bytes to Tb
@@ -271,9 +233,7 @@ public static class UnitConversion
     /// <param name="bytes">Number of bytes to convert to Tb</param>
     /// <returns>Decimal representation of the number of bytes in Tb</returns>
     public static decimal BytesToTb(this int bytes, int decimalPlaces = 1)
-    {
-        return Round(bytes / 1099511627776m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(bytes / 1099511627776m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert bytes to Tb
@@ -281,19 +241,14 @@ public static class UnitConversion
     /// <param name="bytes">Number of bytes to convert to Tb</param>
     /// <returns>Decimal representation of the number of bytes in Tb</returns>
     public static decimal BytesToTb(this long bytes, int decimalPlaces = 1)
-    {
-        return Round(bytes / 1099511627776m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(bytes / 1099511627776m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert bytes to Tb
     /// </summary>
     /// <param name="tb">Number of Tb to convert to bytes</param>
     /// <returns>Decimal representation of the number of Tb in bytes</returns>
-    public static long TbToBytes(this decimal tb)
-    {
-        return (long)(tb * 1099511627776L);
-    }
+    public static long TbToBytes(this decimal tb) { return (long)(tb * 1099511627776L); }
 
     /// <summary>
     /// Convert Kb to Mb
@@ -301,9 +256,7 @@ public static class UnitConversion
     /// <param name="kb">Number of Kb to convert to Mb</param>
     /// <returns>Decimal representation of the number of Kb in Mb</returns>
     public static decimal KbToMb(this decimal kb, int decimalPlaces = 1)
-    {
-        return Round(kb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(kb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Mb to Kb
@@ -311,9 +264,7 @@ public static class UnitConversion
     /// <param name="mb">Number of Mb to convert to Kb</param>
     /// <returns>Decimal representation of the number of Mb in Kb</returns>
     public static decimal MbToKb(this decimal mb, int decimalPlaces = 1)
-    {
-        return Round(mb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(mb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Kb to Gb
@@ -321,9 +272,7 @@ public static class UnitConversion
     /// <param name="kb">Number of Kb to convert to Gb</param>
     /// <returns>Decimal representation of the number of Kb in Gb</returns>
     public static decimal KbToGb(this decimal kb, int decimalPlaces = 1)
-    {
-        return Round(kb / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(kb / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Gb to Kb
@@ -331,9 +280,7 @@ public static class UnitConversion
     /// <param name="gb">Number of Gb to convert to Kb</param>
     /// <returns>Decimal representation of the number of Gb in Kb</returns>
     public static decimal GbToKb(this decimal gb, int decimalPlaces = 1)
-    {
-        return Round(gb / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(gb / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Kb to Tb
@@ -341,9 +288,7 @@ public static class UnitConversion
     /// <param name="kb">Number of Kb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Kb in Tb</returns>
     public static decimal KbToTb(this decimal kb, int decimalPlaces = 1)
-    {
-        return Round(kb / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(kb / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Tb to Kb
@@ -351,9 +296,7 @@ public static class UnitConversion
     /// <param name="tb">Number of Tb to convert to Kb</param>
     /// <returns>Decimal representation of the number of Tb in Kb</returns>
     public static decimal TbToKb(this decimal tb, int decimalPlaces = 1)
-    {
-        return Round(tb * 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(tb * 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Mb to Gb
@@ -361,9 +304,7 @@ public static class UnitConversion
     /// <param name="gb">Number of Mb to convert to Gb</param>
     /// <returns>Decimal representation of the number of Mb in Gb</returns>
     public static decimal MbToGb(this decimal gb, int decimalPlaces = 1)
-    {
-        return Round(gb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(gb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Gb to Mb
@@ -371,9 +312,7 @@ public static class UnitConversion
     /// <param name="gb">Number of Gb to convert to Mb</param>
     /// <returns>Decimal representation of the number of Gb in Mb</returns>
     public static decimal GbToMb(this decimal gb, int decimalPlaces = 1)
-    {
-        return Round(gb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(gb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Mb to Tb
@@ -381,9 +320,7 @@ public static class UnitConversion
     /// <param name="mb">Number of Mb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Mb in Tb</returns>
     public static decimal MbToTb(this decimal mb, int decimalPlaces = 1)
-    {
-        return Round(mb / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(mb / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Tb to Mb
@@ -391,9 +328,7 @@ public static class UnitConversion
     /// <param name="tb">Number of Tb to convert to Mb</param>
     /// <returns>Decimal representation of the number of Tb in Mb</returns>
     public static decimal TbToMb(this decimal tb, int decimalPlaces = 1)
-    {
-        return Round(tb * 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(tb * 1048576m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Gb to Tb
@@ -401,9 +336,7 @@ public static class UnitConversion
     /// <param name="gb">Number of Gb to convert to Tb</param>
     /// <returns>Decimal representation of the number of Gb in Tb</returns>
     public static decimal GbToTb(this decimal gb, int decimalPlaces = 1)
-    {
-        return Round(gb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(gb / 1024m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Convert Tb to Gb
@@ -411,9 +344,7 @@ public static class UnitConversion
     /// <param name="tb">Number of Tb to convert to Gb</param>
     /// <returns>Decimal representation of the number of Tb in Gb</returns>
     public static decimal TbToGb(this decimal tb, int decimalPlaces = 1)
-    {
-        return Round(tb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
-    }
+    { return Round(tb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero); }
 
     /// <summary>
     /// Returns a human readable string representation of the number of bytes
@@ -428,10 +359,9 @@ public static class UnitConversion
         {
             multiplier = -1;
         }
-        return bytes > 1025 ?
-            bytes.BytesToKb(decimalPlaces) > 1025 ? +
-                bytes.BytesToMb(decimalPlaces) > 1025 ?
-                    bytes.BytesToGb(decimalPlaces) > 1025 ?
+        return bytes >= 1024 ?
+            bytes.BytesToKb(decimalPlaces) >= 1024 ? +bytes.BytesToMb(decimalPlaces) >= 1024 ?
+                    bytes.BytesToGb(decimalPlaces) >= 1024 ?
                         $"{bytes.BytesToTb(decimalPlaces) * multiplier} TB" :
                     $"{bytes.BytesToGb(decimalPlaces) * multiplier} GB" :
                 $"{bytes.BytesToMb(decimalPlaces) * multiplier} MB" :
@@ -446,7 +376,10 @@ public static class UnitConversion
     /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this long? nullBytes, int decimalPlaces = 1)
     {
-        if (nullBytes == null) { return "-0"; }
+        if (nullBytes == null)
+        {
+            return "-0";
+        }
         long bytes = Abs((long)nullBytes);
 
         long multiplier = 1;
@@ -454,10 +387,10 @@ public static class UnitConversion
         {
             multiplier = -1;
         }
-        return bytes > 1025 ?
-            bytes.BytesToKb(decimalPlaces) > 1025 ?
-                bytes.BytesToMb(decimalPlaces) > 1025 ?
-                    bytes.BytesToGb(decimalPlaces) > 1025 ?
+        return bytes >= 1024 ?
+            bytes.BytesToKb(decimalPlaces) >= 1024 ?
+                bytes.BytesToMb(decimalPlaces) >= 1024 ?
+                    bytes.BytesToGb(decimalPlaces) >= 1024 ?
                         $"{bytes.BytesToTb(decimalPlaces) * multiplier} TB" :
                     $"{bytes.BytesToGb(decimalPlaces) * multiplier} GB" :
                 $"{bytes.BytesToMb(decimalPlaces) * multiplier} MB" :
@@ -471,9 +404,7 @@ public static class UnitConversion
     /// <param name="inputBytes">Number of bytes to be converted</param>
     /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this int inputBytes)
-    {
-        return ((long)inputBytes).GetFileSizeFromBytesWithUnits();
-    }
+    { return ((long)inputBytes).GetFileSizeFromBytesWithUnits(); }
 
     /// <summary>
     /// Returns a human readable string representation of the number of bytes
@@ -481,19 +412,14 @@ public static class UnitConversion
     /// <param name="nullBytes">Number of bytes to be converted</param>
     /// <returns>Human readable string representation of the number of bytes</returns>
     public static string GetFileSizeFromBytesWithUnits(this int? nullBytes)
-    {
-        return ((long?)nullBytes).GetFileSizeFromBytesWithUnits();
-    }
+    { return ((long?)nullBytes).GetFileSizeFromBytesWithUnits(); }
 
     /// <summary>
     /// Convert meters to miles
     /// </summary>
     /// <param name="meters">Number of meters to be converted into miles</param>
     /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
-    public static decimal MetersToMiles(this decimal meters)
-    {
-        return meters * MetersToMilesConst;
-    }
+    public static decimal MetersToMiles(this decimal meters) { return meters * MetersToMilesConst; }
 
     /// <summary>
     /// Convert meters to miles
@@ -517,10 +443,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="meters">Number of meters to be converted into miles</param>
     /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
-    public static decimal MetersToMiles(this double meters)
-    {
-        return ToDecimal(meters) * MetersToMilesConst;
-    }
+    public static decimal MetersToMiles(this double meters) { return ToDecimal(meters) * MetersToMilesConst; }
 
     /// <summary>
     /// Convert meters to miles
@@ -544,10 +467,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="meters">Number of meters to be converted into miles</param>
     /// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
-    public static decimal MetersToMiles(this int meters)
-    {
-        return meters * MetersToMilesConst;
-    }
+    public static decimal MetersToMiles(this int meters) { return meters * MetersToMilesConst; }
 
     /// <summary>
     /// Convert meters to miles
@@ -571,10 +491,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="miles">Number of miles to be converted into meters</param>
     /// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
-    public static decimal MilesToMeters(this decimal miles)
-    {
-        return miles / MetersToMilesConst;
-    }
+    public static decimal MilesToMeters(this decimal miles) { return miles / MetersToMilesConst; }
 
     /// <summary>
     /// Convert miles to meters
@@ -598,10 +515,7 @@ public static class UnitConversion
     /// </summary>
     /// <param name="miles">Number of miles to be converted into meters</param>
     /// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
-    public static decimal MilesToMeters(this int miles)
-    {
-        return miles / MetersToMilesConst;
-    }
+    public static decimal MilesToMeters(this int miles) { return miles / MetersToMilesConst; }
 
     /// <summary>
     /// Convert miles to meters

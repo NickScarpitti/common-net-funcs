@@ -24,6 +24,16 @@ public static class Random
             throw new ArgumentOutOfRangeException(nameof(maxValue), "Max value must be greater than 0.");
         }
 
+        if (minValue > maxValue)
+        {
+            throw new ArgumentException($"{nameof(minValue)} must be less than or equal to {nameof(maxValue)}", nameof(minValue));
+        }
+
+        if (minValue == maxValue)
+        {
+            return minValue; //There is only one possible value, so just return that
+        }
+
         using RandomNumberGenerator rng = RandomNumberGenerator.Create();
         byte[] randomNumber = new byte[4]; // 4 bytes for an integer
         rng.GetBytes(randomNumber);
@@ -37,14 +47,20 @@ public static class Random
     /// <param name="maxValue">Max value (non-inclusive) to return</param>
     /// <returns>Random number between 0 and maxValue - 1</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static int GetRandomInt(int maxValue = int.MaxValue) { return GetRandomInt(0, maxValue); }
+    public static int GetRandomInt(int maxValue = int.MaxValue)
+    {
+        return GetRandomInt(0, maxValue);
+    }
 
     /// <summary>
     /// Generate a random integer between 0 and int.MaxValue - 1
     /// </summary>
     /// <returns>Random number between 0 and int.MaxValue - 1</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static int GetRandomInt() { return GetRandomInt(0, int.MaxValue); }
+    public static int GetRandomInt()
+    {
+        return GetRandomInt(0, int.MaxValue);
+    }
 
     /// <summary>
     /// Generate a number of random integers between minValue and maxValue - 1
@@ -53,11 +69,12 @@ public static class Random
     /// <param name="maxValue">Max value (non-inclusive) to return in result</param>
     /// <returns>An enumerable of random number between minValue and maxValue - 1</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static IEnumerable<int> GetRandomInts(int numberToGenerate, int minValue = 0, int maxValue = int.MaxValue)
+    public static IEnumerable<int> GetRandomInts(int numberToGenerate, int minValue = 0, int maxValue = int.MaxValue, CancellationToken cancellationToken = default)
     {
         int[] ints = new int[numberToGenerate];
         for (int i = 0; i < numberToGenerate; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ints[i] = GetRandomInt(minValue, maxValue);
         }
         return ints;
@@ -99,11 +116,12 @@ public static class Random
     /// <param name="decimalPlaces">Number of decimal places to include in the results (max of 15)</param>
     /// <returns>A random double with the desired number of decimal places with no whole number component</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static IEnumerable<double> GetRandomDoubles(int numberToGenerate, int decimalPlaces = 15)
+    public static IEnumerable<double> GetRandomDoubles(int numberToGenerate, int decimalPlaces = 15, CancellationToken cancellationToken = default)
     {
         double[] doubles = new double[numberToGenerate];
         for (int i = 0; i < numberToGenerate; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             doubles[i] = GetRandomDouble(decimalPlaces);
         }
         return doubles;
@@ -150,11 +168,12 @@ public static class Random
     /// <param name="decimalPlaces">Number of decimal places to include in the randomly generated numbers (max of 28)</param>
     /// <returns>An enumerable of random decimals with the specified number of decimal places with no whole number component.</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static IEnumerable<decimal> GetRandomDecimals(int numberToGenerate, int decimalPlaces = 28)
+    public static IEnumerable<decimal> GetRandomDecimals(int numberToGenerate, int decimalPlaces = 28, CancellationToken cancellationToken = default)
     {
         decimal[] decimals = new decimal[numberToGenerate];
         for (int i = 0; i < numberToGenerate; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             decimals[i] = GetRandomDecimal(decimalPlaces);
         }
         return decimals;
@@ -166,11 +185,12 @@ public static class Random
     /// <typeparam name="T">Type of objects being shuffled</typeparam>
     /// <param name="list">List of objects to shuffle</param>
     /// <returns>Shuffled list of items</returns>
-    public static IList<T> ShuffleListInPlace<T>(this IList<T> list)
+    public static IList<T> ShuffleListInPlace<T>(this IList<T> list, CancellationToken cancellationToken = default)
     {
         int n = list.Count;
         while (n > 1)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             n--;
             int k = GetRandomInt(0, n + 1); //rngOld.Next(n + 1);
             (list[n], list[k]) = (list[k], list[n]);
@@ -210,7 +230,10 @@ public static class Random
     /// <typeparam name="T">Type of objects being shuffled</typeparam>
     /// <param name="items">Items to shuffle</param>
     /// <returns>Shuffled IEnumerable of items</returns>
-    public static void Shuffle<T>(this T[] items) { Shared.Shuffle(items); }
+    public static void Shuffle<T>(this T[] items)
+    {
+        Shared.Shuffle(items);
+    }
 
     /// <summary>
     /// Randomly shuffle a span of objects in place using the Random.Shared.Shuffle method
@@ -218,7 +241,10 @@ public static class Random
     /// <typeparam name="T">Type of objects being shuffled</typeparam>
     /// <param name="items">Items to shuffle</param>
     /// <returns>Shuffled IEnumerable of items</returns>
-    public static void Shuffle<T>(this Span<T> items) { Shared.Shuffle(items); }
+    public static void Shuffle<T>(this Span<T> items)
+    {
+        Shared.Shuffle(items);
+    }
 
     /// <summary>
     /// Randomly shuffle a collection of objects in place using linq
@@ -227,7 +253,9 @@ public static class Random
     /// <param name="items">Items to shuffle</param>
     /// <returns>Shuffled IEnumerable of items</returns>
     public static IEnumerable<T> ShuffleLinq<T>(this IEnumerable<T> items)
-    { return items.OrderBy(_ => GetRandomInt()).ToList(); }
+    {
+        return items.OrderBy(_ => GetRandomInt()).ToList();
+    }
 
     /// <summary>
     /// Select a random object from a IEnumerable of objects
@@ -236,7 +264,9 @@ public static class Random
     /// <param name="items">Items to select from</param>
     /// <returns>Randomly selected object</returns>
     public static T? GetRandomElement<T>(this IEnumerable<T> items)
-    { return items.Skip(GetRandomInt(0, items.Count())).First(); }
+    {
+        return items.Skip(GetRandomInt(0, items.Count())).First();
+    }
 
     /// <summary>
     /// Select a random object from a IEnumerable of objects
@@ -245,7 +275,9 @@ public static class Random
     /// <param name="items">Items to select from</param>
     /// <returns>Randomly selected objects</returns>
     public static IEnumerable<T> GetRandomElements<T>(this IEnumerable<T> items, int selectQuantity = 1)
-    { return Shared.GetItems(items.ToArray(), selectQuantity); }
+    {
+        return Shared.GetItems(items.ToArray(), selectQuantity);
+    }
 
     /// <summary>
     /// Generates a random string of the indicated length using a range of ASCII characters
@@ -257,7 +289,7 @@ public static class Random
     /// <param name="blacklistedCharacters">Characters that fall within the provided range that are to not be used</param>
     /// <returns>A random string of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static string GenerateRandomString(int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null)
+    public static string GenerateRandomString(int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null, CancellationToken cancellationToken = default)
     {
         if (lowerAsciiBound < 0 || upperAsciiBound > 127 || lowerAsciiBound >= upperAsciiBound)
         {
@@ -289,6 +321,7 @@ public static class Random
         {
             for (int i = 0; i < length; i++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 List<int> blackListCharVals = blacklistedCharacters.Select(x => (int)x).ToList();
                 List<int> whiteListCharVals = Enumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound).ToList();
                 if (whiteListCharVals.Intersect(blackListCharVals).Count() == whiteListCharVals.Count)
@@ -318,12 +351,12 @@ public static class Random
     /// <param name="blacklistedCharacters">Characters that fall within the provided range that are to not be used</param>
     /// <returns>An enumerable of random strings of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static IEnumerable<string> GenerateRandomStrings(int numberToGenerate, int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null)
+    public static IEnumerable<string> GenerateRandomStrings(int numberToGenerate, int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null, CancellationToken cancellationToken = default)
     {
         string[] strings = new string[numberToGenerate];
         for (int i = 0; i < numberToGenerate; i++)
         {
-            strings[i] = GenerateRandomString(maxLength, minLength, lowerAsciiBound, upperAsciiBound, blacklistedCharacters);
+            strings[i] = GenerateRandomString(maxLength, minLength, lowerAsciiBound, upperAsciiBound, blacklistedCharacters, cancellationToken);
         }
         return strings;
     }
@@ -334,7 +367,7 @@ public static class Random
     /// <param name="length">Length of the random string to be generated</param>
     /// <param name="charSet">Characters that are to be used in the generated string</param>
     /// <returns>A random string of the given length comprised only of characters in either the default or custom character set</returns>
-    public static string GenerateRandomStringByCharSet(int length, char[]? charSet = null)
+    public static string GenerateRandomStringByCharSet(int length, char[]? charSet = null, CancellationToken cancellationToken = default)
     {
         // Use a default character set if none is provided
         if (charSet == null || charSet.Length == 0)
@@ -346,6 +379,7 @@ public static class Random
 
         for (int i = 0; i < length; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             char randomChar = charSet[GetRandomInt(0, charSet.Length)];
             result.Append(randomChar);
         }

@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using FastExpressionCompiler;
 using NLog;
 
 namespace CommonNetFuncs.Core;
@@ -296,7 +297,7 @@ public static class Inspect
         Expression<Func<object, object, IEnumerable<string>, bool>> lambda = Expression.Lambda<Func<object, object, IEnumerable<string>, bool>>(
             andAlsoExpression, obj1Param, obj2Param, exemptPropsParam);
 
-        return lambda.Compile();
+        return lambda.CompileFast();
     }
 
     public static string GetHashForObject<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)

@@ -16,6 +16,15 @@ public class FastMapperTests
         public DateTime DateProp { get; set; }
     }
 
+    public class NullableSimpleSource
+    {
+        public required string? StringProp { get; set; }
+
+        public int? IntProp { get; set; }
+
+        public DateTime? DateProp { get; set; }
+    }
+
     public class SimpleDestination
     {
         public required string StringProp { get; set; }
@@ -23,6 +32,15 @@ public class FastMapperTests
         public int IntProp { get; set; }
 
         public DateTime DateProp { get; set; }
+    }
+
+    public class NullableSimpleDestination
+    {
+        public required string? StringProp { get; set; }
+
+        public int? IntProp { get; set; }
+
+        public DateTime? DateProp { get; set; }
     }
 
     public class ComplexSource
@@ -42,6 +60,23 @@ public class FastMapperTests
         public required Stack<double> DoubleStack { get; set; }
     }
 
+    public class NullableComplexSource
+    {
+        public required string? Name { get; set; }
+
+        public required List<string>? StringList { get; set; }
+
+        public required Dictionary<string, int>? Dictionary { get; set; }
+
+        public required NullableSimpleSource? NestedObject { get; set; }
+
+        public required HashSet<int>? NumberSet { get; set; }
+
+        public required Queue<string>? StringQueue { get; set; }
+
+        public required Stack<double>? DoubleStack { get; set; }
+    }
+
     public class ComplexDestination
     {
         public required string Name { get; set; }
@@ -57,6 +92,23 @@ public class FastMapperTests
         public required Queue<string> StringQueue { get; set; }
 
         public required Stack<double> DoubleStack { get; set; }
+    }
+
+    public class NullableComplexDestination
+    {
+        public required string? Name { get; set; }
+
+        public required List<string>? StringList { get; set; }
+
+        public required Dictionary<string, int>? Dictionary { get; set; }
+
+        public required NullableSimpleDestination? NestedObject { get; set; }
+
+        public required HashSet<int>? NumberSet { get; set; }
+
+        public required Queue<string>? StringQueue { get; set; }
+
+        public required Stack<double>? DoubleStack { get; set; }
     }
 
     public class ReadOnlyCollectionSource
@@ -81,11 +133,20 @@ public class FastMapperTests
     {
         private readonly List<T> _items = [];
 
-        public void Add(T item) { _items.Add(item); }
+        public void Add(T item)
+        {
+            _items.Add(item);
+        }
 
-        public IEnumerator<T> GetEnumerator() { return _items.GetEnumerator(); }
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _items.GetEnumerator();
+        }
 
-        IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 
     public class CustomCollectionSource
@@ -200,6 +261,47 @@ public class FastMapperTests
         result.NestedObject.StringProp.ShouldBe(source.NestedObject.StringProp);
         result.NestedObject.IntProp.ShouldBe(source.NestedObject.IntProp);
         result.NestedObject.DateProp.ShouldBe(source.NestedObject.DateProp);
+    }
+
+    [Theory]
+    [InlineData("Test1", new[] { "one", "two" }, "key1", 1, "Nested", 1, new[] { 1, 2 }, "first", 1.0)]
+    [InlineData(null, null, null, null, null, null, null, null, null)]
+    public void FastMap_WithComplexNullableProperties_MapsCorrectly(string? name, string[]? stringList, string? dictKey, int? dictValue,
+       string? nestedString, int? nestedInt, int[]? numberSet, string? queueItem, double? stackItem)
+    {
+        // Arrange
+        NullableComplexSource source = new()
+        {
+            Name = name,
+            StringList = stringList?.ToList(),
+            Dictionary = dictKey == null || dictValue == null ? null : new() { [dictKey] = (int)dictValue },
+            NestedObject = new()
+            {
+                StringProp = nestedString,
+                IntProp = nestedInt,
+                DateProp = nestedInt == null ? null : DateTime.Now
+            },
+            NumberSet = numberSet?.ToHashSet(),
+            StringQueue = queueItem == null ? null : new Queue<string>([queueItem]),
+            DoubleStack = stackItem == null ? null : new Stack<double>([(double)stackItem])
+        };
+
+        // Act
+        NullableComplexDestination result = source.FastMap<NullableComplexSource, NullableComplexDestination>();
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Name.ShouldBe(source.Name);
+        result.StringList.ShouldBe(source.StringList);
+        result.Dictionary.ShouldBe(source.Dictionary);
+        result.NumberSet.ShouldBe(source.NumberSet);
+        result.StringQueue.ShouldBe(source.StringQueue);
+        result.DoubleStack.ShouldBe(source.DoubleStack);
+        result.NestedObject?.StringProp.ShouldBe(source.NestedObject.StringProp);
+
+        result.NestedObject?.StringProp.ShouldBe(source.NestedObject.StringProp);
+        result.NestedObject?.IntProp.ShouldBe(source.NestedObject.IntProp);
+        result.NestedObject?.DateProp.ShouldBe(source.NestedObject.DateProp);
     }
 
     [Theory]

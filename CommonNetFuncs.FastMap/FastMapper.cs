@@ -19,12 +19,19 @@ public static class FastMapper
         public readonly Type DestType = destType;
 
         public bool Equals(MapperCacheKey other)
-        { return other.SourceType == SourceType && other.DestType == DestType; }
+        {
+            return other.SourceType == SourceType && other.DestType == DestType;
+        }
 
         public override bool Equals(object? obj)
-        { return obj is MapperCacheKey mapperCacheKey && Equals(mapperCacheKey); }
+        {
+            return obj is MapperCacheKey mapperCacheKey && Equals(mapperCacheKey);
+        }
 
-        public override int GetHashCode() { return SourceType.GetHashCode() + DestType.GetHashCode(); }
+        public override int GetHashCode()
+        {
+            return SourceType.GetHashCode() + DestType.GetHashCode();
+        }
     }
 
     private static readonly ConcurrentDictionary<MapperCacheKey, Delegate> mapperCache = [];
@@ -186,7 +193,7 @@ public static class FastMapper
             foreach (PropertyInfo destProp in destinationProperties.Where(x => x.CanWrite && !assignedProperties.Contains(x.Name)))
             {
                 Expression destAccess = Expression.Property(destinationVariable, destProp);
-                if (!destProp.PropertyType.IsValueType) // If the property is reference type and not value type, and not already assigned, assign default if null
+                if (!destProp.PropertyType.IsValueType && destProp.PropertyType.GetDefaultValue() != null)
                 {
                     ConstructorInfo? constructorInfo = destProp.PropertyType.GetConstructor(Type.EmptyTypes);
                     if (constructorInfo != null)
@@ -205,6 +212,25 @@ public static class FastMapper
         BlockExpression body = Expression.Block(variables, bindings);
         Expression<Func<T, UT>> lambda = Expression.Lambda<Func<T, UT>>(body, sourceParameter);
         return lambda.CompileFast();
+    }
+
+    private static bool IsNullableReferenceType(PropertyInfo property)
+    {
+        CustomAttributeData? nullable = property.CustomAttributes.FirstOrDefault(x => x.AttributeType.FullName == "System.Runtime.CompilerServices.NullableAttribute");
+        if (nullable?.ConstructorArguments.Count == 1)
+        {
+            CustomAttributeTypedArgument arg = nullable.ConstructorArguments[0];
+            if (arg.ArgumentType == typeof(byte[]))
+            {
+                ReadOnlyCollection<CustomAttributeTypedArgument> args = (ReadOnlyCollection<CustomAttributeTypedArgument>)arg.Value!;
+                return args.Count > 0 && args[0].Value is byte b && b == 2;
+            }
+            else if (arg.ArgumentType == typeof(byte))
+            {
+                return (byte)arg.Value! == 2;
+            }
+        }
+        return false;
     }
 
     private static BinaryExpression CreateCollectionMapping(Expression sourceAccess, Expression destAccess, Type sourceType, Type destType)

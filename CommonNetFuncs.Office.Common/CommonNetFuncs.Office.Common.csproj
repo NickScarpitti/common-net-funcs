@@ -26,6 +26,7 @@
     </Description>
     <PackageTags>dotnet;helpers;pdf;office;excel;word;ms;powerpoint</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -33,6 +34,7 @@
     <MinVerTagPrefix>office.common-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
     <PackageValidationBaselineVersion>3.2.22</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>

@@ -35,6 +35,8 @@
     <RootNamespace>CommonNetFuncs.SubsetModelBinder</RootNamespace>
 
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+
+    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -42,6 +44,7 @@
     <MinVerTagPrefix>subsetmodelbinder.generator-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
     <PackageValidationBaselineVersion>3.2.22</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>

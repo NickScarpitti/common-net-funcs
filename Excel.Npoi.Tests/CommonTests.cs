@@ -239,6 +239,23 @@ public sealed class CommonTests : IDisposable
         row.LastCellNum.ShouldBe((short)3);
     }
 
+    [Fact]
+    public void CreateCell_Extension_CreatesCellAtSpecifiedIndex()
+    {
+        // Arrange
+        IRow row = _sheet.CreateRow(0);
+        const int columnIndex = 2;
+
+        // Act
+        ICell cell = row.CreateCell(columnIndex);
+
+        // Assert
+        cell.ShouldNotBeNull();
+        cell.ColumnIndex.ShouldBe(columnIndex);
+        cell.RowIndex.ShouldBe(0);
+        row.GetCell(columnIndex).ShouldBeSameAs(cell);
+    }
+
     #endregion
 
     #region DataTables and Validation Tests
@@ -646,13 +663,22 @@ public sealed class CommonTests : IDisposable
     }
 
     [Theory]
-    [InlineData(0)]    // null
+    [InlineData(0)]    // Valid index
+    [InlineData(null)] // null
     [InlineData(-1)]   // negative
     public void ColumnIndexToName_WithNullableInt_WithInvalidValues_ThrowsArgumentException(int? value)
     {
         // Act & Assert
-        ArgumentException ex = Should.Throw<ArgumentException>(() => value.ColumnIndexToName());
-        ex.Message.ShouldBe("Index cannot be null or negative.");
+        if (value == null || value < 0)
+        {
+            ArgumentException ex = Should.Throw<ArgumentException>(() => value.ColumnIndexToName());
+            ex.Message.ShouldBe("Index cannot be null or negative.");
+        }
+        else
+        {
+            string result = value.ColumnIndexToName();
+            result.ShouldNotBeNullOrEmpty();
+        }
     }
 
     [Theory]
@@ -675,7 +701,7 @@ public sealed class CommonTests : IDisposable
     public void WriteExcelFile_WithSXSSFWorkbook_WritesSuccessfully()
     {
         // Arrange
-        using SXSSFWorkbook wb = new SXSSFWorkbook();
+        using SXSSFWorkbook wb = new();
         ISheet sheet = wb.CreateSheet("Test");
         IRow row = sheet.CreateRow(0);
         row.CreateCell(0).SetCellValue("Test");
@@ -704,7 +730,7 @@ public sealed class CommonTests : IDisposable
     public void WriteExcelFile_WithHSSFWorkbook_WritesSuccessfully()
     {
         // Arrange
-        using HSSFWorkbook wb = new HSSFWorkbook();
+        using HSSFWorkbook wb = new();
         ISheet sheet = wb.CreateSheet("Test");
         IRow row = sheet.CreateRow(0);
         row.CreateCell(0).SetCellValue("Test");
@@ -733,7 +759,7 @@ public sealed class CommonTests : IDisposable
     public void GetCustomStyle_WithBorderStyles_AppliesCorrectly()
     {
         // Arrange
-        NpoiBorderStyles borderStyles = new NpoiBorderStyles
+        NpoiBorderStyles borderStyles = new()
         {
             BorderTop = BorderStyle.Thin,
             BorderLeft = BorderStyle.Medium,
@@ -779,7 +805,7 @@ public sealed class CommonTests : IDisposable
     public void GetCustomStyle_WithHssfColor_AppliesCorrectColor()
     {
         // Arrange
-        short colorIndex = HSSFColor.Red.Index;
+        const short colorIndex = HSSFColor.Red.Index;
 
         // Act
         ICellStyle style = _xlsxWorkbook.GetCustomStyle(hssfColor: colorIndex);
@@ -839,8 +865,11 @@ public sealed class CommonTests : IDisposable
     [InlineData(CellType.Unknown)]
     public void GetStringValue_WithSpecialCellTypes_ReturnsExpectedValue(CellType cellType)
     {
+        using XSSFWorkbook xlsxWorkbook = new();
+        ISheet sheet = xlsxWorkbook.CreateSheet("Test");
+
         // Arrange
-        ICell cell = _sheet.CreateRow(0).CreateCell(0);
+        ICell cell = sheet.CreateRow(0).CreateCell(0);
 
         switch (cellType)
         {
@@ -860,15 +889,15 @@ public sealed class CommonTests : IDisposable
 
         // Assert
         result.ShouldNotBeNull();
-        result.ShouldBe(cellType == CellType.Formula ? cell.StringCellValue : string.Empty);
+        result.ShouldBe(cellType == CellType.Formula ? cell.NumericCellValue.ToString() : string.Empty);
     }
 
     [Fact]
     public void GetRangeHeightInPx_WithStartRowGreaterThanEndRow_SwapsAndCalculatesCorrectly()
     {
         // Arrange
-        int startRow = 5;
-        int endRow = 2;
+        const int startRow = 5;
+        const int endRow = 2;
 
         for (int i = Math.Min(startRow, endRow); i <= Math.Max(startRow, endRow); i++)
         {
@@ -887,12 +916,12 @@ public sealed class CommonTests : IDisposable
     public void GetRangeWidthInPx_WithStartColGreaterThanEndCol_SwapsAndCalculatesCorrectly()
     {
         // Arrange
-        int startCol = 5;
-        int endCol = 2;
+        const int startCol = 5;
+        const int endCol = 2;
 
         for (int i = Math.Min(startCol, endCol); i <= Math.Max(startCol, endCol); i++)
         {
-            _sheet.SetColumnWidth(i, 0); // Set to 0 to test warning path
+            _sheet.SetColumnWidth(i, .0001); // Set to effectively 0 to test warning path (actual 0 does not work)
         }
 
         // Act
@@ -964,7 +993,7 @@ public sealed class CommonTests : IDisposable
         List<byte[]> imageData = [File.ReadAllBytes("TestData/test1.png"), File.ReadAllBytes("TestData/test2.png")];
         List<string> cellNames = ["ImageCell1", "ImageCell2"];
 
-        foreach (var (name, i) in cellNames.Select((n, i) => (n, i)))
+        foreach ((string name, int i) in cellNames.Select((n, i) => (n, i)))
         {
             IName namedRange = _xlsxWorkbook.CreateName();
             namedRange.NameName = name;
@@ -1120,10 +1149,7 @@ public sealed class CommonTests : IDisposable
         ms.Position = 0;
 
         // Act
-        DataTable result = ms.ReadExcelFileToDataTable(
-            hasHeaders: true, 
-            startCellReference: "A1", 
-            endCellReference: "C1");
+        DataTable result = ms.ReadExcelFileToDataTable(hasHeaders: true, startCellReference: "A1", endCellReference: "C1");
 
         // Assert
         result.Columns.Count.ShouldBe(3); // Should only include A1:C1

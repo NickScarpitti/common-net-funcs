@@ -55,13 +55,16 @@ public static partial class Common
     /// </summary>
     /// <param name="cell">Cell to check if it is empty</param>
     /// <returns>True if cell is empty</returns>
-    public static bool IsCellEmpty(this ICell cell) { return cell.GetStringValue().IsNullOrWhiteSpace(); }
+    public static bool IsCellEmpty(this ICell cell)
+    {
+        return cell.GetStringValue().IsNullOrWhiteSpace();
+    }
 
     /// <summary>
     /// Get ICell offset from cellReference
     /// </summary>
     /// <param name="ws">Worksheet that cell is in</param>
-    /// <param name="cellReference">Cell reference in A1 notation</param>
+    /// <param name="cellReference">Cell reference in A1 notation. If a range is provided, the top left cell of the range will be used</param>
     /// <param name="colOffset">X axis offset from the named cell reference</param>
     /// <param name="rowOffset">Y axis offset from the named cell reference</param>
     /// <returns>ICell object of the specified offset of the named cell</returns>
@@ -69,10 +72,15 @@ public static partial class Common
     {
         try
         {
-            CellReference cr = new(cellReference);
-            IRow? row = ws.GetRow(cr.Row + rowOffset);
-            row ??= ws.CreateRow(cr.Row + rowOffset);
-            return row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+            CellRangeAddress cellRangeAddress = CellRangeAddress.ValueOf(cellReference);
+            IRow row = ws.GetRow(cellRangeAddress.FirstRow + rowOffset);
+            row ??= ws.CreateRow(cellRangeAddress.FirstRow + rowOffset);
+            return row.GetCell(cellRangeAddress.FirstColumn + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+            //CellReference cr = new(cellReference);
+            //IRow? row = ws.GetRow(cr.Row + rowOffset);
+            //row ??= ws.CreateRow(cr.Row + rowOffset);
+            //return row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
         {
@@ -153,7 +161,9 @@ public static partial class Common
     /// <param name="colName">Column name of the column to find the last populated row in</param>
     /// <returns>0 based index of the last row with a non-blank value</returns>
     public static int GetLastPopulatedRowInColumn(this ISheet ws, string colName)
-    { return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber()); }
+    {
+        return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber());
+    }
 
     /// <summary>
     /// Get ICell offset from the cell with named reference cellName
@@ -268,7 +278,10 @@ public static partial class Common
     /// <param name="row">Row to create cell in</param>
     /// <param name="columnIndex">0 based column index of the cell to create</param>
     /// <returns>ICell object of the cell that was created</returns>
-    public static ICell CreateCell(this IRow row, int columnIndex) { return row.CreateCell(columnIndex); }
+    public static ICell CreateCell(this IRow row, int columnIndex)
+    {
+        return row.CreateCell(columnIndex);
+    }
 
     /// <summary>
     /// Writes an excel file to the specified path
@@ -610,10 +623,14 @@ public static partial class Common
         ctTable.tableStyleInfo = new() { name = tableStyle.ToString(), showRowStripes = showRowStripes, showColumnStripes = showColStripes };
         ctTable.tableColumns = new() { tableColumn = [] };
 
+        IRow headerRow = xssfSheet.GetRow(firstRowIndex) ?? xssfSheet.CreateRow(firstRowIndex);
         for (int i = 0; i < lastColIndex - firstColIndex + 1; i++)
         {
             string? cellValue = columnNames.AnyFast() && columnNames.Count - 1 >= i ? columnNames[i] : $"Column{i + 1}";
             ctTable.tableColumns.tableColumn.Add(new() { id = (uint)i + 1, name = cellValue });
+
+            ICell cell = headerRow.GetCell(firstColIndex + i) ?? headerRow.CreateCell(firstColIndex + i);
+            cell.SetCellValue(cellValue);
         }
     }
 
@@ -642,12 +659,12 @@ public static partial class Common
                 CellType.String => cell.StringCellValue,
                 CellType.Blank => string.Empty,
                 CellType.Boolean => cell.BooleanCellValue.ToString(),
-                CellType.Error => cell.ErrorCellValue.ToString(),
+                CellType.Error => string.Empty, // cell.ErrorCellValue.ToString(), <-- Returns the NPOI error code
                 _ => string.Empty,
             },
             CellType.Blank => string.Empty,
             CellType.Boolean => cell.BooleanCellValue.ToString(),
-            CellType.Error => cell.ErrorCellValue.ToString(),
+            CellType.Error => string.Empty, //cell.ErrorCellValue.ToString(), <-- Returns the NPOI error code
             _ => string.Empty,
         };
     }
@@ -676,7 +693,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cellName">Named range to insert image at</param>
     public static void AddImage(this IWorkbook wb, byte[] imageData, string cellName, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages([imageData], [cellName], anchorType); }
+    {
+        wb.AddImages([imageData], [cellName], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -720,7 +739,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, string range, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType); }
+    {
+        wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -729,7 +750,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, CellRangeAddress range, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages(ws, [imageData], [range], anchorType); }
+    {
+        wb.AddImages(ws, [imageData], [range], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -738,7 +761,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cell">Cell in range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, ICell cell, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType); }
+    {
+        wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -1207,7 +1232,10 @@ public static partial class Common
     /// </summary>
     /// <param name="fileStream">Stream representation of a file</param>
     /// <returns>True if stream is an XLSX file</returns>
-    public static bool IsXlsx(this Stream fileStream) { return DocumentFactoryHelper.HasOOXMLHeader(fileStream); }
+    public static bool IsXlsx(this Stream fileStream)
+    {
+        return DocumentFactoryHelper.HasOOXMLHeader(fileStream);
+    }
 
     /// <summary>
     /// Gets whether or not the stream passed in represents an XLSX type file or not
@@ -1215,7 +1243,9 @@ public static partial class Common
     /// <param name="workbook">NPOI Workbook Object</param>
     /// <returns>True if stream is an XLSX file</returns>
     public static bool IsXlsx(this IWorkbook workbook)
-    { return !workbook.GetType().Name.StrComp(typeof(HSSFWorkbook).Name); }
+    {
+        return !workbook.GetType().Name.StrComp(typeof(HSSFWorkbook).Name);
+    }
 
     private static readonly Dictionary<string, HSSFColor> HssfColorCache = [];
 

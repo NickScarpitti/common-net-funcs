@@ -1,5 +1,4 @@
-﻿using Shouldly;
-using static CommonNetFuncs.DeepClone.Reflection;
+﻿using static CommonNetFuncs.DeepClone.Reflection;
 
 namespace DeepClone.Tests;
 
@@ -183,8 +182,6 @@ public class ReflectionTests
 
     private class DerivedTestClass : TestClass
     {
-        private string? _privateField;
-
         public string? ExtraProperty { get; set; }
     }
 

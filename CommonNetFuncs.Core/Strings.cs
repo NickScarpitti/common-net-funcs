@@ -1,5 +1,4 @@
-﻿using FastExpressionCompiler;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -7,6 +6,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using FastExpressionCompiler;
 using static CommonNetFuncs.Core.MathHelpers;
 using static System.Convert;
 using static System.Web.HttpUtility;
@@ -317,20 +317,14 @@ public static partial class Strings
     /// </summary>
     /// <param name="s">The string to test</param>
     /// <returns>True if s is null, a zero length string, or consists only of white-space characters</returns>
-    public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? s)
-    {
-        return string.IsNullOrWhiteSpace(s);
-    }
+    public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? s) { return string.IsNullOrWhiteSpace(s); }
 
     /// <summary>
     /// Indicates whether a specified string is null or a zero length string
     /// </summary>
     /// <param name="s">The string to test</param>
     /// <returns>True if s is null or a zero length string</returns>
-    public static bool IsNullOrEmpty([NotNullWhen(false)] this string? s)
-    {
-        return string.IsNullOrEmpty(s);
-    }
+    public static bool IsNullOrEmpty([NotNullWhen(false)] this string? s) { return string.IsNullOrEmpty(s); }
 
     /// <summary>
     /// Indicates whether a specified string is null or a zero length string
@@ -338,9 +332,7 @@ public static partial class Strings
     /// <param name="enumerable">Collection to check if it's null or has no elements</param>
     /// <returns>True if s is null or a zero length string</returns>
     public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? enumerable)
-    {
-        return enumerable?.Any() != true;
-    }
+    { return enumerable?.Any() != true; }
 
     /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
@@ -349,9 +341,7 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static bool ContainsInvariant(this string? s, string? textToFind)
-    {
-        return textToFind != null && (s?.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
-    }
+    { return textToFind != null && (s?.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false); }
 
     /// <summary>
     /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
@@ -360,9 +350,7 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static bool ContainsInvariant(this IEnumerable<string?>? s, string? textToFind)
-    {
-        return s?.Contains(textToFind, StringComparer.InvariantCultureIgnoreCase) ?? false;
-    }
+    { return s?.Contains(textToFind, StringComparer.InvariantCultureIgnoreCase) ?? false; }
 
     /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
@@ -371,9 +359,7 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static bool StartsWithInvariant(this string? s, string? textToFind)
-    {
-        return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
-    }
+    { return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false); }
 
     /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
@@ -382,9 +368,7 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static bool EndsWithInvariant(this string? s, string? textToFind)
-    {
-        return textToFind != null && (s?.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
-    }
+    { return textToFind != null && (s?.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false); }
 
     /// <summary>
     /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
@@ -393,9 +377,7 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static int IndexOfInvariant(this string? s, string? textToFind)
-    {
-        return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
-    }
+    { return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0; }
 
     /// <summary>
     /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
@@ -404,9 +386,7 @@ public static partial class Strings
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static int IndexOfInvariant(this string? s, char? textToFind)
-    {
-        return textToFind != null ? s?.IndexOf((char)textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
-    }
+    { return textToFind != null ? s?.IndexOf((char)textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0; }
 
     /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
@@ -460,9 +440,7 @@ public static partial class Strings
     /// <returns></returns>
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ReplaceInvariant(this string? s, string oldValue, string newValue, bool replaceAllInstances = true, CancellationToken cancellationToken = default)
-    {
-        return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances, cancellationToken);
-    }
+    { return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances, cancellationToken); }
 
     /// <summary>
     /// Replace multiple substrings with another string, ignoring the case and culture when finding the substrings to replace.
@@ -528,9 +506,7 @@ public static partial class Strings
     /// <param name="s2">Second string to compare</param>
     /// <returns>True if the strings are equal</returns>
     public static bool StrComp(this string? s1, string? s2)
-    {
-        return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty);
-    }
+    { return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty); }
 
     /// <summary>
     /// Compare two strings with optional stringComparison parameter
@@ -539,9 +515,7 @@ public static partial class Strings
     /// <param name="s2">Second string to compare</param>
     /// <returns>True if the strings are equal based on the stringComparison value</returns>
     public static bool StrComp(this string? s1, string? s2, StringComparison stringComparison)
-    {
-        return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison);
-    }
+    { return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison); }
 
     /// <summary>
     /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
@@ -939,10 +913,7 @@ public static partial class Strings
     /// <param name="value">Integer to convert to string</param>
     /// <returns>String representation of the passed in nullable int</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this int? value)
-    {
-        return value?.ToString();
-    }
+    public static string? ToNString(this int? value) { return value?.ToString(); }
 
     /// <summary>
     /// Converts nullable long to string
@@ -950,10 +921,7 @@ public static partial class Strings
     /// <param name="value">Long to convert to string</param>
     /// <returns>String representation of the passed in nullable long</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this long? value)
-    {
-        return value?.ToString();
-    }
+    public static string? ToNString(this long? value) { return value?.ToString(); }
 
     /// <summary>
     /// Converts nullable double to string
@@ -961,10 +929,7 @@ public static partial class Strings
     /// <param name="value">Double to convert to string</param>
     /// <returns>String representation of the passed in nullable double</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this double? value)
-    {
-        return value?.ToString();
-    }
+    public static string? ToNString(this double? value) { return value?.ToString(); }
 
     /// <summary>
     /// Converts nullable decimal to string
@@ -972,10 +937,7 @@ public static partial class Strings
     /// <param name="value">Decimal to convert to string</param>
     /// <returns>String representation of the passed in nullable decimal</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this decimal? value)
-    {
-        return value?.ToString();
-    }
+    public static string? ToNString(this decimal? value) { return value?.ToString(); }
 
     /// <summary>
     /// Converts nullable object to string
@@ -983,10 +945,7 @@ public static partial class Strings
     /// <param name="value">Boolean to turn into a string</param>
     /// <returns>String representation of the passed in nullable object</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this bool? value)
-    {
-        return value?.ToString();
-    }
+    public static string? ToNString(this bool? value) { return value?.ToString(); }
 
     /// <summary>
     /// Converts nullable object to string
@@ -994,10 +953,7 @@ public static partial class Strings
     /// <param name="value">Object to turn into a string</param>
     /// <returns>String representation of the passed in nullable object</returns>
     [return: NotNullIfNotNull(nameof(value))]
-    public static string? ToNString(this object? value)
-    {
-        return value?.ToString();
-    }
+    public static string? ToNString(this object? value) { return value?.ToString(); }
 
     /// <summary>
     /// Converts list of string representations of integers into list of integers
@@ -1025,9 +981,7 @@ public static partial class Strings
     /// <param name="value">String value to be converted to nullable int</param>
     /// <returns>Nullable int parsed from a string</returns>
     public static int? ToNInt(this string? value)
-    {
-        return !string.IsNullOrWhiteSpace(value) && int.TryParse(value, out int i) ? i : null;
-    }
+    { return !string.IsNullOrWhiteSpace(value) && int.TryParse(value, out int i) ? i : null; }
 
     /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable doubles
@@ -1035,9 +989,7 @@ public static partial class Strings
     /// <param name="value">String value to be converted to nullable double</param>
     /// <returns>Nullable double parsed from a string</returns>
     public static double? ToNDouble(this string? value)
-    {
-        return !string.IsNullOrWhiteSpace(value) && double.TryParse(value, out double i) ? i : null;
-    }
+    { return !string.IsNullOrWhiteSpace(value) && double.TryParse(value, out double i) ? i : null; }
 
     /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable decimals
@@ -1045,9 +997,7 @@ public static partial class Strings
     /// <param name="value">String value to be converted to nullable decimal</param>
     /// <returns>Nullable decimal parsed from a string</returns>
     public static decimal? ToNDecimal(this string? value)
-    {
-        return !string.IsNullOrWhiteSpace(value) && decimal.TryParse(value, out decimal i) ? i : null;
-    }
+    { return !string.IsNullOrWhiteSpace(value) && decimal.TryParse(value, out decimal i) ? i : null; }
 
     /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
@@ -1103,39 +1053,28 @@ public static partial class Strings
     /// <param name="value">"Y"/"N" string to convert into a boolean</param>
     /// <returns>Bool representation of string value passed in</returns>
     public static bool YNToBool(this string? value)
-    {
-        return string.Equals(value?.Trim() ?? string.Empty, "Y", StringComparison.InvariantCultureIgnoreCase);
-    }
+    { return string.Equals(value?.Trim() ?? string.Empty, "Y", StringComparison.InvariantCultureIgnoreCase); }
 
     /// <summary>
     /// Convert bool to "Yes" or "No"
     /// </summary>
     /// <param name="value">Boolean to convert to "Yes" or "No"</param>
     /// <returns>"Yes" if true, "No" if false</returns>
-    public static string BoolToYesNo(this bool value)
-    {
-        return value ? nameof(EYesNo.Yes) : nameof(EYesNo.No);
-    }
+    public static string BoolToYesNo(this bool value) { return value ? nameof(EYesNo.Yes) : nameof(EYesNo.No); }
 
     /// <summary>
     /// Convert bool to "Y" or "N"
     /// </summary>
     /// <param name="value">Boolean to convert to "Yes" or "No"</param>
     /// <returns>"Y" if true, "N" if false</returns>
-    public static string BoolToYN(this bool value)
-    {
-        return value ? "Y" : "N";
-    }
+    public static string BoolToYN(this bool value) { return value ? "Y" : "N"; }
 
     /// <summary>
     /// Convert bool to 1 or 0
     /// </summary>
     /// <param name="value">Integer to convert to "Yes" or "No"</param>
     /// <returns>"Yes" if true, "No" if false</returns>
-    public static int BoolToInt(this bool value)
-    {
-        return ToInt32(value);
-    }
+    public static int BoolToInt(this bool value) { return ToInt32(value); }
 
     /// <summary>
     /// Get file name safe date in the chosen format
@@ -1143,9 +1082,7 @@ public static partial class Strings
     /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
     /// <returns>File name safe formatted date</returns>
     public static string GetSafeDate(string dateFormat)
-    {
-        return DateTime.Today.ToString(dateFormat).Replace("/", "-");
-    }
+    { return DateTime.Today.ToString(dateFormat).Replace("/", "-"); }
 
     /// <summary>
     /// Adds number in () at the end of a file name if it would create a duplicate in the savePath
@@ -1819,9 +1756,7 @@ public static partial class Strings
     /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
     [return: NotNullIfNotNull(nameof(input))]
     public static string? TrimOuterNonAlphanumeric(this string? input)
-    {
-        return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric();
-    }
+    { return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric(); }
 
     /// <summary>
     /// Counts the occurrences of a specific character in the given string.
@@ -1876,5 +1811,161 @@ public static partial class Strings
             throw new InvalidDataException("charToFind must be a single character");
         }
         return input.CountChars(charToFind[0]);
+    }
+
+    /// <summary>
+    /// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <param name="maxNumberOfChars">Max count of a specific character in input required to return true</param>
+    /// <returns>True if the maximum threshold maxNumberOfChars is not exceeded, otherwise false</returns>
+    public static bool HasNoMoreThanNumberOfChars(this ReadOnlySpan<char> input, char charToFind, int maxNumberOfChars)
+    {
+        if (maxNumberOfChars < 0)
+        {
+            throw new ArgumentException("maxNumberOfChars must be a number >= 0", nameof(maxNumberOfChars));
+        }
+
+        if (input.Length == 0)
+        {
+            return true;
+        }
+
+        int count = 0;
+        foreach (char @char in input)
+        {
+            if (@char == charToFind)
+            {
+                count++;
+                if (count > maxNumberOfChars)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <param name="maxNumberOfChars">Max count of a specific character in input required to return true</param>
+    /// <returns>True if the maximum threshold maxNumberOfChars is not exceeded, otherwise false</returns>
+    public static bool HasNoMoreThanNumberOfChars(this string? input, char charToFind, int maxNumberOfChars)
+    {
+        if (maxNumberOfChars < 0)
+        {
+            throw new ArgumentException("maxNumberOfChars must be a number >= 0", nameof(maxNumberOfChars));
+        }
+        if (input.IsNullOrEmpty())
+        {
+            return true;
+        }
+        return input.AsSpan().HasNoMoreThanNumberOfChars(charToFind, maxNumberOfChars);
+    }
+
+    /// <summary>
+    /// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <param name="maxNumberOfChars">Max count of a specific character in input required to return true</param>
+    /// <returns>True if the maximum threshold maxNumberOfChars is not exceeded, otherwise false</returns>
+    public static bool HasNoMoreThanNumberOfChars(this string? input, string charToFind, int maxNumberOfChars)
+    {
+        if (charToFind.Length > 1)
+        {
+            throw new InvalidDataException("charToFind must be a single character");
+        }
+        if (maxNumberOfChars < 0)
+        {
+            throw new ArgumentException("maxNumberOfChars must be a number >= 0", nameof(maxNumberOfChars));
+        }
+        return input.HasNoMoreThanNumberOfChars(charToFind[0], maxNumberOfChars);
+    }
+
+    /// <summary>
+    /// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <param name="minNumberOfChars">Minimum count of a specific character in input required to return true</param>
+    /// <returns>True if the minimum threshold minNumberOfChars is met or exceeded, otherwise false</returns>
+    public static bool HasNoLessThanNumberOfChars(this ReadOnlySpan<char> input, char charToFind, int minNumberOfChars)
+    {
+        if (minNumberOfChars < 0)
+        {
+            throw new ArgumentException("minNumberOfChars must be a number >= 0", nameof(minNumberOfChars));
+        }
+
+        if (input.Length == 0)
+        {
+            return minNumberOfChars == 0;
+        }
+
+        if (minNumberOfChars == 0)
+        {
+            return true;
+        }
+
+        int count = 0;
+        foreach (char @char in input)
+        {
+            if (@char == charToFind)
+            {
+                count++;
+                if (count == minNumberOfChars)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <param name="minNumberOfChars">Minimum count of a specific character in input required to return true</param>
+    /// <returns>True if the minimum threshold minNumberOfChars is met or exceeded, otherwise false</returns>
+    public static bool HasNoLessThanNumberOfChars(this string? input, char charToFind, int minNumberOfChars)
+    {
+        if (minNumberOfChars < 0)
+        {
+            throw new ArgumentException("minNumberOfChars must be a number >= 0", nameof(minNumberOfChars));
+        }
+
+        if (input.IsNullOrEmpty())
+        {
+            return minNumberOfChars == 0;
+        }
+
+        return input.AsSpan().HasNoLessThanNumberOfChars(charToFind, minNumberOfChars);
+    }
+
+    /// <summary>
+    /// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
+    /// </summary>
+    /// <param name="input">The string to search within. Can be null or empty.</param>
+    /// <param name="charToFind">The character to count occurrences of.</param>
+    /// <param name="minNumberOfChars">Minimum count of a specific character in input required to return true</param>
+    /// <returns>True if the minimum threshold minNumberOfChars is met or exceeded, otherwise false</returns>
+    public static bool HasNoLessThanNumberOfChars(this string? input, string charToFind, int minNumberOfChars)
+    {
+        if (charToFind.Length > 1)
+        {
+            throw new InvalidDataException("charToFind must be a single character");
+        }
+
+        if (minNumberOfChars < 0)
+        {
+            throw new ArgumentException("minNumberOfChars must be a number >= 0", nameof(minNumberOfChars));
+        }
+        return input.HasNoLessThanNumberOfChars(charToFind[0], minNumberOfChars);
     }
 }

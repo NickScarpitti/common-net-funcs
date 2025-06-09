@@ -555,4 +555,87 @@ public class StringsTests
         // Assert
         result.ShouldBe(expected);
     }
+
+    [Theory]
+    [InlineData("hello", 'l', 2, true)]  // String has 2 'l's, max is 2
+    [InlineData("hello", 'l', 3, true)]  // String has 2 'l's, max is 3
+    [InlineData("hello", 'l', 1, false)] // String has 2 'l's, max is 1
+    [InlineData("test", 'x', 0, true)]   // String has 0 'x's, max is 0
+    [InlineData("", 'a', 5, true)]       // Empty string always returns true
+    [InlineData(null, 'a', 5, true)]     // Null string always returns true
+    public void HasNoMoreThanNumberOfChars_CountsCorrectly(string? input, char charToFind, int maxNumberOfChars, bool expected)
+    {
+        // Act
+        bool result = input.HasNoMoreThanNumberOfChars(charToFind, maxNumberOfChars);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("hello", "l", 2, true)]  // String version test
+    [InlineData("hello", "l", 3, true)]
+    [InlineData("hello", "l", 1, false)]
+    public void HasNoMoreThanNumberOfChars_StringOverload_CountsCorrectly(string input, string charToFind, int maxNumberOfChars, bool expected)
+    {
+        // Act
+        bool result = input.HasNoMoreThanNumberOfChars(charToFind, maxNumberOfChars);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void HasNoMoreThanNumberOfChars_ThrowsOnInvalidArgs()
+    {
+        // Arrange
+        const string input = "test";
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() => input.HasNoMoreThanNumberOfChars('t', -1));
+        Should.Throw<InvalidDataException>(() => input.HasNoMoreThanNumberOfChars("tt", 1));
+    }
+
+    [Theory]
+    [InlineData("hello", 'l', 2, true)]  // String has 2 'l's, min is 2
+    [InlineData("hello", 'l', 3, false)] // String has 2 'l's, min is 3
+    [InlineData("hello", 'l', 1, true)]  // String has 2 'l's, min is 1
+    [InlineData("test", 'x', 0, true)]   // String has 0 'x's, min is 0
+    [InlineData("test", 'x', 1, false)]  // String has 0 'x's, min is 1
+    [InlineData("", 'a', 0, true)]       // Empty string returns true only if min is 0
+    [InlineData("", 'a', 1, false)]      // Empty string returns false if min > 0
+    [InlineData(null, 'a', 0, true)]     // Null string behaves like empty string
+    [InlineData(null, 'a', 1, false)]    // Null string returns false if min > 0
+    public void HasNoLessThanNumberOfChars_CountsCorrectly(string? input, char charToFind, int minNumberOfChars, bool expected)
+    {
+        // Act
+        bool result = input.HasNoLessThanNumberOfChars(charToFind, minNumberOfChars);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("hello", "l", 2, true)]  // String version test
+    [InlineData("hello", "l", 3, false)]
+    [InlineData("hello", "l", 1, true)]
+    public void HasNoLessThanNumberOfChars_StringOverload_CountsCorrectly(string input, string charToFind, int minNumberOfChars, bool expected)
+    {
+        // Act
+        bool result = input.HasNoLessThanNumberOfChars(charToFind, minNumberOfChars);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void HasNoLessThanNumberOfChars_ThrowsOnInvalidArgs()
+    {
+        // Arrange
+        const string input = "test";
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() => input.HasNoLessThanNumberOfChars('t', -1));
+        Should.Throw<InvalidDataException>(() => input.HasNoLessThanNumberOfChars("tt", 1));
+    }
 }

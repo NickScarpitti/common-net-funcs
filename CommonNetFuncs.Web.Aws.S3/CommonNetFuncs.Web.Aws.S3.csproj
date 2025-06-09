@@ -25,6 +25,7 @@
       Helper methods that deal with AWS S3 interactions
     </Description>
     <PackageTags>dotnet;helpers;aws;s3;</PackageTags>
+    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -32,13 +33,14 @@
     <MinVerTagPrefix>web.aws.s3-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
     <PackageValidationBaselineVersion>3.4.0</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="4.0.1.1" PrivateAssets="all" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.1.3" PrivateAssets="all" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

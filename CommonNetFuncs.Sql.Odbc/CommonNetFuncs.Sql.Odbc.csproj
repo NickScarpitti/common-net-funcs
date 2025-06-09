@@ -25,6 +25,7 @@
     </Description>
     <PackageTags>dotnet;helpers;sql;odbc</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -32,6 +33,7 @@
     <MinVerTagPrefix>sql.odbc-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
     <PackageValidationBaselineVersion>3.4.0</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>

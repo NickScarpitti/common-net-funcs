@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Shouldly;
 using static CommonNetFuncs.DeepClone.ExpressionTrees;
 
 namespace DeepClone.Tests;
@@ -20,7 +19,11 @@ public class ExpressionTreesTests
 
         public readonly string ReadOnlyField = "test";
 
+        #pragma warning disable IDE0051 // Remove unused private members
+        #pragma warning disable RCS1213 // Remove unused member declaration
         private readonly int _privateReadOnlyField = 42;
+        #pragma warning disable IDE0051 // Remove unused private members
+        #pragma warning restore RCS1213 // Remove unused member declaration
     }
 
     public struct TestStruct
@@ -191,8 +194,7 @@ public class ExpressionTreesTests
         result.ReadOnlyField.ShouldBe(source.ReadOnlyField);
 
         // Use reflection to check private readonly field
-        FieldInfo? fieldInfo = typeof(TestClass).GetField("_privateReadOnlyField",
-            BindingFlags.NonPublic | BindingFlags.Instance);
+        FieldInfo? fieldInfo = typeof(TestClass).GetField("_privateReadOnlyField", BindingFlags.NonPublic | BindingFlags.Instance);
         fieldInfo.ShouldNotBeNull();
         fieldInfo.GetValue(result).ShouldBe(fieldInfo.GetValue(source));
     }

@@ -25,6 +25,7 @@
     </Description>
     <PackageTags>dotnet;helpers;base 64;images;optimize;gifsicle;jpegoptim;optipng;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -32,19 +33,20 @@
     <MinVerTagPrefix>images-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
     <PackageValidationBaselineVersion>3.4.0</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CliWrap" Version="3.8.2" PrivateAssets="all" />
+    <PackageReference Include="CliWrap" Version="3.9.0" PrivateAssets="all" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" PrivateAssets="all" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8" PrivateAssets="all" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.9" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

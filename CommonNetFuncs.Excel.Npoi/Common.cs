@@ -64,7 +64,7 @@ public static partial class Common
     /// Get ICell offset from cellReference
     /// </summary>
     /// <param name="ws">Worksheet that cell is in</param>
-    /// <param name="cellReference">Cell reference in A1 notation</param>
+    /// <param name="cellReference">Cell reference in A1 notation. If a range is provided, the top left cell of the range will be used</param>
     /// <param name="colOffset">X axis offset from the named cell reference</param>
     /// <param name="rowOffset">Y axis offset from the named cell reference</param>
     /// <returns>ICell object of the specified offset of the named cell</returns>
@@ -72,10 +72,15 @@ public static partial class Common
     {
         try
         {
-            CellReference cr = new(cellReference);
-            IRow? row = ws.GetRow(cr.Row + rowOffset);
-            row ??= ws.CreateRow(cr.Row + rowOffset);
-            return row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+            CellRangeAddress cellRangeAddress = CellRangeAddress.ValueOf(cellReference);
+            IRow row = ws.GetRow(cellRangeAddress.FirstRow + rowOffset);
+            row ??= ws.CreateRow(cellRangeAddress.FirstRow + rowOffset);
+            return row.GetCell(cellRangeAddress.FirstColumn + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+            //CellReference cr = new(cellReference);
+            //IRow? row = ws.GetRow(cr.Row + rowOffset);
+            //row ??= ws.CreateRow(cr.Row + rowOffset);
+            //return row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
         {
@@ -618,10 +623,14 @@ public static partial class Common
         ctTable.tableStyleInfo = new() { name = tableStyle.ToString(), showRowStripes = showRowStripes, showColumnStripes = showColStripes };
         ctTable.tableColumns = new() { tableColumn = [] };
 
+        IRow headerRow = xssfSheet.GetRow(firstRowIndex) ?? xssfSheet.CreateRow(firstRowIndex);
         for (int i = 0; i < lastColIndex - firstColIndex + 1; i++)
         {
             string? cellValue = columnNames.AnyFast() && columnNames.Count - 1 >= i ? columnNames[i] : $"Column{i + 1}";
             ctTable.tableColumns.tableColumn.Add(new() { id = (uint)i + 1, name = cellValue });
+
+            ICell cell = headerRow.GetCell(firstColIndex + i) ?? headerRow.CreateCell(firstColIndex + i);
+            cell.SetCellValue(cellValue);
         }
     }
 
@@ -650,12 +659,12 @@ public static partial class Common
                 CellType.String => cell.StringCellValue,
                 CellType.Blank => string.Empty,
                 CellType.Boolean => cell.BooleanCellValue.ToString(),
-                CellType.Error => cell.ErrorCellValue.ToString(),
+                CellType.Error => string.Empty, // cell.ErrorCellValue.ToString(), <-- Returns the NPOI error code
                 _ => string.Empty,
             },
             CellType.Blank => string.Empty,
             CellType.Boolean => cell.BooleanCellValue.ToString(),
-            CellType.Error => cell.ErrorCellValue.ToString(),
+            CellType.Error => string.Empty, //cell.ErrorCellValue.ToString(), <-- Returns the NPOI error code
             _ => string.Empty,
         };
     }
@@ -916,7 +925,7 @@ public static partial class Common
         float totaHeight = 0;
         for (int i = startRow; i < endRow + 1; i++)
         {
-            totaHeight += ws.GetRow(i).HeightInPoints;
+            totaHeight += ws.GetRow(i)?.HeightInPoints ?? 0;
         }
 
         return (int)Round(totaHeight * XSSFShape.EMU_PER_POINT / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
@@ -1167,15 +1176,20 @@ public static partial class Common
                     for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex++)
                     {
                         ws = wb.GetSheetAt(sheetIndex);
-                        foreach (XSSFTable t in ((XSSFSheet)ws).GetTables())
+                        foreach (XSSFTable sheetTable in ((XSSFSheet)ws).GetTables())
                         {
-                            tableName = t.Name;
+                            tableName = sheetTable.Name;
+                            if (!tableName.IsNullOrWhiteSpace())
+                            {
+                                table = wb.GetTable(tableName);
+                                break;
+                            }
                         }
-                    }
 
-                    if (!tableName.IsNullOrWhiteSpace())
-                    {
-                        table = wb.GetTable(tableName);
+                        if (table != null)
+                        {
+                            break;
+                        }
                     }
                 }
 

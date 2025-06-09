@@ -46,8 +46,7 @@ public static class Email
     /// <param name="smtpServer">The address of the SMTP server to use to sent the email</param>
     /// <param name="smtpPort">Port to use when connecting to the SMPT server</param>
     /// <param name="from">
-    /// The MailAddress indicating the email address to use in the From field (does not need to be an actual email
-    /// address)
+    /// The MailAddress indicating the email address to use in the From field (does not need to be an actual email address)
     /// </param>
     /// <param name="toAddresses">List of MailAdresses that indicates who to add as direct recipients of the email</param>
     /// <param name="subject">Text to be used as the subject of the email</param>
@@ -224,7 +223,7 @@ public static class Email
     /// <param name="attachments">Attachments to add to the email</param>
     /// <param name="bodyBuilder">Builder for the email to add attachments to</param>
     /// <param name="zipAttachments">If true, will perform zip compression on the attachment files before adding them to the email</param>
-    private static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments, CancellationToken cancellationToken = default)
+    public static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments, CancellationToken cancellationToken = default)
     {
         try
         {

@@ -47,6 +47,7 @@ public static class RestHelpersStatic
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
+            client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
             using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
             result = await HandleResponse<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url, requestOptions.UseNewtonsoftDeserializer, requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
@@ -100,6 +101,7 @@ public static class RestHelpersStatic
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
+            client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
             using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
             enumeratedReader = HandleResponseAsync<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url, cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
         }
@@ -207,6 +209,7 @@ public static class RestHelpersStatic
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
+            client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
             restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
             restObject.Result = HandleResponseAsync<T>(restObject.Response, requestOptions.HttpMethod.ToString(), requestOptions.Url, cancellationToken: cancellationToken);
         }

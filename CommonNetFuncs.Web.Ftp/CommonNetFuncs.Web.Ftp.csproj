@@ -25,6 +25,7 @@
     </Description>
     <PackageTags>dotnet;helpers;web;ftp;sshftp;ssh</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Configurations>Debug;Release;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -32,6 +33,7 @@
     <MinVerTagPrefix>web.ftp-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
     <PackageValidationBaselineVersion>3.3.4</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>

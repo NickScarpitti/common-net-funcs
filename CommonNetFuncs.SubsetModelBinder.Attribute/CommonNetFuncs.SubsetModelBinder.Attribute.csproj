@@ -27,6 +27,7 @@
     <PackageTags>dotnet;helpers;generator;model;binding;source generator;model binding;mvc</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RootNamespace>CommonNetFuncs.SubsetModelBinder</RootNamespace>
+    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -34,6 +35,7 @@
     <MinVerTagPrefix>subsetmodelbinder.attribute-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+    <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
     <PackageValidationBaselineVersion>3.2.22</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>

@@ -153,6 +153,7 @@ public static class RestHelpersStatic
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
+            client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
             restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
             restObject.Result = await HandleResponse<T>(restObject.Response, requestOptions.HttpMethod.ToString(), requestOptions.Url, requestOptions.UseNewtonsoftDeserializer, requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, requestOptions.HttpHeaders, cancellationToken).ConfigureAwait(false);
         }

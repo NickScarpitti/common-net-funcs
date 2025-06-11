@@ -446,4 +446,185 @@ public sealed class AsyncTests
     }
 
     #endregion
+
+    #region ResultTaskGroup<T> Tests
+
+    [Fact]
+    public async Task ResultTaskGroup_RunTasks_ShouldReturnAllResults()
+    {
+        List<Task<int>> tasks =
+        [
+            Task.FromResult(1),
+            Task.FromResult(2),
+            Task.FromResult(3)
+        ];
+        ResultTaskGroup<int> group = new(tasks);
+
+        int[] results = await group.RunTasks();
+
+        results.Length.ShouldBe(3);
+        results.ShouldContain(1);
+        results.ShouldContain(2);
+        results.ShouldContain(3);
+    }
+
+    [Fact]
+    public async Task ResultTaskGroup_RunTasks_WithEmptyTasks_ShouldReturnEmptyArray()
+    {
+        ResultTaskGroup<string> group = new();
+
+        string[] results = await group.RunTasks();
+
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ResultTaskGroup_RunTasks_WithSemaphore_ShouldLimitConcurrency()
+    {
+        int concurrent = 0;
+        int maxConcurrent = 0;
+        Lock lockObj = new();
+        SemaphoreSlim semaphore = new(2, 2);
+
+        List<Task<int>> tasks = Enumerable.Range(0, 6).Select(_ => Task.Run(async () =>
+        {
+            lock (lockObj)
+            {
+                concurrent++;
+                maxConcurrent = Math.Max(maxConcurrent, concurrent);
+            }
+            await Task.Delay(50);
+            lock (lockObj)
+            {
+                concurrent--;
+            }
+            return 42;
+        })).ToList();
+
+        ResultTaskGroup<int> group = new(tasks, semaphore);
+
+        int[] results = await group.RunTasks();
+
+        results.Length.ShouldBe(6);
+        results.All(x => x == 42).ShouldBeTrue();
+        maxConcurrent.ShouldBeLessThanOrEqualTo(2);
+    }
+
+    [Fact]
+    public async Task ResultTaskGroup_RunTasks_WithCancellation_ShouldRespectToken()
+    {
+        CancellationTokenSource cts = new();
+        TaskCompletionSource<int> tcs = new();
+        List<Task<int>> tasks =
+        [
+            Task.FromResult(1),
+            tcs.Task // This task will never complete
+        ];
+        ResultTaskGroup<int> group = new(tasks);
+
+        cts.Cancel();
+
+        await Should.ThrowAsync<OperationCanceledException>(async () => await group.RunTasks(cts.Token));
+    }
+
+    [Fact]
+    public async Task ResultTaskGroup_RunTasks_WhenTaskThrows_ShouldPropagateException()
+    {
+        List<Task<int>> tasks =
+        [
+            Task.FromResult(1),
+            Task.FromException<int>(new InvalidOperationException("fail"))
+        ];
+        ResultTaskGroup<int> group = new(tasks);
+
+        await Should.ThrowAsync<InvalidOperationException>(async () => await group.RunTasks());
+    }
+
+    #endregion
+
+    #region TaskGroup Tests
+
+    [Fact]
+    public async Task TaskGroup_RunTasks_ShouldRunAllTasks()
+    {
+        int executed = 0;
+        List<Task> tasks = Enumerable.Range(0, 4)
+            .Select(_ => new Task(async () =>
+            {
+                await Task.Delay(10);
+                Interlocked.Increment(ref executed);
+            })).ToList();
+
+        // Start all tasks
+        foreach (Task t in tasks)
+        {
+            t.Start();
+        }
+
+        TaskGroup group = new(tasks);
+
+        await group.RunTasks();
+
+        executed.ShouldBe(4);
+    }
+
+    [Fact]
+    public async Task TaskGroup_RunTasks_WithEmptyTasks_ShouldNotThrow()
+    {
+        TaskGroup group = new();
+
+        await Should.NotThrowAsync(group.RunTasks);
+    }
+
+    [Fact]
+    public async Task TaskGroup_RunTasks_WithSemaphore_ShouldLimitConcurrency()
+    {
+        int concurrent = 0;
+        int maxConcurrent = 0;
+        object lockObj = new();
+        SemaphoreSlim semaphore = new(2, 2);
+
+        List<Task> tasks = Enumerable.Range(0, 6)
+            .Select(_ => new Task(async () =>
+            {
+                lock (lockObj)
+                {
+                    concurrent++;
+                    maxConcurrent = Math.Max(maxConcurrent, concurrent);
+                }
+                await Task.Delay(50);
+                lock (lockObj)
+                {
+                    concurrent--;
+                }
+            }))
+            .ToList();
+
+        // Start all tasks
+        foreach (Task t in tasks)
+        {
+            t.Start();
+        }
+
+        TaskGroup group = new(tasks, semaphore);
+
+        await group.RunTasks();
+
+        maxConcurrent.ShouldBeLessThanOrEqualTo(2);
+    }
+
+    [Fact]
+    public async Task TaskGroup_RunTasks_WhenTaskThrows_ShouldPropagateException()
+    {
+        List<Task> tasks =
+        [
+            Task.CompletedTask,
+            Task.FromException(new InvalidOperationException("fail"))
+        ];
+        TaskGroup group = new(tasks);
+
+        await Should.ThrowAsync<InvalidOperationException>(group.RunTasks);
+    }
+
+    #endregion
 }

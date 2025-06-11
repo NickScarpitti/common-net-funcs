@@ -1060,7 +1060,6 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
         }
 
         T[] results = new T[Tasks.Count];
-
         await Parallel.ForAsync(0, Tasks.Count, cancellationToken ?? new(), async (i, cancellationToken) =>
         {
             try

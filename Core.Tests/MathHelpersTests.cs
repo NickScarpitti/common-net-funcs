@@ -4,7 +4,7 @@ using static CommonNetFuncs.Core.MathHelpers;
 
 namespace Core.Tests;
 
-public class MathHelpersTests
+public sealed class MathHelpersTests
 {
     [Theory]
     [InlineData(null, 5.0, 0.0)]        // null value
@@ -102,7 +102,10 @@ public class MathHelpersTests
     }
 
     [Fact]
-    public void GenerateRange_ThrowsOnInvalidRange() { Should.Throw<ArgumentException>(() => GenerateRange(5, 1)); }
+    public void GenerateRange_ThrowsOnInvalidRange()
+    {
+        Should.Throw<ArgumentException>(() => GenerateRange(5, 1));
+    }
 
     [Theory]
     [InlineData(12L, 8L, 4L, 3L, 2L)]       // basic reduction

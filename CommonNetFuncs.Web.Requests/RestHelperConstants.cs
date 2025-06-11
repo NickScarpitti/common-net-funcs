@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Web.Common;
+﻿using static CommonNetFuncs.Web.Common.ContentTypes;
+using static CommonNetFuncs.Web.Common.EncodingTypes;
 
 namespace CommonNetFuncs.Web.Requests;
 
@@ -8,17 +9,17 @@ public static class RestHelperConstants
     public const string AcceptEncodingHeader = "Accept-Encoding";
     public const string AcceptHeader = "Accept";
 
-    public static readonly KeyValuePair<string, string> NoEncodingHeader = new(AcceptEncodingHeader, EncodingTypes.Identity);
-    public static readonly KeyValuePair<string, string> BrotliEncodingHeader = new(AcceptEncodingHeader, EncodingTypes.Brotli);
-    public static readonly KeyValuePair<string, string> GzipEncodingHeader = new(AcceptEncodingHeader, EncodingTypes.GZip);
+    public static readonly KeyValuePair<string, string> NoEncodingHeader = new(AcceptEncodingHeader, Identity);
+    public static readonly KeyValuePair<string, string> BrotliEncodingHeader = new(AcceptEncodingHeader, Brotli);
+    public static readonly KeyValuePair<string, string> GzipEncodingHeader = new(AcceptEncodingHeader, GZip);
 
-    public static readonly KeyValuePair<string, string> MemPackContentHeader = new(ContentTypeHeader, ContentTypes.MemPack);
-    public static readonly KeyValuePair<string, string> MsgPackContentHeader = new(ContentTypeHeader, ContentTypes.MsgPack);
-    public static readonly KeyValuePair<string, string> JsonContentHeader = new(ContentTypeHeader, ContentTypes.Json);
+    public static readonly KeyValuePair<string, string> MemPackContentHeader = new(ContentTypeHeader, MemPack);
+    public static readonly KeyValuePair<string, string> MsgPackContentHeader = new(ContentTypeHeader, MsgPack);
+    public static readonly KeyValuePair<string, string> JsonContentHeader = new(ContentTypeHeader, Json);
 
-    public static readonly KeyValuePair<string, string> MemPackAcceptHeader = new(AcceptHeader, ContentTypes.MemPack);
-    public static readonly KeyValuePair<string, string> MsgPackAcceptHeader = new(AcceptHeader, ContentTypes.MsgPack);
-    public static readonly KeyValuePair<string, string> JsonAcceptHeader = new(AcceptHeader, ContentTypes.Json);
+    public static readonly KeyValuePair<string, string> MemPackAcceptHeader = new(AcceptHeader, MemPack);
+    public static readonly KeyValuePair<string, string> MsgPackAcceptHeader = new(AcceptHeader, MsgPack);
+    public static readonly KeyValuePair<string, string> JsonAcceptHeader = new(AcceptHeader, Json);
 
     public static readonly Dictionary<string, string> MemPackHeaders = new([MemPackContentHeader, MemPackAcceptHeader]);
     public static readonly Dictionary<string, string> MsgPackHeaders = new([MsgPackContentHeader, MsgPackAcceptHeader]);

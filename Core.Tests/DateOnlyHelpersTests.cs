@@ -2,7 +2,7 @@
 
 namespace Core.Tests;
 
-public class DateOnlyHelpersTests
+public sealed class DateOnlyHelpersTests
 {
     [Theory]
     [InlineData("2024-05-06", "2024-05-10", null, 5)] // Mon-Fri, no holidays
@@ -83,7 +83,9 @@ public class DateOnlyHelpersTests
     [InlineData(2, 2024, "2024-02-01")]
     [InlineData(12, 2024, "2024-12-01")]
     public void GetFirstDayOfMonth_ByMonthYear_ReturnsFirstDay(int month, int year, string expected)
-    { DateOnlyHelpers.GetFirstDayOfMonth(month, year).ShouldBe(DateOnly.Parse(expected)); }
+    {
+        DateOnlyHelpers.GetFirstDayOfMonth(month, year).ShouldBe(DateOnly.Parse(expected));
+    }
 
     [Fact]
     public void GetFirstDayOfMonth_ByDate_ReturnsFirstDay()
@@ -97,7 +99,9 @@ public class DateOnlyHelpersTests
     [InlineData(2, 2023, "2023-02-28")]
     [InlineData(4, 2024, "2024-04-30")]
     public void GetLastDayOfMonth_ByMonthYear_ReturnsLastDay(int month, int year, string expected)
-    { DateOnlyHelpers.GetLastDayOfMonth(month, year).ShouldBe(DateOnly.Parse(expected)); }
+    {
+        DateOnlyHelpers.GetLastDayOfMonth(month, year).ShouldBe(DateOnly.Parse(expected));
+    }
 
     [Fact]
     public void GetLastDayOfMonth_ByDate_ReturnsLastDay()
@@ -112,7 +116,9 @@ public class DateOnlyHelpersTests
     [InlineData(657434.999, false)]
     [InlineData(2958466.0, false)]
     public void IsValidOaDate_Double_ReturnsExpected(double value, bool expected)
-    { DateOnlyHelpers.IsValidOaDate(value).ShouldBe(expected); }
+    {
+        DateOnlyHelpers.IsValidOaDate(value).ShouldBe(expected);
+    }
 
     [Fact]
     public void IsValidOaDate_NullableDouble_ReturnsFalseIfNull()

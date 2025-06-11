@@ -1,19 +1,22 @@
-﻿using CommonNetFuncs.Compression;
+﻿using static CommonNetFuncs.Compression.Streams;
 
 namespace Compression.Tests;
 
-public class StreamsTests
+public sealed class StreamsTests
 {
     private readonly Fixture _fixture;
 
-    public StreamsTests() { _fixture = new Fixture(); }
+    public StreamsTests()
+    {
+        _fixture = new Fixture();
+    }
 
     [Theory]
-    [InlineData(Streams.ECompressionType.Brotli)]
-    [InlineData(Streams.ECompressionType.Gzip)]
-    [InlineData(Streams.ECompressionType.Deflate)]
-    [InlineData(Streams.ECompressionType.ZLib)]
-    public async Task CompressStream_Should_Compress_Data(Streams.ECompressionType compressionType)
+    [InlineData(ECompressionType.Brotli)]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.ZLib)]
+    public async Task CompressStream_Should_Compress_Data(ECompressionType compressionType)
     {
         // Arrange
         byte[] uncompressedData = _fixture.CreateMany<byte>(100).ToArray();
@@ -52,33 +55,33 @@ public class StreamsTests
         {
             if (useAsync)
             {
-                await Should.ThrowAsync<NotSupportedException>(uncompressedStream.CompressStream(compressedStream, Streams.ECompressionType.Deflate));
+                await Should.ThrowAsync<NotSupportedException>(uncompressedStream.CompressStream(compressedStream, ECompressionType.Deflate));
             }
             else
             {
-                Should.Throw<NotSupportedException>(() => uncompressedStream.CompressStreamSynchronous(compressedStream, Streams.ECompressionType.Deflate));
+                Should.Throw<NotSupportedException>(() => uncompressedStream.CompressStreamSynchronous(compressedStream, ECompressionType.Deflate));
             }
         }
         else
         {
             if (useAsync)
             {
-                await Should.NotThrowAsync(uncompressedStream.CompressStream(compressedStream, Streams.ECompressionType.Deflate));
+                await Should.NotThrowAsync(uncompressedStream.CompressStream(compressedStream, ECompressionType.Deflate));
             }
             else
             {
-                Should.NotThrow(() => uncompressedStream.CompressStreamSynchronous(compressedStream, Streams.ECompressionType.Deflate));
+                Should.NotThrow(() => uncompressedStream.CompressStreamSynchronous(compressedStream, ECompressionType.Deflate));
             }
             compressedStream.Length.ShouldBeGreaterThan(0);
         }
     }
 
     [Theory]
-    [InlineData(Streams.ECompressionType.Brotli)]
-    [InlineData(Streams.ECompressionType.Gzip)]
-    [InlineData(Streams.ECompressionType.Deflate)]
-    [InlineData(Streams.ECompressionType.ZLib)]
-    public void CompressStreamSynchronous_Should_Compress_Data(Streams.ECompressionType compressionType)
+    [InlineData(ECompressionType.Brotli)]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.ZLib)]
+    public void CompressStreamSynchronous_Should_Compress_Data(ECompressionType compressionType)
     {
         // Arrange
         byte[] uncompressedData = _fixture.CreateMany<byte>(100).ToArray();
@@ -93,11 +96,11 @@ public class StreamsTests
     }
 
     [Theory]
-    [InlineData(Streams.ECompressionType.Brotli)]
-    [InlineData(Streams.ECompressionType.Gzip)]
-    [InlineData(Streams.ECompressionType.Deflate)]
-    [InlineData(Streams.ECompressionType.ZLib)]
-    public async Task DecompressStream_Should_Decompress_Data(Streams.ECompressionType compressionType)
+    [InlineData(ECompressionType.Brotli)]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.ZLib)]
+    public async Task DecompressStream_Should_Decompress_Data(ECompressionType compressionType)
     {
         // Arrange
         byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
@@ -131,7 +134,7 @@ public class StreamsTests
 
         await using MemoryStream decompressedStream = (!canWriteDecompressedStream) ? new([], false) : new();
 
-        await uncompressedStream.CompressStream(compressedStream, Streams.ECompressionType.Deflate);
+        await uncompressedStream.CompressStream(compressedStream, ECompressionType.Deflate);
         compressedStream.Position = 0;
 
         if (!canReadCompressedStream)
@@ -144,33 +147,33 @@ public class StreamsTests
         {
             if (useAsync)
             {
-                await Should.ThrowAsync<NotSupportedException>(compressedStream.DecompressStream(decompressedStream, Streams.ECompressionType.Deflate));
+                await Should.ThrowAsync<NotSupportedException>(compressedStream.DecompressStream(decompressedStream, ECompressionType.Deflate));
             }
             else
             {
-                Should.Throw<NotSupportedException>(() => compressedStream.DecompressStreamSynchronous(decompressedStream, Streams.ECompressionType.Deflate));
+                Should.Throw<NotSupportedException>(() => compressedStream.DecompressStreamSynchronous(decompressedStream, ECompressionType.Deflate));
             }
         }
         else
         {
             if (useAsync)
             {
-                await Should.NotThrowAsync(compressedStream.DecompressStream(decompressedStream, Streams.ECompressionType.Deflate));
+                await Should.NotThrowAsync(compressedStream.DecompressStream(decompressedStream, ECompressionType.Deflate));
             }
             else
             {
-                Should.NotThrow(() => compressedStream.DecompressStreamSynchronous(decompressedStream, Streams.ECompressionType.Deflate));
+                Should.NotThrow(() => compressedStream.DecompressStreamSynchronous(decompressedStream, ECompressionType.Deflate));
             }
             decompressedStream.ToArray().ShouldBe(originalData);
         }
     }
 
     [Theory]
-    [InlineData(Streams.ECompressionType.Brotli)]
-    [InlineData(Streams.ECompressionType.Gzip)]
-    [InlineData(Streams.ECompressionType.Deflate)]
-    [InlineData(Streams.ECompressionType.ZLib)]
-    public void DecompressStreamSynchronous_Should_Decompress_Data(Streams.ECompressionType compressionType)
+    [InlineData(ECompressionType.Brotli)]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.ZLib)]
+    public void DecompressStreamSynchronous_Should_Decompress_Data(ECompressionType compressionType)
     {
         // Arrange
         byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
@@ -189,11 +192,11 @@ public class StreamsTests
     }
 
     [Theory]
-    [InlineData(Streams.ECompressionType.Brotli)]
-    [InlineData(Streams.ECompressionType.Gzip)]
-    [InlineData(Streams.ECompressionType.Deflate)]
-    [InlineData(Streams.ECompressionType.ZLib)]
-    public async Task Compress_Should_Compress_Byte_Array(Streams.ECompressionType compressionType)
+    [InlineData(ECompressionType.Brotli)]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.ZLib)]
+    public async Task Compress_Should_Compress_Byte_Array(ECompressionType compressionType)
     {
         // Arrange
         byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
@@ -206,11 +209,11 @@ public class StreamsTests
     }
 
     [Theory]
-    [InlineData(Streams.ECompressionType.Brotli)]
-    [InlineData(Streams.ECompressionType.Gzip)]
-    [InlineData(Streams.ECompressionType.Deflate)]
-    [InlineData(Streams.ECompressionType.ZLib)]
-    public async Task Decompress_Should_Decompress_Byte_Array(Streams.ECompressionType compressionType)
+    [InlineData(ECompressionType.Brotli)]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.ZLib)]
+    public async Task Decompress_Should_Decompress_Byte_Array(ECompressionType compressionType)
     {
         // Arrange
         byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();

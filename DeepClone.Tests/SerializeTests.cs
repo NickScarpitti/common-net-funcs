@@ -1,17 +1,18 @@
 ﻿using System.Text.Json;
-using AutoFixture;
-using Shouldly;
 using static CommonNetFuncs.DeepClone.Serialize;
 
 namespace DeepClone.Tests;
 
-public class SerializeTests
+public sealed class SerializeTests
 {
     private readonly Fixture _fixture;
 
-    public SerializeTests() { _fixture = new Fixture(); }
+    public SerializeTests()
+    {
+        _fixture = new Fixture();
+    }
 
-    public class TestClass
+    public sealed class TestClass
     {
         public int Number { get; set; }
 
@@ -24,7 +25,7 @@ public class SerializeTests
         public DateTime TimeStamp { get; set; }
     }
 
-    public class NonSerializableClass
+    public sealed class NonSerializableClass
     {
         public Action? Callback { get; set; }
 

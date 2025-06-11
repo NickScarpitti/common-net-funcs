@@ -3,9 +3,9 @@ using static CommonNetFuncs.DeepClone.ExpressionTrees;
 
 namespace DeepClone.Tests;
 
-public class ExpressionTreesTests
+public sealed class ExpressionTreesTests
 {
-    public class TestClass
+    public sealed class TestClass
     {
         public int Number { get; set; }
 
@@ -19,11 +19,9 @@ public class ExpressionTreesTests
 
         public readonly string ReadOnlyField = "test";
 
-        #pragma warning disable IDE0051 // Remove unused private members
         #pragma warning disable RCS1213 // Remove unused member declaration
         #pragma warning disable CS0414 // The field is assigned but its value is never used
         private readonly int _privateReadOnlyField = 42;
-        #pragma warning disable IDE0051 // Remove unused private members
         #pragma warning restore RCS1213 // Remove unused member declaration
         #pragma warning restore CS0414 //The field is assigned but its value is never used
     }

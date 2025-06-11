@@ -4,9 +4,9 @@ using CommonNetFuncs.FastMap;
 
 namespace FastMap.Tests;
 
-public class FastMapperTests
+public sealed class FastMapperTests
 {
-    public class SimpleSource
+    public sealed class SimpleSource
     {
         public required string StringProp { get; set; }
 
@@ -15,7 +15,7 @@ public class FastMapperTests
         public DateTime DateProp { get; set; }
     }
 
-    public class NullableSimpleSource
+    public sealed class NullableSimpleSource
     {
         public required string? StringProp { get; set; }
 
@@ -24,7 +24,7 @@ public class FastMapperTests
         public DateTime? DateProp { get; set; }
     }
 
-    public class SimpleDestination
+    public sealed class SimpleDestination
     {
         public required string StringProp { get; set; }
 
@@ -33,7 +33,7 @@ public class FastMapperTests
         public DateTime DateProp { get; set; }
     }
 
-    public class NullableSimpleDestination
+    public sealed class NullableSimpleDestination
     {
         public required string? StringProp { get; set; }
 
@@ -42,7 +42,7 @@ public class FastMapperTests
         public DateTime? DateProp { get; set; }
     }
 
-    public class ComplexSource
+    public sealed class ComplexSource
     {
         public required string Name { get; set; }
 
@@ -59,7 +59,7 @@ public class FastMapperTests
         public required Stack<double> DoubleStack { get; set; }
     }
 
-    public class NullableComplexSource
+    public sealed class NullableComplexSource
     {
         public required string? Name { get; set; }
 
@@ -76,7 +76,7 @@ public class FastMapperTests
         public required Stack<double>? DoubleStack { get; set; }
     }
 
-    public class ComplexDestination
+    public sealed class ComplexDestination
     {
         public required string Name { get; set; }
 
@@ -93,7 +93,7 @@ public class FastMapperTests
         public required Stack<double> DoubleStack { get; set; }
     }
 
-    public class NullableComplexDestination
+    public sealed class NullableComplexDestination
     {
         public required string? Name { get; set; }
 
@@ -110,7 +110,7 @@ public class FastMapperTests
         public required Stack<double>? DoubleStack { get; set; }
     }
 
-    public class ReadOnlyCollectionSource
+    public sealed class ReadOnlyCollectionSource
     {
         public required IReadOnlyCollection<int> ReadOnlyNumbers { get; set; }
 
@@ -119,7 +119,7 @@ public class FastMapperTests
         public required ReadOnlyCollection<DateTime> ReadOnlyDates { get; set; }
     }
 
-    public class ReadOnlyCollectionDest
+    public sealed class ReadOnlyCollectionDest
     {
         public required List<int> ReadOnlyNumbers { get; set; }
 
@@ -128,7 +128,7 @@ public class FastMapperTests
         public required ReadOnlyCollection<DateTime> ReadOnlyDates { get; set; }
     }
 
-    public class CustomCollection<T> : IEnumerable<T>
+    public sealed class CustomCollection<T> : IEnumerable<T>
     {
         private readonly List<T> _items = [];
 
@@ -148,17 +148,17 @@ public class FastMapperTests
         }
     }
 
-    public class CustomCollectionSource
+    public sealed class CustomCollectionSource
     {
         public required CustomCollection<int> Numbers { get; set; }
     }
 
-    public class CustomCollectionDest
+    public sealed class CustomCollectionDest
     {
         public required List<int> Numbers { get; set; }
     }
 
-    public class SourceWithMismatchedProperties
+    public sealed class SourceWithMismatchedProperties
     {
         public required string Name { get; set; }
 
@@ -167,7 +167,7 @@ public class FastMapperTests
         public required string ExtraProperty { get; set; }
     }
 
-    public class DestWithMismatchedProperties
+    public sealed class DestWithMismatchedProperties
     {
         public required string Name { get; set; }
 
@@ -176,12 +176,12 @@ public class FastMapperTests
         public required string DifferentProperty { get; set; }
     }
 
-    public class DictionarySource
+    public sealed class DictionarySource
     {
         public required Dictionary<string, SimpleSource> ComplexDict { get; set; }
     }
 
-    public class DictionaryDest
+    public sealed class DictionaryDest
     {
         public required Dictionary<string, SimpleDestination> ComplexDict { get; set; }
     }

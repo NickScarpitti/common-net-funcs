@@ -5,15 +5,19 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using CommonNetFuncs.Compression;
-using CommonNetFuncs.Core;
-using CommonNetFuncs.Web.Common;
 using MemoryPack;
 using MemoryPack.Compression;
 using MessagePack;
 using Newtonsoft.Json;
 using NLog;
 using static CommonNetFuncs.Compression.Streams;
+using static CommonNetFuncs.Core.Collections;
+using static CommonNetFuncs.Core.ExceptionLocation;
+using static CommonNetFuncs.Core.Streams;
+using static CommonNetFuncs.Core.Strings;
+using static CommonNetFuncs.Web.Common.ContentTypes;
+using static CommonNetFuncs.Web.Common.EncodingTypes;
+using static CommonNetFuncs.Web.Common.UriHelpers;
 using static CommonNetFuncs.Web.Requests.RestHelperConstants;
 
 namespace CommonNetFuncs.Web.Requests;
@@ -259,14 +263,14 @@ public static class RestHelpersStatic
             else
             {
                 string? errorMessage = null;
-                if (contentType.ContainsInvariant(ContentTypes.JsonProblem))
+                if (contentType.ContainsInvariant(JsonProblem))
                 {
                     ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, useNewtonsoftDeserializer, jsonSerializerOptions, msgPackOptions, cancellationToken).ConfigureAwait(false) ?? new();
                     errorMessage = $"({problemDetails.Status}) {problemDetails.Title}\n\t\t{string.Join("\n\t\t", problemDetails.Errors.Select(x => $"{x.Key}:\n\t\t\t{string.Join("\n\t\t\t", x.Value)}"))}";
                 }
                 else
                 {
-                    errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, useNewtonsoftDeserializer, jsonSerializerOptions, msgPackOptions, cancellationToken).ConfigureAwait(false);
+                    errorMessage = await ReadResponseStream<string>(responseStream, Text, contentEncoding, useNewtonsoftDeserializer, jsonSerializerOptions, msgPackOptions, cancellationToken).ConfigureAwait(false);
                 }
                 logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(httpHeaders != null ? $"Headers: {string.Join(", ", httpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
             }
@@ -308,14 +312,14 @@ public static class RestHelpersStatic
                 else
                 {
                     string? errorMessage = null;
-                    if (contentType.ContainsInvariant(ContentTypes.JsonProblem))
+                    if (contentType.ContainsInvariant(JsonProblem))
                     {
                         ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, false, cancellationToken: cancellationToken).ConfigureAwait(false) ?? new();
                         errorMessage = $"({problemDetails.Status}) {problemDetails.Title}\n\t\t{string.Join("\n\t\t", problemDetails.Errors.Select(x => $"{x.Key}:\n\t\t\t{string.Join("\n\t\t\t", x.Value)}"))}";
                     }
                     else
                     {
-                        errorMessage = await ReadResponseStream<string>(responseStream, ContentTypes.Text, contentEncoding, false, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        errorMessage = await ReadResponseStream<string>(responseStream, Text, contentEncoding, false, cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
                     logger.Warn("{msg}", $"{httpMethod.ToUpper()} request with URL {url} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(httpHeaders != null ? $"Headers: {string.Join(", ", httpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
                 }
@@ -352,7 +356,7 @@ public static class RestHelpersStatic
         {
             if (responseStream.Length > 1)
             {
-                if (contentType.StrEq(ContentTypes.MsgPack)) //Message Pack uses native compression
+                if (contentType.StrEq(MsgPack)) //Message Pack uses native compression
                 {
                     if (msgPackOptions?.UseMsgPackCompression == true || msgPackOptions?.UseMsgPackUntrusted == true)
                     {
@@ -373,15 +377,15 @@ public static class RestHelpersStatic
                         result = await MessagePackSerializer.DeserializeAsync<T>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
                 }
-                else if (contentType.StrEq(ContentTypes.MemPack)) // ***Will fail if trying to deserialize null value, ensure NoContent is sent back for nulls***
+                else if (contentType.StrEq(MemPack)) // ***Will fail if trying to deserialize null value, ensure NoContent is sent back for nulls***
                 {
-                    if (contentEncoding.StrEq(EncodingTypes.GZip))
+                    if (contentEncoding.StrEq(GZip))
                     {
                         await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
                         await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
                         result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
                     }
-                    else if (contentEncoding.StrEq(EncodingTypes.Brotli))
+                    else if (contentEncoding.StrEq(Brotli))
                     {
                         BrotliDecompressor decompressor = new();
                         ReadOnlySequence<byte> decompressedBuffer = decompressor.Decompress(new ReadOnlySpan<byte>(await responseStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false)));
@@ -396,11 +400,11 @@ public static class RestHelpersStatic
                 {
                     //Deserialize as stream - More memory efficient than string deserialization
                     await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-                    if (contentEncoding.StrEq(EncodingTypes.GZip))
+                    if (contentEncoding.StrEq(GZip))
                     {
                         await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
-                    else if (contentEncoding.StrEq(EncodingTypes.Brotli))
+                    else if (contentEncoding.StrEq(Brotli))
                     {
                         await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
@@ -420,11 +424,11 @@ public static class RestHelpersStatic
                 else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
                 {
                     await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-                    if (contentEncoding.StrEq(EncodingTypes.GZip))
+                    if (contentEncoding.StrEq(GZip))
                     {
                         await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
-                    else if (contentEncoding.StrEq(EncodingTypes.Brotli))
+                    else if (contentEncoding.StrEq(Brotli))
                     {
                         await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
@@ -450,11 +454,11 @@ public static class RestHelpersStatic
             await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
 
             //Deserialize as stream - More memory efficient than string deserialization
-            if (contentEncoding.StrEq(EncodingTypes.GZip))
+            if (contentEncoding.StrEq(GZip))
             {
                 await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
-            else if (contentEncoding.StrEq(EncodingTypes.Brotli))
+            else if (contentEncoding.StrEq(Brotli))
             {
                 await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
@@ -486,19 +490,19 @@ public static class RestHelpersStatic
     {
         if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
         {
-            if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MemPack)) ?? false)
+            if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(MemPack)) ?? false)
             {
                 httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
-                httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MemPack);
+                httpRequestMessage.Content.Headers.ContentType = new(MemPack);
             }
-            else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(ContentTypes.MsgPack)) ?? false)
+            else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(MsgPack)) ?? false)
             {
                 httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
-                httpRequestMessage.Content.Headers.ContentType = new(ContentTypes.MsgPack);
+                httpRequestMessage.Content.Headers.ContentType = new(MsgPack);
             }
             else
             {
-                httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue(ContentTypes.Json));
+                httpRequestMessage.Content = JsonContent.Create(postObject, new MediaTypeHeaderValue(Json));
             }
         }
         else if (httpMethod == HttpMethod.Patch && patchDoc != null)
@@ -557,12 +561,17 @@ public static class RestHelpersStatic
     {
         //IAsyncEnumerable is limited to MvcOptions.MaxIAsyncEnumerableBufferLimit which is 8192 by default
         int itemsPerChunk = startingitemsPerChunk;
-        int numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
 
+        //int numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
+        decimal numberOfChunksDecimal = (decimal)itemCount / itemsPerChunk;
+        int numberOfChunks = (int)numberOfChunksDecimal + numberOfChunksDecimal > 0 && numberOfChunksDecimal % 1 != 0 ? 1 : 0;
         while (numberOfChunks >= bufferLimit)
         {
             itemsPerChunk += 1000;
-            numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
+
+            //numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
+            numberOfChunksDecimal = (decimal)itemCount / itemsPerChunk;
+            numberOfChunks = (int)numberOfChunksDecimal + numberOfChunksDecimal > 0 && numberOfChunksDecimal % 1 != 0 ? 1 : 0;
         }
         return (itemsPerChunk, numberOfChunks);
     }

@@ -2,7 +2,7 @@
 
 namespace Core.Tests;
 
-public class ExceptionLocationTests
+public sealed class ExceptionLocationTests
 {
     private static Exception CreateExceptionFromMethod(Action action)
     {
@@ -17,9 +17,15 @@ public class ExceptionLocationTests
         throw new InvalidOperationException("No exception was thrown.");
     }
 
-    private static void ThrowFromInstanceMethod() { throw new InvalidOperationException("Test from instance method"); }
+    private static void ThrowFromInstanceMethod()
+    {
+        throw new InvalidOperationException("Test from instance method");
+    }
 
-    private static void ThrowFromStaticMethod() { throw new ArgumentException("Test from static method"); }
+    private static void ThrowFromStaticMethod()
+    {
+        throw new ArgumentException("Test from static method");
+    }
 
     [Fact]
     public void GetLocationOfException_ReturnsExpectedFormat_ForInstanceMethod()
@@ -70,7 +76,10 @@ public class ExceptionLocationTests
         // Arrange
         Exception ex = CreateExceptionFromMethod(() =>
         {
-            static void LocalFunction() { throw new ApplicationException("From local function"); }
+            static void LocalFunction()
+            {
+                throw new ApplicationException("From local function");
+            }
 
             LocalFunction();
         });
@@ -88,7 +97,10 @@ public class ExceptionLocationTests
         // Arrange
         Exception ex = CreateExceptionFromMethod(() =>
         {
-            static void lambda() { throw new ApplicationException("From lambda"); }
+            static void lambda()
+            {
+                throw new ApplicationException("From lambda");
+            }
 
             lambda();
         });

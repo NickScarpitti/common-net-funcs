@@ -2,7 +2,7 @@
 
 namespace Core.Tests;
 
-public class RunBatchesTests
+public sealed class RunBatchesTests
 {
     private readonly Fixture _fixture = new();
 
@@ -268,7 +268,7 @@ public class RunBatchesTests
         processedItems.SequenceEqual(items).ShouldBeTrue();
     }
 
-    private class TestItem
+    private sealed class TestItem
     {
         public int Id { get; set; }
 

@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Web.Requests;
 
@@ -70,7 +69,7 @@ public class RestHelpersCommon(HttpClient client) : IRestHelpersCommon
 
 public class RestHelpersCommonFactory(IHttpClientFactory httpClientFactory, string? httpClientName = null) : IRestHelpersCommon, IDisposable
 {
-    public readonly HttpClient client = httpClientName.IsNullOrWhiteSpace() ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(httpClientName);
+    public readonly HttpClient client = string.IsNullOrWhiteSpace(httpClientName) ? httpClientFactory.CreateClient() : httpClientFactory.CreateClient(httpClientName);
 
     public Task<T?> RestRequest<T, UT>(RequestOptions<UT> baseRequestOptions, CancellationToken cancellationToken = default)
     {

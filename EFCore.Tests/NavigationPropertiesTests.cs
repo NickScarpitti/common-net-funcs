@@ -1,9 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using System.Xml.Serialization;
-using AutoFixture;
 using CommonNetFuncs.EFCore;
 using Microsoft.EntityFrameworkCore;
-using Shouldly;
 
 namespace EFCore.Tests;
 
@@ -21,7 +19,10 @@ public sealed class NavigationPropertiesTests : IDisposable
         _context = new TestDbContext(options);
     }
 
-    public void Dispose() { _context.Dispose(); }
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
 
     [Theory]
     [InlineData(1)]
@@ -150,7 +151,7 @@ public sealed class NavigationPropertiesTests : IDisposable
     }
 
     // Test entities
-    private class TestDbContext(DbContextOptions options) : DbContext(options)
+    private sealed class TestDbContext(DbContextOptions options) : DbContext(options)
     {
         public DbSet<TestEntity> TestEntities => Set<TestEntity>();
 
@@ -186,21 +187,21 @@ public sealed class NavigationPropertiesTests : IDisposable
         }
     }
 
-    private class TestEntity
+    private sealed class TestEntity
     {
         public int Id { get; set; }
 
         public TestRelatedEntity? RelatedEntity { get; set; }
     }
 
-    private class TestRelatedEntity
+    private sealed class TestRelatedEntity
     {
         public int Id { get; set; }
 
         public TestEntity? Parent { get; set; }
     }
 
-    private class TestEntityWithIgnores
+    private sealed class TestEntityWithIgnores
     {
         public int Id { get; set; }
 
@@ -210,7 +211,7 @@ public sealed class NavigationPropertiesTests : IDisposable
         public TestRelatedEntity? NormalNavigation { get; set; }
     }
 
-    private class DeepTestEntity
+    private sealed class DeepTestEntity
     {
         public int Id { get; set; }
 

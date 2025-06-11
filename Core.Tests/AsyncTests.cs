@@ -5,7 +5,7 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-public class AsyncTests
+public sealed class AsyncTests
 {
     private readonly Fixture _fixture;
 

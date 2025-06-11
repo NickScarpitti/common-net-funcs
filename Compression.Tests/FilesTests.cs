@@ -1,9 +1,9 @@
 ﻿using System.IO.Compression;
-using CommonNetFuncs.Compression;
+using static CommonNetFuncs.Compression.Files;
 
 namespace Compression.Tests;
 
-public class FilesTests
+public sealed class FilesTests
 {
     private readonly Fixture _fixture;
 
@@ -91,7 +91,8 @@ public class FilesTests
         await using MemoryStream memoryStream = new();
 
         // Act
-        using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true)){
+        using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
+        {
             await fileStream.AddFileToZip(archive, fileName);
         }
 

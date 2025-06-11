@@ -1034,3 +1034,74 @@ public class AsyncIntString
 
     public string AsyncString { get; set; } = string.Empty;
 }
+
+public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSlim? semaphore = null)
+{
+    public List<Task<T>> Tasks { get; set; } = tasks ?? [];
+
+    public SemaphoreSlim? Semaphore { get; set; } = semaphore;
+
+    public async Task<T[]> RunTasks(CancellationToken? cancellationToken = null)
+    {
+        if (Tasks.Count == 0)
+        {
+            return [];
+        }
+
+        if (Semaphore == null)
+        {
+            return await Task.WhenAll(Tasks);
+        }
+
+        T[] results = new T[Tasks.Count];
+
+        await Parallel.ForAsync(0, Tasks.Count, cancellationToken ?? new(), async (i, cancellationToken) =>
+        {
+            try
+            {
+                await Semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                results[i] = await Tasks[i].ConfigureAwait(false);
+            }
+            finally
+            {
+                Semaphore.Release();
+            }
+        });
+
+        return results;
+    }
+}
+
+public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore = null)
+{
+    public List<Task> Tasks { get; set; } = tasks ?? [];
+
+    public SemaphoreSlim? Semaphore { get; set; } = semaphore;
+
+    public async Task RunTasks()
+    {
+        if (Tasks.Count == 0)
+        {
+            return;
+        }
+
+        if (Semaphore == null)
+        {
+            await Task.WhenAll(Tasks);
+            return;
+        }
+
+        await Parallel.ForEachAsync(Tasks, async (task, _) =>
+        {
+            try
+            {
+                await Semaphore.WaitAsync(_).ConfigureAwait(false);
+                await task.ConfigureAwait(false);
+            }
+            finally
+            {
+                Semaphore.Release();
+            }
+        });
+    }
+}

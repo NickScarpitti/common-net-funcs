@@ -26,7 +26,7 @@
     </Description>
     <PackageTags>dotnet;helpers;pdf;office;excel;word;ms;powerpoint</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
+    <Configurations>Debug;Release;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -25,7 +25,7 @@
       Helper methods that deal with AWS S3 interactions
     </Description>
     <PackageTags>dotnet;helpers;aws;s3;</PackageTags>
-    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
+    <Configurations>Debug;Release;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>

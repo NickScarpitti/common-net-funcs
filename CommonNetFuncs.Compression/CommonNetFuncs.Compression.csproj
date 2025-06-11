@@ -18,7 +18,7 @@
     <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
     <!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
     <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!--<SymbolPackageFormat>snupkg</SymbolPackageFormat>-->
     <DebugType>embedded</DebugType>
     <Description>
       Helper methods that deal with compression and decompression of both files and streams.

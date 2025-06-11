@@ -19,7 +19,7 @@
     <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
     <!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
     <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!--<SymbolPackageFormat>snupkg</SymbolPackageFormat>-->
     <DebugType>embedded</DebugType>
     <Description>
       Helper to export MS Office files to PDF

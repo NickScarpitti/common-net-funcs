@@ -2,7 +2,7 @@
 
 namespace Core.Tests;
 
-public class DimensionScaleTests
+public sealed class DimensionScaleTests
 {
     // 2D int tests
     [Theory]

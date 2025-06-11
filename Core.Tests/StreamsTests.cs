@@ -3,7 +3,7 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-public class StreamsTests
+public sealed class StreamsTests
 {
     private readonly Fixture _fixture = new();
 

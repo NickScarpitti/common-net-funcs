@@ -25,11 +25,11 @@
     </Description>
     <PackageTags>dotnet;helpers;web;api;rest;requests;response;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
+    <Configurations>Debug;Release;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.4.8</Version>
+    <Version>3.4.9</Version>
     <MinVerTagPrefix>web.requests-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>

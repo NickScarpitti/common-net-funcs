@@ -27,7 +27,7 @@
     </Description>
     <PackageTags>dotnet;helpers;generator;model;binding;source generator;model binding;mvc</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
+    <Configurations>Debug;Release;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>

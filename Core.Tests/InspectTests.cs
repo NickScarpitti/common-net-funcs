@@ -4,17 +4,17 @@ using CommonNetFuncs.Core;
 namespace Core.Tests;
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
-public class InspectTests
+public sealed class InspectTests
 {
     // Helper classes for testing
-    public class SimpleClass
+    public sealed class SimpleClass
     {
         public int IntProp { get; set; }
 
         public string? StringProp { get; set; }
     }
 
-    public class NestedClass
+    public sealed class NestedClass
     {
         public int Id { get; set; }
 
@@ -50,7 +50,9 @@ public class InspectTests
     [InlineData(typeof(ClassWithDescription), "DescriptionAttribute", true)]
     [InlineData(typeof(SimpleClass), "DescriptionAttribute", false)]
     public void ObjectHasAttribute_Works(Type type, string attrName, bool expected)
-    { type.ObjectHasAttribute(attrName).ShouldBe(expected); }
+    {
+        type.ObjectHasAttribute(attrName).ShouldBe(expected);
+    }
 
     // Replace the untyped IEnumerable<object[]> with strongly-typed TheoryData<> for better type safety.
 
@@ -69,14 +71,18 @@ public class InspectTests
     [MemberData(nameof(IsEqualRTestData))]
     #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public void IsEqualR_Works(object? a, object? b, IEnumerable<string>? exempt, bool expected)
-    { a.IsEqualR(b, exempt).ShouldBe(expected); }
+    {
+        a.IsEqualR(b, exempt).ShouldBe(expected);
+    }
 
     [Theory]
     #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     [MemberData(nameof(IsEqualRTestData))]
     #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public void IsEqualR_And_IsEqual_Consistency(object? a, object? b, IEnumerable<string>? exempt, bool expected)
-    { a.IsEqual(b, exemptProps: exempt).ShouldBe(expected); }
+    {
+        a.IsEqual(b, exemptProps: exempt).ShouldBe(expected);
+    }
 
     [Fact]
     public void IsEqual_Recursive_ReturnsTrue_ForIdenticalNestedObjects()
@@ -132,9 +138,7 @@ public class InspectTests
     };
 
     [Theory]
-    #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     [MemberData(nameof(HashTestData))]
-    #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public void GetHashCode_And_GetHashForObject_Consistency(SimpleClass a, SimpleClass b, bool shouldMatch)
     {
         // a.GetHashCode().ShouldBe(b.GetHashCode(), shouldMatch ? "Hashes should match" : "Hashes should not match");
@@ -186,14 +190,14 @@ public class InspectTests
 
     // Helper types for attribute and cycle tests
     [Description("desc")]
-    private class ClassWithDescription;
+    private sealed class ClassWithDescription;
 
-    private class CyclicClass
+    private sealed class CyclicClass
     {
         public CyclicClass? Self { get; set; }
     }
 
-    private class ClassWithCollection
+    private sealed class ClassWithCollection
     {
         public IEnumerable<int>? Items { get; set; }
     }

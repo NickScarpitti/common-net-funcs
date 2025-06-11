@@ -2,7 +2,6 @@
 using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
-using CommonNetFuncs.Compression;
 using Microsoft.Extensions.Logging;
 using static Amazon.S3.Util.AmazonS3Util;
 using static CommonNetFuncs.Compression.Streams;

@@ -2,11 +2,14 @@
 
 namespace Core.Tests;
 
-public class CopyTests
+public sealed class CopyTests
 {
     private readonly Fixture _fixture;
 
-    public CopyTests() { _fixture = new Fixture(); }
+    public CopyTests()
+    {
+        _fixture = new Fixture();
+    }
 
     #region CopyPropertiesTo Tests
 
@@ -441,7 +444,7 @@ public class CopyTests
 
     #region Test Classes
 
-    public class SourceClass
+    public sealed class SourceClass
     {
         public int Id { get; set; }
 
@@ -452,7 +455,7 @@ public class CopyTests
         public DateTime CreatedDate { get; set; }
     }
 
-    public class DestinationClass
+    public sealed class DestinationClass
     {
         public int Id { get; set; }
 
@@ -461,7 +464,7 @@ public class CopyTests
         // No Description property
     }
 
-    public class DestinationWithDifferentTypes
+    public sealed class DestinationWithDifferentTypes
     {
         public int Id { get; set; }
 
@@ -470,14 +473,14 @@ public class CopyTests
         public int CreatedDate { get; set; } // Different type from SourceClass.CreatedDate
     }
 
-    public class ClassWithReadOnlyProperty
+    public sealed class ClassWithReadOnlyProperty
     {
         public int Id { get; } // Read-only property
 
         public string? Name { get; set; }
     }
 
-    public class ComplexSourceClass
+    public sealed class ComplexSourceClass
     {
         public int Id { get; set; }
 
@@ -492,7 +495,7 @@ public class CopyTests
         public Dictionary<string, SourceClass>? Dictionary { get; set; }
     }
 
-    public class ComplexDestinationClass
+    public sealed class ComplexDestinationClass
     {
         public int Id { get; set; }
 

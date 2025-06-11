@@ -1,7 +1,5 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-using CommonNetFuncs.Compression;
-using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using NLog;
 using static CommonNetFuncs.Compression.Streams;
+using static CommonNetFuncs.Core.Strings;
+using static CommonNetFuncs.Core.UnitConversion;
 
 namespace CommonNetFuncs.Web.Middleware.CachingMiddleware;
 

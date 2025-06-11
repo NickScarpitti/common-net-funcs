@@ -2,7 +2,7 @@
 
 namespace Core.Tests;
 
-public class UnitConversionTests
+public sealed class UnitConversionTests
 {
     [Theory]
     [InlineData(10.0, 4.53592)]    // 10 lbs = 4.53592 kg

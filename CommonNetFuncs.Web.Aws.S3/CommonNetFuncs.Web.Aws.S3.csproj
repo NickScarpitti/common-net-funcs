@@ -25,11 +25,11 @@
       Helper methods that deal with AWS S3 interactions
     </Description>
     <PackageTags>dotnet;helpers;aws;s3;</PackageTags>
-    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
+    <Configurations>Debug;Release;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
-   <Version>3.4.8</Version>
+   <Version>3.4.9</Version>
     <MinVerTagPrefix>web.aws.s3-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>

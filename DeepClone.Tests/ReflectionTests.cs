@@ -2,7 +2,7 @@
 
 namespace DeepClone.Tests;
 
-public class ReflectionTests
+public sealed class ReflectionTests
 {
     [Theory]
     [InlineData(typeof(int))]
@@ -51,7 +51,7 @@ public class ReflectionTests
     public void DeepClone_ShouldCreateNewInstance_WithSameValues()
     {
         // Arrange
-        TestClass original = new TestClass
+        TestClass original = new()
         {
             Id = 1,
             Name = "Test",
@@ -118,7 +118,7 @@ public class ReflectionTests
     public void DeepClone_ShouldHandleCircularReferences()
     {
         // Arrange
-        CircularReferenceClass original = new CircularReferenceClass();
+        CircularReferenceClass original = new();
         original.Reference = original;
 
         // Act
@@ -134,9 +134,7 @@ public class ReflectionTests
     public void DeepClone_ShouldThrowArgumentException_ForDelegateTypes()
     {
         // Arrange
-        Action action = () =>
-        {
-        };
+        Action action = () => { };
 
         // Act & Assert
         Should.Throw<ArgumentException>(() => action.DeepClone());
@@ -146,7 +144,7 @@ public class ReflectionTests
     public void DeepClone_ShouldHandleInheritance()
     {
         // Arrange
-        DerivedTestClass original = new DerivedTestClass
+        DerivedTestClass original = new()
         {
             Id = 1,
             Name = "Test",
@@ -180,12 +178,12 @@ public class ReflectionTests
         public List<int>? Numbers { get; set; }
     }
 
-    private class DerivedTestClass : TestClass
+    private sealed class DerivedTestClass : TestClass
     {
         public string? ExtraProperty { get; set; }
     }
 
-    private class CircularReferenceClass
+    private sealed class CircularReferenceClass
     {
         public CircularReferenceClass? Reference { get; set; }
     }

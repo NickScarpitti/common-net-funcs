@@ -3,7 +3,7 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-public class FileHelpersTests : IDisposable
+public sealed class FileHelpersTests : IDisposable
 {
     private readonly string _tempDir;
 

@@ -13,7 +13,7 @@ public static class OptionsMiddlewareExtensions
     }
 }
 
-public class OptionsMiddleware(RequestDelegate next)
+public sealed class OptionsMiddleware(RequestDelegate next)
 {
     private readonly RequestDelegate next = next;
 

@@ -2,7 +2,7 @@
 
 namespace Core.Tests;
 
-public class DateTimeHelpersTests
+public sealed class DateTimeHelpersTests
 {
     [Theory]
     [InlineData("2024-05-06", "2024-05-10", null, 5)] // Mon-Fri, no holidays
@@ -83,7 +83,9 @@ public class DateTimeHelpersTests
     [InlineData(2, 2024, "2024-02-01")]
     [InlineData(12, 2024, "2024-12-01")]
     public void GetFirstDayOfMonth_ByMonthYear_ReturnsFirstDay(int month, int year, string expected)
-    { DateTimeHelpers.GetFirstDayOfMonth(month, year).ShouldBe(DateTime.Parse(expected)); }
+    {
+        DateTimeHelpers.GetFirstDayOfMonth(month, year).ShouldBe(DateTime.Parse(expected));
+    }
 
     [Fact]
     public void GetFirstDayOfMonth_ByDate_ReturnsFirstDay()
@@ -97,7 +99,9 @@ public class DateTimeHelpersTests
     [InlineData(2, 2023, "2023-02-28")]
     [InlineData(4, 2024, "2024-04-30")]
     public void GetLastDayOfMonth_ByMonthYear_ReturnsLastDay(int month, int year, string expected)
-    { DateTimeHelpers.GetLastDayOfMonth(month, year).ShouldBe(DateTime.Parse(expected)); }
+    {
+        DateTimeHelpers.GetLastDayOfMonth(month, year).ShouldBe(DateTime.Parse(expected));
+    }
 
     [Fact]
     public void GetLastDayOfMonth_ByDate_ReturnsLastDay()

@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using CommonNetFuncs.Core;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Renci.SshNet;
 using Renci.SshNet.Sftp;
+using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Csv.CsvReadHelpers;
 
 namespace CommonNetFuncs.Web.Ftp;

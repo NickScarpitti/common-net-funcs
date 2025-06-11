@@ -3,9 +3,9 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-public class ValidationTests
+public sealed class ValidationTests
 {
-    public class TestModel
+    public sealed class TestModel
     {
         [Required]
         public string? RequiredString { get; set; }

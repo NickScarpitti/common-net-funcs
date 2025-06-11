@@ -167,7 +167,7 @@ public static class Inspect
     // }
 
     // This class is used to track object pairs being compared
-    private class ComparisonContext
+    private sealed class ComparisonContext
     {
         private readonly HashSet<(object, object)> _comparingPairs = [];
 

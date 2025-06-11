@@ -1,9 +1,6 @@
-﻿using AutoFixture;
-using Shouldly;
+﻿namespace DeepClone.Tests;
 
-namespace DeepClone.Tests;
-
-public class ReferenceEqualityComparerTests
+public sealed class ReferenceEqualityComparerTests
 {
     private readonly Fixture _fixture;
     private readonly CommonNetFuncs.DeepClone.ReferenceEqualityComparer _comparer;

@@ -7,7 +7,7 @@ using FastExpressionCompiler;
 namespace Core.Tests;
 
 // Helper classes for testing
-public class TestClass
+public sealed class TestClass
 {
     public int Id { get; set; }
 
@@ -33,7 +33,7 @@ public enum TestEnum
     Friday = DayOfWeek.Friday
 }
 
-public class CollectionsTests
+public sealed class CollectionsTests
 {
     private readonly Fixture _fixture;
 
@@ -1082,7 +1082,7 @@ public class CollectionsTests
         result[0].Name.ShouldBe("test1,test2");
     }
 
-    public class ArrayTraverseTests
+    public sealed class ArrayTraverseTests
     {
         [Fact]
         public void Constructor_ShouldInitializePositionAndMaxLengths_For1DArray()

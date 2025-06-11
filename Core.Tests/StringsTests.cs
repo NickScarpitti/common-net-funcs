@@ -3,7 +3,7 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-public class StringsTests
+public sealed class StringsTests
 {
     [Theory]
     [InlineData("Hello", 3, "Hel")]
@@ -227,7 +227,7 @@ public class StringsTests
         result.NestedObject.InnerString.ShouldBe("inner1");
     }
 
-    public class TestObject
+    public sealed class TestObject
     {
         public string? StringProp { get; set; }
 
@@ -238,7 +238,7 @@ public class StringsTests
         public NestedObject NestedStringPropWithSpaces { get; set; } = new();
     }
 
-    public class NestedObject
+    public sealed class NestedObject
     {
         public string? InnerString { get; set; }
     }

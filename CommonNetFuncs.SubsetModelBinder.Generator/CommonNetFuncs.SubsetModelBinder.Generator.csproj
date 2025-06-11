@@ -36,7 +36,7 @@
 
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
-    <Configurations>Debug;Release;ReducedBuild;ReducedBuild</Configurations>
+    <Configurations>Debug;Release;ReducedBuild</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>

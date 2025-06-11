@@ -1,9 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
-using CommonNetFuncs.Core;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Exceptions;
+using static CommonNetFuncs.Core.Collections;
+using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Media.Ffmpeg.Helpers;
 
 namespace CommonNetFuncs.Media.Ffmpeg;

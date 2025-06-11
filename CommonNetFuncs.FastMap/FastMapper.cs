@@ -4,10 +4,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using CommonNetFuncs.Core;
+using System.Runtime.CompilerServices;
 using FastExpressionCompiler;
-using static CommonNetFuncs.Core.Strings;
-using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.FastMap;
 
@@ -68,7 +66,7 @@ public static class FastMapper
         List<ParameterExpression> variables = [destinationVariable];
         List<Expression> bindings = [];
 
-        if (sourceType.IsDictionary() || destType.IsDictionary())
+        if (typeof(IDictionary).IsAssignableFrom(sourceType) || typeof(IDictionary).IsAssignableFrom(destType))
         {
             // Always initialize the destination
             bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(UT))));
@@ -140,7 +138,7 @@ public static class FastMapper
             HashSet<string> assignedProperties = [];
             foreach (PropertyInfo destProp in destinationProperties.Where(x => x.CanWrite))
             {
-                PropertyInfo? sourceProp = sourceProperties.FirstOrDefault(p => p.CanRead && p.Name.StrComp(destProp.Name));
+                PropertyInfo? sourceProp = sourceProperties.FirstOrDefault(p => p.CanRead && string.Equals(p.Name, destProp.Name));
                 if (sourceProp != null)
                 {
                     Expression sourceAccess = Expression.Property(sourceParameter, sourceProp);
@@ -193,7 +191,7 @@ public static class FastMapper
             foreach (PropertyInfo destProp in destinationProperties.Where(x => x.CanWrite && !assignedProperties.Contains(x.Name)))
             {
                 Expression destAccess = Expression.Property(destinationVariable, destProp);
-                if (!destProp.PropertyType.IsValueType && destProp.PropertyType.GetDefaultValue() != null)
+                if (!destProp.PropertyType.IsValueType && (destProp.PropertyType.IsValueType ? RuntimeHelpers.GetUninitializedObject(destProp.PropertyType) : null) != null)
                 {
                     ConstructorInfo? constructorInfo = destProp.PropertyType.GetConstructor(Type.EmptyTypes);
                     if (constructorInfo != null)
@@ -311,9 +309,9 @@ public static class FastMapper
                 return Expression.Assign(destAccess, Expression.Call(null, toListMethod, sourceAccess));
             }
         }
-        else if (sourceType.IsDictionary() || destType.IsDictionary())
+        else if (typeof(IDictionary).IsAssignableFrom(sourceType) || typeof(IDictionary).IsAssignableFrom(destType))
         {
-            if (!(sourceType.IsDictionary() && destType.IsDictionary()))
+            if (!(typeof(IDictionary).IsAssignableFrom(sourceType) && typeof(IDictionary).IsAssignableFrom(destType)))
             {
                 throw new InvalidOperationException("Both source and destination must be a dictionary in order to be mapped");
             }
@@ -430,15 +428,41 @@ public static class FastMapper
                 .FirstOrDefault() ?? typeof(object);
         }
     }
+
+    // Duplicated in CommonNetFuncs.Core.TypeChecks, recreated here to remove dependency
+    private static bool IsReadOnlyCollectionType(this Type type)
+    {
+        if (!type.IsGenericType)
+        {
+            return false;
+        }
+
+        Type genericType = type.GetGenericTypeDefinition();
+
+        if (type.IsInterface)
+        {
+            return genericType == typeof(IReadOnlyCollection<>) || genericType == typeof(IReadOnlyList<>);
+        }
+
+        return genericType == typeof(ReadOnlyCollection<>) || type.GetInterfaces().Any(interfaceType =>
+        {
+            if (!interfaceType.IsGenericType)
+            {
+                return false;
+            }
+            Type genericInterfaceType = interfaceType.GetGenericTypeDefinition();
+            return interfaceType.IsGenericType && (genericInterfaceType == typeof(IReadOnlyCollection<>) || genericInterfaceType == typeof(IReadOnlyList<>));
+        });
+    }
 }
 
 internal static class MethodInfoCache
 {
     public static readonly MethodInfo ToList = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))!;
     public static readonly MethodInfo ToArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!;
-    public static readonly MethodInfo ToHashSet = typeof(Enumerable).GetMethods().First(m => m.Name.StrComp(nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1);
+    public static readonly MethodInfo ToHashSet = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1);
     public static readonly MethodInfo FastMap = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!;
     public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!;
-    public static readonly MethodInfo Select = typeof(Enumerable).GetMethods().First(x => x.Name.StrComp(nameof(Enumerable.Select)) && x.GetParameters().Length == 2)!;
-    public static readonly MethodInfo ToDictionary = typeof(Enumerable).GetMethods().First(m => m.Name.StrComp(nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)!;
+    public static readonly MethodInfo Select = typeof(Enumerable).GetMethods().First(x => string.Equals(x.Name, nameof(Enumerable.Select)) && x.GetParameters().Length == 2)!;
+    public static readonly MethodInfo ToDictionary = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)!;
 }

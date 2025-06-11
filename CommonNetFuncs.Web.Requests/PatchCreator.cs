@@ -1,5 +1,4 @@
-﻿using CommonNetFuncs.Core;
-using Microsoft.AspNetCore.JsonPatch;
+﻿using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static CommonNetFuncs.Core.Strings;
@@ -112,8 +111,8 @@ public static class PatchCreator
             }
             else if (origProp?.Value.Type == JTokenType.Date && modProp?.Value.Type == JTokenType.Date)
             {
-                string originalDts = origProp.Value.ToString(Formatting.None).Replace(@"""", "").Replace(@"\", "");
-                string modDts = modProp.Value.ToString(Formatting.None).Replace(@"""", "").Replace(@"\", "");
+                string originalDts = origProp.Value.ToString(Formatting.None).Replace(@"""", string.Empty).Replace(@"\", string.Empty);
+                string modDts = modProp.Value.ToString(Formatting.None).Replace(@"""", string.Empty).Replace(@"\", string.Empty);
 
                 bool originalSucceed = DateTime.TryParse(originalDts, out DateTime originalDate);
                 bool modSucceed = DateTime.TryParse(modDts, out DateTime modDate);

@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
-using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using NPOI.HSSF.UserModel;
 using NPOI.HSSF.Util;
@@ -14,8 +13,6 @@ using NPOI.SS.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
 using SixLabors.ImageSharp;
-using static CommonNetFuncs.Core.ExceptionLocation;
-using static CommonNetFuncs.Core.Strings;
 using static System.Convert;
 using static System.Math;
 
@@ -57,7 +54,7 @@ public static partial class Common
     /// <returns>True if cell is empty</returns>
     public static bool IsCellEmpty(this ICell cell)
     {
-        return cell.GetStringValue().IsNullOrWhiteSpace();
+        return string.IsNullOrWhiteSpace(cell.GetStringValue());
     }
 
     /// <summary>
@@ -84,7 +81,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromReference)} Error");
             return null;
         }
     }
@@ -107,7 +104,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellOffset)} Error");
             return null;
         }
     }
@@ -131,7 +128,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromCoordinates)} Error");
             return null;
         }
     }
@@ -220,7 +217,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromName)} Error");
             return null;
         }
     }
@@ -268,7 +265,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(ClearAllFromName)} Error");
         }
     }
 
@@ -302,7 +299,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(WriteExcelFile)} Error");
             return false;
         }
     }
@@ -326,7 +323,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(WriteExcelFile)} Error");
             return false;
         }
     }
@@ -626,7 +623,7 @@ public static partial class Common
         IRow headerRow = xssfSheet.GetRow(firstRowIndex) ?? xssfSheet.CreateRow(firstRowIndex);
         for (int i = 0; i < lastColIndex - firstColIndex + 1; i++)
         {
-            string? cellValue = columnNames.AnyFast() && columnNames.Count - 1 >= i ? columnNames[i] : $"Column{i + 1}";
+            string? cellValue = columnNames?.Count > 0 && columnNames.Count - 1 >= i ? columnNames[i] : $"Column{i + 1}";
             ctTable.tableColumns.tableColumn.Add(new() { id = (uint)i + 1, name = cellValue });
 
             ICell cell = headerRow.GetCell(firstColIndex + i) ?? headerRow.CreateCell(firstColIndex + i);
@@ -1012,7 +1009,7 @@ public static partial class Common
             {
                 ISheet? ws = null;
 
-                if (!sheetName.IsNullOrWhiteSpace())
+                if (!string.IsNullOrWhiteSpace(sheetName))
                 {
                     ws = wb.GetSheet(sheetName);
                 }
@@ -1030,7 +1027,7 @@ public static partial class Common
                     ICell? startCell;
                     ICell? endCell;
 
-                    if (startCellReference.IsNullOrWhiteSpace())
+                    if (string.IsNullOrWhiteSpace(startCellReference))
                     {
                         startCellReference = "A1";
                     }
@@ -1039,7 +1036,7 @@ public static partial class Common
                     startColIndex = startCell!.ColumnIndex;
                     startRowIndex = startCell!.RowIndex;
 
-                    if (!endCellReference.IsNullOrWhiteSpace())
+                    if (!string.IsNullOrWhiteSpace(endCellReference))
                     {
                         endCell = ws.GetCellFromReference(endCellReference);
                         if (endCell != null)
@@ -1062,7 +1059,7 @@ public static partial class Common
                         else
                         {
                             string? currentCellVal = startCell.GetStringValue();
-                            for (int colIndex = 1; !currentCellVal.IsNullOrWhiteSpace(); colIndex++)
+                            for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
                             {
                                 endColIndex = colIndex - 1;
                                 dataTable.Columns.Add(currentCellVal);
@@ -1082,7 +1079,7 @@ public static partial class Common
                         else
                         {
                             string? currentCellVal = startCell.GetStringValue();
-                            for (int colIndex = 1; !currentCellVal.IsNullOrWhiteSpace(); colIndex++)
+                            for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
                             {
                                 endColIndex = colIndex - 1;
                                 dataTable.Columns.Add($"Column{colIndex - 1}");
@@ -1122,7 +1119,7 @@ public static partial class Common
                                 for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
                                 {
                                     string? cellValue = ws.GetCellFromCoordinates(colIndex, rowIndex).GetStringValue();
-                                    rowIsNotNull = rowIsNotNull ? rowIsNotNull : !cellValue.IsNullOrWhiteSpace();
+                                    rowIsNotNull = rowIsNotNull ? rowIsNotNull : !string.IsNullOrWhiteSpace(cellValue);
                                     newRowData[colIndex - startColIndex] = cellValue;
                                 }
 
@@ -1141,7 +1138,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Unable to read excel data. Location: {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Unable to read excel data. Location: {nameof(Common)}.{nameof(ReadExcelFileToDataTable)}");
         }
 
         return dataTable;
@@ -1164,13 +1161,13 @@ public static partial class Common
                 using XSSFWorkbook wb = new(fileStream);
                 ISheet? ws = null;
                 XSSFTable? table = null;
-                if (!tableName.IsNullOrWhiteSpace())
+                if (!string.IsNullOrWhiteSpace(tableName))
                 {
                     table = wb.GetTable(tableName);
                 }
 
                 //Get first table name if not specified or not found
-                if (tableName.IsNullOrWhiteSpace() || table == null)
+                if (string.IsNullOrWhiteSpace(tableName) || table == null)
                 {
                     int numberOfSheets = wb.NumberOfSheets;
                     for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex++)
@@ -1179,7 +1176,7 @@ public static partial class Common
                         foreach (XSSFTable sheetTable in ((XSSFSheet)ws).GetTables())
                         {
                             tableName = sheetTable.Name;
-                            if (!tableName.IsNullOrWhiteSpace())
+                            if (!string.IsNullOrWhiteSpace(tableName))
                             {
                                 table = wb.GetTable(tableName);
                                 break;
@@ -1221,7 +1218,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Unable to read excel table data. Location {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Unable to read excel table data. Location {nameof(Common)}.{nameof(ReadExcelTableToDataTable)}");
         }
 
         return dataTable;
@@ -1244,7 +1241,7 @@ public static partial class Common
     /// <returns>True if stream is an XLSX file</returns>
     public static bool IsXlsx(this IWorkbook workbook)
     {
-        return !workbook.GetType().Name.StrComp(typeof(HSSFWorkbook).Name);
+        return !string.Equals(workbook.GetType().Name, typeof(HSSFWorkbook).Name, StringComparison.InvariantCultureIgnoreCase);
     }
 
     private static readonly Dictionary<string, HSSFColor> HssfColorCache = [];

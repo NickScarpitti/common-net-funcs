@@ -21,7 +21,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!--<DebugType>embedded</DebugType>-->
     <Description>
-      A fast method to copy one type of object to another based on property names using expression trees with no setup code required for the classes being mapped.
+        A fast method to copy one type of object to another based on property names using expression trees with no setup code required for the classes being mapped.
     </Description>
     <PackageTags>dotnet;helpers;mapping;fast;expression trees;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.4.3</Version>
+    <Version>3.4.8</Version>
     <MinVerTagPrefix>fastmap-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -38,10 +38,6 @@
     <PackageValidationBaselineVersion>3.2.13</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Update="TTLogo.png">
@@ -59,7 +55,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FastExpressionCompiler" Version="5.2.0" />
+    <PackageReference Include="FastExpressionCompiler" Version="5.3.0" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

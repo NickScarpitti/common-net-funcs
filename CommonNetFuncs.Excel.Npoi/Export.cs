@@ -1,11 +1,9 @@
 ﻿using System.Data;
 using System.Reflection;
-using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
-using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.Excel.Npoi;
 
@@ -48,7 +46,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(GenericExcelExport)} Error");
         }
 
         return new();
@@ -83,7 +81,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(GenericExcelExport)} Error");
         }
 
         return new();
@@ -197,7 +195,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(AddGenericTableInternal)} Error");
         }
         return success;
     }
@@ -229,7 +227,7 @@ public static class Export
                 Dictionary<int, int> maxColumnWidths = [];
                 List<string> columnNames = [];
 
-                PropertyInfo[] props = typeof(T).GetProperties().Where(x => !skipColumnNames.AnyFast() || !skipColumnNames.ContainsInvariant(x.Name)).ToArray();
+                PropertyInfo[] props = typeof(T).GetProperties().Where(x => skipColumnNames.Count == 0 || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
                 foreach (PropertyInfo prop in props)
                 {
                     //((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
@@ -289,7 +287,7 @@ public static class Export
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfException()}");
+                    logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {nameof(Export)}.{nameof(ExcelExport)}");
                     logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
                 }
             }
@@ -297,7 +295,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(ExcelExport)} Error");
             return false;
         }
     }
@@ -330,7 +328,7 @@ public static class Export
                 List<string> columnNames = [];
                 foreach (DataColumn column in data.Columns)
                 {
-                    if (!skipColumnNames.ContainsInvariant(column.ColumnName))
+                    if (!skipColumnNames.Contains(column.ColumnName, StringComparer.InvariantCultureIgnoreCase))
                     {
                         ICell? c = ws.GetCellFromCoordinates(x, y);
                         if (c != null)
@@ -396,7 +394,7 @@ public static class Export
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {ex.GetLocationOfException()}");
+                    logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {nameof(Export)}.{nameof(ExcelExport)}");
                     logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
                 }
             }
@@ -404,7 +402,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(ExcelExport)} Error");
             return false;
         }
     }

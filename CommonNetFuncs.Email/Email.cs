@@ -5,7 +5,6 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using static CommonNetFuncs.Compression.Files;
-using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Email.EmailConstants;
 
 namespace CommonNetFuncs.Email;
@@ -170,10 +169,10 @@ public static class Email
                     }
                     catch (Exception ex)
                     {
-                        logger.Warn(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+                        logger.Warn(ex, "{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error");
                         if (i == 7)
                         {
-                            logger.Error("{msg}", $"{ex.GetLocationOfException()} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
+                            logger.Error("{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
                             success = false; //Sets success to false when the email send fails on the last attempt
                         }
                     }
@@ -183,7 +182,7 @@ public static class Email
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
+            logger.Error(ex, "{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
             success = false;
         }
 
@@ -212,7 +211,7 @@ public static class Email
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Email)}.{nameof(IsValidEmail)} Error");
         }
         return isValid;
     }
@@ -271,7 +270,7 @@ public static class Email
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Email)}.{nameof(AddAttachments)} Error");
         }
     }
 }

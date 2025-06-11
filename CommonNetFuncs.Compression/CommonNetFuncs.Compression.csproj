@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.4.2</Version>
+    <Version>3.4.8</Version>
     <MinVerTagPrefix>compression-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -45,10 +45,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

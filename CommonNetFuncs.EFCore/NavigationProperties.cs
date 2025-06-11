@@ -1,12 +1,12 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
-using CommonNetFuncs.Core;
 using FastExpressionCompiler;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using static CommonNetFuncs.Core.Collections;
+using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.EFCore;
 
@@ -50,7 +50,9 @@ public static class NavigationProperties
         }
 
         public override int GetHashCode()
-        { return SourceType.GetHashCode() + NavigationPropertyTypesToIgnore?.GetHashCode() ?? 0; }
+        {
+            return SourceType.GetHashCode() + NavigationPropertyTypesToIgnore?.GetHashCode() ?? 0;
+        }
     }
 
     private readonly struct NavigationProperiesCacheValue(HashSet<string> navigationProperties, int maxDepth) : IEquatable<NavigationProperiesCacheValue>
@@ -59,14 +61,19 @@ public static class NavigationProperties
         public readonly int MaxDepth = maxDepth;
 
         public bool Equals(NavigationProperiesCacheValue other)
-        { return other.MaxDepth == MaxDepth && other.NavigationProperties.SetEquals(NavigationProperties); }
+        {
+            return other.MaxDepth == MaxDepth && other.NavigationProperties.SetEquals(NavigationProperties);
+        }
 
         public override bool Equals(object? obj)
         {
             return obj is NavigationProperiesCacheValue navigationProperiesCacheKey && Equals(navigationProperiesCacheKey);
         }
 
-        public override int GetHashCode() { return NavigationProperties.GetHashCode() + MaxDepth.GetHashCode(); }
+        public override int GetHashCode()
+        {
+            return NavigationProperties.GetHashCode() + MaxDepth.GetHashCode();
+        }
 
         public HashSet<string> GetNavigationsToDepth(int depth)
         {
@@ -262,9 +269,7 @@ public static class NavigationProperties
             // If no valid assignments, return empty action
             if (!assignments.AnyFast())
             {
-                return new Action<object>(_ =>
-                {
-                });
+                return new Action<object>(_ => { });
             }
 
             // Create a block with all assignments

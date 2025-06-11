@@ -1,12 +1,10 @@
 ﻿using System.Data;
 using System.IO.Packaging;
 using System.Reflection;
-using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Excel.OpenXml.Common;
 
 namespace CommonNetFuncs.Excel.OpenXml;
@@ -50,7 +48,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(GenericExcelExport)} Error");
         }
 
         return new();
@@ -86,7 +84,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(GenericExcelExport)} Error");
         }
 
         return new();
@@ -164,7 +162,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(AddGenericTableInternal)} Error");
         }
         return success;
     }
@@ -194,7 +192,7 @@ public static class Export
                 uint x = 1;
                 uint y = 1;
 
-                PropertyInfo[] properties = typeof(T).GetProperties().Where(x => !skipColumnNames.AnyFast() || !skipColumnNames.ContainsInvariant(x.Name)).ToArray();
+                PropertyInfo[] properties = typeof(T).GetProperties().Where(x => skipColumnNames == null || skipColumnNames.Count == 0 || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
 
                 // Write headers
                 foreach (PropertyInfo prop in properties)
@@ -233,7 +231,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Export)}.{nameof(ExportFromTable)}");
             return false;
         }
     }
@@ -265,7 +263,7 @@ public static class Export
                 List<uint> skipColumns = [];
                 foreach (DataColumn column in data.Columns)
                 {
-                    if (!skipColumnNames.ContainsInvariant(column.ColumnName))
+                    if (skipColumnNames?.Contains(column.ColumnName, StringComparer.InvariantCultureIgnoreCase) != true)
                     {
                         sheetData.InsertCellValue(x, y, new(column.ColumnName), CellValues.SharedString, headerStyleId);
                     }
@@ -308,7 +306,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Export)}.{nameof(ExportFromTable)}");
             return false;
         }
     }

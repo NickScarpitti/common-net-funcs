@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
-using static CommonNetFuncs.Core.Strings;
+using static System.Web.HttpUtility;
+//using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Office.Common;
+
 public static class PdfConversion
 {
     private enum EOfficeFileTypes
@@ -79,24 +81,16 @@ public static class PdfConversion
         }
         else
         {
-            throw new FileNotFoundException($"The file at '{fileName.UrlEncodeReadable()}' does not exist");
+            throw new FileNotFoundException($"The file at '{UrlEncode(fileName)}' does not exist");
         }
     }
 
     public sealed class LibreOfficeFailedException : Exception
     {
-        public LibreOfficeFailedException()
-        {
-        }
+        public LibreOfficeFailedException() { }
 
-        public LibreOfficeFailedException(string message)
-            : base(message)
-        {
-        }
+        public LibreOfficeFailedException(string message) : base(message) { }
 
-        public LibreOfficeFailedException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
+        public LibreOfficeFailedException(string message, Exception inner) : base(message, inner) { }
     }
 }

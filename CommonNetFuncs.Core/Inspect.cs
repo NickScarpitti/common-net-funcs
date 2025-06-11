@@ -19,7 +19,9 @@ public static class Inspect
     /// <param name="type">Type to get the default value of</param>
     /// <returns>The default value of the provided type</returns>
     public static object? GetDefaultValue(this Type type)
-    { return type.IsValueType ? RuntimeHelpers.GetUninitializedObject(type) : null; }
+    {
+        return type.IsValueType ? RuntimeHelpers.GetUninitializedObject(type) : null;
+    }
 
     /// <summary>
     /// Get the number of properties in a class that are set to their default value
@@ -67,7 +69,10 @@ public static class Inspect
     /// <param name="obj1">First object to compare for value equality</param>
     /// <param name="obj2">Second object to compare for value equality</param>
     /// <returns>True if the two objects have the same value for all elements</returns>
-    public static bool IsEqualR(this object? obj1, object? obj2) { return obj1.IsEqualR(obj2, null); }
+    public static bool IsEqualR(this object? obj1, object? obj2)
+    {
+        return obj1.IsEqualR(obj2, null);
+    }
 
     /// <summary>
     /// Compare two class objects for value equality
@@ -166,9 +171,15 @@ public static class Inspect
     {
         private readonly HashSet<(object, object)> _comparingPairs = [];
 
-        public bool TryAddPair(object obj1, object obj2) { return _comparingPairs.Add((obj1, obj2)); }
+        public bool TryAddPair(object obj1, object obj2)
+        {
+            return _comparingPairs.Add((obj1, obj2));
+        }
 
-        public void RemovePair(object obj1, object obj2) { _comparingPairs.Remove((obj1, obj2)); }
+        public void RemovePair(object obj1, object obj2)
+        {
+            _comparingPairs.Remove((obj1, obj2));
+        }
     }
 
     private static readonly AsyncLocal<ComparisonContext?> CurrentContext = new();

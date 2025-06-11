@@ -10,21 +10,30 @@ public static class TypeChecks
     /// </summary>
     /// <param name="type">Type to check to see if it's a delegate</param>
     /// <returns>True if type parameter is a delegate</returns>
-    public static bool IsDelegate(this Type type) { return typeof(Delegate).IsAssignableFrom(type); }
+    public static bool IsDelegate(this Type type)
+    {
+        return typeof(Delegate).IsAssignableFrom(type);
+    }
 
     /// <summary>
     /// Checks to see if a type is an array
     /// </summary>
     /// <param name="type">Type to check if it's an array</param>
     /// <returns>True if type parameter is an array</returns>
-    public static bool IsArray(this Type type) { return type.IsArray; }
+    public static bool IsArray(this Type type)
+    {
+        return type.IsArray;
+    }
 
     /// <summary>
     /// Checks to see if a type implements IDictionary
     /// </summary>
     /// <param name="type">Type to check if it implements IDictionary</param>
     /// <returns>True if type parameter implements IDictionary</returns>
-    public static bool IsDictionary(this Type type) { return typeof(IDictionary).IsAssignableFrom(type); }
+    public static bool IsDictionary(this Type type)
+    {
+        return typeof(IDictionary).IsAssignableFrom(type);
+    }
 
     /// <summary>
     /// Checks to see if a type implements IEnumerable and is not a string
@@ -32,7 +41,9 @@ public static class TypeChecks
     /// <param name="type">Type to check if it implements IEnumerable</param>
     /// <returns>True if type parameter implements IEnumerable and is not a string</returns>
     public static bool IsEnumerable(this Type type)
-    { return typeof(IEnumerable).IsAssignableFrom(type) && type != typeof(string); }
+    {
+        return typeof(IEnumerable).IsAssignableFrom(type) && type != typeof(string);
+    }
 
     /// <summary>
     /// Checks to see if a type is a class other than a string
@@ -41,7 +52,7 @@ public static class TypeChecks
     /// <returns>True if type parameter is a class other than a string</returns>
     public static bool IsClassOtherThanString(this Type? type)
     {
-        return type == null || (!type.IsValueType && type != typeof(string)); //Added type == null || - Nick
+        return type == null || (!type.IsValueType && type != typeof(string));
     }
 
     /// <summary>
@@ -49,7 +60,10 @@ public static class TypeChecks
     /// </summary>
     /// <param name="value">Object to check to see if it's numeric</param>
     /// <returns>True if value is a numeric type</returns>
-    public static bool IsNumeric(this object? value) { return (value?.GetType()).IsNumericType(); }
+    public static bool IsNumeric(this object? value)
+    {
+        return (value?.GetType()).IsNumericType();
+    }
 
     /// <summary>
     /// Check if a type is a numeric type
@@ -67,9 +81,8 @@ public static class TypeChecks
         {
             type = Nullable.GetUnderlyingType(type);
         }
-
-        return Type.GetTypeCode(type) is TypeCode.Byte or TypeCode.SByte or TypeCode.UInt16 or TypeCode.UInt32 or TypeCode.UInt64 or TypeCode.Int16 or
-            TypeCode.Int32 or TypeCode.Int64 or TypeCode.Single or TypeCode.Double or TypeCode.Decimal;
+        return Type.GetTypeCode(type) is TypeCode.Int32 or TypeCode.Int64 or TypeCode.Double or TypeCode.Decimal or TypeCode.Int16 or TypeCode.Byte or TypeCode.SByte or
+            TypeCode.UInt16 or TypeCode.UInt32 or TypeCode.UInt64 or TypeCode.Single;
     }
 
     /// <summary>
@@ -90,6 +103,12 @@ public static class TypeChecks
             || type == typeof(Guid);
     }
 
+    // Duplicated in CommonNetFuncs.FastMap.FastMapper to remove dependency
+    /// <summary>
+    /// Checks if the specified type is a read-only collection type, such as IReadOnlyCollection<T>, IReadOnlyList<T>, or ReadOnlyCollection<T>.
+    /// </summary>
+    /// <param name="type">Type to check if it's a read-only collection type</param>
+    /// <returns>True if type is a read-only collection type</returns>
     public static bool IsReadOnlyCollectionType(this Type type)
     {
         if (!type.IsGenericType)
@@ -113,9 +132,5 @@ public static class TypeChecks
             Type genericInterfaceType = interfaceType.GetGenericTypeDefinition();
             return interfaceType.IsGenericType && (genericInterfaceType == typeof(IReadOnlyCollection<>) || genericInterfaceType == typeof(IReadOnlyList<>));
         });
-
-        //return genericType == typeof(ReadOnlyCollection<>) ||
-        //       genericType == typeof(IReadOnlyCollection<>) ||
-        //       genericType == typeof(IReadOnlyList<>);
     }
 }

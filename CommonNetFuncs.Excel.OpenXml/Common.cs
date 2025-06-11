@@ -2,14 +2,13 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
-using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SixLabors.ImageSharp;
-using Dwg = DocumentFormat.OpenXml.Drawing;
 using Color = DocumentFormat.OpenXml.Spreadsheet.Color; //Aliased to prevent issue with DocumentFormat.OpenXml.Spreadsheet.Color
+using Dwg = DocumentFormat.OpenXml.Drawing;
 using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
 
 namespace CommonNetFuncs.Excel.OpenXml;
@@ -88,7 +87,7 @@ public static partial class Common
             throw new ArgumentException("The document does not contain a WorkbookPart.");
         }
 
-        Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Name?.Value.StrEq(sheetName) == true);
+        Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => string.Equals(s.Name?.Value, sheetName, StringComparison.InvariantCultureIgnoreCase));
 
         if (sheet == null && createIfMissing)
         {
@@ -264,7 +263,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromReference)}");
             return null;
         }
     }
@@ -286,7 +285,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromReference)}");
             return null;
         }
     }
@@ -311,7 +310,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellOffset)}");
         }
         return null;
     }
@@ -345,7 +344,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromCoordinates)}");
             return null;
         }
     }
@@ -367,7 +366,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromName)}");
             return null;
         }
     }
@@ -385,7 +384,7 @@ public static partial class Common
         try
         {
             DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
-                workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name.ToNString().StrEq(cellName)); // Search invariant case if exact fails
+                workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
             if (definedName != null)
             {
                 string reference = definedName.Text;
@@ -400,7 +399,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromName)}");
             return null;
         }
     }
@@ -422,7 +421,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellReferenceFromName)}");
             return null;
         }
     }
@@ -440,7 +439,7 @@ public static partial class Common
         try
         {
             DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
-                workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name.ToNString().StrEq(cellName)); // Search invariant case if exact fails
+                workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
             if (definedName != null)
             {
                 string reference = definedName.Text;
@@ -456,7 +455,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellReferenceFromName)}");
             return null;
         }
     }
@@ -1150,7 +1149,7 @@ public static partial class Common
             }
 
             // Check if the cell exists, create if not
-            cell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value.StrComp(cellRef) ?? false);
+            cell = row.Elements<Cell>().FirstOrDefault(c => string.Equals(c.CellReference?.Value, cellRef));
             if (cell == null)
             {
                 // Cells must be in sequential order according to CellReference. Determine where to insert the new cell.
@@ -1287,7 +1286,7 @@ public static partial class Common
         // Iterate through all the items in the SharedStringTable. If the text already exists, return its index.
         foreach (SharedStringItem item in shareStringTablePart.SharedStringTable.Elements<SharedStringItem>())
         {
-            if (item.InnerText.StrComp(text))
+            if (string.Equals(item.InnerText, text))
             {
                 return i;
             }
@@ -1409,7 +1408,7 @@ public static partial class Common
             uint? cellStyleIndex = document.GetCustomStyle(font: new() { FontSize = new() { Val = 11 }, FontName = new() { Val = nameof(EFontName.Calibri) } });
             for (int i = 0; i < imageData.Count; i++)
             {
-                if (imageData[i].Length > 0 && !cellNames[i].IsNullOrWhiteSpace())
+                if (imageData[i].Length > 0 && !string.IsNullOrWhiteSpace(cellNames[i]))
                 {
                     CellReference? cellReference = GetCellReferenceFromName(workbookPart, cellNames[i]);
                     if (cellReference != null)
@@ -1702,11 +1701,6 @@ public static partial class Common
         }
     }
 
-    //TODO:: Add data validation helpers
-    // The AddDataValidation method doesn't have a direct equivalent in OpenXML.
-    // Data validation in OpenXML requires a different approach and would need
-    // a more complex implementation.
-
     /// <summary>
     /// Reads tabular data from an unformatted excel sheet to a DataTable object using OpenXML
     /// </summary>
@@ -1885,7 +1879,7 @@ public static partial class Common
         if (cell.DataType != null)
         {
             string cellDataType = cell.DataType.Value.ToString();
-            if (cellDataType.StrComp(CellValues.SharedString.ToString()))
+            if (string.Equals(cellDataType, CellValues.SharedString.ToString()))
             {
                 Worksheet worksheet = cell.GetWorksheetFromCell();
                 Workbook workbook = worksheet.GetWorkbookFromWorksheet();
@@ -1895,11 +1889,11 @@ public static partial class Common
                     return stringTable.SharedStringTable.ElementAt(int.Parse(cell.InnerText)).InnerText;
                 }
             }
-            else if (cellDataType.StrComp(CellValues.Boolean.ToString()))
+            else if (string.Equals(cellDataType, CellValues.Boolean.ToString()))
             {
-                return cell.InnerText.StrComp("1") ? "TRUE" : "FALSE";
+                return string.Equals(cell.InnerText, "1") ? "TRUE" : "FALSE";
             }
-            else if (cellDataType.StrComp(CellValues.Error.ToString()))
+            else if (string.Equals(cellDataType, CellValues.Error.ToString()))
             {
                 return $"ERROR: {cell.InnerText}";
             }
@@ -1975,7 +1969,7 @@ public static partial class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Unable to read excel table data. Location {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Unable to read excel table data. Location {nameof(Common)}.{nameof(ReadExcelTableToDataTable)}");
         }
 
         return dataTable;
@@ -2157,7 +2151,6 @@ public static partial class Common
                 }
             }
 
-            //TODO:: Check if Min and Max here actually need the + 1
             Column newCol = new()
             {
                 Min = colIndex,

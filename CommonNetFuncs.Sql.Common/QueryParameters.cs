@@ -13,7 +13,7 @@ public static class QueryParameters
     /// <returns>String equivalent of value passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
     public static string? CleanQueryParam(this string? value)
     {
-        return value.MakeNullNull()?.Replace("\n", "").Trim();
+        return value.MakeNullNull()?.Replace("\n", string.Empty).Trim();
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public static class QueryParameters
         ConcurrentBag<string?> cleanValues = [];
         if (values.Any())
         {
-            Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim()));
+            Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", string.Empty).Trim()));
         }
 
         return (cleanValues ?? []).Where(x => x != null)!;
@@ -54,7 +54,7 @@ public static class QueryParameters
         ConcurrentBag<string?> cleanValues = [];
         if (values.Count > 0)
         {
-            Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", "").Trim()));
+            Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", string.Empty).Trim()));
         }
 
         return (cleanValues ?? []).Where(x => x != null).ToList()!;
@@ -95,6 +95,6 @@ public static class QueryParameters
             }
         }
 
-        return result?.Replace("'", "''").Replace("%", "").Replace("*", "") ?? defaultValue;
+        return result?.Replace("'", "''").Replace("%", string.Empty).Replace("*", string.Empty) ?? defaultValue;
     }
 }

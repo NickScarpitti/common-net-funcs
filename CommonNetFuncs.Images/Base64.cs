@@ -1,8 +1,5 @@
 ﻿using SixLabors.ImageSharp;
 using static System.Convert;
-using static CommonNetFuncs.Core.Strings;
-using static CommonNetFuncs.Core.ExceptionLocation;
-using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Images;
 
@@ -38,7 +35,7 @@ public static class Base64
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(ConvertImageFileToBase64)} Error");
         }
 
         return null;
@@ -65,24 +62,27 @@ public static class Base64
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(ConvertImageFileToBase64)} Error");
         }
 
         return null;
     }
 
     private const string B64 = "base64";
+
     public static string? CleanImageValue(this string? imgValue)
     {
-        if (!string.IsNullOrEmpty(imgValue))
+        if (!string.IsNullOrWhiteSpace(imgValue))
         {
             if (imgValue?.Contains(',') == true)
             {
-                imgValue = imgValue.Right(imgValue.Length - imgValue.IndexOf(',') - 1);
+                int numChars = imgValue.Length - imgValue.IndexOf(',') - 1;
+                imgValue = imgValue.Substring(imgValue.Length - numChars, numChars);
             }
             else if (imgValue?.Contains(B64) == true && imgValue.Length > B64.Length)
             {
-                imgValue = imgValue.Right(imgValue.Length - imgValue.IndexOf(B64) - B64.Length);
+                int numChars = imgValue.Length - imgValue.IndexOf(B64) - B64.Length;
+                imgValue = imgValue.Substring(imgValue.Length - numChars, numChars);
             }
             else
             {
@@ -108,7 +108,7 @@ public static class Base64
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\nSave Path: {savePath}");
+            logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(ImageSaveToFile)} Error\nSave Path: {savePath}");
             return false;
         }
     }

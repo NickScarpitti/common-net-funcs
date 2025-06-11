@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using CommonNetFuncs.Core;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace CommonNetFuncs.Word.OpenXml;
@@ -27,7 +26,7 @@ public static class Common
             {
                 foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
                 {
-                    if (hyperlink.Uri.ToString().StrEq(urlToReplace))
+                    if (string.Equals(hyperlink.Uri.ToString(), urlToReplace, StringComparison.InvariantCultureIgnoreCase))
                     {
                         mainPart.DeleteReferenceRelationship(hyperlink);
                         mainPart.AddHyperlinkRelationship(new Uri(newUrl), true, hyperlink.Id);
@@ -44,7 +43,7 @@ public static class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(ChangeUrlsInWordDoc)}");
         }
         finally
         {
@@ -70,7 +69,7 @@ public static class Common
             {
                 foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
                 {
-                    string? newUrl = urlsToUpdate.Where(x => x.Key.StrEq(hyperlink.Uri.ToString())).Select(x => x.Value).FirstOrDefault();
+                    string? newUrl = urlsToUpdate.Where(x => string.Equals(x.Key, hyperlink.Uri.ToString(), StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
                     if (newUrl != null)
                     {
                         mainPart.DeleteReferenceRelationship(hyperlink);
@@ -83,7 +82,7 @@ public static class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(ChangeUrlsInWordDoc)}");
         }
         finally
         {
@@ -113,7 +112,7 @@ public static class Common
                 foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
                 {
                     string currentUri = hyperlink.Uri.ToString();
-                    if (regex.Matches(currentUri).AnyFast())
+                    if (regex.Matches(currentUri).Count > 0)
                     {
                         mainPart.DeleteReferenceRelationship(hyperlink);
                         mainPart.AddHyperlinkRelationship(new Uri(Regex.Replace(currentUri, regexPattern, replacementText)), true, hyperlink.Id);
@@ -130,7 +129,7 @@ public static class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(ChangeUrlsInWordDocRegex)}");
         }
         finally
         {
@@ -161,7 +160,7 @@ public static class Common
                     foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
                     {
                         string currentUri = hyperlink.Uri.ToString();
-                        if (regex.Matches(currentUri).AnyFast())
+                        if (regex.Matches(currentUri).Count > 0)
                         {
                             mainPart.DeleteReferenceRelationship(hyperlink);
                             mainPart.AddHyperlinkRelationship(new Uri(Regex.Replace(currentUri, item.Key, item.Value)), true, hyperlink.Id);
@@ -179,7 +178,7 @@ public static class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {ex.GetLocationOfException()}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(ChangeUrlsInWordDocRegex)}");
         }
         finally
         {

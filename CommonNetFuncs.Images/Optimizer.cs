@@ -1,7 +1,5 @@
 ﻿using CliWrap;
 using CliWrap.Buffered;
-using CommonNetFuncs.Core;
-using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Images;
 
@@ -27,20 +25,20 @@ public static class Optimizer
         BufferedCommandResult result = new(0, DateTimeOffset.Now, DateTimeOffset.Now, string.Empty, string.Empty);
 
         //Compress
-        if (GifsicleExtensions.ContainsInvariant(extension))
+        if (GifsicleExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase))
         {
             commandType = "gifsicle";
             if (gifsicleArgs == null)
             {
                 gifsicleArgs = ["-b", "-O3", file];
             }
-            else if (!gifsicleArgs.Any(x => x.StrEq(file)))
+            else if (!gifsicleArgs.Any(x => string.Equals(x, file, StringComparison.InvariantCultureIgnoreCase)))
             {
                 gifsicleArgs = gifsicleArgs.Append(file);
             }
             result = await Cli.Wrap(commandType).WithArguments(gifsicleArgs).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         }
-        else if (JpegoptimExtensions.ContainsInvariant(extension))
+        else if (JpegoptimExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase))
         {
             commandType = "jpegoptim";
 
@@ -48,13 +46,13 @@ public static class Optimizer
             {
                 jpegoptimArgs = ["--preserve-perms", "--preserve", file];
             }
-            else if (!jpegoptimArgs.Any(x => x.StrEq(file)))
+            else if (!jpegoptimArgs.Any(x => string.Equals(x, file, StringComparison.InvariantCultureIgnoreCase)))
             {
                 jpegoptimArgs = jpegoptimArgs.Append(file);
             }
             result = await Cli.Wrap(commandType).WithArguments(jpegoptimArgs).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         }
-        else if (OptipngExtensions.ContainsInvariant(extension))
+        else if (OptipngExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase))
         {
             commandType = "optipng";
 
@@ -62,24 +60,24 @@ public static class Optimizer
             {
                 optipngArgs = ["-fix", "-o5", file];
             }
-            else if (!optipngArgs.Any(x => x.StrEq(file)))
+            else if (!optipngArgs.Any(x => string.Equals(x, file, StringComparison.InvariantCultureIgnoreCase)))
             {
                 optipngArgs = optipngArgs.Append(file);
             }
             result = await Cli.Wrap(commandType).WithArguments(optipngArgs).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
-        if (!commandType.IsNullOrWhiteSpace())
+        if (!string.IsNullOrWhiteSpace(commandType))
         {
             FileInfo compressedFileInfo = new(file);
             if (result.IsSuccess)
             {
                 logger.Info($"Image compression succeeded for [{file}]" +
-                    $"{(!result.StandardOutput.IsNullOrWhiteSpace() ? $"\n\tStd Output: {result.StandardOutput}" : string.Empty)}" +
-                    $"{(!result.StandardError.IsNullOrWhiteSpace() ? $"\n\tStd Error: {result.StandardError}" : string.Empty)}" +
+                    $"{(!string.IsNullOrWhiteSpace(result.StandardOutput) ? $"\n\tStd Output: {result.StandardOutput}" : string.Empty)}" +
+                    $"{(!string.IsNullOrWhiteSpace(result.StandardError) ? $"\n\tStd Error: {result.StandardError}" : string.Empty)}" +
                     $"\n\tRun Time:{result.RunTime}" +
-                    $"\n\tOriginal size: {originalFileSize.GetFileSizeFromBytesWithUnits(2)} [{originalFileSize} B]" +
-                    $"\n\tNew Size: {compressedFileInfo.Length.GetFileSizeFromBytesWithUnits(2)} [{compressedFileInfo.Length} B]" +
+                    $"\n\tOriginal size: {Math.Round(originalFileSize / 1024d, 2, MidpointRounding.AwayFromZero)}KB [{originalFileSize} B]" +
+                    $"\n\tNew Size: {Math.Round(compressedFileInfo.Length / 1024d, 2, MidpointRounding.AwayFromZero)}KB [{compressedFileInfo.Length} B]" +
                     $"\n\tCompression Ratio: {Math.Round(compressedFileInfo.Length * 100m / originalFileSize, 2, MidpointRounding.AwayFromZero)}%");
             }
             else

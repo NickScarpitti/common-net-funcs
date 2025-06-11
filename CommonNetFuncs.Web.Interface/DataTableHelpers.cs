@@ -4,11 +4,9 @@ using MessagePack;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using NLog;
-using static System.Convert;
-using static CommonNetFuncs.Core.ExceptionLocation;
-using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Sql.Common.QueryParameters;
 using static CommonNetFuncs.Web.Common.ContentTypes;
+using static System.Convert;
 
 namespace CommonNetFuncs.Web.Interface;
 
@@ -29,28 +27,28 @@ public static class DataTableHelpers
         DataTableRequest dataTableRequest = new();
         try
         {
-            if (FormDataTypes.Any(request.ContentType.ContainsInvariant) && request.Form != null)
+            if (FormDataTypes.Any(x => request.ContentType?.Contains(x, StringComparison.InvariantCultureIgnoreCase) ?? false) && request.Form != null)
             {
-                dataTableRequest.Draw = request.Form.Where(x => x.Key.StrEq("draw")).Select(x => x.Value).FirstOrDefault();
+                dataTableRequest.Draw = request.Form.Where(x => string.Equals(x.Key, "draw", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
 
-                for (int i = 0; request.Form.Any(y => y.Key.StrEq($"order[{i}][column]")); i++)
+                for (int i = 0; request.Form.Any(y => string.Equals(y.Key, $"order[{i}][column]", StringComparison.InvariantCultureIgnoreCase)); i++)
                 {
-                    dataTableRequest.SortColumns.Add(i, request.Form.Where(x => x.Key.StrEq("columns[" + request.Form.Where(y => y.Key.StrEq($"order[{i}][column]"))
-                        .Select(z => z.Value).FirstOrDefault() + "][data]")).Select(x => x.Value).FirstOrDefault());
+                    dataTableRequest.SortColumns.Add(i, request.Form.Where(x => string.Equals(x.Key, "columns[" + request.Form.Where(y => string.Equals(y.Key, $"order[{i}][column]", StringComparison.InvariantCultureIgnoreCase))
+                        .Select(z => z.Value).FirstOrDefault() + "][data]", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault());
 
-                    dataTableRequest.SortColumnDir.Add(i, request.Form.Where(x => x.Key.StrEq($"order[{i}][dir]")).Select(x => x.Value).FirstOrDefault());
+                    dataTableRequest.SortColumnDir.Add(i, request.Form.Where(x => string.Equals(x.Key, $"order[{i}][dir]", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault());
                 }
 
-                string? start = request.Form.Where(x => x.Key.StrEq("start")).Select(x => x.Value).FirstOrDefault();
-                string? length = request.Form.Where(x => x.Key.StrEq("length")).Select(x => x.Value).FirstOrDefault();
-                string? searchValue = request.Form.Where(x => x.Key.StrEq("search[value]")).Select(x => x.Value).FirstOrDefault();
+                string? start = request.Form.Where(x => string.Equals(x.Key, "start", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
+                string? length = request.Form.Where(x => string.Equals(x.Key, "length", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
+                string? searchValue = request.Form.Where(x => string.Equals(x.Key, "search[value]", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
 
                 //Paging Size (10,20,50,100)
                 dataTableRequest.PageSize = length != StringValues.Empty ? ToInt32(length) : 0;
                 dataTableRequest.Skip = start != StringValues.Empty ? ToInt32(start) : 0;
 
                 //Get search value key pairs
-                if (!searchValue.IsNullOrEmpty())
+                if (!string.IsNullOrEmpty(searchValue))
                 {
                     foreach (string val in searchValue.Split(',').ToList())
                     {
@@ -81,7 +79,7 @@ public static class DataTableHelpers
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(DataTableHelpers)}.{nameof(GetDataTableRequest)} Error");
         }
         return dataTableRequest;
     }
@@ -115,10 +113,15 @@ public sealed class DataTableRequest
     }
 
     public int PageSize { get; set; }
+
     public int Skip { get; set; }
+
     public Dictionary<int, string?> SortColumnDir { get; set; }
+
     public Dictionary<int, string?> SortColumns { get; set; }
+
     public string? Draw { get; set; }
+
     public Dictionary<string, string?> SearchValues { get; set; }
 }
 
@@ -146,10 +149,15 @@ public partial class SortAndLimitPostModel
         SortColumns = [];
         SortColumnDir = [];
     }
+
     public Dictionary<int, string?> SortColumns { get; set; }
+
     public Dictionary<int, string?> SortColumnDir { get; set; }
+
     public int Skip { get; set; }
+
     public int PageSize { get; set; }
 }
 
 #endregion Classes
+

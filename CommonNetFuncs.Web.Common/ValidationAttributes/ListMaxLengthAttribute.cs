@@ -1,10 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Collections;
+﻿using System.Collections;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
-using CommonNetFuncs.Core;
+using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.Web.Common.ValidationAttributes;
 
@@ -51,9 +51,12 @@ public sealed class ListMaxLengthAttribute : ValidationAttribute
     /// </summary>
     /// <param name="name">The name to include in the formatted string.</param>
     /// <returns>A localized string to describe the maximum acceptable length.</returns>
-    public override string FormatErrorMessage(string name) =>
-        // An error occurred, so we know the value is greater than the maximum if it was specified
-        string.Format(CultureInfo.CurrentCulture, ErrorMessageString, name, Length);
+    public override string FormatErrorMessage(string name)
+    {
+        return
+                // An error occurred, so we know the value is greater than the maximum if it was specified
+                string.Format(CultureInfo.CurrentCulture, ErrorMessageString, name, Length);
+    }
 
     /// <summary>
     ///     Checks that Length has a legal value.

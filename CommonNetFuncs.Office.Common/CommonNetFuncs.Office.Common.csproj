@@ -19,7 +19,7 @@
     <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
     <!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
     <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!--<SymbolPackageFormat>snupkg</SymbolPackageFormat>-->
     <DebugType>embedded</DebugType>
     <Description>
       Helper to export MS Office files to PDF
@@ -30,7 +30,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.4.2</Version>
+    <Version>3.4.8</Version>
     <MinVerTagPrefix>office.common-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -39,10 +39,6 @@
     <PackageValidationBaselineVersion>3.2.22</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Update="TTLogo.png">

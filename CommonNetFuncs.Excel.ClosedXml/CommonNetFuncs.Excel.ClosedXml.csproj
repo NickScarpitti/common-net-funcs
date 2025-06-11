@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.4.5</Version>
+    <Version>3.4.8</Version>
     <MinVerTagPrefix>excel.closedxml-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -46,11 +46,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" PrivateAssets="all" />
-    <PackageReference Include="System.IO.Packaging" Version="9.0.5" />
+    <PackageReference Include="System.IO.Packaging" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
     <ProjectReference Include="..\CommonNetFuncs.Excel.Common\CommonNetFuncs.Excel.Common.csproj" />
   </ItemGroup>
 

@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.DeepClone;
 
@@ -40,7 +39,7 @@ public static class ExpressionTrees
 
         Type type = original.GetType();
 
-        if (type.IsDelegate())
+        if (typeof(Delegate).IsAssignableFrom(type))
         {
             throw new ArgumentException($"Type {type.FullName} is a delegate type which is unsupported.", nameof(original));
             //return null;
@@ -100,7 +99,7 @@ public static class ExpressionTrees
         MemberwiseCloneInputToOutputExpression(type, inputParameter, outputVariable, expressions);
 
         ///// STORE COPIED OBJECT TO REFERENCES DICTIONARY
-        if (type.IsClassOtherThanString())
+        if (!type.IsValueType && type != typeof(string))
         {
             StoreReferencesIntoDictionaryExpression(inputParameter, inputDictionary, outputVariable, expressions);
         }
@@ -109,7 +108,7 @@ public static class ExpressionTrees
         FieldsCopyExpressions(type, inputParameter, inputDictionary, outputVariable, boxingVariable, expressions);
 
         ///// COPY ELEMENTS OF ARRAY
-        if (type.IsArray() && type.GetElementType().IsTypeToDeepCopy())
+        if (type.IsArray && type.GetElementType().IsTypeToDeepCopy())
         {
             CreateArrayCopyLoopExpression(type, inputParameter, inputDictionary, outputVariable, variables, expressions);
         }
@@ -258,7 +257,7 @@ public static class ExpressionTrees
 
         foreach (FieldInfo field in readonlyFields)
         {
-            if (field.FieldType.IsDelegate())
+            if (typeof(Delegate).IsAssignableFrom(field.FieldType))
             {
                 ReadonlyFieldToNullExpression(field, boxingVariable, expressions);
             }
@@ -277,7 +276,7 @@ public static class ExpressionTrees
         ///// NOT-READONLY FIELDS COPY
         foreach (FieldInfo field in writableFields)
         {
-            if (field.FieldType.IsDelegate())
+            if (typeof(Delegate).IsAssignableFrom(field.FieldType))
             {
                 WritableFieldToNullExpression(field, outputVariable, expressions);
             }
@@ -301,7 +300,10 @@ public static class ExpressionTrees
         return fieldsList.ToArray();
     }
 
-    private static FieldInfo[] GetAllFields(Type type) { return GetAllRelevantFields(type, forceAllFields: true); }
+    private static FieldInfo[] GetAllFields(Type type)
+    {
+        return GetAllRelevantFields(type, forceAllFields: true);
+    }
 
     private static readonly Type FieldInfoType = typeof(FieldInfo);
     private static readonly MethodInfo? SetValueMethod = FieldInfoType.GetMethod("SetValue", [ObjectType, ObjectType]);
@@ -373,7 +375,9 @@ public static class ExpressionTrees
     }
 
     private static bool IsTypeToDeepCopy(this Type? type)
-    { return type.IsClassOtherThanString() || type.IsStructWhichNeedsDeepCopy(); }
+    {
+        return type == null || (!type.IsValueType && type != typeof(string)) || type.IsStructWhichNeedsDeepCopy();
+    }
 
     private static bool IsStructWhichNeedsDeepCopy(this Type? type)
     {
@@ -400,10 +404,14 @@ public static class ExpressionTrees
     }
 
     private static bool IsStructWhichNeedsDeepCopy_NoDictionaryUsed(this Type type)
-    { return type.IsStructOtherThanBasicValueTypes() && type.HasInItsHierarchyFieldsWithClasses(); }
+    {
+        return type.IsStructOtherThanBasicValueTypes() && type.HasInItsHierarchyFieldsWithClasses();
+    }
 
     private static bool IsStructOtherThanBasicValueTypes(this Type type)
-    { return type.IsValueType && !type.IsPrimitive && !type.IsEnum && type != typeof(decimal); }
+    {
+        return type.IsValueType && !type.IsPrimitive && !type.IsEnum && type != typeof(decimal);
+    }
 
     private static bool HasInItsHierarchyFieldsWithClasses(this Type type, HashSet<Type>? alreadyCheckedTypes = null)
     {
@@ -413,7 +421,7 @@ public static class ExpressionTrees
         FieldInfo[] allFields = GetAllFields(type);
         IEnumerable<Type> allFieldTypes = allFields.Select(f => f.FieldType).Distinct().ToList();
 
-        bool hasFieldsWithClasses = allFieldTypes.Any(x => x.IsClassOtherThanString());
+        bool hasFieldsWithClasses = allFieldTypes.Any(x => !x.IsValueType && x != typeof(string));
         if (hasFieldsWithClasses)
         {
             return true;

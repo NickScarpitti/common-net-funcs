@@ -21,9 +21,11 @@ public class ExpressionTreesTests
 
         #pragma warning disable IDE0051 // Remove unused private members
         #pragma warning disable RCS1213 // Remove unused member declaration
+        #pragma warning disable CS0414 // The field is assigned but its value is never used
         private readonly int _privateReadOnlyField = 42;
         #pragma warning disable IDE0051 // Remove unused private members
         #pragma warning restore RCS1213 // Remove unused member declaration
+        #pragma warning restore CS0414 //The field is assigned but its value is never used
     }
 
     public struct TestStruct
@@ -81,9 +83,7 @@ public class ExpressionTreesTests
     public void DeepClone_WhenInputIsDelegate_ShouldThrowArgumentException()
     {
         // Arrange
-        TestDelegate source = () =>
-        {
-        };
+        TestDelegate source = () => { };
 
         // Act & Assert
         Should.Throw<ArgumentException>(() => source.DeepClone());

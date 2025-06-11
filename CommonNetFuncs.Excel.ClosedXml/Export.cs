@@ -2,7 +2,6 @@
 using System.Reflection;
 using ClosedXML.Excel;
 using CommonNetFuncs.Excel.Common;
-using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Excel.ClosedXml.Common;
 
 namespace CommonNetFuncs.Excel.ClosedXml;
@@ -106,7 +105,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(ExportFromTable)} Error");
             return false;
         }
     }
@@ -202,7 +201,7 @@ public static class Export
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(ExportFromTable)} Error");
             return false;
         }
     }

@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using CommonNetFuncs.Core;
+using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.Web.Common.ValidationAttributes;
 
@@ -11,9 +11,7 @@ public sealed class AllowedNullableValuesAttribute : ValidationAttribute
     private readonly Type? enumType;
 
     // Original constructors
-    public AllowedNullableValuesAttribute(params object[] allowedValues) : this(true, allowedValues)
-    {
-    }
+    public AllowedNullableValuesAttribute(params object[] allowedValues) : this(true, allowedValues) { }
 
     public AllowedNullableValuesAttribute(bool allowNull, params object[] allowedValues)
     {

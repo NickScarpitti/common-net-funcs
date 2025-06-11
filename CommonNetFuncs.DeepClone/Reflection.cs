@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using static CommonNetFuncs.Core.Collections;
-using static CommonNetFuncs.Core.TypeChecks;
 
 namespace CommonNetFuncs.DeepClone;
 
@@ -54,7 +52,7 @@ public static class Reflection
             return value;
         }
 
-        if (typeToReflect.IsDelegate())
+        if (typeof(Delegate).IsAssignableFrom(typeToReflect))
         {
             throw new ArgumentException($"Type {typeToReflect.FullName} is a delegate type which is unsupported.", nameof(originalObject));
         }
@@ -66,7 +64,12 @@ public static class Reflection
             if (!arrayType!.IsPrimitive())
             {
                 Array clonedArray = (Array)cloneObject!;
-                clonedArray.SetValue((array, indices) => array.SetValue(InternalCopy(clonedArray.GetValue(indices), visited), indices));
+
+                //clonedArray.SetValue((array, indices) => array.SetValue(InternalCopy(clonedArray.GetValue(indices), visited), indices));
+                for (int i = 0; i < clonedArray.Length; i++)
+                {
+                    clonedArray.SetValue(InternalCopy(clonedArray.GetValue(i), visited), i);
+                }
             }
         }
         visited.Add(originalObject, cloneObject);

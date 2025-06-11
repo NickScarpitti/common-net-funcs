@@ -25,7 +25,9 @@ public static class DirectQuery
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the database command</returns>
     public static Task<DataTable> GetDataTable(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
-    { return GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken); }
+    {
+        return GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
+    }
 
     /// <summary>
     /// Reads data using into a DataTable object using the provided database connection and command
@@ -75,7 +77,9 @@ public static class DirectQuery
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the database command</returns>
     public static DataTable GetDataTableSynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
-    { return GetDataTableInternalSynchronous(conn, cmd, commandTimeoutSeconds, maxRetry); }
+    {
+        return GetDataTableInternalSynchronous(conn, cmd, commandTimeoutSeconds, maxRetry);
+    }
 
     /// <summary>
     /// Reads data using into a DataTable object using the provided database connection and command
@@ -125,7 +129,9 @@ public static class DirectQuery
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
     public static Task<UpdateResult> RunUpdateQuery(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
-    { return RunUpdateQueryInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken); }
+    {
+        return RunUpdateQueryInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
+    }
 
     /// <summary>
     /// Execute an update query asynchronously
@@ -173,7 +179,9 @@ public static class DirectQuery
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
     public static UpdateResult RunUpdateQuerySynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
-    { return RunUpdateQueryInternalSynchronous(conn, cmd, commandTimeoutSeconds, maxRetry); }
+    {
+        return RunUpdateQueryInternalSynchronous(conn, cmd, commandTimeoutSeconds, maxRetry);
+    }
 
     /// <summary>
     /// Execute an update query synchronously

@@ -1,7 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Globalization;
-using CommonNetFuncs.Core;
 using Xabe.FFmpeg;
+using static CommonNetFuncs.Core.Collections;
+using static CommonNetFuncs.Core.ExceptionLocation;
+using static CommonNetFuncs.Core.Strings;
+using static CommonNetFuncs.Core.UnitConversion;
 using static CommonNetFuncs.Media.Ffmpeg.Constants;
 
 namespace CommonNetFuncs.Media.Ffmpeg;
@@ -40,7 +43,7 @@ public static class Helpers
     public static string GetTotalFileDif(ConcurrentBag<string> conversionOutputs)
     {
         NumberFormatInfo format = new() { NegativeSign = "-" }; //Needed to do this so negatives are read correctly
-        return conversionOutputs.Sum(x => x.Split(",").Where(y => y.Contains($"{EOutputTags.SizeDif}")).Select(y => long.Parse(y.Replace($"{EOutputTags.SizeDif}=", ""), format)).FirstOrDefault()).GetFileSizeFromBytesWithUnits();
+        return conversionOutputs.Sum(x => x.Split(",").Where(y => y.Contains($"{EOutputTags.SizeDif}")).Select(y => long.Parse(y.Replace($"{EOutputTags.SizeDif}=", string.Empty), format)).FirstOrDefault()).GetFileSizeFromBytesWithUnits();
     }
 
     public static async Task RecordResults(string fileName, bool success, ConcurrentBag<string> conversionOutputs, string logFile, long? originalSize = null, long? endSize = null)
@@ -59,7 +62,7 @@ public static class Helpers
         outputString += originalSize != null && endSize != null ? $"{EOutputTags.SizeRatio}={Math.Round((decimal)endSize / (decimal)originalSize, 2) * 100}%,{EOutputTags.SizeDif}={endSize - originalSize}" : string.Empty;
         conversionOutputs.Add(outputString);
 
-        if(!logFile.IsNullOrWhiteSpace())
+        if (!logFile.IsNullOrWhiteSpace())
         {
             if (!File.Exists(logFile))
             {
@@ -73,7 +76,7 @@ public static class Helpers
     }
 
     /// <summary>
-    /// Gets a sinlge metadata value from a file. Requires Xabe to have the executables path set.
+    /// Gets a single metadata value from a file. Requires Xabe to have the executables path set.
     /// </summary>
     /// <param name="fileName">Full video path and file name of the video file to get metadata from</param>
     /// <param name="videoMetadataItem">Metadata item to get</param>
@@ -92,7 +95,7 @@ public static class Helpers
     }
 
     /// <summary>
-    /// The the frame rate of the given video file
+    /// The frame rate of the given video file
     /// </summary>
     /// <param name="fileName">Full video path and file name of the video file to get key frame spacing of</param>
     /// <returns>The number of frames per second of the video</returns>
@@ -103,7 +106,7 @@ public static class Helpers
             string? frameRate = await fileName.GetVideoMetadata(EVideoMetadata.Avg_Frame_Rate).ConfigureAwait(false);
             if (frameRate != null)
             {
-                frameRate = frameRate.Replace(Environment.NewLine, "");
+                frameRate = frameRate.Replace(Environment.NewLine, string.Empty);
                 return Math.Round(decimal.Parse(frameRate.Split("/")[0]) / decimal.Parse(frameRate.Split("/")[1]), 2, MidpointRounding.AwayFromZero);
             }
         }

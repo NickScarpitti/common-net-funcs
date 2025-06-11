@@ -1,8 +1,6 @@
 ﻿using System.Reflection;
 using ClosedXML.Excel;
-using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
-using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.Excel.ClosedXml;
 
@@ -18,7 +16,10 @@ public static class Common
     /// </summary>
     /// <param name="cell">Cell to check if empty</param>
     /// <returns>True if cell is empty</returns>
-    public static bool IsCellEmpty(this IXLCell cell) { return string.IsNullOrWhiteSpace(cell.Value.ToString()); }
+    public static bool IsCellEmpty(this IXLCell cell)
+    {
+        return string.IsNullOrWhiteSpace(cell.Value.ToString());
+    }
 
     /// <summary>
     /// Writes an excel file to the specified path
@@ -39,7 +40,7 @@ public static class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+            logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(WriteExcelFile)} Error");
             return false;
         }
     }
@@ -93,7 +94,7 @@ public static class Common
                 {
                     xStyle.Alignment.Horizontal = (XLAlignmentHorizontalValues)alignment;
                 }
-                if (!htmlColor.IsNullOrWhiteSpace())
+                if (!string.IsNullOrWhiteSpace(htmlColor))
                 {
                     xStyle.Fill.BackgroundColor = XLColor.FromHtml(htmlColor);
                 }

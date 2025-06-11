@@ -1035,6 +1035,12 @@ public class AsyncIntString
     public string AsyncString { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Used to run a group of tasks that return results in parallel, with an optional semaphore to limit concurrency.
+/// </summary>
+/// <typeparam name="T">Type of the result of the tasks</typeparam>
+/// <param name="tasks">Tasks to be run in parallel</param>
+/// <param name="semaphore">Optional: Semaphore used to limit concurrency</param>
 public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSlim? semaphore = null)
 {
     public List<Task<T>> Tasks { get; set; } = tasks ?? [];
@@ -1072,6 +1078,11 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
     }
 }
 
+/// <summary>
+/// Used to run a group of tasks in parallel, with an optional semaphore to limit concurrency.
+/// </summary>
+/// <param name="tasks">Tasks to be run in parallel</param>
+/// <param name="semaphore">Optional: Semaphore used to limit concurrency</param>
 public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore = null)
 {
     public List<Task> Tasks { get; set; } = tasks ?? [];

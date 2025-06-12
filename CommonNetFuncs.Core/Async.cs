@@ -1056,7 +1056,13 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
 
         if (Semaphore == null)
         {
-            return await Task.WhenAll(Tasks);
+            cancellationToken?.ThrowIfCancellationRequested();
+            foreach (Task task in Tasks.Where(x => x.Status is TaskStatus.WaitingToRun or TaskStatus.Created or TaskStatus.WaitingForActivation))
+            {
+                cancellationToken?.ThrowIfCancellationRequested();
+                task.Start();
+            }
+            return await Task.WhenAll(Tasks).ConfigureAwait(false);
         }
 
         T[] results = new T[Tasks.Count];
@@ -1065,7 +1071,13 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
             try
             {
                 await Semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                results[i] = await Tasks[i].ConfigureAwait(false);
+                Task<T> task = Tasks[i];
+                if (task.Status is TaskStatus.WaitingToRun or TaskStatus.Created or TaskStatus.WaitingForActivation)
+                {
+                    task.Start();
+                }
+                await Task.WhenAll(task).ConfigureAwait(false);
+                results[i] = task.Result;
             }
             finally
             {
@@ -1088,7 +1100,7 @@ public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore
 
     public SemaphoreSlim? Semaphore { get; set; } = semaphore;
 
-    public async Task RunTasks()
+    public async Task RunTasks(CancellationToken? cancellationToken = null)
     {
         if (Tasks.Count == 0)
         {
@@ -1097,16 +1109,26 @@ public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore
 
         if (Semaphore == null)
         {
-            await Task.WhenAll(Tasks);
+            cancellationToken?.ThrowIfCancellationRequested();
+            foreach (Task task in Tasks.Where(x => x.Status is TaskStatus.WaitingToRun or TaskStatus.Created or TaskStatus.WaitingForActivation))
+            {
+                cancellationToken?.ThrowIfCancellationRequested();
+                task.Start();
+            }
+            await Task.WhenAll(Tasks).ConfigureAwait(false);
             return;
         }
 
-        await Parallel.ForEachAsync(Tasks, async (task, _) =>
+        await Parallel.ForEachAsync(Tasks, cancellationToken ?? new(), async (task, cancellationToken) =>
         {
             try
             {
-                await Semaphore.WaitAsync(_).ConfigureAwait(false);
-                await task.ConfigureAwait(false);
+                await Semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                if (task.Status is TaskStatus.WaitingToRun or TaskStatus.Created or TaskStatus.WaitingForActivation)
+                {
+                    task.Start();
+                }
+                await Task.WhenAll(task).ConfigureAwait(false);
             }
             finally
             {

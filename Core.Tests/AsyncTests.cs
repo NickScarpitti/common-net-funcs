@@ -166,7 +166,7 @@ public sealed class AsyncTests
             return Task.FromResult(taskResult);
         }
 
-        SemaphoreSlim semaphore = new(1, 1);
+        using SemaphoreSlim semaphore = new(1, 1);
         await Async.ObjectFill(collection, (Func<Task<string?>>)func, semaphore);
         ((IEnumerable<string?>)collection).Count().ShouldBe(expectedCount);
     }
@@ -290,7 +290,7 @@ public sealed class AsyncTests
         int executionCount = 0;
         int maxConcurrent = 0;
         object lockObj = new();
-        SemaphoreSlim semaphore = new(2, 2);
+        using SemaphoreSlim semaphore = new(2, 2);
 
         List<Func<Task<int>>> tasks =
         [
@@ -484,16 +484,16 @@ public sealed class AsyncTests
         int concurrent = 0;
         int maxConcurrent = 0;
         Lock lockObj = new();
-        SemaphoreSlim semaphore = new(2, 2);
+        using SemaphoreSlim semaphore = new(2, 2);
 
-        List<Task<int>> tasks = Enumerable.Range(0, 6).Select(_ => Task.Run(async () =>
+        List<Task<int>> tasks = Enumerable.Range(0, 6).Select(_ => new Task<int>(() =>
         {
             lock (lockObj)
             {
                 concurrent++;
                 maxConcurrent = Math.Max(maxConcurrent, concurrent);
             }
-            await Task.Delay(50);
+            Task.Delay(50).GetAwaiter().GetResult();
             lock (lockObj)
             {
                 concurrent--;
@@ -508,6 +508,36 @@ public sealed class AsyncTests
         results.Length.ShouldBe(6);
         results.All(x => x == 42).ShouldBeTrue();
         maxConcurrent.ShouldBeLessThanOrEqualTo(2);
+    }
+
+    [Fact]
+    public async Task ResultTaskGroup_RunTasks_WithoutSemaphore()
+    {
+        int concurrent = 0;
+        int maxConcurrent = 0;
+        Lock lockObj = new();
+
+        List<Task<int>> tasks = Enumerable.Range(0, 6).Select(_ => new Task<int>(() =>
+        {
+            lock (lockObj)
+            {
+                concurrent++;
+                maxConcurrent = Math.Max(maxConcurrent, concurrent);
+            }
+            Task.Delay(50).GetAwaiter().GetResult();
+            lock (lockObj)
+            {
+                concurrent--;
+            }
+            return 42;
+        })).ToList();
+
+        ResultTaskGroup<int> group = new(tasks);
+
+        int[] results = await group.RunTasks();
+
+        results.Length.ShouldBe(6);
+        results.All(x => x == 42).ShouldBeTrue();
     }
 
     [Fact]
@@ -549,17 +579,11 @@ public sealed class AsyncTests
     {
         int executed = 0;
         List<Task> tasks = Enumerable.Range(0, 4)
-            .Select(_ => new Task(async () =>
+            .Select(_ => new Task(() =>
             {
-                await Task.Delay(10);
+                Task.Delay(10).GetAwaiter().GetResult();
                 Interlocked.Increment(ref executed);
             })).ToList();
-
-        // Start all tasks
-        foreach (Task t in tasks)
-        {
-            t.Start();
-        }
 
         TaskGroup group = new(tasks);
 
@@ -573,7 +597,7 @@ public sealed class AsyncTests
     {
         TaskGroup group = new();
 
-        await Should.NotThrowAsync(group.RunTasks);
+        await Should.NotThrowAsync(group.RunTasks());
     }
 
     [Fact]
@@ -582,29 +606,24 @@ public sealed class AsyncTests
         int concurrent = 0;
         int maxConcurrent = 0;
         object lockObj = new();
-        SemaphoreSlim semaphore = new(2, 2);
+        using SemaphoreSlim semaphore = new(2, 2);
 
         List<Task> tasks = Enumerable.Range(0, 6)
-            .Select(_ => new Task(async () =>
+            .Select(_ => new Task(() =>
             {
                 lock (lockObj)
                 {
                     concurrent++;
                     maxConcurrent = Math.Max(maxConcurrent, concurrent);
                 }
-                await Task.Delay(50);
+                //await Task.Delay(50);
+                Task.Delay(50).GetAwaiter().GetResult();
                 lock (lockObj)
                 {
                     concurrent--;
                 }
             }))
             .ToList();
-
-        // Start all tasks
-        foreach (Task t in tasks)
-        {
-            t.Start();
-        }
 
         TaskGroup group = new(tasks, semaphore);
 
@@ -623,7 +642,7 @@ public sealed class AsyncTests
         ];
         TaskGroup group = new(tasks);
 
-        await Should.ThrowAsync<InvalidOperationException>(group.RunTasks);
+        await Should.ThrowAsync<InvalidOperationException>(group.RunTasks());
     }
 
     #endregion

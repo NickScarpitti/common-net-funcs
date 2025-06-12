@@ -1057,7 +1057,7 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
         if (Semaphore == null)
         {
             cancellationToken?.ThrowIfCancellationRequested();
-            foreach (Task task in Tasks.Where(x => x.Status is TaskStatus.WaitingToRun or TaskStatus.Created or TaskStatus.WaitingForActivation))
+            foreach (Task task in Tasks.Where(x => x.Status is TaskStatus.Created or TaskStatus.WaitingForActivation))
             {
                 cancellationToken?.ThrowIfCancellationRequested();
                 task.Start();
@@ -1072,7 +1072,7 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
             {
                 await Semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
                 Task<T> task = Tasks[i];
-                if (task.Status is TaskStatus.WaitingToRun or TaskStatus.Created or TaskStatus.WaitingForActivation)
+                if (task.Status is TaskStatus.Created or TaskStatus.WaitingForActivation)
                 {
                     task.Start();
                 }
@@ -1110,7 +1110,7 @@ public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore
         if (Semaphore == null)
         {
             cancellationToken?.ThrowIfCancellationRequested();
-            foreach (Task task in Tasks.Where(x => x.Status is TaskStatus.WaitingToRun or TaskStatus.Created or TaskStatus.WaitingForActivation))
+            foreach (Task task in Tasks.Where(x => x.Status is TaskStatus.Created or TaskStatus.WaitingForActivation))
             {
                 cancellationToken?.ThrowIfCancellationRequested();
                 task.Start();
@@ -1124,7 +1124,7 @@ public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore
             try
             {
                 await Semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                if (task.Status is TaskStatus.WaitingToRun or TaskStatus.Created or TaskStatus.WaitingForActivation)
+                if (task.Status is TaskStatus.Created or TaskStatus.WaitingForActivation)
                 {
                     task.Start();
                 }

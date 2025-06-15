@@ -1,8 +1,4 @@
-﻿using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using System.Text.RegularExpressions;
-using CommonNetFuncs.Excel.Common;
+﻿using CommonNetFuncs.Excel.Common;
 using NPOI.HSSF.UserModel;
 using NPOI.HSSF.Util;
 using NPOI.OpenXmlFormats.Spreadsheet;
@@ -13,6 +9,10 @@ using NPOI.SS.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
 using SixLabors.ImageSharp;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using System.Text.RegularExpressions;
 using static System.Convert;
 using static System.Math;
 
@@ -52,10 +52,7 @@ public static partial class Common
     /// </summary>
     /// <param name="cell">Cell to check if it is empty</param>
     /// <returns>True if cell is empty</returns>
-    public static bool IsCellEmpty(this ICell cell)
-    {
-        return string.IsNullOrWhiteSpace(cell.GetStringValue());
-    }
+    public static bool IsCellEmpty(this ICell cell) { return string.IsNullOrWhiteSpace(cell.GetStringValue()); }
 
     /// <summary>
     /// Get ICell offset from cellReference
@@ -74,10 +71,10 @@ public static partial class Common
             row ??= ws.CreateRow(cellRangeAddress.FirstRow + rowOffset);
             return row.GetCell(cellRangeAddress.FirstColumn + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
 
-            //CellReference cr = new(cellReference);
-            //IRow? row = ws.GetRow(cr.Row + rowOffset);
-            //row ??= ws.CreateRow(cr.Row + rowOffset);
-            //return row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+            // CellReference cr = new(cellReference);
+            // IRow? row = ws.GetRow(cr.Row + rowOffset);
+            // row ??= ws.CreateRow(cr.Row + rowOffset);
+            // return row.GetCell(cr.Col + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
         {
@@ -158,9 +155,7 @@ public static partial class Common
     /// <param name="colName">Column name of the column to find the last populated row in</param>
     /// <returns>0 based index of the last row with a non-blank value</returns>
     public static int GetLastPopulatedRowInColumn(this ISheet ws, string colName)
-    {
-        return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber());
-    }
+    { return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber()); }
 
     /// <summary>
     /// Get ICell offset from the cell with named reference cellName
@@ -193,18 +188,18 @@ public static partial class Common
             {
                 ws ??= wb.GetSheet(crs[i].SheetName);
 
-                if (rowNum == -1 || rowNum > crs[i].Row)
+                if ((rowNum == -1) || (rowNum > crs[i].Row))
                 {
                     rowNum = crs[i].Row;
                 }
 
-                if (colNum == -1 || colNum > crs[i].Col)
+                if ((colNum == -1) || (colNum > crs[i].Col))
                 {
                     colNum = crs[i].Col;
                 }
             }
 
-            if (ws != null && colNum > -1 && rowNum > -1)
+            if ((ws != null) && (colNum > -1) && (rowNum > -1))
             {
                 IRow row = ws.GetRow(rowNum + rowOffset);
                 row ??= ws.CreateRow(rowNum + rowOffset);
@@ -245,7 +240,7 @@ public static partial class Common
             }
             ISheet ws = wb.GetSheet(crs[0].SheetName);
 
-            if (ws == null || crs.Length == 0 || name == null)
+            if ((ws == null) || (crs.Length == 0) || (name == null))
             {
                 return;
             }
@@ -275,10 +270,7 @@ public static partial class Common
     /// <param name="row">Row to create cell in</param>
     /// <param name="columnIndex">0 based column index of the cell to create</param>
     /// <returns>ICell object of the cell that was created</returns>
-    public static ICell CreateCell(this IRow row, int columnIndex)
-    {
-        return row.CreateCell(columnIndex);
-    }
+    public static ICell CreateCell(this IRow row, int columnIndex) { return row.CreateCell(columnIndex); }
 
     /// <summary>
     /// Writes an excel file to the specified path
@@ -435,7 +427,7 @@ public static partial class Common
         if (wb.IsXlsx())
         {
             Regex regex = HexColorRegex();
-            if (hexColor?.Length == 7 && regex.IsMatch(hexColor))
+            if ((hexColor?.Length == 7) && regex.IsMatch(hexColor))
             {
                 byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
                 ((XSSFCellStyle)cellStyle).SetFillForegroundColor(new XSSFColor(rgb));
@@ -600,13 +592,21 @@ public static partial class Common
     /// <param name="lastColIndex">Zero based index of the last column of the table</param>
     /// <param name="firstRowIndex">Zero based index of the first row of the table</param>
     /// <param name="lastRowIndex">Zero based index of the last row of the table</param>
-    /// <param name="columnNames">Optional: Ordered list of names for each column in the table. Will use Column# if not provided or list has fewer elements than there are columns in the table</param>
+    /// <param name="columnNames">
+    /// Optional: Ordered list of names for each column in the table. Will use Column# if not provided or list has fewer
+    /// elements than there are columns in the table
+    /// </param>
     /// <param name="tableStyle">Optional: Style to use for table, defaults to TableStyleMedium1</param>
     /// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
     /// <param name="showColStripes">Optional: Styles the table to show column stripes or not</param>
     public static void CreateTable(this XSSFWorkbook xssfWorkbook, string sheetName, string tableName, int firstColIndex, int lastColIndex, int firstRowIndex, int lastRowIndex, List<string>? columnNames = null,
         ETableStyle tableStyle = ETableStyle.TableStyleMedium1, bool showRowStripes = true, bool showColStripes = false)
     {
+        if (tableName.Length > 255)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+        }
+
         XSSFSheet xssfSheet = (XSSFSheet)xssfWorkbook.GetSheet(sheetName);
         XSSFTable table = xssfSheet.CreateTable();
         CT_Table ctTable = table.GetCTTable();
@@ -621,10 +621,10 @@ public static partial class Common
         ctTable.tableColumns = new() { tableColumn = [] };
 
         IRow headerRow = xssfSheet.GetRow(firstRowIndex) ?? xssfSheet.CreateRow(firstRowIndex);
-        for (int i = 0; i < lastColIndex - firstColIndex + 1; i++)
+        for (int i = 0; i < (lastColIndex - firstColIndex) + 1; i++)
         {
-            string? cellValue = columnNames?.Count > 0 && columnNames.Count - 1 >= i ? columnNames[i] : $"Column{i + 1}";
-            ctTable.tableColumns.tableColumn.Add(new() { id = (uint)i + 1, name = cellValue });
+            string? cellValue = ((columnNames?.Count > 0) && (columnNames.Count - 1 >= i)) ? columnNames[i] : ($"Column{i + 1}");
+            ctTable.tableColumns.tableColumn.Add(new() { id = ((uint)i) + 1, name = cellValue });
 
             ICell cell = headerRow.GetCell(firstColIndex + i) ?? headerRow.CreateCell(firstColIndex + i);
             cell.SetCellValue(cellValue);
@@ -690,9 +690,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cellName">Named range to insert image at</param>
     public static void AddImage(this IWorkbook wb, byte[] imageData, string cellName, AnchorType anchorType = AnchorType.MoveAndResize)
-    {
-        wb.AddImages([imageData], [cellName], anchorType);
-    }
+    { wb.AddImages([imageData], [cellName], anchorType); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -702,7 +700,7 @@ public static partial class Common
     /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
     public static void AddImages(this IWorkbook wb, List<byte[]> imageData, List<string> cellNames, AnchorType anchorType = AnchorType.MoveAndResize)
     {
-        if (wb != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
+        if ((wb != null) && (imageData.Count > 0) && (cellNames.Count > 0) && (imageData.Count == cellNames.Count))
         {
             ISheet? ws;
             ICreationHelper helper = wb.GetCreationHelper();
@@ -710,12 +708,12 @@ public static partial class Common
             ICellStyle cellStyle = wb.GetStandardCellStyle(EStyle.ImageBackground);
             for (int i = 0; i < imageData.Count; i++)
             {
-                if (imageData[i].Length > 0 && wb != null && cellNames[i] != null)
+                if ((imageData[i].Length > 0) && (wb != null) && (cellNames[i] != null))
                 {
                     ICell? cell = wb.GetCellFromName(cellNames[i]);
                     CellRangeAddress? area = cell.GetRangeOfMergedCells();
                     ws = cell?.Sheet;
-                    if (ws != null && area != null)
+                    if ((ws != null) && (area != null))
                     {
                         if (!worksheetDrawings.TryGetValue(ws.SheetName, out IDrawing? drawing))
                         {
@@ -736,9 +734,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, string range, AnchorType anchorType = AnchorType.MoveAndResize)
-    {
-        wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType);
-    }
+    { wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -747,9 +743,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, CellRangeAddress range, AnchorType anchorType = AnchorType.MoveAndResize)
-    {
-        wb.AddImages(ws, [imageData], [range], anchorType);
-    }
+    { wb.AddImages(ws, [imageData], [range], anchorType); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -758,9 +752,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cell">Cell in range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, ICell cell, AnchorType anchorType = AnchorType.MoveAndResize)
-    {
-        wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType);
-    }
+    { wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -770,14 +762,14 @@ public static partial class Common
     /// <param name="ranges">List of ranges to insert images at. Must be equal in length to imageData parameter</param>
     public static void AddImages(this IWorkbook wb, ISheet ws, List<byte[]> imageData, List<CellRangeAddress> ranges, AnchorType anchorType = AnchorType.MoveAndResize)
     {
-        if (wb != null && imageData.Count > 0 && ranges.Count > 0 && imageData.Count == ranges.Count)
+        if ((wb != null) && (imageData.Count > 0) && (ranges.Count > 0) && (imageData.Count == ranges.Count))
         {
             ICreationHelper helper = wb.GetCreationHelper();
             IDrawing? drawing = ws.CreateDrawingPatriarch();
             ICellStyle cellStyle = wb.GetStandardCellStyle(EStyle.ImageBackground);
             for (int i = 0; i < imageData.Count; i++)
             {
-                if (imageData[i].Length > 0 && wb != null && ranges[i] != null)
+                if ((imageData[i].Length > 0) && (wb != null) && (ranges[i] != null))
                 {
                     CellRangeAddress area = ranges[i];
                     wb.AddPicture(ws, area, imageData[i], drawing, anchorType, helper, cellStyle);
@@ -796,7 +788,10 @@ public static partial class Common
     /// <param name="drawing">Drawing patriarch to create the picture with</param>
     /// <param name="anchorType">Optional: Anchor type to define the behavior of the inserted image</param>
     /// <param name="helper">Optional: Creation helper to make anchor with</param>
-    /// <param name="cellStyle">Optional: Cell style to use in cells where pasting image. Using the image background font is strongly recommended as it ensures proper measurements when sizing the picture</param>
+    /// <param name="cellStyle">
+    /// Optional: Cell style to use in cells where pasting image. Using the image background font is strongly
+    /// recommended as it ensures proper measurements when sizing the picture
+    /// </param>
     public static void AddPicture(this IWorkbook wb, ISheet ws, CellRangeAddress area, byte[] imageData, IDrawing drawing, AnchorType anchorType = AnchorType.MoveAndResize, ICreationHelper? helper = null, ICellStyle? cellStyle = null)
     {
         ICell? cell = ws.GetCellFromCoordinates(area.FirstColumn, area.FirstRow);
@@ -810,30 +805,30 @@ public static partial class Common
             int imgWidth;
             int imgHeight;
 
-            //Using old GDI+ System.Drawing
-            //using (MemoryStream ms = new(imageData[i]))
-            //{
-            //    using Image img = Image.FromStream(ms);
-            //    imgWidth = img?.Width ?? 0;
-            //    imgHeight = img?.Height ?? 0;
-            //}
+            // Using old GDI+ System.Drawing
+            // using (MemoryStream ms = new(imageData[i]))
+            // {
+            // using Image img = Image.FromStream(ms);
+            // imgWidth = img?.Width ?? 0;
+            // imgHeight = img?.Height ?? 0;
+            // }
 
             using Image image = Image.Load(imageData);
             imgWidth = image.Width;
             imgHeight = image.Height;
 
-            decimal imgAspect = (decimal)imgWidth / imgHeight;
+            decimal imgAspect = ((decimal)imgWidth) / imgHeight;
 
             int rangeWidth = ws.GetRangeWidthInPx(area.FirstColumn, area.LastColumn);
             int rangeHeight = ws.GetRangeHeightInPx(area.FirstRow, area.LastRow);
-            decimal rangeAspect = (decimal)rangeWidth / rangeHeight;
+            decimal rangeAspect = ((decimal)rangeWidth) / rangeHeight;
 
-            decimal scale = rangeAspect < imgAspect ? (rangeWidth - 3m) / imgWidth : scale = (rangeHeight - 3m) / imgHeight;
+            decimal scale = (rangeAspect < imgAspect) ? ((rangeWidth - 3m) / imgWidth) : (scale = (rangeHeight - 3m) / imgHeight);
 
             int resizeWidth = (int)Round(imgWidth * scale, 0, MidpointRounding.ToZero);
             int resizeHeight = (int)Round(imgHeight * scale, 0, MidpointRounding.ToZero);
-            int xMargin = (int)Round((rangeWidth - resizeWidth) * XSSFShape.EMU_PER_PIXEL / 2.0, 0, MidpointRounding.ToZero);
-            int yMargin = (int)Round((rangeHeight - resizeHeight) * XSSFShape.EMU_PER_PIXEL * 1.75 / 2.0, 0, MidpointRounding.ToZero);
+            int xMargin = (int)Round(((rangeWidth - resizeWidth) * XSSFShape.EMU_PER_PIXEL) / 2.0, 0, MidpointRounding.ToZero);
+            int yMargin = (int)Round(((rangeHeight - resizeHeight) * XSSFShape.EMU_PER_PIXEL * 1.75) / 2.0, 0, MidpointRounding.ToZero);
 
             anchor.AnchorType = anchorType;
             anchor.Col1 = area.FirstColumn;
@@ -925,7 +920,7 @@ public static partial class Common
             totaHeight += ws.GetRow(i)?.HeightInPoints ?? 0;
         }
 
-        return (int)Round(totaHeight * XSSFShape.EMU_PER_POINT / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
+        return (int)Round((totaHeight * XSSFShape.EMU_PER_POINT) / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
     }
 
     /// <summary>
@@ -941,7 +936,7 @@ public static partial class Common
         CellReference cellRefStart = new(cellStartStop[0]);
         CellReference cellRefStop = new(cellStartStop[1]);
 
-        ICell[,] cells = new ICell[cellRefStop.Row - cellRefStart.Row + 1, cellRefStop.Col - cellRefStart.Col + 1];
+        ICell[,] cells = new ICell[(cellRefStop.Row - cellRefStart.Row) + 1, (cellRefStop.Col - cellRefStart.Col) + 1];
 
         for (int i = cellRefStart.Row; i < cellRefStop.Row + 1; i++)
         {
@@ -972,7 +967,8 @@ public static partial class Common
         dataValidation.CreateErrorBox("InvalidValue", "Selected value must be in list");
         dataValidation.ShowErrorBox = true;
         dataValidation.ShowPromptBox = false;
-        //ws.AddValidationData(dataValidation);
+
+        // ws.AddValidationData(dataValidation);
 
         ws.AddValidationData(dataValidation);
     }
@@ -982,8 +978,9 @@ public static partial class Common
     /// </summary>
     /// <param name="fileStream">Stream of Excel file being read</param>
     /// <param name="hasHeaders">
-    /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0', 'Column1'... if true. If no headers specified, first row of data must have a value for
-    /// all columns in order to read all columns correctly./>
+    /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0',
+    /// 'Column1'... if true. If no headers specified, first row of data must have a value for all columns in order to
+    /// read all columns correctly./>
     /// </param>
     /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
     /// <param name="startCellReference">Top left corner containing data to read in A1 notation. Will use A1 if not specified.</param>
@@ -1046,7 +1043,7 @@ public static partial class Common
                         }
                     }
 
-                    //Add headers to table
+                    // Add headers to table
                     if (hasHeaders)
                     {
                         if ((endColIndex ?? 0) != 0)
@@ -1088,14 +1085,14 @@ public static partial class Common
                         }
                     }
 
-                    //Add rows to table
+                    // Add rows to table
                     if (dataTable.Columns.Count > 0)
                     {
                         if (endRowIndex != null)
                         {
                             for (int rowIndex = startRowIndex + (hasHeaders ? 1 : 0); rowIndex < endRowIndex + 1; rowIndex++)
                             {
-                                string?[] newRowData = new string?[(int)endColIndex! + 1 - startColIndex];
+                                string?[] newRowData = new string?[(((int)endColIndex!) + 1) - startColIndex];
 
                                 for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
                                 {
@@ -1114,12 +1111,12 @@ public static partial class Common
                                 cancellationToken.ThrowIfCancellationRequested();
                                 rowIsNotNull = false;
 
-                                string?[] newRowData = new string?[(int)endColIndex! + 1 - startColIndex];
+                                string?[] newRowData = new string?[(((int)endColIndex!) + 1) - startColIndex];
 
                                 for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
                                 {
                                     string? cellValue = ws.GetCellFromCoordinates(colIndex, rowIndex).GetStringValue();
-                                    rowIsNotNull = rowIsNotNull ? rowIsNotNull : !string.IsNullOrWhiteSpace(cellValue);
+                                    rowIsNotNull = rowIsNotNull ? rowIsNotNull : (!string.IsNullOrWhiteSpace(cellValue));
                                     newRowData[colIndex - startColIndex] = cellValue;
                                 }
 
@@ -1166,8 +1163,8 @@ public static partial class Common
                     table = wb.GetTable(tableName);
                 }
 
-                //Get first table name if not specified or not found
-                if (string.IsNullOrWhiteSpace(tableName) || table == null)
+                // Get first table name if not specified or not found
+                if (string.IsNullOrWhiteSpace(tableName) || (table == null))
                 {
                     int numberOfSheets = wb.NumberOfSheets;
                     for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex++)
@@ -1194,17 +1191,17 @@ public static partial class Common
                 {
                     ws ??= wb.GetSheet(table.SheetName);
 
-                    //Get headers
+                    // Get headers
                     for (int i = table.StartColIndex; i < table.EndColIndex + 1; i++)
                     {
                         dataTable.Columns.Add(ws.GetCellFromCoordinates(i, table.StartRowIndex).GetStringValue());
                     }
 
-                    //Get body data
+                    // Get body data
                     for (int i = table.StartRowIndex + 1; i < table.EndRowIndex + 1; i++)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        string?[] newRowData = new string?[table.EndColIndex + 1 - table.StartColIndex];
+                        string?[] newRowData = new string?[(table.EndColIndex + 1) - table.StartColIndex];
 
                         for (int n = table.StartColIndex; n < table.EndColIndex + 1; n++)
                         {
@@ -1229,10 +1226,7 @@ public static partial class Common
     /// </summary>
     /// <param name="fileStream">Stream representation of a file</param>
     /// <returns>True if stream is an XLSX file</returns>
-    public static bool IsXlsx(this Stream fileStream)
-    {
-        return DocumentFactoryHelper.HasOOXMLHeader(fileStream);
-    }
+    public static bool IsXlsx(this Stream fileStream) { return DocumentFactoryHelper.HasOOXMLHeader(fileStream); }
 
     /// <summary>
     /// Gets whether or not the stream passed in represents an XLSX type file or not
@@ -1252,7 +1246,10 @@ public static partial class Common
     /// Converts a hex color to the closest available HSSFColor
     /// </summary>
     /// <param name="hexColor">Hex color to convert</param>
-    /// <param name="cachedColorLimit">Maximum number of colors to cache. Once cache reaches this limit, oldest cached value will be removed when a new value is added</param>
+    /// <param name="cachedColorLimit">
+    /// Maximum number of colors to cache. Once cache reaches this limit, oldest cached value will be removed when a new
+    /// value is added
+    /// </param>
     /// <returns>The closest HSSFColor to the provided hex color</returns>
     public static HSSFColor GetClosestHssfColor(string hexColor, int cachedColorLimit = 100)
     {
@@ -1263,34 +1260,34 @@ public static partial class Common
 
         HSSFColor outputColor = new();
         Regex regex = HexColorRegex();
-        if (hexColor.Length == 7 && regex.IsMatch(hexColor))
+        if ((hexColor.Length == 7) && regex.IsMatch(hexColor))
         {
-            //Span<byte> rgb =
-            //[
-            //    ToByte(hexColor.Substring(1, 2), 16),
-            //    ToByte(hexColor.Substring(3, 2), 16),
-            //    ToByte(hexColor.Substring(5, 2), 16),
-            //];
+            // Span<byte> rgb =
+            // [
+            // ToByte(hexColor.Substring(1, 2), 16),
+            // ToByte(hexColor.Substring(3, 2), 16),
+            // ToByte(hexColor.Substring(5, 2), 16),
+            // ];
 
             byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
             outputColor = HssfColors.Value.MinBy(hssfColor => ColorDistance(rgb, hssfColor.RGB)) ?? new HSSFColor();
 
-            //Old way to do this
-            //int deviation = int.MaxValue;
-            //foreach (HSSFColor hssfColor in HSSFColor.GetIndexHash().Select(x => x.Value))
-            //{
-            //    byte[] hssfRgb = hssfColor.RGB;
-            //    int totalDeviation = (int)Pow((double)rgb[0] - hssfRgb[0], 2) + (int)Pow((double)rgb[1] - hssfRgb[1], 2) + (int)Pow((double)rgb[2] - hssfRgb[2], 2);
-            //    if (totalDeviation < deviation)
-            //    {
-            //        outputColor = hssfColor;
-            //        deviation = totalDeviation;
-            //        if (deviation == 0)
-            //        {
-            //            break;
-            //        }
-            //    }
-            //}
+            // Old way to do this
+            // int deviation = int.MaxValue;
+            // foreach (HSSFColor hssfColor in HSSFColor.GetIndexHash().Select(x => x.Value))
+            // {
+            // byte[] hssfRgb = hssfColor.RGB;
+            // int totalDeviation = (int)Pow((double)rgb[0] - hssfRgb[0], 2) + (int)Pow((double)rgb[1] - hssfRgb[1], 2) + (int)Pow((double)rgb[2] - hssfRgb[2], 2);
+            // if (totalDeviation < deviation)
+            // {
+            // outputColor = hssfColor;
+            // deviation = totalDeviation;
+            // if (deviation == 0)
+            // {
+            // break;
+            // }
+            // }
+            // }
         }
 
         if (HssfColorCache.Count >= cachedColorLimit)
@@ -1310,7 +1307,7 @@ public static partial class Common
         double r = rgb1[0] - rgb2[0];
         double g = rgb1[1] - rgb2[1];
         double b = rgb1[2] - rgb2[2];
-        return Sqrt((2 + rmean / 256) * r * r + 4 * g * g + (2 + (255 - rmean) / 256) * b * b);
+        return Sqrt(((2 + (rmean / 256)) * r * r) + (4 * g * g) + ((2 + ((255 - rmean) / 256)) * b * b));
     }
 
     /// <summary>
@@ -1331,7 +1328,7 @@ public static partial class Common
         for (int i = 0; i < columnName.Length; i++)
         {
             index *= 26;
-            index += (columnName[i] - 'A' + 1);
+            index += (columnName[i] - 'A') + 1;
         }
 
         return index - 1; // Subtract 1 to make it 0-based
@@ -1344,7 +1341,7 @@ public static partial class Common
     /// <returns>Column name corresponding to the value of columnNumber</returns>
     public static string ColumnIndexToName(this int? columnNumber)
     {
-        if (columnNumber == null || columnNumber < 0)
+        if ((columnNumber == null) || (columnNumber < 0))
         {
             throw new ArgumentException("Index cannot be null or negative.");
         }

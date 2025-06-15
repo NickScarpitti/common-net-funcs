@@ -1,9 +1,9 @@
-﻿using System.Data;
-using System.Reflection;
-using CommonNetFuncs.Excel.Common;
+﻿using CommonNetFuncs.Excel.Common;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
+using System.Data;
+using System.Reflection;
 
 namespace CommonNetFuncs.Excel.Npoi;
 
@@ -14,10 +14,11 @@ public static class Export
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-    private const int MaxCellWidthInExcelUnits = 65280;
+    public const int MaxCellWidthInExcelUnits = 65280;
 
     /// <summary>
-    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
+    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
+    /// data
     /// </summary>
     /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
     /// <param name="dataList">Data to export as a table</param>
@@ -30,6 +31,26 @@ public static class Export
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(sheetName))
+            {
+                sheetName = "Data";
+            }
+
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                tableName = "Data";
+            }
+
+            if (sheetName.Length > 31)
+            {
+                throw new ArgumentOutOfRangeException(nameof(sheetName), "Sheet name cannot be longer than 31 characters");
+            }
+
+            if (tableName.Length > 31)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+            }
+
             memoryStream ??= new();
 
             using SXSSFWorkbook wb = new();
@@ -44,6 +65,10 @@ public static class Export
 
             return memoryStream;
         }
+        catch (OperationCanceledException)
+        {
+            throw new TaskCanceledException($"{nameof(Export)}.{nameof(GenericExcelExport)} was canceled");
+        }
         catch (Exception ex)
         {
             logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(GenericExcelExport)} Error");
@@ -53,7 +78,8 @@ public static class Export
     }
 
     /// <summary>
-    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
+    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
+    /// data
     /// </summary>
     /// <param name="datatable">Data to export as a table</param>
     /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
@@ -65,6 +91,26 @@ public static class Export
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(sheetName))
+            {
+                sheetName = "Data";
+            }
+
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                tableName = "Data";
+            }
+
+            if (sheetName.Length > 31)
+            {
+                throw new ArgumentOutOfRangeException(nameof(sheetName), "Sheet name cannot be longer than 31 characters");
+            }
+
+            if (tableName.Length > 31)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+            }
+
             memoryStream ??= new();
 
             using SXSSFWorkbook wb = new();
@@ -78,6 +124,10 @@ public static class Export
             wb.Close();
 
             return memoryStream;
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TaskCanceledException($"{nameof(Export)}.{nameof(GenericExcelExport)} was canceled");
         }
         catch (Exception ex)
         {
@@ -168,6 +218,26 @@ public static class Export
         bool success = false;
         try
         {
+            if (string.IsNullOrWhiteSpace(sheetName))
+            {
+                sheetName = "Data";
+            }
+
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                tableName = "Data";
+            }
+
+            if (sheetName.Length > 31)
+            {
+                throw new ArgumentOutOfRangeException(nameof(sheetName), "Sheet name cannot be longer than 31 characters");
+            }
+
+            if (tableName.Length > 31)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+            }
+
             int i = 1;
             string actualSheetName = sheetName;
             while (wb.GetSheet(actualSheetName) != null)
@@ -193,6 +263,10 @@ public static class Export
                 }
             }
         }
+        catch (OperationCanceledException)
+        {
+            throw new TaskCanceledException($"{nameof(Export)}.{nameof(GenericExcelExport)} was canceled");
+        }
         catch (Exception ex)
         {
             logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(AddGenericTableInternal)} Error");
@@ -216,6 +290,16 @@ public static class Export
         skipColumnNames ??= [];
         try
         {
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                tableName = "Data";
+            }
+
+            if (tableName.Length > 31)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+            }
+
             if (data?.Any() == true)
             {
                 ICellStyle headerStyle = wb.GetStandardCellStyle(EStyle.Header);
@@ -227,10 +311,10 @@ public static class Export
                 Dictionary<int, int> maxColumnWidths = [];
                 List<string> columnNames = [];
 
-                PropertyInfo[] props = typeof(T).GetProperties().Where(x => skipColumnNames.Count == 0 || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
+                PropertyInfo[] props = typeof(T).GetProperties().Where(x => (skipColumnNames.Count == 0) || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
                 foreach (PropertyInfo prop in props)
                 {
-                    //((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
+                    // ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
                     ICell? c = ws.GetCellFromCoordinates(x, y);
                     if (c != null)
                     {
@@ -244,7 +328,7 @@ public static class Export
                 x = 0;
                 y++;
 
-                foreach (T item in data)
+                foreach (T item in data.Where(x => x != null))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     foreach (PropertyInfo prop in props)
@@ -280,8 +364,8 @@ public static class Export
                 {
                     for (int i = 0; i < props.Length; i++)
                     {
-                        //ws.AutoSizeColumn(x, true);
-                        ws.SetColumnWidth(x, maxColumnWidths[x] <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] : MaxCellWidthInExcelUnits);
+                        // ws.AutoSizeColumn(x, true);
+                        ws.SetColumnWidth(x, (maxColumnWidths[x] <= MaxCellWidthInExcelUnits) ? maxColumnWidths[x] : MaxCellWidthInExcelUnits);
                         x++;
                     }
                 }
@@ -292,6 +376,10 @@ public static class Export
                 }
             }
             return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TaskCanceledException($"{nameof(Export)}.{nameof(GenericExcelExport)} was canceled");
         }
         catch (Exception ex)
         {
@@ -315,6 +403,16 @@ public static class Export
         skipColumnNames ??= [];
         try
         {
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                tableName = "Data";
+            }
+
+            if (tableName.Length > 31)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+            }
+
             if (data?.Rows.Count > 0)
             {
                 ICellStyle headerStyle = wb.GetStandardCellStyle(EStyle.Header);
@@ -354,7 +452,7 @@ public static class Export
                     cancellationToken.ThrowIfCancellationRequested();
                     foreach (object? value in row.ItemArray)
                     {
-                        if (value != null && !skipColumns.Contains(x))
+                        if ((value != null) && !skipColumns.Contains(x))
                         {
                             ICell? c = ws.GetCellFromCoordinates(x, y);
                             if (c != null)
@@ -387,8 +485,8 @@ public static class Export
                 {
                     for (int i = 0; i < data.Columns.Count; i++)
                     {
-                        //ws.AutoSizeColumn(x, true);
-                        ws.SetColumnWidth(x, maxColumnWidths[x] + (XSSFShape.EMU_PER_PIXEL * 3) <= MaxCellWidthInExcelUnits ? maxColumnWidths[x] + XSSFShape.EMU_PER_PIXEL * 3 : MaxCellWidthInExcelUnits);
+                        // ws.AutoSizeColumn(x, true);
+                        ws.SetColumnWidth(x, (maxColumnWidths[x] + (XSSFShape.EMU_PER_PIXEL * 3) <= MaxCellWidthInExcelUnits) ? (maxColumnWidths[x] + (XSSFShape.EMU_PER_PIXEL * 3)) : MaxCellWidthInExcelUnits);
                         x++;
                     }
                 }
@@ -399,6 +497,10 @@ public static class Export
                 }
             }
             return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TaskCanceledException($"{nameof(Export)}.{nameof(GenericExcelExport)} was canceled");
         }
         catch (Exception ex)
         {

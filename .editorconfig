@@ -288,6 +288,9 @@ dotnet_diagnostic.xUnit1042.severity = silent
 # xUnit1044: Avoid using TheoryData type arguments that are not serializable
 dotnet_diagnostic.xUnit1044.severity = silent
 
+# CRR1000: The name does not correspond to naming conventions
+dotnet_diagnostic.CRR1000.severity = silent
+
 [*.vb]
 # Modifier preferences
 visual_basic_preferred_modifier_order = Partial,Default,Private,Protected,Public,Friend,NotOverridable,Overridable,MustOverride,Overloads,Overrides,MustInherit,NotInheritable,Static,Shared,Shadows,ReadOnly,WriteOnly,Dim,Const,WithEvents,Widening,Narrowing,Custom,Async:suggestion

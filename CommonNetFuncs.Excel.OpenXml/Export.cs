@@ -1,10 +1,10 @@
-﻿using System.Data;
-using System.IO.Packaging;
-using System.Reflection;
-using CommonNetFuncs.Excel.Common;
+﻿using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using System.Data;
+using System.IO.Packaging;
+using System.Reflection;
 using static CommonNetFuncs.Excel.OpenXml.Common;
 
 namespace CommonNetFuncs.Excel.OpenXml;
@@ -17,7 +17,8 @@ public static class Export
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
-    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
+    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
+    /// data
     /// </summary>
     /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
     /// <param name="dataList">Data to export as a table</param>
@@ -36,7 +37,7 @@ public static class Export
             uint newSheetId = document.InitializeExcelFile(sheetName);
             Worksheet? worksheet = document.GetWorksheetById(newSheetId);
 
-            if (worksheet != null && !ExportFromTable(document, worksheet, dataList, createTable, tableName, skipColumnNames))
+            if ((worksheet != null) && !ExportFromTable(document, worksheet, dataList, createTable, tableName, skipColumnNames))
             {
                 return null;
             }
@@ -55,7 +56,8 @@ public static class Export
     }
 
     /// <summary>
-    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
+    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
+    /// data
     /// </summary>
     /// <param name="datatable">Data to export as a table</param>
     /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
@@ -72,7 +74,7 @@ public static class Export
             uint newSheetId = document.InitializeExcelFile(sheetName);
             Worksheet? worksheet = document.GetWorksheetById(newSheetId);
 
-            if (worksheet != null && !ExportFromTable(document, worksheet, datatable, createTable, tableName, skipColumnNames))
+            if ((worksheet != null) && !ExportFromTable(document, worksheet, datatable, createTable, tableName, skipColumnNames))
             {
                 return null;
             }
@@ -124,7 +126,7 @@ public static class Export
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="document">Workbook to add sheet table to</param>
-    /// <param name="data">Data to populate table with (only accepts IEnumerable </param>
+    /// <param name="data">Data to populate table with (only accepts IEnumerable</param>
     /// <param name="dataType">Type of the data parameter</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
@@ -144,7 +146,7 @@ public static class Export
             }
 
             Worksheet? worksheet = document.GetWorksheetById(document.CreateNewSheet(actualSheetName));
-            if (worksheet != null && data != null)
+            if ((worksheet != null) && (data != null))
             {
                 if (dataType == typeof(IEnumerable<T>))
                 {
@@ -186,13 +188,13 @@ public static class Export
             {
                 SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
 
-                uint headerStyleId = GetStandardCellStyle(EStyle.Header, document);
-                uint bodyStyleId = GetStandardCellStyle(EStyle.Body, document);
+                uint headerStyleId = document.GetStandardCellStyle(EStyle.Header);
+                uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body);
 
                 uint x = 1;
                 uint y = 1;
 
-                PropertyInfo[] properties = typeof(T).GetProperties().Where(x => skipColumnNames == null || skipColumnNames.Count == 0 || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
+                PropertyInfo[] properties = typeof(T).GetProperties().Where(x => (skipColumnNames == null) || (skipColumnNames.Count == 0) || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
 
                 // Write headers
                 foreach (PropertyInfo prop in properties)
@@ -204,7 +206,7 @@ public static class Export
                 y++;
 
                 // Write data
-                foreach (T item in data)
+                foreach (T item in data.Where(x => x != null))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     foreach (PropertyInfo prop in properties)
@@ -218,11 +220,11 @@ public static class Export
 
                 if (createTable)
                 {
-                    CreateTable(worksheet, 1, 1, y - 1, (uint)properties.Length, tableName);
+                    worksheet.CreateTable(1, 1, y - 1, (uint)properties.Length, tableName);
                 }
                 else
                 {
-                    SetAutoFilter(worksheet, 1, 1, y - 1, (uint)properties.Length);
+                    worksheet.SetAutoFilter(1, 1, y - 1, (uint)properties.Length);
                 }
                 worksheet.AutoFitColumns();
             }
@@ -254,8 +256,8 @@ public static class Export
             {
                 SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
 
-                uint headerStyleId = GetStandardCellStyle(EStyle.Header, document);
-                uint bodyStyleId = GetStandardCellStyle(EStyle.Body, document);
+                uint headerStyleId = document.GetStandardCellStyle(EStyle.Header);
+                uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body);
 
                 uint y = 1;
                 uint x = 1;
@@ -282,7 +284,7 @@ public static class Export
                     cancellationToken.ThrowIfCancellationRequested();
                     foreach (object? value in row.ItemArray)
                     {
-                        if (value != null && !skipColumns.Contains(x))
+                        if ((value != null) && !skipColumns.Contains(x))
                         {
                             sheetData.InsertCellValue(x, y, new(value.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
                         }
@@ -294,11 +296,11 @@ public static class Export
 
                 if (createTable)
                 {
-                    CreateTable(worksheet, 1, 1, y - 1, (uint)data.Columns.Count, tableName);
+                    worksheet.CreateTable(1, 1, y - 1, (uint)data.Columns.Count, tableName);
                 }
                 else
                 {
-                    SetAutoFilter(worksheet, 1, 1, y - 1, (uint)data.Columns.Count);
+                    worksheet.SetAutoFilter(1, 1, y - 1, (uint)data.Columns.Count);
                 }
                 worksheet.AutoFitColumns();
             }

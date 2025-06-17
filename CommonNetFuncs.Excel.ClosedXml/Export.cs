@@ -1,7 +1,7 @@
-﻿using System.Data;
-using System.Reflection;
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using CommonNetFuncs.Excel.Common;
+using System.Data;
+using System.Reflection;
 using static CommonNetFuncs.Excel.ClosedXml.Common;
 
 namespace CommonNetFuncs.Excel.ClosedXml;
@@ -57,7 +57,7 @@ public static class Export
                 x = 1;
                 y++;
 
-                foreach (T item in data)
+                foreach (T item in data.Where(x => x != null))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     foreach (PropertyInfo prop in props)
@@ -74,12 +74,12 @@ public static class Export
 
                 if (!createTable)
                 {
-                    //Not compatible with table
+                    // Not compatible with table
                     ws.Range(1, 1, 1, props.Length - 1).SetAutoFilter();
                 }
                 else
                 {
-                    //Based on code found here: https://github.com/ClosedXML/ClosedXML/wiki/Using-Tables
+                    // Based on code found here: https://github.com/ClosedXML/ClosedXML/wiki/Using-Tables
                     IXLTable table = ws.Range(1, 1, y - 1, props.Length).CreateTable();
                     table.ShowTotalsRow = false;
                     table.ShowRowStripes = true;
@@ -170,12 +170,12 @@ public static class Export
 
                 if (!createTable)
                 {
-                    //Not compatible with table
+                    // Not compatible with table
                     ws.Range(1, 1, 1, data.Columns.Count - 1).SetAutoFilter();
                 }
                 else
                 {
-                    //Based on code found here: https://github.com/ClosedXML/ClosedXML/wiki/Using-Tables
+                    // Based on code found here: https://github.com/ClosedXML/ClosedXML/wiki/Using-Tables
                     IXLTable table = ws.Range(1, 1, y - 1, data.Columns.Count).CreateTable();
                     table.ShowTotalsRow = false;
                     table.ShowRowStripes = true;

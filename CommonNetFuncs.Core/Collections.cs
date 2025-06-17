@@ -572,7 +572,7 @@ public static class Collections
         // Add rows
         if (!useParallel)
         {
-            foreach (T item in data)
+            foreach (T item in data.Where(x => x != null))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 DataRow row = dataTable.NewRow();

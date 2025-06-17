@@ -42,6 +42,7 @@ public static partial class Common
             workbookPart = document.AddWorkbookPart();
             workbookPart.Workbook = new();
         }
+
         // Add a blank WorksheetPart
         WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
         worksheetPart.Worksheet = new Worksheet(new SheetData());
@@ -53,7 +54,7 @@ public static partial class Common
         uint sheetId = 1;
         if (sheets.Elements<Sheet>().Any())
         {
-            sheetId = (sheets.Elements<Sheet>().Max(s => s.SheetId?.Value) + 1) ?? (uint)sheets.Elements<Sheet>().Count() + 1;
+            sheetId = sheets.Elements<Sheet>().Max(s => s.SheetId?.Value) + 1 ?? ((uint)sheets.Elements<Sheet>().Count()) + 1;
         }
 
         // Append the new worksheet and associate it with the workbook.
@@ -77,7 +78,7 @@ public static partial class Common
     public static Worksheet? GetWorksheetByName(this SpreadsheetDocument document, string sheetName, bool createIfMissing = true)
     {
         WorkbookPart? workbookPart = document.WorkbookPart;
-        if (workbookPart == null && createIfMissing)
+        if ((workbookPart == null) && createIfMissing)
         {
             workbookPart = document.AddWorkbookPart();
             workbookPart.Workbook = new();
@@ -89,7 +90,7 @@ public static partial class Common
 
         Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => string.Equals(s.Name?.Value, sheetName, StringComparison.InvariantCultureIgnoreCase));
 
-        if (sheet == null && createIfMissing)
+        if ((sheet == null) && createIfMissing)
         {
             return document.GetWorksheetById(document.CreateNewSheet(sheetName));
         }
@@ -113,7 +114,7 @@ public static partial class Common
     public static Worksheet? GetWorksheetById(this SpreadsheetDocument document, uint sheetId)
     {
         WorkbookPart? workbookPart = document.WorkbookPart ?? throw new ArgumentException("The document does not contain a WorkbookPart.");
-        Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.SheetId != null && s.SheetId.Value == sheetId);
+        Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => (s.SheetId != null) && (s.SheetId.Value == sheetId));
 
         if (sheet == null)
         {
@@ -145,7 +146,7 @@ public static partial class Common
         Worksheet worksheet = cell.GetWorksheetFromCell();
 
         // Get the workbook part
-        WorkbookPart? workbookPart = (worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault()) ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+        WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
 
         // Return the workbook
         return workbookPart.Workbook;
@@ -160,7 +161,7 @@ public static partial class Common
     public static Workbook GetWorkbookFromWorksheet(this Worksheet worksheet)
     {
         // Get the workbook part
-        WorkbookPart? workbookPart = (worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault()) ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+        WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
 
         // Return the workbook
         return workbookPart.Workbook;
@@ -175,7 +176,7 @@ public static partial class Common
     public static Workbook GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
     {
         // Get the workbook part
-        WorkbookPart? workbookPart = (worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault()) ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+        WorkbookPart? workbookPart = worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
 
         // Return the workbook
         return workbookPart.Workbook;
@@ -201,7 +202,7 @@ public static partial class Common
     public static Sheet? GetSheetByName(this SpreadsheetDocument document, string? sheetName = null)
     {
         WorkbookPart? workbookPart = document.WorkbookPart;
-        return workbookPart?.Workbook.Descendants<Sheet>().FirstOrDefault(s => sheetName == null || s.Name == sheetName);
+        return workbookPart?.Workbook.Descendants<Sheet>().FirstOrDefault(s => (sheetName == null) || (s.Name == sheetName));
     }
 
     /// <summary>
@@ -216,7 +217,7 @@ public static partial class Common
 
         Sheet? sheet = document.GetSheetByName(sheetName);
         WorkbookPart? workbookPart = document.WorkbookPart;
-        if (sheet != null && workbookPart != null)
+        if ((sheet != null) && (workbookPart != null))
         {
             WorksheetPart? worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
             Worksheet worksheet = worksheetPart.Worksheet;
@@ -232,7 +233,7 @@ public static partial class Common
     /// <returns>True if the Cell is empty, false otherwise</returns>
     public static bool IsCellEmpty(this Cell? cell)
     {
-        return cell == null || string.IsNullOrWhiteSpace(cell.InnerText);
+        return (cell == null) || string.IsNullOrWhiteSpace(cell.InnerText);
     }
 
     /// <summary>
@@ -247,16 +248,16 @@ public static partial class Common
     {
         try
         {
-            Row? row = ws.GetRow(cellReference.RowIndex + (uint)rowOffset);
+            Row? row = ws.GetRow(cellReference.RowIndex + ((uint)rowOffset));
             if (row == null)
             {
                 row = new Row() { RowIndex = (uint)(cellReference.RowIndex + rowOffset) };
                 ws.Append(row);
             }
-            Cell? cell = row.GetCell(cellReference.ColumnIndex + (uint)colOffset);
+            Cell? cell = row.GetCell(cellReference.ColumnIndex + ((uint)colOffset));
             if (cell == null)
             {
-                cell = new Cell() { CellReference = new CellReference(cellReference.ColumnIndex + (uint)colOffset, cellReference.RowIndex + (uint)rowOffset).ToString() };
+                cell = new Cell() { CellReference = new CellReference(cellReference.ColumnIndex + ((uint)colOffset), cellReference.RowIndex + ((uint)rowOffset)).ToString() };
                 row.Append(cell);
             }
             return cell;
@@ -301,11 +302,11 @@ public static partial class Common
     {
         try
         {
-            if (startCell.Parent is Row row && row.Parent is SheetData && startCell.CellReference != null)
+            if ((startCell.Parent is Row row) && (row.Parent is SheetData) && (startCell.CellReference != null))
             {
                 Worksheet worksheet = startCell.GetWorksheetFromCell();
                 CellReference startCellReference = new(startCell.CellReference!);
-                return worksheet.GetCellFromCoordinates((int)startCellReference.ColumnIndex + colOffset, (int)startCellReference.RowIndex + rowOffset);
+                return worksheet.GetCellFromCoordinates(((int)startCellReference.ColumnIndex) + colOffset, ((int)startCellReference.RowIndex) + rowOffset);
             }
         }
         catch (Exception ex)
@@ -449,7 +450,7 @@ public static partial class Common
                 Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().First(s => s.Name == sheetName);
                 WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
                 Cell? cell = worksheetPart.Worksheet.GetCellFromReference(cellReference, colOffset, rowOffset);
-                return cell?.CellReference != null ? new(cell.CellReference!) : null;
+                return (cell?.CellReference != null) ? new(cell.CellReference!) : null;
             }
             return null;
         }
@@ -482,6 +483,8 @@ public static partial class Common
         }
     }
 
+    private static ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCustomFormatCaches = new();
+
     /// <summary>
     /// Clears all cached custom formats for all workbooks
     /// </summary>
@@ -500,6 +503,11 @@ public static partial class Common
         {
             WorkbookCustomFormatCaches.TryRemove(GetWorkbookId(document), out _);
         }
+    }
+
+    public static Dictionary<string, WorkbookStyleCache> GetWorkbookCustomFormatCaches()
+    {
+        return new(WorkbookCustomFormatCaches);
     }
 
     /// <summary>
@@ -524,7 +532,7 @@ public static partial class Common
         }
 
         WorkbookStylesPart? stylesPart = workbookPart.WorkbookStylesPart;
-        if (stylesPart == null && createIfMissing)
+        if ((stylesPart == null) && createIfMissing)
         {
             stylesPart = workbookPart.AddNewPart<WorkbookStylesPart>();
             stylesPart.Stylesheet = new();
@@ -541,7 +549,7 @@ public static partial class Common
     public static Borders? GetBorders(this Stylesheet stylesheet, bool createIfMissing = true)
     {
         Borders? borders = stylesheet.Elements<Borders>().FirstOrDefault();
-        if (borders == null && createIfMissing)
+        if ((borders == null) && createIfMissing)
         {
             stylesheet.AddChild(new Borders());
             borders = stylesheet.Elements<Borders>().First();
@@ -561,7 +569,7 @@ public static partial class Common
     public static Fills? GetFills(this Stylesheet stylesheet, bool createIfMissing = true)
     {
         Fills? fills = stylesheet.Elements<Fills>().FirstOrDefault();
-        if (fills == null && createIfMissing)
+        if ((fills == null) && createIfMissing)
         {
             stylesheet.AddChild(new Fills());
             fills = stylesheet.Elements<Fills>().First();
@@ -581,7 +589,8 @@ public static partial class Common
             };
             fills.Append(defaultFill1);
             fills.Append(defaultFill2);
-            //fills.Append(defaultFill3);
+
+            // fills.Append(defaultFill3);
             fills.Count = (uint)fills.Count();
         }
         return fills;
@@ -596,7 +605,7 @@ public static partial class Common
     public static Fonts? GetFonts(this Stylesheet stylesheet, bool createIfMissing = true)
     {
         Fonts? fonts = stylesheet.Elements<Fonts>().FirstOrDefault();
-        if (fonts == null && createIfMissing)
+        if ((fonts == null) && createIfMissing)
         {
             stylesheet.AddChild(new Fonts());
             fonts = stylesheet.Elements<Fonts>().First();
@@ -623,7 +632,7 @@ public static partial class Common
     public static CellFormats? GetCellFormats(this Stylesheet stylesheet, bool createIfMissing = true)
     {
         CellFormats? cellFormats = stylesheet.Elements<CellFormats>().FirstOrDefault();
-        if (cellFormats == null && createIfMissing)
+        if ((cellFormats == null) && createIfMissing)
         {
             stylesheet.AddChild(new CellFormats());
             cellFormats = stylesheet.Elements<CellFormats>().First();
@@ -643,11 +652,11 @@ public static partial class Common
     /// <summary>
     /// Creates the style corresponding to the style enum passed in and returns the ID for the style that was created
     /// </summary>
-    /// <param name="style">Enum value indicating which style to create</param>
     /// <param name="document">Document to add the standard cell style to</param>
+    /// <param name="style">Enum value indicating which style to create</param>
     /// <param name="cellLocked">Whether or not the cells with this style should be locked or not</param>
     /// <returns>The ID of the style that was created</returns>
-    public static uint GetStandardCellStyle(EStyle style, SpreadsheetDocument document, bool cellLocked = false)
+    public static uint GetStandardCellStyle(this SpreadsheetDocument document, EStyle style, bool cellLocked = false)
     {
         Stylesheet stylesheet = document.GetStylesheet()!;
 
@@ -675,7 +684,7 @@ public static partial class Common
                 border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
                     new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
                 borders.Append(border);
-                cellFormat.BorderId = (uint)borders.Count() - 1;
+                cellFormat.BorderId = ((uint)borders.Count()) - 1;
                 cellFormat.ApplyBorder = true;
 
                 fill = new()
@@ -691,7 +700,7 @@ public static partial class Common
                 };
 
                 fills.Append(fill);
-                cellFormat.FillId = (uint)fills.Count() - 1;
+                cellFormat.FillId = ((uint)fills.Count()) - 1;
                 cellFormat.ApplyFill = true;
 
                 cellFormat.FontId = GetFontId(EFont.Header, fonts);
@@ -705,7 +714,7 @@ public static partial class Common
                 border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
                     new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Medium }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
                 borders.Append(border);
-                cellFormat.BorderId = (uint)borders.Count() - 1;
+                cellFormat.BorderId = ((uint)borders.Count()) - 1;
                 cellFormat.ApplyBorder = true;
 
                 fill = new()
@@ -720,7 +729,7 @@ public static partial class Common
                     },
                 };
                 fills.Append(fill);
-                cellFormat.FillId = (uint)fills.Count() - 1;
+                cellFormat.FillId = ((uint)fills.Count()) - 1;
                 cellFormat.ApplyFill = true;
 
                 cellFormat.FontId = GetFontId(EFont.Header, fonts);
@@ -734,7 +743,7 @@ public static partial class Common
                 border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
                     new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
                 borders.Append(border);
-                cellFormat.BorderId = (uint)borders.Count() - 1;
+                cellFormat.BorderId = ((uint)borders.Count()) - 1;
                 cellFormat.ApplyBorder = true;
 
                 cellFormat.FontId = GetFontId(EFont.Default, fonts);
@@ -756,7 +765,7 @@ public static partial class Common
                 };
 
                 fills.Append(fill);
-                cellFormat.FillId = (uint)fills.Count() - 1;
+                cellFormat.FillId = ((uint)fills.Count()) - 1;
                 cellFormat.ApplyFill = true;
                 break;
 
@@ -774,7 +783,7 @@ public static partial class Common
                 };
 
                 fills.Append(fill);
-                cellFormat.FillId = (uint)fills.Count() - 1;
+                cellFormat.FillId = ((uint)fills.Count()) - 1;
                 cellFormat.ApplyFill = true;
 
                 cellFormat.FontId = GetFontId(EFont.Default, fonts); //Default font is black
@@ -794,7 +803,7 @@ public static partial class Common
                     },
                 };
                 fills.Append(fill);
-                cellFormat.FillId = (uint)fills.Count() - 1;
+                cellFormat.FillId = ((uint)fills.Count()) - 1;
                 cellFormat.ApplyFill = true;
 
                 cellFormat.FontId = GetFontId(EFont.Whiteout, fonts); // White font
@@ -819,9 +828,9 @@ public static partial class Common
         }
 
         // If no matching format found, add the new one
-        //cellFormat.FormatId = (uint)cellFormats.Count() - 1;
+        // cellFormat.FormatId = (uint)cellFormats.Count() - 1;
         cellFormats.Append(cellFormat);
-        uint newFormatId = (uint)cellFormats.Count() - 1;
+        uint newFormatId = ((uint)cellFormats.Count()) - 1;
         formatCache[formatKey] = newFormatId;
 
         fonts.Count = (uint)fonts.Count();
@@ -862,7 +871,7 @@ public static partial class Common
         }
         fonts.Append(font);
         fonts.Count = (uint)fonts.Count();
-        return (uint)fonts.Count() - 1;
+        return ((uint)fonts.Count()) - 1;
     }
 
     /// <summary>
@@ -874,12 +883,12 @@ public static partial class Common
     public static bool CellFormatsAreEqual(CellFormat format1, CellFormat format2)
     {
         // Compare relevant properties of the CellFormat objects
-        return format1.BorderId == format2.BorderId &&
-            format1.FillId == format2.FillId &&
-            format1.FontId == format2.FontId &&
-            format1.ApplyBorder == format2.ApplyBorder &&
-            format1.ApplyFill == format2.ApplyFill &&
-            format1.ApplyFont == format2.ApplyFont &&
+        return (format1.BorderId == format2.BorderId) &&
+            (format1.FillId == format2.FillId) &&
+            (format1.FontId == format2.FontId) &&
+            (format1.ApplyBorder == format2.ApplyBorder) &&
+            (format1.ApplyFill == format2.ApplyFill) &&
+            (format1.ApplyFont == format2.ApplyFont) &&
             FormatAlignmentsAreEqual(format1.Alignment, format2.Alignment) &&
             FormatProtectionsAreEqual(format1.Protection, format2.Protection);
     }
@@ -892,12 +901,12 @@ public static partial class Common
     /// <returns>True if both Alignment objects are the same</returns>
     public static bool FormatAlignmentsAreEqual(Alignment? alignment1, Alignment? alignment2)
     {
-        if (alignment1 == null && alignment2 == null)
+        if ((alignment1 == null) && (alignment2 == null))
         {
             return true;
         }
 
-        if (alignment1 == null || alignment2 == null)
+        if ((alignment1 == null) || (alignment2 == null))
         {
             return false;
         }
@@ -913,20 +922,18 @@ public static partial class Common
     /// <returns>True if both Protection objects are the same</returns>
     public static bool FormatProtectionsAreEqual(Protection? protection1, Protection? protection2)
     {
-        if (protection1 == null && protection2 == null)
+        if ((protection1 == null) && (protection2 == null))
         {
             return true;
         }
 
-        if (protection1 == null || protection2 == null)
+        if ((protection1 == null) || (protection2 == null))
         {
             return false;
         }
 
         return protection1.Locked == protection2.Locked;
     }
-
-    private static ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCustomFormatCaches = new();
 
     public sealed class WorkbookStyleCache
     {
@@ -996,10 +1003,15 @@ public static partial class Common
             cellFormat.ApplyProtection = true;
         }
 
-        CellFormats cellFormats = stylesheet.Elements<CellFormats>().First();
+        CellFormats? cellFormats = stylesheet.Elements<CellFormats>().FirstOrDefault();
+        if (cellFormats == null)
+        {
+            stylesheet.AddChild(new CellFormats());
+            cellFormats = stylesheet.Elements<CellFormats>().First();
+        }
         cellFormats.Append(cellFormat);
         cellFormats.Count = (uint)cellFormats.Count();
-        uint newFormatId = (uint)cellFormats.Count() - 1;
+        uint newFormatId = ((uint)cellFormats.Count()) - 1;
         cache.CellFormatCache[cellFormatKey] = newFormatId;
 
         return newFormatId;
@@ -1024,11 +1036,15 @@ public static partial class Common
         {
             return existingFontId;
         }
-
-        Fonts fonts = stylesheet.Elements<Fonts>().First();
+        Fonts? fonts = stylesheet.Elements<Fonts>().FirstOrDefault();
+        if (fonts == null)
+        {
+            stylesheet.AddChild(new Fonts());
+            fonts = stylesheet.Elements<Fonts>().First();
+        }
         fonts.Append(font);
         fonts.Count = (uint)fonts.Count();
-        uint newFontId = (uint)fonts.Count() - 1;
+        uint newFontId = ((uint)fonts.Count()) - 1;
         cache.FontCache[fontHash] = newFontId;
         return newFontId;
     }
@@ -1053,10 +1069,15 @@ public static partial class Common
             return existingFillId;
         }
 
-        Fills fills = stylesheet.Elements<Fills>().First();
+        Fills? fills = stylesheet.Elements<Fills>().FirstOrDefault();
+        if (fills == null)
+        {
+            stylesheet.AddChild(new Fills());
+            fills = stylesheet.Elements<Fills>().First();
+        }
         fills.Append(fill);
         fills.Count = (uint)fills.Count();
-        uint newFillId = (uint)fills.Count() - 1;
+        uint newFillId = ((uint)fills.Count()) - 1;
         cache.FillCache[fillHash] = newFillId;
         return newFillId;
     }
@@ -1081,10 +1102,15 @@ public static partial class Common
             return existingBorderId;
         }
 
-        Borders borders = stylesheet.Elements<Borders>().First();
+        Borders? borders = stylesheet.Elements<Borders>().FirstOrDefault();
+        if (borders == null)
+        {
+            stylesheet.AddChild(new Borders());
+            borders = stylesheet.Elements<Borders>().First();
+        }
         borders.Append(border);
         borders.Count = (uint)borders.Count();
-        uint newBorderId = (uint)borders.Count() - 1;
+        uint newBorderId = ((uint)borders.Count()) - 1;
         cache.BorderCache[borderHash] = newBorderId;
         return newBorderId;
     }
@@ -1140,8 +1166,9 @@ public static partial class Common
         {
             CellReference cellReference = new(columnIndex, rowIndex);
             string cellRef = cellReference.ToString();
+
             // Check if the row exists, create if not
-            Row? row = sheetData?.Elements<Row>().FirstOrDefault(x => x.RowIndex != null && x.RowIndex == rowIndex);
+            Row? row = sheetData?.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == rowIndex));
             if (row == null)
             {
                 row = new Row { RowIndex = rowIndex };
@@ -1158,18 +1185,18 @@ public static partial class Common
                 foreach (Cell existingCell in row.Elements<Cell>())
                 {
                     CellReference existingCellReference = new(existingCell.CellReference!);
-                    if (existingCellReference.ColumnIndex > cellReference.ColumnIndex && existingCellReference.RowIndex > cellReference.RowIndex)
+                    if ((existingCellReference.ColumnIndex > cellReference.ColumnIndex) && (existingCellReference.RowIndex > cellReference.RowIndex))
                     {
                         refCell = existingCell; //existingCell; //cell
                         break;
                     }
 
-                    //Only works until column AA
-                    //if (string.Compare(existingCell.CellReference?.Value, cellRef, true) > 0)
-                    //{
-                    //    refCell = existingCell; //existingCell; //cell
-                    //    break;
-                    //}
+                    // Only works until column AA
+                    // if (string.Compare(existingCell.CellReference?.Value, cellRef, true) > 0)
+                    // {
+                    // refCell = existingCell; //existingCell; //cell
+                    // break;
+                    // }
                 }
 
                 Cell newCell = new() { CellReference = cellRef, StyleIndex = styleIndex };
@@ -1182,7 +1209,8 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
+    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that
+    /// cell
     /// </summary>
     /// <param name="worksheet">Worksheet to insert the cell and value into</param>
     /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
@@ -1197,7 +1225,8 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
+    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that
+    /// cell
     /// </summary>
     /// <param name="sheetData">SheetData to insert the cell and value into</param>
     /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
@@ -1227,7 +1256,8 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
+    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that
+    /// cell
     /// </summary>
     /// <param name="worksheet">Worksheet to insert the cell and value into</param>
     /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
@@ -1242,7 +1272,8 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
+    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that
+    /// cell
     /// </summary>
     /// <param name="sheetData">SheetData to insert the cell and value into</param>
     /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
@@ -1270,7 +1301,8 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a SharedStringItem with the specified text and inserts it into the SharedStringTablePart. If the item already exists, returns its index.
+    /// Creates a SharedStringItem with the specified text and inserts it into the SharedStringTablePart. If the item
+    /// already exists, returns its index.
     /// </summary>
     /// <param name="workbook">Workbook to insert the SharedString into</param>
     /// <param name="text">Text of the SharedString to be created</param>
@@ -1283,6 +1315,7 @@ public static partial class Common
         shareStringTablePart.SharedStringTable ??= new();
 
         int i = 0;
+
         // Iterate through all the items in the SharedStringTable. If the text already exists, return its index.
         foreach (SharedStringItem item in shareStringTablePart.SharedStringTable.Elements<SharedStringItem>())
         {
@@ -1313,7 +1346,7 @@ public static partial class Common
     /// <param name="styleName">Optional: Style to use for table, defaults to TableStyleMedium1</param>
     /// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
     /// <param name="showColStripes">Optional: Styles the table to show column stripes or not</param>
-    public static void CreateTable(Worksheet worksheet, uint startRow, uint startCol, uint endRow, uint endColumn, string tableName, ETableStyle styleName = ETableStyle.TableStyleMedium1,
+    public static void CreateTable(this Worksheet worksheet, uint startRow, uint startCol, uint endRow, uint endColumn, string tableName, ETableStyle styleName = ETableStyle.TableStyleMedium1,
         bool showRowStripes = true, bool showColStripes = false)
     {
         TableDefinitionPart tableDefinitionPart = worksheet.WorksheetPart!.AddNewPart<TableDefinitionPart>();
@@ -1331,11 +1364,11 @@ public static partial class Common
         tableParts.Append(tablePart);
         tableParts.Count = (uint)tableParts.Count();
 
-        TableColumns tableColumns = new() { Count = endColumn - startCol + 1 };
-        for (uint i = 0; i < endColumn - startCol + 1; i++)
+        TableColumns tableColumns = new() { Count = (endColumn - startCol) + 1 };
+        for (uint i = 0; i < (endColumn - startCol) + 1; i++)
         {
             // Use the content of the first row as column names
-            Cell headerCell = worksheet.GetCellFromCoordinates((int)i + 1, 1)!;
+            Cell headerCell = worksheet.GetCellFromCoordinates(((int)i) + 1, 1)!;
             string cellValue = headerCell.GetCellValue();
             string columnName = cellValue ?? $"Column{i + 1}";
 
@@ -1375,7 +1408,7 @@ public static partial class Common
     /// <param name="startColumn">First column of auto filtered range</param>
     /// <param name="endRow">Last row of auto filtered range</param>
     /// <param name="endColumn">Last column of auto filtered range</param>
-    public static void SetAutoFilter(Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn)
+    public static void SetAutoFilter(this Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn)
     {
         worksheet.Append(new AutoFilter() { Reference = $"{new CellReference(startColumn, startRow)}:{new CellReference(endColumn, endRow)}" });
     }
@@ -1400,7 +1433,7 @@ public static partial class Common
     public static void AddImages(this SpreadsheetDocument document, List<byte[]> imageData, List<string> cellNames)
     {
         WorkbookPart? workbookPart = document.WorkbookPart;
-        if (workbookPart != null && imageData.Count > 0 && cellNames.Count > 0 && imageData.Count == cellNames.Count)
+        if ((workbookPart != null) && (imageData.Count > 0) && (cellNames.Count > 0) && (imageData.Count == cellNames.Count))
         {
             WorksheetPart? worksheetPart = null;
             DrawingsPart? drawingsPart = null;
@@ -1408,7 +1441,7 @@ public static partial class Common
             uint? cellStyleIndex = document.GetCustomStyle(font: new() { FontSize = new() { Val = 11 }, FontName = new() { Val = nameof(EFontName.Calibri) } });
             for (int i = 0; i < imageData.Count; i++)
             {
-                if (imageData[i].Length > 0 && !string.IsNullOrWhiteSpace(cellNames[i]))
+                if ((imageData[i].Length > 0) && !string.IsNullOrWhiteSpace(cellNames[i]))
                 {
                     CellReference? cellReference = GetCellReferenceFromName(workbookPart, cellNames[i]);
                     if (cellReference != null)
@@ -1422,7 +1455,7 @@ public static partial class Common
                             }
                         }
 
-                        if (worksheetPart != null && drawingsPart != null && cellStyleIndex != null)
+                        if ((worksheetPart != null) && (drawingsPart != null) && (cellStyleIndex != null))
                         {
                             worksheetPart.AddImagePart(drawingsPart, GetMergedCellArea(worksheetPart, cellReference), (uint)cellStyleIndex, imageData[i]);
                         }
@@ -1448,11 +1481,14 @@ public static partial class Common
     /// </summary>
     /// <param name="document">SpreadsheetDocument to insert images into</param>
     /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
-    /// <param name="mergedCellAreas">List of tuples defining the first (top left) and last (bottom right) cell of the range to insert the images into. Must be equal in length to imageData parameter</param>
+    /// <param name="mergedCellAreas">
+    /// List of tuples defining the first (top left) and last (bottom right) cell of the range to insert the images
+    /// into. Must be equal in length to imageData parameter
+    /// </param>
     public static void AddImages(this SpreadsheetDocument document, List<byte[]> imageData, List<(CellReference FirstCell, CellReference LastCell)> mergedCellAreas)
     {
         WorkbookPart? workbookPart = document.WorkbookPart;
-        if (workbookPart != null && imageData.Count > 0 && mergedCellAreas.Count > 0 && imageData.Count == mergedCellAreas.Count)
+        if ((workbookPart != null) && (imageData.Count > 0) && (mergedCellAreas.Count > 0) && (imageData.Count == mergedCellAreas.Count))
         {
             WorksheetPart? worksheetPart = null;
             DrawingsPart? drawingsPart = null;
@@ -1475,7 +1511,7 @@ public static partial class Common
                             }
                         }
 
-                        if (worksheetPart != null && drawingsPart != null && cellStyleIndex != null)
+                        if ((worksheetPart != null) && (drawingsPart != null) && (cellStyleIndex != null))
                         {
                             worksheetPart.AddImagePart(drawingsPart, mergedCellArea, (uint)cellStyleIndex, imageData[i]);
                         }
@@ -1487,7 +1523,7 @@ public static partial class Common
 
     public static void AddImagePart(this WorksheetPart worksheetPart, DrawingsPart drawingsPart, (CellReference FirstCell, CellReference LastCell) mergedCellArea, uint cellStyleIndex, byte[] imageData)
     {
-        //Set cells to standard font to ensure cell sizes are gotten correctly
+        // Set cells to standard font to ensure cell sizes are gotten correctly
         Cell? cell = worksheetPart.Worksheet.GetCellFromReference(mergedCellArea.FirstCell);
         if (cell != null)
         {
@@ -1497,18 +1533,18 @@ public static partial class Common
         int imgWidthPx = image.Width;
         int imgHeightPx = image.Height;
 
-        decimal imgAspect = (decimal)imgWidthPx / imgHeightPx;
+        decimal imgAspect = ((decimal)imgWidthPx) / imgHeightPx;
 
         int rangeWidthPx = GetRangeWidthInPx(worksheetPart, mergedCellArea);
         int rangeHeightPx = GetRangeHeightInPx(worksheetPart, mergedCellArea);
-        decimal rangeAspect = (decimal)rangeWidthPx / rangeHeightPx;
+        decimal rangeAspect = ((decimal)rangeWidthPx) / rangeHeightPx;
 
-        decimal scale = rangeAspect < imgAspect ? (rangeWidthPx - 3m) / imgWidthPx : (rangeHeightPx - 3m) / imgHeightPx;
+        decimal scale = (rangeAspect < imgAspect) ? ((rangeWidthPx - 3m) / imgWidthPx) : ((rangeHeightPx - 3m) / imgHeightPx);
 
         int resizeWidth = (int)Math.Round(imgWidthPx * scale, 0, MidpointRounding.ToZero);
         int resizeHeight = (int)Math.Round(imgHeightPx * scale, 0, MidpointRounding.ToZero);
-        int xMargin = (int)Math.Round((rangeWidthPx - resizeWidth) * 9525 / 2.0m, 0, MidpointRounding.ToZero);
-        int yMargin = (int)Math.Round((rangeHeightPx - resizeHeight) * 9525 * 1.75m / 2.0m, 0, MidpointRounding.ToZero);
+        int xMargin = (int)Math.Round(((rangeWidthPx - resizeWidth) * 9525) / 2.0m, 0, MidpointRounding.ToZero);
+        int yMargin = (int)Math.Round(((rangeHeightPx - resizeHeight) * 9525 * 1.75m) / 2.0m, 0, MidpointRounding.ToZero);
 
         ImagePart imagePart = drawingsPart.AddImagePart(ImagePartType.Png);
         using (MemoryStream stream = new(imageData))
@@ -1544,7 +1580,7 @@ public static partial class Common
     /// <param name="worksheetPart">WorksheetPart containing the merged cell area</param>
     /// <param name="cellReference">Cell reference for the merged cell area</param>
     /// <returns>Cell references for the first (top left) and last (bottom right) cell</returns>
-    public static (CellReference FirstCell, CellReference LastCell) GetMergedCellArea(WorksheetPart worksheetPart, CellReference cellReference)
+    public static (CellReference FirstCell, CellReference LastCell) GetMergedCellArea(this WorksheetPart worksheetPart, CellReference cellReference)
     {
         MergeCells? mergedCells = worksheetPart.Worksheet.Elements<MergeCells>().FirstOrDefault();
         if (mergedCells != null)
@@ -1556,8 +1592,8 @@ public static partial class Common
                     string[] range = mergedCell.Reference.Value.Split(':');
                     CellReference start = new(range[0]);
                     CellReference end = new(range[1]);
-                    if (cellReference.RowIndex >= start.RowIndex && cellReference.RowIndex <= end.RowIndex &&
-                        cellReference.ColumnIndex >= start.ColumnIndex && cellReference.ColumnIndex <= end.ColumnIndex)
+                    if ((cellReference.RowIndex >= start.RowIndex) && (cellReference.RowIndex <= end.RowIndex) &&
+                        (cellReference.ColumnIndex >= start.ColumnIndex) && (cellReference.ColumnIndex <= end.ColumnIndex))
                     {
                         return (start, end);
                     }
@@ -1611,7 +1647,7 @@ public static partial class Common
                 sheetData!.Append(row);
             }
             double rowHeight = row?.Height ?? 14.2; // Default row height for Calibri 11pt
-            totalHeight += (int)(rowHeight * 12700 / 9525); // Convert to EMUs (1 point = 12700 EMUs), then to pixels (1 pixel = 9525 EMUs)
+            totalHeight += (int)((rowHeight * 12700) / 9525); // Convert to EMUs (1 point = 12700 EMUs), then to pixels (1 pixel = 9525 EMUs)
         }
 
         return totalHeight;
@@ -1705,7 +1741,11 @@ public static partial class Common
     /// Reads tabular data from an unformatted excel sheet to a DataTable object using OpenXML
     /// </summary>
     /// <param name="fileStream">Stream of Excel file being read</param>
-    /// <param name="hasHeaders">Does the data being read have headers. Will be used for data table column names instead of default 'Column0', 'Column1'... if true. If no headers specified, first row of data must have a value for all columns in order to read all columns correctly.</param>
+    /// <param name="hasHeaders">
+    /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0',
+    /// 'Column1'... if true. If no headers specified, first row of data must have a value for all columns in order to
+    /// read all columns correctly.
+    /// </param>
     /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
     /// <param name="startCellReference">Top left corner containing data to read. Will use A1 if not specified.</param>
     /// <param name="endCellReference">Bottom right cell containing data to read. Will read to first full empty row if not specified.</param>
@@ -1716,11 +1756,12 @@ public static partial class Common
 
         try
         {
+            fileStream.Position = 0;
             using SpreadsheetDocument document = SpreadsheetDocument.Open(fileStream, false);
             WorkbookPart? workbookPart = document.WorkbookPart;
             Sheet? sheet = document.GetSheetByName(sheetName);
 
-            if (sheet != null && workbookPart != null)
+            if ((sheet != null) && (workbookPart != null))
             {
                 WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
                 Worksheet worksheet = worksheetPart.Worksheet;
@@ -1728,17 +1769,17 @@ public static partial class Common
 
                 // Determine start and end cells
                 CellReference startCell = new(startCellReference ?? "A1");
-                CellReference endCell = endCellReference != null ? new(endCellReference) : sheetData.GetLastPopulatedCell();
+                CellReference endCell = (endCellReference != null) ? new(endCellReference) : sheetData.GetLastPopulatedCell();
 
                 // Add columns to DataTable
                 for (uint col = startCell.ColumnIndex; col <= endCell.ColumnIndex; col++)
                 {
-                    string columnName = hasHeaders ? sheetData.GetCellValue(startCell.RowIndex, col) : $"Column{col - startCell.ColumnIndex}";
+                    string columnName = hasHeaders ? sheetData.GetCellValue(startCell.RowIndex, col) : ($"Column{col - startCell.ColumnIndex}");
                     dataTable.Columns.Add(columnName);
                 }
 
                 // Add rows to DataTable
-                uint dataStartRow = hasHeaders ? startCell.RowIndex + 1 : startCell.RowIndex;
+                uint dataStartRow = hasHeaders ? (startCell.RowIndex + 1) : startCell.RowIndex;
                 for (uint row = dataStartRow; row <= endCell.RowIndex; row++)
                 {
                     DataRow dataRow = dataTable.NewRow();
@@ -1796,8 +1837,8 @@ public static partial class Common
     public static string GetCellValue(this SheetData sheetData, uint row, uint col)
     {
         CellReference cellRef = new(col, row);
-        Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => x.RowIndex != null && x.RowIndex == row)?
-                    .Elements<Cell>().FirstOrDefault(x => x.CellReference != null && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+        Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+                    .Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 
         return cell?.GetCellValue() ?? string.Empty;
     }
@@ -1840,7 +1881,7 @@ public static partial class Common
         string value = cell.CellValue.Text;
 
         // If this is a shared string, look up the actual value
-        if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
+        if ((cell.DataType != null) && (cell.DataType.Value == CellValues.SharedString))
         {
             SharedStringTablePart? sharedStringPart = cell.GetWorkbookFromCell().WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
             if (sharedStringPart != null)
@@ -1918,10 +1959,11 @@ public static partial class Common
 
         try
         {
+            fileStream.Position = 0;
             using SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(fileStream, false);
             WorkbookPart? workbookPart = spreadsheetDocument.WorkbookPart ?? throw new InvalidOperationException("The workbook part is missing.");
             Table? table = workbookPart.FindTable(tableName) ?? throw new InvalidOperationException($"Table '{tableName ?? string.Empty}' not found.");
-            Sheet? sheet = spreadsheetDocument.GetSheetByName(table.Name);
+            Sheet? sheet = spreadsheetDocument.GetSheetForTable(table);
             if (sheet?.Id?.Value == null)
             {
                 throw new InvalidOperationException("Sheet not found for the table.");
@@ -1946,7 +1988,7 @@ public static partial class Common
                 Cell? headerCell = worksheet.GetCellFromCoordinates((int)col, (int)startCell.RowIndex);
                 if (headerCell != null)
                 {
-                    dataTable.Columns.Add(headerCell.GetStringValue() ?? $"Column{col - startCell.ColumnIndex + 1}");
+                    dataTable.Columns.Add(headerCell.GetStringValue() ?? $"Column{(col - startCell.ColumnIndex) + 1}");
                 }
             }
 
@@ -1960,7 +2002,7 @@ public static partial class Common
                     Cell? cell = worksheet.GetCellFromCoordinates((int)col, (int)row);
                     if (cell != null)
                     {
-                        dataRow[(int)col - (int)startCell.ColumnIndex] = cell.GetStringValue();
+                        dataRow[((int)col) - ((int)startCell.ColumnIndex)] = cell.GetStringValue();
                     }
                 }
                 dataTable.Rows.Add(dataRow);
@@ -1973,6 +2015,32 @@ public static partial class Common
         }
 
         return dataTable;
+    }
+
+    public static Sheet? GetSheetForTable(this SpreadsheetDocument document, Table table)
+    {
+        WorkbookPart? workbookPart = document.WorkbookPart;
+        if (workbookPart == null)
+        {
+            return null;
+        }
+
+        // Find the WorksheetPart containing the Table
+        foreach (WorksheetPart worksheetPart in workbookPart.WorksheetParts)
+        {
+            foreach (TableDefinitionPart tableDefPart in worksheetPart.TableDefinitionParts)
+            {
+                if (tableDefPart.Table == table)
+                {
+                    // Get the relationship Id for this WorksheetPart
+                    string relId = workbookPart.GetIdOfPart(worksheetPart);
+
+                    // Find the Sheet with this relationship Id
+                    return workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Id != null && s.Id == relId);
+                }
+            }
+        }
+        return null;
     }
 
     /// <summary>
@@ -1989,7 +2057,7 @@ public static partial class Common
             {
                 foreach (TableDefinitionPart tableDefinitionPart in worksheetPart.TableDefinitionParts)
                 {
-                    if (tableName == null || tableDefinitionPart.Table.Name == tableName)
+                    if ((tableName == null) || (tableDefinitionPart.Table.Name == tableName))
                     {
                         return tableDefinitionPart.Table;
                     }
@@ -2007,7 +2075,7 @@ public static partial class Common
     /// <returns>Row from worksheet specified by rowIndex</returns>
     public static Row? GetRow(this Worksheet worksheet, uint rowIndex)
     {
-        return worksheet.GetFirstChild<SheetData>()?.Elements<Row>().FirstOrDefault(r => r.RowIndex != null && r.RowIndex == rowIndex);
+        return worksheet.GetFirstChild<SheetData>()?.Elements<Row>().FirstOrDefault(r => (r.RowIndex != null) && (r.RowIndex == rowIndex));
     }
 
     /// <summary>
@@ -2060,7 +2128,7 @@ public static partial class Common
                 double width = cell.CalculateWidth();
 
                 // Update maximum width for this column if necessary
-                if (!columnWidths.TryGetValue(columnIndex, out double value) || width > value)
+                if (!columnWidths.TryGetValue(columnIndex, out double value) || (width > value))
                 {
                     value = Math.Min(width, maxWidth);
                     columnWidths[columnIndex] = value;
@@ -2113,14 +2181,14 @@ public static partial class Common
     {
         columns ??= worksheet.GetColumns();
 
-        Column? col = columns.Elements<Column>().FirstOrDefault(c => colIndex >= (c.Min?.Value ?? 0) && colIndex <= (c.Max?.Value ?? 0));
+        Column? col = columns.Elements<Column>().FirstOrDefault(c => (colIndex >= (c.Min?.Value ?? 0)) && (colIndex <= (c.Max?.Value ?? 0)));
         if (col == null) //Create new column
         {
             worksheet.GetOrCreateColumn(colIndex, columnWidth, columns);
         }
         else
         {
-            //Existing column, just need to add width attributes
+            // Existing column, just need to add width attributes
             col.Width = columnWidth;
             col.CustomWidth = true;
         }
@@ -2137,7 +2205,8 @@ public static partial class Common
     {
         columns ??= worksheet.GetColumns();
 
-        Column? col = columns.Elements<Column>().FirstOrDefault(c => colIndex >= (c.Min?.Value ?? 0) && colIndex <= (c.Max?.Value ?? 0));
+        Column? col = columns.Elements<Column>().FirstOrDefault(c => (colIndex >= (c.Min?.Value ?? 0)) && (colIndex <= (c.Max?.Value ?? 0)));
+        Column? newCol = null;
         if (col == null) //Create new column
         {
             // Columns must be in sequential order according to CellReference. Determine where to insert the new cell.
@@ -2151,7 +2220,7 @@ public static partial class Common
                 }
             }
 
-            Column newCol = new()
+            newCol = new()
             {
                 Min = colIndex,
                 Max = colIndex
@@ -2165,7 +2234,7 @@ public static partial class Common
 
             columns.InsertBefore(newCol, refCol);
         }
-        return col;
+        return col ?? newCol;
     }
 
     /// <summary>
@@ -2202,22 +2271,22 @@ public static partial class Common
             width++;
         }
 
-        if (styleIndex != null && numberStyles.Contains((uint)styleIndex))
+        if ((styleIndex != null) && numberStyles.Contains((uint)styleIndex))
         {
             int thousandCount = (int)Math.Truncate(width / 4);
 
-            //add 3 for '.00'
-            width += (3 + thousandCount);
+            // add 3 for '.00'
+            width += 3 + thousandCount;
         }
 
-        if (styleIndex != null && boldStyles.Contains((uint)styleIndex))
+        if ((styleIndex != null) && boldStyles.Contains((uint)styleIndex))
         {
-            //add an extra char for bold - not 100% acurate but good enough for what i need.
+            // add an extra char for bold - not 100% acurate but good enough for what i need.
             width++;
         }
 
         const double maxCharWidth = 5; // Calibri 11pt is 7, but 5 seemed to work ok
-        return Math.Truncate(((width * maxCharWidth) + 5) / maxCharWidth * 256) / 256;
+        return Math.Truncate((((width * maxCharWidth) + 5) / maxCharWidth) * 256) / 256;
     }
 
     // Helper classes to deal with cell references more easily
@@ -2233,7 +2302,7 @@ public static partial class Common
             get => _RowIndex;
             set
             {
-                if (value < 1 || value > 1048576)
+                if ((value < 1) || (value > 1048576))
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 1048576");
                 }
@@ -2248,7 +2317,7 @@ public static partial class Common
             get => _ColumnIndex;
             set
             {
-                if (value < 1 || value > 16384)
+                if ((value < 1) || (value > 16384))
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 16384");
                 }
@@ -2285,7 +2354,7 @@ public static partial class Common
             for (int i = 0; i < columnName.Length; i++)
             {
                 number *= 26;
-                number += (uint)(columnName[i] - 'A' + 1);
+                number += (uint)((columnName[i] - 'A') + 1);
             }
             return number;// - 1;
         }
@@ -2297,7 +2366,7 @@ public static partial class Common
         /// <returns>Column name corresponding to the value of columnNumber</returns>
         public static string NumberToColumnName(uint columnNumber)
         {
-            int number = (int)columnNumber - 1; //Make this 1 based to avoid confusion
+            int number = ((int)columnNumber) - 1; //Make this 1 based to avoid confusion
             string columnName = string.Empty;
             while (number >= 0)
             {

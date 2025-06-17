@@ -196,5 +196,8 @@ public sealed class CountingStream(Stream innerStream) : Stream
         }
     }
 
-    private void ThrowIfDisposed() { ObjectDisposedException.ThrowIf(_disposed, this); }
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+    }
 }

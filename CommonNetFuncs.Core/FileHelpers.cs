@@ -265,6 +265,7 @@ public static partial class FileHelpers
 
         try
         {
+            stream.Position = 0;
             using (algorithm)
             {
                 byte[] hash = await algorithm.ComputeHashAsync(stream).ConfigureAwait(false);

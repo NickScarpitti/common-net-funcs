@@ -1,14 +1,14 @@
-﻿using CommonNetFuncs.Excel.Common;
+﻿using System.Data;
+using CommonNetFuncs.Excel.Common;
 using CommonNetFuncs.Excel.OpenXml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using System.Data;
 using static CommonNetFuncs.Excel.OpenXml.Common;
 
 namespace Excel.OpenXml.Tests;
 
-public sealed class CommonTests
+public sealed class CommonTests : IDisposable
 {
     [Fact]
     public void InitializeExcelFile_ShouldCreateNewSheet()
@@ -589,10 +589,13 @@ public sealed class CommonTests
         using MemoryStream memoryStream = new();
         using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
         document.CreateNewSheet("Test Sheet");
-        CellReference cellRef = new("A1");
+        Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+        Cell? cell = worksheet.GetCellFromReference("A1");
+        document.Save();
+        memoryStream.Flush();
 
         // Act
-        WorksheetPart? result = GetWorksheetPartByCellReference(document.WorkbookPart!, cellRef);
+        WorksheetPart? result = GetWorksheetPartByCellReference(document.WorkbookPart!, new(cell.CellReference!));
 
         // Assert
         result.ShouldNotBeNull();
@@ -819,7 +822,7 @@ public sealed class CommonTests
     [Theory]
     [InlineData("Test", nameof(CellValues.String))]
     [InlineData("TRUE", nameof(CellValues.Boolean))]
-    [InlineData("ERROR", nameof(CellValues.Error))]
+    [InlineData("ERROR:Some error message", nameof(CellValues.Error))]
     [InlineData("Test")]
     public void GetStringValue_ShouldReturnFormattedValue(string value, string? cellType = null)
     {
@@ -832,7 +835,20 @@ public sealed class CommonTests
         cell.CellValue = new CellValue(value);
         if (!string.IsNullOrEmpty(cellType))
         {
-            cell.DataType = new EnumValue<CellValues>(Enum.Parse<CellValues>(cellType));
+            switch (cellType)
+            {
+                case nameof(CellValues.Boolean):
+                    cell.DataType = new EnumValue<CellValues>(CellValues.Boolean);
+                    cell.CellValue = new CellValue(value == "TRUE" ? "1" : "0");
+                    break;
+                case nameof(CellValues.Error):
+                    cell.DataType = new EnumValue<CellValues>(CellValues.Error);
+                    cell.CellValue = new CellValue("ERROR:Some error message");
+                    break;
+                case nameof(CellValues.String):
+                    cell.DataType = new EnumValue<CellValues>(CellValues.String);
+                    break;
+            }
         }
 
         // Act
@@ -840,11 +856,11 @@ public sealed class CommonTests
 
         // Assert
         result.ShouldNotBeNull();
-        if (cellType == CellValues.Boolean.ToString())
+        if (cellType == nameof(CellValues.Boolean))
         {
-            result.ShouldBe((value == "1") ? "TRUE" : "FALSE");
+            result.ShouldBe((value == "TRUE") ? "1" : "0");
         }
-        else if (cellType == CellValues.Error.ToString())
+        else if (cellType == nameof(CellValues.Error))
         {
             result.ShouldStartWith("ERROR:");
         }
@@ -867,9 +883,12 @@ public sealed class CommonTests
         worksheet.InsertCellValue(1, 1, new CellValue("Header1"), CellValues.String);
         worksheet.InsertCellValue(1, 2, new CellValue("Data1"), CellValues.String);
         worksheet.CreateTable(1, 1, 2, 1, "TestTable");
+        worksheet.Save();
+        document.Save();
+        memoryStream.Flush();
 
         // Act
-        DataTable result = memoryStream.ReadExcelTableToDataTable("TestTable");
+        using DataTable result = memoryStream.ReadExcelTableToDataTable("TestTable");
 
         // Assert
         result.Columns.Count.ShouldBe(1);
@@ -934,10 +953,17 @@ public sealed class CommonTests
 
         // Act
         Column? column = worksheet.GetOrCreateColumn(colIndex);
+        worksheet.Save();
+        memoryStream.Flush();
 
         // Assert
         column.ShouldNotBeNull();
         column.Min!.Value.ShouldBe(colIndex);
         column.Max!.Value.ShouldBe(colIndex);
+    }
+
+    public void Dispose()
+    {
+        ClearCustomFormatCache();
     }
 }

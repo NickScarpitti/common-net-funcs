@@ -1,12 +1,12 @@
-﻿using CommonNetFuncs.Excel.Common;
+﻿using System.Collections.Concurrent;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
+using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SixLabors.ImageSharp;
-using System.Collections.Concurrent;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
 using Color = DocumentFormat.OpenXml.Spreadsheet.Color; //Aliased to prevent issue with DocumentFormat.OpenXml.Spreadsheet.Color
 using Dwg = DocumentFormat.OpenXml.Drawing;
 using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
@@ -24,7 +24,9 @@ public static partial class Common
     /// <param name="sheetName">Optional name for the new sheet that will be created</param>
     /// <returns>Id of the sheet that was created during initialization</returns>
     public static uint InitializeExcelFile(this SpreadsheetDocument document, string? sheetName = null)
-    { return document.CreateNewSheet(sheetName); }
+    {
+        return document.CreateNewSheet(sheetName);
+    }
 
     /// <summary>
     /// Adds a new sheet to a SpreadsheetDocument named according to the value passed into sheetName or "Sheet #"
@@ -230,7 +232,9 @@ public static partial class Common
     /// <param name="cell">The Cell to check</param>
     /// <returns>True if the Cell is empty, false otherwise</returns>
     public static bool IsCellEmpty(this Cell? cell)
-    { return (cell == null) || string.IsNullOrWhiteSpace(cell.InnerText); }
+    {
+        return (cell == null) || string.IsNullOrWhiteSpace(cell.InnerText);
+    }
 
     /// <summary>
     /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
@@ -462,7 +466,10 @@ public static partial class Common
     /// <summary>
     /// Clears all cached standard formats for all workbooks
     /// </summary>
-    public static void ClearStandardFormatCache() { WorkbookStandardFormatCache = []; }
+    public static void ClearStandardFormatCache()
+    {
+        WorkbookStandardFormatCache = [];
+    }
 
     /// <summary>
     /// Clears standard format cache for specific workbook
@@ -476,10 +483,15 @@ public static partial class Common
         }
     }
 
+    private static ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCustomFormatCaches = new();
+
     /// <summary>
     /// Clears all cached custom formats for all workbooks
     /// </summary>
-    public static void ClearCustomFormatCache() { WorkbookCustomFormatCaches = []; }
+    public static void ClearCustomFormatCache()
+    {
+        WorkbookCustomFormatCaches = [];
+    }
 
     /// <summary>
     /// Clears custom format cache for specific workbook
@@ -491,6 +503,11 @@ public static partial class Common
         {
             WorkbookCustomFormatCaches.TryRemove(GetWorkbookId(document), out _);
         }
+    }
+
+    public static Dictionary<string, WorkbookStyleCache> GetWorkbookCustomFormatCaches()
+    {
+        return new(WorkbookCustomFormatCaches);
     }
 
     /// <summary>
@@ -918,11 +935,6 @@ public static partial class Common
         return protection1.Locked == protection2.Locked;
     }
 
-    public static Dictionary<string, WorkbookStyleCache> GetWorkbookCustomFormatCaches()
-    { return new(WorkbookCustomFormatCaches); }
-
-    private static ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCustomFormatCaches = new();
-
     public sealed class WorkbookStyleCache
     {
         public Dictionary<int, uint> FontCache { get; } = [];
@@ -1108,7 +1120,10 @@ public static partial class Common
     /// </summary>
     /// <param name="element">Element to get hash of</param>
     /// <returns>Hash for the passed in OpenXmlElement</returns>
-    public static int GetHashCode(this OpenXmlElement element) { return element.OuterXml.GetHashCode(); }
+    public static int GetHashCode(this OpenXmlElement element)
+    {
+        return element.OuterXml.GetHashCode();
+    }
 
     /// <summary>
     /// Gets a unique identifier for the current SpreadsheetDocument
@@ -1405,7 +1420,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cellName">Named range to insert image at</param>
     public static void AddImage(this SpreadsheetDocument document, byte[] imageData, string cellName)
-    { document.AddImages([imageData], [cellName]); }
+    {
+        document.AddImages([imageData], [cellName]);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -1455,7 +1472,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="mergedCellArea">Tuple defining the first (top left) and last (bottom right) cell of the range to insert the image into</param>
     public static void AddImage(this SpreadsheetDocument document, byte[] imageData, (CellReference FirstCell, CellReference LastCell) mergedCellArea)
-    { document.AddImages([imageData], [mergedCellArea]); }
+    {
+        document.AddImages([imageData], [mergedCellArea]);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -1737,6 +1756,7 @@ public static partial class Common
 
         try
         {
+            fileStream.Position = 0;
             using SpreadsheetDocument document = SpreadsheetDocument.Open(fileStream, false);
             WorkbookPart? workbookPart = document.WorkbookPart;
             Sheet? sheet = document.GetSheetByName(sheetName);
@@ -1830,7 +1850,9 @@ public static partial class Common
     /// <param name="cellReference">CellReference of cell to get value of</param>
     /// <returns>String value of the indicated cell</returns>
     public static string GetCellValue(this SheetData sheetData, CellReference cellReference)
-    { return sheetData.GetCellValue(cellReference.RowIndex, cellReference.ColumnIndex); }
+    {
+        return sheetData.GetCellValue(cellReference.RowIndex, cellReference.ColumnIndex);
+    }
 
     /// <summary>
     /// Gets the string value of a cell
@@ -1937,10 +1959,11 @@ public static partial class Common
 
         try
         {
+            fileStream.Position = 0;
             using SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(fileStream, false);
             WorkbookPart? workbookPart = spreadsheetDocument.WorkbookPart ?? throw new InvalidOperationException("The workbook part is missing.");
             Table? table = workbookPart.FindTable(tableName) ?? throw new InvalidOperationException($"Table '{tableName ?? string.Empty}' not found.");
-            Sheet? sheet = spreadsheetDocument.GetSheetByName(table.Name);
+            Sheet? sheet = spreadsheetDocument.GetSheetForTable(table);
             if (sheet?.Id?.Value == null)
             {
                 throw new InvalidOperationException("Sheet not found for the table.");
@@ -1992,6 +2015,32 @@ public static partial class Common
         }
 
         return dataTable;
+    }
+
+    public static Sheet? GetSheetForTable(this SpreadsheetDocument document, Table table)
+    {
+        WorkbookPart? workbookPart = document.WorkbookPart;
+        if (workbookPart == null)
+        {
+            return null;
+        }
+
+        // Find the WorksheetPart containing the Table
+        foreach (WorksheetPart worksheetPart in workbookPart.WorksheetParts)
+        {
+            foreach (TableDefinitionPart tableDefPart in worksheetPart.TableDefinitionParts)
+            {
+                if (tableDefPart.Table == table)
+                {
+                    // Get the relationship Id for this WorksheetPart
+                    string relId = workbookPart.GetIdOfPart(worksheetPart);
+
+                    // Find the Sheet with this relationship Id
+                    return workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Id != null && s.Id == relId);
+                }
+            }
+        }
+        return null;
     }
 
     /// <summary>
@@ -2157,6 +2206,7 @@ public static partial class Common
         columns ??= worksheet.GetColumns();
 
         Column? col = columns.Elements<Column>().FirstOrDefault(c => (colIndex >= (c.Min?.Value ?? 0)) && (colIndex <= (c.Max?.Value ?? 0)));
+        Column? newCol = null;
         if (col == null) //Create new column
         {
             // Columns must be in sequential order according to CellReference. Determine where to insert the new cell.
@@ -2170,7 +2220,7 @@ public static partial class Common
                 }
             }
 
-            Column newCol = new()
+            newCol = new()
             {
                 Min = colIndex,
                 Max = colIndex
@@ -2184,7 +2234,7 @@ public static partial class Common
 
             columns.InsertBefore(newCol, refCol);
         }
-        return col;
+        return col ?? newCol;
     }
 
     /// <summary>
@@ -2193,7 +2243,9 @@ public static partial class Common
     /// <param name="cell">Cell to calculate the width of</param>
     /// <returns>Fitted width of the cell</returns>
     public static double CalculateWidth(this Cell cell)
-    { return CalculateWidth(cell.GetCellValue(), cell.StyleIndex?.Value); }
+    {
+        return CalculateWidth(cell.GetCellValue(), cell.StyleIndex?.Value);
+    }
 
     /// <summary>
     /// Calculate the width of a cell based on the provided text
@@ -2286,7 +2338,10 @@ public static partial class Common
             RowIndex = row;
         }
 
-        public override string ToString() { return $"{NumberToColumnName(ColumnIndex)}{RowIndex}"; }
+        public override string ToString()
+        {
+            return $"{NumberToColumnName(ColumnIndex)}{RowIndex}";
+        }
 
         /// <summary>
         /// Get the 1 based column number for the column name provided (1 = A)

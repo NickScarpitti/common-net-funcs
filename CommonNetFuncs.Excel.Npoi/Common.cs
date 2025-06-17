@@ -1,4 +1,8 @@
-﻿using CommonNetFuncs.Excel.Common;
+﻿using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using System.Text.RegularExpressions;
+using CommonNetFuncs.Excel.Common;
 using NPOI.HSSF.UserModel;
 using NPOI.HSSF.Util;
 using NPOI.OpenXmlFormats.Spreadsheet;
@@ -9,10 +13,6 @@ using NPOI.SS.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
 using SixLabors.ImageSharp;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using System.Text.RegularExpressions;
 using static System.Convert;
 using static System.Math;
 
@@ -52,7 +52,10 @@ public static partial class Common
     /// </summary>
     /// <param name="cell">Cell to check if it is empty</param>
     /// <returns>True if cell is empty</returns>
-    public static bool IsCellEmpty(this ICell cell) { return string.IsNullOrWhiteSpace(cell.GetStringValue()); }
+    public static bool IsCellEmpty(this ICell cell)
+    {
+        return string.IsNullOrWhiteSpace(cell.GetStringValue());
+    }
 
     /// <summary>
     /// Get ICell offset from cellReference
@@ -155,7 +158,9 @@ public static partial class Common
     /// <param name="colName">Column name of the column to find the last populated row in</param>
     /// <returns>0 based index of the last row with a non-blank value</returns>
     public static int GetLastPopulatedRowInColumn(this ISheet ws, string colName)
-    { return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber()); }
+    {
+        return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber());
+    }
 
     /// <summary>
     /// Get ICell offset from the cell with named reference cellName
@@ -270,7 +275,10 @@ public static partial class Common
     /// <param name="row">Row to create cell in</param>
     /// <param name="columnIndex">0 based column index of the cell to create</param>
     /// <returns>ICell object of the cell that was created</returns>
-    public static ICell CreateCell(this IRow row, int columnIndex) { return row.CreateCell(columnIndex); }
+    public static ICell CreateCell(this IRow row, int columnIndex)
+    {
+        return row.CreateCell(columnIndex);
+    }
 
     /// <summary>
     /// Writes an excel file to the specified path
@@ -690,7 +698,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cellName">Named range to insert image at</param>
     public static void AddImage(this IWorkbook wb, byte[] imageData, string cellName, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages([imageData], [cellName], anchorType); }
+    {
+        wb.AddImages([imageData], [cellName], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -734,7 +744,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, string range, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType); }
+    {
+        wb.AddImages(ws, [imageData], [ws.GetCellFromReference(range).GetRangeOfMergedCells()], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -743,7 +755,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="range">Range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, CellRangeAddress range, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages(ws, [imageData], [range], anchorType); }
+    {
+        wb.AddImages(ws, [imageData], [range], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -752,7 +766,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cell">Cell in range to insert image at</param>
     public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, ICell cell, AnchorType anchorType = AnchorType.MoveAndResize)
-    { wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType); }
+    {
+        wb.AddImages(ws, [imageData], [cell.GetRangeOfMergedCells()], anchorType);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -992,6 +1008,7 @@ public static partial class Common
 
         try
         {
+            fileStream.Position = 0;
             IWorkbook? wb = null;
             if (fileStream.IsXlsx()) //Only .xlsx files can have tables
             {
@@ -1155,6 +1172,7 @@ public static partial class Common
         {
             if (fileStream.IsXlsx()) //Only .xlsx files can have tables
             {
+                fileStream.Position = 0;
                 using XSSFWorkbook wb = new(fileStream);
                 ISheet? ws = null;
                 XSSFTable? table = null;
@@ -1226,7 +1244,11 @@ public static partial class Common
     /// </summary>
     /// <param name="fileStream">Stream representation of a file</param>
     /// <returns>True if stream is an XLSX file</returns>
-    public static bool IsXlsx(this Stream fileStream) { return DocumentFactoryHelper.HasOOXMLHeader(fileStream); }
+    public static bool IsXlsx(this Stream fileStream)
+    {
+        fileStream.Position = 0;
+        return DocumentFactoryHelper.HasOOXMLHeader(fileStream);
+    }
 
     /// <summary>
     /// Gets whether or not the stream passed in represents an XLSX type file or not

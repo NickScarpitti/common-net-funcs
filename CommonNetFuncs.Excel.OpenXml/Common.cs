@@ -15,6 +15,7 @@ namespace CommonNetFuncs.Excel.OpenXml;
 
 public static partial class Common
 {
+    private static readonly Lock formatCacheLock = new();
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
@@ -24,9 +25,7 @@ public static partial class Common
     /// <param name="sheetName">Optional name for the new sheet that will be created</param>
     /// <returns>Id of the sheet that was created during initialization</returns>
     public static uint InitializeExcelFile(this SpreadsheetDocument document, string? sheetName = null)
-    {
-        return document.CreateNewSheet(sheetName);
-    }
+    { return document.CreateNewSheet(sheetName); }
 
     /// <summary>
     /// Adds a new sheet to a SpreadsheetDocument named according to the value passed into sheetName or "Sheet #"
@@ -37,11 +36,9 @@ public static partial class Common
     public static uint CreateNewSheet(this SpreadsheetDocument document, string? sheetName = null)
     {
         WorkbookPart? workbookPart = document.WorkbookPart;
-        if (workbookPart == null)
-        {
-            workbookPart = document.AddWorkbookPart();
-            workbookPart.Workbook = new();
-        }
+
+        workbookPart ??= document.AddWorkbookPart();
+        workbookPart.Workbook ??= new();
 
         // Add a blank WorksheetPart
         WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
@@ -232,9 +229,7 @@ public static partial class Common
     /// <param name="cell">The Cell to check</param>
     /// <returns>True if the Cell is empty, false otherwise</returns>
     public static bool IsCellEmpty(this Cell? cell)
-    {
-        return (cell == null) || string.IsNullOrWhiteSpace(cell.InnerText);
-    }
+    { return (cell == null) || string.IsNullOrWhiteSpace(cell.InnerText); }
 
     /// <summary>
     /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
@@ -466,10 +461,7 @@ public static partial class Common
     /// <summary>
     /// Clears all cached standard formats for all workbooks
     /// </summary>
-    public static void ClearStandardFormatCache()
-    {
-        WorkbookStandardFormatCache = [];
-    }
+    public static void ClearStandardFormatCache() { WorkbookStandardFormatCache = []; }
 
     /// <summary>
     /// Clears standard format cache for specific workbook
@@ -488,10 +480,7 @@ public static partial class Common
     /// <summary>
     /// Clears all cached custom formats for all workbooks
     /// </summary>
-    public static void ClearCustomFormatCache()
-    {
-        WorkbookCustomFormatCaches = [];
-    }
+    public static void ClearCustomFormatCache() { WorkbookCustomFormatCaches = []; }
 
     /// <summary>
     /// Clears custom format cache for specific workbook
@@ -506,9 +495,7 @@ public static partial class Common
     }
 
     public static Dictionary<string, WorkbookStyleCache> GetWorkbookCustomFormatCaches()
-    {
-        return new(WorkbookCustomFormatCaches);
-    }
+    { return new(WorkbookCustomFormatCaches); }
 
     /// <summary>
     /// Gets the Stylesheet from a SpreadsheetDocument
@@ -831,7 +818,11 @@ public static partial class Common
         // cellFormat.FormatId = (uint)cellFormats.Count() - 1;
         cellFormats.Append(cellFormat);
         uint newFormatId = ((uint)cellFormats.Count()) - 1;
-        formatCache[formatKey] = newFormatId;
+
+        lock (formatCacheLock)
+        {
+            formatCache[formatKey] = newFormatId;
+        }
 
         fonts.Count = (uint)fonts.Count();
         fills.Count = (uint)fills.Count();
@@ -1120,10 +1111,7 @@ public static partial class Common
     /// </summary>
     /// <param name="element">Element to get hash of</param>
     /// <returns>Hash for the passed in OpenXmlElement</returns>
-    public static int GetHashCode(this OpenXmlElement element)
-    {
-        return element.OuterXml.GetHashCode();
-    }
+    public static int GetHashCode(this OpenXmlElement element) { return element.OuterXml.GetHashCode(); }
 
     /// <summary>
     /// Gets a unique identifier for the current SpreadsheetDocument
@@ -1209,8 +1197,7 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that
-    /// cell
+    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
     /// </summary>
     /// <param name="worksheet">Worksheet to insert the cell and value into</param>
     /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
@@ -1225,8 +1212,7 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that
-    /// cell
+    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
     /// </summary>
     /// <param name="sheetData">SheetData to insert the cell and value into</param>
     /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
@@ -1256,8 +1242,7 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that
-    /// cell
+    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
     /// </summary>
     /// <param name="worksheet">Worksheet to insert the cell and value into</param>
     /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
@@ -1272,8 +1257,7 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that
-    /// cell
+    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
     /// </summary>
     /// <param name="sheetData">SheetData to insert the cell and value into</param>
     /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
@@ -1301,8 +1285,7 @@ public static partial class Common
     }
 
     /// <summary>
-    /// Creates a SharedStringItem with the specified text and inserts it into the SharedStringTablePart. If the item
-    /// already exists, returns its index.
+    /// Creates a SharedStringItem with the specified text and inserts it into the SharedStringTablePart. If the item already exists, returns its index.
     /// </summary>
     /// <param name="workbook">Workbook to insert the SharedString into</param>
     /// <param name="text">Text of the SharedString to be created</param>
@@ -1420,9 +1403,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cellName">Named range to insert image at</param>
     public static void AddImage(this SpreadsheetDocument document, byte[] imageData, string cellName)
-    {
-        document.AddImages([imageData], [cellName]);
-    }
+    { document.AddImages([imageData], [cellName]); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -1472,9 +1453,7 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="mergedCellArea">Tuple defining the first (top left) and last (bottom right) cell of the range to insert the image into</param>
     public static void AddImage(this SpreadsheetDocument document, byte[] imageData, (CellReference FirstCell, CellReference LastCell) mergedCellArea)
-    {
-        document.AddImages([imageData], [mergedCellArea]);
-    }
+    { document.AddImages([imageData], [mergedCellArea]); }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -1482,8 +1461,7 @@ public static partial class Common
     /// <param name="document">SpreadsheetDocument to insert images into</param>
     /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
     /// <param name="mergedCellAreas">
-    /// List of tuples defining the first (top left) and last (bottom right) cell of the range to insert the images
-    /// into. Must be equal in length to imageData parameter
+    /// List of tuples defining the first (top left) and last (bottom right) cell of the range to insert the images into. Must be equal in length to imageData parameter
     /// </param>
     public static void AddImages(this SpreadsheetDocument document, List<byte[]> imageData, List<(CellReference FirstCell, CellReference LastCell)> mergedCellAreas)
     {
@@ -1742,9 +1720,8 @@ public static partial class Common
     /// </summary>
     /// <param name="fileStream">Stream of Excel file being read</param>
     /// <param name="hasHeaders">
-    /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0',
-    /// 'Column1'... if true. If no headers specified, first row of data must have a value for all columns in order to
-    /// read all columns correctly.
+    /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0', 'Column1'... if true. If no headers specified, first row of data must have a value for
+    /// all columns in order to read all columns correctly.
     /// </param>
     /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
     /// <param name="startCellReference">Top left corner containing data to read. Will use A1 if not specified.</param>
@@ -1850,9 +1827,7 @@ public static partial class Common
     /// <param name="cellReference">CellReference of cell to get value of</param>
     /// <returns>String value of the indicated cell</returns>
     public static string GetCellValue(this SheetData sheetData, CellReference cellReference)
-    {
-        return sheetData.GetCellValue(cellReference.RowIndex, cellReference.ColumnIndex);
-    }
+    { return sheetData.GetCellValue(cellReference.RowIndex, cellReference.ColumnIndex); }
 
     /// <summary>
     /// Gets the string value of a cell
@@ -2243,9 +2218,7 @@ public static partial class Common
     /// <param name="cell">Cell to calculate the width of</param>
     /// <returns>Fitted width of the cell</returns>
     public static double CalculateWidth(this Cell cell)
-    {
-        return CalculateWidth(cell.GetCellValue(), cell.StyleIndex?.Value);
-    }
+    { return CalculateWidth(cell.GetCellValue(), cell.StyleIndex?.Value); }
 
     /// <summary>
     /// Calculate the width of a cell based on the provided text
@@ -2338,10 +2311,7 @@ public static partial class Common
             RowIndex = row;
         }
 
-        public override string ToString()
-        {
-            return $"{NumberToColumnName(ColumnIndex)}{RowIndex}";
-        }
+        public override string ToString() { return $"{NumberToColumnName(ColumnIndex)}{RowIndex}"; }
 
         /// <summary>
         /// Get the 1 based column number for the column name provided (1 = A)

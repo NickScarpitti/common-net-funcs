@@ -595,7 +595,7 @@ public sealed class CommonTests : IDisposable
         memoryStream.Flush();
 
         // Act
-        WorksheetPart? result = GetWorksheetPartByCellReference(document.WorkbookPart!, new(cell.CellReference!));
+        WorksheetPart? result = GetWorksheetPartByCellReference(document.WorkbookPart!, new(cell?.CellReference!));
 
         // Assert
         result.ShouldNotBeNull();
@@ -962,8 +962,5 @@ public sealed class CommonTests : IDisposable
         column.Max!.Value.ShouldBe(colIndex);
     }
 
-    public void Dispose()
-    {
-        ClearCustomFormatCache();
-    }
+    public void Dispose() { ClearCustomFormatCache(); }
 }

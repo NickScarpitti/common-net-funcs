@@ -1,10 +1,10 @@
-﻿using CommonNetFuncs.Excel.Common;
+﻿using System.Data;
+using System.IO.Packaging;
+using System.Reflection;
+using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using System.Data;
-using System.IO.Packaging;
-using System.Reflection;
 using static CommonNetFuncs.Excel.OpenXml.Common;
 
 namespace CommonNetFuncs.Excel.OpenXml;
@@ -17,8 +17,7 @@ public static class Export
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
-    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
-    /// data
+    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
     /// </summary>
     /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
     /// <param name="dataList">Data to export as a table</param>
@@ -56,8 +55,7 @@ public static class Export
     }
 
     /// <summary>
-    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
-    /// data
+    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
     /// </summary>
     /// <param name="datatable">Data to export as a table</param>
     /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
@@ -230,6 +228,10 @@ public static class Export
             }
             ClearStandardFormatCacheForWorkbook(document);
             return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TaskCanceledException($"{nameof(Export)}.{nameof(ExportFromTable)} was canceled");
         }
         catch (Exception ex)
         {

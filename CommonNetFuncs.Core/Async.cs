@@ -1062,6 +1062,8 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
                 cancellationToken?.ThrowIfCancellationRequested();
                 task.Start();
             }
+
+            Tasks.Clear();
             return await Task.WhenAll(Tasks).ConfigureAwait(false);
         }
 
@@ -1085,6 +1087,7 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
             }
         });
 
+        Tasks.Clear();
         return results;
     }
 }
@@ -1116,6 +1119,7 @@ public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore
                 task.Start();
             }
             await Task.WhenAll(Tasks).ConfigureAwait(false);
+            Tasks.Clear();
             return;
         }
 
@@ -1135,5 +1139,6 @@ public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore
                 Semaphore.Release();
             }
         });
+        Tasks.Clear();
     }
 }

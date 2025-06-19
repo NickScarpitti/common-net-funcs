@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-   <Version>3.4.15</Version>
+   <Version>3.4.16</Version>
     <MinVerTagPrefix>web.aws.s3-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>

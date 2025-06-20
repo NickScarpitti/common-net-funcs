@@ -1063,7 +1063,6 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
                 task.Start();
             }
 
-            Tasks.Clear();
             return await Task.WhenAll(Tasks).ConfigureAwait(false);
         }
 
@@ -1087,7 +1086,6 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
             }
         });
 
-        Tasks.Clear();
         return results;
     }
 }

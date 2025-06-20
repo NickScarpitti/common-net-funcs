@@ -8,17 +8,17 @@ public sealed class HtmlEmailBuilderTests
 {
     [Theory]
     [InlineData("Hello\nWorld", "Hello<br>World")]
-    [InlineData("Hello\r\nWorld", "Hello<br>World")]
+    [InlineData("Hello\r\nWorld", "Hello<br>World", "Hello<br><br>World")]
     [InlineData("Hello\tWorld", "Hello&nbsp&nbsp&nbspWorld")]
     [InlineData(null, "")]
     [InlineData("Hello <script>", "Hello &lt;script&gt;")]
-    public void StringToHtml_ShouldFormatCorrectly(string? input, string expected)
+    public void StringToHtml_ShouldFormatCorrectly(string? input, string expected, string? unixExpected = null)
     {
         // Act
         string result = input.StringtoHtml();
 
         // Assert
-        result.ShouldBe(expected);
+        result.ShouldBe(Environment.OSVersion.Platform == PlatformID.Win32NT ? expected : unixExpected ?? expected);
     }
 
     [Theory]

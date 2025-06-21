@@ -21,15 +21,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Get Curl
-      run: sudo apt-get install curl
+      run: apt-get install curl
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.x.x
     - name: Add Fonts
-      run: sudo apt-get update && sudo apt-get install -y fonts-dejavu fonts-liberation fonts-ubuntu
+      run: apt-get update && apt-get install -y fonts-dejavu fonts-liberation fonts-ubuntu
     - name: Update Font Cache
-      run: sudo fc-cache -f
+      run: fc-cache -f
       
     - name: Restore dependencies
       run: dotnet restore

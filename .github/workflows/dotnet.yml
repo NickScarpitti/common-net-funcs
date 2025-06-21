@@ -32,6 +32,8 @@ jobs:
       run: sudo chmod g=rwx,u=rwx,o=rwx -R /etc/apt/sources.list
     - name: Add paywalled PPAs
       run: sudo echo 'deb-src https://nick-scarpitti:94F5QK1JcfTGWNDD4XVt@private-ppa.launchpadcontent.net/savoury1/ffmpeg/ubuntu jammy main' >>  /etc/apt/sources.list && sudo echo 'deb https://nick-scarpitti:94F5QK1JcfTGWNDD4XVt@private-ppa.launchpadcontent.net/savoury1/ffmpeg/ubuntu jammy main' >>  /etc/apt/sources.list 
+    - name: Trust FFmpeg repo
+      run: sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 374C7797FB006459
     - name: Install FFMPEG
       run: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install ffmpeg -y
 

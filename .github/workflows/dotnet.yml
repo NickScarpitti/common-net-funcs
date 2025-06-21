@@ -11,8 +11,12 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    container:
+      image: zeshue/aspnet9-jammy-ffmpeg:1.0.2
+      credentials:
+        username: zeshue
+        password: ${{ secrets.docker_hub_password }}
 
     steps:
     - uses: actions/checkout@v4
@@ -24,19 +28,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y fonts-dejavu fonts-liberation fonts-ubuntu
     - name: Update Font Cache
       run: sudo fc-cache -f
-    - name: Add software properties common
-      run: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install software-properties-common -y 
-    - name: Add PPAs
-      run: sudo add-apt-repository ppa:dotnet/backports && sudo apt-get update -y && sudo apt-get upgrade -y && sudo add-apt-repository ppa:savoury1/ffmpeg4 -y && sudo add-apt-repository ppa:savoury1/ffmpeg6 -y && sudo apt-get update -y && sudo apt-get upgrade -y
-    - name: Allow updating sources list
-      run: sudo chmod g=rwx,u=rwx,o=rwx -R /etc/apt/sources.list
-    - name: Add paywalled PPAs
-      run: sudo echo 'deb-src https://nick-scarpitti:94F5QK1JcfTGWNDD4XVt@private-ppa.launchpadcontent.net/savoury1/ffmpeg/ubuntu jammy main' >>  /etc/apt/sources.list && sudo echo 'deb https://nick-scarpitti:94F5QK1JcfTGWNDD4XVt@private-ppa.launchpadcontent.net/savoury1/ffmpeg/ubuntu jammy main' >>  /etc/apt/sources.list 
-    - name: Trust FFmpeg repo
-      run: sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 374C7797FB006459
-    - name: Install FFMPEG
-      run: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install ffmpeg -y
-
+      
     - name: Restore dependencies
       run: dotnet restore
     - name: Build

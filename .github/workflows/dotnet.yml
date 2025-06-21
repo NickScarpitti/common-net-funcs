@@ -22,6 +22,8 @@ jobs:
         dotnet-version: 9.x.x
     - name: Add Fonts
       run: sudo apt-get update && sudo apt-get install -y fonts-dejavu fonts-liberation fonts-ubuntu
+    - name: add ffmpeg
+      run: apt-get update -y && apt-get upgrade -y && apt-get install software-properties-common -y && add-apt-repository ppa:dotnet/backports && apt-get update -y && apt-get upgrade -y && add-apt-repository ppa:savoury1/ffmpeg4 -y && add-apt-repository ppa:savoury1/ffmpeg6 -y && apt-get update -y && apt-get upgrade -y && echo 'deb-src https://nick-scarpitti:94F5QK1JcfTGWNDD4XVt@private-ppa.launchpadcontent.net/savoury1/ffmpeg/ubuntu jammy main' >>  /etc/apt/sources.list && echo 'deb https://nick-scarpitti:94F5QK1JcfTGWNDD4XVt@private-ppa.launchpadcontent.net/savoury1/ffmpeg/ubuntu jammy main' >>  /etc/apt/sources.list && apt-get update -y && apt-get upgrade -y && apt-get install ffmpeg -y
     - name: Update Font Cache
       run: sudo fc-cache -f
     - name: Restore dependencies

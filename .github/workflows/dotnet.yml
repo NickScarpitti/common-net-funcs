@@ -29,7 +29,7 @@ jobs:
     - name: Add PPAs
       run: sudo add-apt-repository ppa:dotnet/backports && sudo apt-get update -y && sudo apt-get upgrade -y && sudo add-apt-repository ppa:savoury1/ffmpeg4 -y && sudo add-apt-repository ppa:savoury1/ffmpeg6 -y && sudo apt-get update -y && sudo apt-get upgrade -y
     - name: Allow updating sources list
-      run: chmod g=rwx,u=rwx,o=rwx -R /etc/apt/sources.list
+      run: sudo chmod g=rwx,u=rwx,o=rwx -R /etc/apt/sources.list
     - name: Add paywalled PPAs
       run: sudo echo 'deb-src https://nick-scarpitti:94F5QK1JcfTGWNDD4XVt@private-ppa.launchpadcontent.net/savoury1/ffmpeg/ubuntu jammy main' >>  /etc/apt/sources.list && sudo echo 'deb https://nick-scarpitti:94F5QK1JcfTGWNDD4XVt@private-ppa.launchpadcontent.net/savoury1/ffmpeg/ubuntu jammy main' >>  /etc/apt/sources.list 
     - name: Install FFMPEG

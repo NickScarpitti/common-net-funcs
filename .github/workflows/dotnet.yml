@@ -32,7 +32,7 @@ jobs:
     - name: Update Font Cache
       run: fc-cache -f
     - name: Add LibreOffice
-      run: apt-get install libreoffice=24.8 -y
+      run: apt-get install libreoffice=25.2 -y
     - name: Restore dependencies
       run: dotnet restore
     - name: Build

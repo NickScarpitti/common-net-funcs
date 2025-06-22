@@ -8,6 +8,7 @@ public sealed class Base64Tests : IDisposable
 {
     private readonly string _testImagePath;
     private readonly string _tempSavePath;
+    private const string TestBase64String = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNk+M9Qz0AEYBxVSF+FAAhKDveksOjmAAAAAElFTkSuQmCC";
 
     public Base64Tests()
     {
@@ -15,7 +16,10 @@ public sealed class Base64Tests : IDisposable
         _tempSavePath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.png");
     }
 
-    public void Dispose() { File.Delete(_tempSavePath); }
+    public void Dispose()
+    {
+        File.Delete(_tempSavePath);
+    }
 
     [Fact]
     public void ConvertImageFileToBase64_WithValidPath_ReturnsBase64String()
@@ -95,9 +99,9 @@ public sealed class Base64Tests : IDisposable
     }
 
     [Theory]
-    [InlineData("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA", "iVBORw0KGgoAAAANSUhEUgAAA")]
-    [InlineData("base64iVBORw0KGgoAAAANSUhEUgAAA", "iVBORw0KGgoAAAANSUhEUgAAA")]
-    [InlineData("iVBORw0KGgoAAAANSUhEUgAAA", "iVBORw0KGgoAAAANSUhEUgAAA")]
+    [InlineData($"data:image/png;base64,{TestBase64String}", TestBase64String)]
+    [InlineData($"base64{TestBase64String}", TestBase64String)]
+    [InlineData(TestBase64String, TestBase64String)]
     public void CleanImageValue_WithValidInput_ReturnsCleanedValue(string input, string expected)
     {
         // Act

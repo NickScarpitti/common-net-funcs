@@ -252,25 +252,26 @@ public static class DirectQuery
         foreach (PropertyInfo prop in properties)
         {
             // Create GetOrdinal call
-            MethodCallExpression getOrdinalCall = Expression.Call(
-                readerParam,
-                getOrdinalMethod,
-                Expression.Constant(prop.Name));
+            MethodCallExpression getOrdinalCall = Expression.Call(readerParam, getOrdinalMethod, Expression.Constant(prop.Name));
 
             // Create IsDBNull check
-            MethodCallExpression isDbNullCall = Expression.Call(
-                readerParam,
-                isDBNullMethod,
-                getOrdinalCall);
+            MethodCallExpression isDbNullCall = Expression.Call(readerParam, isDBNullMethod, getOrdinalCall);
 
             // Get value from reader
-            MethodCallExpression getValue = Expression.Call(
-                readerParam,
-                getValueMethod,
-                getOrdinalCall);
+            MethodCallExpression getValue = Expression.Call(readerParam, getValueMethod, getOrdinalCall);
 
             // Convert value to property type if needed
-            UnaryExpression convertedValue = Expression.Convert(getValue, prop.PropertyType);
+            //UnaryExpression convertedValue = Expression.Convert(getValue, prop.PropertyType);
+            Expression convertedValue;
+            if (prop.PropertyType == typeof(int))
+            {
+                // Convert to Int32 from Int64
+                convertedValue = Expression.Convert(Expression.Call(typeof(Convert).GetMethod(nameof(Convert.ToInt32), new[] { typeof(object) })!, getValue), typeof(int));
+            }
+            else
+            {
+                convertedValue = Expression.Convert(getValue, prop.PropertyType);
+            }
 
             // Create conditional expression: if IsDBNull then default else converted value
             ConditionalExpression assignValue = Expression.Condition(isDbNullCall, Expression.Default(prop.PropertyType), convertedValue);

@@ -70,6 +70,11 @@ public static class Base64
 
     private const string B64 = "base64";
 
+    /// <summary>
+    /// Clean up a base 64 image value by removing any prefix or unwanted characters
+    /// </summary>
+    /// <param name="imgValue">Base 64 string from web element to clean up</param>
+    /// <returns>CLean base 64 image string, or null if invalid</returns>
     public static string? CleanImageValue(this string? imgValue)
     {
         if (!string.IsNullOrWhiteSpace(imgValue))
@@ -84,12 +89,12 @@ public static class Base64
                 int numChars = imgValue.Length - imgValue.IndexOf(B64) - B64.Length;
                 imgValue = imgValue.Substring(imgValue.Length - numChars, numChars);
             }
-            else
-            {
-                imgValue = null;
-            }
+            return imgValue.IsValidBase64Image() ? imgValue : null;
         }
-        return imgValue;
+        else
+        {
+            return null;
+        }
     }
 
     public static bool ImageSaveToFile(this string imageBase64, string savePath)
@@ -109,6 +114,31 @@ public static class Base64
         catch (Exception ex)
         {
             logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(ImageSaveToFile)} Error\nSave Path: {savePath}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Check if a base 64 string is a valid image
+    /// </summary>
+    /// <param name="imageBase64">String to confirm if is valid Base64 image</param>
+    /// <returns>True if string is a valid base 64 image, otherwise, false</returns>
+    public static bool IsValidBase64Image(this string? imageBase64)
+    {
+        if (string.IsNullOrWhiteSpace(imageBase64))
+        {
+            return false;
+        }
+
+        try
+        {
+            ReadOnlySpan<byte> bytes = FromBase64String(imageBase64);
+            using Image image = Image.Load(bytes);
+            return image?.Width > 0 && image.Height > 0;
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(IsValidBase64Image)} Error");
             return false;
         }
     }

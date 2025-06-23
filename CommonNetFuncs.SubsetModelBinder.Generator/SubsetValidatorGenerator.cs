@@ -20,13 +20,13 @@ public sealed class SubsetValidatorGenerator : IIncrementalGenerator
         .ForAttributeWithMetadataName( //Used to be CreateSyntaxProvider
                 FullyQualifiedAttributeName,
                 predicate: (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: > 0 },
-                transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx))
+                transform: static(ctx, _) => GetSemanticTargetForGeneration(ctx))
             .Where(static m => m is not null)!;
 
         IncrementalValueProvider<(Compilation, ImmutableArray<ClassDeclarationSyntax>)> compilationAndClasses
             = context.CompilationProvider.Combine(classDeclarations.Collect());
 
-        context.RegisterSourceOutput(compilationAndClasses, static (spc, source) => Execute(source.Item1, source.Item2, spc));
+        context.RegisterSourceOutput(compilationAndClasses, static(spc, source) => Execute(source.Item1, source.Item2, spc));
     }
 
     private static ClassDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorAttributeSyntaxContext context) //Used to be GeneratorSyntaxContext
@@ -65,7 +65,10 @@ public sealed class SubsetValidatorGenerator : IIncrementalGenerator
         {
             SemanticModel semanticModel = compilation.GetSemanticModel(subsetClass.SyntaxTree);
 
-            if (semanticModel.GetDeclaredSymbol(subsetClass) is not INamedTypeSymbol subsetClassSymbol) continue;
+            if (semanticModel.GetDeclaredSymbol(subsetClass) is not INamedTypeSymbol subsetClassSymbol)
+            {
+                continue;
+            }
 
             // Check if the class is marked as partial
             if (!subsetClass.Modifiers.Any(SyntaxKind.PartialKeyword))
@@ -75,9 +78,15 @@ public sealed class SubsetValidatorGenerator : IIncrementalGenerator
 
             AttributeData? subsetOfAttribute = subsetClassSymbol.GetAttributes().FirstOrDefault(a => string.Equals(a.AttributeClass?.Name, AttributeName));
 
-            if (subsetOfAttribute == null) continue;
+            if (subsetOfAttribute == null)
+            {
+                continue;
+            }
 
-            if (subsetOfAttribute.ConstructorArguments[0].Value is not INamedTypeSymbol originalTypeSymbol) continue;
+            if (subsetOfAttribute.ConstructorArguments[0].Value is not INamedTypeSymbol originalTypeSymbol)
+            {
+                continue;
+            }
 
             bool isMvcApp = subsetOfAttribute.ConstructorArguments.Length > 1 && (bool)subsetOfAttribute.ConstructorArguments[1].Value!;
             bool allowInheritedProperties = subsetOfAttribute.ConstructorArguments.Length > 2 && (bool)subsetOfAttribute.ConstructorArguments[2].Value!;
@@ -90,12 +99,12 @@ public sealed class SubsetValidatorGenerator : IIncrementalGenerator
             {
                 if (!originalProperties.TryGetValue(subsetProperty.Name, out IPropertySymbol? originalProperty))
                 {
-                    ReportDiagnosticOnce(context, "SG0002", "Property not found", $"Property '{subsetProperty.Name}' is not present in the parent class '{originalTypeSymbol.Name}'{(allowInheritedProperties ? " or its base classes" : "")}",
+                    ReportDiagnosticOnce(context, "SG0002", "Property not found", $"Property '{subsetProperty.Name}' is not present in the parent class '{originalTypeSymbol.Name}'{(allowInheritedProperties ? " or its base classes" : string.Empty)}",
                         subsetProperty.Locations.FirstOrDefault(), reportedDiagnostics);
                 }
                 else if (!ignoreType && !SymbolEqualityComparer.Default.Equals(subsetProperty.Type, originalProperty.Type))
                 {
-                    ReportDiagnosticOnce(context, "SG0001", "Property type mismatch", $"Property '{subsetProperty.Name}' has a different type than in the original class '{originalTypeSymbol.Name}'{(allowInheritedProperties ? " or its base classes" : "")}. Expected: {originalProperty.Type.Name}, Found: {subsetProperty.Type.Name}",
+                    ReportDiagnosticOnce(context, "SG0001", "Property type mismatch", $"Property '{subsetProperty.Name}' has a different type than in the original class '{originalTypeSymbol.Name}'{(allowInheritedProperties ? " or its base classes" : string.Empty)}. Expected: {originalProperty.Type.Name}, Found: {subsetProperty.Type.Name}",
                         subsetProperty.Locations.FirstOrDefault(), reportedDiagnostics);
                 }
             }

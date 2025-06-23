@@ -16,8 +16,7 @@ public static class SecurityHeadersStore
             { "X-Content-Type-Options", "nosniff" },
             { "X-Permitted-Cross-Domain-Policies", "none" },
             { "Content-Security-Policy", "block-all-mixed-content; upgrade-insecure-requests; script-src 'self' http://cdnjs.cloudflare.com/ http://cdn.jsdelivr.net/; object-src 'self';" }
-        }
-    );
+        });
 
     public static readonly List<string> HeadersToRemove = ["Server", "X-Powered-By"];
 }

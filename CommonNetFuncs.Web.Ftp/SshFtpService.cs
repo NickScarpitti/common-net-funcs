@@ -33,15 +33,15 @@ public interface ISshFtpService
 
 public sealed class SshFtpService : IDisposable, ISshFtpService
 {
+    public SshFtpService(FileTransferConnection fileTransferConnection, Func<FileTransferConnection, SftpClient>? clientFactory = null)
+    {
+        connection = fileTransferConnection;
+        client = clientFactory?.Invoke(connection) ?? Connect();
+    }
+
     private readonly SftpClient client;
     private readonly FileTransferConnection connection;
     private bool disposed;
-
-    public SshFtpService(FileTransferConnection fileTransferConnection)
-    {
-        connection = fileTransferConnection;
-        client = Connect();
-    }
 
     public string GetHostName()
     {
@@ -55,16 +55,20 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
 
     public SftpClient Connect()
     {
-        if (IsConnected())
+        if (!client.IsConnected())
         {
-            DisconnectClient();
+            client.Connect();
         }
-        return client.Connect(connection);
+        return client;
     }
 
-    public Task<SftpClient> ConnectAsync(CancellationTokenSource? cancellationTokenSource)
+    public async Task<SftpClient> ConnectAsync(CancellationTokenSource? cancellationTokenSource)
     {
-        return client.ConnectAsync(connection, cancellationTokenSource);
+        if (!client.IsConnected())
+        {
+            await client.ConnectAsync(cancellationTokenSource?.Token ?? CancellationToken.None);
+        }
+        return client;
     }
 
     public bool DisconnectClient()

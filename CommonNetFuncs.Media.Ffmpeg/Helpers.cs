@@ -85,6 +85,16 @@ public static class Helpers
     {
         try
         {
+            if (fileName.IsNullOrWhiteSpace())
+            {
+                throw new ArgumentNullException(nameof(fileName), "File name cannot be null or empty.");
+            }
+
+            if (!File.Exists(fileName))
+            {
+                throw new FileNotFoundException($"The file '{fileName}' does not exist.");
+            }
+
             return await Probe.New().Start($@"-v quiet -select_streams v:0 -of default=noprint_wrappers=1:nokey=1 -show_entries stream={videoMetadataItem.ToString().ToLowerInvariant()} ""{fileName}""").ConfigureAwait(false);
         }
         catch (Exception ex)

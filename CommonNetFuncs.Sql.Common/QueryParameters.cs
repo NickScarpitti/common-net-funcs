@@ -65,9 +65,9 @@ public static class QueryParameters
     /// </summary>
     /// <param name="parameter">Parameter to check</param>
     /// <returns>True if there are no suspect characters or strings in the parameter</returns>
-    public static bool IsClean(this string? parameter)
+    public static bool IsClean(this string? parameter, bool excludeSingleQuote = false)
     {
-        return parameter.IsNullOrWhiteSpace() || !parameter.Contains(';') && !parameter.Contains('\'') && !parameter.Contains('[') && !parameter.Contains(']') &&
+        return parameter.IsNullOrWhiteSpace() || !parameter.Contains(';') && (excludeSingleQuote || !parameter.Contains('\'')) && !parameter.Contains('[') && !parameter.Contains(']') &&
             !parameter.Contains('"') && !parameter.Contains('`') && !parameter.Contains("/*") && !parameter.Contains("*/") && !parameter.Contains("xp_") && !parameter.Contains("--");
     }
 
@@ -83,7 +83,8 @@ public static class QueryParameters
     public static string? SanitizeSqlParameter(this string? parameter, bool onlyAlphanumeric = false, bool onlyAlphaChars = false, bool onlyNumberChars = false, int? maxLength = null, int? minLength = null, string? defaultValue = "")
     {
         string? result = null;
-        if (parameter.IsClean() && (maxLength == null || (parameter?.Length ?? 0) <= maxLength) && (minLength == null || (parameter?.Length ?? 0) >= minLength))
+        // Ignore single quotes in IsClean check since they will be escaped later
+        if (parameter.IsClean(true) && (maxLength == null || (parameter?.Length ?? 0) <= maxLength) && (minLength == null || (parameter?.Length ?? 0) >= minLength))
         {
             if (onlyAlphanumeric || onlyAlphaChars || onlyNumberChars)
             {

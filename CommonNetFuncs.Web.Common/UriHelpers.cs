@@ -2,8 +2,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Microsoft.AspNetCore.Http;
-using static System.Web.HttpUtility;
 using static CommonNetFuncs.Core.Strings;
+using static System.Web.HttpUtility;
 
 namespace CommonNetFuncs.Web.Common;
 
@@ -96,7 +96,10 @@ public static class UriHelpers
                 queryParameters.Set(queryParameters.GetKey(i), redactedString); //Replace values with redactedString value
             }
 
-            return $"{uri.GetLeftPart(UriPartial.Path)}?{queryParameters}";
+            //return $"{uri.GetLeftPart(UriPartial.Path)}?{queryParameters}";
+            // Use Authority instead of GetLeftPart to avoid extra slash, then rebuild the path
+            string basePart = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath.TrimEnd('/')}";
+            return $"{basePart}?{queryParameters}";
         }
         else
         {

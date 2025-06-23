@@ -58,20 +58,12 @@ public sealed class ListRegularExpressionAttribute : ValidationAttribute
         if (value is IEnumerable<string?> or IEnumerable<string>)
         {
             ValidationResult? result = ValidateEnumerable((IEnumerable<string?>)value, memberName);
-            if (result != null)
-            {
-                return ValidationResult.Success;
-            }
-            return result;
+            return result ?? ValidationResult.Success;
         }
         else if (value.GetType().IsEnumerable())
         {
             ValidationResult? result = ValidateEnumerable(((IEnumerable<object?>)value).Select(x => Convert.ToString(x, CultureInfo.CurrentCulture)), memberName);
-            if (result != null)
-            {
-                return ValidationResult.Success;
-            }
-            return result;
+            return result ?? ValidationResult.Success;
         }
         throw new InvalidDataException($"${nameof(ListRegularExpressionAttribute)} can only be used on properties that implement IEnumerable");
     }

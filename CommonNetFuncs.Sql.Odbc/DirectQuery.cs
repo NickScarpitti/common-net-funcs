@@ -11,8 +11,10 @@ namespace CommonNetFuncs.Sql.Odbc;
 /// <summary>
 /// Interact with databases by using direct queries
 /// </summary>
-public static class DirectQuery
+public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null) : IDirectQuery
 {
+    private readonly Func<string, OdbcConnection> connectionFactory = connectionFactory ?? (connStr => new OdbcConnection(connStr));
+
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
@@ -23,9 +25,9 @@ public static class DirectQuery
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public static async Task<DataTable> GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
+    public async Task<DataTable> GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
     {
-        await using OdbcConnection sqlConn = new(connStr);
+        await using OdbcConnection sqlConn = connectionFactory(connStr);
         await using OdbcCommand sqlCmd = new(sql, sqlConn);
         return await GetDataTableInternal(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry, cancellationToken).ConfigureAwait(false);
     }
@@ -38,9 +40,9 @@ public static class DirectQuery
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public static DataTable GetDataTableSynchronous(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3)
+    public DataTable GetDataTableSynchronous(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
-        using OdbcConnection sqlConn = new(connStr);
+        using OdbcConnection sqlConn = connectionFactory(connStr);
         using OdbcCommand sqlCmd = new(sql, sqlConn);
         return GetDataTableInternalSynchronous(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry);
     }
@@ -53,9 +55,9 @@ public static class DirectQuery
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
-    public static async Task<UpdateResult> RunUpdateQuery(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
+    public async Task<UpdateResult> RunUpdateQuery(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
     {
-        await using OdbcConnection sqlConn = new(connStr);
+        await using OdbcConnection sqlConn = connectionFactory(connStr);
         await using OdbcCommand sqlCmd = new(sql, sqlConn);
         return await RunUpdateQueryInternal(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry, cancellationToken).ConfigureAwait(false);
     }
@@ -68,9 +70,9 @@ public static class DirectQuery
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
-    public static UpdateResult RunUpdateQuerySynchronous(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3)
+    public UpdateResult RunUpdateQuerySynchronous(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
-        using OdbcConnection sqlConn = new(connStr);
+        using OdbcConnection sqlConn = connectionFactory(connStr);
         using OdbcCommand sqlCmd = new(sql, sqlConn);
         return RunUpdateQueryInternalSynchronous(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry);
     }
@@ -83,9 +85,9 @@ public static class DirectQuery
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public static async IAsyncEnumerable<T> GetDataStreaming<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
+    public async IAsyncEnumerable<T> GetDataStreaming<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
-        await using OdbcConnection sqlConn = new(connStr);
+        await using OdbcConnection sqlConn = connectionFactory(connStr);
         await using OdbcCommand sqlCmd = new(sql, sqlConn);
 
         IAsyncEnumerator<T>? enumeratedReader = null;
@@ -127,9 +129,9 @@ public static class DirectQuery
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public static IEnumerable<T> GetDataStreamingSynchronous<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default) where T : class, new()
+    public IEnumerable<T> GetDataStreamingSynchronous<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default) where T : class, new()
     {
-        using OdbcConnection sqlConn = new(connStr);
+        using OdbcConnection sqlConn = connectionFactory(connStr);
         using OdbcCommand sqlCmd = new(sql, sqlConn);
 
         IEnumerable<T>? results = null;
@@ -161,9 +163,9 @@ public static class DirectQuery
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public static async Task<IEnumerable<T>> GetDataDirect<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default) where T : class, new()
+    public async Task<IEnumerable<T>> GetDataDirect<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default) where T : class, new()
     {
-        await using OdbcConnection sqlConn = new(connStr);
+        await using OdbcConnection sqlConn = connectionFactory(connStr);
         await using OdbcCommand sqlCmd = new(sql, sqlConn);
         return await GetDataDirectAsync<T>(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry, cancellationToken).ConfigureAwait(false);
     }

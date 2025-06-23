@@ -57,7 +57,7 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
     {
         if (!client.IsConnected())
         {
-            client.Connect();
+            client.Connect(connection);
         }
         return client;
     }

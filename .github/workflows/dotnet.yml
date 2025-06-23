@@ -35,6 +35,12 @@ jobs:
         
     - name: Add Fonts
       run: apt-get update && apt-get install -y fonts-dejavu fonts-liberation fonts-ubuntu
+    - name: Add OptiPng
+      run: apt-get install -y optipng
+    - name: Add GifSicle
+      run: apt-get install -y gifsicle
+    - name: Add JpegOptim
+      run: apt-get install -y jpegoptim
     - name: Update Font Cache
       run: fc-cache -f
     #- name: Add LibreOffice

@@ -21,7 +21,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <DebugType>embedded</DebugType>
     <Description>
-		Helper methods that deal with reading and writing excel files using NPOI.
+		  Helper methods that deal with reading and writing excel files using NPOI.
     </Description>
     <PackageTags>dotnet;helpers;excel;npoi;openxml;office;msoffice;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>

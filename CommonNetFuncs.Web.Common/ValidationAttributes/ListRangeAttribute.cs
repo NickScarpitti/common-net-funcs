@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -21,6 +22,10 @@ public sealed class ListRangeAttribute : ValidationAttribute
     /// <param name="maximum">The maximum value, inclusive</param>
     public ListRangeAttribute(int minimum, int maximum)
     {
+        if (minimum > maximum)
+        {
+            throw new ArgumentOutOfRangeException(nameof(minimum), "Minimum must be less than or equal to maximum");
+        }
         Minimum = minimum;
         Maximum = maximum;
         OperandType = typeof(int);
@@ -33,6 +38,10 @@ public sealed class ListRangeAttribute : ValidationAttribute
     /// <param name="maximum">The maximum value, inclusive</param>
     public ListRangeAttribute(double minimum, double maximum)
     {
+        if (minimum > maximum)
+        {
+            throw new ArgumentOutOfRangeException(nameof(minimum), "Minimum must be less than or equal to maximum");
+        }
         Minimum = minimum;
         Maximum = maximum;
         OperandType = typeof(double);
@@ -46,8 +55,7 @@ public sealed class ListRangeAttribute : ValidationAttribute
     /// <param name="minimum">The minimum allowable value.</param>
     /// <param name="maximum">The maximum allowable value.</param>
     [RequiresUnreferencedCode("Generic TypeConverters may require the generic types to be annotated. For example, NullableConverter requires the underlying type to be DynamicallyAccessedMembers All.")]
-    public ListRangeAttribute(
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type, string minimum, string maximum)
+    public ListRangeAttribute([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type, string minimum, string maximum)
     {
         OperandType = type;
         Minimum = minimum;
@@ -156,8 +164,7 @@ public sealed class ListRangeAttribute : ValidationAttribute
             }
             else if (operandType == typeof(double))
             {
-                Initialize((double)minimum, (double)maximum,
-                    v => Convert.ToDouble(v, CultureInfo.InvariantCulture));
+                Initialize((double)minimum, (double)maximum, v => Convert.ToDouble(v, CultureInfo.InvariantCulture));
             }
             else
             {
@@ -194,7 +201,10 @@ public sealed class ListRangeAttribute : ValidationAttribute
     }
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification = "The ctor that allows this code to be called is marked with RequiresUnreferencedCode.")]
-    private TypeConverter GetOperandTypeConverter() => TypeDescriptor.GetConverter(OperandType);
+    private TypeConverter GetOperandTypeConverter()
+    {
+        return TypeDescriptor.GetConverter(OperandType);
+    }
 
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
@@ -213,12 +223,12 @@ public sealed class ListRangeAttribute : ValidationAttribute
             throw new InvalidDataException($"${nameof(ListRangeAttribute)} can only be used on properties that implement IEnumerable");
         }
 
-        foreach (object? obj in (IEnumerable<object?>)value)
+        foreach (object? obj in (IEnumerable)value)
         {
             object? convertedValue;
             try
             {
-                convertedValue = Conversion!(value);
+                convertedValue = Conversion!(obj);
             }
             catch (FormatException)
             {
@@ -246,4 +256,54 @@ public sealed class ListRangeAttribute : ValidationAttribute
 
         return ValidationResult.Success;
     }
+    //protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+    //{
+    //    SetupConversion();
+
+    //    if (value is null)
+    //    {
+    //        return ValidationResult.Success;
+    //    }
+
+    //    int index = 0;
+    //    string memberName = validationContext.MemberName ?? string.Empty;
+
+    //    if (!value.GetType().IsEnumerable())
+    //    {
+    //        throw new InvalidDataException($"${nameof(ListRangeAttribute)} can only be used on properties that implement IEnumerable");
+    //    }
+
+    //    foreach (object obj in (IEnumerable)value)
+    //    {
+    //        object? convertedValue;
+    //        try
+    //        {
+    //            convertedValue = Conversion!(obj); // Changed from 'value' to 'obj'
+    //        }
+    //        catch (FormatException)
+    //        {
+    //            return new ValidationResult("Invalid format", [memberName]);
+    //        }
+    //        catch (InvalidCastException)
+    //        {
+    //            return new ValidationResult("Invalid cast", [memberName]);
+    //        }
+    //        catch (NotSupportedException)
+    //        {
+    //            return new ValidationResult("Not supported", [memberName]);
+    //        }
+
+    //        IComparable min = (IComparable)Minimum;
+    //        IComparable max = (IComparable)Maximum;
+
+    //        if ((MinimumIsExclusive ? min.CompareTo(convertedValue) >= 0 : min.CompareTo(convertedValue) > 0) ||
+    //            (MaximumIsExclusive ? max.CompareTo(convertedValue) <= 0 : max.CompareTo(convertedValue) < 0))
+    //        {
+    //            return new ValidationResult($"Item at index {index} '{obj.ToNString().UrlEncodeReadable()}' must be between {min} and {max}", [memberName]);
+    //        }
+    //        index++;
+    //    }
+
+    //    return ValidationResult.Success;
+    //}
 }

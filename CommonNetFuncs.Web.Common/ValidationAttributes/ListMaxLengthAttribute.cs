@@ -15,7 +15,7 @@ namespace CommonNetFuncs.Web.Common.ValidationAttributes;
 /// </summary>
 public sealed class ListMaxLengthAttribute : ValidationAttribute
 {
-    private const string DefaultErrorMessageString = "Value cannot be longer than {0} characters long";
+    private const string DefaultErrorMessageString = "Value for {0} cannot be longer than {1} characters long";
     private const int MaxAllowableLength = -1;
 
     /// <summary>
@@ -53,9 +53,8 @@ public sealed class ListMaxLengthAttribute : ValidationAttribute
     /// <returns>A localized string to describe the maximum acceptable length.</returns>
     public override string FormatErrorMessage(string name)
     {
-        return
-                // An error occurred, so we know the value is greater than the maximum if it was specified
-                string.Format(CultureInfo.CurrentCulture, ErrorMessageString, name, Length);
+        // An error occurred, so we know the value is greater than the maximum if it was specified
+        return string.Format(CultureInfo.CurrentCulture, DefaultErrorMessageString, name, Length);
     }
 
     /// <summary>
@@ -118,7 +117,7 @@ public sealed class ListMaxLengthAttribute : ValidationAttribute
         foreach (string? item in collection)
         {
             int length;
-            if (value is string str)
+            if (item is string str)
             {
                 length = str.Length;
             }

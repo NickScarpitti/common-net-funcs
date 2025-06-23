@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
 using CommonNetFuncs.EFCore;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -174,7 +175,12 @@ public sealed class GenericEndpoints : ControllerBase
             if (failedValidations.AnyFast())
             //if (!TryValidateModel(updateModel)) //Only works when this method is the controller endpoint being called
             {
-                return ValidationProblem(ModelState);
+                ActionResult result = ValidationProblem(ModelState);
+                if (result is ObjectResult objectResult)
+                {
+                    objectResult.StatusCode = (int)HttpStatusCode.BadRequest;
+                }
+                return result;
             }
 
             updateModel.CopyPropertiesTo(dbModel);

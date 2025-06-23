@@ -29,7 +29,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <returns>True if file was successfully uploaded</returns>
     public async Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip, CancellationToken cancellationToken = default)
     {
-        if (compressSteam && compressionType is not ECompressionType.Gzip or ECompressionType.Deflate)
+        if (compressSteam && compressionType is not ECompressionType.Gzip and not ECompressionType.Deflate)
         {
             throw new NotSupportedException($"Compression type {compressionType} is not valid for this method.\n\tSupported types are:\n\t\t{ECompressionType.Gzip},\n\t\t{ECompressionType.Deflate}");
         }

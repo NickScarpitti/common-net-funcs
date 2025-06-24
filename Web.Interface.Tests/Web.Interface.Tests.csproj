@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoFixture.AutoFakeItEasy" Version="4.18.1" />
+    <PackageReference Include="AutoFixture" Version="4.18.1" />
     <PackageReference Include="coverlet.collector" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -16,7 +16,6 @@
     <PackageReference Include="FakeItEasy" Version="8.3.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
-    <PackageReference Include="SSH.NET" Version="2025.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -24,17 +23,15 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommonNetFuncs.Web.Ftp\CommonNetFuncs.Web.Ftp.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.Web.Interface\CommonNetFuncs.Web.Interface.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Using Include="Xunit" />
-    <Using Include="Shouldly" />
-    <Using Include="AutoFixture" />
-    <Using Include="FakeItEasy" />
   </ItemGroup>
 
 </Project>

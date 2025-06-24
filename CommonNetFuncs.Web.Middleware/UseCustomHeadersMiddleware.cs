@@ -5,7 +5,7 @@ namespace CommonNetFuncs.Web.Middleware;
 
 public sealed class UseCustomHeadersMiddleware(RequestDelegate next, IDictionary<string, string>? addHeaders = null, IEnumerable<string>? removeHeaders = null)
 {
-    private readonly RequestDelegate next = next;
+    private readonly RequestDelegate next = next ?? throw new ArgumentNullException(nameof(next), "RequestDelegate \"next\" cannot be null!");
     private readonly IEnumerable<string>? removeHeaders = removeHeaders;
     private readonly IDictionary<string, string>? addHeaders = addHeaders;
 

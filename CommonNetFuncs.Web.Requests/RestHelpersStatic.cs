@@ -85,57 +85,65 @@ public static class RestHelpersStatic
     public static async IAsyncEnumerable<T?> StreamingRestRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IAsyncEnumerator<T?>? enumeratedReader = null;
+        HttpResponseMessage? response = null;
         try
         {
-            logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
-                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument?.ReadAsStringAsync(cancellationToken).Result)}" : string.Empty));
-            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
-            using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
-
-            //Ensure json header is being used
-            if (requestOptions.HttpHeaders == null)
+            try
             {
-                requestOptions.HttpHeaders = new(JsonAcceptHeader.SingleToList());
+                logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
+                    $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument?.ReadAsStringAsync(cancellationToken).Result)}" : string.Empty));
+                using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
+                using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
+
+                //Ensure json header is being used
+                if (requestOptions.HttpHeaders == null)
+                {
+                    requestOptions.HttpHeaders = new(JsonAcceptHeader.SingleToList());
+                }
+                else if (requestOptions.HttpHeaders.Remove(AcceptHeader))
+                {
+                    requestOptions.HttpHeaders.AddDictionaryItem(JsonAcceptHeader);
+                }
+
+                httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
+                httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+
+                client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
+                response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
+                enumeratedReader = HandleResponseAsync<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url, cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
             }
-            else if (requestOptions.HttpHeaders.Remove(AcceptHeader))
+            catch (TaskCanceledException tcex)
             {
-                requestOptions.HttpHeaders.AddDictionaryItem(JsonAcceptHeader);
+                string exceptionLocation = tcex.GetLocationOfException();
+                if (requestOptions.ExpectTaskCancellation)
+                {
+                    logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+                }
+                else
+                {
+                    logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
             }
 
-            httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
-            httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
-
-            client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
-            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
-            enumeratedReader = HandleResponseAsync<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url, cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
-        }
-        catch (TaskCanceledException tcex)
-        {
-            string exceptionLocation = tcex.GetLocationOfException();
-            if (requestOptions.ExpectTaskCancellation)
+            if (enumeratedReader != null)
             {
-                logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+                while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
+                {
+                    yield return enumeratedReader!.Current;
+                }
             }
             else
             {
-                logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+                yield break;
             }
         }
-        catch (Exception ex)
+        finally
         {
-            logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
-        }
-
-        if (enumeratedReader != null)
-        {
-            while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
-            {
-                yield return enumeratedReader!.Current;
-            }
-        }
-        else
-        {
-            yield break;
+            response.Dispose();
         }
     }
 
@@ -470,6 +478,36 @@ public static class RestHelpersStatic
                     yield return item;
                 }
             }
+
+            //if (outputStream.Length > 1)
+            //{
+            //    if (outputStream.CanSeek)
+            //    {
+            //        outputStream.Position = 0;
+            //    }
+            //    await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(outputStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken))
+            //    {
+            //        if (item != null)
+            //        {
+            //            yield return item;
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    if (responseStream.CanSeek)
+            //    {
+            //        responseStream.Position = 0;
+            //    }
+
+            //    await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken))
+            //    {
+            //        if (item != null)
+            //        {
+            //            yield return item;
+            //        }
+            //    }
+            //}
         }
         else
         {

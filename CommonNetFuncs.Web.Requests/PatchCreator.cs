@@ -36,34 +36,39 @@ public static class PatchCreator
     /// Compares two JObjects together and populates a JsonPatchDocument with the differences
     /// From Source2
     /// </summary>
-    /// <param name="orig">Original object to be compared to</param>
-    /// <param name="mod">Modified version of the original object</param>
+    /// <param name="originalObject">Original object to be compared to</param>
+    /// <param name="modObject">Modified version of the original object</param>
     /// <param name="patch">The json patch document to write the patch instructions to</param>
     /// <param name="path"></param>
-    private static void FillPatchForObject(JObject orig, JObject mod, JsonPatchDocument patch, string path)
+    private static void FillPatchForObject(JObject originalObject, JObject modObject, JsonPatchDocument patch, string path)
     {
-        string[] origNames = orig.Properties().Select(x => x.Name).ToArray();
-        string[] modNames = mod.Properties().Select(x => x.Name).ToArray();
+        Dictionary<string, JProperty> origProps = originalObject.Properties().ToDictionary(p => p.Name, p => p);
+        Dictionary<string, JProperty> modProps = modObject.Properties().ToDictionary(p => p.Name, p => p);
+
+        HashSet<string> origNames = new(origProps.Keys);
+        HashSet<string> modNames = new(modProps.Keys);
 
         // Names removed in modified
         foreach (string? k in origNames.Except(modNames))
         {
-            JProperty? prop = orig.Property(k);
+            JProperty? prop = originalObject.Property(k);
             patch.Remove($"{path}{prop!.Name}");
         }
 
         // Names added in modified
         foreach (string? k in modNames.Except(origNames))
         {
-            JProperty? prop = mod.Property(k);
+            JProperty? prop = modObject.Property(k);
             patch.Add($"{path}{prop!.Name}", prop.Value);
         }
 
         // Present in both
         foreach (string? k in origNames.Intersect(modNames))
         {
-            JProperty? origProp = orig.Property(k);
-            JProperty? modProp = mod.Property(k);
+            JProperty? origProp = origProps[k];
+            JProperty? modProp = modProps[k];
+            //JProperty? origProp = originalObject.Property(k); // Slightly slower than using the dictionary
+            //JProperty? modProp = modObject.Property(k); // Slightly slower than using the dictionary
 
             if (origProp?.Value.Type != modProp?.Value.Type)
             {

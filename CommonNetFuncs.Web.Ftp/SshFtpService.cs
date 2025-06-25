@@ -36,10 +36,12 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
     public SshFtpService(FileTransferConnection fileTransferConnection, Func<FileTransferConnection, SftpClient>? clientFactory = null)
     {
         connection = fileTransferConnection;
-        client = clientFactory?.Invoke(connection) ?? Connect();
+        Client = clientFactory?.Invoke(connection) ?? Connect();
     }
 
-    private readonly SftpClient client;
+    public SftpClient Client { get; private set; }
+
+    //private readonly SftpClient Client;
     private readonly FileTransferConnection connection;
     private bool disposed;
 
@@ -50,70 +52,70 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
 
     public bool IsConnected()
     {
-        return client.IsConnected();
+        return Client.IsConnected();
     }
 
     public SftpClient Connect()
     {
-        if (!client.IsConnected())
+        if (!Client.IsConnected())
         {
-            client.Connect(connection);
+            Client = Client.Connect(connection);
         }
-        return client;
+        return Client;
     }
 
     public async Task<SftpClient> ConnectAsync(CancellationTokenSource? cancellationTokenSource)
     {
-        if (!client.IsConnected())
+        if (!Client.IsConnected())
         {
-            await client.ConnectAsync(cancellationTokenSource?.Token ?? CancellationToken.None);
+            await Client.ConnectAsync(cancellationTokenSource?.Token ?? CancellationToken.None);
         }
-        return client;
+        return Client;
     }
 
     public bool DisconnectClient()
     {
-        return client.DisconnectClient();
+        return Client.DisconnectClient();
     }
 
     public bool DirectoryExists(string path)
     {
-        return client.DirectoryOrFileExists(path);
+        return Client.DirectoryOrFileExists(path);
     }
 
     public Task<bool> DirectoryExistsAsync(string path)
     {
-        return client.DirectoryOrFileExistsAsync(path);
+        return Client.DirectoryOrFileExistsAsync(path);
     }
 
     public IEnumerable<string> GetFileList(string path, string extension = "*")
     {
-        return client.GetFileList(path, extension);
+        return Client.GetFileList(path, extension);
     }
 
     public IAsyncEnumerable<string> GetFileListAsync(string path, string extension = "*", CancellationTokenSource? cancellationTokenSource = null)
     {
-        return client.GetFileListAsync(path, extension, cancellationTokenSource);
+        return Client.GetFileListAsync(path, extension, cancellationTokenSource);
     }
 
     public Task<List<T>> GetDataFromCsvAsync<T>(string remoteFilePath, bool csvHasHeaderRow = true)
     {
-        return client.GetDataFromCsvAsync<T>(remoteFilePath, csvHasHeaderRow);
+        return Client.GetDataFromCsvAsync<T>(remoteFilePath, csvHasHeaderRow);
     }
 
     public List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true)
     {
-        return client.GetDataFromCsv<T>(remoteFilePath, csvHasHeaderRow);
+        return Client.GetDataFromCsv<T>(remoteFilePath, csvHasHeaderRow);
     }
 
     public bool DeleteFile(string remoteFilePath)
     {
-        return client.DeleteSftpFile(remoteFilePath);
+        return Client.DeleteSftpFile(remoteFilePath);
     }
 
     public Task<bool> DeleteFileAsync(string remoteFilePath)
     {
-        return client.DeleteFileAsync(remoteFilePath);
+        return Client.DeleteFileAsync(remoteFilePath);
     }
 
     // IDisposable implementation
@@ -130,7 +132,7 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
             if (disposing)
             {
                 // Dispose managed resources
-                client?.Dispose();
+                Client?.Dispose();
             }
 
             // Dispose unmanaged resources (if any)

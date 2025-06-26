@@ -6,6 +6,7 @@ using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Web.Aws.S3;
 using FakeItEasy;
 using Microsoft.Extensions.Logging;
+
 using static CommonNetFuncs.Compression.Streams;
 
 namespace Web.Aws.S3.Tests;

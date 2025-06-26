@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.4.21</Version>
+    <Version>3.4.23</Version>
     <MinVerTagPrefix>web.aws.s3-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -51,7 +51,6 @@
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
     <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
-    <ProjectReference Include="..\CommonNetFuncs.Web.Api\CommonNetFuncs.Web.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

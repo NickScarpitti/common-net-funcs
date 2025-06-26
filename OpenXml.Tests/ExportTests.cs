@@ -17,7 +17,30 @@ public sealed class ExportTests : IDisposable
         _memoryStream = new MemoryStream();
     }
 
-    public void Dispose() { _memoryStream.Dispose(); }
+    private bool disposed;
+
+    public void Dispose()
+    {
+        _memoryStream.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                _memoryStream.Dispose();
+            }
+            disposed = true;
+        }
+    }
+
+    ~ExportTests()
+    {
+        Dispose(false);
+    }
 
     public class TestModel
     {

@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using CommonNetFuncs.Sql.Common;
 using Microsoft.Data.Sqlite;
-using Shouldly;
 using SQLitePCL;
 
 namespace Sql.Common.Tests;
@@ -17,9 +16,29 @@ public sealed class DirectQueryTests : IDisposable
         SetupDb();
     }
 
+    private bool disposed;
+
     public void Dispose()
     {
         _connection.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                _connection.Dispose();
+            }
+            disposed = true;
+        }
+    }
+
+    ~DirectQueryTests()
+    {
+        Dispose(false);
     }
 
     private void SetupDb()

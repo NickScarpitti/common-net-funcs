@@ -18,9 +18,10 @@ public static class Common
     public static bool ChangeUrlsInWordDoc(Stream fileStream, string newUrl, string urlToReplace, bool replaceAll = true)
     {
         bool success = false;
-        using WordprocessingDocument wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
+        WordprocessingDocument? wordDoc = null;
         try
         {
+            wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
             MainDocumentPart? mainPart = wordDoc.MainDocumentPart;
             if (mainPart != null)
             {
@@ -30,16 +31,17 @@ public static class Common
                     {
                         mainPart.DeleteReferenceRelationship(hyperlink);
                         mainPart.AddHyperlinkRelationship(new Uri(newUrl), true, hyperlink.Id);
-                    }
 
-                    if (!replaceAll)
-                    {
-                        break;
+                        if (!replaceAll)
+                        {
+                            break;
+                        }
                     }
                 }
                 //mainPart.Document.Save();
                 success = true;
             }
+            wordDoc.Save();
         }
         catch (Exception ex)
         {
@@ -47,7 +49,7 @@ public static class Common
         }
         finally
         {
-            wordDoc.Dispose();
+            wordDoc?.Dispose();
         }
         return success;
     }
@@ -61,9 +63,10 @@ public static class Common
     public static bool ChangeUrlsInWordDoc(Stream fileStream, Dictionary<string, string> urlsToUpdate)
     {
         bool success = false;
-        using WordprocessingDocument wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
+        WordprocessingDocument? wordDoc = null;
         try
         {
+            wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
             MainDocumentPart? mainPart = wordDoc.MainDocumentPart;
             if (mainPart != null)
             {
@@ -86,7 +89,7 @@ public static class Common
         }
         finally
         {
-            wordDoc.Dispose();
+            wordDoc?.Dispose();
         }
         return success;
     }
@@ -99,28 +102,30 @@ public static class Common
     /// <param name="replacementText">Text to replace the matched regex text with in the URl</param>
     /// <param name="replaceAll">Replace all URLs that are matched with regexPattern</param>
     /// <returns>True when no error is thrown</returns>
-    public static bool ChangeUrlsInWordDocRegex(Stream fileStream, string regexPattern, string replacementText, bool replaceAll = true)
+    public static bool ChangeUrlsInWordDocRegex(Stream fileStream, string regexPattern, string replacementText, bool replaceAll = true, RegexOptions regexOptions = RegexOptions.IgnoreCase, TimeSpan? regexTimeout = null)
     {
         bool success = false;
-        using WordprocessingDocument wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
+        WordprocessingDocument? wordDoc = null;
         try
         {
+            wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
             MainDocumentPart? mainPart = wordDoc.MainDocumentPart;
             if (mainPart != null)
             {
-                Regex regex = new(regexPattern);
+                regexTimeout ??= Regex.InfiniteMatchTimeout;
+                Regex regex = new(regexPattern, regexOptions, (TimeSpan)regexTimeout);
                 foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
                 {
                     string currentUri = hyperlink.Uri.ToString();
                     if (regex.Matches(currentUri).Count > 0)
                     {
                         mainPart.DeleteReferenceRelationship(hyperlink);
-                        mainPart.AddHyperlinkRelationship(new Uri(Regex.Replace(currentUri, regexPattern, replacementText)), true, hyperlink.Id);
-                    }
+                        mainPart.AddHyperlinkRelationship(new Uri(Regex.Replace(currentUri, regexPattern, replacementText, regexOptions, (TimeSpan)regexTimeout)), true, hyperlink.Id);
 
-                    if (!replaceAll)
-                    {
-                        break;
+                        if (!replaceAll)
+                        {
+                            break;
+                        }
                     }
                 }
                 //mainPart.Document.Save();
@@ -133,7 +138,7 @@ public static class Common
         }
         finally
         {
-            wordDoc.Dispose();
+            wordDoc?.Dispose();
         }
         return success;
     }
@@ -145,30 +150,32 @@ public static class Common
     /// <param name="urlsToUpdate">Dictionary containing regex pattern / replacement text pairs where the Key is the regex pattern to match, and the Value is the text to replace the text that matches the paired regex pattern</param>
     /// <param name="replaceAll">Replace all URLs that are matched with regexPattern</param>
     /// <returns>True when no error is thrown</returns>
-    public static bool ChangeUrlsInWordDocRegex(Stream fileStream, Dictionary<string, string> urlsToUpdate, bool replaceAll = true)
+    public static bool ChangeUrlsInWordDocRegex(Stream fileStream, Dictionary<string, string> urlsToUpdate, bool replaceAll = true, RegexOptions regexOptions = RegexOptions.IgnoreCase, TimeSpan? regexTimeout = null)
     {
         bool success = false;
-        using WordprocessingDocument wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
+        WordprocessingDocument? wordDoc = null;
         try
         {
+            wordDoc = WordprocessingDocument.Open(fileStream, true, new() { AutoSave = true });
             MainDocumentPart? mainPart = wordDoc.MainDocumentPart;
             if (mainPart != null)
             {
+                regexTimeout ??= Regex.InfiniteMatchTimeout;
                 foreach (KeyValuePair<string, string> item in urlsToUpdate)
                 {
-                    Regex regex = new(item.Key);
+                    Regex regex = new(item.Key, regexOptions, (TimeSpan)regexTimeout);
                     foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
                     {
                         string currentUri = hyperlink.Uri.ToString();
                         if (regex.Matches(currentUri).Count > 0)
                         {
                             mainPart.DeleteReferenceRelationship(hyperlink);
-                            mainPart.AddHyperlinkRelationship(new Uri(Regex.Replace(currentUri, item.Key, item.Value)), true, hyperlink.Id);
-                        }
+                            mainPart.AddHyperlinkRelationship(new Uri(Regex.Replace(currentUri, item.Key, item.Value, regexOptions, (TimeSpan)regexTimeout)), true, hyperlink.Id);
 
-                        if (!replaceAll)
-                        {
-                            break;
+                            if (!replaceAll)
+                            {
+                                break;
+                            }
                         }
                     }
                     //mainPart.Document.Save();
@@ -182,7 +189,7 @@ public static class Common
         }
         finally
         {
-            wordDoc.Dispose();
+            wordDoc?.Dispose();
         }
         return success;
     }

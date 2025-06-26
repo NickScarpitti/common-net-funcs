@@ -452,6 +452,49 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Checks if the given string contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textsToFind">Strings to find in s</param>
+    /// <param name="useOrComparison">
+    /// <para>If true, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
+    /// </param>
+    /// <returns>
+    /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
+    /// False</para>
+    /// </returns>
+    public static bool Contains(this string? s, IEnumerable<string> textsToFind, bool useOrComparison = true)
+    {
+        if (s.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        if (useOrComparison)
+        {
+            foreach (string textToFind in textsToFind)
+            {
+                if (s.Contains(textToFind))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else
+        {
+            foreach (string textToFind in textsToFind)
+            {
+                if (!s.Contains(textToFind))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /// <summary>
     /// Replace a substring with another string, ignoring the case and culture when finding the substring to replace
     /// </summary>
     /// <param name="s">String to search for substring to replace</param>

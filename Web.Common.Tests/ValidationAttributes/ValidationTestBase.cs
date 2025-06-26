@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using AutoFixture;
 
 namespace Web.Common.Tests.ValidationAttributes;
 

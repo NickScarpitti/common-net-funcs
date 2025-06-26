@@ -1,8 +1,6 @@
 ﻿using System.Collections.Concurrent;
-using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
-using Shouldly;
 
 namespace Media.Ffmpeg.Tests;
 
@@ -20,6 +18,38 @@ public sealed class HelpersTests : IDisposable
         string testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
         _testVideoPath = Path.Combine(testDataDir, "test.mp4");
         _tempLogFile = Path.Combine(Path.GetTempPath(), $"HelpersTests_{Guid.NewGuid()}.log");
+    }
+
+    private bool disposed;
+
+    public void Dispose()
+    {
+        if (File.Exists(_tempLogFile))
+        {
+            try
+            {
+                File.Delete(_tempLogFile);
+            }
+            catch { }
+        }
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                File.Delete(_tempLogFile);
+            }
+            disposed = true;
+        }
+    }
+
+    ~HelpersTests()
+    {
+        Dispose(false);
     }
 
     [Fact]
@@ -182,17 +212,5 @@ public sealed class HelpersTests : IDisposable
         values.ShouldContain("Codec_Name");
         values.ShouldContain("Duration");
         values.ShouldContain("Bit_Rate");
-    }
-
-    public void Dispose()
-    {
-        if (File.Exists(_tempLogFile))
-        {
-            try
-            {
-                File.Delete(_tempLogFile);
-            }
-            catch { }
-        }
     }
 }

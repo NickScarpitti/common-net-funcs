@@ -10,6 +10,31 @@ namespace Excel.OpenXml.Tests;
 
 public sealed class CommonTests : IDisposable
 {
+    bool disposed;
+
+    public void Dispose()
+    {
+        ClearCustomFormatCache();
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                ClearCustomFormatCache();
+            }
+            disposed = true;
+        }
+    }
+
+    ~CommonTests()
+    {
+        Dispose(false);
+    }
+
     [Fact]
     public void InitializeExcelFile_ShouldCreateNewSheet()
     {
@@ -961,6 +986,4 @@ public sealed class CommonTests : IDisposable
         column.Min!.Value.ShouldBe(colIndex);
         column.Max!.Value.ShouldBe(colIndex);
     }
-
-    public void Dispose() { ClearCustomFormatCache(); }
 }

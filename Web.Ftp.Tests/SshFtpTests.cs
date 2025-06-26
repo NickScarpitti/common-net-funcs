@@ -1,7 +1,5 @@
-﻿using AutoFixture;
-using AutoFixture.AutoFakeItEasy;
+﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Web.Ftp;
-using Shouldly;
 
 namespace Web.Ftp.Tests;
 

@@ -1,10 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
-using Shouldly;
 using Xabe.FFmpeg;
 
 namespace Media.Ffmpeg.Tests;
@@ -33,6 +31,8 @@ public sealed class ConversionTaskTests : IDisposable
         FFmpeg.SetExecutablesPath(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "/usr/bin" : "C:\\Program Files\\ffmpeg\\bin");
     }
 
+    private bool disposed;
+
     public void Dispose()
     {
         // Cleanup temporary files after tests
@@ -46,6 +46,34 @@ public sealed class ConversionTaskTests : IDisposable
             {
             } // Ignore cleanup errors
         }
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                // Cleanup temporary files after tests
+                if (Directory.Exists(_workingDir))
+                {
+                    try
+                    {
+                        Directory.Delete(_workingDir, true);
+                    }
+                    catch (IOException)
+                    {
+                    } // Ignore cleanup errors
+                }
+            }
+            disposed = true;
+        }
+    }
+
+    ~ConversionTaskTests()
+    {
+        Dispose(false);
     }
 
     [Theory]

@@ -1,7 +1,5 @@
-﻿using AutoFixture;
-using AutoFixture.AutoFakeItEasy;
+﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Images;
-using Shouldly;
 
 namespace Images.Tests;
 

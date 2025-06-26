@@ -15,7 +15,30 @@ public sealed class ExportTests : IDisposable
         _workbook = new XLWorkbook();
     }
 
-    public void Dispose() { _workbook.Dispose(); }
+    private bool disposed;
+
+    public void Dispose()
+    {
+        _workbook.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                _workbook?.Dispose();
+            }
+            disposed = true;
+        }
+    }
+
+    ~ExportTests()
+    {
+        Dispose(false);
+    }
 
     public sealed class TestData
     {

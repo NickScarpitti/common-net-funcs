@@ -1,8 +1,7 @@
 ﻿using CommonNetFuncs.Images;
-using Shouldly;
 using SixLabors.ImageSharp;
 
-namespace ImagesTests;
+namespace Images.Tests;
 
 public sealed class Base64Tests : IDisposable
 {
@@ -16,9 +15,29 @@ public sealed class Base64Tests : IDisposable
         _tempSavePath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.png");
     }
 
+    private bool disposed;
+
     public void Dispose()
     {
         File.Delete(_tempSavePath);
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                File.Delete(_tempSavePath);
+            }
+            disposed = true;
+        }
+    }
+
+    ~Base64Tests()
+    {
+        Dispose(false);
     }
 
     [Fact]

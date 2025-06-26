@@ -29,9 +29,12 @@
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Web.Ftp\CommonNetFuncs.Web.Ftp.csproj" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="Shouldly" />
+    <Using Include="AutoFixture" />
+    <Using Include="FakeItEasy" />
   </ItemGroup>
 
 </Project>

@@ -1,10 +1,8 @@
 ﻿using System.Linq.Expressions;
 using System.Text.Json.Serialization;
-using AutoFixture;
 using CommonNetFuncs.EFCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Shouldly;
 
 namespace EFCore.Tests;
 

@@ -94,18 +94,18 @@ public sealed class RestHelpersStaticTests
         };
 
         List<string?> results = new();
-        await foreach (var item in client.StreamingRestRequest<string, string>(options))
+        await foreach (string? item in client.StreamingRestRequest<string, string>(options))
         {
             results.Add(item);
         }
 
-        results.ShouldBe(new[] { "a", "b" });
+        results.ShouldBe(["a", "b"]);
     }
 
     [Fact]
     public void GetChunkingParameters_ReturnsExpectedValues()
     {
-        var (itemsPerChunk, numberOfChunks) = RestHelpersStatic.GetChunkingParameters(100_000, 10_000, 8192);
+        (int itemsPerChunk, int numberOfChunks) = RestHelpersStatic.GetChunkingParameters(1000000, 100, 8192);
         itemsPerChunk.ShouldBeGreaterThan(0);
         numberOfChunks.ShouldBeGreaterThan(0);
     }

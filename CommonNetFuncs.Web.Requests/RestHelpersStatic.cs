@@ -602,14 +602,14 @@ public static class RestHelpersStatic
 
         //int numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
         decimal numberOfChunksDecimal = (decimal)itemCount / itemsPerChunk;
-        int numberOfChunks = (int)numberOfChunksDecimal + numberOfChunksDecimal > 0 && numberOfChunksDecimal % 1 != 0 ? 1 : 0;
+        int numberOfChunks = (int)numberOfChunksDecimal + (numberOfChunksDecimal > 0 && numberOfChunksDecimal % 1 != 0 ? 1 : 0);
         while (numberOfChunks >= bufferLimit)
         {
             itemsPerChunk += 1000;
 
             //numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
             numberOfChunksDecimal = (decimal)itemCount / itemsPerChunk;
-            numberOfChunks = (int)numberOfChunksDecimal + numberOfChunksDecimal > 0 && numberOfChunksDecimal % 1 != 0 ? 1 : 0;
+            numberOfChunks = (int)numberOfChunksDecimal + (numberOfChunksDecimal > 0 && numberOfChunksDecimal % 1 != 0 ? 1 : 0);
         }
         return (itemsPerChunk, numberOfChunks);
     }

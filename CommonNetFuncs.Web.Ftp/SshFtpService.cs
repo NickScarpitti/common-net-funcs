@@ -131,12 +131,8 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
         {
             if (disposing)
             {
-                // Dispose managed resources
                 Client?.Dispose();
             }
-
-            // Dispose unmanaged resources (if any)
-
             disposed = true;
         }
     }

@@ -105,10 +105,10 @@ public sealed class RestHelpersCommonTests
         StreamingRestObject<string> result = await restHelpers.StreamingRestRequestObject<string, string>(options);
 
         List<string?> items = new();
-        await foreach (var item in result.Result)
+        await foreach (string? item in result.Result!)
         {
             items.Add(item);
         }
-        items.ShouldBe(new[] { "x", "y" });
+        items.ShouldBe(["x", "y"]);
     }
 }

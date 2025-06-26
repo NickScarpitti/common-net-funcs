@@ -19,9 +19,29 @@ public sealed class NavigationPropertiesTests : IDisposable
         _context = new TestDbContext(options);
     }
 
+    private bool disposed;
+
     public void Dispose()
     {
         _context.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                _context?.Dispose();
+            }
+            disposed = true;
+        }
+    }
+
+    ~NavigationPropertiesTests()
+    {
+        Dispose(false);
     }
 
     [Theory]

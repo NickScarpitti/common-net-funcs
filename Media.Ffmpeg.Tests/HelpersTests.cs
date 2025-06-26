@@ -20,6 +20,38 @@ public sealed class HelpersTests : IDisposable
         _tempLogFile = Path.Combine(Path.GetTempPath(), $"HelpersTests_{Guid.NewGuid()}.log");
     }
 
+    private bool disposed;
+
+    public void Dispose()
+    {
+        if (File.Exists(_tempLogFile))
+        {
+            try
+            {
+                File.Delete(_tempLogFile);
+            }
+            catch { }
+        }
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                File.Delete(_tempLogFile);
+            }
+            disposed = true;
+        }
+    }
+
+    ~HelpersTests()
+    {
+        Dispose(false);
+    }
+
     [Fact]
     public void GetTotalFps_ShouldReturnSumOfValues()
     {
@@ -180,17 +212,5 @@ public sealed class HelpersTests : IDisposable
         values.ShouldContain("Codec_Name");
         values.ShouldContain("Duration");
         values.ShouldContain("Bit_Rate");
-    }
-
-    public void Dispose()
-    {
-        if (File.Exists(_tempLogFile))
-        {
-            try
-            {
-                File.Delete(_tempLogFile);
-            }
-            catch { }
-        }
     }
 }

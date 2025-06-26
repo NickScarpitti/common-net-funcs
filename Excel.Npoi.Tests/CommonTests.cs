@@ -26,10 +26,31 @@ public sealed class CommonTests : IDisposable
         _sheet = _xlsxWorkbook.CreateSheet("Test");
     }
 
+    private bool disposed;
+
     public void Dispose()
     {
         _xlsxWorkbook.Dispose();
         _xlsWorkbook.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                _xlsxWorkbook?.Dispose();
+                _xlsWorkbook?.Dispose();
+            }
+            disposed = true;
+        }
+    }
+
+    ~CommonTests()
+    {
+        Dispose(false);
     }
 
     [Theory]

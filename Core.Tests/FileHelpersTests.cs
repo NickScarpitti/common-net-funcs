@@ -22,6 +22,11 @@ public sealed class FileHelpersTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    ~FileHelpersTests()
+    {
+        Dispose();
+    }
+
     [Fact]
     public void GetSafeSaveName_String_ReturnsUniqueName_WhenFileExists()
     {

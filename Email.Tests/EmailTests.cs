@@ -3,8 +3,6 @@ using AutoFixture.Xunit2;
 using CommonNetFuncs.Email;
 using MimeKit;
 
-//using MimeKit;
-using Shouldly;
 using static CommonNetFuncs.Email.Email;
 
 namespace Email.Tests;
@@ -55,7 +53,7 @@ public sealed class EmailTests
         // Assert
         ValidationContext validationContext = new(mailAddress);
         List<ValidationResult> validationResults = new();
-        bool isValid = System.ComponentModel.DataAnnotations.Validator.TryValidateObject(mailAddress, validationContext, validationResults, true);
+        bool isValid = Validator.TryValidateObject(mailAddress, validationContext, validationResults, true);
 
         // Assert
         isValid.ShouldBeFalse();

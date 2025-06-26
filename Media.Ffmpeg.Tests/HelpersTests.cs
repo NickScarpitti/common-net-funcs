@@ -1,8 +1,6 @@
 ﻿using System.Collections.Concurrent;
-using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
-using Shouldly;
 
 namespace Media.Ffmpeg.Tests;
 

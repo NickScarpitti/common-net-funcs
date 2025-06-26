@@ -1,8 +1,6 @@
 ﻿using System.Data;
 using System.Globalization;
-using AutoFixture;
 using CommonNetFuncs.Csv;
-using Shouldly;
 
 namespace Csv.Tests;
 
@@ -10,7 +8,10 @@ public sealed class CsvExportHelpersTests
 {
     private readonly Fixture _fixture;
 
-    public CsvExportHelpersTests() { _fixture = new Fixture(); }
+    public CsvExportHelpersTests()
+    {
+        _fixture = new Fixture();
+    }
 
     private sealed record TestRecord(string Name, int Age, DateTime BirthDate);
 

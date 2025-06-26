@@ -1,7 +1,5 @@
 ﻿using System.Globalization;
-using AutoFixture;
 using CommonNetFuncs.Csv;
-using Shouldly;
 
 namespace Csv.Tests;
 

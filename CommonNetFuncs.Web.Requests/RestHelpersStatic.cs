@@ -143,7 +143,7 @@ public static class RestHelpersStatic
         }
         finally
         {
-            response.Dispose();
+            response?.Dispose();
         }
     }
 

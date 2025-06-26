@@ -1,8 +1,7 @@
 ﻿using CommonNetFuncs.Images;
-using Shouldly;
 using SixLabors.ImageSharp;
 
-namespace ImagesTests;
+namespace Images.Tests;
 
 public sealed class Base64Tests : IDisposable
 {

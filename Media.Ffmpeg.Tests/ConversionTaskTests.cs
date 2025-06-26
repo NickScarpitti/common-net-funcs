@@ -1,10 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
-using Shouldly;
 using Xabe.FFmpeg;
 
 namespace Media.Ffmpeg.Tests;

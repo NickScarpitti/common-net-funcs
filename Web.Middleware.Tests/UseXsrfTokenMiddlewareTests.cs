@@ -41,7 +41,7 @@ public sealed class UseXsrfTokenMiddlewareTests
 
         // Assert
         context.Response.Headers.ShouldContainKey("Set-Cookie");
-        string? setCookieHeader = context.Response.Headers["Set-Cookie"].ToString();
+        string? setCookieHeader = context.Response.Headers.SetCookie.ToString();
         setCookieHeader.ShouldContain("XSRF-TOKEN");
         setCookieHeader.ShouldContain(expectedToken);
 

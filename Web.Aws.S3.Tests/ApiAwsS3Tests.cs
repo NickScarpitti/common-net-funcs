@@ -2,12 +2,10 @@
 using System.Text;
 using Amazon.S3;
 using Amazon.S3.Model;
-using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Web.Aws.S3;
 using FakeItEasy;
 using Microsoft.Extensions.Logging;
-using Shouldly;
 using static CommonNetFuncs.Compression.Streams;
 
 namespace Web.Aws.S3.Tests;

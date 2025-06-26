@@ -2,7 +2,7 @@
 
 namespace CommonNetFuncs.EFCore.Logging;
 
-public sealed class FilteredEfCoreLoggerFactory(ILoggerFactory innerFactory, LogLevel minLogLevel, IReadOnlyDictionary<string, LogLevel> stringFilters) : ILoggerFactory
+public sealed class FilteredEfCoreLoggerFactory(ILoggerFactory innerFactory, IReadOnlyDictionary<string, LogLevel> stringFilters) : ILoggerFactory
 {
     private readonly ILoggerFactory _innerFactory = innerFactory;
 
@@ -16,10 +16,6 @@ public sealed class FilteredEfCoreLoggerFactory(ILoggerFactory innerFactory, Log
         {
             return new FilteredEfCoreLogger(logger, filter.Value.Value);
         }
-        //if (categoryName.Contains("Microsoft.EntityFrameworkCore.Database.Command"))
-        //{
-        //    return new FilteredEfCoreLogger(logger, LogLevel.Warning);
-        //}
 
         return logger;
     }

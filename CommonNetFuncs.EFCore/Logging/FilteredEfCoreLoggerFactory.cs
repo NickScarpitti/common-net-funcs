@@ -27,7 +27,26 @@ public sealed class FilteredEfCoreLoggerFactory(ILoggerFactory innerFactory, IRe
 
     public void Dispose()
     {
-        _innerFactory.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    bool disposed;
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                _innerFactory.Dispose();
+            }
+            disposed = true;
+        }
+    }
+
+    ~FilteredEfCoreLoggerFactory()
+    {
+        Dispose(false);
     }
 }

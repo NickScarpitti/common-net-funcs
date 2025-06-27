@@ -21,7 +21,7 @@ public sealed class ExportTests : IDisposable
 
     public void Dispose()
     {
-        _memoryStream.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

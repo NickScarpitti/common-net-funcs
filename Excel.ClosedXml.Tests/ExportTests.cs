@@ -19,7 +19,7 @@ public sealed class ExportTests : IDisposable
 
     public void Dispose()
     {
-        _workbook.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

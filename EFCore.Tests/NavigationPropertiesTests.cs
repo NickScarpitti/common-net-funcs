@@ -23,7 +23,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 
     public void Dispose()
     {
-        _context.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

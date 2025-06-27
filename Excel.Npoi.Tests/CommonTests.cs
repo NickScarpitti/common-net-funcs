@@ -30,8 +30,7 @@ public sealed class CommonTests : IDisposable
 
     public void Dispose()
     {
-        _xlsxWorkbook.Dispose();
-        _xlsWorkbook.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

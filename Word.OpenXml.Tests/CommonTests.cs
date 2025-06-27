@@ -13,16 +13,20 @@ public class CommonTests : IDisposable
 
     public void Dispose()
     {
-        _tempFileStream?.Dispose();
         if (File.Exists(_tempDocPath))
         {
             File.Delete(_tempDocPath);
         }
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 
     private void Dispose(bool disposing)
     {
+        if (File.Exists(_tempDocPath))
+        {
+            File.Delete(_tempDocPath);
+        }
         if (!disposed)
         {
             if (disposing)

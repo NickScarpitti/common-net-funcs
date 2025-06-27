@@ -200,4 +200,9 @@ public sealed class CountingStream(Stream innerStream) : Stream
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
     }
+
+    ~CountingStream()
+    {
+        Dispose(false);
+    }
 }

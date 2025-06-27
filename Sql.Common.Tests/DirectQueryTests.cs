@@ -20,7 +20,7 @@ public sealed class DirectQueryTests : IDisposable
 
     public void Dispose()
     {
-        _connection.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

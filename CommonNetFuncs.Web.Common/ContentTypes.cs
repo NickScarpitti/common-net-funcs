@@ -5,6 +5,73 @@
 /// </summary>
 public static class ContentTypes
 {
+    /// <summary>
+    /// Determines the MIME content type based on the file extension of the specified file name.
+    /// </summary>
+    /// <remarks>This method uses the file extension to identify the MIME type. Ensure the file name includes a valid extension.</remarks>
+    /// <param name="fileName">The name of the file, including its extension. Cannot be null or empty.</param>
+    /// <returns>A string representing the MIME content type associated with the file extension. Returns an empty string if the file extension is not recognized.</returns>
+    public static string GetContentType(this string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+        {
+            throw new ArgumentException("File name cannot be null or empty.", nameof(fileName));
+        }
+        return GetContentTypeByExtension(Path.GetExtension(fileName));
+    }
+
+    public static string GetContentTypeByExtension(string extension)
+    {
+        if (string.IsNullOrEmpty(extension))
+        {
+            throw new ArgumentException("File extension cannot be null or empty.", nameof(extension));
+        }
+        // Ensure the extension starts with a dot
+        if (!extension.StartsWith('.'))
+        {
+            extension = $".{extension}";
+        }
+
+        // Use switch expression to return content type based on file extension
+        return extension.ToLowerInvariant() switch
+        {
+            ".json" => Json,
+            ".mempack" => MemPack,
+            ".msgpack" => MsgPack,
+            ".png" => Png,
+            ".jpg" or ".jpeg" => Jpeg,
+            ".gif" => Gif,
+            ".bmp" => Bmp,
+            ".tiff" => Tiff,
+            ".svg" => Svg,
+            ".xlsx" => Xlsx,
+            ".xls" => Xls,
+            ".docx" => Docx,
+            ".doc" => Doc,
+            ".pptx" => Pptx,
+            ".ppt" => Ppt,
+            ".pdf" => Pdf,
+            ".csv" => Csv,
+            ".zip" or ".mszipupload" => Zip,
+            ".ts" => TransportStream,
+            ".mpeg" or ".mpg" => Mpeg,
+            ".mp4" => Mp4,
+            ".webm" => Webm,
+            ".flv" => Flv,
+            ".avi" => Avi,
+            ".mp3" => Mp3,
+            ".aac" => Aac,
+            _ when FormDataTypes.Contains(extension) => UrlEncodedFormData, // Default to form data types
+            _ when extension.StartsWith(".html") || extension.StartsWith(".htm") => Html, // Handle HTML files
+            _ when extension.StartsWith(".txt") || extension.StartsWith(".text") => Text, // Handle text files
+            _ when extension.StartsWith(".js") || extension.StartsWith(".javascript") => Js, // Handle JavaScript files
+            _ when extension.StartsWith(".css") || extension.StartsWith(".stylesheet") => Css, // Handle CSS files
+            _ when extension.StartsWith(".xml") || extension.StartsWith(".xhtml") => Xml, // Handle XML files
+            _ when extension.StartsWith(".binary") || extension.StartsWith(".octet-stream") => BinaryStream, // Handle binary streams
+            _ => "application/octet-stream", // Default content type for unknown extensions
+        };
+    }
+
     public const string Json = "application/json";
     public const string JsonProblem = "application/problem+json";
     public const string MemPack = "application/x-memorypack";

@@ -293,59 +293,136 @@ public static class Streams
     }
 
     /// <summary>
-    /// Detect the compression type of a stream based on its header.
+    /// Detect the compression type of a stream based on its header without advancing the stream position.
     /// </summary>
     /// <param name="stream">Stream to analyze</param>
     /// <returns>Detected compression type, or None if not recognized</returns>
-    public static ECompressionType DetectCompressionType(this Stream? stream)
+    /// <remarks>If the stream is not seekable, there is no way to detect deflate compression</remarks>
+    public static async Task<ECompressionType> DetectCompressionType(this Stream? stream)
     {
         if (stream?.CanRead != true)
         {
             return ECompressionType.None;
         }
 
-        long originalPosition = stream.CanSeek ? stream.Position : 0;
-        Span<byte> header = stackalloc byte[4];
-        int bytesRead = 0;
+        // For seekable streams, use the original approach
+        if (stream.CanSeek)
+        {
+            return await DetectCompressionTypeSeekable(stream);
+        }
+
+        // For non-seekable streams, we need to wrap it
+        return await DetectCompressionTypeNonSeekable(stream);
+    }
+
+    private static async Task<ECompressionType> DetectCompressionTypeSeekable(Stream stream)
+    {
+        long originalPosition = stream.Position;
+        byte[] header = new byte[4];
+        int bytesRead;
 
         try
         {
             // Read up to 4 bytes for header detection
-            bytesRead = stream.Read(header);
+            //bytesRead = await stream.ReadAsync(header, 0, 4);
+            bytesRead = await stream.ReadAsync(header.AsMemory(0, 4));
             if (bytesRead < 2)
             {
                 return ECompressionType.None;
             }
 
-            // GZIP: 1F 8B
-            if (header[0] == 0x1F && header[1] == 0x8B)
+            ECompressionType result = AnalyzeHeader(header, bytesRead);
+            if (result != ECompressionType.None)
             {
-                return ECompressionType.Gzip;
+                return result;
             }
 
-            // ZLIB: 78 01 / 78 9C / 78 DA (first byte 0x78, second varies)
-            if (header[0] == 0x78 && (header[1] == 0x01 || header[1] == 0x9C || header[1] == 0xDA))
+            // For deflate detection, we need more sophisticated approach
+            // Reset position first
+            stream.Position = originalPosition;
+
+            // Read a larger sample for deflate detection
+            byte[] sample = new byte[1024];
+            //int sampleBytesRead = await stream.ReadAsync(sample, 0, sample.Length);
+            int sampleBytesRead = await stream.ReadAsync(sample);
+
+            if (sampleBytesRead > 0 && await IsDeflateCompressed(sample.Take(sampleBytesRead).ToArray()))
             {
-                return ECompressionType.ZLib;
+                return ECompressionType.Deflate;
             }
 
-            // Brotli: 0xCE B2 CF 81 (first 4 bytes, but only if at least 4 bytes read)
-            if (bytesRead >= 4 && header[0] == 0xCE && header[1] == 0xB2 && header[2] == 0xCF && header[3] == 0x81)
-            {
-                return ECompressionType.Brotli;
-            }
-
-            // Deflate: No standard header, but if not GZIP/ZLIB/Brotli, and stream is not empty, assume Deflate
-            // (This is a heuristic; Deflate is raw DEFLATE data, so it's ambiguous)
-            return ECompressionType.Deflate;
+            return ECompressionType.None;
         }
         finally
         {
-            // Reset stream position if possible
-            if (stream.CanSeek)
-            {
-                stream.Position = originalPosition;
-            }
+            // Reset stream position
+            stream.Position = originalPosition;
+        }
+    }
+
+    private static async Task<ECompressionType> DetectCompressionTypeNonSeekable(Stream stream)
+    {
+        // For non-seekable streams, we need to buffer the data
+        await using BufferedStream bufferedStream = new(stream, 4096);
+
+        // Try to peek at the first few bytes
+        byte[] header = new byte[4];
+        //int bytesRead = await bufferedStream.ReadAsync(header, 0, 4);
+        int bytesRead = await bufferedStream.ReadAsync(header.AsMemory(0, 4));
+
+        if (bytesRead < 2)
+        {
+            return ECompressionType.None;
+        }
+
+        ECompressionType result = AnalyzeHeader(header, bytesRead);
+        if (result != ECompressionType.None)
+        {
+            return result;
+        }
+
+        return ECompressionType.None;
+    }
+
+    private static ECompressionType AnalyzeHeader(byte[] header, int bytesRead)
+    {
+        // GZIP: 1F 8B
+        if (header[0] == 0x1F && header[1] == 0x8B)
+        {
+            return ECompressionType.Gzip;
+        }
+
+        // ZLIB: 78 01 / 78 9C / 78 DA (first byte 0x78, second varies)
+        if (header[0] == 0x78 && (header[1] == 0x01 || header[1] == 0x9C || header[1] == 0xDA))
+        {
+            return ECompressionType.ZLib;
+        }
+
+        // Brotli: 0xCE B2 CF 81 (first 4 bytes, but only if at least 4 bytes read)
+        if (bytesRead >= 4 && header[0] == 0xCE && header[1] == 0xB2 && header[2] == 0xCF && header[3] == 0x81)
+        {
+            return ECompressionType.Brotli;
+        }
+
+        return ECompressionType.None;
+    }
+
+    // Fixed version that doesn't modify the original data
+    public static async Task<bool> IsDeflateCompressed(byte[] data)
+    {
+        try
+        {
+            await using MemoryStream memoryStream = new(data);
+            await using DeflateStream deflateStream = new(memoryStream, CompressionMode.Decompress);
+
+            byte[] buffer = new byte[1];
+            //int bytesRead = await deflateStream.ReadAsync(buffer, 0, buffer.Length);
+            int bytesRead = await deflateStream.ReadAsync(buffer);
+            return bytesRead > 0;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 }

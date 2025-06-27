@@ -46,7 +46,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                 }
 
                 await using MemoryStream compressedStream = new();
-                ECompressionType currentCompression = fileData.DetectCompressionType();
+                ECompressionType currentCompression = await fileData.DetectCompressionType();
                 switch (currentCompression)
                 {
                     case ECompressionType.Brotli: case ECompressionType.ZLib: // Unsupported compression types for upload
@@ -80,7 +80,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                 }
                 else if (currentCompression != ECompressionType.None)
                 {
-                    request.Headers["Content-Encoding"] = currentCompression.ToString();
+                    request.Headers["Content-Encoding"] = currentCompression.ToString().ToLowerInvariant();
                 }
 
                 request.Headers["Content-Length"] = request.InputStream.Length.ToString();
@@ -128,41 +128,15 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                 GetObjectResponse? response = await s3Client.GetObjectAsync(request, cancellationToken).ConfigureAwait(false);
                 if (response != null)
                 {
-                    await using Stream responseStream = response.ResponseStream;
-
-                    if (decompressGzipData && response.Headers.ContentEncoding.ContainsInvariant(["gzip", "deflate"]))
+                    MemoryStream responseStream = new();
+                    try
                     {
-                        //await using MemoryStream decompressedStream = new();
-                        await using MemoryStream intermediateStream = new();
-                        await responseStream.CopyToAsync(intermediateStream, cancellationToken).ConfigureAwait(false);
-                        await intermediateStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-                        intermediateStream.Position = 0;
-                        try
-                        {
-                            await intermediateStream.DecompressStream(fileData, response.Headers.ContentEncoding.ContainsInvariant("gzip") ? ECompressionType.Gzip : ECompressionType.Deflate, cancellationToken: cancellationToken).ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            try
-                            {
-                                logger.LogWarning(ex, "{msg}", $"Failed to decompress {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket. Attempting to copy raw data instead.");
-                                intermediateStream.Position = 0;
-                                await intermediateStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+                        await response.ResponseStream.CopyToAsync(responseStream, cancellationToken);
+                        responseStream.Position = 0;
 
-                                // Re-upload the raw data to without Content-Encoding header if decompression fails
-                                await UploadS3File(bucketName, fileName, intermediateStream, validatedBuckets, compressSteam: false, cancellationToken: cancellationToken).ConfigureAwait(false);
-                            }
-                            catch (Exception ex2)
-                            {
-                                logger.LogError(ex2, "{msg}", $"Failed to copy raw data from {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} in {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket after decompression failure. Abandoning request.");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ECompressionType currentCompression = responseStream.DetectCompressionType();
-                        if (currentCompression != ECompressionType.None)
+                        if (decompressGzipData && response.Headers.ContentEncoding.ContainsInvariant(["gzip", "deflate"]))
                         {
+                            //await using MemoryStream decompressedStream = new();
                             await using MemoryStream intermediateStream = new();
                             await responseStream.CopyToAsync(intermediateStream, cancellationToken).ConfigureAwait(false);
                             await intermediateStream.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -171,20 +145,55 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                             {
                                 await intermediateStream.DecompressStream(fileData, response.Headers.ContentEncoding.ContainsInvariant("gzip") ? ECompressionType.Gzip : ECompressionType.Deflate, cancellationToken: cancellationToken).ConfigureAwait(false);
                             }
-                            catch
+                            catch (Exception ex)
                             {
-                                logger.LogWarning("{msg}", $"Failed to decompress {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket. Attempting to copy raw data instead.");
-                                intermediateStream.Position = 0;
-                                await intermediateStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+                                try
+                                {
+                                    logger.LogWarning(ex, "{msg}", $"Failed to decompress {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket. Attempting to copy raw data instead.");
+                                    intermediateStream.Position = 0;
+                                    await intermediateStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+
+                                    // Re-upload the raw data to without Content-Encoding header if decompression fails
+                                    await UploadS3File(bucketName, fileName, intermediateStream, validatedBuckets, compressSteam: false, cancellationToken: cancellationToken).ConfigureAwait(false);
+                                }
+                                catch (Exception ex2)
+                                {
+                                    logger.LogError(ex2, "{msg}", $"Failed to copy raw data from {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} in {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket after decompression failure. Abandoning request.");
+                                }
                             }
                         }
                         else
                         {
-                            await responseStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+                            ECompressionType currentCompression = await responseStream.DetectCompressionType();
+                            if (currentCompression != ECompressionType.None)
+                            {
+                                await using MemoryStream intermediateStream = new();
+                                await responseStream.CopyToAsync(intermediateStream, cancellationToken).ConfigureAwait(false);
+                                await intermediateStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                                intermediateStream.Position = 0;
+                                try
+                                {
+                                    await intermediateStream.DecompressStream(fileData, currentCompression, cancellationToken: cancellationToken).ConfigureAwait(false);
+                                }
+                                catch
+                                {
+                                    logger.LogWarning("{msg}", $"Failed to decompress {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket. Attempting to copy raw data instead.");
+                                    intermediateStream.Position = 0;
+                                    await intermediateStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+                                }
+                            }
+                            else
+                            {
+                                await responseStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+                            }
                         }
+                        await fileData.FlushAsync(cancellationToken).ConfigureAwait(false);
+                        fileData.Position = 0;
                     }
-                    await fileData.FlushAsync(cancellationToken).ConfigureAwait(false);
-                    fileData.Position = 0;
+                    finally
+                    {
+                        await responseStream.DisposeAsync().ConfigureAwait(false);
+                    }
                 }
             }
         }

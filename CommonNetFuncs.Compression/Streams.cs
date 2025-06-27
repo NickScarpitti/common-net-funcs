@@ -9,7 +9,8 @@ public static class Streams
         Brotli = 1,
         Gzip = 2,
         Deflate = 3,
-        ZLib = 4
+        ZLib = 4,
+        None = 5
     }
 
     /// <summary>
@@ -289,5 +290,62 @@ public static class Streams
         }
 
         return decompressedStream.ToArray();
+    }
+
+    /// <summary>
+    /// Detect the compression type of a stream based on its header.
+    /// </summary>
+    /// <param name="stream">Stream to analyze</param>
+    /// <returns>Detected compression type, or None if not recognized</returns>
+    public static ECompressionType DetectCompressionType(this Stream? stream)
+    {
+        if (stream?.CanRead != true)
+        {
+            return ECompressionType.None;
+        }
+
+        long originalPosition = stream.CanSeek ? stream.Position : 0;
+        Span<byte> header = stackalloc byte[4];
+        int bytesRead = 0;
+
+        try
+        {
+            // Read up to 4 bytes for header detection
+            bytesRead = stream.Read(header);
+            if (bytesRead < 2)
+            {
+                return ECompressionType.None;
+            }
+
+            // GZIP: 1F 8B
+            if (header[0] == 0x1F && header[1] == 0x8B)
+            {
+                return ECompressionType.Gzip;
+            }
+
+            // ZLIB: 78 01 / 78 9C / 78 DA (first byte 0x78, second varies)
+            if (header[0] == 0x78 && (header[1] == 0x01 || header[1] == 0x9C || header[1] == 0xDA))
+            {
+                return ECompressionType.ZLib;
+            }
+
+            // Brotli: 0xCE B2 CF 81 (first 4 bytes, but only if at least 4 bytes read)
+            if (bytesRead >= 4 && header[0] == 0xCE && header[1] == 0xB2 && header[2] == 0xCF && header[3] == 0x81)
+            {
+                return ECompressionType.Brotli;
+            }
+
+            // Deflate: No standard header, but if not GZIP/ZLIB/Brotli, and stream is not empty, assume Deflate
+            // (This is a heuristic; Deflate is raw DEFLATE data, so it's ambiguous)
+            return ECompressionType.Deflate;
+        }
+        finally
+        {
+            // Reset stream position if possible
+            if (stream.CanSeek)
+            {
+                stream.Position = originalPosition;
+            }
+        }
     }
 }

@@ -210,7 +210,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                                     cache.Remove(keyToEvict);
                                     if (!cacheOptions.SuppressLogs)
                                     {
-                                        logger.Info($"Manually evicting {keyToEvict} because it had tag {tag.UrlEncodeReadable()}");
+                                        logger.Info("Manually evicting {keyToEvict} because it had tag {tag}", [keyToEvict, tag.UrlEncodeReadable()]);
                                     }
                                 }
                             }
@@ -237,7 +237,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                     cache.Remove(cacheKey);
                     if (!cacheOptions.SuppressLogs)
                     {
-                        logger.Info($"Manually evicting {cacheKey}");
+                        logger.Info("Manually evicting {cacheKey}", cacheKey);
                     }
                     RemoveCacheTags(cacheKey, entry?.Tags ?? []);
                 }
@@ -260,7 +260,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         RemoveCacheTags(key.ToString() ?? string.Empty, entry.Tags);
         if (!cacheOptions.SuppressLogs)
         {
-            logger.Info($"Automatically evicting {key} for reason: {reason}");
+            logger.Info("Automatically evicting {key} for reason: {reason}", [key, reason]);
         }
     }
 
@@ -324,7 +324,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                     cacheTracker?.RemoveEntry(entry.Key);
                     if (!cacheOptions.SuppressLogs)
                     {
-                        logger.Info($"Automatically evicting {entry.Key} because due to there not being enough space in cache for new value of size {entry.Value.Size.BytesToKb()}");
+                        logger.Info("Automatically evicting {key} because due to there not being enough space in cache for new value of size {size}", [entry.Key, entry.Value.Size.BytesToKb()]);
                     }
 
                     freedSpace += entry.Value.Size;

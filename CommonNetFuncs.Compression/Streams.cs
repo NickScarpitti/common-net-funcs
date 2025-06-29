@@ -315,7 +315,7 @@ public static class Streams
         return await DetectCompressionTypeNonSeekable(stream);
     }
 
-    private static async Task<ECompressionType> DetectCompressionTypeSeekable(Stream stream)
+    internal static async Task<ECompressionType> DetectCompressionTypeSeekable(Stream stream)
     {
         long originalPosition = stream.Position;
         byte[] header = new byte[4];
@@ -360,7 +360,7 @@ public static class Streams
         }
     }
 
-    private static async Task<ECompressionType> DetectCompressionTypeNonSeekable(Stream stream)
+    internal static async Task<ECompressionType> DetectCompressionTypeNonSeekable(Stream stream)
     {
         // For non-seekable streams, we need to buffer the data
         await using BufferedStream bufferedStream = new(stream, 4096);
@@ -384,7 +384,7 @@ public static class Streams
         return ECompressionType.None;
     }
 
-    private static ECompressionType AnalyzeHeader(byte[] header, int bytesRead)
+    internal static ECompressionType AnalyzeHeader(byte[] header, int bytesRead)
     {
         // GZIP: 1F 8B
         if (header[0] == 0x1F && header[1] == 0x8B)

@@ -41,4 +41,10 @@
     <None Remove=".editorconfig" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestData\test.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

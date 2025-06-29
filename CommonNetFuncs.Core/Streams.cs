@@ -39,6 +39,16 @@ public static class Streams
     /// <param name="sourceStream">MemoryStream to copy to</param>
     public static async Task WriteStreamToStream(this Stream targetStream, MemoryStream sourceStream, CancellationToken cancellationToken = default)
     {
+        if (!sourceStream.CanRead || !sourceStream.CanSeek)
+        {
+            throw new InvalidOperationException("Source stream must be readable and seekable");
+        }
+
+        if (!targetStream.CanSeek || !targetStream.CanWrite)
+        {
+            throw new InvalidOperationException("Target stream must be writable and seekable");
+        }
+
         await using MemoryStream tempStream = new();
 
         sourceStream.Position = 0;
@@ -51,6 +61,7 @@ public static class Streams
         await tempStream.DisposeAsync().ConfigureAwait(false);
         await targetStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         targetStream.Position = 0;
+        sourceStream.Position = 0;
     }
 
     /// <summary>
@@ -60,11 +71,19 @@ public static class Streams
     /// <param name="sourceStream">Stream to copy to</param>
     public static async Task WriteStreamToStream(this Stream targetStream, Stream sourceStream, CancellationToken cancellationToken = default)
     {
+        if (!sourceStream.CanRead || !sourceStream.CanSeek)
+        {
+            throw new InvalidOperationException("Source stream must be readable and seekable");
+        }
+
+        if (!targetStream.CanSeek || !targetStream.CanWrite)
+        {
+            throw new InvalidOperationException("Target stream must be writable and seekable");
+        }
+
         await using MemoryStream tempStream = new();
 
         sourceStream.Position = 0;
-
-        //wb.SaveAs(tempStream, options);
         await tempStream.WriteAsync(await sourceStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
         await tempStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         tempStream.Position = 0;
@@ -72,6 +91,7 @@ public static class Streams
         await tempStream.DisposeAsync().ConfigureAwait(false);
         await targetStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         targetStream.Position = 0;
+        sourceStream.Position = 0;
     }
 }
 

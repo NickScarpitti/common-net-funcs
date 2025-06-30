@@ -368,6 +368,49 @@ public static partial class Strings
     /// Checks if the given string contains a specific string regardless of culture or case
     /// </summary>
     /// <param name="s">String to search</param>
+    /// <param name="textsToFind">Strings to find in s</param>
+    /// <param name="useOrComparison">
+    /// <para>If true, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
+    /// </param>
+    /// <returns>
+    /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
+    /// False</para>
+    /// </returns>
+    public static bool ContainsInvariant(this string? s, IEnumerable<string> textsToFind, bool useOrComparison = true)
+    {
+        if (s.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        if (useOrComparison)
+        {
+            foreach (string textToFind in textsToFind)
+            {
+                if (s.ContainsInvariant(textToFind))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else
+        {
+            foreach (string textToFind in textsToFind)
+            {
+                if (!s.ContainsInvariant(textToFind))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Checks if the given string contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
     /// <param name="textToFind">String to find in s</param>
     /// <returns>True if s contains the string textToFind in any form</returns>
     public static bool StartsWithInvariant(this string? s, string? textToFind)
@@ -406,49 +449,6 @@ public static partial class Strings
     public static int IndexOfInvariant(this string? s, char? textToFind)
     {
         return textToFind != null ? s?.IndexOf((char)textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
-    }
-
-    /// <summary>
-    /// Checks if the given string contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textsToFind">Strings to find in s</param>
-    /// <param name="useOrComparison">
-    /// <para>If true, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
-    /// </param>
-    /// <returns>
-    /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
-    /// False</para>
-    /// </returns>
-    public static bool ContainsInvariant(this string? s, IEnumerable<string> textsToFind, bool useOrComparison = true)
-    {
-        if (s.IsNullOrWhiteSpace())
-        {
-            return false;
-        }
-
-        if (useOrComparison)
-        {
-            foreach (string textToFind in textsToFind)
-            {
-                if (s.ContainsInvariant(textToFind))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        else
-        {
-            foreach (string textToFind in textsToFind)
-            {
-                if (!s.ContainsInvariant(textToFind))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
     }
 
     /// <summary>

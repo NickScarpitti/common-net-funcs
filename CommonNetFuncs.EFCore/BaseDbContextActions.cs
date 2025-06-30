@@ -2959,6 +2959,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="model">Record of type T to be added to the table</param>
     public async Task Create(T model, bool removeNavigationProps = false)
     {
+        if (model == null)
+        {
+            throw new ArgumentNullException(nameof(model), "Model cannot be null");
+        }
+
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (removeNavigationProps)
         {
@@ -3161,10 +3166,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>Boolean indicating success</returns>
     public async Task<bool> SaveChanges()
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         bool result = false;
         try
         {
+            using DbContext context = serviceProvider.GetRequiredService<UT>()!;
             result = await context.SaveChangesAsync().ConfigureAwait(false) > 0;
         }
         catch (DbUpdateException duex)

@@ -256,6 +256,7 @@ public static class Collections
     /// </summary>
     /// <typeparam name="T">Type to use in list</typeparam>
     /// <param name="obj">Object to turn into a single item list</param>
+    [Obsolete("Use collection expression instead")]
     public static List<T> SingleToList<T>(this T? obj)
     {
         return (obj != null) ? [obj] : [];
@@ -265,6 +266,7 @@ public static class Collections
     /// Create a single item list from an object
     /// </summary>
     /// <param name="obj">Object to turn into a single item list</param>
+    [Obsolete("Use collection expression instead")]
     public static List<string> SingleToList(this string? obj, bool allowEmptyStrings = false)
     {
         if (!allowEmptyStrings)
@@ -522,18 +524,17 @@ public static class Collections
     }
 
     /// <summary>
-    /// Convert a collection into equivalent DataTable object
+    /// Convert a collection into equivalent DataTable object using expression trees
     /// </summary>
     /// <typeparam name="T">Class to use in table creation</typeparam>
     /// <param name="data">Collection to convert into a DataTable</param>
     /// <param name="dataTable">DataTable to optionally insert data into</param>
-    /// <param name="useExpressionTrees">Uses expression trees with caching to perform the conversion</param>
     /// <param name="useParallel">Parallelizes the conversion</param>
     /// <param name="approximateCount">Used for pre-allocating variable size when using parallelization, default is data.Count()</param>
     /// <param name="degreeOfParallelism">Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine)</param>
     /// <returns>A DaataTable representation of the collection that was passed in</returns>
     [return: NotNullIfNotNull(nameof(data))]
-    public static DataTable? ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
+    public static DataTable? ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
     {
         if (data == null)
         {
@@ -541,11 +542,29 @@ public static class Collections
         }
 
         dataTable ??= new();
-        return useExpressionTrees ? data.ToDataTableExpressionTrees(dataTable, useParallel, approximateCount, degreeOfParallelism, cancellationToken) : data.ToDataTableReflection(dataTable, useParallel, approximateCount, degreeOfParallelism, cancellationToken);
+        return data.ToDataTableExpressionTrees(dataTable, useParallel, approximateCount, degreeOfParallelism, cancellationToken);
     }
 
-    private static DataTable ToDataTableReflection<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism, CancellationToken cancellationToken = default) where T : class, new()
+    /// <summary>
+    /// Convert a collection into equivalent DataTable object using reflection
+    /// </summary>
+    /// <typeparam name="T">Class to use in table creation</typeparam>
+    /// <param name="data">Collection to convert into a DataTable</param>
+    /// <param name="dataTable">DataTable to optionally insert data into</param>
+    /// <param name="useParallel">Parallelizes the conversion</param>
+    /// <param name="approximateCount">Used for pre-allocating variable size when using parallelization, default is data.Count()</param>
+    /// <param name="degreeOfParallelism">Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine)</param>
+    /// <returns>A DaataTable representation of the collection that was passed in</returns>
+    [Obsolete("Please use ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) instead", false)]
+    [return: NotNullIfNotNull(nameof(data))]
+    public static DataTable? ToDataTableReflection<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
     {
+        if (data == null)
+        {
+            return null;
+        }
+
+        dataTable ??= new();
         PropertyInfo[] properties = typeof(T).GetProperties();
 
         // Remove invalid columns
@@ -748,7 +767,6 @@ public static class Collections
     public static Expression<Func<T, bool>>? CombineExpressions<T>(IEnumerable<Expression<Func<T, bool>>> expressions)
     {
         Expression<Func<T, bool>>? combined = null;
-
         foreach (Expression<Func<T, bool>> expression in expressions)
         {
             if (combined == null)
@@ -858,11 +876,24 @@ public static class Collections
         }
     }
 
+    /// <summary>
+    /// Returns the index of the first occurrence of an object in a collection.
+    /// </summary>
+    /// <param name="collection"></param>
+    /// <param name="value"></param>
+    /// <returns>Index of the first occurrence of value in the collection or -1 if not found</returns>
     public static int IndexOf<T>(this IEnumerable<T> collection, T value)
     {
         return collection.IndexOf(value, null);
     }
 
+    /// <summary>
+    /// Returns the index of the first occurrence of an object in a collection, using the specified comparer for equality checks.
+    /// </summary>
+    /// <param name="collection">Collection to get index of object in</param>
+    /// <param name="value">Value to check for equality in collection</param>
+    /// <param name="comparer">Comparer used when checking for equality with value</param>
+    /// <returns>Index of the first occurrence of value in the collection or -1 if not found</returns>
     public static int IndexOf<T>(this IEnumerable<T> collection, T value, IEqualityComparer<T>? comparer)
     {
         comparer ??= EqualityComparer<T>.Default;
@@ -870,6 +901,12 @@ public static class Collections
         return (found == null) ? (-1) : found.i;
     }
 
+    /// <summary>
+    /// Checks to see if the value is in the enum type specified
+    /// </summary>
+    /// <typeparam name="T">Enum to check against for validity</typeparam>
+    /// <param name="value">Value to check to see if it's in the specified enum</param>
+    /// <returns>True if value is a valid value of the specified enum, otherwise false</returns>
     public static bool IsIn<T>(this object value) where T : Enum
     {
         return Enum.IsDefined(typeof(T), value);

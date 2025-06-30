@@ -2,6 +2,9 @@
 
 namespace CommonNetFuncs.Core;
 
+/// <summary>
+/// Run batches of operations on a collection of items.
+/// </summary>
 public static class RunBatches
 {
     //public delegate bool BatchedProcess<T>(IReadOnlyList<T> itemsToProcess);

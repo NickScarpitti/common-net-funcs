@@ -114,7 +114,7 @@ public sealed class DateTimeHelpersTests
     public void IsValidOaDate_NullableDouble_ReturnsFalseIfNull()
     {
         double? value = null;
-        DateTimeHelpers.IsValidOaDate(value).ShouldBeFalse();
+        value.IsValidOaDate().ShouldBeFalse();
     }
 
     [Theory]
@@ -125,6 +125,16 @@ public sealed class DateTimeHelpersTests
     public void IsValidOaDate_NullableDouble_ReturnsExpected(double value, bool expected)
     {
         _ = value;
-        DateTimeHelpers.IsValidOaDate(value).ShouldBe(expected);
+        value.IsValidOaDate().ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(657435.0, true)]
+    [InlineData(2958465.99999999, true)]
+    [InlineData(657434.999, false)]
+    [InlineData(2958466.0, false)]
+    public void IsValidOaDate_Double_ReturnsExpected(double value, bool expected)
+    {
+        value.IsValidOaDate().ShouldBe(expected);
     }
 }

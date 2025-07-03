@@ -266,7 +266,7 @@ public sealed class RandomTests
 
         // Assert
         results.Count().ShouldBe(quantity);
-        results.All(x => items.Contains(x)).ShouldBeTrue();
+        results.All(items.Contains).ShouldBeTrue();
     }
 
     [Theory]

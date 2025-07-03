@@ -6,11 +6,17 @@ This lightweight project contains helper methods for several common functions re
 
 ## Contents
 
-<!-- - [Class Name](#) -->
+- [CommonNetFuncs.DeepClone](#commonnetfuncsdeepclone)
+  - [Contents](#contents)
+  - [\[Class Name\]](#class-name)
+    - [\[Class Name\] Usage Examples](#class-name-usage-examples)
+      - [\[MethodNameHere\]](#methodnamehere)
 
 ---
 
-## [Class Name Here]
+## [Class Name]
+
+### [Class Name] Usage Examples
 
 [Description here]
 

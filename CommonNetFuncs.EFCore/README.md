@@ -6,7 +6,10 @@ This lightweight project contains helper methods for several common functions re
 
 ## Contents
 
-<!-- - [Class Name](#) -->
+- [CommonNetFuncs.EFCore](#commonnetfuncsefcore)
+  - [Contents](#contents)
+  - [\[Class Name Here\]](#class-name-here)
+      - [\[MethodNameHere\]](#methodnamehere)
 
 ---
 

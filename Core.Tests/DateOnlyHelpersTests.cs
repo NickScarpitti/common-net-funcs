@@ -110,34 +110,6 @@ public sealed class DateOnlyHelpersTests
         date.GetLastDayOfMonth().ShouldBe(new DateOnly(2024, 5, 31));
     }
 
-    [Theory]
-    [InlineData(657435.0, true)]
-    [InlineData(2958465.99999999, true)]
-    [InlineData(657434.999, false)]
-    [InlineData(2958466.0, false)]
-    public void IsValidOaDate_Double_ReturnsExpected(double value, bool expected)
-    {
-        DateOnlyHelpers.IsValidOaDate(value).ShouldBe(expected);
-    }
-
-    [Fact]
-    public void IsValidOaDate_NullableDouble_ReturnsFalseIfNull()
-    {
-        double? value = null;
-        DateOnlyHelpers.IsValidOaDate(value).ShouldBeFalse();
-    }
-
-    [Theory]
-    [InlineData(657435.0, true)]
-    [InlineData(2958465.99999999, true)]
-    [InlineData(657434.999, false)]
-    [InlineData(2958466.0, false)]
-    public void IsValidOaDate_NullableDouble_ReturnsExpected(double value, bool expected)
-    {
-        double? numericValue = value;
-        DateOnlyHelpers.IsValidOaDate(numericValue).ShouldBe(expected);
-    }
-
     [Fact]
     public void GetToday_ReturnsTodaysDate()
     {

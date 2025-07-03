@@ -13,13 +13,14 @@ public static class Reflection
     /// <typeparam name="T">Type of object to clone</typeparam>
     /// <param name="original">Object to clone</param>
     /// <returns>Clone of the original object</returns>
+    [Obsolete("Please use CommonNetFuncs.DeepClone.ExpressionTrees.DeepClone instead")]
     [return: NotNullIfNotNull(nameof(original))]
-    public static T? DeepClone<T>(this T? original)
+    public static T? DeepCloneR<T>(this T? original)
     {
         return (T?)original.Copy();
     }
 
-    public static bool IsPrimitive(this Type type)
+    private static bool IsPrimitive(this Type type)
     {
         if (type == typeof(string))
         {

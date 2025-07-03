@@ -531,7 +531,9 @@ public sealed class CollectionsTests
         TestClass obj = new() { Name = "test" };
 
         // Act
+#pragma warning disable CS0618 // Type or member is obsolete
         List<TestClass> result = obj.SingleToList();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(1);
@@ -542,7 +544,9 @@ public sealed class CollectionsTests
     public void SingleToList_WithNullObject_ReturnsEmptyList()
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<TestClass> result = Collections.SingleToList<TestClass>(null);
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(0);
@@ -555,7 +559,9 @@ public sealed class CollectionsTests
         const string str = "test";
 
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = str.SingleToList();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(1);
@@ -566,7 +572,9 @@ public sealed class CollectionsTests
     public void SingleToList_WithEmptyString_ReturnsEmptyList()
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = string.Empty.SingleToList(allowEmptyStrings: false);
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(0);
@@ -576,7 +584,9 @@ public sealed class CollectionsTests
     public void SingleToList_WithEmptyStringAndAllowEmptyTrue_ReturnsListWithEmptyString()
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = string.Empty.SingleToList(allowEmptyStrings: true);
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(1);
@@ -587,7 +597,9 @@ public sealed class CollectionsTests
     public void SingleToList_WithNullString_ReturnsEmptyList()
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = Collections.SingleToList(null, allowEmptyStrings: true);
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(0);

@@ -12,7 +12,8 @@ public static class Serialize
     /// <param name="original">Object to clone</param>
     /// <returns>Clone of the original object</returns>
     [return: NotNullIfNotNull(nameof(original))]
-    public static T? DeepClone<T>(this T? original) where T : class
+    [Obsolete("Please use CommonNetFuncs.DeepClone.ExpressionTrees.DeepClone instead")]
+    public static T? DeepCloneS<T>(this T? original) where T : class
     {
         if (original == null)
         {

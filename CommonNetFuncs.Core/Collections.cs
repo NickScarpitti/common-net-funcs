@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections;
+using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -990,5 +991,154 @@ public sealed class ArrayTraverse
             }
         }
         return false;
+    }
+}
+
+public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
+{
+    private readonly Lock addLock = new();
+    private readonly int capacity;
+    private readonly OrderedDictionary<TKey, TValue?> dictionary;
+
+    //private Queue<TKey> insertionOrderQueue;
+
+    public FixedFIFODictionary(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
+    {
+        if (capacity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
+        }
+
+        if (sourceDictionary != null && sourceDictionary.Count > capacity)
+        {
+            throw new ArgumentException("Source dictionary exceeds the specified capacity.", nameof(sourceDictionary));
+        }
+
+        this.capacity = capacity;
+        dictionary = new OrderedDictionary<TKey, TValue?>(capacity);
+        //insertionOrderQueue = new Queue<TKey>(capacity);
+
+        if (sourceDictionary != null)
+        {
+            foreach (KeyValuePair<TKey, TValue?> kvp in sourceDictionary)
+            {
+                dictionary[kvp.Key] = kvp.Value;
+                //insertionOrderQueue.Enqueue(kvp.Key);
+            }
+        }
+    }
+
+    public ICollection<TKey> Keys => dictionary.Keys;
+
+    public ICollection<TValue?> Values => dictionary.Values;
+
+    public int Count => dictionary.Count;
+
+    public bool IsReadOnly => ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).IsReadOnly;
+
+    public TValue? this[TKey key]
+    {
+        get
+        {
+            lock (addLock)
+            {
+                return dictionary[key];
+            }
+        }
+        set
+        {
+            lock (addLock)
+            {
+                if (dictionary.ContainsKey(key))
+                {
+                    // Update existing item
+                    dictionary[key] = value;
+                    // Note: We're not changing its position in the queue
+                }
+                else
+                {
+                    // Add new item
+                    if (dictionary.Count >= capacity)
+                    {
+                        // Remove oldest item
+                        //TKey oldestKey = insertionOrderQueue.Dequeue();
+                        TKey oldestKey = dictionary.GetAt(0).Key;
+                        dictionary.Remove(oldestKey);
+                    }
+                    dictionary[key] = value;
+                    //insertionOrderQueue.Enqueue(key);
+                }
+            }
+        }
+    }
+
+    public bool ContainsKey(TKey key)
+    {
+        return dictionary.ContainsKey(key);
+    }
+
+    public bool TryGetValue(TKey key, out TValue? value)
+    {
+        return dictionary.TryGetValue(key, out value);
+    }
+
+    public void Clear()
+    {
+        dictionary.Clear();
+        //insertionOrderQueue.Clear();
+    }
+
+    public void Add(TKey key, TValue? value)
+    {
+        dictionary.Add(key, value);
+        //insertionOrderQueue.Enqueue(key);
+    }
+
+    public bool Remove(TKey key)
+    {
+        //if (dictionary.Remove(key))
+        //{
+        //    insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, key)));
+        //    return true;
+        //}
+        //return false;
+        return dictionary.Remove(key);
+    }
+
+    public void Add(KeyValuePair<TKey, TValue?> item)
+    {
+        ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Add(item);
+        //insertionOrderQueue.Enqueue(item.Key);
+    }
+
+    public bool Contains(KeyValuePair<TKey, TValue?> item)
+    {
+        return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Contains(item);
+    }
+
+    public void CopyTo(KeyValuePair<TKey, TValue?>[] array, int arrayIndex)
+    {
+        ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).CopyTo(array, arrayIndex);
+    }
+
+    public bool Remove(KeyValuePair<TKey, TValue?> item)
+    {
+        //if (((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item))
+        //{
+        //    insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, item.Key)));
+        //    return true;
+        //}
+        //return false;
+        return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item);
+    }
+
+    public IEnumerator<KeyValuePair<TKey, TValue?>> GetEnumerator()
+    {
+        return ((IEnumerable<KeyValuePair<TKey, TValue?>>)dictionary).GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return ((IEnumerable)dictionary).GetEnumerator();
     }
 }

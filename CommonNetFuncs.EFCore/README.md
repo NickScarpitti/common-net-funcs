@@ -2,7 +2,7 @@
 
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.EFCore)](https://www.nuget.org/packages/CommonNetFuncs.EFCore/)
 
-This lightweight project contains helper methods for several common functions required by applications.
+This project contains helper methods for several common Entity Framework Core operations.
 
 ## Contents
 

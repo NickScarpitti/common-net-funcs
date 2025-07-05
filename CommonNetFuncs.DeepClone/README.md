@@ -2,7 +2,7 @@
 
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.DeepClone)](https://www.nuget.org/packages/CommonNetFuncs.DeepClone/)
 
-This lightweight project contains helper methods for several common functions required by applications.
+This project contains helper methods for deep cloning objects in .NET applications (i.e. creating a new instance of an object with the same values as an existing instance but without the same references in memory).
 
 ## Contents
 

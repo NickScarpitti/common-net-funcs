@@ -2,7 +2,7 @@
 
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Excel.Npoi)](https://www.nuget.org/packages/CommonNetFuncs.Excel.Npoi/)
 
-This lightweight project contains helper methods for several common functions required by applications.
+This project contains helper methods for reading and writing Excel files using the NPOI library in .NET applications.
 
 ## Contents
 

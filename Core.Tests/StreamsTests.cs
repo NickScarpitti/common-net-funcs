@@ -107,6 +107,210 @@ public sealed class StreamsTests
     }
 
     [Fact]
+    public async Task WriteStreamToStream_Copies_All_Data()
+    {
+        // Arrange
+        await using FileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
+        await using MemoryStream target = new();
+        byte[] data = await source.ReadStreamAsync();
+        source.Position = 0;
+
+        // Act
+        await target.WriteStreamToStream(source);
+
+        // Assert
+        target.ToArray().ShouldBe(data);
+        target.Position.ShouldBe(0);
+        source.Position.ShouldBe(0); // Source is reset to 0 by the method
+    }
+
+    [Fact]
+    public async Task WriteStreamToStream_Respects_CancellationToken()
+    {
+        // Arrange
+        await using ControllableFileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
+        await using MemoryStream target = new();
+        using CancellationTokenSource cts = new();
+        cts.Cancel();
+
+        // Act & Assert
+        await Should.ThrowAsync<OperationCanceledException>(async () => await target.WriteStreamToStream(source, cts.Token));
+    }
+
+    [Fact]
+    public async Task WriteStreamToStream_Throws_If_Source_Disposed()
+    {
+        // Arrange
+        await using ControllableFileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
+        await using MemoryStream target = new();
+        source.Dispose();
+
+        // Act & Assert
+        await Should.ThrowAsync<ObjectDisposedException>(async () => await target.WriteStreamToStream(source));
+    }
+
+    [Fact]
+    public async Task WriteStreamToStream_Throws_If_Target_Disposed()
+    {
+        // Arrange
+        await using ControllableFileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
+        await using MemoryStream target = new();
+        target.Dispose();
+
+        // Act & Assert
+        await Should.ThrowAsync<InvalidOperationException>(async () => await target.WriteStreamToStream(source));
+    }
+
+    [Fact]
+    public async Task WriteStreamToStream_Leaves_Target_At_Position_Zero_And_Flushed()
+    {
+        // Arrange
+        await using FileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
+        await using MemoryStream target = new();
+        byte[] data = await source.ReadStreamAsync();
+        source.Position = 0;
+
+        // Act
+        await target.WriteStreamToStream(source);
+
+        // Assert
+        target.Position.ShouldBe(0);
+        target.ToArray().ShouldBe(data);
+    }
+
+    [Fact]
+    public async Task WriteStreamToStream_Source_Position_Is_Reset()
+    {
+        // Arrange
+        await using FileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
+        await using MemoryStream target = new();
+        byte[] data = await source.ReadStreamAsync();
+        source.Position = 0;
+
+        // Move source position to end
+        source.Position = source.Length;
+
+        // Act
+        await target.WriteStreamToStream(source);
+
+        // Assert
+        source.Position.ShouldBe(0);
+        target.ToArray().ShouldBe(data);
+    }
+
+    [Theory]
+    [InlineData(false, true, true, true)]  // source: !CanRead
+    [InlineData(true, false, true, true)]  // source: !CanSeek
+    [InlineData(true, true, false, true)]  // target: !CanSeek
+    [InlineData(true, true, true, false)]  // target: !CanWrite
+    public async Task WriteStreamToStream_Stream_Throws_On_Invalid_Capabilities(bool sourceCanRead, bool sourceCanSeek, bool targetCanSeek, bool targetCanWrite)
+    {
+        // Arrange
+        string tempSource = Path.GetTempFileName();
+        string tempTarget = Path.GetTempFileName();
+        await File.WriteAllBytesAsync(tempSource, new byte[] { 1, 2, 3, 4 });
+        await File.WriteAllBytesAsync(tempTarget, Array.Empty<byte>());
+
+        Stream source = new ControllableFileStream(tempSource, FileMode.Open, FileAccess.Read, FileShare.None, sourceCanSeek, sourceCanRead);
+
+        Stream target = new ControllableFileStream(tempTarget, FileMode.Open, targetCanWrite ? FileAccess.ReadWrite : FileAccess.Read, FileShare.None, targetCanSeek);
+
+        // Act & Assert
+        await Should.ThrowAsync<InvalidOperationException>(async () => await target.WriteStreamToStream(source));
+
+        await source.DisposeAsync();
+        await target.DisposeAsync();
+        File.Delete(tempSource);
+        File.Delete(tempTarget);
+    }
+
+    // Helper for non-seekable stream
+    private sealed class ControllableFileStream(string path, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, bool canSeek = true, bool canRead = true) : FileStream(path, fileMode, fileAccess, fileShare)
+    {
+        public override bool CanSeek => canSeek;
+
+        public override bool CanRead => canRead;
+    }
+
+    [Theory]
+    [InlineData(false, true, true, true)]  // source: !CanRead
+    [InlineData(true, false, true, true)]  // source: !CanSeek
+    [InlineData(true, true, false, true)]  // target: !CanSeek
+    [InlineData(true, true, true, false)]  // target: !CanWrite
+    public async Task WriteStreamToStream_MemoryStream_Throws_On_Invalid_Capabilities(bool sourceCanRead, bool sourceCanSeek, bool targetCanSeek, bool targetCanWrite)
+    {
+        // Arrange
+        byte[] data = { 1, 2, 3, 4 };
+        ControllableMemoryStream source = new(data, sourceCanRead, true, sourceCanSeek);
+        ControllableMemoryStream target = new([], true, targetCanWrite, targetCanSeek);
+
+        // Act & Assert
+        await Should.ThrowAsync<InvalidOperationException>(async () => await target.WriteStreamToStream(source));
+
+        await source.DisposeAsync();
+        await target.DisposeAsync();
+    }
+
+    // Helper memory stream
+    private sealed class ControllableMemoryStream(byte[] buffer, bool canRead = true, bool canWrite = true, bool canSeek = true) : MemoryStream(buffer, canWrite)
+    {
+        public override bool CanSeek => canSeek;
+
+        public override bool CanRead => canRead;
+    }
+
+    [Fact]
+    public async Task WriteStreamToStream_Stream_Resets_Source_Position()
+    {
+        // Arrange
+        string tempSource = Path.GetTempFileName();
+        string tempTarget = Path.GetTempFileName();
+        byte[] data = { 10, 20, 30, 40 };
+        await File.WriteAllBytesAsync(tempSource, data);
+        await File.WriteAllBytesAsync(tempTarget, Array.Empty<byte>());
+
+        await using FileStream source = new(tempSource, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+        await using FileStream target = new(tempTarget, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+        source.Position = source.Length; // Move to end
+
+        // Act
+        await target.WriteStreamToStream(source);
+
+        // Assert
+        source.Position.ShouldBe(0);
+        target.Position.ShouldBe(0);
+        (await target.ReadStreamAsync()).ShouldBe(data);
+
+        source.Close();
+        target.Close();
+        await source.DisposeAsync();
+        await target.DisposeAsync();
+
+        File.Delete(tempSource);
+        File.Delete(tempTarget);
+    }
+
+    [Fact]
+    public async Task WriteStreamToStream_MemoryStream_Resets_Source_Position()
+    {
+        // Arrange
+        byte[] data = { 5, 6, 7, 8 };
+        MemoryStream source = new(data, true);
+        MemoryStream target = new();
+
+        source.Position = source.Length;
+
+        // Act
+        await target.WriteStreamToStream(source);
+
+        // Assert
+        source.Position.ShouldBe(0);
+        target.Position.ShouldBe(0);
+        target.ToArray().ShouldBe(data);
+    }
+
+    [Fact]
     public void CountingStream_TracksBytesWritten()
     {
         // Arrange

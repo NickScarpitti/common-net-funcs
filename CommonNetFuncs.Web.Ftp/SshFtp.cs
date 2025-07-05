@@ -113,7 +113,7 @@ public static class SshFtp
         }
 
         await using SftpFileStream stream = sftpClient!.OpenRead(remoteFilePath);
-        return ReadCsvFromStream<T>(stream, csvHasHeaderRow);
+        return ReadCsv<T>(stream, csvHasHeaderRow);
     }
 
     public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true)

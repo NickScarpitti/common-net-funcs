@@ -52,7 +52,7 @@ public static class TypeChecks
     /// <returns>True if type parameter is a class other than a string</returns>
     public static bool IsClassOtherThanString(this Type? type)
     {
-        return type == null || (!type.IsValueType && type != typeof(string));
+        return type?.IsValueType != false || type != typeof(string);
     }
 
     /// <summary>
@@ -111,19 +111,42 @@ public static class TypeChecks
     /// <returns>True if type is a read-only collection type</returns>
     public static bool IsReadOnlyCollectionType(this Type type)
     {
-        if (!type.IsGenericType)
+        ArgumentNullException.ThrowIfNull(type, nameof(type));
+
+        // Check if the type itself is a generic IReadOnlyCollection<> or IReadOnlyList<> or ReadOnlyCollection<>
+        if (type.IsGenericType)
+        {
+            Type genericType = type.GetGenericTypeDefinition();
+            if (genericType == typeof(IReadOnlyCollection<>) ||
+                genericType == typeof(IReadOnlyList<>) ||
+                genericType == typeof(ReadOnlyCollection<>))
+            {
+                return true;
+            }
+        }
+
+        if (type.Name.Equals("List`1"))
         {
             return false;
         }
 
-        Type genericType = type.GetGenericTypeDefinition();
-
-        if (type.IsInterface)
+        if (type.Name.Equals("Dictionary`2"))
         {
-            return genericType == typeof(IReadOnlyCollection<>) || genericType == typeof(IReadOnlyList<>);
+            return false;
         }
 
-        return genericType == typeof(ReadOnlyCollection<>) || type.GetInterfaces().Any(interfaceType =>
+        if (type.Name.Equals("ReadOnlyDictionary"))
+        {
+            return true;
+        }
+
+        if (type.BaseType?.Name == "Array")
+        {
+            return false;
+        }
+
+        // Check all interfaces (including inherited) for IReadOnlyCollection<> or IReadOnlyList<>
+        return type.GetInterfaces().Any(interfaceType =>
         {
             if (!interfaceType.IsGenericType)
             {

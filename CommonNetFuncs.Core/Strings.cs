@@ -207,23 +207,6 @@ public static partial class Strings
         return !s.IsNullOrWhiteSpace() ? string.Concat(s.Select(x => char.IsUpper(x) ? $" {x}" : x.ToString())).TrimStart(' ') : s;
     }
 
-    ///// <summary>
-    ///// Converts string to title case using the specified culture
-    ///// </summary>
-    ///// <param name="s">String to convert to title case</param>
-    ///// <param name="cultureString">String representation of the culture to use when converting string to title case</param>
-    ///// <returns>String converted to title case</returns>
-    //[return: NotNullIfNotNull(nameof(s))]
-    //public static string? ToTitleCase(this string? s, string cultureString = "en-US")
-    //{
-    //    if (!s.IsNullOrWhiteSpace())
-    //    {
-    //        TextInfo textinfo = new CultureInfo(cultureString, false).TextInfo;
-    //        s = textinfo.ToTitleCase(s);
-    //    }
-    //    return s;
-    //}
-
     /// <summary>
     /// Converts a string to title case with options for handling uppercase words.
     /// </summary>
@@ -368,50 +351,6 @@ public static partial class Strings
     /// Checks if the given string contains a specific string regardless of culture or case
     /// </summary>
     /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns>True if s contains the string textToFind in any form</returns>
-    public static bool StartsWithInvariant(this string? s, string? textToFind)
-    {
-        return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
-    }
-
-    /// <summary>
-    /// Checks if the given string contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns>True if s contains the string textToFind in any form</returns>
-    public static bool EndsWithInvariant(this string? s, string? textToFind)
-    {
-        return textToFind != null && (s?.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
-    }
-
-    /// <summary>
-    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns>True if s contains the string textToFind in any form</returns>
-    public static int IndexOfInvariant(this string? s, string? textToFind)
-    {
-        return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
-    }
-
-    /// <summary>
-    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns>True if s contains the string textToFind in any form</returns>
-    public static int IndexOfInvariant(this string? s, char? textToFind)
-    {
-        return textToFind != null ? s?.IndexOf((char)textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
-    }
-
-    /// <summary>
-    /// Checks if the given string contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
     /// <param name="textsToFind">Strings to find in s</param>
     /// <param name="useOrComparison">
     /// <para>If true, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
@@ -452,18 +391,63 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Checks if the given string begins with a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns>True if s contains the string textToFind in any form</returns>
+    public static bool StartsWithInvariant(this string? s, string? textToFind)
+    {
+        return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
+    }
+
+    /// <summary>
     /// Checks if the given string contains a specific string regardless of culture or case
     /// </summary>
     /// <param name="s">String to search</param>
-    /// <param name="textsToFind">Strings to find in s</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns>True if s contains the string textToFind in any form</returns>
+    public static bool EndsWithInvariant(this string? s, string? textToFind)
+    {
+        return textToFind != null && (s?.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
+    }
+
+    /// <summary>
+    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns>True if s contains the string textToFind in any form</returns>
+    public static int IndexOfInvariant(this string? s, string? textToFind)
+    {
+        return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
+    }
+
+    /// <summary>
+    /// Gets the index of a character in a string, ignoring culture and case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="charToFind">Character to find in s</param>
+    /// <returns>The zero-based index of the first occurrence of charToFind, or -1 if not found</returns>
+    public static int IndexOfInvariant(this string? s, char? charToFind)
+    {
+        return charToFind != null ? s?.IndexOf((char)charToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
+    }
+
+    /// <summary>
+    /// Checks if the given string contains at least one or all of the strings in a collection of strings, regardless of culture or case.
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="stringsToFind">Strings to find in s</param>
     /// <param name="useOrComparison">
-    /// <para>If true, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
+    /// <para>If true, will check if any of the stringsToFind values are in s. (OR configuration)</para>
+    /// <para>If false, will check if all of the stringsToFind values are in s. (AND configuration)</para>
     /// </param>
     /// <returns>
-    /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
-    /// False</para>
+    /// <para>True if s contains any of the strings in stringsToFind in any form when useOrComparison = True</para>
+    /// <para>True if s contains all of the strings in stringsToFind when useOrComparison = False</para>
     /// </returns>
-    public static bool Contains(this string? s, IEnumerable<string> textsToFind, bool useOrComparison = true)
+    public static bool Contains(this string? s, IEnumerable<string> stringsToFind, bool useOrComparison = true)
     {
         if (s.IsNullOrWhiteSpace())
         {
@@ -472,7 +456,7 @@ public static partial class Strings
 
         if (useOrComparison)
         {
-            foreach (string textToFind in textsToFind)
+            foreach (string textToFind in stringsToFind)
             {
                 if (s.Contains(textToFind))
                 {
@@ -483,7 +467,7 @@ public static partial class Strings
         }
         else
         {
-            foreach (string textToFind in textsToFind)
+            foreach (string textToFind in stringsToFind)
             {
                 if (!s.Contains(textToFind))
                 {
@@ -659,9 +643,10 @@ public static partial class Strings
     /// <typeparam name="T">Type of object to trim strings in</typeparam>
     /// <param name="obj">Object containing string properties to be trimmed</param>
     [return: NotNullIfNotNull(nameof(obj))]
+    [Obsolete("Please use TrimObjectStrings instead")]
     public static T? TrimObjectStringsR<T>(this T? obj)
     {
-        if (obj == null)
+        if (obj != null)
         {
             IEnumerable<PropertyInfo> props = typeof(T).GetProperties().Where(x => x.PropertyType == typeof(string));
             if (props.Any())
@@ -761,6 +746,7 @@ public static partial class Strings
         return obj;
     }
 
+    //TODO:: Implement use of FixedFIFODictionary here to allow max number of cached delegates to be set
     private static readonly ConcurrentDictionary<(Type, bool, NormalizationForm, bool), Delegate> normalizeObjectStringsCache = new();
 
     /// <summary>
@@ -1191,19 +1177,40 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Get file name safe date in the chosen format
+    /// </summary>
+    /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
+    /// <returns>File name safe formatted date</returns>
+    public static string GetSafeDate(this DateTime? date, string dateFormat)
+    {
+        return (date ?? DateTime.Today).ToString(dateFormat).Replace("/", "-");
+    }
+
+    /// <summary>
+    /// Get file name safe date in the chosen format
+    /// </summary>
+    /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
+    /// <returns>File name safe formatted date</returns>
+    public static string GetSafeDate(this DateOnly? date, string dateFormat)
+    {
+        return (date ?? DateOnly.FromDateTime(DateTime.Today)).ToString(dateFormat).Replace("/", "-");
+    }
+
+    /// <summary>
     /// Adds number in () at the end of a file name if it would create a duplicate in the savePath
     /// </summary>
-    /// <param name="savePath">Path to get unique name for</param>
-    /// <param name="fileName">File name to make unique</param>
-    /// <param name="extension">File extension</param>
+    /// <param name="savePath">Path to get unique name for without trailing slash</param>
+    /// <param name="fileName">File name to make unique (including extension)</param>
+    /// <param name="extension">Optional: File extension (without '.'), otherwise will infer extension from fileName</param>
     /// <returns>Unique file name string</returns>
-    public static string MakeExportNameUnique(string savePath, string fileName, string extension)
+    public static string MakeExportNameUnique(string savePath, string fileName, string? extension = null)
     {
+        extension ??= Path.GetExtension(fileName)[1..];
         int i = 0;
         string outputName = fileName;
         while (File.Exists(Path.Combine(savePath, outputName)))
         {
-            outputName = $"{fileName[..(fileName.Length - extension.Length)]} ({i}).{extension}";
+            outputName = $"{fileName[..(fileName.Length - extension.Length - 1)]} ({i}).{extension}";
             i++;
         }
         return outputName;
@@ -1542,6 +1549,12 @@ public static partial class Strings
         return input;
     }
 
+    /// <summary>
+    /// Splits a string into lines based on line breaks, yielding each line as an individual string.
+    /// </summary>
+    /// <param name="input">The input string to split into lines.</param>
+    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+    /// <returns>An enumerable collection of strings, each representing a line from the input.</returns>
     [return: NotNullIfNotNull(nameof(input))]
     public static IEnumerable<string> SplitLines(this string? input, CancellationToken cancellationToken = default)
     {
@@ -1558,6 +1571,12 @@ public static partial class Strings
         }
     }
 
+    /// <summary>
+    /// Converts a nullable numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
+    /// </summary>
+    /// <param name="number">The nullable value to convert.</param>
+    /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
+    /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4"). Null if number is null.</returns>
     [return: NotNullIfNotNull(nameof(number))]
     public static string? ToFractionString(this decimal? number, int maxNumberOfDecimalsToConsider)
     {
@@ -1574,6 +1593,12 @@ public static partial class Strings
         return $"{wholeNumberPart} {numerator}/{denominator}";
     }
 
+    /// <summary>
+    /// Converts a numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
+    /// </summary>
+    /// <param name="number">The value to convert.</param>
+    /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
+    /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4")</returns>
     [return: NotNullIfNotNull(nameof(number))]
     public static string? ToFractionString(this decimal number, int maxNumberOfDecimalsToConsider)
     {
@@ -1585,6 +1610,12 @@ public static partial class Strings
         return $"{wholeNumberPart} {numerator}/{denominator}";
     }
 
+    /// <summary>
+    /// Converts a nullable numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
+    /// </summary>
+    /// <param name="number">The nullable value to convert.</param>
+    /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
+    /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4"). Null if number is null.</returns>
     [return: NotNullIfNotNull(nameof(number))]
     public static string? ToFractionString(this double? number, int maxNumberOfDecimalsToConsider)
     {
@@ -1601,6 +1632,12 @@ public static partial class Strings
         return $"{wholeNumberPart} {numerator}/{denominator}";
     }
 
+    /// <summary>
+    /// Converts a numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
+    /// </summary>
+    /// <param name="number">The value to convert.</param>
+    /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
+    /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4")</returns>
     [return: NotNullIfNotNull(nameof(number))]
     public static string? ToFractionString(this double number, int maxNumberOfDecimalsToConsider)
     {
@@ -1612,6 +1649,18 @@ public static partial class Strings
         return $"{wholeNumberPart} {numerator}/{denominator}";
     }
 
+    /// <summary>
+    /// Converts a string representation of a fraction or decimal value into a decimal value.
+    /// </summary>
+    /// <remarks>The method supports the following formats: <list type="bullet"> <item> <description>A decimal
+    /// value, e.g. "3.14".</description> </item> <item> <description>A fraction in the format "numerator/denominator",
+    /// e.g. "1/2".</description> </item> <item> <description>A mixed fraction in the format "whole
+    /// numerator/denominator", e.g. "1 1/2".</description> </item> </list> If the input string is null, the method returns null. If the input string is invalid, a FormatException is thrown.
+    /// </remarks>
+    /// <param name="fractionString">A string containing a decimal value or a fraction in the format "numerator/denominator" or  "whole
+    /// numerator/denominator". Can also include a space between the whole number and the fraction.</param>
+    /// <returns>A decimal representation of the input string if it is a valid fraction or decimal, otherwise null</returns>
+    /// <exception cref="FormatException">Thrown if fractionString is not a valid decimal or fraction format.</exception>
     [return: NotNullIfNotNull(nameof(fractionString))]
     public static decimal? FractionToDecimal(this string? fractionString)
     {
@@ -1646,10 +1695,16 @@ public static partial class Strings
         throw new FormatException("Not a valid fraction.");
     }
 
-    public static bool TryFractionToDecimal(this string? inputString, [NotNullWhen(true)] out decimal? result)
+    /// <summary>
+    /// Attempts to convert a fraction represented as a string into its decimal equivalent.
+    /// </summary>
+    /// <param name="fractionString">The input string containing the fraction to be converted.</param>
+    /// <param name="result">Contains the decimal equivalent of the fraction if the conversion was successful, otherwise null.</param>
+    /// <returns>True if the conversion was successful, otherwise false.</returns>
+    public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal? result)
     {
         result = null;
-        if (inputString.IsNullOrWhiteSpace())
+        if (fractionString.IsNullOrWhiteSpace())
         {
             return false;
         }
@@ -1657,7 +1712,7 @@ public static partial class Strings
         bool success = true;
         try
         {
-            result = inputString.FractionToDecimal();
+            result = fractionString.FractionToDecimal();
         }
         catch (Exception)
         {
@@ -1666,6 +1721,12 @@ public static partial class Strings
         return success;
     }
 
+    /// <summary>
+    /// Attempts to convert a fraction represented as a string into its decimal equivalent.
+    /// </summary>
+    /// <param name="fractionString">The input string containing the fraction to be converted.</param>
+    /// <param name="result">Contains the decimal equivalent of the fraction if the conversion was successful, otherwise 0</param>
+    /// <returns>True if the conversion was successful, otherwise false.</returns>
     public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal result)
     {
         result = default;
@@ -1686,21 +1747,29 @@ public static partial class Strings
         return success;
     }
 
+    /// <summary>
+    /// Attempts to convert the specified string to a decimal value.
+    /// </summary>
+    /// <param name="inputString">The input string to parse.</param>
+    /// <param name="result">When this method returns true, contains the parsed decimal value. When this method returns false, contains null.</param>
+    /// <returns>True if the conversion was successful, otherwise false.</returns>
     public static bool TryStringToDecimal(this string? inputString, [NotNullWhen(true)] out decimal? result)
     {
         result = null;
-        bool success = true;
         if (inputString.IsNullOrWhiteSpace())
         {
             return false;
         }
 
+        bool success;
         try
         {
             //Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
             result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
                 decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
                 null;
+
+            success = result != null;
         }
         catch (Exception)
         {
@@ -1709,21 +1778,29 @@ public static partial class Strings
         return success;
     }
 
+    /// <summary>
+    /// Attempts to convert the specified string to a decimal value.
+    /// </summary>
+    /// <param name="inputString">The input string to parse.</param>
+    /// <param name="result">When this method returns true, contains the parsed decimal value. When this method returns false, contains 0.</param>
+    /// <returns>True if the conversion was successful, otherwise false.</returns>
     public static bool TryStringToDecimal(this string? inputString, [NotNullWhen(true)] out decimal result)
     {
         result = default;
-        bool success = true;
         if (inputString.IsNullOrWhiteSpace())
         {
             return false;
         }
 
+        bool success;
         try
         {
             //Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
             result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
                 decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
                 default;
+
+            success = result != default;
         }
         catch (Exception)
         {
@@ -1732,6 +1809,18 @@ public static partial class Strings
         return success;
     }
 
+    /// <summary>
+    /// Converts a string representation of a fraction or decimal value into a double value.
+    /// </summary>
+    /// <remarks>The method supports the following formats: <list type="bullet"> <item> <description>A decimal
+    /// value, e.g. "3.14".</description> </item> <item> <description>A fraction in the format "numerator/denominator",
+    /// e.g. "1/2".</description> </item> <item> <description>A mixed fraction in the format "whole
+    /// numerator/denominator", e.g. "1 1/2".</description> </item> </list> If the input string is null, the method returns null. If the input string is invalid, a FormatException is thrown.
+    /// </remarks>
+    /// <param name="fractionString">A string containing a decimal value or a fraction in the format "numerator/denominator" or  "whole
+    /// numerator/denominator". Can also include a space between the whole number and the fraction.</param>
+    /// <returns>A double representation of the input string if it is a valid fraction or decimal, otherwise null</returns>
+    /// <exception cref="FormatException">Thrown if fractionString is not a valid decimal or fraction format.</exception>
     [return: NotNullIfNotNull(nameof(fractionString))]
     public static double? FractionToDouble(this string? fractionString)
     {
@@ -1766,6 +1855,122 @@ public static partial class Strings
         throw new FormatException("Not a valid fraction.");
     }
 
+    /// <summary>
+    /// Attempts to convert a fraction represented as a string into its double equivalent.
+    /// </summary>
+    /// <param name="fractionString">The input string containing the fraction to be converted.</param>
+    /// <param name="result">Contains the double equivalent of the fraction if the conversion was successful, otherwise null.</param>
+    /// <returns>True if the conversion was successful, otherwise false.</returns>
+    /// Attempts to convert a fraction represented as a string into its double equivalent.
+    /// </summary>>
+    public static bool TryFractionToDouble(this string? fractionString, [NotNullWhen(true)] out double? result)
+    {
+        result = null;
+        if (fractionString.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        bool success = true;
+        try
+        {
+            result = fractionString.FractionToDouble();
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    /// <summary>
+    /// Attempts to convert a fraction represented as a string into its double equivalent.
+    /// </summary>
+    /// <param name="fractionString">The input string containing the fraction to be converted.</param>
+    /// <param name="result">Contains the double equivalent of the fraction if the conversion was successful, otherwise 0</param>
+    /// <returns>True if the conversion was successful, otherwise false.</returns>
+    public static bool TryFractionToDouble(this string? fractionString, [NotNullWhen(true)] out double result)
+    {
+        result = default;
+        if (fractionString.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        bool success = true;
+        try
+        {
+            result = fractionString.FractionToDouble() ?? default;
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    /// <summary>
+    /// Attempts to convert the specified string to a double value.
+    /// </summary>
+    /// <param name="inputString">The input string to parse.</param>
+    /// <param name="result">When this method returns true, contains the parsed double value. When this method returns false, contains null.</param>
+    /// <returns>True if the conversion was successful, otherwise false.</returns>
+    public static bool TryStringToDouble(this string? inputString, [NotNullWhen(true)] out double? result)
+    {
+        result = null;
+        if (inputString.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        bool success;
+        try
+        {
+            //Try reading fraction value first as double.TryParse as double.TryParse will just give numerator if there is a fraction
+            result = inputString.GetOnlyNumbers(true).TryFractionToDouble(out double fractionValue) ? fractionValue :
+                double.TryParse(inputString.GetOnlyNumbers(), out double value) ? value :
+                null;
+
+            success = result != null;
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
+    /// <summary>
+    /// Attempts to convert the specified string to a double value.
+    /// </summary>
+    /// <param name="inputString">The input string to parse.</param>
+    /// <param name="result">When this method returns true, contains the parsed double value. When this method returns false, contains 0.</param>
+    /// <returns>True if the conversion was successful, otherwise false.</returns>
+    public static bool TryStringToDouble(this string? inputString, [NotNullWhen(true)] out double result)
+    {
+        result = default;
+        bool success;
+        if (inputString.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        try
+        {
+            //Try reading fraction value first as double.TryParse as double.TryParse will just give numerator if there is a fraction
+            result = inputString.GetOnlyNumbers(true).TryFractionToDouble(out double fractionValue) ? fractionValue :
+                double.TryParse(inputString.GetOnlyNumbers(), out double value) ? value :
+                default;
+
+            success = result != default;
+        }
+        catch (Exception)
+        {
+            success = false;
+        }
+        return success;
+    }
+
     [return: NotNullIfNotNull(nameof(value))]
     public static string? RemoveLetters(this string? value)
     {
@@ -1777,6 +1982,11 @@ public static partial class Strings
         return RemoveLettersRegex().Replace(value, string.Empty);
     }
 
+    /// <summary>
+    /// Removes all numbers from a string, leaving only letters and other non-numeric characters.
+    /// </summary>
+    /// <param name="value">String to remove all numbers from</param>
+    /// <returns>Returns a string containing only the numbers from value, or null if the input is null, empty, or whitespace</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static string? RemoveNumbers(this string? value)
     {
@@ -1788,6 +1998,11 @@ public static partial class Strings
         return RemoveNumbersRegex().Replace(value, string.Empty);
     }
 
+    /// <summary>
+    /// Gets only the letters and spaces from a string, removing all numbers and other non-letter characters.
+    /// </summary>
+    /// <param name="value">String to get only letters from</param>
+    /// <returns>Returns a string containing only the letters and spaces from value, or null if the input is null, empty, or whitespace</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static string? GetOnlyLetters(this string? value)
     {
@@ -1798,6 +2013,12 @@ public static partial class Strings
         return string.Concat(LettersOnlyRegex().Matches(value.Trim())).Trim();
     }
 
+    /// <summary>
+    /// Gets only the numbers from a string, removing all letters and other non-numeric characters.
+    /// </summary>
+    /// <param name="value">String to get only numbers from</param>
+    /// <param name="allowFractions">Specifies whether to allow fractions in the numeric output</param>
+    /// <returns>Returns a string containing only the numbers from value, or null if the input is null, empty, or whitespace</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static string? GetOnlyNumbers(this string? value, bool allowFractions = false)
     {
@@ -1856,7 +2077,7 @@ public static partial class Strings
     }
 
     /// <summary>
-    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// Removes all non-alphanumeric characters from the beginning and ending of a string until the first alphanumeric character is reached.
     /// </summary>
     /// <param name="input">The input string to process.</param>
     /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
@@ -1916,7 +2137,7 @@ public static partial class Strings
     {
         if (charToFind.Length > 1)
         {
-            throw new InvalidDataException("charToFind must be a single character");
+            throw new ArgumentException($"{nameof(charToFind)} must be a single character", nameof(charToFind));
         }
         return input.CountChars(charToFind[0]);
     }

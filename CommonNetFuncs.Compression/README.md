@@ -6,15 +6,20 @@ This project contains helper methods for compressing files into a zip file as we
 
 ## Contents
 
-- [Contents](#contents)
-- [Files](#files)
-- [Streams](#streams)
+- [CommonNetFuncs.Compression](#commonnetfuncscompression)
+  - [Contents](#contents)
+  - [Files](#files)
+    - [Files Usage Examples](#files-usage-examples)
+  - [Streams](#streams)
+    - [Streams Usage Examples](#streams-usage-examples)
 
 ---
 
 ## Files
 
 Used for compressing file data into a ZipArchive class.
+
+### Files Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -89,6 +94,8 @@ Currently supported compression algorithms:
 - GZip
 - Deflate
 - ZLib
+
+### Streams Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>

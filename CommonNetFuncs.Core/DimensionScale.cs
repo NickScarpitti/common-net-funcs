@@ -102,7 +102,6 @@ public static class DimensionScale
            (Round(originalWidth * ratio, (int)resultDecimalPlaces, MidpointRounding.ToZero), Round(originalHeight * ratio, (int)resultDecimalPlaces, MidpointRounding.ToZero));
     }
 
-    // Credit GPT-4
     /// <summary>
     /// Get the dimensions to scale a 3d object in a way that maximally fits inside of the maximum constraint dimensions
     /// while maintaining its aspect ratio.

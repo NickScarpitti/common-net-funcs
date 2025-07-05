@@ -48,7 +48,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.0" PrivateAssets="all" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

@@ -37,7 +37,10 @@ public sealed class CollectionsTests
 {
     private readonly Fixture _fixture;
 
-    public CollectionsTests() { _fixture = new Fixture(); }
+    public CollectionsTests()
+    {
+        _fixture = new Fixture();
+    }
 
     #region AnyFast Tests
 
@@ -528,7 +531,9 @@ public sealed class CollectionsTests
         TestClass obj = new() { Name = "test" };
 
         // Act
+#pragma warning disable CS0618 // Type or member is obsolete
         List<TestClass> result = obj.SingleToList();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(1);
@@ -539,7 +544,9 @@ public sealed class CollectionsTests
     public void SingleToList_WithNullObject_ReturnsEmptyList()
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<TestClass> result = Collections.SingleToList<TestClass>(null);
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(0);
@@ -552,7 +559,9 @@ public sealed class CollectionsTests
         const string str = "test";
 
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = str.SingleToList();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(1);
@@ -563,7 +572,9 @@ public sealed class CollectionsTests
     public void SingleToList_WithEmptyString_ReturnsEmptyList()
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = string.Empty.SingleToList(allowEmptyStrings: false);
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(0);
@@ -573,7 +584,9 @@ public sealed class CollectionsTests
     public void SingleToList_WithEmptyStringAndAllowEmptyTrue_ReturnsListWithEmptyString()
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = string.Empty.SingleToList(allowEmptyStrings: true);
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(1);
@@ -584,7 +597,9 @@ public sealed class CollectionsTests
     public void SingleToList_WithNullString_ReturnsEmptyList()
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = Collections.SingleToList(null, allowEmptyStrings: true);
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(0);
@@ -926,8 +941,19 @@ public sealed class CollectionsTests
             new TestClass { Id = 2, Name = "test2", IsActive = false }
         };
 
+        using DataTable result = new();
+
         // Act
-        using DataTable result = collection.ToDataTable(useExpressionTrees: useExpressionTrees);
+        if (useExpressionTrees)
+        {
+            collection.ToDataTable(result);
+        }
+        else
+        {
+            #pragma warning disable CS0618 // Type or member is obsolete
+            collection.ToDataTableReflection(result);
+            #pragma warning restore CS0618 // Type or member is obsolete
+        }
 
         // Assert
         result.ShouldNotBeNull();
@@ -941,6 +967,8 @@ public sealed class CollectionsTests
         result.Rows[1]["Id"].ShouldBe(2);
         result.Rows[1]["Name"].ShouldBe("test2");
         result.Rows[1]["IsActive"].ShouldBe(false);
+
+        result.Dispose();
     }
 
     [Theory]
@@ -972,7 +1000,19 @@ public sealed class CollectionsTests
         }
 
         // Act
-        using DataTable result = collection.ToDataTable(dataTable, useExpressionTrees: useExpressionTrees);
+        DataTable result = new();
+
+        // Act
+        if (useExpressionTrees)
+        {
+            result = collection.ToDataTable(dataTable);
+        }
+        else
+        {
+            #pragma warning disable CS0618 // Type or member is obsolete
+            result = collection.ToDataTableReflection(dataTable);
+            #pragma warning restore CS0618 // Type or member is obsolete
+        }
 
         // Assert
         result.ShouldBeSameAs(dataTable);
@@ -996,8 +1036,17 @@ public sealed class CollectionsTests
         };
 
         // Act
-        DataTable result = collection.ToDataTable(useExpressionTrees: useExpressionTrees, useParallel: true);
-
+        using DataTable result = new();
+        if (useExpressionTrees)
+        {
+            collection.ToDataTable(result, useParallel: true);
+        }
+        else
+        {
+            #pragma warning disable CS0618 // Type or member is obsolete
+            collection.ToDataTableReflection(result, useParallel: true);
+            #pragma warning restore CS0618 // Type or member is obsolete
+        }
         // Assert
         result.ShouldNotBeNull();
         result.Rows.Count.ShouldBe(2);
@@ -1028,7 +1077,17 @@ public sealed class CollectionsTests
     public void ToDataTable_WithNullCollection_ReturnsNull(bool useExpressionTrees)
     {
         // Act
-        using DataTable? result = Collections.ToDataTable<TestClass>(null, useExpressionTrees: useExpressionTrees);
+        DataTable? result = new();
+        if (useExpressionTrees)
+        {
+            result = Collections.ToDataTable<TestClass>(null, result);
+        }
+        else
+        {
+            #pragma warning disable CS0618 // Type or member is obsolete
+            result = Collections.ToDataTableReflection<TestClass>(null, result);
+            #pragma warning restore CS0618 // Type or member is obsolete
+        }
 
         // Assert
         result.ShouldBeNull();

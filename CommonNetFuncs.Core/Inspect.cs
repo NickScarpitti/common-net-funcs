@@ -69,6 +69,7 @@ public static class Inspect
     /// <param name="obj1">First object to compare for value equality</param>
     /// <param name="obj2">Second object to compare for value equality</param>
     /// <returns>True if the two objects have the same value for all elements</returns>
+    [Obsolete("Please use IsEqual method instead")]
     public static bool IsEqualR(this object? obj1, object? obj2)
     {
         return obj1.IsEqualR(obj2, null);
@@ -78,9 +79,10 @@ public static class Inspect
     /// Compare two class objects for value equality
     /// </summary>
     /// <param name="obj1">First object to compare for value equality</param>
-    /// <param name="obj2">First object to compare for value equality</param>
+    /// <param name="obj2">Second object to compare for value equality</param>
     /// <param name="exemptProps">Names of properties to not include in the matching check</param>
     /// <returns>True if both objects contain identical values for all properties except for the ones identified by exemptProps</returns>
+    [Obsolete("Please use IsEqual method instead")]
     public static bool IsEqualR(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
     {
         // They're both null.
@@ -185,6 +187,15 @@ public static class Inspect
     private static readonly AsyncLocal<ComparisonContext?> CurrentContext = new();
     private static readonly ConcurrentDictionary<Tuple<Type, bool, bool>, Func<object, object, IEnumerable<string>, bool>> CompareDelegates = [];
 
+    /// <summary>
+    /// Compare two class objects for value equality
+    /// </summary>
+    /// <param name="obj1">First object to compare for value equality</param>
+    /// <param name="obj2">Second object to compare for value equality</param>
+    /// <param name="exemptProps">Optional: Names of properties to not include in the matching check</param>
+    /// <param name="ignoreStringCase">Optional: If true, will ignore case when comparing string properties between obj1 and obj2, otherwise will use case sensitive comparison.</param>
+    /// <param name="recursive">Optional: If true, will recursively compare </param>
+    /// <returns></returns>
     public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
     {
         // Initialize context if this is the top-level call
@@ -311,6 +322,12 @@ public static class Inspect
         return lambda.CompileFast();
     }
 
+    /// <summary>
+    /// Gets a hash string representing the object's value, using the specified algorithm (default MD5). Order of collection elements does not affect the hash.
+    /// </summary>
+    /// <param name="obj">Object to get hash value from</param>
+    /// <param name="hashAlgorithm">Hash algorithm to use</param>
+    /// <returns>Hash string representing the object's value</returns>
     public static string GetHashForObject<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
     {
         if (obj == null)
@@ -343,6 +360,12 @@ public static class Inspect
         return Convert.ToHexStringLower(algorithm.ComputeHash(ms.ToArray()));
     }
 
+    /// <summary>
+    /// Gets a hash string representing the object's value asynchronously, using the specified algorithm (default MD5). Order of collection elements does not affect the hash.
+    /// </summary>
+    /// <param name="obj">Object to get hash value from</param>
+    /// <param name="hashAlgorithm">Hash algorithm to use</param>
+    /// <returns>Hash string representing the object's value</returns>
     public static async Task<string> GetHashForObjectAsync<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
     {
         if (obj == null)

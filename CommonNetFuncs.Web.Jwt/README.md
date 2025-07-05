@@ -6,23 +6,38 @@ This lightweight project contains helper methods for several common functions re
 
 ## Contents
 
-<!-- - [Class Name](#) -->
+- [CommonNetFuncs.Web.Jwt](#commonnetfuncswebjwt)
+  - [Contents](#contents)
+  - [JwtManager](#jwtmanager)
+    - [JwtManager Usage Examples](#jwtmanager-usage-examples)
+      - [Authenticate](#authenticate)
 
 ---
 
-## [Class Name Here]
+## JwtManager
 
-### Usage Examples
+Provides an authentication mechanism that issues JWT tokens when the correct credentials are provided.
 
-[Description here]
+### JwtManager Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
 
-#### [MethodNameHere]
+#### Authenticate
+
+Authenticate credentials and issue a JWT token if credentials are valid.
 
 ```cs
-//Code here
+public class JwtToken // This is a class present within the CommonNetFuncs.Web.Jwt package
+{
+  public string? Token { get; set; }
+  public string? RefreshToken { get; set; }
+  public DateTime? JwtExpireTime { get; set; }
+}
+
+JwtToken? jwtToken = Authenticate("user-name", "password", "user-name-secret", "password-secret", "production", "key-secret", TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(5), "issuer", "email", "audience");
+// All "-secret" values should be secrets in the host application and are validated against the user submitted values.
+// Issuer, Email, and Audience parameters are all optional depending on the info you want to include in the JWT token
 ```
 
 </details>

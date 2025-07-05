@@ -60,59 +60,61 @@ public static class DateOnlyHelpers
     /// </summary>
     /// <returns>Tuple containing the first and last date of the specified month</returns>
     public static (DateOnly firstDay, DateOnly lastDay) GetMonthBoundaries(int month, int year)
-    { return (GetFirstDayOfMonth(month, year), GetLastDayOfMonth(month, year)); }
+    {
+        return (GetFirstDayOfMonth(month, year), GetLastDayOfMonth(month, year));
+    }
 
     /// <summary>
     /// Gets the first and last day of the month provided
     /// </summary>
     /// <returns>Tuple containing the first and last date of the specified month</returns>
     public static (DateOnly firstDay, DateOnly lastDay) GetMonthBoundaries(this DateOnly date)
-    { return GetMonthBoundaries(date.Month, date.Year); }
+    {
+        return GetMonthBoundaries(date.Month, date.Year);
+    }
 
     /// <summary>
     /// Gets the first day of the month provided
     /// </summary>
     /// <returns>DateOnly for the first day of the specified month</returns>
-    public static DateOnly GetFirstDayOfMonth(int month, int year) { return new(year, month, 1); }
+    public static DateOnly GetFirstDayOfMonth(int month, int year)
+    {
+        return new(year, month, 1);
+    }
 
     /// <summary>
     /// Gets the first day of the month provided
     /// </summary>
     /// <returns>DateOnly for the first day of the specified month</returns>
-    public static DateOnly GetFirstDayOfMonth(this DateOnly date) { return GetFirstDayOfMonth(date.Month, date.Year); }
+    public static DateOnly GetFirstDayOfMonth(this DateOnly date)
+    {
+        return GetFirstDayOfMonth(date.Month, date.Year);
+    }
 
     /// <summary>
     /// Gets the lest day of the month provided
     /// </summary>
     /// <returns>DateOnly for the lest day of the specified month</returns>
     public static DateOnly GetLastDayOfMonth(int month, int year)
-    { return new(year, month, DateTime.DaysInMonth(year, month)); }
+    {
+        return new(year, month, DateTime.DaysInMonth(year, month));
+    }
 
     /// <summary>
-    /// Gets the lest day of the month provided
+    /// Gets the last day of the month provided
     /// </summary>
     /// <returns>DateOnly for the lest day of the specified month</returns>
-    public static DateOnly GetLastDayOfMonth(this DateOnly date) { return GetLastDayOfMonth(date.Month, date.Year); }
-
-    /// <summary>
-    /// Returns whether or not the provided double value is a valid OADate
-    /// </summary>
-    /// <param name="oaDate">Double to check as OADate</param>
-    /// <returns>True if double passed in represents a valid OA Date</returns>
-    public static bool IsValidOaDate(this double? oaDate)
-    { return (oaDate != null) && (oaDate >= 657435.0) && (oaDate <= 2958465.99999999); }
-
-    /// <summary>
-    /// Returns whether or not the provided double value is a valid OADate
-    /// </summary>
-    /// <param name="oaDate">Double to check as OADate</param>
-    /// <returns>True if double passed in represents a valid OA Date</returns>
-    public static bool IsValidOaDate(this double oaDate)
-    { return (oaDate >= 657435.0) && (oaDate <= 2958465.99999999); }
+    public static DateOnly GetLastDayOfMonth(this DateOnly date)
+    {
+        return GetLastDayOfMonth(date.Month, date.Year);
+    }
 
     /// <summary>
     /// Gets today's date
     /// </summary>
     /// <returns>Date only value for today's date</returns>
-    public static DateOnly GetToday() { return DateOnly.FromDateTime(DateTime.Today); }
+    public static DateOnly GetToday()
+    {
+        return DateOnly.FromDateTime(DateTime.Today);
+    }
 }

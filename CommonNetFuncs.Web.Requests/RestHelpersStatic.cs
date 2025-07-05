@@ -95,10 +95,10 @@ public static class RestHelpersStatic
                 using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
                 using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 
-                //Ensure json header is being used
+                //Ensure JSON header is being used
                 if (requestOptions.HttpHeaders == null)
                 {
-                    requestOptions.HttpHeaders = new(JsonAcceptHeader.SingleToList());
+                    requestOptions.HttpHeaders = new([JsonAcceptHeader]);
                 }
                 else if (requestOptions.HttpHeaders.Remove(AcceptHeader))
                 {
@@ -208,10 +208,10 @@ public static class RestHelpersStatic
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
             using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 
-            //Ensure json header is being used
+            //Ensure JSON header is being used
             if (requestOptions.HttpHeaders == null)
             {
-                requestOptions.HttpHeaders = new(JsonAcceptHeader.SingleToList());
+                requestOptions.HttpHeaders = new([JsonAcceptHeader]);
             }
             else if (requestOptions.HttpHeaders.Remove(AcceptHeader))
             {

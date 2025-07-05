@@ -10,9 +10,11 @@ using NPOI.POIFS.FileSystem;
 using NPOI.SS;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
+using NPOI.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using static System.Convert;
 using static System.Math;
 
@@ -438,7 +440,7 @@ public static partial class Common
             if ((hexColor?.Length == 7) && regex.IsMatch(hexColor))
             {
                 byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
-                ((XSSFCellStyle)cellStyle).SetFillForegroundColor(new XSSFColor(rgb));
+                ((XSSFCellStyle)cellStyle).SetFillForegroundColor(new XSSFColor(new Rgb24(rgb[0], rgb[1], rgb[2])));
             }
         }
         else
@@ -843,8 +845,8 @@ public static partial class Common
 
             int resizeWidth = (int)Round(imgWidth * scale, 0, MidpointRounding.ToZero);
             int resizeHeight = (int)Round(imgHeight * scale, 0, MidpointRounding.ToZero);
-            int xMargin = (int)Round(((rangeWidth - resizeWidth) * XSSFShape.EMU_PER_PIXEL) / 2.0, 0, MidpointRounding.ToZero);
-            int yMargin = (int)Round(((rangeHeight - resizeHeight) * XSSFShape.EMU_PER_PIXEL * 1.75) / 2.0, 0, MidpointRounding.ToZero);
+            int xMargin = (int)Round(((rangeWidth - resizeWidth) * Units.EMU_PER_PIXEL) / 2.0, 0, MidpointRounding.ToZero);
+            int yMargin = (int)Round(((rangeHeight - resizeHeight) * Units.EMU_PER_PIXEL * 1.75) / 2.0, 0, MidpointRounding.ToZero);
 
             anchor.AnchorType = anchorType;
             anchor.Col1 = area.FirstColumn;
@@ -936,7 +938,7 @@ public static partial class Common
             totaHeight += ws.GetRow(i)?.HeightInPoints ?? 0;
         }
 
-        return (int)Round((totaHeight * XSSFShape.EMU_PER_POINT) / XSSFShape.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
+        return (int)Round((totaHeight * Units.EMU_PER_POINT) / Units.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
     }
 
     /// <summary>
@@ -1010,7 +1012,7 @@ public static partial class Common
         {
             fileStream.Position = 0;
             IWorkbook? wb = null;
-            if (fileStream.IsXlsx()) //Only .xlsx files can have tables
+            if (fileStream.IsXlsx())
             {
                 wb = new XSSFWorkbook(fileStream);
             }

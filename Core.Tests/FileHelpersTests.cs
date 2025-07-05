@@ -126,7 +126,7 @@ public sealed class FileHelpersTests : IDisposable
     public void ValidateFileExtention_Works(string fileName, string[] validExtensions, bool expected)
     {
         // Act
-        bool result = fileName.ValidateFileExtention(validExtensions);
+        bool result = fileName.ValidateFileExtension(validExtensions);
 
         // Assert
         result.ShouldBe(expected);

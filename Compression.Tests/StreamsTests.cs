@@ -1,4 +1,5 @@
-﻿using static CommonNetFuncs.Compression.Streams;
+﻿using CommonNetFuncs.Compression;
+using static CommonNetFuncs.Compression.Streams;
 
 namespace Compression.Tests;
 
@@ -37,7 +38,6 @@ public sealed class StreamsTests
     [InlineData(true, true, false)]
     [InlineData(true, false, false)]
     [InlineData(false, true, false)]
-
     public async Task CompressStream_Should_Throw_Error(bool canWriteCompressedStream, bool canReadUncompressedStream, bool useAsync)
     {
         // Arrange
@@ -224,5 +224,74 @@ public sealed class StreamsTests
 
         // Assert
         decompressedData.ShouldBe(originalData);
+    }
+
+    [Theory]
+    [MemberData(nameof(GetCompressionTestData))]
+    public async Task DetectCompressionTypeNonSeekable_Should_Detect_Compression_Type(byte[] header, ECompressionType expectedType)
+    {
+        // Arrange
+        await using MemoryStream stream = new(header, false);
+
+        // Act
+        ECompressionType detectedType = await DetectCompressionTypeNonSeekable(stream);
+
+        // Assert
+        detectedType.ShouldBe(expectedType);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task DetectCompressionTypeNonSeekable_Should_Return_None_For_Short_Stream(int streamLength)
+    {
+        // Arrange
+        byte[] data = new byte[streamLength];
+        await using MemoryStream stream = new(data, false);
+
+        // Act
+        ECompressionType detectedType = await DetectCompressionTypeNonSeekable(stream);
+
+        // Assert
+        detectedType.ShouldBe(ECompressionType.None);
+    }
+
+    [Fact]
+    public async Task DetectCompressionTypeNonSeekable_Should_Handle_Closed_Stream()
+    {
+        // Arrange
+        await using MemoryStream stream = new();
+        stream.Close();
+
+        // Act & Assert
+        await Should.ThrowAsync<ObjectDisposedException>(DetectCompressionTypeNonSeekable(stream));
+    }
+
+    public static TheoryData<byte[], ECompressionType> GetCompressionTestData()
+    {
+        TheoryData<byte[], ECompressionType> data = new TheoryData<byte[], ECompressionType>
+        {
+            // Gzip header (1F 8B)
+            { new byte[] { 0x1F, 0x8B, 0x08, 0x00 }, ECompressionType.Gzip },
+
+            // Zlib header (78 01, 78 9C, or 78 DA)
+            { new byte[] { 0x78, 0x01, 0x00, 0x00 }, ECompressionType.ZLib },
+            { new byte[] { 0x78, 0x9C, 0x00, 0x00 }, ECompressionType.ZLib },
+            { new byte[] { 0x78, 0xDA, 0x00, 0x00 }, ECompressionType.ZLib },
+
+            // Brotli header (CE B2 CF 81)
+            { new byte[] { 0xCE, 0xB2, 0xCF, 0x81 }, ECompressionType.Brotli },
+
+            // Invalid/Unknown header
+            { new byte[] { 0x00, 0x00, 0x00, 0x00 }, ECompressionType.None },
+
+            // Edge case - exactly 2 bytes
+            { new byte[] { 0x1F, 0x8B }, ECompressionType.Gzip },
+
+            // Edge case - 3 bytes
+            { new byte[] { 0x78, 0x01, 0x00 }, ECompressionType.ZLib }
+        };
+
+        return data;
     }
 }

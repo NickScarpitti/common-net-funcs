@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections;
+using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -256,6 +257,7 @@ public static class Collections
     /// </summary>
     /// <typeparam name="T">Type to use in list</typeparam>
     /// <param name="obj">Object to turn into a single item list</param>
+    [Obsolete("Use collection expression instead")]
     public static List<T> SingleToList<T>(this T? obj)
     {
         return (obj != null) ? [obj] : [];
@@ -265,6 +267,7 @@ public static class Collections
     /// Create a single item list from an object
     /// </summary>
     /// <param name="obj">Object to turn into a single item list</param>
+    [Obsolete("Use collection expression instead")]
     public static List<string> SingleToList(this string? obj, bool allowEmptyStrings = false)
     {
         if (!allowEmptyStrings)
@@ -522,18 +525,17 @@ public static class Collections
     }
 
     /// <summary>
-    /// Convert a collection into equivalent DataTable object
+    /// Convert a collection into equivalent DataTable object using expression trees
     /// </summary>
     /// <typeparam name="T">Class to use in table creation</typeparam>
     /// <param name="data">Collection to convert into a DataTable</param>
     /// <param name="dataTable">DataTable to optionally insert data into</param>
-    /// <param name="useExpressionTrees">Uses expression trees with caching to perform the conversion</param>
     /// <param name="useParallel">Parallelizes the conversion</param>
     /// <param name="approximateCount">Used for pre-allocating variable size when using parallelization, default is data.Count()</param>
     /// <param name="degreeOfParallelism">Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine)</param>
     /// <returns>A DaataTable representation of the collection that was passed in</returns>
     [return: NotNullIfNotNull(nameof(data))]
-    public static DataTable? ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
+    public static DataTable? ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
     {
         if (data == null)
         {
@@ -541,11 +543,29 @@ public static class Collections
         }
 
         dataTable ??= new();
-        return useExpressionTrees ? data.ToDataTableExpressionTrees(dataTable, useParallel, approximateCount, degreeOfParallelism, cancellationToken) : data.ToDataTableReflection(dataTable, useParallel, approximateCount, degreeOfParallelism, cancellationToken);
+        return data.ToDataTableExpressionTrees(dataTable, useParallel, approximateCount, degreeOfParallelism, cancellationToken);
     }
 
-    private static DataTable ToDataTableReflection<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism, CancellationToken cancellationToken = default) where T : class, new()
+    /// <summary>
+    /// Convert a collection into equivalent DataTable object using reflection
+    /// </summary>
+    /// <typeparam name="T">Class to use in table creation</typeparam>
+    /// <param name="data">Collection to convert into a DataTable</param>
+    /// <param name="dataTable">DataTable to optionally insert data into</param>
+    /// <param name="useParallel">Parallelizes the conversion</param>
+    /// <param name="approximateCount">Used for pre-allocating variable size when using parallelization, default is data.Count()</param>
+    /// <param name="degreeOfParallelism">Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine)</param>
+    /// <returns>A DaataTable representation of the collection that was passed in</returns>
+    [Obsolete("Please use ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) instead", false)]
+    [return: NotNullIfNotNull(nameof(data))]
+    public static DataTable? ToDataTableReflection<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
     {
+        if (data == null)
+        {
+            return null;
+        }
+
+        dataTable ??= new();
         PropertyInfo[] properties = typeof(T).GetProperties();
 
         // Remove invalid columns
@@ -748,7 +768,6 @@ public static class Collections
     public static Expression<Func<T, bool>>? CombineExpressions<T>(IEnumerable<Expression<Func<T, bool>>> expressions)
     {
         Expression<Func<T, bool>>? combined = null;
-
         foreach (Expression<Func<T, bool>> expression in expressions)
         {
             if (combined == null)
@@ -858,11 +877,24 @@ public static class Collections
         }
     }
 
+    /// <summary>
+    /// Returns the index of the first occurrence of an object in a collection.
+    /// </summary>
+    /// <param name="collection"></param>
+    /// <param name="value"></param>
+    /// <returns>Index of the first occurrence of value in the collection or -1 if not found</returns>
     public static int IndexOf<T>(this IEnumerable<T> collection, T value)
     {
         return collection.IndexOf(value, null);
     }
 
+    /// <summary>
+    /// Returns the index of the first occurrence of an object in a collection, using the specified comparer for equality checks.
+    /// </summary>
+    /// <param name="collection">Collection to get index of object in</param>
+    /// <param name="value">Value to check for equality in collection</param>
+    /// <param name="comparer">Comparer used when checking for equality with value</param>
+    /// <returns>Index of the first occurrence of value in the collection or -1 if not found</returns>
     public static int IndexOf<T>(this IEnumerable<T> collection, T value, IEqualityComparer<T>? comparer)
     {
         comparer ??= EqualityComparer<T>.Default;
@@ -870,6 +902,12 @@ public static class Collections
         return (found == null) ? (-1) : found.i;
     }
 
+    /// <summary>
+    /// Checks to see if the value is in the enum type specified
+    /// </summary>
+    /// <typeparam name="T">Enum to check against for validity</typeparam>
+    /// <param name="value">Value to check to see if it's in the specified enum</param>
+    /// <returns>True if value is a valid value of the specified enum, otherwise false</returns>
     public static bool IsIn<T>(this object value) where T : Enum
     {
         return Enum.IsDefined(typeof(T), value);
@@ -953,5 +991,154 @@ public sealed class ArrayTraverse
             }
         }
         return false;
+    }
+}
+
+public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
+{
+    private readonly Lock addLock = new();
+    private readonly int capacity;
+    private readonly OrderedDictionary<TKey, TValue?> dictionary;
+
+    //private Queue<TKey> insertionOrderQueue;
+
+    public FixedFIFODictionary(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
+    {
+        if (capacity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
+        }
+
+        if (sourceDictionary != null && sourceDictionary.Count > capacity)
+        {
+            throw new ArgumentException("Source dictionary exceeds the specified capacity.", nameof(sourceDictionary));
+        }
+
+        this.capacity = capacity;
+        dictionary = new OrderedDictionary<TKey, TValue?>(capacity);
+        //insertionOrderQueue = new Queue<TKey>(capacity);
+
+        if (sourceDictionary != null)
+        {
+            foreach (KeyValuePair<TKey, TValue?> kvp in sourceDictionary)
+            {
+                dictionary[kvp.Key] = kvp.Value;
+                //insertionOrderQueue.Enqueue(kvp.Key);
+            }
+        }
+    }
+
+    public ICollection<TKey> Keys => dictionary.Keys;
+
+    public ICollection<TValue?> Values => dictionary.Values;
+
+    public int Count => dictionary.Count;
+
+    public bool IsReadOnly => ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).IsReadOnly;
+
+    public TValue? this[TKey key]
+    {
+        get
+        {
+            lock (addLock)
+            {
+                return dictionary[key];
+            }
+        }
+        set
+        {
+            lock (addLock)
+            {
+                if (dictionary.ContainsKey(key))
+                {
+                    // Update existing item
+                    dictionary[key] = value;
+                    // Note: We're not changing its position in the queue
+                }
+                else
+                {
+                    // Add new item
+                    if (dictionary.Count >= capacity)
+                    {
+                        // Remove oldest item
+                        //TKey oldestKey = insertionOrderQueue.Dequeue();
+                        TKey oldestKey = dictionary.GetAt(0).Key;
+                        dictionary.Remove(oldestKey);
+                    }
+                    dictionary[key] = value;
+                    //insertionOrderQueue.Enqueue(key);
+                }
+            }
+        }
+    }
+
+    public bool ContainsKey(TKey key)
+    {
+        return dictionary.ContainsKey(key);
+    }
+
+    public bool TryGetValue(TKey key, out TValue? value)
+    {
+        return dictionary.TryGetValue(key, out value);
+    }
+
+    public void Clear()
+    {
+        dictionary.Clear();
+        //insertionOrderQueue.Clear();
+    }
+
+    public void Add(TKey key, TValue? value)
+    {
+        dictionary.Add(key, value);
+        //insertionOrderQueue.Enqueue(key);
+    }
+
+    public bool Remove(TKey key)
+    {
+        //if (dictionary.Remove(key))
+        //{
+        //    insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, key)));
+        //    return true;
+        //}
+        //return false;
+        return dictionary.Remove(key);
+    }
+
+    public void Add(KeyValuePair<TKey, TValue?> item)
+    {
+        ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Add(item);
+        //insertionOrderQueue.Enqueue(item.Key);
+    }
+
+    public bool Contains(KeyValuePair<TKey, TValue?> item)
+    {
+        return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Contains(item);
+    }
+
+    public void CopyTo(KeyValuePair<TKey, TValue?>[] array, int arrayIndex)
+    {
+        ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).CopyTo(array, arrayIndex);
+    }
+
+    public bool Remove(KeyValuePair<TKey, TValue?> item)
+    {
+        //if (((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item))
+        //{
+        //    insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, item.Key)));
+        //    return true;
+        //}
+        //return false;
+        return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item);
+    }
+
+    public IEnumerator<KeyValuePair<TKey, TValue?>> GetEnumerator()
+    {
+        return ((IEnumerable<KeyValuePair<TKey, TValue?>>)dictionary).GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return ((IEnumerable)dictionary).GetEnumerator();
     }
 }

@@ -1,9 +1,10 @@
-﻿using CommonNetFuncs.Excel.Common;
+﻿using System.Data;
+using System.Reflection;
+using CommonNetFuncs.Excel.Common;
 using NPOI.SS.UserModel;
+using NPOI.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
-using System.Data;
-using System.Reflection;
 
 namespace CommonNetFuncs.Excel.Npoi;
 
@@ -486,7 +487,7 @@ public static class Export
                     for (int i = 0; i < data.Columns.Count; i++)
                     {
                         // ws.AutoSizeColumn(x, true);
-                        ws.SetColumnWidth(x, (maxColumnWidths[x] + (XSSFShape.EMU_PER_PIXEL * 3) <= MaxCellWidthInExcelUnits) ? (maxColumnWidths[x] + (XSSFShape.EMU_PER_PIXEL * 3)) : MaxCellWidthInExcelUnits);
+                        ws.SetColumnWidth(x, (maxColumnWidths[x] + (Units.EMU_PER_PIXEL * 3) <= MaxCellWidthInExcelUnits) ? (maxColumnWidths[x] + (Units.EMU_PER_PIXEL * 3)) : MaxCellWidthInExcelUnits);
                         x++;
                     }
                 }

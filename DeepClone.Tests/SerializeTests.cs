@@ -39,7 +39,9 @@ public sealed class SerializeTests
         TestClass? source = null;
 
         // Act
-        TestClass? result = source.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        TestClass? result = source.DeepCloneS();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.ShouldBeNull();
@@ -51,7 +53,9 @@ public sealed class SerializeTests
     public void DeepClone_WhenInputIsString_ShouldCreateNewInstance(string? input)
     {
         // Act
-        string? result = input.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        string? result = input.DeepCloneS();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.ShouldBe(input);
@@ -71,7 +75,9 @@ public sealed class SerializeTests
             .Create();
 
         // Act
-        TestClass result = source.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        TestClass result = source.DeepCloneS();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.ShouldNotBeSameAs(source);
@@ -90,7 +96,9 @@ public sealed class SerializeTests
         };
 
         // Act
-        TestClass result = source.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        TestClass result = source.DeepCloneS();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Numbers.ShouldNotBeSameAs(source.Numbers);
@@ -115,7 +123,9 @@ public sealed class SerializeTests
         };
 
         // Act & Assert
-        Should.Throw<JsonException>(() => source.DeepClone());
+#pragma warning disable CS0618 // Type or member is obsolete
+        Should.Throw<JsonException>(() => source.DeepCloneS());
+        #pragma warning restore CS0618 // Type or member is obsolete
     }
 
     [Fact]
@@ -129,7 +139,9 @@ public sealed class SerializeTests
         };
 
         // Act & Assert
-        Should.Throw<NotSupportedException>(() => source.DeepClone());
+#pragma warning disable CS0618 // Type or member is obsolete
+        Should.Throw<NotSupportedException>(() => source.DeepCloneS());
+        #pragma warning restore CS0618 // Type or member is obsolete
     }
 
     [Theory]
@@ -137,7 +149,9 @@ public sealed class SerializeTests
     public void DeepClone_WhenInputIsComplexObject_ShouldCreateDeepCopy(TestClass source)
     {
         // Act
-        TestClass result = source.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        TestClass result = source.DeepCloneS();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.ShouldNotBeSameAs(source);

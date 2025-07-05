@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using CommonNetFuncs.Core;
 
 namespace Core.Tests;
@@ -70,7 +72,7 @@ public sealed class TypeChecksTests
 
     [Theory]
     [InlineData(typeof(string), false)]
-    [InlineData(typeof(int), false)]
+    [InlineData(typeof(int), true)]
     [InlineData(typeof(List<int>), true)]
     [InlineData(null, true)]
     public void IsClassOtherThanString_ShouldIdentifyClassTypesOtherThanString(Type? type, bool expected)
@@ -125,5 +127,63 @@ public sealed class TypeChecksTests
 
         // Assert
         result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(typeof(IReadOnlyCollection<int>), true)]
+    [InlineData(typeof(IReadOnlyList<string>), true)]
+    [InlineData(typeof(ReadOnlyCollection<int>), true)]
+    [InlineData(typeof(List<int>), false)]
+    [InlineData(typeof(int[]), false)]
+    [InlineData(typeof(ImmutableArray<int>), true)]
+    [InlineData(typeof(Dictionary<int, string>), false)]
+    [InlineData(typeof(IReadOnlyDictionary<int, string>), true)]
+    [InlineData(typeof(ICollection<int>), false)]
+    [InlineData(typeof(IEnumerable<int>), false)]
+    [InlineData(typeof(ArrayList), false)]
+    [InlineData(typeof(string), false)]
+    [InlineData(typeof(int), false)]
+    [InlineData(typeof(MyReadOnlyCollectionInterface), true)]
+    [InlineData(typeof(MyReadOnlyCollectionClass), true)]
+    [InlineData(typeof(IReadOnlyCollection<>), true)]
+    [InlineData(typeof(IReadOnlyList<>), true)]
+    [InlineData(typeof(ReadOnlyCollection<>), true)]
+    [InlineData(typeof(object), false)]
+    [InlineData(null, false)]
+    public void IsReadOnlyCollectionType_ShouldIdentifyReadOnlyCollectionTypes(Type? type, bool expected)
+    {
+        // Arrange
+        bool result = false;
+
+        // Act
+        if (type != null)
+        {
+            result = type.IsReadOnlyCollectionType();
+        }
+        else
+        {
+            Should.Throw<ArgumentNullException>(() => type!.IsReadOnlyCollectionType());
+        }
+
+        // Assert
+        Assert.Equal(expected, result);
+    }
+
+    // Helper types for interface/class that implement IReadOnlyCollection<T>
+    private interface MyReadOnlyCollectionInterface : IReadOnlyCollection<int>;
+
+    private class MyReadOnlyCollectionClass : IReadOnlyCollection<int>
+    {
+        public int Count => 0;
+
+        public IEnumerator<int> GetEnumerator()
+        {
+            return Enumerable.Empty<int>().GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }

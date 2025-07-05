@@ -72,7 +72,9 @@ public sealed class InspectTests
     #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public void IsEqualR_Works(object? a, object? b, IEnumerable<string>? exempt, bool expected)
     {
+        #pragma warning disable CS0618 // Type or member is obsolete
         a.IsEqualR(b, exempt).ShouldBe(expected);
+        #pragma warning restore CS0618 // Type or member is obsolete
     }
 
     [Theory]

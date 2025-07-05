@@ -3,7 +3,7 @@ using DocumentFormat.OpenXml.Packaging;
 
 namespace Word.OpenXml.Tests;
 
-public class CommonTests : IDisposable
+public class ChangeUrlTests : IDisposable
 {
     private readonly string _testDocPath;
     private readonly string _tempDocPath;
@@ -13,20 +13,12 @@ public class CommonTests : IDisposable
 
     public void Dispose()
     {
-        if (File.Exists(_tempDocPath))
-        {
-            File.Delete(_tempDocPath);
-        }
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
     private void Dispose(bool disposing)
     {
-        if (File.Exists(_tempDocPath))
-        {
-            File.Delete(_tempDocPath);
-        }
         if (!disposed)
         {
             if (disposing)
@@ -35,14 +27,18 @@ public class CommonTests : IDisposable
             }
             disposed = true;
         }
+        if (File.Exists(_tempDocPath))
+        {
+            File.Delete(_tempDocPath);
+        }
     }
 
-    ~CommonTests()
+    ~ChangeUrlTests()
     {
         Dispose(false);
     }
 
-    public CommonTests()
+    public ChangeUrlTests()
     {
         // Set up test paths
         _testDocPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData", "TestDocument.docx");
@@ -65,7 +61,7 @@ public class CommonTests : IDisposable
     public void ChangeUrlsInWordDoc_SingleUrl_ReplacesCorrectly(string urlToReplace, string newUrl, bool replaceAll)
     {
         // Act
-        bool result = CommonNetFuncs.Word.OpenXml.Common.ChangeUrlsInWordDoc(_tempFileStream!, newUrl, urlToReplace, replaceAll);
+        bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDoc(_tempFileStream!, newUrl, urlToReplace, replaceAll);
         _tempFileStream!.Position = 0;
 
         // Assert
@@ -98,7 +94,7 @@ public class CommonTests : IDisposable
         };
 
         // Act
-        bool result = CommonNetFuncs.Word.OpenXml.Common.ChangeUrlsInWordDoc(_tempFileStream!, urlsToUpdate);
+        bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDoc(_tempFileStream!, urlsToUpdate);
         _tempFileStream!.Position = 0;
 
         // Assert
@@ -124,7 +120,7 @@ public class CommonTests : IDisposable
     public void ChangeUrlsInWordDocRegex_SinglePattern_ReplacesCorrectly(string pattern, string replacement, bool replaceAll)
     {
         // Act
-        bool result = CommonNetFuncs.Word.OpenXml.Common.ChangeUrlsInWordDocRegex(_tempFileStream!, pattern, replacement, replaceAll, RegexOptions.IgnoreCase);
+        bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDocRegex(_tempFileStream!, pattern, replacement, replaceAll, RegexOptions.IgnoreCase);
         _tempFileStream!.Position = 0;
 
         // Assert
@@ -158,7 +154,7 @@ public class CommonTests : IDisposable
         };
 
         // Act
-        bool result = CommonNetFuncs.Word.OpenXml.Common.ChangeUrlsInWordDocRegex(_tempFileStream!, patternsToUpdate, regexOptions: caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
+        bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDocRegex(_tempFileStream!, patternsToUpdate, regexOptions: caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
         _tempFileStream!.Position = 0;
 
         // Assert
@@ -196,7 +192,7 @@ public class CommonTests : IDisposable
         using MemoryStream invalidStream = new(new byte[] { 0x0 });
 
         // Act
-        bool result = CommonNetFuncs.Word.OpenXml.Common.ChangeUrlsInWordDoc(invalidStream, "http://NewUrl/1", "http://TestUrl/1");
+        bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDoc(invalidStream, "http://NewUrl/1", "http://TestUrl/1");
 
         // Assert
         result.ShouldBeFalse();
@@ -209,7 +205,7 @@ public class CommonTests : IDisposable
         const string invalidPattern = "["; // Invalid regex pattern
 
         // Act
-        bool result = CommonNetFuncs.Word.OpenXml.Common.ChangeUrlsInWordDocRegex(_tempFileStream!, invalidPattern, "replacement");
+        bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDocRegex(_tempFileStream!, invalidPattern, "replacement");
 
         // Assert
         result.ShouldBeFalse();

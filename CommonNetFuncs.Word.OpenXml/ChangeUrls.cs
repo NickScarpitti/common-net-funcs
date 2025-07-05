@@ -3,7 +3,7 @@ using DocumentFormat.OpenXml.Packaging;
 
 namespace CommonNetFuncs.Word.OpenXml;
 
-public static class Common
+public static class ChangeUrls
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -45,7 +45,7 @@ public static class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(ChangeUrlsInWordDoc)}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(ChangeUrls)}.{nameof(ChangeUrlsInWordDoc)}");
         }
         finally
         {
@@ -85,7 +85,7 @@ public static class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(ChangeUrlsInWordDoc)}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(ChangeUrls)}.{nameof(ChangeUrlsInWordDoc)}");
         }
         finally
         {
@@ -134,7 +134,7 @@ public static class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(ChangeUrlsInWordDocRegex)}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(ChangeUrls)}.{nameof(ChangeUrlsInWordDocRegex)}");
         }
         finally
         {
@@ -185,7 +185,7 @@ public static class Common
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(ChangeUrlsInWordDocRegex)}");
+            logger.Error(ex, "{msg}", $"Error in {nameof(ChangeUrls)}.{nameof(ChangeUrlsInWordDocRegex)}");
         }
         finally
         {

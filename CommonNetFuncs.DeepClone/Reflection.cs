@@ -20,7 +20,7 @@ public static class Reflection
         return (T?)original.Copy();
     }
 
-    private static bool IsPrimitive(this Type type)
+    internal static bool IsPrimitive(this Type type)
     {
         if (type == typeof(string))
         {

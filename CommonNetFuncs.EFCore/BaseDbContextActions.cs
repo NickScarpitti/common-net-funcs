@@ -3101,7 +3101,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// Delete records in the table corresponding to type T matching the enumerable objects of type T passed in
     /// </summary>
     /// <param name="keys">Keys of type T to delete</param>
-    public async Task<bool> DeleteManyByKeys(IEnumerable<object> keys) //Does not work with Postgres
+    public async Task<bool> DeleteManyByKeys(IEnumerable<object> keys) //Does not work with PostgreSQL, not testable
     {
         using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         try

@@ -1012,7 +1012,7 @@ public static partial class Common
         {
             fileStream.Position = 0;
             IWorkbook? wb = null;
-            if (fileStream.IsXlsx()) //Only .xlsx files can have tables
+            if (fileStream.IsXlsx())
             {
                 wb = new XSSFWorkbook(fileStream);
             }

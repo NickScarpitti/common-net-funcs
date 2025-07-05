@@ -23,7 +23,7 @@ public sealed class CsvExportHelpersTests
         await using MemoryStream memoryStream = new();
 
         // Act
-        await using MemoryStream result = await testData.ExportListToCsv(memoryStream);
+        await using MemoryStream result = await testData.ExportToCsv(memoryStream);
 
         // Assert
         result.ShouldNotBeNull();
@@ -52,7 +52,7 @@ public sealed class CsvExportHelpersTests
         IEnumerable<TestRecord> testData = _fixture.CreateMany<TestRecord>(1);
 
         // Act
-        await using MemoryStream result = await testData.ExportListToCsv();
+        await using MemoryStream result = await testData.ExportToCsv();
 
         // Assert
         result.ShouldNotBeNull();
@@ -77,7 +77,7 @@ public sealed class CsvExportHelpersTests
         dataTable.Rows.Add(values);
 
         // Act
-        await using MemoryStream result = await dataTable.ExportListToCsv();
+        await using MemoryStream result = await dataTable.ExportToCsv();
 
         // Assert
         result.ShouldNotBeNull();
@@ -108,7 +108,7 @@ public sealed class CsvExportHelpersTests
         dataTable.Rows.Add(row);
 
         // Act
-        await using MemoryStream result = await dataTable.ExportListToCsv();
+        await using MemoryStream result = await dataTable.ExportToCsv();
 
         // Assert
         result.ShouldNotBeNull();
@@ -131,7 +131,7 @@ public sealed class CsvExportHelpersTests
         dataTable.Rows.Add(valueWithComma);
 
         // Act
-        await using MemoryStream result = await dataTable.ExportListToCsv();
+        await using MemoryStream result = await dataTable.ExportToCsv();
 
         // Assert
         result.ShouldNotBeNull();

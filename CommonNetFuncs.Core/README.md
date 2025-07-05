@@ -247,10 +247,11 @@ This lightweight project contains helper methods for several common functions re
 ## Async
 
 Helper methods for dealing with asynchronous processes.
-<details>
-<summary><h3>Usage Examples</h3></summary>
 
 ### Async Usage Examples
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
 
 #### ObjectFill
 
@@ -300,9 +301,9 @@ await Task.WhenAll(tasks);
 
 ## Collections
 
-### Collections Usage Examples
-
 Helper methods that work with collections such as IEnumerable, List, IDictionary, ConcurrentBag, and DataTable
+
+### Collections Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -497,9 +498,9 @@ bool result = "Not A Day".IsIn<TestEnum>(); // False
 
 ## Copy
 
-### Copy Usage Examples
-
 Helper methods for copying properties between objects, including deep and shallow copy.
+
+### Copy Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -574,9 +575,9 @@ Person result = target.MergeInstances(new[] { person1, person2 }); // { Id = 1, 
 
 ## DateOnlyHelpers
 
-### DateHelpers Usage Examples
-
 Helper methods for working with `DateOnly` values.
+
+### DateHelpers Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -641,9 +642,9 @@ DateOnly today = DateOnlyHelpers.GetToday(); // Gets current date
 
 ## DateTimeHelpers
 
-### DateTimeHelpers Usage Examples
-
 Helper methods for working with `DateTime` values.
+
+### DateTimeHelpers Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -711,9 +712,9 @@ bool isNotValid = inValidOdDate.IsValidOaDate(); // False
 
 ## DimensionScale
 
-### DimensionScale Usage Examples
-
 Helpers for scaling 2D and 3D dimensions proportionally to maximally fit within constraint dimensions.
+
+### DimensionScale Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -736,9 +737,9 @@ Scale a size to fit within a bounding box.
 
 ## ExceptionLocation
 
-### ExceptionLocation Usage Examples
-
 Helpers for extracting location information from exceptions.
+
+### ExceptionLocation Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -768,9 +769,9 @@ public void TestMethod()
 
 ## FileHelpers
 
-### FileHelpers Usage Examples
-
 Helpers for working with files and file paths.
+
+### FileHelpers Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -839,9 +840,9 @@ string safeName = FileHelpers.CleanFileName(unsafeName); // Returns "file.with_i
 
 ## Inspect
 
-### Inspect Usage Examples
-
 Helpers for inspecting types and objects.
+
+### Inspect Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -991,9 +992,9 @@ string hashNull = ((MyClass?)null).GetHashForObjectAsync(); // "null"
 
 ## MathHelpers
 
-### MathHelpers Usage Examples
-
 Helpers for common math operations.
+
+### MathHelpers Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -1074,9 +1075,9 @@ MathHelpers.GreatestCommonDenominator(ref num, ref den, out gcd); // num == 0, d
 
 ## Random
 
-### Random Usage Examples
-
 Helpers for generating randomness.
+
+### Random Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -1215,9 +1216,9 @@ string s = Random.GenerateRandomStringByCharSet(10, charset); // 10 characters, 
 
 ## RunBatches
 
-### RunBatches Usage Examples
-
 Helpers for running tasks in batches.
+
+### RunBatches Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -1296,9 +1297,9 @@ bool result3 = items.RunBatchedProcess(FailingBatchProcessor, batchSize: 30, bre
 
 ## Streams
 
-### Streams Usage Examples
-
 Helpers for working with streams.
+
+### Streams Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -1344,9 +1345,9 @@ await memTarget.WriteStreamToStream(fileSource); // memTarget.ToArray() == await
 
 ## Strings
 
-### Strings Usage Examples
-
 Helpers for string manipulation.
+
+### Strings Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -2191,9 +2192,9 @@ Checks if a string contains at least a specified number of a given character.
 
 ## TypeChecks
 
-### TypeChecks Usage Examples
-
 Helpers for checking types.
+
+### TypeChecks Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -2311,9 +2312,9 @@ typeof(object).IsReadOnlyCollectionType(); // false
 
 ## UnitConversion
 
-### UnitConversion Usage Examples
-
 Helpers for converting between units.
+
+### UnitConversion Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
@@ -2588,9 +2589,9 @@ decimal meters4 = ((int?)1).MilesToMeters(); // 1609.34
 
 ## Validation
 
-### Validation Usage Examples
-
 Helpers for validating objects and properties.
+
+### Validation Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>

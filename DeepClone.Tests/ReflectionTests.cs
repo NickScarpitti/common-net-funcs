@@ -41,7 +41,9 @@ public sealed class ReflectionTests
         TestClass? nullObject = null;
 
         // Act
-        TestClass? result = nullObject.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        TestClass? result = nullObject.DeepCloneR();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.ShouldBeNull();
@@ -59,7 +61,9 @@ public sealed class ReflectionTests
         };
 
         // Act
-        TestClass? clone = original.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        TestClass? clone = original.DeepCloneR();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         clone.ShouldNotBeNull();
@@ -78,7 +82,9 @@ public sealed class ReflectionTests
         int[] original = new int[] { 1, 2, 3, 4, 5 };
 
         // Act
-        int[]? clone = original.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        int[]? clone = original.DeepCloneR();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         clone.ShouldNotBeNull();
@@ -98,7 +104,9 @@ public sealed class ReflectionTests
         };
 
         // Act
-        TestClass[]? clone = original.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        TestClass[]? clone = original.DeepCloneR();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         clone.ShouldNotBeNull();
@@ -122,7 +130,9 @@ public sealed class ReflectionTests
         original.Reference = original;
 
         // Act
-        CircularReferenceClass? clone = original.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        CircularReferenceClass? clone = original.DeepCloneR();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         clone.ShouldNotBeNull();
@@ -137,7 +147,9 @@ public sealed class ReflectionTests
         Action action = () => { };
 
         // Act & Assert
-        Should.Throw<ArgumentException>(() => action.DeepClone());
+        #pragma warning disable CS0618 // Type or member is obsolete
+        Should.Throw<ArgumentException>(() => action.DeepCloneR());
+        #pragma warning restore CS0618 // Type or member is obsolete
     }
 
     [Fact]
@@ -153,7 +165,9 @@ public sealed class ReflectionTests
         };
 
         // Act
-        DerivedTestClass? clone = original.DeepClone();
+        #pragma warning disable CS0618 // Type or member is obsolete
+        DerivedTestClass? clone = original.DeepCloneR();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         clone.ShouldNotBeNull();

@@ -47,6 +47,25 @@ public sealed class BaseDbContextActionsTests
         result.Name.ShouldBe(testEntity.Name);
     }
 
+    [Fact]
+    public async Task GetByKeyFull_WithValidKey_ShouldReturnExpectedEntity()
+    {
+        // Arrange
+        TestEntity testEntity = _fixture.Create<TestEntity>();
+        await _context.TestEntities.AddAsync(testEntity);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        // Act
+        TestEntity? result = await testContext.GetByKey(testEntity.Id);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(testEntity.Id);
+        result.Name.ShouldBe(testEntity.Name);
+    }
+
     [Theory]
     [InlineData(true, true)]
     [InlineData(true, false)]
@@ -116,7 +135,49 @@ public sealed class BaseDbContextActionsTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task GetMaxByOrder_ShouldReturnEntityWithMaxValue(bool full)
+    public async Task GetOneWithFilterFullAndNot_WithValidPredicate_ShouldReturnSingleEntity(bool full)
+    {
+        // Arrange
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+        string targetName = entities[0].Name;
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        Expression<Func<TestEntity, bool>> filter = x => x.Name == targetName;
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        // Act
+        TestEntity? result = await testContext.GetOneWithFilter(full, filter);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Name.ShouldBe(targetName);
+    }
+
+    [Fact]
+    public async Task GetMaxByOrder_ShouldReturnEntityWithMaxValue()
+    {
+        // Arrange
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        Expression<Func<TestEntity, bool>> filter = _ => true;
+        Expression<Func<TestEntity, int>> orderExpression = x => x.Id;
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        // Act
+        TestEntity? result = await testContext.GetMaxByOrder(filter, orderExpression);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(entities.Max(x => x.Id));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetMaxByOrderFullAndNot_ShouldReturnEntityWithMaxValue(bool full)
     {
         // Arrange
         List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
@@ -213,6 +274,26 @@ public sealed class BaseDbContextActionsTests
         result!.Id.ShouldBe(entity.Id);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetByKeyFullAndNot_WithCompoundKey_ShouldReturnEntity(bool full)
+    {
+        // Arrange
+        TestEntity entity = _fixture.Create<TestEntity>();
+        await _context.TestEntities.AddAsync(entity);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        // Act
+        TestEntity? result = await testContext.GetByKey(full, new object[] { entity.Id });
+
+        // Assert
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(entity.Id);
+    }
+
     [Fact]
     public async Task GetByKeyFull_WithCompoundKey_ShouldReturnEntity()
     {
@@ -271,6 +352,29 @@ public sealed class BaseDbContextActionsTests
         results[0].Id.ShouldBe(target.Id);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetWithFilterStreamingFullAndNot_ShouldReturnFilteredEntities(bool full)
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+        TestEntity target = entities[0];
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+        Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
+
+        List<TestEntity> results = new();
+        await foreach (TestEntity item in testContext.GetWithFilterStreaming(full, filter)!)
+        {
+            results.Add(item);
+        }
+
+        results.Count.ShouldBe(1);
+        results[0].Id.ShouldBe(target.Id);
+    }
+
     [Fact]
     public async Task GetWithFilterFullStreaming_ShouldReturnFilteredEntities()
     {
@@ -292,6 +396,24 @@ public sealed class BaseDbContextActionsTests
         results[0].Id.ShouldBe(target.Id);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetAllFullAndNot_WithProjection_ShouldReturnProjectedEntities(bool full)
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        List<string>? results = await testContext.GetAll(full, x => x.Name);
+
+        results.ShouldNotBeNull();
+        results!.Count.ShouldBe(entities.Count);
+        results.ShouldAllBe(x => !string.IsNullOrEmpty(x));
+    }
+
     [Fact]
     public async Task GetAll_WithProjection_ShouldReturnProjectedEntities()
     {
@@ -302,6 +424,22 @@ public sealed class BaseDbContextActionsTests
         BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
 
         List<string>? results = await testContext.GetAll(x => x.Name);
+
+        results.ShouldNotBeNull();
+        results!.Count.ShouldBe(entities.Count);
+        results.ShouldAllBe(x => !string.IsNullOrEmpty(x));
+    }
+
+    [Fact]
+    public async Task GetAllFull_WithProjection_ShouldReturnProjectedEntities()
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        List<string>? results = await testContext.GetAllFull(x => x.Name);
 
         results.ShouldNotBeNull();
         results!.Count.ShouldBe(entities.Count);
@@ -320,6 +458,44 @@ public sealed class BaseDbContextActionsTests
         Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
         List<string>? results = await testContext.GetWithFilter(filter, x => x.Name);
+
+        results.ShouldNotBeNull();
+        results!.Count.ShouldBe(1);
+        results[0].ShouldBe(target.Name);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetWithFilterFullAndNot_WithProjection_ShouldReturnProjectedEntities(bool full)
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+        TestEntity target = entities[0];
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+        Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
+
+        List<string>? results = await testContext.GetWithFilter(full, filter, x => x.Name);
+
+        results.ShouldNotBeNull();
+        results!.Count.ShouldBe(1);
+        results[0].ShouldBe(target.Name);
+    }
+
+    [Fact]
+    public async Task GetWithFilterFull_WithProjection_ShouldReturnProjectedEntities()
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+        TestEntity target = entities[0];
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+        Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
+
+        List<string>? results = await testContext.GetWithFilterFull(filter, x => x.Name);
 
         results.ShouldNotBeNull();
         results!.Count.ShouldBe(1);
@@ -355,6 +531,23 @@ public sealed class BaseDbContextActionsTests
         result!.Id.ShouldBe(entities.Min(x => x.Id));
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetMinByOrderFullAndNot_ShouldReturnEntityWithMinValue(bool full)
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        TestEntity? result = await testContext.GetMinByOrder(full, _ => true, x => x.Id);
+
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(entities.Min(x => x.Id));
+    }
+
     [Fact]
     public async Task GetMax_ShouldReturnMaxValue()
     {
@@ -369,6 +562,22 @@ public sealed class BaseDbContextActionsTests
         result.ShouldBe(entities.Max(x => x.Id));
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetMaxFullAndNot_ShouldReturnMaxValue(bool full)
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        int result = await testContext.GetMax(full, _ => true, x => x.Id);
+
+        result.ShouldBe(entities.Max(x => x.Id));
+    }
+
     [Fact]
     public async Task GetMin_ShouldReturnMinValue()
     {
@@ -379,6 +588,22 @@ public sealed class BaseDbContextActionsTests
         BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
 
         int result = await testContext.GetMin(_ => true, x => x.Id);
+
+        result.ShouldBe(entities.Min(x => x.Id));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetMinFullAndNot_ShouldReturnMinValue(bool full)
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        int result = await testContext.GetMin(full, _ => true, x => x.Id);
 
         result.ShouldBe(entities.Min(x => x.Id));
     }
@@ -541,6 +766,24 @@ public sealed class BaseDbContextActionsTests
     }
 
     [Fact]
+    public async Task GetAllStreaming_ShouldReturnAllEntities()
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        List<TestEntity> results = new();
+        await foreach (TestEntity item in testContext.GetAllStreaming()!)
+        {
+            results.Add(item);
+        }
+
+        results.Count.ShouldBe(entities.Count);
+    }
+
+    [Fact]
     public async Task GetAllFullStreaming_ShouldReturnAllEntities()
     {
         List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
@@ -632,6 +875,23 @@ public sealed class BaseDbContextActionsTests
         result.TotalRecords.ShouldBe(5);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetWithPagingFilterFullAndNot_ShouldReturnPagedEntities(bool full)
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(5).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(full, whereExpression: _ => true, selectExpression: x => x, orderByString: nameof(TestEntity.Id), skip: 1, pageSize: 2);
+
+        result.Entities.Count.ShouldBe(2);
+        result.TotalRecords.ShouldBe(5);
+    }
+
     [Fact]
     public async Task GetWithPagingFilter_TKey_ShouldReturnPagedEntities()
     {
@@ -642,6 +902,23 @@ public sealed class BaseDbContextActionsTests
         BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
 
         GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, ascendingOrderEpression: x => x.Id, skip: 1, pageSize: 2);
+
+        result.Entities.Count.ShouldBe(2);
+        result.TotalRecords.ShouldBe(5);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetWithPagingFilterFullAndNot_TKey_ShouldReturnPagedEntities(bool full)
+    {
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(5).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(full, whereExpression: _ => true, selectExpression: x => x, ascendingOrderEpression: x => x.Id, skip: 1, pageSize: 2);
 
         result.Entities.Count.ShouldBe(2);
         result.TotalRecords.ShouldBe(5);
@@ -771,6 +1048,31 @@ public sealed class BaseDbContextActionsTests
         savedEntity.ShouldNotBeNull();
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetAllStreamingFullAndNot_WithProjection_ShouldReturnProjectedEntities(bool full)
+    {
+        // Arrange
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        // Act
+        List<string> results = new();
+        await foreach (string name in testContext.GetAllStreaming(full, x => x.Name)!)
+        {
+            results.Add(name);
+        }
+
+        // Assert
+        results.Count.ShouldBe(entities.Count);
+        results.ShouldAllBe(x => !string.IsNullOrEmpty(x));
+        results.ShouldBe(entities.Select(x => x.Name));
+    }
+
     [Fact]
     public async Task GetAllStreaming_WithProjection_ShouldReturnProjectedEntities()
     {
@@ -792,6 +1094,55 @@ public sealed class BaseDbContextActionsTests
         results.Count.ShouldBe(entities.Count);
         results.ShouldAllBe(x => !string.IsNullOrEmpty(x));
         results.ShouldBe(entities.Select(x => x.Name));
+    }
+
+    [Fact]
+    public async Task GetAllStreamingFull_WithProjection_ShouldReturnProjectedEntities()
+    {
+        // Arrange
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        // Act
+        List<string> results = new();
+        await foreach (string name in testContext.GetAllFullStreaming(x => x.Name)!)
+        {
+            results.Add(name);
+        }
+
+        // Assert
+        results.Count.ShouldBe(entities.Count);
+        results.ShouldAllBe(x => !string.IsNullOrEmpty(x));
+        results.ShouldBe(entities.Select(x => x.Name));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetWithFilterStreamingFullAndNot_WithProjection_ShouldReturnProjectedEntities(bool full)
+    {
+        // Arrange
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+        TestEntity target = entities[0];
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+        Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
+
+        // Act
+        List<string> results = new();
+        await foreach (string name in testContext.GetWithFilterStreaming(full, filter, x => x.Name)!)
+        {
+            results.Add(name);
+        }
+
+        // Assert
+        results.Count.ShouldBe(1);
+        results[0].ShouldBe(target.Name);
     }
 
     [Fact]
@@ -819,6 +1170,30 @@ public sealed class BaseDbContextActionsTests
     }
 
     [Fact]
+    public async Task GetWithFilterFullStreaming_WithProjection_ShouldReturnProjectedEntities()
+    {
+        // Arrange
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+        TestEntity target = entities[0];
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+        Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
+
+        // Act
+        List<string> results = new();
+        await foreach (string name in testContext.GetWithFilterFullStreaming(filter, x => x.Name)!)
+        {
+            results.Add(name);
+        }
+
+        // Assert
+        results.Count.ShouldBe(1);
+        results[0].ShouldBe(target.Name);
+    }
+
+    [Fact]
     public async Task GetOneWithFilter_WithProjection_ShouldReturnProjectedEntity()
     {
         // Arrange
@@ -831,6 +1206,27 @@ public sealed class BaseDbContextActionsTests
 
         // Act
         string? result = await testContext.GetOneWithFilter(x => x.Id == target.Id, x => x.Name);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.ShouldBe(target.Name);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetOneWithFilterFullAndNot_WithProjection_ShouldReturnProjectedEntity(bool full)
+    {
+        // Arrange
+        List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+        TestEntity target = entities[0];
+        await _context.TestEntities.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        // Act
+        string? result = await testContext.GetOneWithFilter(full, x => x.Id == target.Id, x => x.Name);
 
         // Assert
         result.ShouldNotBeNull();
@@ -879,6 +1275,31 @@ public sealed class BaseDbContextActionsTests
         results[0].Name.ShouldBe("A");
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetNavigationWithFilterFullAndNot_WithProjection_ShouldReturnProjectedEntities(bool full)
+    {
+        // Arrange
+        TestEntityDetail related = new() { Id = 1, Description = "desc", TestEntityId = 1 };
+        TestEntity entity = new() { Id = 1, Name = "A", Details = new List<TestEntityDetail> { related } };
+        await _context.TestEntities.AddAsync(entity);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
+        Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
+
+        // Act
+        List<TestEntity>? results = await testContext.GetNavigationWithFilter(full, where, select);
+
+        // Assert
+        results.ShouldNotBeNull();
+        results.Count.ShouldBe(1);
+        results[0].Name.ShouldBe("A");
+    }
+
     [Fact]
     public async Task GetNavigationWithFilterStreaming_ShouldReturnStreamedEntities()
     {
@@ -896,6 +1317,35 @@ public sealed class BaseDbContextActionsTests
         // Act
         List<TestEntity> results = new();
         await foreach (TestEntity item in testContext.GetNavigationWithFilterStreaming(where, select)!)
+        {
+            results.Add(item);
+        }
+
+        // Assert
+        results.Count.ShouldBe(1);
+        results[0].Id.ShouldBe(1);
+        results[0].Name.ShouldBe("A");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetNavigationWithFilterStreamingFullAndNot_ShouldReturnStreamedEntities(bool full)
+    {
+        // Arrange
+        TestEntityDetail related = new() { Id = 1, Description = "desc", TestEntityId = 1 };
+        TestEntity entity = new() { Id = 1, Name = "A", Details = new List<TestEntityDetail> { related } };
+        await _context.TestEntities.AddAsync(entity);
+        await _context.SaveChangesAsync();
+
+        BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+        Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
+        Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
+
+        // Act
+        List<TestEntity> results = new();
+        await foreach (TestEntity item in testContext.GetNavigationWithFilterStreaming(full, where, select)!)
         {
             results.Add(item);
         }

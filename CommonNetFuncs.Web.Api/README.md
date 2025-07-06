@@ -2,19 +2,19 @@
 
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Web.Api)](https://www.nuget.org/packages/CommonNetFuncs.Web.Api/)
 
-This lightweight project contains helper methods for several common functions required by applications.
+This project contains helper methods for several common functions required by API applications that interact with databases using Entity Framework Core. Works in combination with the BaseDbContextActions class in CommonNetFuncs.EFCore package.
 
 ## Contents
 
 - [CommonNetFuncs.Web.Api](#commonnetfuncswebapi)
   - [Contents](#contents)
-  - [\[Class Name\]](#class-name)
+  - [GenericEndpoints](#genericendpoints)
     - [\[Class Name\] Usage Examples](#class-name-usage-examples)
       - [\[MethodNameHere\]](#methodnamehere)
 
 ---
 
-## [Class Name]
+## GenericEndpoints
 
 [Description here]
 

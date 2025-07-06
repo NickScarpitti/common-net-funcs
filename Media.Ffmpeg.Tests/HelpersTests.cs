@@ -192,10 +192,21 @@ public sealed class HelpersTests : IDisposable
     [Theory]
     [InlineData(-1, -1)]
     [InlineData(2, 5)]
-    public async Task GetKeyFrameSpacing_ShouldReturnValueOrMinusOne(int numberOfSamples, int sampleLengthSec)
+    public async Task GetKeyFrameSpacing_WithSamples_ShouldReturnValueOrMinusOne(int numberOfSamples, int sampleLengthSec)
     {
         // Act
         decimal result = await _testVideoPath.GetKeyFrameSpacing(numberOfSamples, sampleLengthSec);
+
+        // Assert
+        // For a valid file, should be >= -1 (could be -1 if no keyframes found)
+        result.ShouldBeInRange(-1, 1000);
+    }
+
+    [Fact]
+    public async Task GetKeyFrameSpacing_WithoutSamples_ShouldReturnValueOrMinusOne()
+    {
+        // Act
+        decimal result = await _testVideoPath.GetKeyFrameSpacing();
 
         // Assert
         // For a valid file, should be >= -1 (could be -1 if no keyframes found)

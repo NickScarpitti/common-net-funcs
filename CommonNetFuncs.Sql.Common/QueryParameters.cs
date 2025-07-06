@@ -32,7 +32,7 @@ public static class QueryParameters
         ConcurrentBag<string?> cleanValues = [];
         if (values.Any())
         {
-            Parallel.ForEach(values, value => cleanValues.Add(value.MakeNullNull()?.Replace("\n", string.Empty).Trim()));
+            Parallel.ForEach(values, value => cleanValues.Add(value.CleanQueryParam()));
         }
 
         return (cleanValues ?? []).Where(x => x != null)!;

@@ -21,6 +21,10 @@ public static class Optimizer
     /// Optimizes image to be smaller size if possible
     /// </summary>
     /// <param name="file">Path to the file that will be optimized</param>
+    /// <param name="gifsicleArgs">Optional: Arguments to pass to gifsicle command. If null, defaults to "-b -O3 {file}"</param>
+    /// <param name="jpegoptimArgs">Optional: Arguments to pass to jpegoptim command. If null, defaults to "--preserve-perms --preserve {file}"</param>
+    /// <param name="optipngArgs">Optional: Arguments to pass to optipng command. If null, defaults to "-fix -o5 {file}"</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <remarks>Need to have gifsicle, jpegoptim, and optipng installed for these to work</remarks>
     public static async Task OptimizeImage(string file, IEnumerable<string>? gifsicleArgs = null, IEnumerable<string>? jpegoptimArgs = null, IEnumerable<string>? optipngArgs = null, CancellationToken cancellationToken = default)
     {

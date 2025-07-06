@@ -47,10 +47,11 @@ public static class ConversionTask
     /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
     /// <returns>True if conversion successfully completed</returns>
-    public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string workingPath, VideoCodec codec, Format outputFormat = Format.mp4,
-        ConversionPreset conversionPreset = ConversionPreset.Slower, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1,
-        bool cancelIfLarger = true, string? taskDescription = null, bool strict = true, bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal,
-        HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null, CancellationTokenSource? cancellationTokenSource = null)
+    public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, VideoCodec codec, Format outputFormat = Format.mp4, ConversionPreset conversionPreset = ConversionPreset.Slower,
+        string? workingPath = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true,
+        string? taskDescription = null, bool strict = true, bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal,
+        HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null,
+        CancellationTokenSource? cancellationTokenSource = null)
     {
         return FfmpegConversionTask(fileToConvert, outputFileName, workingPath, codec, outputFormat, conversionPreset, conversionIndex, fpsDict, mediaInfo, null, numberOfThreads, cancelIfLarger,
             taskDescription, strict, overwriteOutput, processPriority, hardwareAccelerationValues, conversionOutputs, additionalLogText, cancellationTokenSource);
@@ -77,16 +78,16 @@ public static class ConversionTask
     /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
     /// <returns>True if conversion successfully completed</returns>
-    public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string workingPath, string? ffmpegCommand, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null,
-        IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true, bool overwriteOutput = true,
-        ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null,
-        string? additionalLogText = null, CancellationTokenSource ? cancellationTokenSource = null)
+    public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string? ffmpegCommand, string? workingPath = null, int conversionIndex = 0,
+        ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true,
+        bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, HardwareAccelerationValues? hardwareAccelerationValues = null,
+        ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null, CancellationTokenSource? cancellationTokenSource = null)
     {
         return FfmpegConversionTask(fileToConvert, outputFileName, workingPath, null, null, null, conversionIndex, fpsDict, mediaInfo, ffmpegCommand, numberOfThreads, cancelIfLarger,
             taskDescription, strict, overwriteOutput, processPriority, hardwareAccelerationValues, conversionOutputs, additionalLogText, cancellationTokenSource);
     }
 
-    private static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string workingPath, VideoCodec? codec = null, Format? outputFormat = null,
+    private static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string? workingPath = null, VideoCodec? codec = null, Format? outputFormat = null,
         ConversionPreset? conversionPreset = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, string? ffmpegCommand = null,
         int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true, bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal,
         HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null, CancellationTokenSource? cancellationTokenSource = null)
@@ -109,11 +110,11 @@ public static class ConversionTask
             TimeSpan videoTimespan = videoStream?.Duration ?? TimeSpan.FromSeconds(0);
 
             conversion
-               .AddStream(audioStream)
-               .SetOutput(Path.GetFullPath(Path.Combine(workingPath, outputFileName)))
-               .SetOverwriteOutput(overwriteOutput)
-               .UseMultiThread(numberOfThreads)
-               .SetPriority(processPriority);
+                .AddStream(audioStream)
+                .SetOutput(Path.GetFullPath(Path.Combine(workingPath ?? Path.GetTempPath(), outputFileName)))
+                .SetOverwriteOutput(overwriteOutput)
+                .UseMultiThread(numberOfThreads)
+                .SetPriority(processPriority);
 
             if (string.IsNullOrWhiteSpace(ffmpegCommand))
             {

@@ -17,28 +17,15 @@ public static class Base64
     /// <returns>Base 64 string representation of image</returns>
     public static string? ConvertImageFileToBase64(this string filePath)
     {
-        try
+        if (File.Exists(filePath))
         {
-            if (File.Exists(filePath))
-            {
-                using MemoryStream ms = new(File.ReadAllBytes(filePath));
-                if (ms.Length > 0)
-                {
-                    using Image image = Image.Load(ms);
-                    if (image?.Height > 0 && image.Width > 0)
-                    {
-                        ReadOnlySpan<byte> imageBytes = ms.ToArray();
-                        return ToBase64String(imageBytes);
-                    }
-                }
-            }
+            using MemoryStream ms = new(File.ReadAllBytes(filePath));
+            return ms.ConvertImageFileToBase64();
         }
-        catch (Exception ex)
+        else
         {
-            logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(ConvertImageFileToBase64)} Error");
+            throw new FileNotFoundException($"The file was not found", filePath);
         }
-
-        return null;
     }
 
     /// <summary>
@@ -97,6 +84,12 @@ public static class Base64
         }
     }
 
+    /// <summary>
+    /// Save a base 64 image string to a file
+    /// </summary>
+    /// <param name="imageBase64">Base 64 string representation of an image</param>
+    /// <param name="savePath">Path (including file name) to save image to</param>
+    /// <returns>True if the image was saved successfully, otherwise false</returns>
     public static bool ImageSaveToFile(this string imageBase64, string savePath)
     {
         try

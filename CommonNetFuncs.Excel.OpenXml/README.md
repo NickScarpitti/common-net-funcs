@@ -2,7 +2,7 @@
 
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Excel.OpenXml)](https://www.nuget.org/packages/CommonNetFuncs.Excel.OpenXml/)
 
-This lightweight project contains helper methods for several common functions required by applications.
+This project contains helper methods for reading and writing Excel files using the OpenXML SDK in .NET applications.
 
 ## Contents
 

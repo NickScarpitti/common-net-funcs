@@ -2,7 +2,7 @@
 
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Csv)](https://www.nuget.org/packages/CommonNetFuncs.Csv/)
 
-This lightweight project contains helper methods for several common functions required by applications.
+This project contains helper methods for reading and writing CSV files in .NET applications.
 
 ## Contents
 

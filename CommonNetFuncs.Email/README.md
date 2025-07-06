@@ -2,7 +2,7 @@
 
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Email)](https://www.nuget.org/packages/CommonNetFuncs.Email/)
 
-This lightweight project contains helper methods for several common functions required by applications.
+This  contains helper methods for sending emails in .NET applications. It includes a simple interface for sending emails as well as an implementation that can be used directly or consumed as a service.
 
 ## Contents
 

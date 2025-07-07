@@ -72,8 +72,7 @@ public static partial class Common
         try
         {
             CellRangeAddress cellRangeAddress = CellRangeAddress.ValueOf(cellReference);
-            IRow row = ws.GetRow(cellRangeAddress.FirstRow + rowOffset);
-            row ??= ws.CreateRow(cellRangeAddress.FirstRow + rowOffset);
+            IRow row = ws.GetRow(cellRangeAddress.FirstRow + rowOffset) ?? ws.CreateRow(cellRangeAddress.FirstRow + rowOffset);
             return row.GetCell(cellRangeAddress.FirstColumn + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
 
             // CellReference cr = new(cellReference);
@@ -100,8 +99,7 @@ public static partial class Common
         try
         {
             ISheet ws = startCell.Sheet;
-            IRow? row = ws.GetRow(startCell.RowIndex + rowOffset);
-            row ??= ws.CreateRow(startCell.RowIndex + rowOffset);
+            IRow? row = ws.GetRow(startCell.RowIndex + rowOffset) ?? ws.CreateRow(startCell.RowIndex + rowOffset);
             return row.GetCell(startCell.ColumnIndex + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
@@ -124,8 +122,7 @@ public static partial class Common
     {
         try
         {
-            IRow row = ws.GetRow(rowIndex + rowOffset);
-            row ??= ws.CreateRow(rowIndex + rowOffset);
+            IRow row = ws.GetRow(rowIndex + rowOffset) ?? ws.CreateRow(rowIndex + rowOffset);
             return row.GetCell(colIndex + colOffset, MissingCellPolicy.CREATE_NULL_AS_BLANK);
         }
         catch (Exception ex)
@@ -143,14 +140,26 @@ public static partial class Common
     /// <returns>0 based index of the last row with a non-blank value</returns>
     public static int GetLastPopulatedRowInColumn(this ISheet ws, int colIndex)
     {
-        int i = 0;
-        ICell? currentCell = ws.GetCellFromCoordinates(colIndex, i);
-        while (currentCell?.IsCellEmpty() == false)
+        //int i = 0;
+        //ICell? currentCell = ws.GetCellFromCoordinates(colIndex, i);
+        //while (currentCell?.IsCellEmpty() == false)
+        //{
+        //    i++;
+        //    currentCell = ws.GetCellFromCoordinates(colIndex, i);
+        //}
+        //return i - 1;
+
+        // Iterate backwards through the rows to find the last populated row (faster on large sheets than top down method)
+        for (int i = ws.LastRowNum; i >= 0; i--)
         {
-            i++;
-            currentCell = ws.GetCellFromCoordinates(colIndex, i);
+            IRow row = ws.GetRow(i);
+            ICell? cell = row?.GetCell(colIndex);
+            if (cell?.IsCellEmpty() == false)
+            {
+                return i;
+            }
         }
-        return i - 1;
+        return -1;
     }
 
     /// <summary>
@@ -913,7 +922,7 @@ public static partial class Common
             {
                 logger.Warn("{msg}", $"Width of Column {i} is 0! Check referenced excel sheet: {ws.SheetName}");
             }
-            totalWidth += ws.GetColumnWidthInPixels(i);
+            totalWidth += columnWidth;
         }
         return (int)Round(totalWidth, 0, MidpointRounding.ToZero);
     }
@@ -1111,11 +1120,13 @@ public static partial class Common
                         {
                             for (int rowIndex = startRowIndex + (hasHeaders ? 1 : 0); rowIndex < endRowIndex + 1; rowIndex++)
                             {
+                                IRow row = ws.GetRow(rowIndex) ?? ws.CreateRow(rowIndex);
                                 string?[] newRowData = new string?[(((int)endColIndex!) + 1) - startColIndex];
 
                                 for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
                                 {
-                                    newRowData[colIndex - startColIndex] = ws.GetCellFromCoordinates(colIndex, rowIndex).GetStringValue();
+                                    //newRowData[colIndex - startColIndex] = ws.GetCellFromCoordinates(colIndex, rowIndex).GetStringValue();
+                                    newRowData[colIndex - startColIndex] = row.GetCell(colIndex).GetStringValue();
                                 }
                                 dataTable.Rows.Add(newRowData);
                             }
@@ -1128,20 +1139,26 @@ public static partial class Common
                             while (rowIsNotNull)
                             {
                                 cancellationToken.ThrowIfCancellationRequested();
-                                rowIsNotNull = false;
 
-                                string?[] newRowData = new string?[(((int)endColIndex!) + 1) - startColIndex];
-
-                                for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
-                                {
-                                    string? cellValue = ws.GetCellFromCoordinates(colIndex, rowIndex).GetStringValue();
-                                    rowIsNotNull = rowIsNotNull ? rowIsNotNull : (!string.IsNullOrWhiteSpace(cellValue));
-                                    newRowData[colIndex - startColIndex] = cellValue;
-                                }
+                                IRow? row = ws.GetRow(rowIndex);
+                                rowIsNotNull = row != null;
 
                                 if (rowIsNotNull)
                                 {
-                                    dataTable.Rows.Add(newRowData);
+                                    string?[] newRowData = new string?[(((int)endColIndex!) + 1) - startColIndex];
+
+                                    for (int colIndex = startColIndex; colIndex < endColIndex + 1; colIndex++)
+                                    {
+                                        //string? cellValue = ws.GetCellFromCoordinates(colIndex, rowIndex).GetStringValue();
+                                        string? cellValue = row!.GetCell(colIndex).GetStringValue();
+                                        rowIsNotNull = rowIsNotNull ? rowIsNotNull : (!string.IsNullOrWhiteSpace(cellValue));
+                                        newRowData[colIndex - startColIndex] = cellValue;
+                                    }
+
+                                    if (rowIsNotNull)
+                                    {
+                                        dataTable.Rows.Add(newRowData);
+                                    }
                                 }
                                 rowIndex++;
                             }
@@ -1212,20 +1229,24 @@ public static partial class Common
                     ws ??= wb.GetSheet(table.SheetName);
 
                     // Get headers
+                    IRow currentRow = ws.GetRow(table.StartRowIndex) ?? ws.CreateRow(table.StartRowIndex);
                     for (int i = table.StartColIndex; i < table.EndColIndex + 1; i++)
                     {
-                        dataTable.Columns.Add(ws.GetCellFromCoordinates(i, table.StartRowIndex).GetStringValue());
+                        //dataTable.Columns.Add(ws.GetCellFromCoordinates(i, table.StartRowIndex).GetStringValue());
+                        dataTable.Columns.Add(currentRow.GetCell(i).GetStringValue());
                     }
 
                     // Get body data
                     for (int i = table.StartRowIndex + 1; i < table.EndRowIndex + 1; i++)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
+                        currentRow = ws.GetRow(i) ?? ws.CreateRow(i);
                         string?[] newRowData = new string?[(table.EndColIndex + 1) - table.StartColIndex];
 
                         for (int n = table.StartColIndex; n < table.EndColIndex + 1; n++)
                         {
-                            newRowData[n - table.StartColIndex] = ws.GetCellFromCoordinates(n, i).GetStringValue();
+                            //newRowData[n - table.StartColIndex] = ws.GetCellFromCoordinates(n, i).GetStringValue();
+                            newRowData[n - table.StartColIndex] = currentRow.GetCell(n).GetStringValue();
                         }
 
                         dataTable.Rows.Add(newRowData);
@@ -1286,6 +1307,10 @@ public static partial class Common
         Regex regex = HexColorRegex();
         if ((hexColor.Length == 7) && regex.IsMatch(hexColor))
         {
+            byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
+            outputColor = HssfColors.Value.MinBy(hssfColor => ColorDistance(rgb, hssfColor.RGB)) ?? new HSSFColor();
+
+            // Old way to do this
             // Span<byte> rgb =
             // [
             // ToByte(hexColor.Substring(1, 2), 16),
@@ -1293,10 +1318,6 @@ public static partial class Common
             // ToByte(hexColor.Substring(5, 2), 16),
             // ];
 
-            byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
-            outputColor = HssfColors.Value.MinBy(hssfColor => ColorDistance(rgb, hssfColor.RGB)) ?? new HSSFColor();
-
-            // Old way to do this
             // int deviation = int.MaxValue;
             // foreach (HSSFColor hssfColor in HSSFColor.GetIndexHash().Select(x => x.Value))
             // {

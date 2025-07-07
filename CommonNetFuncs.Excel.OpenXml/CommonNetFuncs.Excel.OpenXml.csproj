@@ -51,6 +51,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Excel.Common\CommonNetFuncs.Excel.Common.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

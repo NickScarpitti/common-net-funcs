@@ -16,19 +16,20 @@ public static class MathHelpers
     /// <returns>Double representation of the rounded value</returns>
     public static double Ceiling(this double? value, double significance)
     {
-        value ??= 0;
+        double val = value ?? 0;
 
         if (significance == 0)
         {
-            return Math.Ceiling((double)value);
+            return Math.Ceiling(val);
         }
 
-        if (value % significance != 0)
+        if (val % significance != 0)
         {
-            return ((int)(value / significance) * significance) + (value > 0 ? significance : 0);
+            return Math.Ceiling(val / significance) * significance;
+            //return ((int)(value / significance) * significance) + (value > 0 ? significance : 0);
         }
 
-        return ToDouble(value);
+        return ToDouble(val);
     }
 
     /// <summary>
@@ -39,19 +40,20 @@ public static class MathHelpers
     /// <returns>Decimal representation of the rounded value</returns>
     public static decimal Ceiling(this decimal? value, decimal significance)
     {
-        value ??= 0;
+        decimal val = value ?? 0;
 
         if (significance == 0)
         {
-            return Math.Ceiling((decimal)value);
+            return Math.Ceiling(val);
         }
 
-        if (value % significance != 0)
+        if (val % significance != 0)
         {
-            return ((int)(value / significance) * significance) + (value > 0 ? significance : 0);
+            return Math.Ceiling(val / significance) * significance;
+            //return ((int)(value / significance) * significance) + (value > 0 ? significance : 0);
         }
 
-        return ToDecimal(value);
+        return ToDecimal(val);
     }
 
     /// <summary>
@@ -62,19 +64,20 @@ public static class MathHelpers
     /// <returns>Double representation of the rounded value</returns>
     public static double Floor(this double? value, double significance)
     {
-        value ??= 0;
+        double val = value ?? 0;
 
         if (significance == 0)
         {
-            return Math.Floor((double)value);
+            return Math.Floor(val);
         }
 
-        if (value % significance != 0)
+        if (val % significance != 0)
         {
-            return (int)(value / significance) * significance - (value > 0 ? 0 : significance);
+            return Math.Floor(val / significance) * significance;
+            //return (int)(value / significance) * significance - (value > 0 ? 0 : significance);
         }
 
-        return ToDouble(value);
+        return ToDouble(val);
     }
 
     /// <summary>
@@ -85,19 +88,20 @@ public static class MathHelpers
     /// <returns>Decimal representation of the rounded value</returns>
     public static decimal Floor(this decimal? value, decimal significance)
     {
-        value ??= 0;
+        decimal val = value ?? 0;
 
         if (significance == 0)
         {
-            return Math.Floor((decimal)value);
+            return Math.Floor(val);
         }
 
-        if (value % significance != 0)
+        if (val % significance != 0)
         {
-            return (int)(value / significance) * significance - (value > 0 ? 0 : significance);
+            return Math.Floor(val / significance) * significance;
+            //return (int)(value / significance) * significance - (value > 0 ? 0 : significance);
         }
 
-        return ToDecimal(value);
+        return ToDecimal(val);
     }
 
     /// <summary>
@@ -111,9 +115,9 @@ public static class MathHelpers
         {
             return 0;
         }
-        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
-        int position = value.ToString()!.IndexOf(decimalSeparator);
-        return position == -1 ? 0 : value.ToString()!.Length - position - 1;
+        decimal val = value ?? 0;
+        int[] bits = decimal.GetBits(val);
+        return (bits[3] >> 16) & 0xFF;
     }
 
     /// <summary>
@@ -121,15 +125,17 @@ public static class MathHelpers
     /// </summary>
     /// <param name="value">Value to get the precision of</param>
     /// <returns>The number of decimal places of the given double value</returns>
-    public static int GetPrecision(this double? value)
+    public static int GetPrecision(this double? value, string? decimalSeparator = null)
     {
         if (value == null)
         {
             return 0;
         }
-        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
-        int position = value.ToString()!.IndexOf(decimalSeparator);
-        return position == -1 ? 0 : value.ToString()!.Length - position - 1;
+
+        string valueString = value.ToString() ?? string.Empty;
+        decimalSeparator ??= NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
+        int position = valueString!.IndexOf(decimalSeparator);
+        return position == -1 ? 0 : valueString!.Length - position - 1;
     }
 
     /// <summary>
@@ -137,11 +143,10 @@ public static class MathHelpers
     /// </summary>
     /// <param name="value">Value to get the precision of</param>
     /// <returns>The number of decimal places of the given double value</returns>
-    public static int GetPrecision(this decimal value)
+    public static int GetPrecision(this decimal value, string? decimalSeparator = null)
     {
-        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
-        int position = value.ToString()!.IndexOf(decimalSeparator);
-        return position == -1 ? 0 : value.ToString()!.Length - position - 1;
+        int[] bits = decimal.GetBits(value);
+        return (bits[3] >> 16) & 0xFF;
     }
 
     /// <summary>
@@ -149,11 +154,12 @@ public static class MathHelpers
     /// </summary>
     /// <param name="value">Value to get the precision of</param>
     /// <returns>The number of decimal places of the given double value</returns>
-    public static int GetPrecision(this double value)
+    public static int GetPrecision(this double value, string? decimalSeparator = null)
     {
-        string decimalSeparator = NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
-        int position = value.ToString()!.IndexOf(decimalSeparator);
-        return position == -1 ? 0 : value.ToString()!.Length - position - 1;
+        string valueString = value.ToString() ?? string.Empty;
+        decimalSeparator ??= NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
+        int position = valueString!.IndexOf(decimalSeparator);
+        return position == -1 ? 0 : valueString!.Length - position - 1;
     }
 
     /// <summary>
@@ -171,21 +177,76 @@ public static class MathHelpers
         return Enumerable.Range(start, end - start + 1);
     }
 
-    public static void GreatestCommonDenominator(ref long Numerator, ref long Denominator, out long greatestCommonDenominator)
+    public static void GreatestCommonDenominator(ref long numerator, ref long denominator, out long greatestCommonDenominator)
     {
-        greatestCommonDenominator = 0;
-        for (int x = 1; x <= Denominator; x++)
-        {
-            if ((Numerator % x == 0) && (Denominator % x == 0))
-            {
-                greatestCommonDenominator = x;
-            }
-        }
+        // Slow brute-force GCD calculation
+        //greatestCommonDenominator = 0;
+        //for (long x = 1; x <= denominator; x++)
+        //{
+        //    if ((numerator % x == 0) && (denominator % x == 0))
+        //    {
+        //        greatestCommonDenominator = x;
+        //    }
+        //}
 
+        //if (greatestCommonDenominator != 0)
+        //{
+        //    numerator /= greatestCommonDenominator;
+        //    denominator /= greatestCommonDenominator;
+        //}
+
+        // Fast Euclidean algorithm for GCD calculation
+        long a = Math.Abs(numerator);
+        long b = Math.Abs(denominator);
+        while (b != 0)
+        {
+            long temp = b;
+            b = a % b;
+            a = temp;
+        }
+        greatestCommonDenominator = a;
         if (greatestCommonDenominator != 0)
         {
-            Numerator /= greatestCommonDenominator;
-            Denominator /= greatestCommonDenominator;
+            numerator /= greatestCommonDenominator;
+            denominator /= greatestCommonDenominator;
+        }
+    }
+
+    public static void GreatestCommonDenominator(ref int numerator, ref int denominator, out int greatestCommonDenominator)
+    {
+        // Fast Euclidean algorithm for GCD calculation
+        int a = Math.Abs(numerator);
+        int b = Math.Abs(denominator);
+        while (b != 0)
+        {
+            int temp = b;
+            b = a % b;
+            a = temp;
+        }
+        greatestCommonDenominator = a;
+        if (greatestCommonDenominator != 0)
+        {
+            numerator /= greatestCommonDenominator;
+            denominator /= greatestCommonDenominator;
+        }
+    }
+
+    public static void GreatestCommonDenominator(ref decimal numerator, ref decimal denominator, out decimal greatestCommonDenominator)
+    {
+        // Fast Euclidean algorithm for GCD calculation
+        decimal a = Math.Abs(numerator);
+        decimal b = Math.Abs(denominator);
+        while (b != 0)
+        {
+            decimal temp = b;
+            b = a % b;
+            a = temp;
+        }
+        greatestCommonDenominator = a;
+        if (greatestCommonDenominator != 0)
+        {
+            numerator /= greatestCommonDenominator;
+            denominator /= greatestCommonDenominator;
         }
     }
 }

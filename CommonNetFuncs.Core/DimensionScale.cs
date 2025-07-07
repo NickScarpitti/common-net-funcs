@@ -91,11 +91,8 @@ public static class DimensionScale
             return (originalWidth, originalHeight);
         }
 
-        // Calculate the ratio of the original dimensions to the max dimensions
-        decimal[] ratios = [maxWidth / originalWidth, maxHeight / originalHeight];
-
-        // Use the smaller ratio to ensure the image fits within the container without losing its aspect ratio
-        decimal ratio = ratios.Min();
+        // Calculate the ratio of the original dimensions to the max dimensions and use the smaller ratio to ensure the image fits within the container without losing its aspect ratio
+        decimal ratio = Min(maxWidth / originalWidth, maxHeight / originalHeight);
 
         // Calculate the new dimensions and return them
         return (resultDecimalPlaces == null) ? (originalWidth * ratio, originalHeight * ratio) :
@@ -153,11 +150,8 @@ public static class DimensionScale
             return (originalWidth, originalHeight, originalDepth);
         }
 
-        // Calculate the ratio of the original dimensions to the max dimensions
-        decimal[] ratios = [((decimal)maxWidth) / originalWidth, ((decimal)maxHeight) / originalHeight, ((decimal)maxDepth) / originalDepth];
-
-        // Use the smallest ratio to ensure the object fits within the container without losing its aspect ratio
-        decimal ratio = ratios.Min();
+        // Calculate the ratio of the original dimensions to the max dimensions and use the smallest ratio to ensure the object fits within the container without losing its aspect ratio
+        decimal ratio = Min(Min(((decimal)maxWidth) / originalWidth, ((decimal)maxHeight) / originalHeight), ((decimal)maxDepth) / originalDepth);
 
         // Calculate the new dimensions and return them
         return ((int)Round(originalWidth * ratio, 0, MidpointRounding.ToZero), (int)Round(originalHeight * ratio, 0, MidpointRounding.ToZero), (int)Round(originalDepth * ratio, 0, MidpointRounding.ToZero));
@@ -214,11 +208,8 @@ public static class DimensionScale
             return (originalWidth, originalHeight, originalDepth);
         }
 
-        // Calculate the ratio of the original dimensions to the max dimensions
-        decimal[] ratios = [maxWidth / originalWidth, maxHeight / originalHeight, maxDepth / originalDepth];
-
-        // Use the smallest ratio to ensure the object fits within the container without losing its aspect ratio
-        decimal ratio = ratios.Min();
+        // Calculate the ratio of the original dimensions to the max dimensions and use the smallest ratio to ensure the object fits within the container without losing its aspect ratio
+        decimal ratio = Min(Min(maxWidth / originalWidth, maxHeight / originalHeight), maxDepth / originalDepth);
 
         // Calculate the new dimensions and return them
         return (resultDecimalPlaces == null) ? (originalWidth * ratio, originalHeight * ratio, originalDepth * ratio) :

@@ -5,6 +5,7 @@ using NPOI.SS.UserModel;
 using NPOI.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
+using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Excel.Npoi;
 
@@ -312,11 +313,14 @@ public static class Export
                 Dictionary<int, int> maxColumnWidths = [];
                 List<string> columnNames = [];
 
-                PropertyInfo[] props = typeof(T).GetProperties().Where(x => (skipColumnNames.Count == 0) || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
+                PropertyInfo[] props = GetOrAddPropertiesFromCache(typeof(T)).Where(x => (skipColumnNames.Count == 0) || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
+
+                IRow currentRow = ws.GetRow(y) ?? ws.CreateRow(y);
                 foreach (PropertyInfo prop in props)
                 {
                     // ((SXSSFSheet)ws).TrackColumnForAutoSizing(x);
-                    ICell? c = ws.GetCellFromCoordinates(x, y);
+                    //ICell? c = ws.GetCellFromCoordinates(x, y);
+                    ICell? c = currentRow.GetCell(x) ?? currentRow.CreateCell(x);
                     if (c != null)
                     {
                         c.SetCellValue(prop.Name);
@@ -329,18 +333,27 @@ public static class Export
                 x = 0;
                 y++;
 
-                foreach (T item in data.Where(x => x != null))
+                foreach (T item in data)
                 {
+                    if (item == null)
+                    {
+                        continue;
+                    }
+
                     cancellationToken.ThrowIfCancellationRequested();
+                    currentRow = ws.GetRow(y) ?? ws.CreateRow(y);
                     foreach (PropertyInfo prop in props)
                     {
                         object value = prop.GetValue(item) ?? string.Empty;
-                        ICell? c = ws.GetCellFromCoordinates(x, y);
+
+                        //ICell? c = ws.GetCellFromCoordinates(x, y);
+                        ICell? c = currentRow.GetCell(x) ?? currentRow.CreateCell(x);
                         if (c != null)
                         {
-                            c.SetCellValue(value.ToString());
+                            string? valueString = value.ToString();
+                            c.SetCellValue(valueString);
                             c.CellStyle = bodyStyle;
-                            int newVal = (value.ToString()?.Length ?? 1 + 6) * 256;
+                            int newVal = (valueString?.Length ?? 1 + 6) * 256;
                             if (maxColumnWidths[x] < newVal)
                             {
                                 maxColumnWidths[x] = newVal;
@@ -422,14 +435,16 @@ public static class Export
                 int x = 0;
                 int y = 0;
 
-                List<int> skipColumns = [];
+                HashSet<int> skipColumns = [];
                 Dictionary<int, int> maxColumnWidths = [];
                 List<string> columnNames = [];
+                IRow currentRow = ws.GetRow(y) ?? ws.CreateRow(y);
                 foreach (DataColumn column in data.Columns)
                 {
                     if (!skipColumnNames.Contains(column.ColumnName, StringComparer.InvariantCultureIgnoreCase))
                     {
-                        ICell? c = ws.GetCellFromCoordinates(x, y);
+                        //ICell? c = ws.GetCellFromCoordinates(x, y);
+                        ICell? c = currentRow.GetCell(x) ?? currentRow.CreateCell(x);
                         if (c != null)
                         {
                             c.SetCellValue(column.ColumnName);
@@ -451,16 +466,19 @@ public static class Export
                 foreach (DataRow row in data.Rows)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    currentRow = ws.GetRow(y) ?? ws.CreateRow(y);
                     foreach (object? value in row.ItemArray)
                     {
                         if ((value != null) && !skipColumns.Contains(x))
                         {
-                            ICell? c = ws.GetCellFromCoordinates(x, y);
+                            //ICell? c = ws.GetCellFromCoordinates(x, y);
+                            ICell? c = currentRow.GetCell(x) ?? currentRow.CreateCell(x);
                             if (c != null)
                             {
-                                c.SetCellValue(value.ToString());
+                                string? valueString = value.ToString();
+                                c.SetCellValue(valueString);
                                 c.CellStyle = bodyStyle;
-                                int newVal = (value.ToString()?.Length ?? 1 + 6) * 256;
+                                int newVal = (valueString?.Length ?? 1 + 6) * 256;
                                 if (maxColumnWidths[x] < newVal)
                                 {
                                     maxColumnWidths[x] = newVal;

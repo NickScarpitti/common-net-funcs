@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using FastExpressionCompiler;
 using NLog;
+using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
 
@@ -28,13 +29,9 @@ public static class Inspect
     /// </summary>
     /// <param name="obj">Object to count default properties in</param>
     /// <returns>Number of properties in a class that are set to their default value</returns>
-    //public static int CountDefaultProps<T>(this T obj) where T : class
-    // {
-    // return typeof(T).GetProperties().Count(x => x.CanWrite && x.GetValue(obj) == x.PropertyType.GetDefaultValue());
-    // }
     public static int CountDefaultProps<T>(this T obj) where T : class
     {
-        return typeof(T).GetProperties().Count(x => x.CanWrite && Equals(x.GetValue(obj), x.PropertyType.GetDefaultValue()));
+        return GetOrAddPropertiesFromCache(typeof(T)).Count(x => x.CanWrite && Equals(x.GetValue(obj), x.PropertyType.GetDefaultValue()));
     }
 
     /// <summary>
@@ -103,7 +100,7 @@ public static class Inspect
             return false;
         }
 
-        IEnumerable<PropertyInfo> props = obj1.GetType().GetProperties();
+        IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromCache(obj1.GetType());
         if (exemptProps?.Any() == true)
         {
             props = props.Where(x => exemptProps?.Contains(x.Name) != true);
@@ -266,7 +263,7 @@ public static class Inspect
         UnaryExpression typedObj1 = Expression.Convert(obj1Param, type);
         UnaryExpression typedObj2 = Expression.Convert(obj2Param, type);
 
-        IEnumerable<PropertyInfo> properties = type.GetProperties().Where(p => p.CanRead && (p.GetIndexParameters().Length == 0));
+        IEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromCache(type).Where(p => p.CanRead && (p.GetIndexParameters().Length == 0));
 
         List<Expression> comparisons = [];
 
@@ -344,7 +341,7 @@ public static class Inspect
             _ => SHA512.Create()
         };
 
-        IOrderedEnumerable<PropertyInfo> properties = typeof(T).GetProperties().Where(x => x.CanRead).OrderBy(x => x.Name);
+        IOrderedEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.CanRead).OrderBy(x => x.Name);
 
         using MemoryStream ms = new();
         using BinaryWriter writer = new(ms);
@@ -382,7 +379,7 @@ public static class Inspect
             _ => SHA512.Create()
         };
 
-        IOrderedEnumerable<PropertyInfo> properties = typeof(T).GetProperties().Where(x => x.CanRead).OrderBy(x => x.Name);
+        IOrderedEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.CanRead).OrderBy(x => x.Name);
 
         await using MemoryStream ms = new();
         await using BinaryWriter writer = new(ms);
@@ -444,7 +441,7 @@ public static class Inspect
         }
 
         // Handle complex objects recursively
-        IOrderedEnumerable<PropertyInfo> properties = type.GetProperties()
+        IOrderedEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromCache(type)
             .Where(p => p.CanRead)
             .OrderBy(p => p.Name);
 

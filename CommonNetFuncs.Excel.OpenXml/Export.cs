@@ -5,6 +5,7 @@ using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using static CommonNetFuncs.Core.ReflectionCaches;
 using static CommonNetFuncs.Excel.OpenXml.Common;
 
 namespace CommonNetFuncs.Excel.OpenXml;
@@ -192,7 +193,7 @@ public static class Export
                 uint x = 1;
                 uint y = 1;
 
-                PropertyInfo[] properties = typeof(T).GetProperties().Where(x => (skipColumnNames == null) || (skipColumnNames.Count == 0) || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
+                PropertyInfo[] properties = GetOrAddPropertiesFromCache(typeof(T)).Where(x => (skipColumnNames == null) || (skipColumnNames.Count == 0) || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
 
                 // Write headers
                 foreach (PropertyInfo prop in properties)

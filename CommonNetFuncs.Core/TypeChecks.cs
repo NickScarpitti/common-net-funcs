@@ -114,6 +114,54 @@ public static class TypeChecks
         ArgumentNullException.ThrowIfNull(type, nameof(type));
 
         // Check if the type itself is a generic IReadOnlyCollection<> or IReadOnlyList<> or ReadOnlyCollection<>
+        //if (type.IsGenericType)
+        //{
+        //    Type genericType = type.GetGenericTypeDefinition();
+        //    if (genericType == typeof(IReadOnlyCollection<>) ||
+        //        genericType == typeof(IReadOnlyList<>) ||
+        //        genericType == typeof(ReadOnlyCollection<>))
+        //    {
+        //        return true;
+        //    }
+        //}
+
+        //if (type.IsArray)
+        //{
+        //    return false;
+        //}
+
+        //if (type.Name.Equals("List`1"))
+        //{
+        //    return false;
+        //}
+
+        //if (type.Name.Equals("Dictionary`2"))
+        //{
+        //    return false;
+        //}
+
+        //if (type.Name.Equals("ReadOnlyDictionary"))
+        //{
+        //    return true;
+        //}
+
+        //if (type.BaseType?.Name == "Array")
+        //{
+        //    return false;
+        //}
+
+        //// Check all interfaces (including inherited) for IReadOnlyCollection<> or IReadOnlyList<>
+        //return type.GetInterfaces().Any(interfaceType =>
+        //{
+        //    if (!interfaceType.IsGenericType)
+        //    {
+        //        return false;
+        //    }
+        //    Type genericInterfaceType = interfaceType.GetGenericTypeDefinition();
+        //    return interfaceType.IsGenericType && (genericInterfaceType == typeof(IReadOnlyCollection<>) || genericInterfaceType == typeof(IReadOnlyList<>));
+        //});
+
+        // Direct generic type checks
         if (type.IsGenericType)
         {
             Type genericType = type.GetGenericTypeDefinition();
@@ -123,37 +171,38 @@ public static class TypeChecks
             {
                 return true;
             }
+            // Exclude List<> and Dictionary<,>
+            if (genericType == typeof(List<>) || genericType == typeof(Dictionary<,>))
+            {
+                return false;
+            }
         }
 
-        if (type.Name.Equals("List`1"))
+        // Exclude arrays
+        if (type.IsArray)
         {
             return false;
         }
 
-        if (type.Name.Equals("Dictionary`2"))
-        {
-            return false;
-        }
-
-        if (type.Name.Equals("ReadOnlyDictionary"))
+        // Check for ReadOnlyDictionary<,>
+        if (type.IsGenericType && type.GetGenericTypeDefinition().FullName?.StartsWith("System.Collections.ObjectModel.ReadOnlyDictionary`2") == true)
         {
             return true;
         }
 
-        if (type.BaseType?.Name == "Array")
+        // Check all interfaces for IReadOnlyCollection<> or IReadOnlyList<>
+        foreach (Type interfaceType in type.GetInterfaces())
         {
-            return false;
-        }
-
-        // Check all interfaces (including inherited) for IReadOnlyCollection<> or IReadOnlyList<>
-        return type.GetInterfaces().Any(interfaceType =>
-        {
-            if (!interfaceType.IsGenericType)
+            if (interfaceType.IsGenericType)
             {
-                return false;
+                Type genericInterfaceType = interfaceType.GetGenericTypeDefinition();
+                if (genericInterfaceType == typeof(IReadOnlyCollection<>) ||
+                    genericInterfaceType == typeof(IReadOnlyList<>))
+                {
+                    return true;
+                }
             }
-            Type genericInterfaceType = interfaceType.GetGenericTypeDefinition();
-            return interfaceType.IsGenericType && (genericInterfaceType == typeof(IReadOnlyCollection<>) || genericInterfaceType == typeof(IReadOnlyList<>));
-        });
+        }
+        return false;
     }
 }

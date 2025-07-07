@@ -113,7 +113,8 @@ public sealed class MathHelpersTests
     [InlineData(7L, 13L, 1L, 7L, 13L)]      // coprime numbers
     [InlineData(0L, 5L, 5L, 0L, 1L)]        // zero numerator
     [InlineData(100L, 100L, 100L, 1L, 1L)]  // equal numbers
-    public void GreatestCommonDenominator_Works(long initialNum, long initialDen, long expectedGcd, long expectedNum, long expectedDen)
+    [InlineData(123456789L, 9123456789L, 9L, 13717421L, 1013717421L)]  // large numbers
+    public void GreatestCommonDenominatorLong_Works(long initialNum, long initialDen, long expectedGcd, long expectedNum, long expectedDen)
     {
         long numerator = initialNum;
         long denominator = initialDen;
@@ -123,6 +124,45 @@ public sealed class MathHelpersTests
         gcd.ShouldBe(expectedGcd);
         numerator.ShouldBe(expectedNum);
         denominator.ShouldBe(expectedDen);
+    }
+
+    [Theory]
+    [InlineData(12, 8, 4, 3, 2)]       // basic reduction
+    [InlineData(25, 15, 5, 5, 3)]      // larger numbers
+    [InlineData(7, 13, 1, 7, 13)]      // coprime numbers
+    [InlineData(0, 5, 5, 0, 1)]        // zero numerator
+    [InlineData(100, 100, 100, 1, 1)]  // equal numbers
+    [InlineData(123456, 9123456, 192, 643, 47518)]  // large numbers
+    public void GreatestCommonDenominatorInt_Works(int initialNum, int initialDen, int expectedGcd, int expectedNum, int expectedDen)
+    {
+        int numerator = initialNum;
+        int denominator = initialDen;
+
+        GreatestCommonDenominator(ref numerator, ref denominator, out int gcd);
+
+        gcd.ShouldBe(expectedGcd);
+        numerator.ShouldBe(expectedNum);
+        denominator.ShouldBe(expectedDen);
+    }
+
+    [Theory]
+    [InlineData(12, 8, 4, 3, 2)]       // basic reduction
+    [InlineData(25, 15, 5, 5, 3)]      // larger numbers
+    [InlineData(7, 13, 1, 7, 13)]      // coprime numbers
+    [InlineData(0, 5, 5, 0, 1)]        // zero numerator
+    [InlineData(100, 100, 100, 1, 1)]  // equal numbers
+    [InlineData(123456, 9123456, 192, 643, 47518)]  // large numbers
+    [InlineData(123456.6, 9123456.6, 1.8, 68587, 5068587)]  // large numbers with decimals
+    public void GreatestCommonDenominatorDecimal_Works(double initialNum, double initialDen, double expectedGcd, double expectedNum, double expectedDen)
+    {
+        decimal numerator = (decimal)initialNum;
+        decimal denominator = (decimal)initialDen;
+
+        GreatestCommonDenominator(ref numerator, ref denominator, out decimal gcd);
+
+        gcd.ShouldBe((decimal)expectedGcd);
+        numerator.ShouldBe((decimal)expectedNum);
+        denominator.ShouldBe((decimal)expectedDen);
     }
 
     [Fact]

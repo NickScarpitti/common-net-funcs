@@ -39,7 +39,7 @@ public static class PatchCreator
     /// <param name="originalObject">Original object to be compared to</param>
     /// <param name="modObject">Modified version of the original object</param>
     /// <param name="patch">The json patch document to write the patch instructions to</param>
-    /// <param name="path"></param>
+    /// <param name="path">Property path</param>
     private static void FillPatchForObject(JObject originalObject, JObject modObject, JsonPatchDocument patch, string path)
     {
         Dictionary<string, JProperty> origProps = originalObject.Properties().ToDictionary(p => p.Name, p => p);
@@ -65,66 +65,53 @@ public static class PatchCreator
         // Present in both
         foreach (string? k in origNames.Intersect(modNames))
         {
-            JProperty? origProp = origProps[k];
-            JProperty? modProp = modProps[k];
+            JProperty origProp = origProps[k];
+            JProperty modProp = modProps[k];
+
+            JTokenType? origType = origProp.Value.Type;
+            JTokenType? modType = modProp.Value.Type;
             //JProperty? origProp = originalObject.Property(k); // Slightly slower than using the dictionary
             //JProperty? modProp = modObject.Property(k); // Slightly slower than using the dictionary
 
-            if (origProp?.Value.Type != modProp?.Value.Type)
+            if (origType != modType)
             {
-                patch.Replace($"{path}{modProp?.Name}", modProp?.Value);
+                patch.Replace($"{path}{modProp.Name}", modProp.Value);
+                continue;
             }
-            else if (origProp?.Value.Type == JTokenType.Float)
-            {
-                decimal? origDec = null;
-                decimal? modDec = null;
-                if (decimal.TryParse(origProp?.Value.ToString(Formatting.None), out decimal origDecimal))
-                {
-                    origDec = origDecimal;
-                }
-                if (decimal.TryParse(modProp?.Value.ToString(Formatting.None), out decimal modDecimal))
-                {
-                    modDec = modDecimal;
-                }
 
+            if (origType == JTokenType.Float)
+            {
+                decimal origDec = origProp.Value.Value<decimal>();
+                decimal modDec = modProp.Value.Value<decimal>();
                 if (modDec != origDec)
                 {
-                    if (origProp?.Value.Type == JTokenType.Object)
-                    {
-                        // Recurse into objects
-                        FillPatchForObject(origProp.Value as JObject ?? [], modProp?.Value as JObject ?? [], patch, $"{path}{modProp?.Name}/");
-                    }
-                    else
-                    {
-                        // Replace values directly
-                        patch.Replace($"{path}{modProp?.Name}", modProp?.Value);
-                    }
-                }
-            }
-            else if (!(origProp?.Value.ToString(Formatting.None)).StrComp(modProp?.Value.ToString(Formatting.None)) && origProp?.Value.Type != JTokenType.Date)
-            {
-                if (origProp?.Value.Type == JTokenType.Object)
-                {
-                    // Recurse into objects
-                    FillPatchForObject(origProp.Value as JObject ?? [], modProp?.Value as JObject ?? [], patch, $"{path}{modProp?.Name}/");
-                }
-                else
-                {
                     // Replace values directly
-                    patch.Replace($"{path}{modProp?.Name}", modProp?.Value);
+                    patch.Replace($"{path}{modProp.Name}", modProp.Value);
                 }
+                continue;
             }
-            else if (origProp?.Value.Type == JTokenType.Date && modProp?.Value.Type == JTokenType.Date)
+
+            if (origType == JTokenType.Object)
             {
-                string originalDts = origProp.Value.ToString(Formatting.None).Replace(@"""", string.Empty).Replace(@"\", string.Empty);
-                string modDts = modProp.Value.ToString(Formatting.None).Replace(@"""", string.Empty).Replace(@"\", string.Empty);
+                FillPatchForObject((JObject)origProp.Value, (JObject)modProp.Value, patch, $"{path}{modProp.Name}/");
+                continue;
+            }
 
-                bool originalSucceed = DateTime.TryParse(originalDts, out DateTime originalDate);
-                bool modSucceed = DateTime.TryParse(modDts, out DateTime modDate);
+            string? origStr = origProp.Value.ToString(Formatting.None);
+            string? modStr = modProp.Value.ToString(Formatting.None);
 
-                if (modSucceed && (originalSucceed ? originalDate : null) != modDate)
+            if (!origStr.StrComp(modStr) && origType != JTokenType.Date)
+            {
+                patch.Replace($"{path}{modProp.Name}", modProp.Value);
+                continue;
+            }
+
+            if (origType == JTokenType.Date)
+            {
+                DateTime origDate = origProp.Value.Value<DateTime>();
+                DateTime modDate = modProp.Value.Value<DateTime>();
+                if (origDate != modDate)
                 {
-                    // Replace values directly
                     patch.Replace($"{path}{modProp.Name}", modProp.Value);
                 }
             }

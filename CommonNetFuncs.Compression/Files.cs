@@ -10,10 +10,21 @@ public static class Files
     /// <param name="file">Stream and file name to compress into a zipped file</param>
     /// <param name="zipFileStream">Memory stream to receive the zipped file</param>
     /// <param name="compressionLevel">Configure compression preference</param>
-    public static async Task ZipFile(this (Stream? fileStream, string fileName) file, MemoryStream? zipFileStream = null, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
+    public static async Task ZipFile(this (Stream? fileStream, string fileName) file, MemoryStream zipFileStream, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
     {
         List<(Stream? fileStream, string fileName)> files = [file];
         await files.ZipFiles(zipFileStream, compressionLevel, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Compress a file in the form of a stream into a memory stream
+    /// </summary>
+    /// <param name="file">Stream and file name to compress into a zipped file</param>
+    /// <param name="compressionLevel">Configure compression preference</param>
+    public static async Task<MemoryStream> ZipFile(this (Stream? fileStream, string fileName) file, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
+    {
+        List<(Stream? fileStream, string fileName)> files = [file];
+        return await files.ZipFiles(compressionLevel, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -22,19 +33,37 @@ public static class Files
     /// <param name="files">Streams and associated file names to compress into a zipped file</param>
     /// <param name="zipFileStream">Memory stream to receive the zipped files</param>
     /// <param name="compressionLevel">Configure compression preference</param>
-    public static async Task ZipFiles(this IEnumerable<(Stream? fileStream, string fileName)> files, MemoryStream? zipFileStream = null, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
+    public static async Task<MemoryStream> ZipFiles(this IEnumerable<(Stream? fileStream, string fileName)> files, MemoryStream zipFileStream, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
     {
-        zipFileStream ??= new();
+        if (!zipFileStream.CanWrite)
+        {
+            throw new ArgumentException($"{nameof(zipFileStream)} must be writable", nameof(zipFileStream));
+        }
+
         if (files.Any())
         {
-            await using MemoryStream memoryStream = new();
-            using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
+            using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Create, true);
             await files.AddFilesToZip(archive, compressionLevel, cancellationToken).ConfigureAwait(false);
-            archive.Dispose();
-            memoryStream.Position = 0;
-            await memoryStream.CopyToAsync(zipFileStream, cancellationToken).ConfigureAwait(false); //Copy to output stream
             zipFileStream.Position = 0;
         }
+        return zipFileStream ?? new();
+    }
+
+    /// <summary>
+    /// Compress multiple files in the form of a stream into a memory stream
+    /// </summary>
+    /// <param name="files">Streams and associated file names to compress into a zipped file</param>
+    /// <param name="compressionLevel">Configure compression preference</param>
+    public static async Task<MemoryStream> ZipFiles(this IEnumerable<(Stream? fileStream, string fileName)> files, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
+    {
+        MemoryStream zipFileStream = new();
+        if (files.Any())
+        {
+            using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Create, true);
+            await files.AddFilesToZip(archive, compressionLevel, cancellationToken).ConfigureAwait(false);
+            zipFileStream.Position = 0;
+        }
+        return zipFileStream ?? new();
     }
 
     /// <summary>

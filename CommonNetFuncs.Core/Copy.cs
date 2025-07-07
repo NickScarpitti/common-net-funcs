@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
 
@@ -22,13 +23,12 @@ public static class Copy
         else
         {
             dest ??= Activator.CreateInstance<UT>();
-            IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-            IEnumerable<PropertyInfo> destProps = typeof(UT).GetProperties().Where(x => x.CanWrite);
+            IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.CanRead);
+            Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
-            foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
+            foreach (PropertyInfo sourceProp in sourceProps)
             {
-                PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
-                if ((destProp != null) && (destProp.PropertyType == sourceProp.PropertyType))
+                if (destPropDict.TryGetValue(sourceProp.Name, out PropertyInfo? destProp) && destProp.PropertyType == sourceProp.PropertyType)
                 {
                     destProp.SetValue(dest, sourceProp.GetValue(source, null), null);
                 }
@@ -48,14 +48,16 @@ public static class Copy
             return default!;
         }
 
-        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = typeof(T).GetProperties().Where(x => x.CanWrite);
+        IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.CanRead);
+        Dictionary<string, PropertyInfo> destPropDict = sourceProps.ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
         T dest = new();
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
+        foreach (PropertyInfo sourceProp in sourceProps)
         {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
-            destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
+            if (destPropDict.TryGetValue(sourceProp.Name, out PropertyInfo? destProp) && destProp.PropertyType == sourceProp.PropertyType)
+            {
+                destProp.SetValue(dest, sourceProp.GetValue(source, null), null);
+            }
         }
         return dest;
     }
@@ -67,14 +69,16 @@ public static class Copy
     /// <param name="source">Object to copy common properties from</param>
     public static UT CopyPropertiesToNew<T, UT>(this T source) where UT : new()
     {
-        IEnumerable<PropertyInfo> sourceProps = typeof(T).GetProperties().Where(x => x.CanRead);
-        IEnumerable<PropertyInfo> destProps = typeof(UT).GetProperties().Where(x => x.CanWrite);
+        IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.CanRead);
+        Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
         UT dest = new();
-        foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
+        foreach (PropertyInfo sourceProp in sourceProps)
         {
-            PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
-            destProp?.SetValue(dest, sourceProp.GetValue(source, null), null);
+            if (destPropDict.TryGetValue(sourceProp.Name, out PropertyInfo? destProp) && destProp.PropertyType == sourceProp.PropertyType)
+            {
+                destProp.SetValue(dest, sourceProp.GetValue(source, null), null);
+            }
         }
         return dest;
     }
@@ -120,15 +124,15 @@ public static class Copy
         }
         else
         {
-            IEnumerable<PropertyInfo> sourceProps = sourceType.GetProperties().Where(x => x.CanRead);
-            IEnumerable<PropertyInfo> destProps = destType.GetProperties().Where(x => x.CanWrite);
+            IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromCache(sourceType).Where(x => x.CanRead);
+            //IEnumerable<PropertyInfo> destProps = GetOrAddPropertiesFromCache(destType).Where(x => x.CanWrite);
+            Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromCache(destType).Where(x => x.CanWrite).ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
 
-            foreach (PropertyInfo sourceProp in sourceProps.Where(x => destProps.Any(y => y.Name.StrComp(x.Name))))
+            foreach (PropertyInfo sourceProp in sourceProps)
             {
-                PropertyInfo? destProp = destProps.FirstOrDefault(x => x.Name.StrComp(sourceProp.Name));
-                if (destProp == null)
+                if (!destPropsDict.TryGetValue(sourceProp.Name, out PropertyInfo? destProp) || destProp == null)
                 {
-                    continue;
+                    continue; // Skip if the property does not exist in the destination type
                 }
 
                 object? value = sourceProp.GetValue(source, null);
@@ -280,7 +284,7 @@ public static class Copy
     /// <param name="mergeFromObject">Object to merge properties from</param>
     public static T MergeInstances<T>(this T mergeIntoObject, T mergeFromObject, CancellationToken cancellationToken = default) where T : class
     {
-        foreach (PropertyInfo property in typeof(T).GetProperties())
+        foreach (PropertyInfo property in GetOrAddPropertiesFromCache(typeof(T)))
         {
             cancellationToken.ThrowIfCancellationRequested();
             object? value = property.GetValue(mergeFromObject);

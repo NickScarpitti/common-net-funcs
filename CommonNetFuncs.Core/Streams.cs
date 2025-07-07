@@ -18,11 +18,7 @@ public static class Streams
         byte[] buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
         try
         {
-            int read;
-            while ((read = await stream.ReadAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false)) > 0)
-            {
-                await ms.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
-            }
+            await stream.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
             return ms.ToArray();
         }
         finally
@@ -52,13 +48,7 @@ public static class Streams
         await using MemoryStream tempStream = new();
 
         sourceStream.Position = 0;
-
-        //wb.SaveAs(tempStream, options);
-        await tempStream.WriteAsync(sourceStream.ToArray(), cancellationToken).ConfigureAwait(false);
-        await tempStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-        tempStream.Position = 0;
-        await tempStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
-        await tempStream.DisposeAsync().ConfigureAwait(false);
+        await sourceStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
         await targetStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         targetStream.Position = 0;
         sourceStream.Position = 0;
@@ -81,14 +71,8 @@ public static class Streams
             throw new InvalidOperationException("Target stream must be writable and seekable");
         }
 
-        await using MemoryStream tempStream = new();
-
         sourceStream.Position = 0;
-        await tempStream.WriteAsync(await sourceStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
-        await tempStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-        tempStream.Position = 0;
-        await tempStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
-        await tempStream.DisposeAsync().ConfigureAwait(false);
+        await sourceStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
         await targetStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         targetStream.Position = 0;
         sourceStream.Position = 0;

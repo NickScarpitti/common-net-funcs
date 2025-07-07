@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace CommonNetFuncs.Core;
@@ -177,9 +178,7 @@ public static partial class FileHelpers
                 else
                 {
                     string fileNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
-                    testPath = Path.GetFullPath(Path.Combine(
-                        path,
-                        $"{fileNameWithoutExt} ({i}){ext}"));
+                    testPath = Path.GetFullPath(Path.Combine(path, $"{fileNameWithoutExt} ({i}){ext}"));
                 }
 
                 if (!suppressLogging)
@@ -279,12 +278,6 @@ public static partial class FileHelpers
         }
     }
 
-    /// <summary>
-    /// Returns the full file path of all files contained under the directory startDirectory
-    /// </summary>
-    /// <param name="startDirectory">Top most directory to get files from</param>
-    /// <param name="searchPattern">Optional: Search pattern value to be used for the searchPattern parameter in Directory.GetDirectories</param>
-    /// <returns>List of all files contained within startDirectory and matching searchPattern</returns>
     public static List<string> GetAllFilesRecursive(string? startDirectory, string searchPattern = "*")
     {
         List<string> files = [];
@@ -294,15 +287,30 @@ public static partial class FileHelpers
             return files;
         }
 
+        Stack<string> dirs = new();
+        dirs.Push(startDirectory);
+
         try
         {
-            // Get files in current directory
-            files.AddRange(Directory.GetFiles(startDirectory, searchPattern));
-
-            // Get files in all subdirectories
-            foreach (string directory in Directory.GetDirectories(startDirectory))
+            while (dirs.Count > 0)
             {
-                files.AddRange(GetAllFilesRecursive(directory, searchPattern));
+                string currentDir = dirs.Pop();
+
+                try
+                {
+                    // Add files in the current directory
+                    files.AddRange(Directory.EnumerateFiles(currentDir, searchPattern));
+
+                    // Push subdirectories onto the stack
+                    foreach (string subDir in Directory.EnumerateDirectories(currentDir))
+                    {
+                        dirs.Push(subDir);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, $"Error accessing directory: {currentDir}");
+                }
             }
         }
         catch (Exception ex)
@@ -321,7 +329,8 @@ public static partial class FileHelpers
     private static string CleanFileName(string fileName)
     {
         // Replace invalid characters with safe alternatives
-        return fileName
+        StringBuilder stringBuilder = new(fileName);
+        return stringBuilder
             .Replace("/", "-")
             .Replace(@"\", "-")
             .Replace(":", ".")
@@ -330,7 +339,7 @@ public static partial class FileHelpers
             .Replace("\"", "'")
             .Replace("|", "_")
             .Replace("?", "_")
-            .Replace("*", "_");
+            .Replace("*", "_").ToString();
     }
 
     [GeneratedRegex(@"\(([^)]*)\)$")]

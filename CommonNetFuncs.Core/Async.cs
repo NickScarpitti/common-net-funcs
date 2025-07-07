@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
+using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
 
@@ -70,10 +71,7 @@ public static class Async
         try
         {
             T? resultObject = await task;
-            lock (obj)
-            {
-                obj.Add(resultObject);
-            }
+            obj.Add(resultObject);
         }
         catch (Exception ex)
         {
@@ -859,7 +857,7 @@ public static class Async
     {
         try
         {
-            PropertyInfo[] props = typeof(T).GetProperties();
+            PropertyInfo[] props = GetOrAddPropertiesFromCache(typeof(T));
             if (props.Length > 0)
             {
                 PropertyInfo? prop = Array.Find(props, x => x.Name.StrEq(propertyName));
@@ -900,7 +898,7 @@ public static class Async
                 await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            PropertyInfo[] props = typeof(T).GetProperties();
+            PropertyInfo[] props = GetOrAddPropertiesFromCache(typeof(T));
             if (props.Length > 0)
             {
                 PropertyInfo? prop = Array.Find(props, x => x.Name.StrEq(propertyName));
@@ -930,9 +928,16 @@ public static class Async
         }
     }
 
+    /// <summary>
+    /// Run a group of tasks in parallel, with an optional semaphore to limit concurrency.
+    /// </summary>
+    /// <param name="tasks">Tasks to run</param>
+    /// <param name="semaphore">Optional: Semaphore to limit concurrency</param>
+    /// <param name="cancellationTokenSource">Optional: Token to cancel task</param>
+    /// <param name="breakOnError">Optional: Triggers task cancellation if any task fails</param>
+    /// <returns>ConcurrentBag filled with task results</returns>
     public static async Task<ConcurrentBag<T>> RunAll<T>(this IEnumerable<Func<Task<T>>> tasks, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false)
     {
-        semaphore ??= new(1);
         cancellationTokenSource ??= new();
         ConcurrentBag<T> results = [];
         CancellationToken token = cancellationTokenSource.Token;
@@ -944,7 +949,12 @@ public static class Async
                 {
                     return; // Exit if cancellation is requested
                 }
-                await semaphore.WaitAsync(token).ConfigureAwait(false);
+
+                if (semaphore != null)
+                {
+                    await semaphore.WaitAsync(token).ConfigureAwait(false);
+                }
+
                 results.Add(await task().ConfigureAwait(false));
             }
             catch (Exception ex)
@@ -957,22 +967,37 @@ public static class Async
             }
             finally
             {
-                semaphore.Release();
+                semaphore?.Release();
             }
         }).ConfigureAwait(false);
         return results;
     }
 
+    /// <summary>
+    /// Run a group of tasks in parallel, with an optional semaphore to limit concurrency.
+    /// </summary>
+    /// <param name="tasks">Tasks to run</param>
+    /// <param name="semaphore">Optional: Semaphore to limit concurrency</param>
+    /// <param name="cancellationTokenSource">Optional: Token to cancel task</param>
+    /// <param name="breakOnError">Optional: Triggers task cancellation if any task fails</param>
     public static async Task RunAll(this IEnumerable<Func<Task>> tasks, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false)
     {
-        semaphore ??= new(1, 1);
         cancellationTokenSource ??= new();
         CancellationToken token = cancellationTokenSource.Token;
         await Parallel.ForEachAsync(tasks, async (task, _) =>
         {
             try
             {
-                await semaphore.WaitAsync(token).ConfigureAwait(false);
+                if (token.IsCancellationRequested)
+                {
+                    return; // Exit if cancellation is requested
+                }
+
+                if (semaphore != null)
+                {
+                    await semaphore.WaitAsync(token).ConfigureAwait(false);
+                }
+
                 await task().ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -985,7 +1010,7 @@ public static class Async
             }
             finally
             {
-                semaphore.Release();
+                semaphore?.Release();
             }
         }).ConfigureAwait(false);
     }
@@ -999,9 +1024,8 @@ public static class Async
     /// <param name="semaphore">Semaphore to limit concurrent processes</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation token source for concurrent operations</param>
     /// <param name="breakOnError">Optional: If true, will cancel operations using the same CancellationTokenSource</param>
-    public static async Task RunAsyncWithSemaphore(this Task task, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false, string? errorText = null)
+    public static async Task RunAsyncWithSemaphore(this Task task, SemaphoreSlim semaphore, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false, string? errorText = null)
     {
-        semaphore ??= new(1, 1);
         cancellationTokenSource ??= new();
         CancellationToken token = cancellationTokenSource.Token;
         try

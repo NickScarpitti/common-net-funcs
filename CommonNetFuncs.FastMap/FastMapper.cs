@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using FastExpressionCompiler;
+using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.FastMap;
 
@@ -33,7 +34,7 @@ public static class FastMapper
     }
 
     private static readonly ConcurrentDictionary<MapperCacheKey, Delegate> mapperCache = [];
-    private static readonly ConcurrentDictionary<Type, PropertyInfo[]> propertyCache = new();
+    //private static readonly ConcurrentDictionary<Type, PropertyInfo[]> propertyCache = new();
 
     /// <summary>
     /// Method that maps one object onto another by property name using expression trees
@@ -133,8 +134,10 @@ public static class FastMapper
         else
         {
             bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(UT)))); // Initialize destination object if not a collection
-            PropertyInfo[] sourceProperties = propertyCache.GetOrAdd(typeof(T), t => t.GetProperties());
-            PropertyInfo[] destinationProperties = propertyCache.GetOrAdd(typeof(UT), t => t.GetProperties());
+            //PropertyInfo[] sourceProperties = propertyCache.GetOrAdd(typeof(T), t => t.GetProperties());
+            //PropertyInfo[] destinationProperties = propertyCache.GetOrAdd(typeof(UT), t => t.GetProperties());
+            PropertyInfo[] sourceProperties = GetOrAddPropertiesFromCache(typeof(T));
+            PropertyInfo[] destinationProperties = GetOrAddPropertiesFromCache(typeof(UT));
             HashSet<string> assignedProperties = [];
             foreach (PropertyInfo destProp in destinationProperties.Where(x => x.CanWrite))
             {

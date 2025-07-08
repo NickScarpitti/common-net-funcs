@@ -70,6 +70,20 @@ public sealed class DirectQueryTests : IDisposable
     }
 
     [Fact]
+    public void GetDataTableSynchronous_ShouldReturnPopulatedDataTable_WhenQuerySucceeds()
+    {
+        using SqliteCommand cmd = _connection.CreateCommand();
+        cmd.CommandText = "SELECT * FROM TestTable";
+
+        DataTable result = DirectQuery.GetDataTableSynchronous(_connection, cmd);
+
+        result.ShouldNotBeNull();
+        result.Rows.Count.ShouldBe(5);
+        result.Columns.Contains("Id").ShouldBeTrue();
+        result.Columns.Contains("Name").ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task GetDataTable_ShouldRetryOnFailure()
     {
         // Simulate a failure by using an invalid SQL for the first two attempts, then a valid one
@@ -112,6 +126,18 @@ public sealed class DirectQueryTests : IDisposable
         cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
 
         UpdateResult result = await DirectQuery.RunUpdateQuery(_connection, cmd);
+
+        result.Success.ShouldBeTrue();
+        result.RecordsChanged.ShouldBe(5);
+    }
+
+    [Fact]
+    public void RunUpdateQuerySynchronous_ShouldReturnSuccessResult_WhenUpdateSucceeds()
+    {
+        using SqliteCommand cmd = _connection.CreateCommand();
+        cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
+
+        UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(_connection, cmd);
 
         result.Success.ShouldBeTrue();
         result.RecordsChanged.ShouldBe(5);

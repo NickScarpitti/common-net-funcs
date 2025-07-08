@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Reflection;
 using CsvHelper;
+using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Csv;
 
@@ -115,7 +116,7 @@ public static class CsvReadHelpers
         DataTable dataTable = new();
         if (dataType != null)
         {
-            foreach (PropertyInfo prop in dataType.GetProperties())
+            foreach (PropertyInfo prop in GetOrAddPropertiesFromCache(dataType))
             {
                 dataTable.Columns.Add(prop.Name, prop.PropertyType);
             }

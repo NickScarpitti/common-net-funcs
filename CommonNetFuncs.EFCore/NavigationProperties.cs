@@ -1,11 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using FastExpressionCompiler;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using static CommonNetFuncs.Core.Collections;
+using static CommonNetFuncs.Core.ReflectionCaches;
 using static CommonNetFuncs.Core.Strings;
 
 namespace CommonNetFuncs.EFCore;
@@ -102,6 +104,7 @@ public static class NavigationProperties
 
     private readonly record struct NavigationNode(string Name, Type Type);
     private static readonly ConcurrentDictionary<NavigationProperiesCacheKey, NavigationProperiesCacheValue> CachedEntityNavigations = new();
+    private static readonly ConcurrentDictionary<Type, List<string>> CachedTopLevelNavigations = new();
 
     /// <summary>
     /// Gets all of the navigations of entity T as a list of string through recursive iterations through each navigation property.
@@ -141,13 +144,28 @@ public static class NavigationProperties
             foreach (INavigation navigation in entityTypeInfo.GetNavigations())
             {
                 // Skip if property has JsonIgnore attribute
-                PropertyInfo? propertyInfo = entityType.GetProperty(navigation.Name);
+                PropertyInfo? propertyInfo = GetOrAddPropertiesFromCache(entityType).First(x => x.Name.StrComp(navigation.Name)); //entityType.GetProperty(navigation.Name);
                 if (navigationPropertiesOptions.NavPropAttributesToIgnore != null)
                 {
-                    if (navigationPropertiesOptions.NavPropAttributesToIgnore.Any(x => propertyInfo?.GetCustomAttributes(x, true).AnyFast() == true))
+                    bool skipProperty = false;
+                    for (int i = 0; i < navigationPropertiesOptions.NavPropAttributesToIgnore.Count; i++)
+                    {
+                        if (propertyInfo?.GetCustomAttributes(navigationPropertiesOptions.NavPropAttributesToIgnore[i], true).AnyFast() == true)
+                        {
+                            skipProperty = true;
+                            break;
+                        }
+                    }
+
+                    if (skipProperty)
                     {
                         continue;
                     }
+
+                    //if (navigationPropertiesOptions.NavPropAttributesToIgnore.Any(x => propertyInfo?.GetCustomAttributes(x, true).AnyFast() == true))
+                    //{
+                    //    continue;
+                    //}
                 }
                 else if (propertyInfo?.GetCustomAttributes<JsonIgnoreAttribute>(true).Any() == true || propertyInfo?.GetCustomAttributes<System.Text.Json.Serialization.JsonIgnoreAttribute>(true).Any() == true)
                 {
@@ -165,7 +183,14 @@ public static class NavigationProperties
                 }
 
                 currentPath.Push(navigation.Name);
-                paths.Add(string.Join(".", currentPath.Reverse())); //Reverse order since Stack is LIFO
+                StringBuilder stringBuilder = new();
+
+                foreach (string pathSegment in currentPath.Reverse()) //Reverse order since Stack is LIFO
+                {
+                    stringBuilder.Append(pathSegment).Append('.');
+                }
+                stringBuilder.Length--; // Remove the last '.'
+                paths.Add(stringBuilder.ToString());
 
                 TraverseNavigations(targetType, currentPath, depth + 1);
 
@@ -204,8 +229,15 @@ public static class NavigationProperties
     public static List<string> GetTopLevelNavigations<T>(DbContext context, List<Type>? navPropAttributesToIgnore = null)
     {
         Type entityClassType = typeof(T);
+
+        if (CachedTopLevelNavigations.TryGetValue(entityClassType, out List<string>? cachedNavigations))
+        {
+            return cachedNavigations;
+        }
+
         List<string> topLevelNavigations = CachedEntityNavigations.Where(x => x.Key.Equals(new(entityClassType, navPropAttributesToIgnore.CreateNavPropsIgnoreString())))
             .SelectMany(x => x.Value.NavigationProperties).Where(x => !x.Contains('.')).ToList(); //Remove any with a '.' since these are deeper than top level
+
         if (!topLevelNavigations.AnyFast())
         {
             //IEnumerable<INavigation> navigations = (context.Model.FindEntityType(entityType)?.GetNavigations()
@@ -220,6 +252,7 @@ public static class NavigationProperties
 
             topLevelNavigations = navigations.Select(x => x.Name).ToList();
         }
+        CachedTopLevelNavigations.AddDictionaryItem(new(entityClassType, topLevelNavigations));
         return topLevelNavigations;
     }
 
@@ -228,7 +261,7 @@ public static class NavigationProperties
         return navPropAttributesToIgnore != null ? string.Join("|", navPropAttributesToIgnore.OrderBy(x => x.Name)) : null;
     }
 
-    private static readonly ConcurrentDictionary<Type, Action<object>> _navigationSetterCache = new();
+    private static readonly ConcurrentDictionary<Type, Action<object>> NavigationSetterCache = new();
 
     /// <summary>
     /// Sets all navigation properties in the provided entity to null.
@@ -243,7 +276,7 @@ public static class NavigationProperties
             return;
         }
 
-        Action<T> setter = _navigationSetterCache.GetOrAdd(typeof(T), type =>
+        Action<T> setter = NavigationSetterCache.GetOrAdd(typeof(T), type =>
         {
             // Get navigation property names
             List<string> navigations = GetTopLevelNavigations<T>(context);
@@ -253,18 +286,28 @@ public static class NavigationProperties
             UnaryExpression convertedParameter = Expression.Convert(parameter, type);
 
             // Create assignments for each navigation property
-            List<BinaryExpression?> assignments = navigations.Select(navProp =>
+            List<BinaryExpression> assignments = [];
+            foreach (string navProp in navigations)
             {
                 PropertyInfo? property = type.GetProperty(navProp);
-                if (property?.CanWrite != true)
+                if (property?.CanWrite == true)
                 {
-                    return null;
+                    assignments.Add(Expression.Assign(Expression.Property(convertedParameter, property), Expression.Constant(null, property.PropertyType)));
                 }
+            }
 
-                return Expression.Assign(Expression.Property(convertedParameter, property), Expression.Constant(null, property.PropertyType));
-            })
-            .Where(assignment => assignment != null)
-            .ToList();
+            //List<BinaryExpression?> assignments = navigations.Select(navProp =>
+            //{
+            //    PropertyInfo? property = type.GetProperty(navProp);
+            //    if (property?.CanWrite != true)
+            //    {
+            //        return null;
+            //    }
+
+            //    return Expression.Assign(Expression.Property(convertedParameter, property), Expression.Constant(null, property.PropertyType));
+            //})
+            //.Where(assignment => assignment != null)
+            //.ToList();
 
             // If no valid assignments, return empty action
             if (!assignments.AnyFast())
@@ -273,7 +316,7 @@ public static class NavigationProperties
             }
 
             // Create a block with all assignments
-            BlockExpression block = Expression.Block(assignments.SelectNonNull());
+            BlockExpression block = Expression.Block(assignments);
 
             // Compile the expression tree into a delegate
             return Expression.Lambda<Action<object>>(block, parameter).CompileFast();

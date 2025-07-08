@@ -7,9 +7,21 @@ public sealed class StreamsTests
 {
     private readonly Fixture _fixture;
 
+    private readonly byte[] _smallData = new byte[100];
+    private readonly byte[] _largeData = new byte[1024 * 1024 * 16 + 100];
+
     public StreamsTests()
     {
         _fixture = new Fixture();
+        _smallData = _fixture.CreateMany<byte>(100).ToArray();
+        List<byte> largeByteChunk = _fixture.CreateMany<byte>(1024 * 1024 + 100).ToList();
+        List<byte> largeByteList = new();
+
+        for (int i = 0; i < 16; i++)
+        {
+            largeByteList.AddRange(largeByteChunk);
+        }
+        _largeData = largeByteList.ToArray();
     }
 
     [Theory]
@@ -41,7 +53,7 @@ public sealed class StreamsTests
     public async Task CompressStream_Should_Throw_Error(bool canWriteCompressedStream, bool canReadUncompressedStream, bool useAsync)
     {
         // Arrange
-        byte[] uncompressedData = _fixture.CreateMany<byte>(100).ToArray();
+        byte[] uncompressedData = _smallData;
         await using MemoryStream uncompressedStream = new(uncompressedData);
         await using MemoryStream compressedStream = (!canWriteCompressedStream) ? new([], false) : new();
 
@@ -84,7 +96,7 @@ public sealed class StreamsTests
     public void CompressStreamSynchronous_Should_Compress_Data(ECompressionType compressionType)
     {
         // Arrange
-        byte[] uncompressedData = _fixture.CreateMany<byte>(100).ToArray();
+        byte[] uncompressedData = _smallData;
         using MemoryStream uncompressedStream = new(uncompressedData);
         using MemoryStream compressedStream = new();
 
@@ -103,7 +115,7 @@ public sealed class StreamsTests
     public async Task DecompressStream_Should_Decompress_Data(ECompressionType compressionType)
     {
         // Arrange
-        byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
+        byte[] originalData = _smallData;
         await using MemoryStream uncompressedStream = new(originalData);
         await using MemoryStream compressedStream = new();
         await using MemoryStream decompressedStream = new();
@@ -128,7 +140,7 @@ public sealed class StreamsTests
     public async Task DecompressStream_Should_Throw_Error(bool canWriteDecompressedStream, bool canReadCompressedStream, bool useAsync)
     {
         // Arrange
-        byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
+        byte[] originalData = _smallData;
         await using MemoryStream uncompressedStream = new(originalData);
         await using MemoryStream compressedStream = new();
 
@@ -176,7 +188,7 @@ public sealed class StreamsTests
     public void DecompressStreamSynchronous_Should_Decompress_Data(ECompressionType compressionType)
     {
         // Arrange
-        byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
+        byte[] originalData = _smallData;
         MemoryStream uncompressedStream = new(originalData);
         MemoryStream compressedStream = new();
         MemoryStream decompressedStream = new();
@@ -192,14 +204,18 @@ public sealed class StreamsTests
     }
 
     [Theory]
-    [InlineData(ECompressionType.Brotli)]
-    [InlineData(ECompressionType.Gzip)]
-    [InlineData(ECompressionType.Deflate)]
-    [InlineData(ECompressionType.ZLib)]
-    public async Task Compress_Should_Compress_Byte_Array(ECompressionType compressionType)
+    [InlineData(ECompressionType.Brotli, false)]
+    [InlineData(ECompressionType.Gzip, false)]
+    [InlineData(ECompressionType.Deflate, false)]
+    [InlineData(ECompressionType.ZLib, false)]
+    [InlineData(ECompressionType.Brotli, true)]
+    [InlineData(ECompressionType.Gzip, true)]
+    [InlineData(ECompressionType.Deflate, true)]
+    [InlineData(ECompressionType.ZLib, true)]
+    public async Task Compress_Should_Compress_Byte_Array(ECompressionType compressionType, bool largeData)
     {
         // Arrange
-        byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
+        byte[] originalData = largeData ? _largeData : _smallData;
 
         // Act
         byte[] compressedData = await originalData.Compress(compressionType);
@@ -209,14 +225,18 @@ public sealed class StreamsTests
     }
 
     [Theory]
-    [InlineData(ECompressionType.Brotli)]
-    [InlineData(ECompressionType.Gzip)]
-    [InlineData(ECompressionType.Deflate)]
-    [InlineData(ECompressionType.ZLib)]
-    public async Task Decompress_Should_Decompress_Byte_Array(ECompressionType compressionType)
+    [InlineData(ECompressionType.Brotli, false)]
+    [InlineData(ECompressionType.Gzip, false)]
+    [InlineData(ECompressionType.Deflate, false)]
+    [InlineData(ECompressionType.ZLib, false)]
+    [InlineData(ECompressionType.Brotli, true)]
+    [InlineData(ECompressionType.Gzip, true)]
+    [InlineData(ECompressionType.Deflate, true)]
+    [InlineData(ECompressionType.ZLib, true)]
+    public async Task Decompress_Should_Decompress_Byte_Array(ECompressionType compressionType, bool largeData)
     {
         // Arrange
-        byte[] originalData = _fixture.CreateMany<byte>(100).ToArray();
+        byte[] originalData = largeData ? _largeData : _smallData; //_fixture.CreateMany<byte>(arraySize).ToArray();
         byte[] compressedData = await originalData.Compress(compressionType);
 
         // Act
@@ -269,7 +289,7 @@ public sealed class StreamsTests
 
     public static TheoryData<byte[], ECompressionType> GetCompressionTestData()
     {
-        TheoryData<byte[], ECompressionType> data = new TheoryData<byte[], ECompressionType>
+        TheoryData<byte[], ECompressionType> data = new()
         {
             // Gzip header (1F 8B)
             { new byte[] { 0x1F, 0x8B, 0x08, 0x00 }, ECompressionType.Gzip },

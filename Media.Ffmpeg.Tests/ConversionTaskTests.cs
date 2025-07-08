@@ -86,7 +86,7 @@ public sealed class ConversionTaskTests : IDisposable
         string outputFileName = $"output_{Guid.NewGuid()}{format}";
 
         // Act
-        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, _workingDir, codec, format, ConversionPreset.UltraFast);
+        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, codec, format, ConversionPreset.UltraFast, workingPath: _workingDir);
 
         // Assert
         result.ShouldBeTrue();
@@ -102,7 +102,7 @@ public sealed class ConversionTaskTests : IDisposable
         const string ffmpegCommand = "-c:v libx264 -preset medium -crf 50";
 
         // Act
-        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, _workingDir, ffmpegCommand);
+        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommand, _workingDir);
 
         // Assert
         result.ShouldBeTrue();
@@ -120,7 +120,7 @@ public sealed class ConversionTaskTests : IDisposable
         string outputFileName = $"output_{Guid.NewGuid()}.mp4";
 
         // Act
-        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, _workingDir, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, processPriority: priority);
+        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, workingPath: _workingDir, processPriority: priority);
 
         // Assert
         result.ShouldBeTrue();
@@ -135,7 +135,7 @@ public sealed class ConversionTaskTests : IDisposable
         CancellationTokenSource cts = new();
 
         // Act
-        Task<bool> conversionTask = ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, _workingDir, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, cancellationTokenSource: cts);
+        Task<bool> conversionTask = ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, workingPath: _workingDir, cancellationTokenSource: cts);
 
         // Cancel after a brief delay
         await Task.Delay(100);
@@ -162,7 +162,7 @@ public sealed class ConversionTaskTests : IDisposable
         };
 
         // Act
-        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, _workingDir, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, hardwareAccelerationValues: hwAccel);
+        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, workingPath: _workingDir, hardwareAccelerationValues: hwAccel);
 
         // Assert
         result.ShouldBeTrue();
@@ -178,7 +178,7 @@ public sealed class ConversionTaskTests : IDisposable
         const int conversionIndex = 1;
 
         // Act
-        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, _workingDir, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, conversionIndex: conversionIndex, fpsDict: fpsDict);
+        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, workingPath: _workingDir, conversionIndex: conversionIndex, fpsDict: fpsDict);
 
         // Assert
         result.ShouldBeTrue();
@@ -193,7 +193,7 @@ public sealed class ConversionTaskTests : IDisposable
         string outputFileName = $"output_{Guid.NewGuid()}.mp4";
 
         // Act & Assert
-        Should.Throw<ArgumentException>(async () => await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, _workingDir, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast));
+        Should.Throw<ArgumentException>(async () => await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, workingPath: _workingDir));
     }
 
     [Theory]
@@ -206,7 +206,7 @@ public sealed class ConversionTaskTests : IDisposable
         string outputFileName = $"output_{Guid.NewGuid()}.mp4";
 
         // Act
-        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, _workingDir, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, strict: strict);
+        bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, workingPath: _workingDir, strict: strict);
 
         // Assert
         result.ShouldBeTrue();

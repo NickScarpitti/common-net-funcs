@@ -228,14 +228,29 @@ public sealed class RandomTests
     public void GenerateRandomStringByCharSet_UsesProvidedCharSet(int length)
     {
         // Arrange
-        char[] charset = ['A', 'B', 'C', '1', '2', '3'];
+        char[] charSet = ['A', 'B', 'C', '1', '2', '3'];
 
         // Act
-        string result = GenerateRandomStringByCharSet(length, charset);
+        string result = GenerateRandomStringByCharSet(length, charSet);
 
         // Assert
         result.Length.ShouldBe(length);
-        result.All(c => charset.Contains(c)).ShouldBeTrue();
+        result.All(c => charSet.Contains(c)).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(10)]
+    [InlineData(20)]
+    public void GenerateRandomStringByCharSet_UsesDefaultCharSet(int length)
+    {
+        // Act
+        string result = GenerateRandomStringByCharSet(length);
+
+        // Assert
+        result.Length.ShouldBe(length);
+
+        // Check if all characters are from the default char set
+        result.All(c => DefaultCharSet.Contains(c)).ShouldBeTrue();
     }
 
     [Fact]

@@ -1522,6 +1522,23 @@ public sealed class CollectionsTests
     }
 
     [Fact]
+    public void GetEnumeratedCombinations_GeneratesAllPossibleCombinations()
+    {
+        // Arrange
+        List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
+
+        // Act
+        IEnumerable<string> result = sources.GetEnumeratedCombinations();
+
+        // Assert
+        result.Count().ShouldBe(4);
+        result.ShouldContain("A|1");
+        result.ShouldContain("A|2");
+        result.ShouldContain("B|1");
+        result.ShouldContain("B|2");
+    }
+
+    [Fact]
     public void GetCombinations_WithCustomSeparator_UsesCorrectSeparator()
     {
         // Arrange
@@ -1532,6 +1549,23 @@ public sealed class CollectionsTests
 
         // Assert
         result.Count.ShouldBe(4);
+        result.ShouldContain("A-1");
+        result.ShouldContain("A-2");
+        result.ShouldContain("B-1");
+        result.ShouldContain("B-2");
+    }
+
+    [Fact]
+    public void GetEnumeratedCombinations_WithCustomSeparator_UsesCorrectSeparator()
+    {
+        // Arrange
+        List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
+
+        // Act
+        IEnumerable<string> result = sources.GetEnumeratedCombinations(separator: "-");
+
+        // Assert
+        result.Count().ShouldBe(4);
         result.ShouldContain("A-1");
         result.ShouldContain("A-2");
         result.ShouldContain("B-1");
@@ -1556,6 +1590,23 @@ public sealed class CollectionsTests
     }
 
     [Fact]
+    public void GetEnumeratedCombinations_WithNullReplacement_HandlesNullValues()
+    {
+        // Arrange
+        List<List<string?>> sources = new() { new List<string?> { "A", null }, new List<string?> { "1", "2" } };
+
+        // Act
+        IEnumerable<string> result = sources.GetEnumeratedCombinations(nullReplacement: "NULL");
+
+        // Assert
+        result.Count().ShouldBe(4);
+        result.ShouldContain("A|1");
+        result.ShouldContain("A|2");
+        result.ShouldContain("NULL|1");
+        result.ShouldContain("NULL|2");
+    }
+
+    [Fact]
     public void GetCombinations_WithMaxCombinations_LimitsResults()
     {
         // Arrange
@@ -1563,6 +1614,16 @@ public sealed class CollectionsTests
 
         // Act & Assert
         Should.Throw<ArgumentException>(() => sources.GetCombinations(maxCombinations: 5));
+    }
+
+    [Fact]
+    public void GetEnumeratedCombinations_WithMaxCombinations_LimitsResults()
+    {
+        // Arrange
+        List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() => sources.GetEnumeratedCombinations(maxCombinations: 5).ToList());
     }
 
     [Fact]
@@ -1579,6 +1640,19 @@ public sealed class CollectionsTests
     }
 
     [Fact]
+    public void GetEnumeratedCombinations_WithEmptySource_ReturnsEmptySet()
+    {
+        // Arrange
+        List<List<string>> sources = new();
+
+        // Act
+        IEnumerable<string> result = sources.GetEnumeratedCombinations();
+
+        // Assert
+        result.Count().ShouldBe(0);
+    }
+
+    [Fact]
     public void GetCombinations_WithEmptyInnerList_HandlesCorrectly()
     {
         // Arrange
@@ -1589,6 +1663,21 @@ public sealed class CollectionsTests
 
         // Assert
         result.Count.ShouldBe(2);
+        result.ShouldContain("A|EMPTY");
+        result.ShouldContain("B|EMPTY");
+    }
+
+    [Fact]
+    public void GetEnumeratedCombinations_WithEmptyInnerList_HandlesCorrectly()
+    {
+        // Arrange
+        List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string>() };
+
+        // Act
+        IEnumerable<string> result = sources.GetEnumeratedCombinations(nullReplacement: "EMPTY");
+
+        // Assert
+        result.Count().ShouldBe(2);
         result.ShouldContain("A|EMPTY");
         result.ShouldContain("B|EMPTY");
     }

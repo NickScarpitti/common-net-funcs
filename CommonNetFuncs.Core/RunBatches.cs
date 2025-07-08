@@ -31,7 +31,9 @@ public static class RunBatches
         for (int i = 0; i < totalBatches; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            IReadOnlyList<T> batch = distinctItems.Skip(i * batchSize).Take(batchSize).ToList();
+            int start = i * batchSize;
+            int count = Math.Min(batchSize, distinctItems.Count - start);
+            IReadOnlyList<T> batch = distinctItems.GetRange(start, count);
 
             success &= await processor(batch).ConfigureAwait(false);
 
@@ -67,7 +69,9 @@ public static class RunBatches
         for (int i = 0; i < totalBatches; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            IReadOnlyList<T> batch = distinctItems.Skip(i * batchSize).Take(batchSize).ToList();
+            int start = i * batchSize;
+            int count = Math.Min(batchSize, distinctItems.Count - start);
+            IReadOnlyList<T> batch = distinctItems.GetRange(start, count);
 
             success &= processor(batch);
 
@@ -90,13 +94,13 @@ public static class RunBatches
         bool logProgress = true, CancellationToken cancellationToken = default)
     {
         // Adapt the List processor to work with IReadOnlyList
-        return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor(batch.ToList()), batchSize, breakOnFail, logProgress, cancellationToken);
+        return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor(batch is List<T> l ? l : batch.ToList()), batchSize, breakOnFail, logProgress, cancellationToken);
     }
 
     public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, bool> listProcessor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true,
         CancellationToken cancellationToken = default)
     {
         // Adapt the List processor to work with IReadOnlyList
-        return RunBatchedProcess(itemsToProcess, batch => listProcessor(batch.ToList()), batchSize, breakOnFail, logProgress, cancellationToken);
+        return RunBatchedProcess(itemsToProcess, batch => listProcessor(batch is List<T> l ? l : batch.ToList()), batchSize, breakOnFail, logProgress, cancellationToken);
     }
 }

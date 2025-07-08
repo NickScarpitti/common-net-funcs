@@ -31,6 +31,23 @@ public sealed class FilesTests
     }
 
     [Fact]
+    public async Task ZipFile_NullStream_Should_Create_Zip_With_Single_File()
+    {
+        // Arrange
+        string fileName = _fixture.Create<string>();
+        await using MemoryStream fileStream = new(_fixture.CreateMany<byte>(100).ToArray());
+
+        // Act
+        await using MemoryStream zipFileStream = await (fileStream, fileName).ZipFile();
+
+        // Assert
+        zipFileStream.Length.ShouldBeGreaterThan(0);
+        using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
+        archive.Entries.Count.ShouldBe(1);
+        archive.Entries[0].Name.ShouldBe(fileName);
+    }
+
+    [Fact]
     public async Task ZipFiles_Should_Create_Zip_With_Multiple_Files()
     {
         // Arrange
@@ -48,6 +65,30 @@ public sealed class FilesTests
         // Assert
         zipFileStream.Length.ShouldBeGreaterThan(0);
         using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
+        archive.Entries.Count.ShouldBe(files.Count);
+        foreach ((Stream?, string fileName) file in files)
+        {
+            archive.Entries.ShouldContain(e => e.Name == file.fileName);
+        }
+    }
+
+    [Fact]
+    public async Task ZipFiles_Null_Stream_Should_Create_Zip_With_Multiple_Files()
+    {
+        // Arrange
+        List<(Stream?, string)> files =
+        [
+            (new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)i).ToArray()), "file1.txt"),
+            (new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt"),
+            (new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 2)).ToArray()), "file3.txt")
+        ];
+
+        // Act
+        await using MemoryStream? zipFileStream = await files.ZipFiles();
+
+        // Assert
+        zipFileStream?.Length.ShouldBeGreaterThan(0);
+        using ZipArchive archive = new(zipFileStream ?? new(), ZipArchiveMode.Read);
         archive.Entries.Count.ShouldBe(files.Count);
         foreach ((Stream?, string fileName) file in files)
         {

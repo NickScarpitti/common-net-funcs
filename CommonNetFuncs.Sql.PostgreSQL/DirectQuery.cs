@@ -84,7 +84,7 @@ public class DirectQuery(Func<string, NpgsqlConnection>? connectionFactory = nul
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public async IAsyncEnumerable<T> GetDataStreaming<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
+    public async IAsyncEnumerable<T> GetDataStreamAsync<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
         await using NpgsqlConnection sqlConn = connectionFactory(connStr);
         await using NpgsqlCommand sqlCmd = new(sql, sqlConn);
@@ -94,7 +94,7 @@ public class DirectQuery(Func<string, NpgsqlConnection>? connectionFactory = nul
         {
             try
             {
-                enumeratedReader = GetDataStreamAsync<T>(sqlConn, sqlCmd, commandTimeoutSeconds, cancellationToken).GetAsyncEnumerator(cancellationToken);
+                enumeratedReader = Common.DirectQuery.GetDataStreamAsync<T>(sqlConn, sqlCmd, commandTimeoutSeconds, cancellationToken).GetAsyncEnumerator(cancellationToken);
                 break;
             }
             catch (DbException ex)
@@ -128,7 +128,7 @@ public class DirectQuery(Func<string, NpgsqlConnection>? connectionFactory = nul
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public IEnumerable<T> GetDataStreamingSynchronous<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default) where T : class, new()
+    public IEnumerable<T> GetDataStreamSynchronous<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default) where T : class, new()
     {
         using NpgsqlConnection sqlConn = connectionFactory(connStr);
         using NpgsqlCommand sqlCmd = new(sql, sqlConn);
@@ -138,7 +138,7 @@ public class DirectQuery(Func<string, NpgsqlConnection>? connectionFactory = nul
         {
             try
             {
-                results = GetDataStreamSynchronous<T>(sqlConn, sqlCmd, commandTimeoutSeconds, cancellationToken);
+                results = Common.DirectQuery.GetDataStreamSynchronous<T>(sqlConn, sqlCmd, commandTimeoutSeconds, cancellationToken);
                 break;
             }
             catch (DbException ex)
@@ -162,10 +162,10 @@ public class DirectQuery(Func<string, NpgsqlConnection>? connectionFactory = nul
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
     /// <returns>DataTable containing the results of the SQL query</returns>
-    public async Task<IEnumerable<T>> GetDataDirect<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default) where T : class, new()
+    public async Task<IEnumerable<T>> GetDataDirectAsync<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default) where T : class, new()
     {
         await using NpgsqlConnection sqlConn = connectionFactory(connStr);
         await using NpgsqlCommand sqlCmd = new(sql, sqlConn);
-        return await GetDataDirectAsync<T>(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry, cancellationToken).ConfigureAwait(false);
+        return await Common.DirectQuery.GetDataDirectAsync<T>(sqlConn, sqlCmd, commandTimeoutSeconds, maxRetry, cancellationToken).ConfigureAwait(false);
     }
 }

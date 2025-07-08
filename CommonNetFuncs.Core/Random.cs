@@ -10,6 +10,8 @@ namespace CommonNetFuncs.Core;
 /// </summary>
 public static class Random
 {
+    public static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
+
     /// <summary>
     /// Generate a random integer between 0 and maxValue - 1
     /// </summary>
@@ -34,7 +36,7 @@ public static class Random
             return minValue; //There is only one possible value, so just return that
         }
 
-        using RandomNumberGenerator rng = RandomNumberGenerator.Create();
+        //using RandomNumberGenerator rng = RandomNumberGenerator.Create();
         byte[] randomNumber = new byte[4]; // 4 bytes for an integer
         rng.GetBytes(randomNumber);
         int result = BitConverter.ToInt32(randomNumber, 0) & 0x7FFFFFFF; // Ensure it's non-negative
@@ -86,7 +88,7 @@ public static class Random
     /// <returns>A random 15 decimal place double with no whole number component</returns>
     public static double GetRandomDouble()
     {
-        using RandomNumberGenerator rng = RandomNumberGenerator.Create();
+        //using RandomNumberGenerator rng = RandomNumberGenerator.Create();
         byte[] randomNumber = new byte[8]; // 8 bytes for a double
         rng.GetBytes(randomNumber);
         ulong ulongResult = BitConverter.ToUInt64(randomNumber, 0);
@@ -133,7 +135,7 @@ public static class Random
     /// <returns>A random 28 decimal place decimal with no whole number component</returns>
     public static decimal GetRandomDecimal()
     {
-        using RandomNumberGenerator rng = RandomNumberGenerator.Create();
+        //using RandomNumberGenerator rng = RandomNumberGenerator.Create();
         byte[] randomBytes = new byte[16]; // 16 bytes for higher entropy
         rng.GetBytes(randomBytes);
 
@@ -319,20 +321,25 @@ public static class Random
         }
         else
         {
+            HashSet<int> blackListCharVals = blacklistedCharacters.Select(x => (int)x).ToHashSet();
+            IEnumerable<int> whiteListCharVals = Enumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound);
+            if (whiteListCharVals.Intersect(blackListCharVals).Count() == whiteListCharVals.Count())
+            {
+                throw new Exception("Black list contains all available values");
+            }
+
+            // Generate the first part of the string with a for loop for speed
             for (int i = 0; i < length; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                List<int> blackListCharVals = blacklistedCharacters.Select(x => (int)x).ToList();
-                List<int> whiteListCharVals = Enumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound).ToList();
-                if (whiteListCharVals.Intersect(blackListCharVals).Count() == whiteListCharVals.Count)
-                {
-                    throw new Exception("Black list contains all available values");
-                }
-
                 int randomInt = GetRandomInt(lowerAsciiBound, upperAsciiBound + 1);
                 if (!blackListCharVals.Contains(randomInt))
                 {
                     result.Append((char)randomInt);
+                }
+                else
+                {
+                    i--; // If the character is blacklisted, decrement i to try again
                 }
             }
         }
@@ -361,6 +368,8 @@ public static class Random
         return strings;
     }
 
+    internal static readonly char[] DefaultCharSet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
     /// <summary>
     /// Generates a random string of the indicated length using either a custom character set, or the default of a-z A-Z 1-9
     /// </summary>
@@ -372,7 +381,7 @@ public static class Random
         // Use a default character set if none is provided
         if (charSet == null || charSet.Length == 0)
         {
-            charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
+            charSet = DefaultCharSet;
         }
 
         StringBuilder result = new(length);

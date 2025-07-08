@@ -59,11 +59,8 @@ public sealed class Base64Tests : IDisposable
     [InlineData("nonexistent.png")]
     public void ConvertImageFileToBase64_WithInvalidPath_ReturnsNull(string invalidPath)
     {
-        // Act
-        string? result = invalidPath.ConvertImageFileToBase64();
-
-        // Assert
-        result.ShouldBeNull();
+        // Act & Assert
+        Should.Throw<FileNotFoundException>(invalidPath.ConvertImageFileToBase64);
     }
 
     [Fact]

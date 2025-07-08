@@ -13,11 +13,21 @@ public static class Helpers
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+    /// <summary>
+    /// Gets the total FPS from a dictionary of FPS values.
+    /// </summary>
+    /// <param name="fpsDict">Dictionary containing (typically active) conversion tasks with their task Id as the key and the associated FPS value.</param>
+    /// <returns>Total frames per second</returns>
     public static decimal GetTotalFps(ConcurrentDictionary<int, decimal> fpsDict)
     {
         return fpsDict.Sum(x => x.Value);
     }
 
+    /// <summary>
+    /// Gets FPS from the ffmpeg log output.
+    /// </summary>
+    /// <param name="data">FFMpeg log line</param>
+    /// <returns>Frames per second value</returns>
     public static decimal ParseFfmpegLogFps(this string data)
     {
         decimal fps = -1;
@@ -40,17 +50,39 @@ public static class Helpers
         return fps;
     }
 
+    /// <summary>
+    /// / Gets the total file size difference from all conversion outputs
+    /// </summary>
+    /// <param name="conversionOutputs">Collection of results recorded in an object using RecordResults</param>
+    /// <returns>The total difference between the size of all inputs and all outputs in bytes / KB / MB / GB</returns>
     public static string GetTotalFileDif(ConcurrentBag<string> conversionOutputs)
     {
         NumberFormatInfo format = new() { NegativeSign = "-" }; //Needed to do this so negatives are read correctly
         return conversionOutputs.Sum(x => x.Split(",").Where(y => y.Contains($"{EOutputTags.SizeDif}")).Select(y => long.Parse(y.Replace($"{EOutputTags.SizeDif}=", string.Empty), format)).FirstOrDefault()).GetFileSizeFromBytesWithUnits();
     }
 
+    /// <summary>
+    /// Records the results of the conversion process.
+    /// </summary>
+    /// <param name="fileName">Name of the file being processed.</param>
+    /// <param name="success">Indicates whether the conversion was successful.</param>
+    /// <param name="conversionOutputs">Collection of results to add result to.</param>
+    /// <param name="logFile">Path to the log file to record results in.</param>
+    /// <param name="originalSize">Original file size.</param>
+    /// <param name="endSize">Final file size after FFMpeg conversion.</param>
     public static async Task RecordResults(string fileName, bool success, ConcurrentBag<string> conversionOutputs, string logFile, long? originalSize = null, long? endSize = null)
     {
         await RecordResults(fileName, success, conversionOutputs, originalSize, endSize, logFile).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Records the results of the conversion process.
+    /// </summary>
+    /// <param name="fileName">Name of the file being processed.</param>
+    /// <param name="success">Indicates whether the conversion was successful.</param>
+    /// <param name="conversionOutputs">Collection of results to add result to.</param>
+    /// <param name="originalSize">Original file size.</param>
+    /// <param name="endSize">Final file size after FFMpeg conversion.</param>
     public static async Task RecordResults(string fileName, bool success, ConcurrentBag<string> conversionOutputs, long? originalSize = null, long? endSize = null)
     {
         await RecordResults(fileName, success, conversionOutputs, originalSize, endSize, null).ConfigureAwait(false);
@@ -59,7 +91,7 @@ public static class Helpers
     private static async Task RecordResults(string fileName, bool success, ConcurrentBag<string> conversionOutputs, long? originalSize = null, long? endSize = null, string? logFile = null)
     {
         string outputString = $"{EOutputTags.FileName}={fileName},{EOutputTags.Success}={success},{EOutputTags.OriginalSize}={originalSize.GetFileSizeFromBytesWithUnits()},{EOutputTags.EndSize}={endSize.GetFileSizeFromBytesWithUnits()}";
-        outputString += originalSize != null && endSize != null ? $"{EOutputTags.SizeRatio}={Math.Round((decimal)endSize / (decimal)originalSize, 2) * 100}%,{EOutputTags.SizeDif}={endSize - originalSize}" : string.Empty;
+        outputString += originalSize != null && endSize != null ? $",{EOutputTags.SizeRatio}={Math.Round((decimal)endSize / (decimal)originalSize, 2) * 100}%,{EOutputTags.SizeDif}={endSize - originalSize} bytes" : string.Empty;
         conversionOutputs.Add(outputString);
 
         if (!logFile.IsNullOrWhiteSpace())
@@ -128,11 +160,24 @@ public static class Helpers
     }
 
     /// <summary>
+    /// Gets the number of frames between key frames in the given video.
+    /// </summary>
+    /// <param name="fileName">Full video path and file name of the video file to get key frame spacing of</param>
+    /// <remarks>Samples entire video which may take a long time. Use overload with numberOfSamples, sampleLengthSec to specify sample limits</remarks>
+    /// <returns>The average number of frames between keyframes</returns>
+    public static Task<decimal> GetKeyFrameSpacing(this string fileName)
+    {
+        return GetKeyFrameSpacing(fileName, -1, -1);
+    }
+
+    /// <summary>
     /// Gets the number of frames between key frames in the given video
     /// </summary>
     /// <param name="fileName">Full video path and file name of the video file to get key frame spacing of</param>
+    /// <param name="numberOfSamples">Number of samples to take from the video. If -1, will sample the entire video</param>
+    /// <param name="sampleLengthSec">Length of each sample in seconds. Default is -1, which means that the entire video will be sampled</param>
     /// <returns>The average number of frames between keyframes</returns>
-    public static async Task<decimal> GetKeyFrameSpacing(this string fileName, int numberOfSamples = -1, int sampleLengthSec = -1)
+    public static async Task<decimal> GetKeyFrameSpacing(this string fileName, int numberOfSamples, int sampleLengthSec)
     {
         decimal frameRate = await fileName.GetFrameRate().ConfigureAwait(false);
         try

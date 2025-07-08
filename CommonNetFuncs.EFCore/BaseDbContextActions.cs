@@ -64,7 +64,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
     public async Task<T?> GetByKey(object primaryKey, TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -96,7 +96,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     public async Task<T?> GetByKeyFull(object primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
         fullQueryOptions ??= new();
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -190,7 +190,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>Record of type T corresponding to the primary key passed in.</returns>
     public async Task<T?> GetByKey(object[] primaryKey, TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -222,7 +222,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     public async Task<T?> GetByKeyFull(object[] primaryKey, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
         fullQueryOptions ??= new FullQueryOptions();
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -1577,7 +1577,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         try
         {
             //model = await query.ToListAsync();
-            using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+            await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
             model = fullQueryOptions.SplitQueryOverride switch
             {
                 //Need to add in navigation properties of the output type since they are not kept in the original query
@@ -1679,7 +1679,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         try
         {
             //model = await query.ToListAsync();
-            using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+            await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
             enumeratedReader = fullQueryOptions.SplitQueryOverride switch
             {
                 //Need to add in navigation properties of the output type since they are not kept in the original query
@@ -1866,7 +1866,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     public async Task<GenericPagingModel<T2>> GetWithPagingFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
         string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -1877,11 +1877,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             IQueryable<T2> qModel = !trackEntities ? context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression) : context.Set<T>().Where(whereExpression).Select(selectExpression);
 
-            var results = await qModel.OrderBy(orderByString ?? string.Empty).Select(x => new { Entities = x, TotalCount = qModel.Count() })
-                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
+            //var results = await qModel.OrderBy(orderByString ?? string.Empty).Select(x => new { Entities = x, TotalCount = qModel.Count() })
+            //    .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
-            model.Entities = results.ConvertAll(x => x.Entities);
+            //model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
+            //model.Entities = results.ConvertAll(x => x.Entities);
+
+            model.TotalRecords = await qModel.CountAsync(cancellationToken); //results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
+            model.Entities = await qModel.Skip(skip).Take(pageSize).ToListAsync(cancellationToken); //results.ConvertAll(x => x.Entities);
         }
         catch (Exception ex)
         {
@@ -1915,10 +1918,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         {
             qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, false, trackEntities, fullQueryOptions);
 
-            var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
+            //var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
-            model.Entities = results.ConvertAll(x => x.Entities);
+            model.TotalRecords = await qModel.CountAsync(cancellationToken); //results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
+            model.Entities = await qModel.Skip(skip).Take(pageSize).ToListAsync(cancellationToken);//results.ConvertAll(x => x.Entities);
         }
         catch (InvalidOperationException ioEx)
         {
@@ -2047,7 +2050,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     public async Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
         Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2216,7 +2219,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>First record from the table corresponding to class T that also satisfy the conditions of the linq query expression.</returns>
     public async Task<T?> GetOneWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2338,7 +2341,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>First record from the table corresponding to class T that also satisfy the conditions of the linq query expression that has been transformed into the T2 class with the select expression.</returns>
     public async Task<T2?> GetOneWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2373,7 +2376,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
         fullQueryOptions ??= new FullQueryOptions();
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2461,7 +2464,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>The record that contains the maximum value according to the ascending order expression</returns>
     public async Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2496,7 +2499,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
         fullQueryOptions ??= new FullQueryOptions();
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2585,7 +2588,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>The record that contains the minimum value according to the ascending order expression</returns>
     public async Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2620,7 +2623,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
         fullQueryOptions ??= new FullQueryOptions();
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2709,7 +2712,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>The maximum value specified by the max expression</returns>
     public async Task<T2?> GetMax<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2742,7 +2745,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
         fullQueryOptions ??= new FullQueryOptions();
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2831,7 +2834,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>The minimum value specified by the min expression</returns>
     public async Task<T2?> GetMin<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2865,7 +2868,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
     {
         fullQueryOptions ??= new FullQueryOptions();
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2931,7 +2934,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <returns>The number of records that satisfy the where expression.</returns>
     public async Task<int> GetCount(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (queryTimeout != null)
         {
             context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
@@ -2964,7 +2967,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             throw new ArgumentNullException(nameof(model), "Model cannot be null");
         }
 
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (removeNavigationProps)
         {
             model.RemoveNavigationProperties(context);
@@ -2986,7 +2989,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="model">Records of type T to be added to the table</param>
     public async Task CreateMany(IEnumerable<T> model, bool removeNavigationProps = false)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         if (removeNavigationProps)
         {
             model.SetValue(x => x.RemoveNavigationProperties(context));
@@ -3031,7 +3034,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="key">Key of the record of type T to delete</param>
     public async Task<bool> DeleteByKey(object key)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         DbSet<T> table = context.Set<T>();
         bool success = false;
         try
@@ -3080,7 +3083,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="models">Records of type T to delete</param>
     public async Task<bool> DeleteManyTracked(IEnumerable<T> models, bool removeNavigationProps = false)
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         try
         {
             if (removeNavigationProps)
@@ -3103,7 +3106,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     /// <param name="keys">Keys of type T to delete</param>
     public async Task<bool> DeleteManyByKeys(IEnumerable<object> keys) //Does not work with PostgreSQL, not testable
     {
-        using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+        await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
         try
         {
             await context.Set<T>().DeleteRangeByKeyAsync(keys).ConfigureAwait(false); //EF Core +, Does not require separate save
@@ -3169,7 +3172,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         bool result = false;
         try
         {
-            using DbContext context = serviceProvider.GetRequiredService<UT>()!;
+            await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
             result = await context.SaveChangesAsync().ConfigureAwait(false) > 0;
         }
         catch (DbUpdateException duex)

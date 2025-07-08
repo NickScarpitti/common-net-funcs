@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using FastExpressionCompiler;
 using static CommonNetFuncs.Core.MathHelpers;
+using static CommonNetFuncs.Core.ReflectionCaches;
 using static System.Convert;
 using static System.Web.HttpUtility;
 
@@ -648,7 +649,7 @@ public static partial class Strings
     {
         if (obj != null)
         {
-            IEnumerable<PropertyInfo> props = typeof(T).GetProperties().Where(x => x.PropertyType == typeof(string));
+            IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
             if (props.Any())
             {
                 foreach (PropertyInfo prop in props)
@@ -723,7 +724,7 @@ public static partial class Strings
     {
         if (obj != null)
         {
-            IEnumerable<PropertyInfo> props = typeof(T).GetProperties().Where(x => x.PropertyType == typeof(string));
+            IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
             if (props.Any())
             {
                 foreach (PropertyInfo prop in props)
@@ -842,7 +843,7 @@ public static partial class Strings
     {
         if (obj != null)
         {
-            IEnumerable<PropertyInfo> props = typeof(T).GetProperties().Where(x => x.PropertyType == typeof(string));
+            IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
             if (props.Any())
             {
                 foreach (PropertyInfo prop in props)

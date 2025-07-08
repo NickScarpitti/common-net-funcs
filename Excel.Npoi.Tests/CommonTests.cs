@@ -13,8 +13,6 @@ namespace Excel.Npoi.Tests;
 
 public sealed class CommonTests : IDisposable
 {
-    #region Cell Manipulation Tests
-
     private readonly XSSFWorkbook _xlsxWorkbook;
     private readonly HSSFWorkbook _xlsWorkbook;
     private readonly ISheet _sheet;
@@ -51,6 +49,8 @@ public sealed class CommonTests : IDisposable
     {
         Dispose(false);
     }
+
+    #region Cell Manipulation Tests
 
     [Theory]
     [InlineData("")]

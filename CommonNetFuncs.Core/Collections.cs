@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using FastExpressionCompiler;
+using static CommonNetFuncs.Core.ReflectionCaches;
 using static System.Convert;
 
 namespace CommonNetFuncs.Core;
@@ -99,10 +100,7 @@ public static class Collections
         foreach (KeyValuePair<K, V> keyValuePair in keyValuePairs)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (!dict.ContainsKey(keyValuePair.Key))
-            {
-                dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
-            }
+            dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
         }
     }
 
@@ -422,6 +420,7 @@ public static class Collections
 
                 // note: passed in as "state", not captured, so not a foreach/capture bug
                 outstandingItem = new(Transform!, row);
+                //outstandingItem.Start();
                 outstandingItem.Start();
 
                 if (tmp != null)
@@ -442,7 +441,7 @@ public static class Collections
     {
         List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
         DataRow firstRow = table.Rows[0];
-        foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+        foreach (PropertyInfo propertyInfo in GetOrAddPropertiesFromCache(typeof(T)))
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (table.Columns.Contains(propertyInfo.Name))
@@ -566,7 +565,7 @@ public static class Collections
         }
 
         dataTable ??= new();
-        PropertyInfo[] properties = typeof(T).GetProperties();
+        PropertyInfo[] properties = GetOrAddPropertiesFromCache(typeof(T));
 
         // Remove invalid columns
         IEnumerable<string> propertyNames = properties.Select(x => x.Name);
@@ -708,13 +707,13 @@ public static class Collections
 
         Func<object, object>[] propertyGetters = typeAccessor.PropertyGetters;
         int columnCount = propertyGetters.Length;
-        object[] rowValues = new object[columnCount];
 
         // Add the rows
         if (!useParallel)
         {
             foreach (T item in data)
             {
+                object[] rowValues = new object[columnCount];
                 cancellationToken.ThrowIfCancellationRequested();
                 for (int i = 0; i < columnCount; i++)
                 {
@@ -822,7 +821,7 @@ public static class Collections
             throw new ArgumentException("There must be at least one property identified in propsToAgg", nameof(propsToAgg));
         }
 
-        PropertyInfo[] properties = typeof(T).GetProperties();
+        PropertyInfo[] properties = GetOrAddPropertiesFromCache(typeof(T));
         PropertyInfo[] groupingProperties = properties.Where(p => !propsToAgg.Contains(p.Name)).ToArray();
 
         if (!groupingProperties.AnyFast() || (propsToAgg.Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Length))
@@ -948,6 +947,55 @@ public static class Collections
         // Convert the results to strings with separator and return as HashSet
         return new HashSet<string>(current.Select(x => string.Join(separator, x)));
     }
+
+    public static IEnumerable<string> GetEnumeratedCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
+    {
+        // Prepare the sources as arrays for efficient indexing
+        string?[][] sourcesArray = sources.Select(x => x.Any() ? x.Distinct().Select(v => v ?? nullReplacement).ToArray() : [nullReplacement]).ToArray();
+
+        if (!sourcesArray.AnyFast())
+        {
+            yield break;
+        }
+
+        long totalCombinations = sourcesArray.Aggregate(1L, (acc, curr) => acc * curr.Length);
+        if (maxCombinations.HasValue && totalCombinations > maxCombinations.Value)
+        {
+            throw new ArgumentException($"Total possible combinations ({totalCombinations}) exceeds maximum allowed ({maxCombinations.Value})");
+        }
+
+        HashSet<string> yielded = new();
+
+        IEnumerable<string> Recurse(int depth, List<string> current)
+        {
+            if (depth == sourcesArray.Length)
+            {
+                string combination = string.Join(separator, current);
+                if (yielded.Add(combination))
+                {
+                    yield return combination;
+                }
+
+                yield break;
+            }
+
+            foreach (string? value in sourcesArray[depth])
+            {
+                current.Add(value?.ToString() ?? string.Empty);
+                foreach (string result in Recurse(depth + 1, current))
+                {
+                    yield return result;
+                }
+
+                current.RemoveAt(current.Count - 1);
+            }
+        }
+
+        foreach (string combination in Recurse(0, new List<string>(sourcesArray.Length)))
+        {
+            yield return combination;
+        }
+    }
 }
 
 public sealed class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor
@@ -996,9 +1044,11 @@ public sealed class ArrayTraverse
 
 public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
 {
-    private readonly Lock addLock = new();
+    private readonly Lock addRemoveLock = new();
     private readonly int capacity;
     private readonly OrderedDictionary<TKey, TValue?> dictionary;
+
+    //private readonly Dictionary<TKey, TValue?> dictionary;
 
     //private Queue<TKey> insertionOrderQueue;
 
@@ -1016,6 +1066,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 
         this.capacity = capacity;
         dictionary = new OrderedDictionary<TKey, TValue?>(capacity);
+        //dictionary = new Dictionary<TKey, TValue?>(capacity);
         //insertionOrderQueue = new Queue<TKey>(capacity);
 
         if (sourceDictionary != null)
@@ -1040,20 +1091,19 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
     {
         get
         {
-            lock (addLock)
+            lock (addRemoveLock)
             {
                 return dictionary[key];
             }
         }
         set
         {
-            lock (addLock)
+            lock (addRemoveLock)
             {
                 if (dictionary.ContainsKey(key))
                 {
                     // Update existing item
-                    dictionary[key] = value;
-                    // Note: We're not changing its position in the queue
+                    dictionary[key] = value; // Note: We're not changing its position in the queue
                 }
                 else
                 {
@@ -1061,12 +1111,10 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
                     if (dictionary.Count >= capacity)
                     {
                         // Remove oldest item
-                        //TKey oldestKey = insertionOrderQueue.Dequeue();
                         TKey oldestKey = dictionary.GetAt(0).Key;
                         dictionary.Remove(oldestKey);
                     }
                     dictionary[key] = value;
-                    //insertionOrderQueue.Enqueue(key);
                 }
             }
         }
@@ -1084,31 +1132,62 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 
     public void Clear()
     {
-        dictionary.Clear();
-        //insertionOrderQueue.Clear();
+        lock (addRemoveLock)
+        {
+            dictionary.Clear();
+        }
     }
 
     public void Add(TKey key, TValue? value)
     {
-        dictionary.Add(key, value);
-        //insertionOrderQueue.Enqueue(key);
+        lock (addRemoveLock)
+        {
+            if (!dictionary.TryAdd(key, value))
+            {
+                // Update existing item
+                dictionary[key] = value; // Note: We're not changing its position in the queue
+            }
+            else
+            {
+                // Add new item
+                if (dictionary.Count >= capacity)
+                {
+                    // Remove oldest item
+                    TKey oldestKey = dictionary.GetAt(0).Key;
+                    dictionary.Remove(oldestKey);
+                }
+            }
+        }
     }
 
     public bool Remove(TKey key)
     {
-        //if (dictionary.Remove(key))
-        //{
-        //    insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, key)));
-        //    return true;
-        //}
-        //return false;
-        return dictionary.Remove(key);
+        lock (addRemoveLock)
+        {
+            return dictionary.Remove(key);
+        }
     }
 
     public void Add(KeyValuePair<TKey, TValue?> item)
     {
-        ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Add(item);
-        //insertionOrderQueue.Enqueue(item.Key);
+        lock (addRemoveLock)
+        {
+            if (!dictionary.TryAdd(item.Key, item.Value))
+            {
+                // Update existing item
+                dictionary[item.Key] = item.Value; // Note: We're not changing its position in the queue
+            }
+            else
+            {
+                // Add new item
+                if (dictionary.Count >= capacity)
+                {
+                    // Remove oldest item
+                    TKey oldestKey = dictionary.GetAt(0).Key;
+                    dictionary.Remove(oldestKey);
+                }
+            }
+        }
     }
 
     public bool Contains(KeyValuePair<TKey, TValue?> item)
@@ -1123,12 +1202,6 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 
     public bool Remove(KeyValuePair<TKey, TValue?> item)
     {
-        //if (((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item))
-        //{
-        //    insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, item.Key)));
-        //    return true;
-        //}
-        //return false;
         return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item);
     }
 
@@ -1142,3 +1215,172 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         return ((IEnumerable)dictionary).GetEnumerator();
     }
 }
+
+//public class FixedFIFODictionaryAlt<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
+//{
+//    private readonly Lock addRemoveLock = new();
+//    private readonly int capacity;
+//    private readonly Dictionary<TKey, TValue?> dictionary;
+
+//    private Queue<TKey> insertionOrderQueue;
+
+//    public FixedFIFODictionaryAlt(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
+//    {
+//        if (capacity <= 0)
+//        {
+//            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
+//        }
+
+//        if (sourceDictionary != null && sourceDictionary.Count > capacity)
+//        {
+//            throw new ArgumentException("Source dictionary exceeds the specified capacity.", nameof(sourceDictionary));
+//        }
+
+//        this.capacity = capacity;
+//        dictionary = new Dictionary<TKey, TValue?>(capacity);
+//        insertionOrderQueue = new Queue<TKey>(capacity);
+
+//        if (sourceDictionary != null)
+//        {
+//            foreach (KeyValuePair<TKey, TValue?> kvp in sourceDictionary)
+//            {
+//                dictionary[kvp.Key] = kvp.Value;
+//                insertionOrderQueue.Enqueue(kvp.Key);
+//            }
+//        }
+//    }
+
+//    public ICollection<TKey> Keys => dictionary.Keys;
+
+//    public ICollection<TValue?> Values => dictionary.Values;
+
+//    public int Count => dictionary.Count;
+
+//    public bool IsReadOnly => ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).IsReadOnly;
+
+//    public TValue? this[TKey key]
+//    {
+//        get
+//        {
+//            lock (addRemoveLock)
+//            {
+//                return dictionary[key];
+//            }
+//        }
+//        set
+//        {
+//            lock (addRemoveLock)
+//            {
+//                if (dictionary.ContainsKey(key))
+//                {
+//                    // Update existing item
+//                    dictionary[key] = value; // Note: We're not changing its position in the queue
+//                }
+//                else
+//                {
+//                    // Add new item
+//                    if (dictionary.Count >= capacity)
+//                    {
+//                        // Remove oldest item
+//                        TKey oldestKey = insertionOrderQueue.Dequeue();
+//                        dictionary.Remove(oldestKey);
+//                    }
+//                    dictionary[key] = value;
+//                    insertionOrderQueue.Enqueue(key);
+//                }
+//            }
+//        }
+//    }
+
+//    public bool ContainsKey(TKey key)
+//    {
+//        return dictionary.ContainsKey(key);
+//    }
+
+//    public bool TryGetValue(TKey key, out TValue? value)
+//    {
+//        return dictionary.TryGetValue(key, out value);
+//    }
+
+//    public void Clear()
+//    {
+//        dictionary.Clear();
+//        insertionOrderQueue.Clear();
+//    }
+
+//    public void Add(TKey key, TValue? value)
+//    {
+//        lock (addRemoveLock)
+//        {
+//          if (dictionary.ContainsKey(key))
+//          {
+//              // Update existing item
+//              dictionary[key] = value; // Note: We're not changing its position in the queue
+//          }
+//          else
+//          {
+//              // Add new item
+//              if (dictionary.Count >= capacity)
+//              {
+//                  // Remove oldest item
+//                  TKey oldestKey = insertionOrderQueue.Dequeue();
+//                  dictionary.Remove(oldestKey);
+//              }
+//              dictionary.Add(key, value);
+//              insertionOrderQueue.Enqueue(key);
+//          }
+//        }
+//    }
+
+//    public bool Remove(TKey key)
+//    {
+//        lock (addRemoveLock)
+//        {
+//          if (dictionary.Remove(key))
+//          {
+//              insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, key)));
+//              return true;
+//          }
+//        }
+//        return false;
+//    }
+
+//    public void Add(KeyValuePair<TKey, TValue?> item)
+//    {
+//        lock (addRemoveLock)
+//        {
+//          ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Add(item);
+//          insertionOrderQueue.Enqueue(item.Key);
+//        }
+//    }
+
+//    public bool Contains(KeyValuePair<TKey, TValue?> item)
+//    {
+//        return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Contains(item);
+//    }
+
+//    public void CopyTo(KeyValuePair<TKey, TValue?>[] array, int arrayIndex)
+//    {
+//        ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).CopyTo(array, arrayIndex);
+//    }
+
+//    public bool Remove(KeyValuePair<TKey, TValue?> item)
+//    {
+//        if (((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item))
+//        {
+//            insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, item.Key)));
+//            return true;
+//        }
+//        return false;
+//    }
+
+//    public IEnumerator<KeyValuePair<TKey, TValue?>> GetEnumerator()
+//    {
+//        return ((IEnumerable<KeyValuePair<TKey, TValue?>>)dictionary).GetEnumerator();
+//    }
+
+//    IEnumerator IEnumerable.GetEnumerator()
+//    {
+//        return ((IEnumerable)dictionary).GetEnumerator();
+//    }
+//}

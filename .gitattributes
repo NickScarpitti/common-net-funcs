@@ -1,3 +1,1 @@
- ```
-     *.csproj text=auto
- ```
+*.csproj text=auto

@@ -1,7 +1,8 @@
-﻿using ClosedXML.Excel;
-using CommonNetFuncs.Excel.Common;
-using System.Data;
+﻿using System.Data;
 using System.Reflection;
+using ClosedXML.Excel;
+using CommonNetFuncs.Excel.Common;
+using static CommonNetFuncs.Core.ReflectionCaches;
 using static CommonNetFuncs.Excel.ClosedXml.Common;
 
 namespace CommonNetFuncs.Excel.ClosedXml;
@@ -34,7 +35,7 @@ public static class Export
                 int x = 1;
                 int y = 1;
 
-                PropertyInfo[] props = typeof(T).GetProperties();
+                PropertyInfo[] props = GetOrAddPropertiesFromCache(typeof(T));
                 foreach (PropertyInfo prop in props)
                 {
                     IXLCell cell = ws.Cell(y, x);

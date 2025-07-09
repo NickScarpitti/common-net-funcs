@@ -187,5 +187,5 @@ public class ReflectionCachesTests : IDisposable
         props.ShouldBeEmpty();
     }
 
-    private class NoProps { }
+    private class NoProps;
 }

@@ -531,9 +531,7 @@ public sealed class CollectionsTests
         TestClass obj = new() { Name = "test" };
 
         // Act
-#pragma warning disable CS0618 // Type or member is obsolete
         List<TestClass> result = obj.SingleToList();
-        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(1);
@@ -544,9 +542,7 @@ public sealed class CollectionsTests
     public void SingleToList_WithNullObject_ReturnsEmptyList()
     {
         // Act
-        #pragma warning disable CS0618 // Type or member is obsolete
         List<TestClass> result = Collections.SingleToList<TestClass>(null);
-        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(0);
@@ -559,9 +555,7 @@ public sealed class CollectionsTests
         const string str = "test";
 
         // Act
-        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = str.SingleToList();
-        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(1);
@@ -572,9 +566,7 @@ public sealed class CollectionsTests
     public void SingleToList_WithEmptyString_ReturnsEmptyList()
     {
         // Act
-        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = string.Empty.SingleToList(allowEmptyStrings: false);
-        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(0);
@@ -584,9 +576,7 @@ public sealed class CollectionsTests
     public void SingleToList_WithEmptyStringAndAllowEmptyTrue_ReturnsListWithEmptyString()
     {
         // Act
-        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = string.Empty.SingleToList(allowEmptyStrings: true);
-        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(1);
@@ -597,9 +587,7 @@ public sealed class CollectionsTests
     public void SingleToList_WithNullString_ReturnsEmptyList()
     {
         // Act
-        #pragma warning disable CS0618 // Type or member is obsolete
         List<string> result = Collections.SingleToList(null, allowEmptyStrings: true);
-        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.Count.ShouldBe(0);
@@ -704,7 +692,7 @@ public sealed class CollectionsTests
         dataTable.Rows.Add(2, "test2", false, null);
 
         // Act
-        List<TestClass?> result = dataTable.ToList<TestClass>();
+        List<TestClass> result = dataTable.ToList<TestClass>();
 
         // Assert
         result.Count.ShouldBe(2);
@@ -733,7 +721,7 @@ public sealed class CollectionsTests
         dataTable.Rows.Add(2, "test2", (short)0, DateTime.MaxValue, DateOnly.MaxValue);
 
         // Act
-        List<TestClass?> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+        List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true);
 
         // Assert
         result.Count.ShouldBe(2);
@@ -764,7 +752,7 @@ public sealed class CollectionsTests
         dataTable.Rows.Add(2, "test2", (short)0, DateOnly.MaxValue, DateTime.MaxValue);
 
         // Act
-        List<TestClass?> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+        List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true);
 
         // Assert
         result.Count.ShouldBe(2);
@@ -800,7 +788,7 @@ public sealed class CollectionsTests
         if (!badFirstDate && !badSecondDate)
         {
             // Act
-            List<TestClass?> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+            List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true);
 
             // Assert
             result.Count.ShouldBe(2);
@@ -842,7 +830,7 @@ public sealed class CollectionsTests
         if (!badFirstDate && !badSecondDate)
         {
             // Act
-            List<TestClass?> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+            List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true);
 
             // Assert
             result.Count.ShouldBe(2);
@@ -877,7 +865,7 @@ public sealed class CollectionsTests
         dataTable.Rows.Add(2, "test2", false);
 
         // Act
-        List<TestClass?> result = dataTable.ToListParallel<TestClass>();
+        List<TestClass> result = dataTable.ToListParallel<TestClass>();
 
         // Assert
         result.Count.ShouldBe(2);
@@ -897,7 +885,7 @@ public sealed class CollectionsTests
         dataTable.Rows.Add(2, "test2");
 
         // Act
-        List<TestClass?> result = dataTable.ToEnumerableParallel<TestClass>().ToList();
+        List<TestClass> result = dataTable.ToEnumerableParallel<TestClass>().ToList();
 
         // Assert
         result.Count.ShouldBe(2);
@@ -917,7 +905,7 @@ public sealed class CollectionsTests
         dataTable.Rows.Add(2, "test2");
 
         // Act
-        List<TestClass?> result = dataTable.ToEnumerableStreaming<TestClass>().ToList();
+        List<TestClass> result = dataTable.ToEnumerableStreaming<TestClass>().ToList();
 
         // Assert
         result.Count.ShouldBe(2);

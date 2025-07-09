@@ -24,7 +24,7 @@ public static class Base64
         }
         else
         {
-            throw new FileNotFoundException($"The file was not found", filePath);
+            throw new FileNotFoundException("The file was not found", filePath);
         }
     }
 

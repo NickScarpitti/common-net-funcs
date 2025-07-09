@@ -1848,7 +1848,7 @@ public static partial class Strings
 
                 if (int.TryParse(split[2], out int c))
                 {
-                    return a + (double)b / c;
+                    return a + ((double)b / c);
                 }
             }
         }

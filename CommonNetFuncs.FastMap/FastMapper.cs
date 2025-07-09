@@ -90,7 +90,7 @@ public static class FastMapper
                 variables.Add(tempList);
                 bindings.Add(Expression.Assign(tempList, Expression.New(listType)));
 
-                if (destType.IsInterface || destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(ReadOnlyCollection<>))
+                if (destType.IsInterface || (destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(ReadOnlyCollection<>)))
                 {
                     Type concreteType = typeof(ReadOnlyCollection<>).MakeGenericType(elementType);
                     bindings.Add(Expression.Assign(destinationVariable, Expression.New(concreteType.GetConstructor([typeof(IList<>).MakeGenericType(elementType)])!, tempList)));

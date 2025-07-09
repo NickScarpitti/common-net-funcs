@@ -341,16 +341,20 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ToList<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
+    public static List<T> ToList<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
-        List<T?> list = new(table.Rows.Count);
+        List<T> list = new(table.Rows.Count);
         if (table.Rows.Count > 0)
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken: cancellationToken);
             foreach (DataRow row in table.AsEnumerable())
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                list.Add(row.ParseRowValues<T>(map, cancellationToken: cancellationToken));
+                T? rowData = row.ParseRowValues<T>(map, cancellationToken);
+                if (rowData != null)
+                {
+                    list.Add(rowData);
+                }
             }
         }
         return list;
@@ -364,13 +368,20 @@ public static class Collections
     /// <param name="maxDegreeOfParallelism">Parallelism parameter to be used in Parallel.Foreach loop</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ToListParallel<T>(this DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
+    public static List<T> ToListParallel<T>(this DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
-        ConcurrentBag<T?> bag = [];
+        ConcurrentBag<T> bag = [];
         if (table.Rows.Count > 0)
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken: cancellationToken);
-            Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row => bag.Add(row.ParseRowValues<T>(map, cancellationToken)));
+            Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row =>
+            {
+                T? rowData = row.ParseRowValues<T>(map, cancellationToken);
+                if (rowData != null)
+                {
+                    bag.Add(rowData);
+                }
+            });
         }
         return bag.ToList();
     }
@@ -382,13 +393,13 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static IEnumerable<T?> ToEnumerableParallel<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
+    public static IEnumerable<T> ToEnumerableParallel<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
-        IEnumerable<T?> values = [];
+        IEnumerable<T> values = [];
         if (table.Rows.Count > 0)
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken: cancellationToken);
-            values = table.AsEnumerable().AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).Select(row => row.ParseRowValues<T>(map, cancellationToken));
+            values = table.AsEnumerable().AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).Select(row => row.ParseRowValues<T>(map, cancellationToken)!).Where(x => x != null);
         }
         return values;
     }
@@ -400,7 +411,7 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static IEnumerable<T?> ToEnumerableStreaming<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
+    public static IEnumerable<T> ToEnumerableStreaming<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         if (table.Rows.Count > 0)
         {
@@ -421,13 +432,13 @@ public static class Collections
                 //outstandingItem.Start();
                 outstandingItem.Start();
 
-                if (tmp != null)
+                if (tmp?.Result != null)
                 {
                     yield return tmp.Result;
                 }
             }
 
-            if (outstandingItem != null)
+            if (outstandingItem?.Result != null)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 yield return outstandingItem.Result;

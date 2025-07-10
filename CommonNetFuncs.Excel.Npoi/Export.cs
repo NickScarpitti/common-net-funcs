@@ -313,7 +313,7 @@ public static class Export
                 Dictionary<int, int> maxColumnWidths = [];
                 List<string> columnNames = [];
 
-                PropertyInfo[] props = GetOrAddPropertiesFromCache(typeof(T)).Where(x => (skipColumnNames.Count == 0) || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
+                PropertyInfo[] props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => (skipColumnNames.Count == 0) || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase)).ToArray();
 
                 IRow currentRow = ws.GetRow(y) ?? ws.CreateRow(y);
                 foreach (PropertyInfo prop in props)

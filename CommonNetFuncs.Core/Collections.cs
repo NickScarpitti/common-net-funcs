@@ -450,7 +450,7 @@ public static class Collections
     {
         List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
         DataRow firstRow = table.Rows[0];
-        foreach (PropertyInfo propertyInfo in GetOrAddPropertiesFromCache(typeof(T)))
+        foreach (PropertyInfo propertyInfo in GetOrAddPropertiesFromReflectionCache(typeof(T)))
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (table.Columns.Contains(propertyInfo.Name))
@@ -574,7 +574,7 @@ public static class Collections
         }
 
         dataTable ??= new();
-        PropertyInfo[] properties = GetOrAddPropertiesFromCache(typeof(T));
+        PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
 
         // Remove invalid columns
         IEnumerable<string> propertyNames = properties.Select(x => x.Name);
@@ -830,7 +830,7 @@ public static class Collections
             throw new ArgumentException("There must be at least one property identified in propsToAgg", nameof(propsToAgg));
         }
 
-        PropertyInfo[] properties = GetOrAddPropertiesFromCache(typeof(T));
+        PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
         PropertyInfo[] groupingProperties = properties.Where(p => !propsToAgg.Contains(p.Name)).ToArray();
 
         if (!groupingProperties.AnyFast() || (propsToAgg.Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Length))
@@ -1196,6 +1196,25 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
                     dictionary.Remove(oldestKey);
                 }
             }
+        }
+    }
+
+    public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
+    {
+        lock (addRemoveLock)
+        {
+            if (!dictionary.TryGetValue(key, out TValue? value))
+            {
+                value = valueFactory(key);
+                if (dictionary.Count >= capacity)
+                {
+                    // Remove oldest item
+                    TKey oldestKey = dictionary.GetAt(0).Key;
+                    dictionary.Remove(oldestKey);
+                }
+                dictionary[key] = value;
+            }
+            return value!;
         }
     }
 

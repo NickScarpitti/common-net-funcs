@@ -9,7 +9,7 @@ public static class ReflectionCaches
     private static FixedFIFODictionary<Type, PropertyInfo[]> LimitedReflectionCache = new(LimitedReflectionCacheSize); // Default to 100 entries
     private static bool UseLimitedReflectionCache = true;
 
-    public static void ClearReflectionCaches()
+    public static void ClearAllReflectionCaches()
     {
         ClearReflectionCache();
         ClearLimitedReflectionCache();
@@ -45,7 +45,7 @@ public static class ReflectionCaches
     /// <param name="useLimitedReflectionCache">When true, uses cache with limited number of total records</param>
     public static void SetUseLimitedReflectionCache(bool useLimitedReflectionCache)
     {
-        ClearReflectionCaches();
+        ClearAllReflectionCaches();
         SetLimitedReflectionCacheSize(useLimitedReflectionCache ? LimitedReflectionCacheSize : 1);
         UseLimitedReflectionCache = useLimitedReflectionCache;
     }
@@ -67,7 +67,7 @@ public static class ReflectionCaches
     /// Clears LimitedReflectionCache cache and sets the size to the specified value.
     /// </summary>
     /// <param name="type">Type to get properties for. Will store </param>
-    public static PropertyInfo[] GetOrAddPropertiesFromCache(Type type)
+    public static PropertyInfo[] GetOrAddPropertiesFromReflectionCache(Type type)
     {
         if (UseLimitedReflectionCache)
         {
@@ -75,7 +75,7 @@ public static class ReflectionCaches
             {
                 return properties ?? [];
             }
-            properties = type.GetProperties();
+            properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             LimitedReflectionCache.Add(type, properties);
             return properties;
         }
@@ -85,7 +85,7 @@ public static class ReflectionCaches
             {
                 return properties ?? [];
             }
-            properties = type.GetProperties();
+            properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             ReflectionCache.Add(type, properties);
             return properties;
         }

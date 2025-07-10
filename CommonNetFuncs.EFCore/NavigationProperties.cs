@@ -144,7 +144,7 @@ public static class NavigationProperties
             foreach (INavigation navigation in entityTypeInfo.GetNavigations())
             {
                 // Skip if property has JsonIgnore attribute
-                PropertyInfo? propertyInfo = GetOrAddPropertiesFromCache(entityType).First(x => x.Name.StrComp(navigation.Name)); //entityType.GetProperty(navigation.Name);
+                PropertyInfo? propertyInfo = GetOrAddPropertiesFromReflectionCache(entityType).First(x => x.Name.StrComp(navigation.Name)); //entityType.GetProperty(navigation.Name);
                 if (navigationPropertiesOptions.NavPropAttributesToIgnore != null)
                 {
                     bool skipProperty = false;

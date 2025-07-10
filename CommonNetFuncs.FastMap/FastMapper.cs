@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using CommonNetFuncs.Core;
 using FastExpressionCompiler;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
@@ -12,6 +13,8 @@ namespace CommonNetFuncs.FastMap;
 
 public static class FastMapper
 {
+    #region Caching
+
     private readonly struct MapperCacheKey(Type sourceType, Type destType) : IEquatable<MapperCacheKey>
     {
         public readonly Type SourceType = sourceType;
@@ -33,8 +36,93 @@ public static class FastMapper
         }
     }
 
-    private static readonly ConcurrentDictionary<MapperCacheKey, Delegate> mapperCache = [];
-    //private static readonly ConcurrentDictionary<Type, PropertyInfo[]> propertyCache = new();
+    private static int LimitedMapperCacheSize = 100;
+    private static readonly ConcurrentDictionary<MapperCacheKey, Delegate> MapperCache = [];
+    private static FixedFIFODictionary<MapperCacheKey, Delegate> LimitedMapperCache = new(LimitedMapperCacheSize);
+    private static bool UseLimitedMapperCache = true;
+
+    public static void ClearAllMapperCaches()
+    {
+        ClearMapperCache();
+        ClearLimitedMapperCache();
+    }
+
+    public static void ClearMapperCache()
+    {
+        MapperCache.Clear();
+    }
+
+    public static void ClearLimitedMapperCache()
+    {
+        LimitedMapperCache.Clear();
+    }
+
+    /// <summary>
+    /// Clears LimitedMapperCache cache and sets the size to the specified value.
+    /// </summary>
+    /// <param name="size">Maximum number of entries to allow in LimitedMapperCache before removing oldest entry according to FIFO rules</param>
+    public static void SetLimitedMapperCacheSize(int size)
+    {
+        LimitedMapperCacheSize = size;
+        if (UseLimitedMapperCache)
+        {
+            ClearLimitedMapperCache();
+            LimitedMapperCache = new(LimitedMapperCacheSize);
+        }
+    }
+
+    /// <summary>
+    /// Clears caches and initializes LimitedMapperCache to use the size specified by LimitedMapperCacheSize or 0 if UseLimitedMapperCache is false.
+    /// </summary>
+    /// <param name="useLimitedMapperCache">When true, uses cache with limited number of total records</param>
+    public static void SetUseLimitedMapperCache(bool useLimitedMapperCache)
+    {
+        ClearAllMapperCaches();
+        SetLimitedMapperCacheSize(useLimitedMapperCache ? LimitedMapperCacheSize : 1);
+        UseLimitedMapperCache = useLimitedMapperCache;
+    }
+
+    public static int GetLimitedMapperCacheSize()
+    {
+        return LimitedMapperCacheSize;
+    }
+
+    /// <summary>
+    /// Returns whether the LimitedMapperCache is being used.
+    /// </summary>
+    public static bool IsUsingLimitedMapperCache()
+    {
+        return UseLimitedMapperCache;
+    }
+
+    /// <summary>
+    /// Clears LimitedMapperCache cache and sets the size to the specified value.
+    /// </summary>
+    private static Delegate GetOrAddPropertiesFromMapperCache<T, UT>(MapperCacheKey key)
+    {
+        if (UseLimitedMapperCache)
+        {
+            if (LimitedMapperCache.TryGetValue(key, out Delegate? function))
+            {
+                return function!;
+            }
+            function = CreateMapper<T, UT>();
+            LimitedMapperCache.Add(key, function);
+            return function;
+        }
+        else
+        {
+            if (MapperCache.TryGetValue(key, out Delegate? function))
+            {
+                return function;
+            }
+            function = CreateMapper<T, UT>();
+            MapperCache.TryAdd(key, function);
+            return function;
+        }
+    }
+
+    #endregion
 
     /// <summary>
     /// Method that maps one object onto another by property name using expression trees
@@ -51,7 +139,7 @@ public static class FastMapper
             return default;
         }
 
-        Func<T, UT> mapper = (Func<T, UT>)mapperCache.GetOrAdd(new(typeof(T), typeof(UT)), _ => CreateMapper<T, UT>());
+        Func<T, UT> mapper = (Func<T, UT>)GetOrAddPropertiesFromMapperCache<T, UT>(new(typeof(T), typeof(UT))); //(Func<T, UT>)MapperCache.GetOrAdd(new(typeof(T), typeof(UT)), _ => CreateMapper<T, UT>());
         return mapper(source)!;
     }
 
@@ -136,8 +224,8 @@ public static class FastMapper
             bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(UT)))); // Initialize destination object if not a collection
             //PropertyInfo[] sourceProperties = propertyCache.GetOrAdd(typeof(T), t => t.GetProperties());
             //PropertyInfo[] destinationProperties = propertyCache.GetOrAdd(typeof(UT), t => t.GetProperties());
-            PropertyInfo[] sourceProperties = GetOrAddPropertiesFromCache(typeof(T));
-            PropertyInfo[] destinationProperties = GetOrAddPropertiesFromCache(typeof(UT));
+            PropertyInfo[] sourceProperties = GetOrAddPropertiesFromReflectionCache(typeof(T));
+            PropertyInfo[] destinationProperties = GetOrAddPropertiesFromReflectionCache(typeof(UT));
             HashSet<string> assignedProperties = [];
             foreach (PropertyInfo destProp in destinationProperties.Where(x => x.CanWrite))
             {

@@ -390,17 +390,17 @@ public sealed class CommonTests : IDisposable
         {
             case EFont.Default:
                 cellFont.IsBold.ShouldBeFalse();
-                cellFont.FontHeightInPoints.ShouldBe((short)10);
+                cellFont.FontHeightInPoints.ShouldBe(10);
                 cellFont.FontName.ShouldBe("Calibri");
                 break;
             case EFont.Header:
                 cellFont.IsBold.ShouldBeTrue();
-                cellFont.FontHeightInPoints.ShouldBe((short)10);
+                cellFont.FontHeightInPoints.ShouldBe(10);
                 cellFont.FontName.ShouldBe("Calibri");
                 break;
             case EFont.Whiteout:
                 cellFont.IsBold.ShouldBeFalse();
-                cellFont.FontHeight.ShouldBe((short)10);
+                cellFont.FontHeight.ShouldBe(10);
                 cellFont.FontName.ShouldBe("Calibri");
                 break;
         }

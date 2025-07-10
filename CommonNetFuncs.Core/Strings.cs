@@ -649,7 +649,7 @@ public static partial class Strings
     {
         if (obj != null)
         {
-            IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
+            IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
             if (props.Any())
             {
                 foreach (PropertyInfo prop in props)
@@ -724,7 +724,7 @@ public static partial class Strings
     {
         if (obj != null)
         {
-            IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
+            IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
             if (props.Any())
             {
                 foreach (PropertyInfo prop in props)
@@ -843,7 +843,7 @@ public static partial class Strings
     {
         if (obj != null)
         {
-            IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
+            IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
             if (props.Any())
             {
                 foreach (PropertyInfo prop in props)

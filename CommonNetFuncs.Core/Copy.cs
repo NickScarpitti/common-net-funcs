@@ -1,12 +1,73 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using System.Reflection;
+using FastExpressionCompiler;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
 
 public static class Copy
 {
+    #region Caching
+
+    private static readonly CacheManager<(Type Source, Type Dest), Func<object, object?, int, int, object?>> DeepCopyCache = new();
+
+    public static ICacheManagerApi<(Type Source, Type Dest), Func<object, object?, int, int, object?>> DeepCopyCacheManager => DeepCopyCache;
+
+    private static readonly CacheManager<(Type SourceType, Type DestType), Dictionary<string, (Delegate Set, Delegate Get)>> CopyCache = new();
+
+    public static ICacheManagerApi<(Type SourceType, Type DestType), Dictionary<string, (Delegate Set, Delegate Get)>> CopyCacheManager => CopyCache;
+
+    /// <summary>
+    /// Gets or adds a function from the deep copy cache based on the source and destination types.
+    /// </summary>
+    /// <param name="key">Cache key</param>
+    /// <returns>Function for executing deep copy</returns>
+    private static Func<object, object?, int, int, object?> GetOrAddFunctionFromDeepCopyCache((Type sourceType, Type destType) key)
+    {
+        if (DeepCopyCacheManager.IsUsingLimitedCache() ? DeepCopyCacheManager.GetLimitedCache().TryGetValue(key, out Func<object, object?, int, int, object?>? function) :
+            DeepCopyCacheManager.GetCache().TryGetValue(key, out function))
+        {
+            return function!;
+        }
+
+        function = CreateCopyFunction(key.sourceType, key.destType);
+        if (DeepCopyCacheManager.IsUsingLimitedCache())
+        {
+            DeepCopyCacheManager.TryAddLimitedCache(key, function);
+        }
+        else
+        {
+            DeepCopyCacheManager.TryAddCache(key, function);
+        }
+
+        return function;
+    }
+
+    /// <summary>
+    /// Gets or adds a function from the shallow copy cache based on the source and destination types.
+    /// </summary>
+    /// <returns>Function for executing shallow copy</returns>
+    private static Dictionary<string, (Delegate Set, Delegate Get)> GetOrAddFunctionFromCopyCache<TSource, TDest>()
+    {
+        (Type, Type) key = (typeof(TSource), typeof(TDest));
+        bool isLimitedCache = CopyCacheManager.IsUsingLimitedCache();
+        if (isLimitedCache ? CopyCacheManager.GetLimitedCache().TryGetValue(key, out Dictionary<string, (Delegate Set, Delegate Get)>? functions) :
+            CopyCacheManager.GetCache().TryGetValue(key, out functions))
+        {
+            return functions!;
+        }
+
+        if (isLimitedCache)
+        {
+            return CopyCacheManager.GetOrAddLimitedCache(key, _ => CreatePropertyMappingsForCache<TSource, TDest>());
+        }
+        return CopyCacheManager.GetOrAddCache(key, _ => CreatePropertyMappingsForCache<TSource, TDest>());
+    }
+
+    #endregion
+
     /// <summary>
     /// Copy properties of the same name from one object to another
     /// </summary>
@@ -14,17 +75,29 @@ public static class Copy
     /// <typeparam name="UT">Type of destination object</typeparam>
     /// <param name="source">Object to copy common properties from</param>
     /// <param name="dest">Object to copy common properties to</param>
-    public static void CopyPropertiesTo<T, UT>(this T source, UT dest)
+    public static void CopyPropertiesTo<T, UT>(this T source, UT dest, bool useCache = true)
     {
         if (source == null)
         {
-            dest = default!;
+            return;
+        }
+        if (useCache)
+        {
+            if (dest == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, (Action<UT, object?> Set, Func<T, object?> Get)> kvp in GetOrCreatePropertyMaps<T, UT>())
+            {
+                kvp.Value.Set(dest, kvp.Value.Get(source));
+            }
         }
         else
         {
             dest ??= Activator.CreateInstance<UT>();
-            IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.CanRead);
-            Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
+            IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead);
+            Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
             foreach (PropertyInfo sourceProp in sourceProps)
             {
@@ -41,22 +114,26 @@ public static class Copy
     /// </summary>
     /// <typeparam name="T">Type of object being copied</typeparam>
     /// <param name="source">Object to copy common properties from</param>
-    public static T CopyPropertiesToNew<T>(this T source) where T : new()
+    public static T CopyPropertiesToNew<T>(this T source, bool useCache = true) where T : new()
     {
         if (source == null)
         {
             return default!;
         }
 
-        IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.CanRead);
-        Dictionary<string, PropertyInfo> destPropDict = sourceProps.ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
-
         T dest = new();
-        foreach (PropertyInfo sourceProp in sourceProps)
+        if (useCache)
         {
-            if (destPropDict.TryGetValue(sourceProp.Name, out PropertyInfo? destProp) && destProp.PropertyType == sourceProp.PropertyType)
+            foreach (KeyValuePair<string, (Action<T, object?> Set, Func<T, object?> Get)> kvp in GetOrCreatePropertyMaps<T, T>())
             {
-                destProp.SetValue(dest, sourceProp.GetValue(source, null), null);
+                kvp.Value.Set(dest, kvp.Value.Get(source));
+            }
+        }
+        else
+        {
+            foreach (PropertyInfo sourceProp in GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead))
+            {
+                sourceProp.SetValue(dest, sourceProp.GetValue(source, null), null);
             }
         }
         return dest;
@@ -67,17 +144,27 @@ public static class Copy
     /// </summary>
     /// <typeparam name="T">Type of object being copied</typeparam>
     /// <param name="source">Object to copy common properties from</param>
-    public static UT CopyPropertiesToNew<T, UT>(this T source) where UT : new()
+    public static UT CopyPropertiesToNew<T, UT>(this T source, bool useCache = true) where UT : new()
     {
-        IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromCache(typeof(T)).Where(x => x.CanRead);
-        Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
+        IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead);
+        Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
         UT dest = new();
-        foreach (PropertyInfo sourceProp in sourceProps)
+        if (useCache)
         {
-            if (destPropDict.TryGetValue(sourceProp.Name, out PropertyInfo? destProp) && destProp.PropertyType == sourceProp.PropertyType)
+            foreach (KeyValuePair<string, (Action<UT, object?> Set, Func<T, object?> Get)> kvp in GetOrCreatePropertyMaps<T, UT>())
             {
-                destProp.SetValue(dest, sourceProp.GetValue(source, null), null);
+                kvp.Value.Set(dest, kvp.Value.Get(source));
+            }
+        }
+        else
+        {
+            foreach (PropertyInfo sourceProp in sourceProps)
+            {
+                if (destPropDict.TryGetValue(sourceProp.Name, out PropertyInfo? destProp) && destProp.PropertyType == sourceProp.PropertyType)
+                {
+                    destProp.SetValue(dest, sourceProp.GetValue(source, null), null);
+                }
             }
         }
         return dest;
@@ -93,20 +180,72 @@ public static class Copy
     /// <param name="maxDepth">How deep to recursively traverse. Default = -1 which is unlimited recursion</param>
     /// <returns>A new instance of UT with properties of the same name from source populated</returns>
     [return: NotNullIfNotNull(nameof(source))]
-    public static UT? CopyPropertiesToNewRecursive<T, UT>(this T source, int maxDepth = -1) where UT : new()
+    public static UT? CopyPropertiesToNewRecursive<T, UT>(this T source, int maxDepth = -1, bool useCache = true) where UT : new()
     {
         if (source == null)
         {
             return default;
         }
 
-        if (typeof(IEnumerable).IsAssignableFrom(typeof(T)) && typeof(IEnumerable).IsAssignableFrom(typeof(UT)) && (typeof(T) != typeof(string)) && (typeof(UT) != typeof(string)))
+        if (useCache)
         {
-            return (UT?)CopyCollection(source, typeof(UT), maxDepth) ?? new();
+            return CopyPropertiesToNewRecursiveExpressionTrees<T, UT>(source, maxDepth)!;
+        }
+        else
+        {
+            if (typeof(IEnumerable).IsAssignableFrom(typeof(T)) && typeof(IEnumerable).IsAssignableFrom(typeof(UT)) && (typeof(T) != typeof(string)) && (typeof(UT) != typeof(string)))
+            {
+                return (UT?)CopyCollection(source, typeof(UT), maxDepth) ?? new();
+            }
+
+            return (UT?)CopyObject(source, typeof(UT), 0, maxDepth) ?? new();
+        }
+    }
+
+    /// <summary>
+    /// <para>Merge the field values from one instance into another of the same object</para>
+    /// <para>Only default values will be overridden by mergeFromObjects</para>
+    /// </summary>
+    /// <typeparam name="T">Object type</typeparam>
+    /// <param name="mergeIntoObject">Object to merge properties into</param>
+    /// <param name="mergeFromObjects">Objects to merge properties from</param>
+    public static T MergeInstances<T>(this T mergeIntoObject, IEnumerable<T> mergeFromObjects, CancellationToken cancellationToken = default) where T : class
+    {
+        foreach (T instance in mergeFromObjects)
+        {
+            mergeIntoObject.MergeInstances(instance, cancellationToken);
         }
 
-        return (UT?)CopyObject(source, typeof(UT), 0, maxDepth) ?? new();
+        return mergeIntoObject;
     }
+
+    /// <summary>
+    /// <para>Merge the field values from one instance into another of the same object</para>
+    /// <para>Only default values will be overridden by mergeFromObject</para>
+    /// </summary>
+    /// <typeparam name="T">Object type</typeparam>
+    /// <param name="mergeIntoObject">Object to merge properties into</param>
+    /// <param name="mergeFromObject">Object to merge properties from</param>
+    public static T MergeInstances<T>(this T mergeIntoObject, T mergeFromObject, CancellationToken cancellationToken = default) where T : class
+    {
+        foreach (PropertyInfo property in GetOrAddPropertiesFromReflectionCache(typeof(T)))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            object? value = property.GetValue(mergeFromObject);
+            object? mergedValue = property.GetValue(mergeIntoObject);
+
+            object? defaultValue = property.PropertyType.IsValueType ? Activator.CreateInstance(property.PropertyType) : null;
+
+            if ((value != default) && (mergedValue?.Equals(defaultValue) != false))
+            {
+                property.SetValue(mergeIntoObject, value);
+            }
+        }
+
+        return mergeIntoObject;
+    }
+
+    #region Reflection Deep Copy Helpers
 
     private static object? CopyObject(object source, Type destType, int depth, int maxDepth)
     {
@@ -124,9 +263,8 @@ public static class Copy
         }
         else
         {
-            IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromCache(sourceType).Where(x => x.CanRead);
-            //IEnumerable<PropertyInfo> destProps = GetOrAddPropertiesFromCache(destType).Where(x => x.CanWrite);
-            Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromCache(destType).Where(x => x.CanWrite).ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
+            IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(sourceType).Where(x => x.CanRead);
+            Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(x => x.CanWrite).ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
 
             foreach (PropertyInfo sourceProp in sourceProps)
             {
@@ -258,46 +396,385 @@ public static class Copy
         }
     }
 
-    /// <summary>
-    /// <para>Merge the field values from one instance into another of the same object</para>
-    /// <para>Only default values will be overridden by mergeFromObjects</para>
-    /// </summary>
-    /// <typeparam name="T">Object type</typeparam>
-    /// <param name="mergeIntoObject">Object to merge properties into</param>
-    /// <param name="mergeFromObjects">Objects to merge properties from</param>
-    public static T MergeInstances<T>(this T mergeIntoObject, IEnumerable<T> mergeFromObjects, CancellationToken cancellationToken = default) where T : class
-    {
-        foreach (T instance in mergeFromObjects)
-        {
-            mergeIntoObject.MergeInstances(instance, cancellationToken);
-        }
+    #endregion
 
-        return mergeIntoObject;
+    #region Expression Trees for Shallow Copying
+
+    public static Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> GetOrCreatePropertyMaps<TSource, TDest>()
+    {
+        return GetOrAddFunctionFromCopyCache<TSource, TDest>().ToDictionary(kvp => kvp.Key, kvp => ((Action<TDest, object?>)kvp.Value.Set, (Func<TSource, object?>)kvp.Value.Get));
     }
 
-    /// <summary>
-    /// <para>Merge the field values from one instance into another of the same object</para>
-    /// <para>Only default values will be overridden by mergeFromObject</para>
-    /// </summary>
-    /// <typeparam name="T">Object type</typeparam>
-    /// <param name="mergeIntoObject">Object to merge properties into</param>
-    /// <param name="mergeFromObject">Object to merge properties from</param>
-    public static T MergeInstances<T>(this T mergeIntoObject, T mergeFromObject, CancellationToken cancellationToken = default) where T : class
+    private static Dictionary<string, (Delegate Set, Delegate Get)> CreatePropertyMappingsForCache<TSource, TDest>()
     {
-        foreach (PropertyInfo property in GetOrAddPropertiesFromCache(typeof(T)))
+        Dictionary<string, (Delegate Set, Delegate Get)> cacheableMaps = new();
+
+        IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(TSource)).Where(p => p.CanRead);
+        Dictionary<string, PropertyInfo> destProps = GetOrAddPropertiesFromReflectionCache(typeof(TDest)).Where(p => p.CanWrite).ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
+
+        foreach (PropertyInfo sProp in sourceProps)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            object? value = property.GetValue(mergeFromObject);
-            object? mergedValue = property.GetValue(mergeIntoObject);
-
-            object? defaultValue = property.PropertyType.IsValueType ? Activator.CreateInstance(property.PropertyType) : null;
-
-            if ((value != default) && (mergedValue?.Equals(defaultValue) != false))
+            if (destProps.TryGetValue(sProp.Name, out PropertyInfo? dProp) && dProp.PropertyType == sProp.PropertyType)
             {
-                property.SetValue(mergeIntoObject, value);
+                // Getter: (TSource src) => (object?)src.Prop
+                ParameterExpression srcParam = Expression.Parameter(typeof(TSource), "src");
+                Expression<Func<TSource, object?>> getExpr = Expression.Lambda<Func<TSource, object?>>(
+                    Expression.Convert(
+                        Expression.Property(
+                            typeof(TSource).IsInterface ? Expression.Convert(srcParam, sProp.DeclaringType!) : srcParam,
+                            sProp),
+                        typeof(object)),
+                    srcParam);
+                Func<TSource, object?> get = getExpr.CompileFast();
+
+                // Setter: (TDest dest, object? value) => dest.Prop = (TPropType)value
+                ParameterExpression destParam = Expression.Parameter(typeof(TDest), "dest");
+                ParameterExpression valueParam = Expression.Parameter(typeof(object), "value");
+                Expression<Action<TDest, object?>> setExpr = Expression.Lambda<Action<TDest, object?>>(
+                    Expression.Assign(
+                        Expression.Property(
+                            typeof(TDest).IsInterface ? Expression.Convert(destParam, dProp.DeclaringType!) : destParam,
+                            dProp),
+                        Expression.Convert(valueParam, dProp.PropertyType)),
+                    destParam, valueParam);
+                Action<TDest, object?> set = setExpr.CompileFast();
+
+                string propertyKey = sProp.Name;
+                cacheableMaps.Add(propertyKey, (set, get));
             }
         }
 
-        return mergeIntoObject;
+        return cacheableMaps;
     }
+
+    #endregion
+
+    #region Property Mapping For Recursive Copy
+
+    /// <summary>
+    /// Creates a robust recursive copy function using expression trees
+    /// </summary>
+    private static UT? CopyPropertiesToNewRecursiveExpressionTrees<T, UT>(this T source, int maxDepth = -1) where UT : new()
+    {
+        if (source == null)
+        {
+            return default;
+        }
+
+        Func<object, object?, int, int, object?> copyFunc = GetOrCreateCopyFunction(typeof(T), typeof(UT));
+        return (UT?)copyFunc(source, null, 0, maxDepth);
+    }
+
+    /// <summary>
+    /// Gets or creates a compiled copy function for the given source and destination types
+    /// </summary>
+    private static Func<object, object?, int, int, object?> GetOrCreateCopyFunction(Type sourceType, Type destType)
+    {
+        //return CopyFunctionCache.GetOrAdd(key, _ => CreateCopyFunction(sourceType, destType));
+        return GetOrAddFunctionFromDeepCopyCache((sourceType, destType));
+    }
+
+    /// <summary>
+    /// Creates a compiled expression tree function for copying between two types
+    /// </summary>
+    private static Func<object, object?, int, int, object?> CreateCopyFunction(Type sourceType, Type destType)
+    {
+        ParameterExpression sourceParam = Expression.Parameter(typeof(object), "source");
+        ParameterExpression destParam = Expression.Parameter(typeof(object), "dest");
+        ParameterExpression depthParam = Expression.Parameter(typeof(int), "depth");
+        ParameterExpression maxDepthParam = Expression.Parameter(typeof(int), "maxDepth");
+
+        ParameterExpression typedSource = Expression.Variable(sourceType, "typedSource");
+        ParameterExpression result = Expression.Variable(typeof(object), "result");
+
+        List<Expression> expressions = new();
+
+        // Cast source to correct type
+        expressions.Add(Expression.Assign(typedSource, Expression.Convert(sourceParam, sourceType)));
+
+        // Handle simple types (string, primitives, etc.) - direct conversion
+        if (destType.IsSimpleType())
+        {
+            // For simple types, we can't do property copying, so we try direct conversion
+            if (sourceType == destType)
+            {
+                expressions.Add(Expression.Assign(result, Expression.Convert(typedSource, typeof(object))));
+            }
+            else if (CanConvertTypes(sourceType, destType))
+            {
+                expressions.Add(Expression.Assign(result, Expression.Convert(Expression.Convert(typedSource, destType), typeof(object))));
+            }
+            else
+            {
+                // Return default value for the type
+                expressions.Add(Expression.Assign(result, Expression.Convert(destType.IsValueType ? Expression.Default(destType) : Expression.Constant(null, destType), typeof(object))));
+            }
+        }
+        else
+        {
+            // For complex types, create instance and copy properties
+            ParameterExpression typedDest = Expression.Variable(destType, "typedDest");
+
+            // Create destination instance
+            expressions.Add(Expression.Assign(typedDest, CreateInstanceExpression(destType)));
+
+            // Get properties for both types
+            PropertyInfo[] sourceProps = GetOrAddPropertiesFromReflectionCache(sourceType).Where(p => p.CanRead).ToArray();
+            Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(p => p.CanWrite).ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
+
+            // Create property copy expressions
+            foreach (PropertyInfo sourceProp in sourceProps)
+            {
+                if (!destPropsDict.TryGetValue(sourceProp.Name, out PropertyInfo? destProp))
+                {
+                    continue;
+                }
+
+                Expression? copyExpression;
+
+                MemberExpression sourceValue = Expression.Property(typedSource, sourceProp);
+                MemberExpression destProperty = Expression.Property(typedDest, destProp);
+
+                // Handle null values
+                if (!sourceProp.PropertyType.IsValueType)
+                {
+                    BinaryExpression nullCheck = Expression.Equal(sourceValue, Expression.Constant(null));
+                    BinaryExpression setNull = Expression.Assign(destProperty, Expression.Convert(Expression.Constant(null), destProp.PropertyType));
+
+                    Expression? copyLogic = CreateValueCopyExpression(sourceValue, destProperty, sourceProp.PropertyType, destProp.PropertyType, depthParam, maxDepthParam);
+                    copyExpression = copyLogic != null ? Expression.IfThenElse(nullCheck, setNull, copyLogic) : null;
+                }
+                else
+                {
+                    copyExpression = CreateValueCopyExpression(sourceValue, destProperty, sourceProp.PropertyType, destProp.PropertyType, depthParam, maxDepthParam);
+                }
+
+                if (copyExpression != null)
+                {
+                    expressions.Add(copyExpression);
+                }
+            }
+
+            // Return the destination object
+            expressions.Add(Expression.Assign(result, Expression.Convert(typedDest, typeof(object))));
+
+            // Add typedDest to the block variables
+            BlockExpression body = Expression.Block(new[] { typedSource, typedDest, result }, expressions.Concat([result]));
+
+            Expression<Func<object, object?, int, int, object?>> lambda = Expression.Lambda<Func<object, object?, int, int, object?>>(body, sourceParam, destParam, depthParam, maxDepthParam);
+
+            return lambda.CompileFast();
+        }
+
+        // For simple types, we don't need the extra variable
+        expressions.Add(result);
+
+        BlockExpression simpleBody = Expression.Block(new[] { typedSource, result }, expressions);
+
+        Expression<Func<object, object?, int, int, object?>> simpleLambda = Expression.Lambda<Func<object, object?, int, int, object?>>(simpleBody, sourceParam, destParam, depthParam, maxDepthParam);
+
+        return simpleLambda.CompileFast();
+    }
+
+    /// <summary>
+    /// Creates an expression for instantiating a type
+    /// </summary>
+    private static Expression CreateInstanceExpression(Type type)
+    {
+        // Check if type has parameterless constructor
+        ConstructorInfo? defaultConstructor = type.GetConstructor(Type.EmptyTypes);
+        if (defaultConstructor != null)
+        {
+            return Expression.New(type);
+        }
+
+        // For types without parameterless constructor, use Activator.CreateInstance
+        MethodInfo createInstanceMethod = typeof(Activator).GetMethod(nameof(Activator.CreateInstance), new[] { typeof(Type) })!;
+        return Expression.Convert(Expression.Call(createInstanceMethod, Expression.Constant(type)), type);
+    }
+
+    /// <summary>
+    /// Checks if two types can be converted between each other
+    /// </summary>
+    private static bool CanConvertTypes(Type sourceType, Type destType)
+    {
+        // Check for implicit/explicit conversions
+        try
+        {
+            // This is a simple check - you might want to make this more sophisticated
+            return sourceType == destType || destType.IsAssignableFrom(sourceType) || (sourceType.IsPrimitive && destType.IsPrimitive);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Creates an expression for copying a value with type compatibility checks
+    /// </summary>
+    private static Expression? CreateValueCopyExpression(Expression sourceValue, Expression destProperty, Type sourceType, Type destType, ParameterExpression depthParam, ParameterExpression maxDepthParam)
+    {
+        // Direct assignment for same types or simple types
+        if (sourceType == destType || (sourceType.IsSimpleType() && destType.IsSimpleType() && CanConvertTypes(sourceType, destType)))
+        {
+            return Expression.Assign(destProperty, Expression.Convert(sourceValue, destType));
+        }
+
+        // Handle collections
+        if (sourceType.IsEnumerable() && destType.IsEnumerable())
+        {
+            MethodInfo copyCollectionMethod = typeof(Copy).GetMethod(nameof(CopyCollectionRuntime), BindingFlags.NonPublic | BindingFlags.Static)!;
+            MethodCallExpression copyCall = Expression.Call(copyCollectionMethod, Expression.Convert(sourceValue, typeof(object)), Expression.Constant(destType), depthParam, maxDepthParam);
+            return Expression.Assign(destProperty, Expression.Convert(copyCall, destType));
+        }
+
+        // Handle complex objects with depth checking
+        if (sourceType.IsClass && destType.IsClass && !sourceType.IsSimpleType() && !destType.IsSimpleType())
+        {
+            // Check depth limits
+            BinaryExpression depthCheck = Expression.AndAlso(Expression.NotEqual(maxDepthParam, Expression.Constant(-1)), Expression.GreaterThanOrEqual(depthParam, maxDepthParam));
+            BinaryExpression setDefault = Expression.Assign(destProperty, Expression.Convert(Expression.Constant(null), destType));
+
+            // Recursive copy call
+            MethodInfo copyObjectMethod = typeof(Copy).GetMethod(nameof(CopyObjectRuntime), BindingFlags.NonPublic | BindingFlags.Static)!;
+            MethodCallExpression recursiveCopy = Expression.Call(copyObjectMethod, Expression.Convert(sourceValue, typeof(object)), Expression.Constant(destType), Expression.Add(depthParam, Expression.Constant(1)), maxDepthParam);
+            BinaryExpression assignCopy = Expression.Assign(destProperty, Expression.Convert(recursiveCopy, destType));
+            return Expression.IfThenElse(depthCheck, setDefault, assignCopy);
+        }
+
+        // Fallback: try direct conversion
+        if (destType.IsAssignableFrom(sourceType))
+        {
+            return Expression.Assign(destProperty, Expression.Convert(sourceValue, destType));
+        }
+
+        return null;
+    }
+
+    private static object? CopyCollectionRuntime(object source, Type destType, int depth, int maxDepth)
+    {
+        if (source == null)
+        {
+            return null;
+        }
+
+        IEnumerable sourceEnumerable = (IEnumerable)source;
+
+        // Handle arrays
+        if (destType.IsArray)
+        {
+            Type elementType = destType.GetElementType()!;
+            List<object> sourceList = sourceEnumerable.Cast<object>().ToList();
+            Array destArray = Array.CreateInstance(elementType, sourceList.Count);
+
+            for (int i = 0; i < sourceList.Count; i++)
+            {
+                object? copiedItem = CopyItemRuntime(sourceList[i], elementType, depth, maxDepth);
+                destArray.SetValue(copiedItem, i);
+            }
+
+            return destArray;
+        }
+
+        // Handle dictionaries specifically
+        if (destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+        {
+            Type[] destGenericArgs = destType.GetGenericArguments();
+            Type destKeyType = destGenericArgs[0];
+            Type destValueType = destGenericArgs[1];
+
+            object? destCollection = Activator.CreateInstance(destType);
+            MethodInfo? addMethod = destType.GetMethod("Add");
+
+            if (addMethod != null)
+            {
+                foreach (object item in sourceEnumerable)
+                {
+                    if (item == null)
+                    {
+                        continue;
+                    }
+
+                    // Get the actual type of the source KeyValuePair
+                    Type sourceItemType = item.GetType();
+                    PropertyInfo sourceKeyProperty = sourceItemType.GetProperty("Key")!;
+                    PropertyInfo sourceValueProperty = sourceItemType.GetProperty("Value")!;
+
+                    // Extract key and value from the source KeyValuePair
+                    object? sourceKey = sourceKeyProperty.GetValue(item);
+                    object? sourceValue = sourceValueProperty.GetValue(item);
+
+                    // Copy key and value to destination types
+                    object? copiedKey = CopyItemRuntime(sourceKey, destKeyType, depth, maxDepth);
+                    object? copiedValue = CopyItemRuntime(sourceValue, destValueType, depth, maxDepth);
+
+                    addMethod.Invoke(destCollection, [copiedKey, copiedValue]);
+                }
+            }
+
+            return destCollection;
+        }
+
+        // Handle generic collections (List, etc.)
+        if (destType.IsGenericType)
+        {
+            Type[] genericArgs = destType.GetGenericArguments();
+            Type elementType = genericArgs[0];
+
+            // Create destination collection
+            object? destCollection = Activator.CreateInstance(destType);
+            MethodInfo? addMethod = destType.GetMethod("Add");
+
+            if (addMethod != null)
+            {
+                foreach (object item in sourceEnumerable)
+                {
+                    object? copiedItem = CopyItemRuntime(item, elementType, depth, maxDepth);
+                    addMethod.Invoke(destCollection, [copiedItem]);
+                }
+            }
+
+            return destCollection;
+        }
+
+        return source;
+    }
+
+    /// <summary>
+    /// Runtime helper for copying individual items
+    /// </summary>
+    private static object? CopyItemRuntime(object? item, Type destType, int depth, int maxDepth)
+    {
+        if (item == null)
+        {
+            return null;
+        }
+
+        Type itemType = item.GetType();
+
+        if (itemType.IsSimpleType() || itemType == destType)
+        {
+            return item;
+        }
+
+        return CopyObjectRuntime(item, destType, depth, maxDepth);
+    }
+
+    /// <summary>
+    /// Runtime helper for copying objects
+    /// </summary>
+    private static object? CopyObjectRuntime(object source, Type destType, int depth, int maxDepth)
+    {
+        if (source == null)
+        {
+            return null;
+        }
+
+        Func<object, object?, int, int, object?> copyFunc = GetOrCreateCopyFunction(source.GetType(), destType);
+        return copyFunc(source, null, depth, maxDepth);
+    }
+
+    #endregion
+
 }

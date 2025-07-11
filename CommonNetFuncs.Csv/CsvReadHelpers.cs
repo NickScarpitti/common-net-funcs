@@ -116,7 +116,7 @@ public static class CsvReadHelpers
         DataTable dataTable = new();
         if (dataType != null)
         {
-            foreach (PropertyInfo prop in GetOrAddPropertiesFromCache(dataType))
+            foreach (PropertyInfo prop in GetOrAddPropertiesFromReflectionCache(dataType))
             {
                 dataTable.Columns.Add(prop.Name, prop.PropertyType);
             }

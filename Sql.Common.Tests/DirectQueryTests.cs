@@ -31,6 +31,9 @@ public sealed class DirectQueryTests : IDisposable
             if (disposing)
             {
                 _connection.Dispose();
+                DirectQuery.CacheManager.SetUseLimitedCache(true);
+                DirectQuery.CacheManager.SetLimitedCacheSize(100);
+                DirectQuery.CacheManager.ClearAllCaches();
             }
             disposed = true;
         }
@@ -180,5 +183,120 @@ public sealed class DirectQueryTests : IDisposable
         results.Count().ShouldBe(1);
         results.First().Id.ShouldBe(1);
         results.First().Name.ShouldBe("Test1");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DirectQuery_CacheManager_SetAndGetUseLimitedCache_Works(bool useLimited)
+    {
+        // Act
+        DirectQuery.CacheManager.SetUseLimitedCache(useLimited);
+
+        // Assert
+        DirectQuery.CacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(10)]
+    public void DirectQuery_CacheManager_SetAndGetLimitedCacheSize_Works(int size)
+    {
+        // Act
+        DirectQuery.CacheManager.SetLimitedCacheSize(size);
+
+        // Assert
+        DirectQuery.CacheManager.GetLimitedCacheSize().ShouldBe(size);
+    }
+
+    [Fact]
+    public void DirectQuery_CacheManager_ClearAllCaches_RemovesAllEntries()
+    {
+        // Arrange
+        DirectQuery.CacheManager.SetUseLimitedCache(false);
+        Type key = typeof(TestModel);
+        Func<IDataReader, TestModel> del = _ => new TestModel { Id = 1, Name = "A" };
+        DirectQuery.CacheManager.TryAddCache(key, del);
+        DirectQuery.CacheManager.GetCache().Count.ShouldBeGreaterThan(0);
+
+        // Act
+        DirectQuery.CacheManager.ClearAllCaches();
+
+        // Assert
+        DirectQuery.CacheManager.GetCache().Count.ShouldBe(0);
+        DirectQuery.CacheManager.GetLimitedCache().Count.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DirectQuery_CacheManager_GetCacheAndLimitedCache_Work(bool useLimited)
+    {
+        // Arrange
+        DirectQuery.CacheManager.SetUseLimitedCache(useLimited);
+        DirectQuery.CacheManager.SetLimitedCacheSize(10);
+        Type key = typeof(TestModel);
+        Func<IDataReader, TestModel> del = _ => new TestModel { Id = 1, Name = "A" };
+
+        // Act
+        DirectQuery.CacheManager.ClearAllCaches();
+        if (useLimited)
+        {
+            DirectQuery.CacheManager.TryAddLimitedCache(key, del);
+        }
+        else
+        {
+            DirectQuery.CacheManager.TryAddCache(key, del);
+        }
+
+        // Assert
+        if (useLimited)
+        {
+            DirectQuery.CacheManager.GetLimitedCache().Count.ShouldBe(1);
+            DirectQuery.CacheManager.GetCache().Count.ShouldBe(0);
+        }
+        else
+        {
+            DirectQuery.CacheManager.GetCache().Count.ShouldBe(1);
+            DirectQuery.CacheManager.GetLimitedCache().Count.ShouldBe(0);
+        }
+    }
+
+    [Fact]
+    public void DirectQuery_CacheManager_TryAddCacheAndTryAddLimitedCache_Works()
+    {
+        // Arrange
+        Type key = typeof(TestModel);
+        Func<IDataReader, TestModel> del = _ => new TestModel { Id = 1, Name = "A" };
+
+        // Act & Assert
+        DirectQuery.CacheManager.SetUseLimitedCache(false);
+        DirectQuery.CacheManager.ClearAllCaches();
+        DirectQuery.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+        DirectQuery.CacheManager.GetCache().ContainsKey(key).ShouldBeTrue();
+
+        DirectQuery.CacheManager.SetUseLimitedCache(true);
+        DirectQuery.CacheManager.ClearAllCaches();
+        DirectQuery.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+        DirectQuery.CacheManager.GetLimitedCache().ContainsKey(key).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DirectQuery_CacheManager_DuplicateTryAddCache_ReturnsFalse()
+    {
+        // Arrange
+        Type key = typeof(TestModel);
+        Func<IDataReader, TestModel> del = _ => new TestModel { Id = 1, Name = "A" };
+
+        // Act & Assert
+        DirectQuery.CacheManager.SetUseLimitedCache(false);
+        DirectQuery.CacheManager.ClearAllCaches();
+        DirectQuery.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+        DirectQuery.CacheManager.TryAddCache(key, del).ShouldBeFalse();
+
+        DirectQuery.CacheManager.SetUseLimitedCache(true);
+        DirectQuery.CacheManager.ClearAllCaches();
+        DirectQuery.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+        DirectQuery.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
     }
 }

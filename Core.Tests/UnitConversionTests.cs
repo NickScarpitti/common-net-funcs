@@ -279,7 +279,7 @@ public sealed class UnitConversionTests
     public void FtToIns_NonNullable_ConvertsCorrectly(decimal feet, decimal expectedInches)
     {
         decimal result = feet.FtToIns();
-        Assert.Equal(expectedInches, result);
+        result.ShouldBe(expectedInches);
     }
 
     [Theory]
@@ -289,7 +289,7 @@ public sealed class UnitConversionTests
     public void FtToIns_Nullable_ConvertsCorrectly(double? feet, decimal expectedInches)
     {
         decimal result = ((decimal?)feet).FtToIns();
-        Assert.Equal(expectedInches, result);
+        result.ShouldBe(expectedInches);
     }
 
     [Theory]
@@ -300,7 +300,7 @@ public sealed class UnitConversionTests
     public void BytesToMb_Long_ConvertsCorrectly(long bytes, int decimalPlaces, decimal expectedMb)
     {
         decimal result = bytes.BytesToMb(decimalPlaces);
-        Assert.Equal(expectedMb, result);
+        result.ShouldBe(expectedMb);
     }
 
     [Theory]
@@ -311,7 +311,7 @@ public sealed class UnitConversionTests
     public void MbToBytes_ConvertsCorrectly(decimal mb, long expectedBytes)
     {
         long result = mb.MbToBytes();
-        Assert.Equal(expectedBytes, result);
+        result.ShouldBe(expectedBytes);
     }
 
     [Theory]
@@ -324,7 +324,7 @@ public sealed class UnitConversionTests
         decimal result = bytes.BytesToGb(decimalPlaces);
 
         // Assert
-        Assert.Equal(expectedGb, result);
+        result.ShouldBe(expectedGb);
     }
 
     [Theory]
@@ -335,7 +335,7 @@ public sealed class UnitConversionTests
     public void BytesToGb_Long_ConvertsCorrectly(long bytes, int decimalPlaces, decimal expectedGb)
     {
         decimal result = bytes.BytesToGb(decimalPlaces);
-        Assert.Equal(expectedGb, result);
+        result.ShouldBe(expectedGb);
     }
 
     [Theory]
@@ -346,7 +346,7 @@ public sealed class UnitConversionTests
     public void GbToBytes_ConvertsCorrectly(decimal gb, long expectedBytes)
     {
         long result = gb.GbToBytes();
-        Assert.Equal(expectedBytes, result);
+        result.ShouldBe(expectedBytes);
     }
 
     [Theory]
@@ -357,7 +357,7 @@ public sealed class UnitConversionTests
     public void BytesToTb_Int_ConvertsCorrectly(int bytes, int decimalPlaces, decimal expectedTb)
     {
         decimal result = bytes.BytesToTb(decimalPlaces);
-        Assert.Equal(expectedTb, result);
+        result.ShouldBe(expectedTb);
     }
 
     [Theory]
@@ -368,7 +368,8 @@ public sealed class UnitConversionTests
     public void BytesToTb_Long_ConvertsCorrectly(long bytes, int decimalPlaces, decimal expectedTb)
     {
         decimal result = bytes.BytesToTb(decimalPlaces);
-        Assert.Equal(expectedTb, result);
+
+        result.ShouldBe(expectedTb);
     }
 
     [Theory]
@@ -379,7 +380,7 @@ public sealed class UnitConversionTests
     public void TbToBytes_ConvertsCorrectly(decimal tb, long expectedBytes)
     {
         long result = tb.TbToBytes();
-        Assert.Equal(expectedBytes, result);
+        result.ShouldBe(expectedBytes);
     }
 
     [Theory]
@@ -390,7 +391,7 @@ public sealed class UnitConversionTests
     public void KbToMb_ConvertsCorrectly(decimal kb, int decimalPlaces, decimal expectedMb)
     {
         decimal result = kb.KbToMb(decimalPlaces);
-        Assert.Equal(expectedMb, result);
+        result.ShouldBe(expectedMb);
     }
 
     [Theory]
@@ -401,7 +402,7 @@ public sealed class UnitConversionTests
     public void MbToKb_ConvertsCorrectly(decimal mb, int decimalPlaces, decimal expectedKb)
     {
         decimal result = mb.MbToKb(decimalPlaces);
-        Assert.Equal(expectedKb, result);
+        result.ShouldBe(expectedKb);
     }
 
     [Theory]
@@ -412,7 +413,7 @@ public sealed class UnitConversionTests
     public void KbToGb_ConvertsCorrectly(decimal kb, int decimalPlaces, decimal expectedGb)
     {
         decimal result = kb.KbToGb(decimalPlaces);
-        Assert.Equal(expectedGb, result);
+        result.ShouldBe(expectedGb);
     }
 
     [Theory]
@@ -423,7 +424,7 @@ public sealed class UnitConversionTests
     public void GbToKb_ConvertsCorrectly(decimal gb, int decimalPlaces, decimal expectedKb)
     {
         decimal result = gb.GbToKb(decimalPlaces);
-        Assert.Equal(expectedKb, result);
+        result.ShouldBe(expectedKb);
     }
 
     [Theory]
@@ -434,7 +435,7 @@ public sealed class UnitConversionTests
     public void KbToTb_ConvertsCorrectly(decimal kb, int decimalPlaces, decimal expectedTb)
     {
         decimal result = kb.KbToTb(decimalPlaces);
-        Assert.Equal(expectedTb, result);
+        result.ShouldBe(expectedTb);
     }
 
     [Theory]
@@ -445,7 +446,7 @@ public sealed class UnitConversionTests
     public void TbToKb_ConvertsCorrectly(decimal tb, int decimalPlaces, decimal expectedKb)
     {
         decimal result = tb.TbToKb(decimalPlaces);
-        Assert.Equal(expectedKb, result);
+        result.ShouldBe(expectedKb);
     }
 
     [Theory]
@@ -456,7 +457,7 @@ public sealed class UnitConversionTests
     public void MbToGb_ConvertsCorrectly(decimal mb, int decimalPlaces, decimal expectedGb)
     {
         decimal result = mb.MbToGb(decimalPlaces);
-        Assert.Equal(expectedGb, result);
+        result.ShouldBe(expectedGb);
     }
 
     [Theory]
@@ -467,7 +468,7 @@ public sealed class UnitConversionTests
     public void GbToMb_ConvertsCorrectly(decimal gb, int decimalPlaces, decimal expectedMb)
     {
         decimal result = gb.GbToMb(decimalPlaces);
-        Assert.Equal(expectedMb, result);
+        result.ShouldBe(expectedMb);
     }
 
     [Theory]
@@ -478,7 +479,7 @@ public sealed class UnitConversionTests
     public void MbToTb_ConvertsCorrectly(decimal mb, int decimalPlaces, decimal expectedTb)
     {
         decimal result = mb.MbToTb(decimalPlaces);
-        Assert.Equal(expectedTb, result);
+        result.ShouldBe(expectedTb);
     }
 
     [Theory]
@@ -489,7 +490,7 @@ public sealed class UnitConversionTests
     public void TbToMb_ConvertsCorrectly(decimal tb, int decimalPlaces, decimal expectedMb)
     {
         decimal result = tb.TbToMb(decimalPlaces);
-        Assert.Equal(expectedMb, result);
+        result.ShouldBe(expectedMb);
     }
 
     [Theory]
@@ -500,7 +501,7 @@ public sealed class UnitConversionTests
     public void GbToTb_ConvertsCorrectly(decimal gb, int decimalPlaces, decimal expectedTb)
     {
         decimal result = gb.GbToTb(decimalPlaces);
-        Assert.Equal(expectedTb, result);
+        result.ShouldBe(expectedTb);
     }
 
     [Theory]
@@ -511,7 +512,7 @@ public sealed class UnitConversionTests
     public void TbToGb_ConvertsCorrectly(decimal tb, int decimalPlaces, decimal expectedGb)
     {
         decimal result = tb.TbToGb(decimalPlaces);
-        Assert.Equal(expectedGb, result);
+        result.ShouldBe(expectedGb);
     }
 
     [Theory]
@@ -521,7 +522,7 @@ public sealed class UnitConversionTests
     public void MetersToMiles_Decimal_ConvertsCorrectly(decimal meters, decimal expectedMiles)
     {
         decimal result = meters.MetersToMiles();
-        Assert.Equal(expectedMiles, result, 2);
+        result.ShouldBe(expectedMiles, 0.01m);
     }
 
     [Theory]
@@ -531,7 +532,7 @@ public sealed class UnitConversionTests
     public void MetersToMiles_NullableDecimal_ConvertsCorrectly(double? meters, decimal expectedMiles)
     {
         decimal result = ((decimal?)meters).MetersToMiles();
-        Assert.Equal(expectedMiles, result, 2);
+        result.ShouldBe(expectedMiles, 0.01m);
     }
 
     [Theory]
@@ -541,7 +542,7 @@ public sealed class UnitConversionTests
     public void MetersToMiles_Double_ConvertsCorrectly(double meters, decimal expectedMiles)
     {
         decimal result = meters.MetersToMiles();
-        Assert.Equal(expectedMiles, result, 2);
+        result.ShouldBe(expectedMiles, 0.01m);
     }
 
     [Theory]
@@ -551,7 +552,7 @@ public sealed class UnitConversionTests
     public void MetersToMiles_NullableDouble_ConvertsCorrectly(double? meters, decimal expectedMiles)
     {
         decimal result = meters.MetersToMiles();
-        Assert.Equal(expectedMiles, result, 2);
+        result.ShouldBe(expectedMiles, 0.01m);
     }
 
     [Theory]
@@ -561,7 +562,7 @@ public sealed class UnitConversionTests
     public void MetersToMiles_Int_ConvertsCorrectly(int meters, decimal expectedMiles)
     {
         decimal result = meters.MetersToMiles();
-        Assert.Equal(expectedMiles, result, 2);
+        result.ShouldBe(expectedMiles, 0.01m);
     }
 
     [Theory]
@@ -571,7 +572,7 @@ public sealed class UnitConversionTests
     public void MetersToMiles_NullableInt_ConvertsCorrectly(int? meters, decimal expectedMiles)
     {
         decimal result = meters.MetersToMiles();
-        Assert.Equal(expectedMiles, result, 2);
+        result.ShouldBe(expectedMiles, 0.01m);
     }
 
     [Theory]
@@ -581,7 +582,7 @@ public sealed class UnitConversionTests
     public void MilesToMeters_Decimal_ConvertsCorrectly(decimal miles, decimal expectedMeters)
     {
         decimal result = miles.MilesToMeters();
-        Assert.Equal(expectedMeters, result, 2);
+        result.ShouldBe(expectedMeters, 0.01m);
     }
 
     [Theory]
@@ -591,7 +592,7 @@ public sealed class UnitConversionTests
     public void MilesToMeters_NullableDecimal_ConvertsCorrectly(double? miles, decimal expectedMeters)
     {
         decimal result = ((decimal?)miles).MilesToMeters();
-        Assert.Equal(expectedMeters, result, 2);
+        result.ShouldBe(expectedMeters, 0.01m);
     }
 
     [Theory]
@@ -601,7 +602,7 @@ public sealed class UnitConversionTests
     public void MilesToMeters_Int_ConvertsCorrectly(int miles, decimal expectedMeters)
     {
         decimal result = miles.MilesToMeters();
-        Assert.Equal(expectedMeters, result, 2);
+        result.ShouldBe(expectedMeters, 0.01m);
     }
 
     [Theory]
@@ -611,6 +612,6 @@ public sealed class UnitConversionTests
     public void MilesToMeters_NullableInt_ConvertsCorrectly(int? miles, decimal expectedMeters)
     {
         decimal result = miles.MilesToMeters();
-        Assert.Equal(expectedMeters, result, 2);
+        result.ShouldBe(expectedMeters, 0.01m);
     }
 }

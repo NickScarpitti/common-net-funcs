@@ -857,7 +857,7 @@ public static class Async
     {
         try
         {
-            PropertyInfo[] props = GetOrAddPropertiesFromCache(typeof(T));
+            PropertyInfo[] props = GetOrAddPropertiesFromReflectionCache(typeof(T));
             if (props.Length > 0)
             {
                 PropertyInfo? prop = Array.Find(props, x => x.Name.StrEq(propertyName));
@@ -898,7 +898,7 @@ public static class Async
                 await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            PropertyInfo[] props = GetOrAddPropertiesFromCache(typeof(T));
+            PropertyInfo[] props = GetOrAddPropertiesFromReflectionCache(typeof(T));
             if (props.Length > 0)
             {
                 PropertyInfo? prop = Array.Find(props, x => x.Name.StrEq(propertyName));

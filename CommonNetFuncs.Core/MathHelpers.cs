@@ -143,7 +143,7 @@ public static class MathHelpers
     /// </summary>
     /// <param name="value">Value to get the precision of</param>
     /// <returns>The number of decimal places of the given double value</returns>
-    public static int GetPrecision(this decimal value, string? decimalSeparator = null)
+    public static int GetPrecision(this decimal value)
     {
         int[] bits = decimal.GetBits(value);
         return (bits[3] >> 16) & 0xFF;

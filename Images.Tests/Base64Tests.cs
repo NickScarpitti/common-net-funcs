@@ -88,7 +88,7 @@ public sealed class Base64Tests : IDisposable
     public void ConvertImageFileToBase64_WithMemoryStream_ReturnsBase64String()
     {
         // Arrange
-        using MemoryStream ms = new MemoryStream(File.ReadAllBytes(_testImagePath));
+        using MemoryStream ms = new(File.ReadAllBytes(_testImagePath));
 
         // Act
         string? result = ms.ConvertImageFileToBase64();
@@ -105,7 +105,7 @@ public sealed class Base64Tests : IDisposable
     public void ConvertImageFileToBase64_WithEmptyMemoryStream_ReturnsNull()
     {
         // Arrange
-        using MemoryStream ms = new MemoryStream();
+        using MemoryStream ms = new();
 
         // Act
         string? result = ms.ConvertImageFileToBase64();
@@ -163,7 +163,7 @@ public sealed class Base64Tests : IDisposable
     public void ImageSaveToFile_WithInvalidBase64_ReturnsFalse()
     {
         // Arrange
-        string invalidBase64 = "invalid base64 string";
+        const string invalidBase64 = "invalid base64 string";
 
         // Act
         bool result = invalidBase64.ImageSaveToFile(_tempSavePath);

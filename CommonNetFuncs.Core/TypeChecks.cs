@@ -1,10 +1,44 @@
 ﻿using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 
 namespace CommonNetFuncs.Core;
 
 public static class TypeChecks
 {
+    private static readonly ConcurrentDictionary<Type, bool> SimpleTypeCache = new();
+    private static readonly ConcurrentDictionary<Type, bool> ReadOnlyCollectionTypeCache = new();
+    private static readonly ConcurrentDictionary<Type, bool> NumericTypeCache = new();
+    private static readonly ConcurrentDictionary<Type, bool> EnumerableTypeCache = new();
+
+    public static void ClearTypeCheckCaches()
+    {
+        SimpleTypeCache.Clear();
+        ReadOnlyCollectionTypeCache.Clear();
+        NumericTypeCache.Clear();
+        EnumerableTypeCache.Clear();
+    }
+
+    public static void ClearSimpleTypeCache()
+    {
+        SimpleTypeCache.Clear();
+    }
+
+    public static void ClearReadOnlyCollectionTypeCache()
+    {
+        ReadOnlyCollectionTypeCache.Clear();
+    }
+
+    public static void ClearNumericTypeCache()
+    {
+        NumericTypeCache.Clear();
+    }
+
+    public static void ClearEnumerableTypeCache()
+    {
+        EnumerableTypeCache.Clear();
+    }
+
     /// <summary>
     /// Checks to see if a type is a delegate
     /// </summary>
@@ -42,7 +76,7 @@ public static class TypeChecks
     /// <returns>True if type parameter implements IEnumerable and is not a string</returns>
     public static bool IsEnumerable(this Type type)
     {
-        return typeof(IEnumerable).IsAssignableFrom(type) && type != typeof(string);
+        return EnumerableTypeCache.GetOrAdd(type, t => typeof(IEnumerable).IsAssignableFrom(t) && t != typeof(string));
     }
 
     /// <summary>
@@ -77,12 +111,19 @@ public static class TypeChecks
             return false;
         }
 
-        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        return NumericTypeCache.GetOrAdd(type, x =>
         {
-            type = Nullable.GetUnderlyingType(type);
-        }
-        return Type.GetTypeCode(type) is TypeCode.Int32 or TypeCode.Int64 or TypeCode.Double or TypeCode.Decimal or TypeCode.Int16 or TypeCode.Byte or TypeCode.SByte or
-            TypeCode.UInt16 or TypeCode.UInt32 or TypeCode.UInt64 or TypeCode.Single;
+            if (x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                Type? underlyingType = Nullable.GetUnderlyingType(x);
+                if (underlyingType != null)
+                {
+                    x = underlyingType;
+                }
+            }
+            return Type.GetTypeCode(x) is TypeCode.Int32 or TypeCode.Int64 or TypeCode.Double or TypeCode.Decimal or TypeCode.Int16 or TypeCode.Byte or TypeCode.SByte or
+                TypeCode.UInt16 or TypeCode.UInt32 or TypeCode.UInt64 or TypeCode.Single;
+        });
     }
 
     /// <summary>
@@ -92,15 +133,28 @@ public static class TypeChecks
     /// <returns>
     /// <para>True if type is:</para> <para>Primitive, Enum, String, Decimal, DateTime, DateTimeOffset, TimeSpan, Guid</para>
     /// </returns>
+    //public static bool IsSimpleType(this Type type)
+    //{
+    //    return type.IsPrimitive || type.IsEnum
+    //        || type == typeof(string)
+    //        || type == typeof(decimal)
+    //        || type == typeof(DateTime)
+    //        || type == typeof(DateTimeOffset)
+    //        || type == typeof(TimeSpan)
+    //        || type == typeof(Guid);
+    //}
+
     public static bool IsSimpleType(this Type type)
     {
-        return type.IsPrimitive || type.IsEnum
-            || type == typeof(string)
-            || type == typeof(decimal)
-            || type == typeof(DateTime)
-            || type == typeof(DateTimeOffset)
-            || type == typeof(TimeSpan)
-            || type == typeof(Guid);
+        return SimpleTypeCache.GetOrAdd(type, x => x.IsPrimitive ||
+            x.IsEnum ||
+            x == typeof(string) ||
+            x == typeof(decimal) ||
+            x == typeof(DateTime) ||
+            x == typeof(DateTimeOffset) ||
+            x == typeof(TimeSpan) ||
+            x == typeof(Guid) ||
+            (x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Nullable<>) && IsSimpleType(x.GetGenericArguments()[0])));
     }
 
     // Duplicated in CommonNetFuncs.FastMap.FastMapper to remove dependency
@@ -162,47 +216,50 @@ public static class TypeChecks
         //});
 
         // Direct generic type checks
-        if (type.IsGenericType)
+        return ReadOnlyCollectionTypeCache.GetOrAdd(type, x =>
         {
-            Type genericType = type.GetGenericTypeDefinition();
-            if (genericType == typeof(IReadOnlyCollection<>) ||
-                genericType == typeof(IReadOnlyList<>) ||
-                genericType == typeof(ReadOnlyCollection<>))
+            if (x.IsGenericType)
             {
-                return true;
-            }
-            // Exclude List<> and Dictionary<,>
-            if (genericType == typeof(List<>) || genericType == typeof(Dictionary<,>))
-            {
-                return false;
-            }
-        }
-
-        // Exclude arrays
-        if (type.IsArray)
-        {
-            return false;
-        }
-
-        // Check for ReadOnlyDictionary<,>
-        if (type.IsGenericType && type.GetGenericTypeDefinition().FullName?.StartsWith("System.Collections.ObjectModel.ReadOnlyDictionary`2") == true)
-        {
-            return true;
-        }
-
-        // Check all interfaces for IReadOnlyCollection<> or IReadOnlyList<>
-        foreach (Type interfaceType in type.GetInterfaces())
-        {
-            if (interfaceType.IsGenericType)
-            {
-                Type genericInterfaceType = interfaceType.GetGenericTypeDefinition();
-                if (genericInterfaceType == typeof(IReadOnlyCollection<>) ||
-                    genericInterfaceType == typeof(IReadOnlyList<>))
+                Type genericType = x.GetGenericTypeDefinition();
+                if (genericType == typeof(IReadOnlyCollection<>) ||
+                    genericType == typeof(IReadOnlyList<>) ||
+                    genericType == typeof(ReadOnlyCollection<>))
                 {
                     return true;
                 }
+                // Exclude List<> and Dictionary<,>
+                if (genericType == typeof(List<>) || genericType == typeof(Dictionary<,>))
+                {
+                    return false;
+                }
             }
-        }
-        return false;
+
+            // Exclude arrays
+            if (x.IsArray)
+            {
+                return false;
+            }
+
+            // Check for ReadOnlyDictionary<,>
+            if (x.IsGenericType && x.GetGenericTypeDefinition().FullName?.StartsWith("System.Collections.ObjectModel.ReadOnlyDictionary`2") == true)
+            {
+                return true;
+            }
+
+            // Check all interfaces for IReadOnlyCollection<> or IReadOnlyList<>
+            foreach (Type interfaceType in x.GetInterfaces())
+            {
+                if (interfaceType.IsGenericType)
+                {
+                    Type genericInterfaceType = interfaceType.GetGenericTypeDefinition();
+                    if (genericInterfaceType == typeof(IReadOnlyCollection<>) ||
+                        genericInterfaceType == typeof(IReadOnlyList<>))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
     }
 }

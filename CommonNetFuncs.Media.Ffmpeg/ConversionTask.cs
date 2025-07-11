@@ -29,10 +29,10 @@ public static class ConversionTask
     /// </summary>
     /// <param name="fileToConvert">Full file path and file name of the file to be converted</param>
     /// <param name="outputFileName">Name of the output file</param>
-    /// <param name="workingPath">Directory for conversion to put temporary files</param>
     /// <param name="codec">Codec to convert to</param>
     /// <param name="outputFormat">Format to convert to</param>
     /// <param name="conversionPreset">Ffmpeg encoding preset to use</param>
+    /// <param name="workingPath">Directory for conversion to put temporary files</param>
     /// <param name="conversionIndex">Optional: Index of this task. Used to distinguish between multiple tasks. Defaults to 0 if null</param>
     /// <param name="fpsDict">Optional: Dictionary used to display total conversion FPS. Can be used to sum total FPS between multiple simultaneous conversion tasks. If null, will only show FPS for current conversion</param>
     /// <param name="mediaInfo">Optional: MediaInfo object for the file being converted. Used when MediaInfo has already been retrieved to prevent extra processing. Will be populated if left null.</param>
@@ -62,8 +62,8 @@ public static class ConversionTask
     /// </summary>
     /// <param name="fileToConvert">Full file path and file name of the file to be converted</param>
     /// <param name="outputFileName">Name of the output file</param>
-    /// <param name="workingPath">Directory for conversion to put temporary files</param>
     /// <param name="ffmpegCommand">Command to execute in ffmpeg. Input parameter should not be included in this command.</param>
+    /// <param name="workingPath">Directory for conversion to put temporary files</param>
     /// <param name="conversionIndex">Optional: Index of this task. Used to distinguish between multiple tasks. Defaults to 0 if null</param>
     /// <param name="fpsDict">Optional: Dictionary used to display total conversion FPS. Can be used to sum total FPS between multiple simultaneous conversion tasks. If null, will only show FPS for current conversion</param>
     /// <param name="mediaInfo">Optional: MediaInfo object for the file being converted. Used when MediaInfo has already been retrieved to prevent extra processing. Will be populated if left null.</param>

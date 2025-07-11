@@ -1,9 +1,9 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using CommonNetFuncs.Core;
 using FastExpressionCompiler;
 using static CommonNetFuncs.Core.ExceptionLocation;
 
@@ -221,19 +221,50 @@ public static class DirectQuery
     }
 
     // Cache for compiled mapping delegates
-    private static readonly ConcurrentDictionary<Type, Delegate> _mappingCache = new();
+
+    #region Caching
+
+    private static readonly CacheManager<Type, Delegate> MappingCache = new();
+
+    public static ICacheManagerApi<Type, Delegate> CacheManager => MappingCache;
+
+    /// <summary>
+    /// Clears LimitedMappingCache cache and sets the size to the specified value.
+    /// </summary>
+    private static Delegate GetOrAddPropertiesFromMappingCache<T>(Type key) where T : class, new()
+    {
+        bool isLimitedCache = CacheManager.IsUsingLimitedCache();
+        if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Delegate? function) :
+            CacheManager.GetCache().TryGetValue(key, out function))
+        {
+            return function!;
+        }
+
+        function = CreateMapperDelegate<T>(key);
+        if (isLimitedCache)
+        {
+            CacheManager.TryAddLimitedCache(key, function);
+        }
+        else
+        {
+            CacheManager.TryAddCache(key, function);
+        }
+        return function;
+    }
+
+    #endregion
 
     // Creates a mapping delegate for a type and caches it
-    private static Func<IDataReader, T> CreateMapperDelegate<T>() where T : class, new()
+    private static Func<IDataReader, T> GetOrCreateMapperDelegate<T>(bool useCache) where T : class, new()
     {
         Type type = typeof(T);
 
-        // Return from cache if exists
-        if (_mappingCache.TryGetValue(type, out Delegate? existing))
-        {
-            return (Func<IDataReader, T>)existing;
-        }
+        return useCache ? (Func<IDataReader, T>)GetOrAddPropertiesFromMappingCache<T>(type) :
+            CreateMapperDelegate<T>(type);
+    }
 
+    private static Func<IDataReader, T> CreateMapperDelegate<T>(Type type) where T : class, new()
+    {
         // Parameter expressions
         ParameterExpression readerParam = Expression.Parameter(typeof(IDataReader), "reader");
         MethodInfo getValueMethod = typeof(IDataRecord).GetMethod("GetValue")!;
@@ -285,12 +316,7 @@ public static class DirectQuery
 
         // Create and compile lambda
         Expression<Func<IDataReader, T>> lambda = Expression.Lambda<Func<IDataReader, T>>(memberInit, readerParam);
-        Func<IDataReader, T> compiled = lambda.CompileFast();
-
-        // Cache the delegate
-        _mappingCache.TryAdd(type, compiled);
-
-        return compiled;
+        return lambda.CompileFast();
     }
 
     /// <summary>
@@ -301,7 +327,7 @@ public static class DirectQuery
     /// <param name="commandTimeoutSeconds">Optional: Command execution timeout in seconds</param>
     /// <param name="cancellationToken">Optional: Token to monitor for cancellation requests</param>
     /// <returns></returns>
-    public static IEnumerable<T> GetDataStreamSynchronous<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default) where T : class, new()
+    public static IEnumerable<T> GetDataStreamSynchronous<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, bool useCache = true, CancellationToken cancellationToken = default) where T : class, new()
     {
         DbDataReader? reader = null;
         try
@@ -309,7 +335,7 @@ public static class DirectQuery
             cmd.CommandTimeout = commandTimeoutSeconds;
             conn.Open();
             reader = cmd.ExecuteReader();
-            Func<IDataReader, T> mapper = CreateMapperDelegate<T>();
+            Func<IDataReader, T> mapper = GetOrCreateMapperDelegate<T>(useCache);
 
             foreach (T item in EnumerateReaderSynchronous(reader, mapper, cancellationToken))
             {
@@ -323,7 +349,7 @@ public static class DirectQuery
         }
     }
 
-    public static async IAsyncEnumerable<T> GetDataStreamAsync<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
+    public static async IAsyncEnumerable<T> GetDataStreamAsync<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, bool useCache = true, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
         try
         {
@@ -331,7 +357,7 @@ public static class DirectQuery
             await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using DbDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
-            Func<IDataReader, T> mapper = CreateMapperDelegate<T>();
+            Func<IDataReader, T> mapper = GetOrCreateMapperDelegate<T>(useCache);
 
             IAsyncEnumerator<T> enumeratedReader = EnumerateReader(reader, mapper, cancellationToken).GetAsyncEnumerator(cancellationToken);
             while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
@@ -352,7 +378,7 @@ public static class DirectQuery
         }
     }
 
-    public static async Task<IEnumerable<T>> GetDataDirectAsync<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default) where T : class, new()
+    public static async Task<IEnumerable<T>> GetDataDirectAsync<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, bool useCache = true, CancellationToken cancellationToken = default) where T : class, new()
     {
         List<T> values = [];
         for (int i = 0; i < maxRetry; i++)
@@ -363,7 +389,7 @@ public static class DirectQuery
                 await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
                 await using DbDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
-                Func<IDataReader, T> mapper = CreateMapperDelegate<T>();
+                Func<IDataReader, T> mapper = GetOrCreateMapperDelegate<T>(useCache);
                 while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                 {
                     try

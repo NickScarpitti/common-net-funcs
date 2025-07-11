@@ -19,7 +19,7 @@ public static class Validation
         if (!Validator.TryValidateObject(obj, context, validationResults, validateAll))
         {
             HashSet<string> propertiesToSetToDefault = new(validationResults.SelectMany(x => x.MemberNames));
-            foreach (PropertyInfo prop in GetOrAddPropertiesFromCache(typeof(T)).Where(x => propertiesToSetToDefault.Contains(x.Name)))
+            foreach (PropertyInfo prop in GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => propertiesToSetToDefault.Contains(x.Name)))
             {
                 prop.SetValue(obj, default);
             }

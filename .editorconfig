@@ -291,6 +291,12 @@ dotnet_diagnostic.xUnit1044.severity = silent
 # CRR1000: The name does not correspond to naming conventions
 dotnet_diagnostic.CRR1000.severity = silent
 
+# RCS1124: Inline local variable
+dotnet_diagnostic.RCS1124.severity = silent
+
+# IDE0230: Use UTF-8 string literal
+dotnet_diagnostic.IDE0230.severity = silent
+
 [*.vb]
 # Modifier preferences
 visual_basic_preferred_modifier_order = Partial,Default,Private,Protected,Public,Friend,NotOverridable,Overridable,MustOverride,Overloads,Overrides,MustInherit,NotInheritable,Static,Shared,Shadows,ReadOnly,WriteOnly,Dim,Const,WithEvents,Widening,Narrowing,Custom,Async:suggestion

@@ -4,8 +4,35 @@ using CommonNetFuncs.FastMap;
 
 namespace FastMap.Tests;
 
-public sealed class FastMapperTests
+public sealed class FastMapperTests : IDisposable
 {
+    private bool disposed;
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                FastMapper.CacheManager.SetUseLimitedCache(true);
+                FastMapper.CacheManager.SetLimitedCacheSize(100);
+                FastMapper.CacheManager.ClearAllCaches();
+            }
+            disposed = true;
+        }
+    }
+
+    ~FastMapperTests()
+    {
+        Dispose(false);
+    }
+
     public sealed class SimpleSource
     {
         public required string StringProp { get; set; }
@@ -464,7 +491,7 @@ public sealed class FastMapperTests
         Dictionary<int, string> source = new() { [1] = "test" };
 
         // Act & Assert
-        Should.Throw<InvalidOperationException>(source.FastMap<Dictionary<int, string>, List<string>>)
+        Should.Throw<InvalidOperationException>(() => source.FastMap<Dictionary<int, string>, List<string>>())
             .Message.ShouldBe("Both source and destination must be a dictionary in order to be mapped");
     }
 
@@ -475,7 +502,112 @@ public sealed class FastMapperTests
         Dictionary<int, string> source = new() { [1] = "test" };
 
         // Act & Assert
-        Should.Throw<InvalidOperationException>(source.FastMap<Dictionary<int, string>, Dictionary<string, string>>)
+        Should.Throw<InvalidOperationException>(() => source.FastMap<Dictionary<int, string>, Dictionary<string, string>>())
             .Message.ShouldBe("Source and destination dictionary key types must match.");
+    }
+
+    [Theory]
+    [InlineData(5)]
+    [InlineData(1)]
+    public void FastMapper_CacheManager_SetAndGetLimitedCacheSize_Works(int size)
+    {
+        // Act
+        FastMapper.CacheManager.SetLimitedCacheSize(size);
+
+        // Assert
+        FastMapper.CacheManager.GetLimitedCacheSize().ShouldBe(size);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void FastMapper_CacheManager_SetAndGetUseLimitedCache_Works(bool useLimited)
+    {
+        // Act
+        FastMapper.CacheManager.SetUseLimitedCache(useLimited);
+
+        // Assert
+        FastMapper.CacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
+    }
+
+    [Fact]
+    public void FastMapper_CacheManager_ClearAllCaches_RemovesAllEntries()
+    {
+        // Arrange
+        FastMapper.CacheManager.SetUseLimitedCache(false);
+        SimpleSource source = new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now };
+        source.FastMap<SimpleSource, SimpleDestination>(useCache: true);
+        FastMapper.CacheManager.GetCache().Count.ShouldBeGreaterThan(0);
+
+        // Act
+        FastMapper.CacheManager.ClearAllCaches();
+
+        // Assert
+        FastMapper.CacheManager.GetCache().Count.ShouldBe(0);
+        FastMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void FastMapper_CacheManager_GetCacheAndLimitedCache_Work(bool useLimited)
+    {
+        // Arrange
+        FastMapper.CacheManager.SetUseLimitedCache(useLimited);
+        FastMapper.CacheManager.SetLimitedCacheSize(10);
+        SimpleSource source = new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now };
+
+        // Act
+        source.FastMap<SimpleSource, SimpleDestination>(useCache: true);
+
+        // Assert
+        if (useLimited)
+        {
+            FastMapper.CacheManager.GetLimitedCache().Count.ShouldBe(1);
+            FastMapper.CacheManager.GetCache().Count.ShouldBe(0);
+        }
+        else
+        {
+            FastMapper.CacheManager.GetCache().Count.ShouldBe(1);
+            FastMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
+        }
+    }
+
+    [Fact]
+    public void FastMapper_CacheManager_TryAddCacheAndTryAddLimitedCache_Works()
+    {
+        // Arrange
+        FastMapper.MapperCacheKey key = new(typeof(SimpleSource), typeof(SimpleDestination));
+        Func<SimpleSource, SimpleDestination> del = (_ => new SimpleDestination { StringProp = "X", IntProp = 2, DateProp = DateTime.Now });
+
+        // Act
+        FastMapper.CacheManager.SetUseLimitedCache(false);
+        FastMapper.CacheManager.ClearAllCaches();
+        FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+        FastMapper.CacheManager.GetCache().ContainsKey(key).ShouldBeTrue();
+
+        FastMapper.CacheManager.SetUseLimitedCache(true);
+        FastMapper.CacheManager.ClearAllCaches();
+        FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+        FastMapper.CacheManager.GetLimitedCache().ContainsKey(key).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FastMapper_CacheManager_DuplicateTryAddCache_ReturnsFalse()
+    {
+        // Arrange
+        FastMapper.MapperCacheKey key = new(typeof(SimpleSource), typeof(SimpleDestination));
+        Func<SimpleSource, SimpleDestination> del = _ => new SimpleDestination { StringProp = "X", IntProp = 2, DateProp = DateTime.Now };
+
+        // Act
+        FastMapper.CacheManager.SetUseLimitedCache(false);
+        FastMapper.CacheManager.ClearAllCaches();
+        FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+        FastMapper.CacheManager.TryAddCache(key, del).ShouldBeFalse();
+
+        FastMapper.CacheManager.SetUseLimitedCache(true);
+        FastMapper.CacheManager.ClearAllCaches();
+        FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+        FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
     }
 }

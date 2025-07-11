@@ -1,7 +1,9 @@
 ﻿using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using NPOI.HSSF.UserModel;
 using NPOI.HSSF.Util;
@@ -20,8 +22,16 @@ using static System.Math;
 
 namespace CommonNetFuncs.Excel.Npoi;
 
-public sealed class NpoiBorderStyles()
+public sealed class NpoiBorderStyles
 {
+    public NpoiBorderStyles(ICellStyle? cellStyle = null)
+    {
+        if (cellStyle != null)
+        {
+            ExtractBorderStyles(cellStyle);
+        }
+    }
+
     public BorderStyle? BorderTop { get; set; }
 
     public BorderStyle? BorderLeft { get; set; }
@@ -37,6 +47,159 @@ public sealed class NpoiBorderStyles()
     public short? BorderRightColor { get; set; }
 
     public short? BorderBottomColor { get; set; }
+
+    public void ExtractBorderStyles(ICellStyle cellStyle)
+    {
+        BorderTop = cellStyle.BorderTop;
+        BorderLeft = cellStyle.BorderLeft;
+        BorderRight = cellStyle.BorderRight;
+        BorderBottom = cellStyle.BorderBottom;
+
+        BorderTopColor = cellStyle.TopBorderColor;
+        BorderLeftColor = cellStyle.LeftBorderColor;
+        BorderRightColor = cellStyle.RightBorderColor;
+        BorderBottomColor = cellStyle.BottomBorderColor;
+    }
+}
+
+public sealed class CellStyle : ICellStyle
+{
+    public bool ShrinkToFit { get; set; }
+
+    public short Index { get; }
+
+    public short DataFormat { get; set; }
+
+    public short FontIndex { get; private set; }
+
+    public bool IsHidden { get; set; }
+
+    public bool IsLocked { get; set; }
+
+    public bool IsQuotePrefixed { get; set; }
+
+    public HorizontalAlignment Alignment { get; set; }
+
+    public bool WrapText { get; set; }
+
+    public VerticalAlignment VerticalAlignment { get; set; }
+
+    public short Rotation { get; set; }
+
+    public short Indention { get; set; }
+
+    public BorderStyle BorderLeft { get; set; }
+
+    public BorderStyle BorderRight { get; set; }
+
+    public BorderStyle BorderTop { get; set; }
+
+    public BorderStyle BorderBottom { get; set; }
+
+    public short LeftBorderColor { get; set; }
+
+    public short RightBorderColor { get; set; }
+
+    public short TopBorderColor { get; set; }
+
+    public short BottomBorderColor { get; set; }
+
+    public FillPattern FillPattern { get; set; }
+
+    public short FillBackgroundColor { get; set; }
+
+    public short FillForegroundColor { get; set; }
+
+    public short BorderDiagonalColor { get; set; }
+
+    public BorderStyle BorderDiagonalLineStyle { get; set; }
+
+    public BorderDiagonal BorderDiagonal { get; set; }
+
+    public IColor? FillBackgroundColorColor { get; }
+
+    public IColor? FillForegroundColorColor { get; }
+
+    public ReadingOrder ReadingOrder { get; set; }
+
+    public string? HexColor { get; set; }
+
+    public short? HssfColor { get; set; }
+
+    public void CloneStyleFrom(ICellStyle source)
+    {
+        source.CopyPropertiesTo(this);
+    }
+
+    public string GetDataFormatString()
+    {
+        throw new NotImplementedException();
+    }
+
+    public IFont GetFont(IWorkbook parentWorkbook)
+    {
+        return parentWorkbook.GetFontAt(FontIndex);
+    }
+
+    public void SetFont(IFont font)
+    {
+        FontIndex = font.Index;
+    }
+}
+
+public sealed class CellFont : IFont
+{
+    public string FontName { get; set; } = string.Empty;
+
+    public double FontHeight { get; set; }
+
+    public double FontHeightInPoints { get; set; }
+
+    public bool IsItalic { get; set; }
+
+    public bool IsStrikeout { get; set; }
+
+    public short Color { get; set; }
+
+    public FontSuperScript TypeOffset { get; set; }
+
+    public FontUnderlineType Underline { get; set; }
+
+    public short Charset { get; set; }
+
+    public short Index { get; }
+
+    public short Boldweight { get; set; }
+
+    public bool IsBold { get; set; }
+
+    public void CloneStyleFrom(IFont src)
+    {
+        src.CopyPropertiesTo(this);
+    }
+
+    public void CopyProperties(IFont dest)
+    {
+        dest.FontName = FontName;
+        if (FontHeight != default)
+        {
+            dest.FontHeight = FontHeight;
+        }
+        else
+        {
+            dest.FontHeightInPoints = FontHeightInPoints;
+        }
+        dest.IsItalic = IsItalic;
+        dest.IsStrikeout = IsStrikeout;
+        dest.Color = Color;
+        dest.TypeOffset = TypeOffset;
+        dest.Underline = Underline;
+        dest.Charset = Charset;
+        #pragma warning disable CS0618 // Type or member is obsolete
+        dest.Boldweight = Boldweight;
+        #pragma warning restore CS0618 // Type or member is obsolete
+        dest.IsBold = IsBold;
+    }
 }
 
 /// <summary>
@@ -48,6 +211,170 @@ public static partial class Common
     private static partial Regex HexColorRegex();
 
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+    // Cache: one dictionary per workbook, automatically cleaned up
+    private static readonly ConditionalWeakTable<IWorkbook, Dictionary<string, ICellStyle>> StyleCacheTable = new();
+
+    private static Dictionary<string, ICellStyle> GetStyleCache(IWorkbook wb)
+    {
+        return StyleCacheTable.GetOrCreateValue(wb);
+    }
+
+    private static ICellStyle GetOrCreateStyle(this IWorkbook wb, CellStyle style, int cachedColorLimit = 100)
+    {
+        Dictionary<string, ICellStyle> cache = GetStyleCache(wb);
+        string key = GetStyleKey(style);
+        if (cache.TryGetValue(key, out ICellStyle? cachedStyle))
+        {
+            return cachedStyle; // Return existing style
+        }
+        ICellStyle newCellStyle = wb.CreateCellStyle();
+        cache[key] = newCellStyle;
+        style.CopyPropertiesTo(newCellStyle);
+
+        if (style.HexColor != null)
+        {
+            if (wb.IsXlsx())
+            {
+                Regex regex = HexColorRegex();
+                if ((style.HexColor?.Length == 7) && regex.IsMatch(style.HexColor))
+                {
+                    byte[] rgb = [ToByte(style.HexColor.Substring(1, 2), 16), ToByte(style.HexColor.Substring(3, 2), 16), ToByte(style.HexColor.Substring(5, 2), 16)];
+                    ((XSSFCellStyle)newCellStyle).SetFillForegroundColor(new XSSFColor(new Rgb24(rgb[0], rgb[1], rgb[2])));
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid hex color format. Expected format: #RRGGBB");
+                }
+            }
+            else
+            {
+                HSSFColor hexHssfColor = GetClosestHssfColor(style.HexColor, cachedColorLimit);
+                if (hexHssfColor != null)
+                {
+                    newCellStyle.FillForegroundColor = hexHssfColor.Indexed;
+                }
+            }
+        }
+        else if (style.HssfColor != null)
+        {
+            newCellStyle.FillForegroundColor = (short)style.HssfColor;
+        }
+
+        return newCellStyle;
+    }
+
+    private static readonly ConditionalWeakTable<IWorkbook, Dictionary<string, IFont>> FontCacheTable = new();
+
+    private static Dictionary<string, IFont> GetFontCache(IWorkbook wb)
+    {
+        return FontCacheTable.GetOrCreateValue(wb);
+    }
+
+    private static IFont GetOrCreateFont(this IWorkbook wb, CellFont font)
+    {
+        Dictionary<string, IFont> cache = GetFontCache(wb);
+        string key = GetFontKey(font);
+        if (cache.TryGetValue(key, out IFont? cachedFont))
+        {
+            return cachedFont; // Return existing font
+        }
+        IFont newFont = wb.CreateFont();
+        cache[key] = newFont;
+        font.CopyProperties(newFont);
+        return newFont;
+    }
+
+    private static string GetStyleKey(CellStyle style)
+    {
+        // Build a unique key based on all relevant properties
+        StringBuilder stringBuilder = new();
+        stringBuilder.Append(style.Alignment);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.BorderBottom);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.BorderDiagonal);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.BorderDiagonalColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.BorderDiagonalLineStyle);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.BorderLeft);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.BorderRight);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.BorderTop);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.BottomBorderColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.DataFormat);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.FillBackgroundColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.FillBackgroundColorColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.FillForegroundColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.FillForegroundColorColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.FillPattern);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.FontIndex);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.HexColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.HssfColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.Indention);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.IsHidden);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.IsLocked);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.IsQuotePrefixed);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.LeftBorderColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.ReadingOrder);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.RightBorderColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.Rotation);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.ShrinkToFit);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.TopBorderColor);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.VerticalAlignment);
+        stringBuilder.Append('|');
+        stringBuilder.Append(style.WrapText);
+        return stringBuilder.ToString();
+    }
+
+    private static string GetFontKey(CellFont font)
+    {
+        StringBuilder stringBuilder = new();
+        stringBuilder.Append(font.Charset);
+        stringBuilder.Append('|');
+        stringBuilder.Append(font.Color);
+        stringBuilder.Append('|');
+        stringBuilder.Append(font.FontHeight);
+        stringBuilder.Append('|');
+        stringBuilder.Append(font.FontHeightInPoints);
+        stringBuilder.Append('|');
+        stringBuilder.Append(font.FontName);
+        stringBuilder.Append('|');
+        stringBuilder.Append(font.IsBold);
+        stringBuilder.Append('|');
+        stringBuilder.Append(font.IsItalic);
+        stringBuilder.Append('|');
+        stringBuilder.Append(font.IsStrikeout);
+        stringBuilder.Append('|');
+        stringBuilder.Append(font.TypeOffset);
+        stringBuilder.Append('|');
+        stringBuilder.Append(font.Underline);
+        return stringBuilder.ToString();
+    }
 
     /// <summary>
     /// Checks if cell is empty
@@ -347,26 +674,17 @@ public static partial class Common
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null, FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null)
+    private static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, string? hexColor = null, short? hssfColor = null, IFont? font = null, HorizontalAlignment? alignment = null,
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100)
     {
-        ICellStyle cellStyle;
+        //ICellStyle cellStyle;
+        CellStyle cellStyle = new();
         if (wb.IsXlsx())
         {
-            XSSFCellStyle xssfStyle = (XSSFCellStyle)wb.CreateCellStyle();
-            if (alignment != null)
-            {
-                xssfStyle.Alignment = (HorizontalAlignment)alignment;
-            }
+            //ICellStyle xssfStyle = (XSSFCellStyle)wb.CreateCellStyle();
+            //CellStyle cellStyle = new();
 
-            if (fillPattern != null)
-            {
-                xssfStyle.FillPattern = (FillPattern)fillPattern;
-            }
-            if (font != null)
-            {
-                xssfStyle.SetFont(font);
-            }
-            cellStyle = xssfStyle;
+            //cellStyle = (CellStyle)xssfStyle;
 
             if (borderStyles != null)
             {
@@ -409,25 +727,65 @@ public static partial class Common
         }
         else
         {
-            HSSFCellStyle hssfStyle = (HSSFCellStyle)wb.CreateCellStyle();
-            if (alignment != null)
-            {
-                hssfStyle.Alignment = (HorizontalAlignment)alignment;
-            }
+            //ICellStyle hssfStyle = (HSSFCellStyle)wb.CreateCellStyle();
+            //if (alignment != null)
+            //{
+            //    cellStyle.Alignment = (HorizontalAlignment)alignment;
+            //}
 
-            if (fillPattern != null)
-            {
-                hssfStyle.FillPattern = (FillPattern)fillPattern;
-            }
-            if (font != null)
-            {
-                hssfStyle.SetFont(font);
-            }
-            cellStyle = hssfStyle;
+            //if (fillPattern != null)
+            //{
+            //    cellStyle.FillPattern = (FillPattern)fillPattern;
+            //}
+            //if (font != null)
+            //{
+            //    cellStyle.SetFont(font);
+            //}
+
+            //cellStyle = (CellStyle)hssfStyle;
+        }
+
+        if (alignment != null)
+        {
+            cellStyle.Alignment = (HorizontalAlignment)alignment;
+        }
+
+        if (fillPattern != null)
+        {
+            cellStyle.FillPattern = (FillPattern)fillPattern;
+        }
+
+        if (font != null)
+        {
+            cellStyle.SetFont(font);
+        }
+
+        if (hssfColor != null)
+        {
+            cellStyle.HssfColor = hssfColor;
+        }
+
+        if (hexColor != null)
+        {
+            cellStyle.HexColor = hexColor;
         }
 
         cellStyle.IsLocked = cellLocked;
-        return cellStyle;
+
+        return wb.GetOrCreateStyle(cellStyle, cachedColorLimit);
+    }
+
+    /// <summary>
+    /// Get cell style based on enum EStyle options
+    /// </summary>
+    /// <param name="wb">Workbook the style will be used in</param>
+    /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
+    /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
+    /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
+    /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
+    public static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null, FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null)
+    {
+        return GetCustomStyle(wb, cellLocked, null, null, font, alignment, fillPattern, borderStyles);
     }
 
     /// <summary>
@@ -442,30 +800,7 @@ public static partial class Common
     public static ICellStyle GetCustomStyle(this IWorkbook wb, string hexColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
         FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100)
     {
-        ICellStyle cellStyle = wb.GetCustomStyle(cellLocked, font, alignment, fillPattern, borderStyles);
-        if (wb.IsXlsx())
-        {
-            Regex regex = HexColorRegex();
-            if ((hexColor?.Length == 7) && regex.IsMatch(hexColor))
-            {
-                byte[] rgb = [ToByte(hexColor.Substring(1, 2), 16), ToByte(hexColor.Substring(3, 2), 16), ToByte(hexColor.Substring(5, 2), 16)];
-                ((XSSFCellStyle)cellStyle).SetFillForegroundColor(new XSSFColor(new Rgb24(rgb[0], rgb[1], rgb[2])));
-            }
-        }
-        else
-        {
-            if (hexColor != null)
-            {
-                HSSFColor hssfColor = GetClosestHssfColor(hexColor, cachedColorLimit);
-                if (hssfColor != null)
-                {
-                    ((HSSFCellStyle)cellStyle).FillForegroundColor = hssfColor.Indexed;
-                }
-            }
-        }
-
-        cellStyle.IsLocked = cellLocked;
-        return cellStyle;
+        return wb.GetCustomStyle(cellLocked, hexColor, null, font, alignment, fillPattern, borderStyles, cachedColorLimit);
     }
 
     /// <summary>
@@ -480,12 +815,7 @@ public static partial class Common
     public static ICellStyle GetCustomStyle(this IWorkbook wb, short? hssfColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
         FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null)
     {
-        ICellStyle cellStyle = wb.GetCustomStyle(cellLocked, font, alignment, fillPattern, borderStyles);
-        if (hssfColor != null)
-        {
-            cellStyle.FillForegroundColor = (short)hssfColor;
-        }
-        return cellStyle;
+        return wb.GetCustomStyle(cellLocked, null, hssfColor, font, alignment, fillPattern, borderStyles);
     }
 
     /// <summary>
@@ -493,20 +823,22 @@ public static partial class Common
     /// </summary>
     /// <param name="wb">Workbook to add the standard cell style to</param>
     /// <param name="style">Enum value indicating which style to create</param>
-    /// <param name="cellLocked">Whether or not the cells with this style should be locked or not</param>
+    /// <param name="cellLocked">Optional: Whether or not the cells with this style should be locked or not. Default = false</param>
+    /// <param name="borderStyles">Optional: Border styling overrides</param>
     /// <returns>The ICellStyle that was created</returns>
-    public static ICellStyle GetStandardCellStyle(this IWorkbook wb, EStyle style, bool cellLocked = false)
+    public static ICellStyle GetStandardCellStyle(this IWorkbook wb, EStyle style, bool cellLocked = false, NpoiBorderStyles? borderStyles = null)
     {
-        ICellStyle cellStyle = wb.CreateCellStyle();
+        //ICellStyle cellStyle = wb.CreateCellStyle();
+        CellStyle cellStyle = new();
         IFont cellFont;
         switch (style)
         {
             case EStyle.Header:
                 cellStyle.Alignment = HorizontalAlignment.Center;
-                cellStyle.BorderBottom = BorderStyle.Thin;
-                cellStyle.BorderLeft = BorderStyle.Thin;
-                cellStyle.BorderRight = BorderStyle.Thin;
-                cellStyle.BorderTop = BorderStyle.Thin;
+                cellStyle.BorderBottom = borderStyles?.BorderBottom ?? BorderStyle.Thin;
+                cellStyle.BorderLeft = borderStyles?.BorderLeft ?? BorderStyle.Thin;
+                cellStyle.BorderRight = borderStyles?.BorderRight ?? BorderStyle.Thin;
+                cellStyle.BorderTop = borderStyles?.BorderTop ?? BorderStyle.Thin;
                 cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 cellStyle.SetFont(wb.GetFont(EFont.Header));
@@ -514,10 +846,10 @@ public static partial class Common
 
             case EStyle.HeaderThickTop:
                 cellStyle.Alignment = HorizontalAlignment.Center;
-                cellStyle.BorderBottom = BorderStyle.Thin;
-                cellStyle.BorderLeft = BorderStyle.Thin;
-                cellStyle.BorderRight = BorderStyle.Thin;
-                cellStyle.BorderTop = BorderStyle.Medium;
+                cellStyle.BorderBottom = borderStyles?.BorderBottom ?? BorderStyle.Thin;
+                cellStyle.BorderLeft = borderStyles?.BorderLeft ?? BorderStyle.Thin;
+                cellStyle.BorderRight = borderStyles?.BorderRight ?? BorderStyle.Thin;
+                cellStyle.BorderTop = borderStyles?.BorderTop ?? BorderStyle.Medium;
                 cellStyle.FillForegroundColor = HSSFColor.Grey25Percent.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
                 cellStyle.SetFont(wb.GetFont(EFont.Header));
@@ -525,9 +857,15 @@ public static partial class Common
 
             case EStyle.Body:
                 cellStyle.Alignment = HorizontalAlignment.Center;
-                cellStyle.BorderBottom = BorderStyle.Thin;
-                cellStyle.BorderLeft = BorderStyle.Thin;
-                cellStyle.BorderRight = BorderStyle.Thin;
+                cellStyle.BorderBottom = borderStyles?.BorderBottom ?? BorderStyle.Thin;
+                cellStyle.BorderLeft = borderStyles?.BorderLeft ?? BorderStyle.Thin;
+                cellStyle.BorderRight = borderStyles?.BorderRight ?? BorderStyle.Thin;
+
+                if (borderStyles?.BorderTop != null)
+                {
+                    cellStyle.BorderTop = (BorderStyle)borderStyles.BorderTop;
+                }
+
                 cellStyle.FillForegroundColor = HSSFColor.COLOR_NORMAL;
                 cellStyle.SetFont(wb.GetFont(EFont.Default));
                 break;
@@ -535,6 +873,29 @@ public static partial class Common
             case EStyle.Error:
                 cellStyle.FillForegroundColor = HSSFColor.Red.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
+
+                if (borderStyles != null)
+                {
+                    if (borderStyles.BorderBottom != null)
+                    {
+                        cellStyle.BorderBottom = (BorderStyle)borderStyles.BorderBottom;
+                    }
+
+                    if (borderStyles.BorderLeft != null)
+                    {
+                        cellStyle.BorderLeft = (BorderStyle)borderStyles.BorderLeft;
+                    }
+
+                    if (borderStyles.BorderRight != null)
+                    {
+                        cellStyle.BorderRight = (BorderStyle)borderStyles.BorderRight;
+                    }
+
+                    if (borderStyles.BorderTop != null)
+                    {
+                        cellStyle.BorderTop = (BorderStyle)borderStyles.BorderTop;
+                    }
+                }
                 break;
 
             case EStyle.Blackout:
@@ -543,6 +904,29 @@ public static partial class Common
                 cellStyle.SetFont(cellFont);
                 cellStyle.FillForegroundColor = HSSFColor.Black.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
+
+                if (borderStyles != null)
+                {
+                    if (borderStyles.BorderBottom != null)
+                    {
+                        cellStyle.BorderBottom = (BorderStyle)borderStyles.BorderBottom;
+                    }
+
+                    if (borderStyles.BorderLeft != null)
+                    {
+                        cellStyle.BorderLeft = (BorderStyle)borderStyles.BorderLeft;
+                    }
+
+                    if (borderStyles.BorderRight != null)
+                    {
+                        cellStyle.BorderRight = (BorderStyle)borderStyles.BorderRight;
+                    }
+
+                    if (borderStyles.BorderTop != null)
+                    {
+                        cellStyle.BorderTop = (BorderStyle)borderStyles.BorderTop;
+                    }
+                }
                 break;
 
             case EStyle.Whiteout:
@@ -551,6 +935,29 @@ public static partial class Common
                 cellStyle.SetFont(cellFont);
                 cellStyle.FillForegroundColor = HSSFColor.White.Index;
                 cellStyle.FillPattern = FillPattern.SolidForeground;
+
+                if (borderStyles != null)
+                {
+                    if (borderStyles.BorderBottom != null)
+                    {
+                        cellStyle.BorderBottom = (BorderStyle)borderStyles.BorderBottom;
+                    }
+
+                    if (borderStyles.BorderLeft != null)
+                    {
+                        cellStyle.BorderLeft = (BorderStyle)borderStyles.BorderLeft;
+                    }
+
+                    if (borderStyles.BorderRight != null)
+                    {
+                        cellStyle.BorderRight = (BorderStyle)borderStyles.BorderRight;
+                    }
+
+                    if (borderStyles.BorderTop != null)
+                    {
+                        cellStyle.BorderTop = (BorderStyle)borderStyles.BorderTop;
+                    }
+                }
                 break;
 
             case EStyle.ImageBackground:
@@ -558,10 +965,58 @@ public static partial class Common
                 cellStyle.FillForegroundColor = HSSFColor.COLOR_NORMAL;
                 cellStyle.Alignment = HorizontalAlignment.Center;
                 cellStyle.VerticalAlignment = VerticalAlignment.Center;
+
+                if (borderStyles != null)
+                {
+                    if (borderStyles.BorderBottom != null)
+                    {
+                        cellStyle.BorderBottom = (BorderStyle)borderStyles.BorderBottom;
+                    }
+
+                    if (borderStyles.BorderLeft != null)
+                    {
+                        cellStyle.BorderLeft = (BorderStyle)borderStyles.BorderLeft;
+                    }
+
+                    if (borderStyles.BorderRight != null)
+                    {
+                        cellStyle.BorderRight = (BorderStyle)borderStyles.BorderRight;
+                    }
+
+                    if (borderStyles.BorderTop != null)
+                    {
+                        cellStyle.BorderTop = (BorderStyle)borderStyles.BorderTop;
+                    }
+                }
                 break;
         }
+
+        if (borderStyles != null)
+        {
+            if (borderStyles.BorderBottomColor != null)
+            {
+                cellStyle.BottomBorderColor = (short)borderStyles.BorderBottomColor;
+            }
+
+            if (borderStyles.BorderLeftColor != null)
+            {
+                cellStyle.LeftBorderColor = (short)borderStyles.BorderLeftColor;
+            }
+
+            if (borderStyles.BorderRightColor != null)
+            {
+                cellStyle.RightBorderColor = (short)borderStyles.BorderRightColor;
+            }
+
+            if (borderStyles.BorderTopColor != null)
+            {
+                cellStyle.TopBorderColor = (short)borderStyles.BorderTopColor;
+            }
+        }
+
         cellStyle.IsLocked = cellLocked;
-        return cellStyle;
+
+        return wb.GetOrCreateStyle(cellStyle);
     }
 
     /// <summary>
@@ -572,7 +1027,8 @@ public static partial class Common
     /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
     public static IFont GetFont(this IWorkbook wb, EFont font)
     {
-        IFont cellFont = wb.CreateFont();
+        //IFont cellFont = wb.CreateFont();
+        CellFont cellFont = new();
         switch (font)
         {
             case EFont.Default:
@@ -598,7 +1054,8 @@ public static partial class Common
                 cellFont.FontHeightInPoints = 11;
                 break;
         }
-        return cellFont;
+
+        return wb.GetOrCreateFont(cellFont);
     }
 
     /// <summary>
@@ -726,12 +1183,12 @@ public static partial class Common
             ISheet? ws;
             ICreationHelper helper = wb.GetCreationHelper();
             Dictionary<string, IDrawing> worksheetDrawings = [];
-            ICellStyle cellStyle = wb.GetStandardCellStyle(EStyle.ImageBackground);
             for (int i = 0; i < imageData.Count; i++)
             {
                 if ((imageData[i].Length > 0) && (wb != null) && (cellNames[i] != null))
                 {
                     ICell? cell = wb.GetCellFromName(cellNames[i]);
+                    ICellStyle cellStyle = wb.GetStandardCellStyle(EStyle.ImageBackground, borderStyles: new(cell?.CellStyle)); // Need to do this to keep borders consistent
                     CellRangeAddress? area = cell.GetRangeOfMergedCells();
                     ws = cell?.Sheet;
                     if ((ws != null) && (area != null))
@@ -825,7 +1282,8 @@ public static partial class Common
         if (cell != null)
         {
             helper ??= wb.GetCreationHelper();
-            cell.CellStyle = cellStyle ?? wb.GetCustomStyle(hssfColor: HSSFColor.COLOR_NORMAL, font: wb.GetFont(EFont.ImageBackground)); //Ensure consistent cell style to ensure images are sized correctly
+
+            cell.CellStyle = cellStyle ?? wb.GetCustomStyle(false, null, HSSFColor.COLOR_NORMAL, wb.GetFont(EFont.ImageBackground), null, null, new(cell.CellStyle));//Ensure consistent cell style to ensure images are sized correctly
 
             IClientAnchor anchor = helper.CreateClientAnchor();
 
@@ -1333,6 +1791,10 @@ public static partial class Common
             // }
             // }
             // }
+        }
+        else
+        {
+            throw new ArgumentException("Invalid hex color format. Expected format: #RRGGBB", nameof(hexColor));
         }
 
         if (HssfColorCache.Count >= cachedColorLimit)

@@ -1,10 +1,38 @@
 ﻿using System.Reflection;
+using CommonNetFuncs.Core;
 using static CommonNetFuncs.DeepClone.ExpressionTrees;
 
 namespace DeepClone.Tests;
 
-public sealed class ExpressionTreesTests
+public sealed class ExpressionTreesTests : IDisposable
 {
+    private bool disposed;
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                CacheManager.SetUseLimitedCache(true);
+                CacheManager.SetLimitedCacheSize(100);
+                CacheManager.ClearAllCaches();
+            }
+            disposed = true;
+        }
+    }
+
+    ~ExpressionTreesTests()
+    {
+        Dispose(false);
+    }
+
     public sealed class TestClass
     {
         public int Number { get; set; }
@@ -18,12 +46,7 @@ public sealed class ExpressionTreesTests
         public TestClass? Child { get; set; }
 
         public readonly string ReadOnlyField = "test";
-
-        #pragma warning disable RCS1213 // Remove unused member declaration
-        #pragma warning disable CS0414 // The field is assigned but its value is never used
         private readonly int _privateReadOnlyField = 42;
-        #pragma warning restore RCS1213 // Remove unused member declaration
-        #pragma warning restore CS0414 //The field is assigned but its value is never used
     }
 
     public struct TestStruct
@@ -270,5 +293,98 @@ public sealed class ExpressionTreesTests
         customDict.Count.ShouldBe(1);
         customDict.ContainsKey(source).ShouldBeTrue();
         customDict[source].ShouldBeSameAs(result);
+    }
+
+    [Fact]
+    public void CacheManager_Property_ShouldExposeApiAndAffectCache()
+    {
+        // Arrange
+        ICacheManagerApi<Type, Func<object, Dictionary<object, object>, object>> cacheApi = CacheManager;
+        Type type = typeof(TestClass);
+
+        // Act
+        cacheApi.ClearCache();
+        cacheApi.ClearLimitedCache();
+        cacheApi.SetLimitedCacheSize(1);
+
+        // Should not have anything cached yet
+        cacheApi.GetCache().ContainsKey(type).ShouldBeFalse();
+        cacheApi.GetLimitedCache().ContainsKey(type).ShouldBeFalse();
+
+        // Add to cache
+        Func<object, Dictionary<object, object>, object> func = CreateCompiledLambdaCopyFunctionForType(type, true).Compile();
+        cacheApi.TryAddCache(type, func).ShouldBeTrue();
+        cacheApi.GetCache().ContainsKey(type).ShouldBeTrue();
+
+        // Add to limited cache
+        cacheApi.TryAddLimitedCache(type, func).ShouldBeTrue();
+        cacheApi.GetLimitedCache().ContainsKey(type).ShouldBeTrue();
+
+        // IsUsingLimitedCache should reflect state
+        cacheApi.SetLimitedCacheSize(2);
+        cacheApi.IsUsingLimitedCache().ShouldBeTrue();
+        cacheApi.SetLimitedCacheSize(0);
+        cacheApi.IsUsingLimitedCache().ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DeepClone_ShouldRespectCacheUsage(bool useCache)
+    {
+        // Arrange
+        Type type = typeof(TestClass);
+        CacheManager.ClearCache();
+        CacheManager.ClearLimitedCache();
+        CacheManager.SetLimitedCacheSize(0);
+
+        TestClass source = new() { Number = 1, Text = "abc" };
+
+        // Act
+        TestClass clone1 = source.DeepClone(useCache: useCache);
+        TestClass clone2 = source.DeepClone(useCache: useCache);
+
+        // Assert
+        clone1.ShouldNotBeSameAs(source);
+        clone2.ShouldNotBeSameAs(source);
+
+        // If using cache, the compiled function should be cached
+        if (useCache)
+        {
+            CacheManager.GetCache().ContainsKey(type).ShouldBeTrue();
+        }
+        else
+        {
+            CacheManager.GetCache().ContainsKey(type).ShouldBeFalse();
+        }
+    }
+
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(2, true)]
+    public void DeepClone_ShouldUseLimitedCache_WhenConfigured(int limitedCacheSize, bool expectLimited)
+    {
+        // Arrange
+        Type type = typeof(TestClass);
+        CacheManager.ClearCache();
+        CacheManager.ClearLimitedCache();
+        CacheManager.SetLimitedCacheSize(limitedCacheSize);
+
+        TestClass source = new() { Number = 2, Text = "xyz" };
+
+        // Act
+        _ = source.DeepClone();
+
+        // Assert
+        if (expectLimited)
+        {
+            CacheManager.GetLimitedCache().ContainsKey(type).ShouldBeTrue();
+            CacheManager.GetCache().ContainsKey(type).ShouldBeFalse();
+        }
+        else
+        {
+            CacheManager.GetCache().ContainsKey(type).ShouldBeTrue();
+            CacheManager.GetLimitedCache().ContainsKey(type).ShouldBeFalse();
+        }
     }
 }

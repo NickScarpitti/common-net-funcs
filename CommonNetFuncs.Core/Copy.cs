@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,16 +9,64 @@ namespace CommonNetFuncs.Core;
 
 public static class Copy
 {
-    private static int LimitedCopyFunctionCacheSize = 100;
-    private static int LimitedDeepCopyFunctionCacheSize = 100;
-    private static bool UseLimitedCopyFunctionCache = true;
-    private static bool UseLimitedDeepCopyFunctionCache = true;
+    #region Caching
 
-    private static readonly ConcurrentDictionary<(Type Source, Type Dest), Func<object, object?, int, int, object?>> DeepCopyFunctionCache = new(); // Shallow copy
-    private static FixedFIFODictionary<(Type Source, Type Dest), Func<object, object?, int, int, object?>> LimitedDeepCopyFunctionCache = new(LimitedDeepCopyFunctionCacheSize); // Shallow copy
+    private static readonly CacheManager<(Type Source, Type Dest), Func<object, object?, int, int, object?>> DeepCopyCache = new();
 
-    private static readonly ConcurrentDictionary<(Type SourceType, Type DestType), Dictionary<string, (Delegate Set, Delegate Get)>> CopyFunctionCache = new(); // Deep Copy
-    private static FixedFIFODictionary<(Type SourceType, Type DestType), Dictionary<string, (Delegate Set, Delegate Get)>> LimitedCopyFunctionCache = new(LimitedCopyFunctionCacheSize); // Deep Copy
+    public static ICacheManagerApi<(Type Source, Type Dest), Func<object, object?, int, int, object?>> DeepCopyCacheManager => DeepCopyCache;
+
+    private static readonly CacheManager<(Type SourceType, Type DestType), Dictionary<string, (Delegate Set, Delegate Get)>> CopyCache = new();
+
+    public static ICacheManagerApi<(Type SourceType, Type DestType), Dictionary<string, (Delegate Set, Delegate Get)>> CopyCacheManager => CopyCache;
+
+    /// <summary>
+    /// Gets or adds a function from the deep copy cache based on the source and destination types.
+    /// </summary>
+    /// <param name="key">Cache key</param>
+    /// <returns>Function for executing deep copy</returns>
+    private static Func<object, object?, int, int, object?> GetOrAddFunctionFromDeepCopyCache((Type sourceType, Type destType) key)
+    {
+        if (DeepCopyCacheManager.IsUsingLimitedCache() ? DeepCopyCacheManager.GetLimitedCache().TryGetValue(key, out Func<object, object?, int, int, object?>? function) :
+            DeepCopyCacheManager.GetCache().TryGetValue(key, out function))
+        {
+            return function!;
+        }
+
+        function = CreateCopyFunction(key.sourceType, key.destType);
+        if (DeepCopyCacheManager.IsUsingLimitedCache())
+        {
+            DeepCopyCacheManager.TryAddLimitedCache(key, function);
+        }
+        else
+        {
+            DeepCopyCacheManager.TryAddCache(key, function);
+        }
+
+        return function;
+    }
+
+    /// <summary>
+    /// Gets or adds a function from the shallow copy cache based on the source and destination types.
+    /// </summary>
+    /// <returns>Function for executing shallow copy</returns>
+    private static Dictionary<string, (Delegate Set, Delegate Get)> GetOrAddFunctionFromCopyCache<TSource, TDest>()
+    {
+        (Type, Type) key = (typeof(TSource), typeof(TDest));
+        bool isLimitedCache = CopyCacheManager.IsUsingLimitedCache();
+        if (isLimitedCache ? CopyCacheManager.GetLimitedCache().TryGetValue(key, out Dictionary<string, (Delegate Set, Delegate Get)>? functions) :
+            CopyCacheManager.GetCache().TryGetValue(key, out functions))
+        {
+            return functions!;
+        }
+
+        if (isLimitedCache)
+        {
+            return CopyCacheManager.GetOrAddLimitedCache(key, _ => CreatePropertyMappingsForCache<TSource, TDest>());
+        }
+        return CopyCacheManager.GetOrAddCache(key, _ => CreatePropertyMappingsForCache<TSource, TDest>());
+    }
+
+    #endregion
 
     /// <summary>
     /// Copy properties of the same name from one object to another
@@ -355,64 +402,8 @@ public static class Copy
 
     public static Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> GetOrCreatePropertyMaps<TSource, TDest>()
     {
-        _ = (typeof(TSource), typeof(TDest));
         return GetOrAddFunctionFromCopyCache<TSource, TDest>().ToDictionary(kvp => kvp.Key, kvp => ((Action<TDest, object?>)kvp.Value.Set, (Func<TSource, object?>)kvp.Value.Get));
-        //if (PropertyMapCache.TryGetValue(key, out Dictionary<string, (Delegate Set, Delegate Get)>? cachedMaps))
-        //{
-        //    // Convert the cached delegates back to strongly typed versions
-        //    return cachedMaps.ToDictionary(kvp => kvp.Key, kvp => ((Action<TDest, object?>)kvp.Value.Set, (Func<TSource, object?>)kvp.Value.Get));
-        //}
-
-        //return CreatePropertyMappings<TSource, TDest>();
     }
-
-    //private static Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> CreatePropertyMappings<TSource, TDest>()
-    //{
-    //    Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> propertyMaps = new();
-    //    Dictionary<string, (Delegate Set, Delegate Get)> cacheableMaps = new();
-
-    //    IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromCache(typeof(TSource)).Where(p => p.CanRead);
-    //    Dictionary<string, PropertyInfo> destProps = GetOrAddPropertiesFromCache(typeof(TDest)).Where(p => p.CanWrite).ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
-
-    //    foreach (PropertyInfo sProp in sourceProps)
-    //    {
-    //        if (destProps.TryGetValue(sProp.Name, out PropertyInfo? dProp) && dProp.PropertyType == sProp.PropertyType)
-    //        {
-    //            //var (set, get) = CreatePropertyAccessors<TSource, TDest>(sProp, dProp);
-    //            ParameterExpression srcParam = Expression.Parameter(typeof(TSource), "src");
-    //            Expression<Func<TSource, object?>> getExpr = Expression.Lambda<Func<TSource, object?>>(
-    //                Expression.Convert(
-    //                    Expression.Property(
-    //                        typeof(TSource).IsInterface ? Expression.Convert(srcParam, sProp.DeclaringType!) : srcParam,
-    //                        sProp),
-    //                    typeof(object)),
-    //                srcParam);
-    //            Func<TSource, object?> get = getExpr.CompileFast();
-
-    //            // Setter: (TDest dest, object? value) => dest.Prop = (TPropType)value
-    //            ParameterExpression destParam = Expression.Parameter(typeof(TDest), "dest");
-    //            ParameterExpression valueParam = Expression.Parameter(typeof(object), "value");
-    //            Expression<Action<TDest, object?>> setExpr = Expression.Lambda<Action<TDest, object?>>(
-    //                Expression.Assign(
-    //                    Expression.Property(
-    //                        typeof(TDest).IsInterface ? Expression.Convert(destParam, dProp.DeclaringType!) : destParam,
-    //                        dProp),
-    //                    Expression.Convert(valueParam, dProp.PropertyType)),
-    //                destParam, valueParam);
-    //            Action<TDest, object?> set = setExpr.CompileFast();
-
-    //            string propertyKey = sProp.Name;
-    //            propertyMaps.Add(propertyKey, (set, get));
-    //            cacheableMaps.Add(propertyKey, (set, get));
-    //        }
-    //    }
-
-    //    // Cache the mappings for future use
-    //    (Type, Type) typeKey = (typeof(TSource), typeof(TDest));
-    //    PropertyMapCache.TryAdd(typeKey, cacheableMaps);
-
-    //    return propertyMaps;
-    //}
 
     private static Dictionary<string, (Delegate Set, Delegate Get)> CreatePropertyMappingsForCache<TSource, TDest>()
     {
@@ -786,175 +777,4 @@ public static class Copy
 
     #endregion
 
-    #region Cache Controls
-
-    /// <summary>
-    /// Clears the cached copy functions
-    /// </summary>
-    public static void ClearAllCopyCaches()
-    {
-        CopyFunctionCache.Clear();
-        LimitedCopyFunctionCache.Clear();
-        DeepCopyFunctionCache.Clear();
-        LimitedDeepCopyFunctionCache.Clear();
-    }
-
-    public static void ClearCopyFunctionCache()
-    {
-        CopyFunctionCache.Clear();
-    }
-
-    public static void ClearLimitedCopyFunctionCache()
-    {
-        LimitedCopyFunctionCache.Clear();
-    }
-
-    public static void ClearDeepCopyFunctionCache()
-    {
-        DeepCopyFunctionCache.Clear();
-    }
-
-    public static void ClearLimitedDeepCopyFunctionCache()
-    {
-        LimitedDeepCopyFunctionCache.Clear();
-    }
-
-    public static void SetLimitedCopyFunctionCacheSize(int size)
-    {
-        LimitedCopyFunctionCacheSize = size;
-        if (UseLimitedCopyFunctionCache)
-        {
-            ClearLimitedCopyFunctionCache();
-            LimitedCopyFunctionCache = new(LimitedCopyFunctionCacheSize);
-        }
-    }
-
-    public static void SetLimitedDeepCopyFunctionCacheSize(int size)
-    {
-        LimitedDeepCopyFunctionCacheSize = size;
-        if (UseLimitedDeepCopyFunctionCache)
-        {
-            ClearLimitedCopyFunctionCache();
-            LimitedDeepCopyFunctionCache = new(LimitedDeepCopyFunctionCacheSize);
-        }
-    }
-
-    /// <summary>
-    /// Clears caches and initializes LimitedCopyFunctionCache to use the size specified by LimitedCopyFunctionCacheSize or 0 if UseLimitedCopyFunctionCache is false.
-    /// </summary>
-    /// <param name="useLimitedCopyCache">When true, uses cache with limited number of total records</param>
-    public static void SetUseLimitedCopyFunctionCache(bool useLimitedCopyCache)
-    {
-        ClearCopyFunctionCache();
-        ClearLimitedCopyFunctionCache();
-        SetLimitedCopyFunctionCacheSize(useLimitedCopyCache ? LimitedCopyFunctionCacheSize : 1);
-        UseLimitedCopyFunctionCache = useLimitedCopyCache;
-    }
-
-    /// <summary>
-    /// Clears caches and initializes LimitedDeepCopyFunctionCache to use the size specified by LimitedDeepCopyFunctionCacheSize or 0 if UseLimitedDeepCopyFunctionCache is false.
-    /// </summary>
-    /// <param name="useLimitedDeepCopyCache">When true, uses cache with limited number of total records</param>
-    public static void SetUseLimitedDeepCopyFunctionCache(bool useLimitedDeepCopyCache)
-    {
-        ClearDeepCopyFunctionCache();
-        ClearLimitedDeepCopyFunctionCache();
-        SetLimitedDeepCopyFunctionCacheSize(useLimitedDeepCopyCache ? LimitedDeepCopyFunctionCacheSize : 1);
-        UseLimitedDeepCopyFunctionCache = useLimitedDeepCopyCache;
-    }
-
-    public static int GetLimitedCopyFunctionCacheSize()
-    {
-        return LimitedCopyFunctionCacheSize;
-    }
-
-    public static int GetLimitedDeepCopyFunctionCacheSize()
-    {
-        return LimitedDeepCopyFunctionCacheSize;
-    }
-
-    /// <summary>
-    /// Returns whether the LimitedCopyFunctionCache is being used.
-    /// </summary>
-    public static bool IsUsingLimitedCopyFunctionCache()
-    {
-        return UseLimitedCopyFunctionCache;
-    }
-
-    /// <summary>
-    /// Returns whether the LimitedDeepCopyFunctionCache is being used.
-    /// </summary>
-    public static bool IsUsingLimitedDeepCopyFunctionCache()
-    {
-        return UseLimitedDeepCopyFunctionCache;
-    }
-
-    /// <summary>
-    /// Gets or adds a function from the deep copy cache based on the source and destination types.
-    /// </summary>
-    /// <param name="key">Cache key</param>
-    /// <returns>Function for executing deep copy</returns>
-    private static Func<object, object?, int, int, object?> GetOrAddFunctionFromDeepCopyCache((Type sourceType, Type destType) key)
-    {
-        if (UseLimitedDeepCopyFunctionCache)
-        {
-            if (LimitedDeepCopyFunctionCache.TryGetValue(key, out Func<object, object?, int, int, object?>? function))
-            {
-                return function!;
-            }
-
-            return LimitedDeepCopyFunctionCache.GetOrAdd(key, _ => CreateCopyFunction(key.sourceType, key.destType));
-        }
-        else
-        {
-            if (DeepCopyFunctionCache.TryGetValue(key, out Func<object, object?, int, int, object?>? function))
-            {
-                return function!;
-            }
-
-            return DeepCopyFunctionCache.GetOrAdd(key, _ => CreateCopyFunction(key.sourceType, key.destType));
-        }
-    }
-
-    //private static Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> CreatePropertyMappings<TSource, TDest>()
-    //{
-    //    Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> propertyMaps = new();
-    //    Dictionary<string, (Delegate Set, Delegate Get)> cacheableMaps = CreatePropertyMappingsForCache<TSource, TDest>();
-
-    //    foreach (var kvp in cacheableMaps)
-    //    {
-    //        propertyMaps.Add(kvp.Key, ((Action<TDest, object?>)kvp.Value.Set, (Func<TSource, object?>)kvp.Value.Get));
-    //    }
-
-    //    return propertyMaps;
-    //}
-
-    /// <summary>
-    /// Gets or adds a function from the shallow copy cache based on the source and destination types.
-    /// </summary>
-    /// <returns>Function for executing shallow copy</returns>
-    private static Dictionary<string, (Delegate Set, Delegate Get)> GetOrAddFunctionFromCopyCache<TSource, TDest>()
-    {
-        (Type, Type) key = (typeof(TSource), typeof(TDest));
-        if (UseLimitedCopyFunctionCache)
-        {
-            if (LimitedCopyFunctionCache.TryGetValue(key, out Dictionary<string, (Delegate Set, Delegate Get)>? functions))
-            {
-                return functions!;
-            }
-
-            return LimitedCopyFunctionCache.GetOrAdd(key, _ => CreatePropertyMappingsForCache<TSource, TDest>());
-        }
-        else
-        {
-            if (CopyFunctionCache.TryGetValue(key, out Dictionary<string, (Delegate Set, Delegate Get)>? functions))
-            {
-                return functions!;
-            }
-
-            return CopyFunctionCache.GetOrAdd(key, _ => CreatePropertyMappingsForCache<TSource, TDest>());
-        }
-    }
-
-    #endregion
 }

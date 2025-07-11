@@ -2,6 +2,7 @@
 using System.Data;
 using System.Linq.Expressions;
 using CommonNetFuncs.Core;
+using CommonNetFuncs.Core.CollectionClasses;
 using FastExpressionCompiler;
 
 namespace Core.Tests;
@@ -1808,6 +1809,421 @@ public sealed class CollectionsTests
 
         TestClass testObj = new() { Id = 1 };
         func(testObj).ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region FIFO and LRU Dictionary Tests
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    public void FixedFIFODictionary_BasicAddAndEviction(int capacity)
+    {
+        // Arrange
+        FixedFIFODictionary<int, string> dict = new(capacity);
+
+        // Act
+        for (int i = 0; i < capacity; i++)
+        {
+            dict.Add(i, $"v{i}");
+        }
+
+        dict.Count.ShouldBe(capacity);
+
+        // Add one more to trigger eviction
+        dict.Add(capacity, $"v{capacity}");
+
+        // Assert
+        dict.Count.ShouldBe(capacity);
+        dict.ContainsKey(0).ShouldBe(capacity != 1 && false); // 0 is always evicted
+        dict.ContainsKey(capacity).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Constructor_ThrowsOnInvalidCapacity()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => new FixedFIFODictionary<int, string>(0));
+        Should.Throw<ArgumentOutOfRangeException>(() => new FixedFIFODictionary<int, string>(-1));
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Constructor_ThrowsOnOversizedSource()
+    {
+        Dictionary<int, string?> source = new() { [1] = "a", [2] = "b" };
+        Should.Throw<ArgumentException>(() => new FixedFIFODictionary<int, string>(1, source));
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Constructor_CopiesSource()
+    {
+        Dictionary<int, string?> source = new() { [1] = "a", [2] = "b" };
+        FixedFIFODictionary<int, string> dict = new(2, source);
+        dict.Count.ShouldBe(2);
+        dict[1].ShouldBe("a");
+        dict[2].ShouldBe("b");
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Indexer_SetAndGet()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict[1] = "a";
+        dict[1].ShouldBe("a");
+        dict[2] = "b";
+        dict[2].ShouldBe("b");
+        dict[1] = "c";
+        dict[1].ShouldBe("c");
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Indexer_EvictsOldest()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict[1] = "a";
+        dict[2] = "b";
+        dict[3] = "c";
+        dict.ContainsKey(1).ShouldBeFalse();
+        dict.ContainsKey(2).ShouldBeTrue();
+        dict.ContainsKey(3).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Add_UpdatesExisting()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(1, "b");
+        dict[1].ShouldBe("b");
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Add_KeyEviction()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        dict.Add(3, "c");
+        dict.ContainsKey(1).ShouldBeFalse();
+        dict.ContainsKey(2).ShouldBeTrue();
+        dict.ContainsKey(3).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Remove_Works()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Remove(1).ShouldBeTrue();
+        dict.ContainsKey(1).ShouldBeFalse();
+        dict.Remove(1).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Clear_Works()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        dict.Clear();
+        dict.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_TryGetValue_Works()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.TryGetValue(1, out string? value).ShouldBeTrue();
+        value.ShouldBe("a");
+        dict.TryGetValue(2, out string? value2).ShouldBeFalse();
+        value2.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_ContainsKey_And_Contains()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.ContainsKey(1).ShouldBeTrue();
+        dict.Contains(new KeyValuePair<int, string?>(1, "a")).ShouldBeTrue();
+        dict.Contains(new KeyValuePair<int, string?>(2, "b")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_CopyTo_And_Enumerator()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        KeyValuePair<int, string?>[] arr = new KeyValuePair<int, string?>[2];
+        dict.CopyTo(arr, 0);
+        arr.ShouldContain(new KeyValuePair<int, string?>(1, "a"));
+        arr.ShouldContain(new KeyValuePair<int, string?>(2, "b"));
+        List<KeyValuePair<int, string?>> list = dict.ToList();
+        list.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Add_KeyValuePair()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(new KeyValuePair<int, string?>(1, "a"));
+        dict[1].ShouldBe("a");
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Remove_KeyValuePair()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Remove(new KeyValuePair<int, string?>(1, "a")).ShouldBeTrue();
+        dict.Remove(new KeyValuePair<int, string?>(1, "a")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Keys_Values()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        dict.Keys.ShouldContain(1);
+        dict.Keys.ShouldContain(2);
+        dict.Values.ShouldContain("a");
+        dict.Values.ShouldContain("b");
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_GetOrAdd_Works()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.GetOrAdd(1, _ => "a").ShouldBe("a");
+        dict.GetOrAdd(1, _ => "b").ShouldBe("a");
+        dict.GetOrAdd(2, _ => "b").ShouldBe("b");
+        dict.GetOrAdd(3, _ => "c").ShouldBe("c");
+        dict.ContainsKey(1).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_IsReadOnly_IsFalse()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.IsReadOnly.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedFIFODictionary_Enumerator_ImplementsIEnumerable()
+    {
+        FixedFIFODictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        IEnumerator<KeyValuePair<int, string?>> enumerator = dict.GetEnumerator();
+        enumerator.MoveNext().ShouldBeTrue();
+    }
+
+    // ----------------- FixedLRUDictionary Tests -----------------
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    public void FixedLRUDictionary_BasicAddAndEviction(int capacity)
+    {
+        FixedLRUDictionary<int, string> dict = new(capacity);
+
+        for (int i = 0; i < capacity; i++)
+        {
+            dict.Add(i, $"v{i}");
+        }
+
+        dict.Count.ShouldBe(capacity);
+
+        dict.Add(capacity, $"v{capacity}");
+
+        dict.Count.ShouldBe(capacity);
+        dict.ContainsKey(0).ShouldBeFalse();
+        dict.ContainsKey(capacity).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Constructor_ThrowsOnInvalidCapacity()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => new FixedLRUDictionary<int, string>(0));
+        Should.Throw<ArgumentOutOfRangeException>(() => new FixedLRUDictionary<int, string>(-1));
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Constructor_ThrowsOnOversizedSource()
+    {
+        Dictionary<int, string?> source = new() { [1] = "a", [2] = "b" };
+        Should.Throw<ArgumentException>(() => new FixedLRUDictionary<int, string>(1, source));
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Constructor_CopiesSource()
+    {
+        Dictionary<int, string?> source = new() { [1] = "a", [2] = "b" };
+        FixedLRUDictionary<int, string> dict = new(2, source);
+        dict.Count.ShouldBe(2);
+        dict[1].ShouldBe("a");
+        dict[2].ShouldBe("b");
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Indexer_SetAndGet()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict[1] = "a";
+        dict[1].ShouldBe("a");
+        dict[2] = "b";
+        dict[2].ShouldBe("b");
+        dict[1] = "c";
+        dict[1].ShouldBe("c");
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Indexer_EvictsLeastRecentlyUsed()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict[1] = "a";
+        dict[2] = "b";
+        // Access 1 to make it most recently used
+        _ = dict[1];
+        dict[3] = "c";
+        dict.ContainsKey(2).ShouldBeFalse();
+        dict.ContainsKey(1).ShouldBeTrue();
+        dict.ContainsKey(3).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Add_ThrowsOnDuplicate()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        Should.Throw<ArgumentException>(() => dict.Add(1, "b"));
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Remove_Works()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Remove(1).ShouldBeTrue();
+        dict.ContainsKey(1).ShouldBeFalse();
+        dict.Remove(1).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Clear_Works()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        dict.Clear();
+        dict.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_TryGetValue_MovesToFront()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        dict.TryGetValue(1, out string? value).ShouldBeTrue();
+        value.ShouldBe("a");
+        dict[1].ShouldBe("a");
+        dict[2] = "b2";
+        dict[3] = "c";
+        dict.ContainsKey(1).ShouldBeFalse();
+        dict.ContainsKey(2).ShouldBeTrue();
+        dict.ContainsKey(3).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_ContainsKey_And_Contains()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.ContainsKey(1).ShouldBeTrue();
+        dict.Contains(new KeyValuePair<int, string?>(1, "a")).ShouldBeTrue();
+        dict.Contains(new KeyValuePair<int, string?>(2, "b")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_CopyTo_And_Enumerator()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        KeyValuePair<int, string?>[] arr = new KeyValuePair<int, string?>[2];
+        dict.CopyTo(arr, 0);
+        arr.ShouldContain(new KeyValuePair<int, string?>(1, "a"));
+        arr.ShouldContain(new KeyValuePair<int, string?>(2, "b"));
+        List<KeyValuePair<int, string?>> list = dict.ToList();
+        list.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Add_KeyValuePair()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(new KeyValuePair<int, string?>(1, "a"));
+        dict[1].ShouldBe("a");
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Remove_KeyValuePair()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Remove(new KeyValuePair<int, string?>(1, "a")).ShouldBeTrue();
+        dict.Remove(new KeyValuePair<int, string?>(1, "a")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Keys_Values()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        dict.Keys.ShouldContain(1);
+        dict.Keys.ShouldContain(2);
+        dict.Values.ShouldContain("a");
+        dict.Values.ShouldContain("b");
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_GetOrAdd_Works()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.GetOrAdd(1, _ => "a").ShouldBe("a");
+        dict.GetOrAdd(1, _ => "b").ShouldBe("a");
+        dict.GetOrAdd(2, _ => "b").ShouldBe("b");
+        dict.GetOrAdd(3, _ => "c").ShouldBe("c");
+        dict.ContainsKey(1).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_IsReadOnly_IsFalse()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.IsReadOnly.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Enumerator_ImplementsIEnumerable()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        dict.Add(1, "a");
+        dict.Add(2, "b");
+        IEnumerator<KeyValuePair<int, string?>> enumerator = dict.GetEnumerator();
+        enumerator.MoveNext().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FixedLRUDictionary_Indexer_ThrowsOnMissingKey()
+    {
+        FixedLRUDictionary<int, string> dict = new(2);
+        Should.Throw<KeyNotFoundException>(() => _ = dict[42]);
     }
 
     #endregion

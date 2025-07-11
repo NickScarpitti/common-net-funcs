@@ -4,13 +4,6 @@ namespace Core.Tests;
 
 public sealed class CopyTests
 {
-    private readonly Fixture _fixture;
-
-    public CopyTests()
-    {
-        _fixture = new Fixture();
-    }
-
     #region CopyPropertiesTo Tests
 
     [Theory]
@@ -468,6 +461,206 @@ public sealed class CopyTests
         result.ShouldBeSameAs(target); // Should return the same instance
         result.Id.ShouldBe(1); // Should keep original value
         result.Name.ShouldBe("Original"); // Should keep original value since it's non-default
+    }
+
+    #endregion
+
+    #region CacheManager API Tests
+
+    [Fact]
+    public void SetLimitedCacheSize_ShouldBeSetSize()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
+
+        // Assert
+        Copy.DeepCopyCacheManager.GetLimitedCacheSize().ShouldBe(10);
+    }
+
+    [Fact]
+    public void SetCopyCacheSize_ShouldBeSetSize()
+    {
+        // Act
+        Copy.CopyCacheManager.SetLimitedCacheSize(10);
+
+        // Assert
+        Copy.CopyCacheManager.GetLimitedCacheSize().ShouldBe(10);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SetUseLimitedCache_houldBeUseLimited(bool useLimited)
+    {
+        // Act
+        Copy.DeepCopyCacheManager.SetUseLimitedCache(useLimited);
+
+        // Assert
+        Copy.DeepCopyCacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SetUseCopyCache_ShouldBeUseLimited(bool useLimited)
+    {
+        // Act
+        Copy.CopyCacheManager.SetUseLimitedCache(useLimited);
+
+        // Assert
+        Copy.CopyCacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
+    }
+
+    [Fact]
+    public void ClearDeepCopyCaches_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+        source.CopyPropertiesTo(dest, useCache: true); // Create cached value
+
+        // Act
+        Copy.DeepCopyCacheManager.ClearAllCaches();
+
+        // Assert
+        Copy.DeepCopyCacheManager.GetCache().Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearCopyCaches_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.CopyCacheManager.SetLimitedCacheSize(10);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+        source.CopyPropertiesTo(dest, useCache: true); // Create cached value
+
+        // Act
+        Copy.CopyCacheManager.ClearAllCaches();
+
+        // Assert
+        Copy.CopyCacheManager.GetCache().Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetLimitedDeepCopyCache_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+
+        // Act
+        DestinationClass dest = source.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>(useCache: true); // Create cached value
+
+        // Assert
+        dest.ShouldNotBeNull();
+        Copy.DeepCopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
+        Copy.DeepCopyCacheManager.GetLimitedCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
+        Copy.DeepCopyCacheManager.GetLimitedCache().Values.First().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetLimitedCache_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.CopyCacheManager.SetLimitedCacheSize(10);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+
+        // Act
+        source.CopyPropertiesTo(dest, useCache: true); // Create cached value
+
+        // Assert
+        Copy.CopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
+        Copy.CopyCacheManager.GetLimitedCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
+        Copy.CopyCacheManager.GetLimitedCache().Values.First().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetCache_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+
+        // Act
+        DestinationClass dest = source.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>(useCache: true); // Create cached value
+
+        // Assert
+        dest.ShouldNotBeNull();
+        Copy.DeepCopyCacheManager.GetCache().Count.ShouldBe(1);
+        Copy.DeepCopyCacheManager.GetLimitedCache().Count.ShouldBe(0);
+        Copy.DeepCopyCacheManager.GetLimitedCacheSize().ShouldBe(1);
+        Copy.DeepCopyCacheManager.GetCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
+        Copy.DeepCopyCacheManager.GetCache().Values.First().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetCache_ShouldNotBeUsingLimitedCache()
+    {
+        // Arrange
+        Copy.CopyCacheManager.SetUseLimitedCache(false);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+
+        // Act
+        source.CopyPropertiesTo(dest, useCache: true); // Create cached value
+
+        // Assert
+        Copy.CopyCacheManager.GetCache().Count.ShouldBe(1);
+        Copy.CopyCacheManager.GetLimitedCache().Count.ShouldBe(0);
+        Copy.CopyCacheManager.GetLimitedCacheSize().ShouldBe(1);
+        Copy.CopyCacheManager.GetCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
+        Copy.CopyCacheManager.GetCache().Values.First().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void DeepCopyCacheManager_Api_ShouldNotAffectCopyBehavior()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetUseLimitedCache(true);
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(5);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+
+        // Act
+        source.CopyPropertiesTo(dest, useCache: true);
+
+        // Assert
+        dest.Id.ShouldBe(42);
+        dest.Name.ShouldBe("CacheTest");
+
+        // Now clear cache and copy again
+        Copy.DeepCopyCacheManager.ClearAllCaches();
+        dest = new();
+        source.CopyPropertiesTo(dest, useCache: true);
+        dest.Id.ShouldBe(42);
+        dest.Name.ShouldBe("CacheTest");
+    }
+
+    [Fact]
+    public void CopyCacheManager_Api_ShouldNotAffectCopyBehavior()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetUseLimitedCache(true);
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(5);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+
+        // Act
+        source.CopyPropertiesTo(dest, useCache: true);
+
+        // Assert
+        dest.Id.ShouldBe(42);
+        dest.Name.ShouldBe("CacheTest");
+
+        // Now clear cache and copy again
+        Copy.DeepCopyCacheManager.ClearAllCaches();
+        dest = new();
+        source.CopyPropertiesTo(dest, useCache: true);
+        dest.Id.ShouldBe(42);
+        dest.Name.ShouldBe("CacheTest");
     }
 
     #endregion

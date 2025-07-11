@@ -4,64 +4,9 @@ namespace CommonNetFuncs.Core;
 
 public static class ReflectionCaches
 {
-    private static int LimitedReflectionCacheSize = 100;
-    private static readonly Dictionary<Type, PropertyInfo[]> ReflectionCache = new();
-    private static FixedFIFODictionary<Type, PropertyInfo[]> LimitedReflectionCache = new(LimitedReflectionCacheSize); // Default to 100 entries
-    private static bool UseLimitedReflectionCache = true;
+    private static readonly CacheManager<Type, PropertyInfo[]> ReflectionCache = new();
 
-    public static void ClearAllReflectionCaches()
-    {
-        ClearReflectionCache();
-        ClearLimitedReflectionCache();
-    }
-
-    public static void ClearReflectionCache()
-    {
-        ReflectionCache.Clear();
-    }
-
-    public static void ClearLimitedReflectionCache()
-    {
-        LimitedReflectionCache.Clear();
-    }
-
-    /// <summary>
-    /// Clears LimitedReflectionCache cache and sets the size to the specified value.
-    /// </summary>
-    /// <param name="size">Maximum number of entries to allow in LimitedReflectionCache before removing oldest entry according to FIFO rules</param>
-    public static void SetLimitedReflectionCacheSize(int size)
-    {
-        LimitedReflectionCacheSize = size;
-        if (UseLimitedReflectionCache)
-        {
-            ClearLimitedReflectionCache();
-            LimitedReflectionCache = new(LimitedReflectionCacheSize);
-        }
-    }
-
-    /// <summary>
-    /// Clears caches and initializes LimitedReflectionCache to use the size specified by LimitedReflectionCacheSize or 0 if UseLimitedReflectionCache is false.
-    /// </summary>
-    /// <param name="useLimitedReflectionCache">When true, uses cache with limited number of total records</param>
-    public static void SetUseLimitedReflectionCache(bool useLimitedReflectionCache)
-    {
-        ClearAllReflectionCaches();
-        SetLimitedReflectionCacheSize(useLimitedReflectionCache ? LimitedReflectionCacheSize : 1);
-        UseLimitedReflectionCache = useLimitedReflectionCache;
-    }
-
-    public static int GetLimitedReflectionCacheSize()
-    {
-        return LimitedReflectionCacheSize;
-    }
-
-    /// <summary>
-    /// Returns whether the LimitedReflectionCache is being used.
-    /// </summary>
-    public static bool IsUsingLimitedReflectionCache()
-    {
-        return UseLimitedReflectionCache;
-    }
+    public static ICacheManagerApi<Type, PropertyInfo[]> CacheManager => ReflectionCache;
 
     /// <summary>
     /// Clears LimitedReflectionCache cache and sets the size to the specified value.
@@ -69,25 +14,22 @@ public static class ReflectionCaches
     /// <param name="type">Type to get properties for. Will store </param>
     public static PropertyInfo[] GetOrAddPropertiesFromReflectionCache(Type type)
     {
-        if (UseLimitedReflectionCache)
+        bool isLimitedCache = CacheManager.IsUsingLimitedCache();
+        if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(type, out PropertyInfo[]? properties) :
+            CacheManager.GetCache().TryGetValue(type, out properties))
         {
-            if (LimitedReflectionCache.TryGetValue(type, out PropertyInfo[]? properties))
-            {
-                return properties ?? [];
-            }
-            properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            LimitedReflectionCache.Add(type, properties);
-            return properties;
+            return properties ?? [];
+        }
+
+        properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        if (isLimitedCache)
+        {
+            CacheManager.TryAddLimitedCache(type, properties);
         }
         else
         {
-            if (ReflectionCache.TryGetValue(type, out PropertyInfo[]? properties))
-            {
-                return properties ?? [];
-            }
-            properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            ReflectionCache.Add(type, properties);
-            return properties;
+            CacheManager.TryAddCache(type, properties);
         }
+        return properties;
     }
 }

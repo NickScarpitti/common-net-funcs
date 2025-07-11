@@ -10,9 +10,9 @@ public class ReflectionCachesTests : IDisposable
     public ReflectionCachesTests()
     {
         // Ensure a clean state before each test
-        ReflectionCaches.SetUseLimitedReflectionCache(true);
-        ReflectionCaches.SetLimitedReflectionCacheSize(100);
-        ReflectionCaches.ClearAllReflectionCaches();
+        ReflectionCaches.CacheManager.SetUseLimitedCache(true);
+        ReflectionCaches.CacheManager.SetLimitedCacheSize(100);
+        ReflectionCaches.CacheManager.ClearAllCaches();
     }
 
     private bool disposed;
@@ -29,9 +29,9 @@ public class ReflectionCachesTests : IDisposable
         {
             if (disposing)
             {
-                ReflectionCaches.SetUseLimitedReflectionCache(true);
-                ReflectionCaches.SetLimitedReflectionCacheSize(100);
-                ReflectionCaches.ClearAllReflectionCaches();
+                ReflectionCaches.CacheManager.SetUseLimitedCache(true);
+                ReflectionCaches.CacheManager.SetLimitedCacheSize(100);
+                ReflectionCaches.CacheManager.ClearAllCaches();
             }
             disposed = true;
         }
@@ -56,7 +56,7 @@ public class ReflectionCachesTests : IDisposable
         ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType); // Add to cache
 
         // Act
-        ReflectionCaches.ClearAllReflectionCaches();
+        ReflectionCaches.CacheManager.ClearAllCaches();
 
         // Assert
         // Should be empty, so a new call should trigger reflection again (no exception)
@@ -69,11 +69,11 @@ public class ReflectionCachesTests : IDisposable
     public void ClearReflectionCache_ClearsUnboundedCache()
     {
         // Arrange
-        ReflectionCaches.SetUseLimitedReflectionCache(false);
+        ReflectionCaches.CacheManager.SetUseLimitedCache(false);
         ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
 
         // Act
-        ReflectionCaches.ClearReflectionCache();
+        ReflectionCaches.CacheManager.ClearCache();
 
         // Assert
         PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
@@ -84,11 +84,11 @@ public class ReflectionCachesTests : IDisposable
     public void ClearLimitedReflectionCache_ClearsLimitedCache()
     {
         // Arrange
-        ReflectionCaches.SetUseLimitedReflectionCache(true);
+        ReflectionCaches.CacheManager.SetUseLimitedCache(true);
         ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
 
         // Act
-        ReflectionCaches.ClearLimitedReflectionCache();
+        ReflectionCaches.CacheManager.ClearLimitedCache();
 
         // Assert
         PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
@@ -99,14 +99,14 @@ public class ReflectionCachesTests : IDisposable
     public void SetLimitedReflectionCacheSize_ChangesCacheSizeAndClearsCache()
     {
         // Arrange
-        ReflectionCaches.SetUseLimitedReflectionCache(true);
+        ReflectionCaches.CacheManager.SetUseLimitedCache(true);
         ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
 
         // Act
-        ReflectionCaches.SetLimitedReflectionCacheSize(1);
+        ReflectionCaches.CacheManager.SetLimitedCacheSize(1);
 
         // Assert
-        ReflectionCaches.GetLimitedReflectionCacheSize().ShouldBe(1);
+        ReflectionCaches.CacheManager.GetLimitedCacheSize().ShouldBe(1);
         // Should still work after resize
         PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
         props.Length.ShouldBe(2);
@@ -116,49 +116,49 @@ public class ReflectionCachesTests : IDisposable
     public void SetLimitedReflectionCacheSize_DoesNotClearIfNotUsingLimitedCache()
     {
         // Arrange
-        ReflectionCaches.SetUseLimitedReflectionCache(false);
-        ReflectionCaches.SetLimitedReflectionCacheSize(5);
+        ReflectionCaches.CacheManager.SetUseLimitedCache(false);
+        ReflectionCaches.CacheManager.SetLimitedCacheSize(5);
 
         // Assert
-        ReflectionCaches.GetLimitedReflectionCacheSize().ShouldBe(5);
-        ReflectionCaches.IsUsingLimitedReflectionCache().ShouldBeFalse();
+        ReflectionCaches.CacheManager.GetLimitedCacheSize().ShouldBe(5);
+        ReflectionCaches.CacheManager.IsUsingLimitedCache().ShouldBeFalse();
     }
 
     [Fact]
     public void SetUseLimitedReflectionCache_SwitchesModesAndClearsCaches()
     {
         // Arrange
-        ReflectionCaches.SetUseLimitedReflectionCache(false);
-        ReflectionCaches.IsUsingLimitedReflectionCache().ShouldBeFalse();
+        ReflectionCaches.CacheManager.SetUseLimitedCache(false);
+        ReflectionCaches.CacheManager.IsUsingLimitedCache().ShouldBeFalse();
 
         // Act
-        ReflectionCaches.SetUseLimitedReflectionCache(true);
+        ReflectionCaches.CacheManager.SetUseLimitedCache(true);
 
         // Assert
-        ReflectionCaches.IsUsingLimitedReflectionCache().ShouldBeTrue();
+        ReflectionCaches.CacheManager.IsUsingLimitedCache().ShouldBeTrue();
     }
 
     [Fact]
     public void GetLimitedReflectionCacheSize_ReturnsCurrentSize()
     {
-        ReflectionCaches.SetLimitedReflectionCacheSize(42);
-        ReflectionCaches.GetLimitedReflectionCacheSize().ShouldBe(42);
+        ReflectionCaches.CacheManager.SetLimitedCacheSize(42);
+        ReflectionCaches.CacheManager.GetLimitedCacheSize().ShouldBe(42);
     }
 
     [Fact]
     public void IsUsingLimitedReflectionCache_ReturnsCurrentMode()
     {
-        ReflectionCaches.SetUseLimitedReflectionCache(false);
-        ReflectionCaches.IsUsingLimitedReflectionCache().ShouldBeFalse();
+        ReflectionCaches.CacheManager.SetUseLimitedCache(false);
+        ReflectionCaches.CacheManager.IsUsingLimitedCache().ShouldBeFalse();
 
-        ReflectionCaches.SetUseLimitedReflectionCache(true);
-        ReflectionCaches.IsUsingLimitedReflectionCache().ShouldBeTrue();
+        ReflectionCaches.CacheManager.SetUseLimitedCache(true);
+        ReflectionCaches.CacheManager.IsUsingLimitedCache().ShouldBeTrue();
     }
 
     [Fact]
     public void GetOrAddPropertiesFromCache_UsesLimitedCache_WhenEnabled()
     {
-        ReflectionCaches.SetUseLimitedReflectionCache(true);
+        ReflectionCaches.CacheManager.SetUseLimitedCache(true);
 
         PropertyInfo[] props1 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
         PropertyInfo[] props2 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
@@ -170,7 +170,7 @@ public class ReflectionCachesTests : IDisposable
     [Fact]
     public void GetOrAddPropertiesFromCache_UsesUnboundedCache_WhenDisabled()
     {
-        ReflectionCaches.SetUseLimitedReflectionCache(false);
+        ReflectionCaches.CacheManager.SetUseLimitedCache(false);
 
         PropertyInfo[] props1 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
         PropertyInfo[] props2 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);

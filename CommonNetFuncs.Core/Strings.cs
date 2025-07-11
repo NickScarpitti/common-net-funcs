@@ -747,8 +747,39 @@ public static partial class Strings
         return obj;
     }
 
-    //TODO:: Implement use of FixedFIFODictionary here to allow max number of cached delegates to be set
-    private static readonly ConcurrentDictionary<(Type, bool, NormalizationForm, bool), Delegate> normalizeObjectStringsCache = new();
+    #region Caching
+
+    private static readonly CacheManager<(Type, bool, NormalizationForm, bool), Delegate> NormalizeObjectStringsCache = new();
+
+    public static ICacheManagerApi<(Type, bool, NormalizationForm, bool), Delegate> CacheManager => NormalizeObjectStringsCache;
+
+    /// <summary>
+    /// Gets or adds a function from the deep copy cache based on the source and destination types.
+    /// </summary>
+    /// <param name="key">Cache key</param>
+    /// <returns>Function for executing deep copy</returns>
+    private static Delegate GetOrAddNormalizeObjectStringsCache<T>((Type, bool, NormalizationForm, bool) key, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false)
+    {
+        bool isLimitedCache = CacheManager.IsUsingLimitedCache();
+        if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Delegate? function) :
+            CacheManager.GetCache().TryGetValue(key, out function))
+        {
+            return function!;
+        }
+
+        function = CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive, true).CompileFast();
+        if (isLimitedCache)
+        {
+            CacheManager.TryAddLimitedCache(key, function);
+        }
+        else
+        {
+            CacheManager.TryAddCache(key, function);
+        }
+        return function;
+    }
+
+    #endregion
 
     /// <summary>
     /// Removes excess spaces in string properties inside of an object with the option to also trim them
@@ -759,7 +790,7 @@ public static partial class Strings
     /// <param name="normalizationForm">String normalization setting</param>
     /// <param name="recursive">If true, will recursively apply string normalization to nested object</param>
     [return: NotNullIfNotNull(nameof(obj))]
-    public static T? NormalizeObjectStrings<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false)
+    public static T? NormalizeObjectStrings<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false, bool useCache = true)
     {
         if (obj == null)
         {
@@ -769,13 +800,14 @@ public static partial class Strings
         Type type = typeof(T);
         (Type type, bool enableTrim, NormalizationForm normalizationForm, bool recursive) key = (type, enableTrim, normalizationForm, recursive);
 
-        Action<T> action = (Action<T>)normalizeObjectStringsCache.GetOrAdd(key, _ => CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive).CompileFast());
+        Action<T> action = useCache ? (Action<T>)GetOrAddNormalizeObjectStringsCache<T>(key, enableTrim, normalizationForm, recursive) :
+            CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive, useCache).CompileFast();
         action(obj);
 
         return obj;
     }
 
-    private static Expression<Action<T>> CreateNormalizeObjectStringsExpression<T>(bool enableTrim, NormalizationForm normalizationForm, bool recursive)
+    private static Expression<Action<T>> CreateNormalizeObjectStringsExpression<T>(bool enableTrim, NormalizationForm normalizationForm, bool recursive, bool useCache)
     {
         ParameterExpression objParam = Expression.Parameter(typeof(T), "obj");
         List<Expression> expressions = [];
@@ -818,9 +850,9 @@ public static partial class Strings
             else if (recursive && prop.PropertyType.IsClass)
             {
                 MemberExpression propExpr = Expression.Property(objParam, prop);
-                MethodInfo makeObjectNullNullMethod = typeof(Strings).GetMethod(nameof(NormalizeObjectStrings))!;
-                MethodInfo genericMethod = makeObjectNullNullMethod.MakeGenericMethod(prop.PropertyType);
-                MethodCallExpression callMakeObjectNullNull = Expression.Call(genericMethod, propExpr, Expression.Constant(enableTrim), Expression.Constant(normalizationForm), Expression.Constant(true));
+                MethodInfo normalizeStringsMethod = typeof(Strings).GetMethod(nameof(NormalizeObjectStrings))!;
+                MethodInfo genericMethod = normalizeStringsMethod.MakeGenericMethod(prop.PropertyType);
+                MethodCallExpression callMakeObjectNullNull = Expression.Call(genericMethod, propExpr, Expression.Constant(enableTrim), Expression.Constant(normalizationForm), Expression.Constant(true), Expression.Constant(useCache));
 
                 // Add null check for recursive call
                 Expression nullCheck = Expression.NotEqual(propExpr, Expression.Constant(null));

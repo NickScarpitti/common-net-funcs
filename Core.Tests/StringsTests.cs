@@ -652,7 +652,7 @@ public sealed class StringsTests
         bool result = input.IsNullOrEmpty();
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -665,7 +665,7 @@ public sealed class StringsTests
         bool result = input.IsNullOrEmpty();
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -680,7 +680,7 @@ public sealed class StringsTests
         bool result = s.ContainsInvariant(textToFind);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -695,7 +695,7 @@ public sealed class StringsTests
         bool result = s.StartsWithInvariant(textToFind);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -710,7 +710,7 @@ public sealed class StringsTests
         bool result = s.EndsWithInvariant(textToFind);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -725,7 +725,7 @@ public sealed class StringsTests
         int result = s.IndexOfInvariant(textToFind);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -738,7 +738,7 @@ public sealed class StringsTests
         int result = s.IndexOfInvariant(charToFind);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -753,7 +753,7 @@ public sealed class StringsTests
         bool result = s.Contains(search, useOr);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -766,7 +766,7 @@ public sealed class StringsTests
         string? result = s.ReplaceInvariant(oldValue, newValue, replaceAll);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -779,7 +779,7 @@ public sealed class StringsTests
         string? result = s.ReplaceInvariant(oldValues, newValue, replaceAll);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     // StrComp (string?, string?)
@@ -795,7 +795,7 @@ public sealed class StringsTests
         bool result = s1.StrComp(s2);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -808,7 +808,7 @@ public sealed class StringsTests
         bool result = s1.StrComp(s2, comparison);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -823,7 +823,7 @@ public sealed class StringsTests
         bool result = input.IsNumericOnly(allowSpaces);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -836,7 +836,7 @@ public sealed class StringsTests
         string? result = s.ExtractToLastInstance(c);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -849,7 +849,7 @@ public sealed class StringsTests
         string? result = s.ExtractFromLastInstance(c);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     private class TestTrimObj
@@ -866,13 +866,13 @@ public sealed class StringsTests
         TestTrimObj obj = new() { Name = "  test  ", Desc = "  desc  " };
 
         // Act
-#pragma warning disable CS0618 // Type or member is obsolete
+        #pragma warning disable CS0618 // Type or member is obsolete
         TestTrimObj result = obj.TrimObjectStringsR();
         #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
-        Assert.Equal("test", result!.Name);
-        Assert.Equal("desc", result.Desc);
+        result!.Name.ShouldBe("test");
+        result.Desc.ShouldBe("desc");
     }
 
     private class TestNormObj
@@ -880,17 +880,26 @@ public sealed class StringsTests
         public string? Name { get; set; }
     }
 
-    [Fact]
-    public void NormalizeObjectStringsR_NormalizesStrings()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void NormalizeObjectStringsR_NormalizesStrings(bool enableTrim)
     {
         // Arrange
         TestNormObj obj = new() { Name = "  café  " };
 
         // Act
-        TestNormObj? result = obj.NormalizeObjectStringsR(true, NormalizationForm.FormD);
+        TestNormObj? result = obj.NormalizeObjectStringsR(enableTrim, NormalizationForm.FormD);
 
         // Assert
-        Assert.Equal("café", result!.Name); // decomposed form
+        if (enableTrim)
+        {
+            result!.Name.ShouldBe("café");
+        }
+        else
+        {
+            result!.Name.ShouldBe("  café  ");
+        }
     }
 
     private class TestNullObj
@@ -908,7 +917,8 @@ public sealed class StringsTests
         TestNullObj result = obj.MakeObjectNullNullR();
 
         // Assert
-        Assert.Null(result!.Name);
+        result.ShouldNotBeNull();
+        result.Name.ShouldBeNull();
     }
 
     [Fact]
@@ -921,7 +931,21 @@ public sealed class StringsTests
         TestNullObj result = obj.MakeObjectNullNull();
 
         // Assert
-        Assert.Null(result!.Name);
+        result.ShouldNotBeNull();
+        result.Name.ShouldBeNull();
+    }
+
+    [Fact]
+    public void MakeNullObjectNull_SetsNull()
+    {
+        // Arrange
+        TestNullObj? obj = null;
+
+        // Act
+        TestNullObj? result = obj.MakeObjectNullNull();
+
+        // Assert
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -939,16 +963,16 @@ public sealed class StringsTests
         object? o = "test";
 
         // Act & Assert
-        Assert.Equal(dt.Value.ToString(), dt.ToNString());
-        Assert.Equal(d.Value.ToString(), d.ToNString());
-        Assert.Equal(ts.Value.ToString(), ts.ToNString());
-        Assert.Equal("42", i.ToNString());
-        Assert.Equal("123456789", l.ToNString());
-        Assert.Equal("3.14", dbl.ToNString());
-        Assert.Equal("2.71", dec.ToNString());
-        Assert.Equal("True", b.ToNString());
-        Assert.Equal("test", o.ToNString());
-        Assert.Null(((object?)null).ToNString());
+        dt.ToNString().ShouldBe(dt.ToString());
+        d.ToNString().ShouldBe(d.ToString());
+        ts.ToNString().ShouldBe(ts.ToString());
+        i.ToNString().ShouldBe("42");
+        l.ToNString().ShouldBe("123456789");
+        dbl.ToNString().ShouldBe("3.14");
+        dec.ToNString().ShouldBe("2.71");
+        b.ToNString().ShouldBe("True");
+        o.ToNString().ShouldBe("test");
+        ((object?)null).ToNString().ShouldBeNull();
     }
 
     [Fact]
@@ -963,8 +987,8 @@ public sealed class StringsTests
         List<int> result2 = list.ToListInt();
 
         // Assert
-        Assert.Equal([1, 2, 3], result1);
-        Assert.Equal(new List<int> { 4, 5, 6 }, result2);
+        result1.ShouldBe([1, 2, 3]);
+        result2.ShouldBe(new List<int> { 4, 5, 6 });
     }
 
     [Theory]
@@ -977,7 +1001,7 @@ public sealed class StringsTests
         double? result = input.ToNDouble();
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -990,7 +1014,7 @@ public sealed class StringsTests
         decimal? result = input.ToNDecimal();
 
         // Assert
-        Assert.Equal((decimal?)expected, result);
+        result.ShouldBe((decimal?)expected);
     }
 
     [Theory]
@@ -1004,11 +1028,11 @@ public sealed class StringsTests
         // Assert
         if (year is null)
         {
-            Assert.Null(result);
+            result.ShouldBeNull();
         }
         else
         {
-            Assert.Equal(new DateTime(year.Value, month!.Value, day!.Value), result);
+            result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value));
         }
     }
 
@@ -1023,11 +1047,11 @@ public sealed class StringsTests
         // Assert
         if (year is null)
         {
-            Assert.Null(result);
+            result.ShouldBeNull();
         }
         else
         {
-            Assert.Equal(new DateOnly(year.Value, month!.Value, day!.Value), result);
+            result.ShouldBe(new DateOnly(year.Value, month!.Value, day!.Value));
         }
     }
 
@@ -1044,7 +1068,7 @@ public sealed class StringsTests
         bool result = input.YesNoToBool();
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1060,7 +1084,7 @@ public sealed class StringsTests
         bool result = input.YNToBool();
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1072,7 +1096,7 @@ public sealed class StringsTests
         string result = input.BoolToYesNo();
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1084,7 +1108,7 @@ public sealed class StringsTests
         string result = input.BoolToYN();
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Fact]
@@ -1101,9 +1125,9 @@ public sealed class StringsTests
         string result3 = d.GetSafeDate(format);
 
         // Assert
-        Assert.False(string.IsNullOrWhiteSpace(result1));
-        Assert.False(string.IsNullOrWhiteSpace(result2));
-        Assert.False(string.IsNullOrWhiteSpace(result3));
+        string.IsNullOrWhiteSpace(result1).ShouldBeFalse();
+        string.IsNullOrWhiteSpace(result2).ShouldBeFalse();
+        string.IsNullOrWhiteSpace(result3).ShouldBeFalse();
     }
 
     [Fact]
@@ -1118,8 +1142,8 @@ public sealed class StringsTests
         string unique = Strings.MakeExportNameUnique(tempDir, fileName, ext);
 
         // Assert
-        Assert.StartsWith(fileName.Replace($".{ext}", string.Empty), unique);
-        Assert.EndsWith(ext, unique);
+        unique.ShouldStartWith(fileName.Replace($".{ext}", string.Empty));
+        unique.ShouldEndWith(ext);
     }
 
     [Theory]
@@ -1134,7 +1158,7 @@ public sealed class StringsTests
         string result = ts.TimespanToShortForm();
 
         // Assert
-        Assert.Contains(expected[..2], result);
+        result.ShouldContain(expected[..2]);
     }
 
     [Theory]
@@ -1149,7 +1173,7 @@ public sealed class StringsTests
         string result = ts.TimespanToShortForm();
 
         // Assert
-        Assert.Contains(expected[..2], result);
+        result.ShouldContain(expected[..2]);
     }
 
     [Theory]
@@ -1162,7 +1186,7 @@ public sealed class StringsTests
         string? result = input.ReplaceInverse(pattern, replacement, matchFirstOnly);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1178,7 +1202,7 @@ public sealed class StringsTests
         string? result = regex.ReplaceInverse(input, replacement, matchFirstOnly);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1190,7 +1214,7 @@ public sealed class StringsTests
         string? result = input.ToFractionString(maxDecimals);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1202,7 +1226,7 @@ public sealed class StringsTests
         string? result = input.ToFractionString(maxDecimals);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Fact]
@@ -1215,7 +1239,7 @@ public sealed class StringsTests
         string? result = input.ToFractionString(2);
 
         // Assert
-        Assert.Null(result);
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -1228,7 +1252,7 @@ public sealed class StringsTests
         string? result = input.ToFractionString(2);
 
         // Assert
-        Assert.Null(result);
+        result.ShouldBeNull();
     }
 
     [Theory]
@@ -1242,8 +1266,8 @@ public sealed class StringsTests
         bool success = input.TryFractionToDecimal(out decimal? result);
 
         // Assert
-        Assert.Equal(expectedSuccess, success);
-        Assert.Equal((decimal?)expected, result);
+        success.ShouldBe(expectedSuccess);
+        result.ShouldBe((decimal?)expected);
     }
 
     [Theory]
@@ -1257,8 +1281,8 @@ public sealed class StringsTests
         bool success = input.TryFractionToDecimal(out decimal result);
 
         // Assert
-        Assert.Equal(expectedSuccess, success);
-        Assert.Equal((decimal?)expected, result);
+        success.ShouldBe(expectedSuccess);
+        result.ShouldBe((decimal)expected);
     }
 
     [Theory]
@@ -1272,8 +1296,8 @@ public sealed class StringsTests
         bool success = input.TryStringToDecimal(out decimal? result);
 
         // Assert
-        Assert.Equal(expectedSuccess, success);
-        Assert.Equal((decimal?)expected, result);
+        success.ShouldBe(expectedSuccess);
+        result.ShouldBe((decimal?)expected);
     }
 
     [Theory]
@@ -1287,8 +1311,8 @@ public sealed class StringsTests
         bool success = input.TryStringToDecimal(out decimal result);
 
         // Assert
-        Assert.Equal(expectedSuccess, success);
-        Assert.Equal((decimal?)expected, result);
+        success.ShouldBe(expectedSuccess);
+        result.ShouldBe((decimal)expected);
     }
 
     [Theory]
@@ -1302,7 +1326,7 @@ public sealed class StringsTests
         double? result = input.FractionToDouble();
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1316,8 +1340,8 @@ public sealed class StringsTests
         bool success = input.TryFractionToDouble(out double? result);
 
         // Assert
-        Assert.Equal(expectedSuccess, success);
-        Assert.Equal(expected, result);
+        success.ShouldBe(expectedSuccess);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1331,8 +1355,8 @@ public sealed class StringsTests
         bool success = input.TryFractionToDouble(out double result);
 
         // Assert
-        Assert.Equal(expectedSuccess, success);
-        Assert.Equal(expected, result);
+        success.ShouldBe(expectedSuccess);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1346,8 +1370,8 @@ public sealed class StringsTests
         bool success = input.TryStringToDouble(out double? result);
 
         // Assert
-        Assert.Equal(expectedSuccess, success);
-        Assert.Equal(expected, result);
+        success.ShouldBe(expectedSuccess);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1361,8 +1385,8 @@ public sealed class StringsTests
         bool success = input.TryStringToDouble(out double result);
 
         // Assert
-        Assert.Equal(expectedSuccess, success);
-        Assert.Equal(expected, result);
+        success.ShouldBe(expectedSuccess);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1376,7 +1400,7 @@ public sealed class StringsTests
         string? result = input.TrimOuterNonAlphanumeric();
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1389,7 +1413,7 @@ public sealed class StringsTests
         int result = input.AsSpan().CountChars(charToFind);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1402,7 +1426,7 @@ public sealed class StringsTests
         int result = input.CountChars(charToFind);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Fact]
@@ -1422,7 +1446,7 @@ public sealed class StringsTests
         bool result = input.AsSpan().HasNoMoreThanNumberOfChars(charToFind, max);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     [Theory]
@@ -1435,6 +1459,79 @@ public sealed class StringsTests
         bool result = input.AsSpan().HasNoLessThanNumberOfChars(charToFind, min);
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void CacheManager_Property_ReturnsExpectedInstance()
+    {
+        // Act
+        ICacheManagerApi<(Type, bool, NormalizationForm, bool), Delegate> cache = Strings.CacheManager;
+
+        // Assert
+        cache.ShouldNotBeNull();
+        cache.ShouldBeAssignableTo<ICacheManagerApi<(Type, bool, NormalizationForm, bool), Delegate>>();
+    }
+
+    [Fact]
+    public void NormalizeObjectStrings_UsesCacheAndBypassesCache()
+    {
+        // Arrange
+        TestNormObj obj = new() { Name = "  café  " };
+
+        // Act
+
+        // First call: should populate the cache
+        TestNormObj result1 = obj.NormalizeObjectStrings(true, NormalizationForm.FormD, recursive: false, useCache: true);
+
+        // Second call: should hit the cache
+        TestNormObj result2 = obj.NormalizeObjectStrings(true, NormalizationForm.FormD, recursive: false, useCache: true);
+
+        // Third call: bypass cache
+        TestNormObj result3 = obj.NormalizeObjectStrings(true, NormalizationForm.FormD, recursive: false, useCache: false);
+
+        // Assert
+        result1!.Name.ShouldBe("café");
+        result2!.Name.ShouldBe("café");
+        result3!.Name.ShouldBe("café");
+    }
+
+    [Fact]
+    public void NormalizeObjectStrings_CacheManager_LimitedAndUnlimitedModes()
+    {
+        // Arrange
+        ICacheManagerApi<(Type, bool, NormalizationForm, bool), Delegate> cacheManager = Strings.CacheManager;
+        TestNormObj obj = new() { Name = "  café  " };
+        (Type, bool, NormalizationForm FormD, bool) key = (typeof(TestNormObj), true, NormalizationForm.FormD, false);
+
+        bool wasLimited = cacheManager.IsUsingLimitedCache(); // Save original mode
+
+        //Act & Assert
+        try
+        {
+            // Force unlimited mode
+            if (wasLimited)
+            {
+                cacheManager.SetUseLimitedCache(false);
+            }
+
+            // Should add to unlimited cache
+            obj.NormalizeObjectStrings(true, NormalizationForm.FormD, false, true);
+
+            cacheManager.GetCache().ContainsKey(key).ShouldBeTrue();
+
+            // Switch to limited mode
+            cacheManager.SetUseLimitedCache(true);
+
+            // Should add to limited cache
+            obj.NormalizeObjectStrings(true, NormalizationForm.FormD, false, true);
+
+            cacheManager.GetLimitedCache().ContainsKey(key).ShouldBeTrue();
+        }
+        finally
+        {
+            // Restore original mode
+            cacheManager.SetUseLimitedCache(wasLimited);
+        }
     }
 }

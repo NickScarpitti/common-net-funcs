@@ -2,11 +2,11 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using CommonNetFuncs.Core;
 using FastExpressionCompiler;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
-using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ReflectionCaches;
 using static CommonNetFuncs.Core.Strings;
 
@@ -36,7 +36,9 @@ public class NavigationPropertiesOptions(int maxNavigationDepth = 100, List<Type
 
 public static class NavigationProperties
 {
-    private readonly struct NavigationProperiesCacheKey(Type sourceType, string? navigationPropertyTypesToIgnore) : IEquatable<NavigationProperiesCacheKey>
+    #region Caching
+
+    public readonly struct NavigationProperiesCacheKey(Type sourceType, string? navigationPropertyTypesToIgnore) : IEquatable<NavigationProperiesCacheKey>
     {
         public readonly Type SourceType = sourceType;
         public readonly string? NavigationPropertyTypesToIgnore = navigationPropertyTypesToIgnore;
@@ -55,9 +57,19 @@ public static class NavigationProperties
         {
             return SourceType.GetHashCode() + NavigationPropertyTypesToIgnore?.GetHashCode() ?? 0;
         }
+
+        public static bool operator ==(NavigationProperiesCacheKey left, NavigationProperiesCacheKey right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(NavigationProperiesCacheKey left, NavigationProperiesCacheKey right)
+        {
+            return !(left == right);
+        }
     }
 
-    private readonly struct NavigationProperiesCacheValue(HashSet<string> navigationProperties, int maxDepth) : IEquatable<NavigationProperiesCacheValue>
+    public readonly struct NavigationProperiesCacheValue(HashSet<string> navigationProperties, int maxDepth) : IEquatable<NavigationProperiesCacheValue>
     {
         public readonly HashSet<string> NavigationProperties = navigationProperties;
         public readonly int MaxDepth = maxDepth;
@@ -85,7 +97,78 @@ public static class NavigationProperties
             }
             return NavigationProperties.Where(x => x.HasNoMoreThanNumberOfChars('.', depth)).ToHashSet();
         }
+
+        public static bool operator ==(NavigationProperiesCacheValue left, NavigationProperiesCacheValue right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(NavigationProperiesCacheValue left, NavigationProperiesCacheValue right)
+        {
+            return !(left == right);
+        }
     }
+
+    private static readonly CacheManager<NavigationProperiesCacheKey, NavigationProperiesCacheValue> NavigationCache = new();
+
+    public static ICacheManagerApi<NavigationProperiesCacheKey, NavigationProperiesCacheValue> NavigationCacheManager => NavigationCache;
+
+    private static readonly CacheManager<Type, List<string>> TopLevelNavigationCache = new();
+
+    public static ICacheManagerApi<Type, List<string>> TopLevelNavigationCacheManager => TopLevelNavigationCache;
+
+    /// <summary>
+    /// Clears LimitedEntityNavigationsCache cache and sets the size to the specified value.
+    /// </summary>
+    /// <param name="key">Type to get properties for. Will store </param>
+    private static HashSet<string> GetOrAddPropertiesFromEntityNavigationsCache<T>(NavigationProperiesCacheKey key, DbContext context, NavigationPropertiesOptions navigationPropertiesOptions) where T : class
+    {
+        if (NavigationCacheManager.IsUsingLimitedCache() ?
+            NavigationCacheManager.GetLimitedCache().TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out NavigationProperiesCacheValue cachedValue) :
+            NavigationCacheManager.GetCache().TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out cachedValue))
+        {
+            if (cachedValue.MaxDepth < 0 || cachedValue.MaxDepth >= navigationPropertiesOptions.MaxNavigationDepth) //Cached value to requested depth exists
+            {
+                return cachedValue.GetNavigationsToDepth(navigationPropertiesOptions.MaxNavigationDepth);
+            }
+        }
+
+        HashSet<string> navigations = GetNewNavigations<T>(context, navigationPropertiesOptions);
+        if (NavigationCacheManager.IsUsingLimitedCache())
+        {
+            NavigationCacheManager.TryAddLimitedCache(key, new(navigations, navigationPropertiesOptions.MaxNavigationDepth));
+        }
+        else
+        {
+            NavigationCacheManager.TryAddCache(key, new(navigations, navigationPropertiesOptions.MaxNavigationDepth));
+        }
+        return navigations;
+    }
+
+    /// <summary>
+    /// Clears LimitedTopLevelNavigationsCache cache and sets the size to the specified value.
+    /// </summary>
+    /// <param name="type">Type to get properties for. Will store </param>
+    private static List<string> GetOrAddPropertiesFromTopLevelNavigationsCache(Type type, DbContext context, List<Type>? navPropAttributesToIgnore = null)
+    {
+        if (TopLevelNavigationCacheManager.IsUsingLimitedCache() ? TopLevelNavigationCacheManager.GetLimitedCache().TryGetValue(type, out List<string>? cachedNavigations) : TopLevelNavigationCacheManager.GetCache().TryGetValue(type, out cachedNavigations))
+        {
+            return cachedNavigations ?? [];
+        }
+
+        List<string> navigations = GetNewTopLevelNavigations(type, context, navPropAttributesToIgnore);
+        if (TopLevelNavigationCacheManager.IsUsingLimitedCache())
+        {
+            TopLevelNavigationCacheManager.TryAddLimitedCache(type, navigations);
+        }
+        else
+        {
+            TopLevelNavigationCacheManager.TryAddCache(type, navigations);
+        }
+        return navigations;
+    }
+
+    #endregion
 
     /// <summary>
     /// Adds navigation properties onto an EF Core query.
@@ -103,8 +186,6 @@ public static class NavigationProperties
     }
 
     private readonly record struct NavigationNode(string Name, Type Type);
-    private static readonly ConcurrentDictionary<NavigationProperiesCacheKey, NavigationProperiesCacheValue> CachedEntityNavigations = new();
-    private static readonly ConcurrentDictionary<Type, List<string>> CachedTopLevelNavigations = new();
 
     /// <summary>
     /// Gets all of the navigations of entity T as a list of string through recursive iterations through each navigation property.
@@ -116,15 +197,14 @@ public static class NavigationProperties
     public static HashSet<string> GetNavigations<T>(DbContext context, NavigationPropertiesOptions? navigationPropertiesOptions = null) where T : class
     {
         navigationPropertiesOptions ??= new();
-        // Try get from cache first
-        if (navigationPropertiesOptions.UseCaching && CachedEntityNavigations.TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out NavigationProperiesCacheValue cachedValue))
-        {
-            if (cachedValue.MaxDepth < 0 || cachedValue.MaxDepth >= navigationPropertiesOptions.MaxNavigationDepth) //Cached value to requested depth exists
-            {
-                return cachedValue.GetNavigationsToDepth(navigationPropertiesOptions.MaxNavigationDepth);
-            }
-        }
 
+        return navigationPropertiesOptions.UseCaching ?
+            GetOrAddPropertiesFromEntityNavigationsCache<T>(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), context, navigationPropertiesOptions) :
+            GetNewNavigations<T>(context, navigationPropertiesOptions);
+    }
+
+    private static HashSet<string> GetNewNavigations<T>(DbContext context, NavigationPropertiesOptions navigationPropertiesOptions) where T : class
+    {
         HashSet<NavigationNode> visitedNode = [];
         HashSet<string> paths = [];
 
@@ -161,11 +241,6 @@ public static class NavigationProperties
                     {
                         continue;
                     }
-
-                    //if (navigationPropertiesOptions.NavPropAttributesToIgnore.Any(x => propertyInfo?.GetCustomAttributes(x, true).AnyFast() == true))
-                    //{
-                    //    continue;
-                    //}
                 }
                 else if (propertyInfo?.GetCustomAttributes<JsonIgnoreAttribute>(true).Any() == true || propertyInfo?.GetCustomAttributes<System.Text.Json.Serialization.JsonIgnoreAttribute>(true).Any() == true)
                 {
@@ -201,21 +276,6 @@ public static class NavigationProperties
 
         TraverseNavigations(typeof(T), new(), 0);
 
-        // Cache the results
-        NavigationProperiesCacheKey newKey = new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString());
-        NavigationProperiesCacheValue newValue = new(paths, navigationPropertiesOptions.MaxNavigationDepth);
-        if (CachedEntityNavigations.TryGetValue(newKey, out NavigationProperiesCacheValue existingValue))
-        {
-            if (existingValue.MaxDepth > 0 && (existingValue.MaxDepth < navigationPropertiesOptions.MaxNavigationDepth || navigationPropertiesOptions.MaxNavigationDepth < 0))
-            {
-                CachedEntityNavigations[newKey] = newValue; // Update existing entry if it exists to new, higher depth
-            }
-        }
-        else
-        {
-            CachedEntityNavigations.TryAdd(newKey, newValue); // Add new entry if it does not exist
-        }
-
         return paths;
     }
 
@@ -226,17 +286,20 @@ public static class NavigationProperties
     /// <param name="context">The context that contains the definition for entity T.</param>
     /// <param name="navPropAttributesToIgnore">Optional: The attribute types used to ignore top level class properties. If null, uses System.Text.Json.Serialization.JsonIgnoreAttribute and Newtonsoft.Json.JsonIgnoreAttribute</param>
     /// <returns>List of string representing the names of all of the navigation properties in entity T.</returns>
-    public static List<string> GetTopLevelNavigations<T>(DbContext context, List<Type>? navPropAttributesToIgnore = null)
+    public static List<string> GetTopLevelNavigations<T>(DbContext context, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
     {
         Type entityClassType = typeof(T);
 
-        if (CachedTopLevelNavigations.TryGetValue(entityClassType, out List<string>? cachedNavigations))
-        {
-            return cachedNavigations;
-        }
+        return useCaching ? GetOrAddPropertiesFromTopLevelNavigationsCache(entityClassType, context, navPropAttributesToIgnore) :
+            GetNewTopLevelNavigations(entityClassType, context, navPropAttributesToIgnore);
+    }
 
-        List<string> topLevelNavigations = CachedEntityNavigations.Where(x => x.Key.Equals(new(entityClassType, navPropAttributesToIgnore.CreateNavPropsIgnoreString())))
-            .SelectMany(x => x.Value.NavigationProperties).Where(x => !x.Contains('.')).ToList(); //Remove any with a '.' since these are deeper than top level
+    private static List<string> GetNewTopLevelNavigations(Type entityClassType, DbContext context, List<Type>? navPropAttributesToIgnore = null)
+    {
+        List<string> topLevelNavigations = NavigationCacheManager.IsUsingLimitedCache() ? NavigationCacheManager.GetLimitedCache().Where(x => x.Key.Equals(new(entityClassType, navPropAttributesToIgnore.CreateNavPropsIgnoreString())))
+             .SelectMany(x => x.Value.NavigationProperties).Where(x => !x.Contains('.')).ToList() : //Remove any with a '.' since these are deeper than top level
+             NavigationCacheManager.GetCache().Where(x => x.Key.Equals(new(entityClassType, navPropAttributesToIgnore.CreateNavPropsIgnoreString())))
+             .SelectMany(x => x.Value.NavigationProperties).Where(x => !x.Contains('.')).ToList(); //Remove any with a '.' since these are deeper than top level
 
         if (!topLevelNavigations.AnyFast())
         {
@@ -252,7 +315,6 @@ public static class NavigationProperties
 
             topLevelNavigations = navigations.Select(x => x.Name).ToList();
         }
-        CachedTopLevelNavigations.AddDictionaryItem(new(entityClassType, topLevelNavigations));
         return topLevelNavigations;
     }
 
@@ -295,19 +357,6 @@ public static class NavigationProperties
                     assignments.Add(Expression.Assign(Expression.Property(convertedParameter, property), Expression.Constant(null, property.PropertyType)));
                 }
             }
-
-            //List<BinaryExpression?> assignments = navigations.Select(navProp =>
-            //{
-            //    PropertyInfo? property = type.GetProperty(navProp);
-            //    if (property?.CanWrite != true)
-            //    {
-            //        return null;
-            //    }
-
-            //    return Expression.Assign(Expression.Property(convertedParameter, property), Expression.Constant(null, property.PropertyType));
-            //})
-            //.Where(assignment => assignment != null)
-            //.ToList();
 
             // If no valid assignments, return empty action
             if (!assignments.AnyFast())

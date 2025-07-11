@@ -166,7 +166,7 @@ public sealed class TypeChecksTests
         }
 
         // Assert
-        Assert.Equal(expected, result);
+        result.ShouldBe(expected);
     }
 
     // Helper types for interface/class that implement IReadOnlyCollection<T>

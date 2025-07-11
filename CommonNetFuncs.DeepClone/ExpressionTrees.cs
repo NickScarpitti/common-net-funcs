@@ -1,6 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.DeepClone;
 
@@ -9,14 +11,45 @@ namespace CommonNetFuncs.DeepClone;
 /// </summary>
 public static class ExpressionTrees
 {
-    private static readonly Lock IsStructTypeToDeepCopyDictionaryLocker = new();
-    private static Dictionary<Type, bool> IsStructTypeToDeepCopyDictionary = [];
+    //private static readonly Lock IsStructTypeToDeepCopyDictionaryLocker = new();
+    private static readonly ConcurrentDictionary<Type, bool> IsStructTypeToDeepCopyDictionary = [];
 
-    private static readonly Lock CompiledCopyFunctionsDictionaryLocker = new();
-    private static Dictionary<Type, Func<object, Dictionary<object, object>, object>> CompiledCopyFunctionsDictionary = [];
+    //private static readonly Lock CompiledCopyFunctionsDictionaryLocker = new();
 
     private static readonly Type ObjectType = typeof(object);
     private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
+
+    #region Caching
+
+    private static readonly CacheManager<Type, Func<object, Dictionary<object, object>, object>> DeepCloneCache = new();
+
+    public static ICacheManagerApi<Type, Func<object, Dictionary<object, object>, object>> CacheManager => DeepCloneCache;
+
+    /// <summary>
+    /// Clears LimitedCompiledFunctionsCache cache and sets the size to the specified value.
+    /// </summary>
+    private static Func<object, Dictionary<object, object>, object> GetOrAddPropertiesFromCompiledFunctionsCache(Type key)
+    {
+        bool isLimitedCache = CacheManager.IsUsingLimitedCache();
+        if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Func<object, Dictionary<object, object>, object>? compiledFunction) :
+            CacheManager.GetCache().TryGetValue(key, out compiledFunction))
+        {
+            return compiledFunction!;
+        }
+
+        compiledFunction = CreateCompiledLambdaCopyFunctionForType(key, true).Compile();
+        if (isLimitedCache)
+        {
+            CacheManager.TryAddLimitedCache(key, compiledFunction);
+        }
+        else
+        {
+            CacheManager.TryAddCache(key, compiledFunction);
+        }
+        return compiledFunction;
+    }
+
+    #endregion
 
     /// <summary>
     /// Deep clone a non-delegate type class (cloned object doesn't retain memory references) using Expression Trees (fastest)
@@ -25,12 +58,12 @@ public static class ExpressionTrees
     /// <param name="original">Object to copy.</param>
     /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
     [return: NotNullIfNotNull(nameof(original))]
-    public static T? DeepClone<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null)
+    public static T? DeepClone<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null, bool useCache = true)
     {
-        return (T?)DeepCopyByExpressionTreeObj(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
+        return (T?)DeepCopyByExpressionTreeObj(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()), useCache);
     }
 
-    private static object? DeepCopyByExpressionTreeObj(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
+    private static object? DeepCopyByExpressionTreeObj(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict, bool useCache)
     {
         if (original == null)
         {
@@ -60,33 +93,13 @@ public static class ExpressionTrees
             return new();
         }
 
-        Func<object, Dictionary<object, object>, object> compiledCopyFunction = GetOrCreateCompiledLambdaCopyFunction(type);
+        Func<object, Dictionary<object, object>, object> compiledCopyFunction = useCache ?
+            GetOrAddPropertiesFromCompiledFunctionsCache(type) :
+            CreateCompiledLambdaCopyFunctionForType(type, useCache).Compile();
         return compiledCopyFunction(original, copiedReferencesDict);
     }
 
-    private static Func<object, Dictionary<object, object>, object> GetOrCreateCompiledLambdaCopyFunction(Type type)
-    {
-        // The following structure ensures that multiple threads can use the dictionary even while dictionary is locked and being updated by other thread.
-        // That is why we do not modify the old dictionary instance but we replace it with a new instance every time.
-        if (!CompiledCopyFunctionsDictionary.TryGetValue(type, out Func<object, Dictionary<object, object>, object>? compiledCopyFunction))
-        {
-            lock (CompiledCopyFunctionsDictionaryLocker)
-            {
-                if (!CompiledCopyFunctionsDictionary.TryGetValue(type, out compiledCopyFunction))
-                {
-                    Expression<Func<object, Dictionary<object, object>, object>> uncompiledCopyFunction = CreateCompiledLambdaCopyFunctionForType(type);
-                    compiledCopyFunction = uncompiledCopyFunction.Compile();
-
-                    Dictionary<Type, Func<object, Dictionary<object, object>, object>> dictionaryCopy = CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
-                    dictionaryCopy.Add(type, compiledCopyFunction);
-                    CompiledCopyFunctionsDictionary = dictionaryCopy;
-                }
-            }
-        }
-        return compiledCopyFunction;
-    }
-
-    private static Expression<Func<object, Dictionary<object, object>, object>> CreateCompiledLambdaCopyFunctionForType(Type type)
+    internal static Expression<Func<object, Dictionary<object, object>, object>> CreateCompiledLambdaCopyFunctionForType(Type type, bool useCache)
     {
         ///// INITIALIZATION OF EXPRESSIONS AND VARIABLES
         InitializeExpressions(type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable, out ParameterExpression boxingVariable,
@@ -105,12 +118,12 @@ public static class ExpressionTrees
         }
 
         ///// COPY ALL NONVALUE OR NONPRIMITIVE FIELDS
-        FieldsCopyExpressions(type, inputParameter, inputDictionary, outputVariable, boxingVariable, expressions);
+        FieldsCopyExpressions(type, inputParameter, inputDictionary, outputVariable, boxingVariable, expressions, useCache);
 
         ///// COPY ELEMENTS OF ARRAY
         if (type.IsArray && type.GetElementType().IsTypeToDeepCopy())
         {
-            CreateArrayCopyLoopExpression(type, inputParameter, inputDictionary, outputVariable, variables, expressions);
+            CreateArrayCopyLoopExpression(type, inputParameter, inputDictionary, outputVariable, variables, expressions, useCache);
         }
 
         ///// COMBINE ALL EXPRESSIONS INTO LAMBDA FUNCTION
@@ -169,7 +182,8 @@ public static class ExpressionTrees
         return Expression.Lambda<Func<object, Dictionary<object, object>, object>>(finalBody, inputParameter, inputDictionary);
     }
 
-    private static void CreateArrayCopyLoopExpression(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<ParameterExpression> variables, List<Expression> expressions)
+    private static void CreateArrayCopyLoopExpression(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable,
+        List<ParameterExpression> variables, List<Expression> expressions, bool useCache)
     {
         int rank = type.GetArrayRank();
         List<ParameterExpression> indices = GenerateIndices(rank);
@@ -177,7 +191,7 @@ public static class ExpressionTrees
         variables.AddRange(indices);
 
         Type? elementType = type.GetElementType();
-        Expression forExpression = ArrayFieldToArrayFieldAssignExpression(inputParameter, inputDictionary, outputVariable, elementType, type, indices);
+        Expression forExpression = ArrayFieldToArrayFieldAssignExpression(inputParameter, inputDictionary, outputVariable, elementType, type, indices, useCache);
 
         for (int dimension = 0; dimension < rank; dimension++)
         {
@@ -202,13 +216,13 @@ public static class ExpressionTrees
         return indices;
     }
 
-    private static BinaryExpression ArrayFieldToArrayFieldAssignExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, Type? elementType, Type arrayType, List<ParameterExpression> indices)
+    private static BinaryExpression ArrayFieldToArrayFieldAssignExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, Type? elementType, Type arrayType, List<ParameterExpression> indices, bool useCache)
     {
         IndexExpression indexTo = Expression.ArrayAccess(outputVariable, indices);
         MethodCallExpression indexFrom = Expression.ArrayIndex(Expression.Convert(inputParameter, arrayType), indices);
 
         bool forceDeepCopy = elementType != ObjectType;
-        UnaryExpression rightSide = Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(indexFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary), elementType!);
+        UnaryExpression rightSide = Expression.Convert(Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(indexFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary, Expression.Constant(useCache, typeof(bool))), elementType!);
         return Expression.Assign(indexTo, rightSide);
     }
 
@@ -241,7 +255,8 @@ public static class ExpressionTrees
         return Expression.Assign(lengthVariable, Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, new[] { dimensionConstant }));
     }
 
-    private static void FieldsCopyExpressions(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, ParameterExpression boxingVariable, List<Expression> expressions)
+    private static void FieldsCopyExpressions(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable,
+        ParameterExpression boxingVariable, List<Expression> expressions, bool useCache)
     {
         FieldInfo[] fields = GetAllRelevantFields(type);
         IEnumerable<FieldInfo> readonlyFields = fields.Where(f => f.IsInitOnly).ToList();
@@ -263,7 +278,7 @@ public static class ExpressionTrees
             }
             else
             {
-                ReadonlyFieldCopyExpression(type, field, inputParameter, inputDictionary, boxingVariable, expressions);
+                ReadonlyFieldCopyExpression(type, field, inputParameter, inputDictionary, boxingVariable, expressions, useCache);
             }
         }
 
@@ -282,7 +297,7 @@ public static class ExpressionTrees
             }
             else
             {
-                WritableFieldCopyExpression(type, field, inputParameter, inputDictionary, outputVariable, expressions);
+                WritableFieldCopyExpression(type, field, inputParameter, inputDictionary, outputVariable, expressions, useCache);
             }
         }
     }
@@ -322,7 +337,7 @@ public static class ExpressionTrees
     private static readonly Type ThisType = typeof(ExpressionTrees);
     private static readonly MethodInfo? DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static);
 
-    private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions)
+    private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions, bool useCache)
     {
         // This option must be implemented by Reflection (SetValueMethod) because of the following:
         // https://visualstudio.uservoice.com/forums/121579-visual-studio-2015/suggestions/2727812-allow-expression-assign-to-set-readonly-struct-f
@@ -338,7 +353,7 @@ public static class ExpressionTrees
                 Expression.Constant(field, FieldInfoType),
                 SetValueMethod!,
                 boxingVariable,
-                Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary));
+                Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary, Expression.Constant(useCache, typeof(bool))));
 
         expressions.Add(fieldDeepCopyExpression);
     }
@@ -352,7 +367,7 @@ public static class ExpressionTrees
         expressions.Add(fieldToNullExpression);
     }
 
-    private static void WritableFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<Expression> expressions)
+    private static void WritableFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<Expression> expressions, bool useCache)
     {
         ///// Intended code:
         ///// output.<field> = (<fieldType>)DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>);
@@ -368,7 +383,7 @@ public static class ExpressionTrees
                 fieldTo,
                 Expression.Convert
                 (
-                    Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary),
+                    Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary, Expression.Constant(useCache, typeof(bool))),
                     fieldType));
 
         expressions.Add(fieldDeepCopyExpression);
@@ -388,16 +403,18 @@ public static class ExpressionTrees
 
         if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out bool isStructTypeToDeepCopy))
         {
-            lock (IsStructTypeToDeepCopyDictionaryLocker)
+            //lock (IsStructTypeToDeepCopyDictionaryLocker)
+            //{
+            if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out isStructTypeToDeepCopy))
             {
-                if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out isStructTypeToDeepCopy))
-                {
-                    isStructTypeToDeepCopy = type!.IsStructWhichNeedsDeepCopy_NoDictionaryUsed();
-                    Dictionary<Type, bool> newDictionary = IsStructTypeToDeepCopyDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
-                    newDictionary[type!] = isStructTypeToDeepCopy;
-                    IsStructTypeToDeepCopyDictionary = newDictionary;
-                }
+                isStructTypeToDeepCopy = type!.IsStructWhichNeedsDeepCopy_NoDictionaryUsed();
+                //Dictionary<Type, bool> newDictionary = IsStructTypeToDeepCopyDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
+                //newDictionary[type!] = isStructTypeToDeepCopy;
+                //IsStructTypeToDeepCopyDictionary = newDictionary;
+
+                IsStructTypeToDeepCopyDictionary.TryAdd(type!, isStructTypeToDeepCopy);
             }
+            //}
         }
 
         return isStructTypeToDeepCopy;

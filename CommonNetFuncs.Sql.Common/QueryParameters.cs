@@ -67,8 +67,8 @@ public static class QueryParameters
     /// <returns>True if there are no suspect characters or strings in the parameter</returns>
     public static bool IsClean(this string? parameter, bool excludeSingleQuote = false)
     {
-        return parameter.IsNullOrWhiteSpace() || !parameter.Contains(';') && (excludeSingleQuote || !parameter.Contains('\'')) && !parameter.Contains('[') && !parameter.Contains(']') &&
-            !parameter.Contains('"') && !parameter.Contains('`') && !parameter.Contains("/*") && !parameter.Contains("*/") && !parameter.Contains("xp_") && !parameter.Contains("--");
+        return parameter.IsNullOrWhiteSpace() || (!parameter.Contains(';') && (excludeSingleQuote || !parameter.Contains('\'')) && !parameter.Contains('[') && !parameter.Contains(']') &&
+            !parameter.Contains('"') && !parameter.Contains('`') && !parameter.Contains("/*") && !parameter.Contains("*/") && !parameter.Contains("xp_") && !parameter.Contains("--"));
     }
 
     /// <summary>

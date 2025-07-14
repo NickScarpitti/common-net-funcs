@@ -35,17 +35,7 @@ public sealed class ConversionTaskTests : IDisposable
 
     public void Dispose()
     {
-        // Cleanup temporary files after tests
-        if (Directory.Exists(_workingDir))
-        {
-            try
-            {
-                Directory.Delete(_workingDir, true);
-            }
-            catch (IOException)
-            {
-            } // Ignore cleanup errors
-        }
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 

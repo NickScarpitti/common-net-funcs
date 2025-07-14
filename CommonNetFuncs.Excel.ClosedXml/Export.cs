@@ -35,7 +35,7 @@ public static class Export
                 int x = 1;
                 int y = 1;
 
-                PropertyInfo[] props = GetOrAddPropertiesFromCache(typeof(T));
+                PropertyInfo[] props = GetOrAddPropertiesFromReflectionCache(typeof(T));
                 foreach (PropertyInfo prop in props)
                 {
                     IXLCell cell = ws.Cell(y, x);

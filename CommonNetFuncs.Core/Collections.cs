@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -255,24 +254,22 @@ public static class Collections
     /// </summary>
     /// <typeparam name="T">Type to use in list</typeparam>
     /// <param name="obj">Object to turn into a single item list</param>
-    [Obsolete("Use collection expression instead")]
     public static List<T> SingleToList<T>(this T? obj)
     {
-        return (obj != null) ? [obj] : [];
+        return obj != null ? [obj] : [];
     }
 
     /// <summary>
     /// Create a single item list from an object
     /// </summary>
     /// <param name="obj">Object to turn into a single item list</param>
-    [Obsolete("Use collection expression instead")]
     public static List<string> SingleToList(this string? obj, bool allowEmptyStrings = false)
     {
         if (!allowEmptyStrings)
         {
             return (!obj.IsNullOrWhiteSpace()) ? [obj] : [];
         }
-        return (obj != null) ? [obj] : [];
+        return obj != null ? [obj] : [];
     }
 
     /// <summary>
@@ -343,16 +340,20 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ToList<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
+    public static List<T> ToList<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
-        List<T?> list = new(table.Rows.Count);
+        List<T> list = new(table.Rows.Count);
         if (table.Rows.Count > 0)
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken: cancellationToken);
             foreach (DataRow row in table.AsEnumerable())
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                list.Add(row.ParseRowValues<T>(map, cancellationToken: cancellationToken));
+                T? rowData = row.ParseRowValues<T>(map, cancellationToken);
+                if (rowData != null)
+                {
+                    list.Add(rowData);
+                }
             }
         }
         return list;
@@ -366,13 +367,20 @@ public static class Collections
     /// <param name="maxDegreeOfParallelism">Parallelism parameter to be used in Parallel.Foreach loop</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static List<T?> ToListParallel<T>(this DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
+    public static List<T> ToListParallel<T>(this DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
-        ConcurrentBag<T?> bag = [];
+        ConcurrentBag<T> bag = [];
         if (table.Rows.Count > 0)
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken: cancellationToken);
-            Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row => bag.Add(row.ParseRowValues<T>(map, cancellationToken)));
+            Parallel.ForEach(table.AsEnumerable(), new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, row =>
+            {
+                T? rowData = row.ParseRowValues<T>(map, cancellationToken);
+                if (rowData != null)
+                {
+                    bag.Add(rowData);
+                }
+            });
         }
         return bag.ToList();
     }
@@ -384,13 +392,13 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static IEnumerable<T?> ToEnumerableParallel<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
+    public static IEnumerable<T> ToEnumerableParallel<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
-        IEnumerable<T?> values = [];
+        IEnumerable<T> values = [];
         if (table.Rows.Count > 0)
         {
             IReadOnlyList<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = table.GetDataTableMap<T>(convertShortToBool, cancellationToken: cancellationToken);
-            values = table.AsEnumerable().AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).Select(row => row.ParseRowValues<T>(map, cancellationToken));
+            values = table.AsEnumerable().AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).Select(row => row.ParseRowValues<T>(map, cancellationToken)!).Where(x => x != null);
         }
         return values;
     }
@@ -402,7 +410,7 @@ public static class Collections
     /// <param name="table">Table to convert to list</param>
     /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
     /// <returns>List containing table values as the specified class</returns>
-    public static IEnumerable<T?> ToEnumerableStreaming<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
+    public static IEnumerable<T> ToEnumerableStreaming<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         if (table.Rows.Count > 0)
         {
@@ -423,13 +431,13 @@ public static class Collections
                 //outstandingItem.Start();
                 outstandingItem.Start();
 
-                if (tmp != null)
+                if (tmp?.Result != null)
                 {
                     yield return tmp.Result;
                 }
             }
 
-            if (outstandingItem != null)
+            if (outstandingItem?.Result != null)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 yield return outstandingItem.Result;
@@ -441,7 +449,7 @@ public static class Collections
     {
         List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
         DataRow firstRow = table.Rows[0];
-        foreach (PropertyInfo propertyInfo in GetOrAddPropertiesFromCache(typeof(T)))
+        foreach (PropertyInfo propertyInfo in GetOrAddPropertiesFromReflectionCache(typeof(T)))
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (table.Columns.Contains(propertyInfo.Name))
@@ -565,7 +573,7 @@ public static class Collections
         }
 
         dataTable ??= new();
-        PropertyInfo[] properties = GetOrAddPropertiesFromCache(typeof(T));
+        PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
 
         // Remove invalid columns
         IEnumerable<string> propertyNames = properties.Select(x => x.Name);
@@ -821,7 +829,7 @@ public static class Collections
             throw new ArgumentException("There must be at least one property identified in propsToAgg", nameof(propsToAgg));
         }
 
-        PropertyInfo[] properties = GetOrAddPropertiesFromCache(typeof(T));
+        PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
         PropertyInfo[] groupingProperties = properties.Where(p => !propsToAgg.Contains(p.Name)).ToArray();
 
         if (!groupingProperties.AnyFast() || (propsToAgg.Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Length))
@@ -1041,346 +1049,3 @@ public sealed class ArrayTraverse
         return false;
     }
 }
-
-public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
-{
-    private readonly Lock addRemoveLock = new();
-    private readonly int capacity;
-    private readonly OrderedDictionary<TKey, TValue?> dictionary;
-
-    //private readonly Dictionary<TKey, TValue?> dictionary;
-
-    //private Queue<TKey> insertionOrderQueue;
-
-    public FixedFIFODictionary(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
-    {
-        if (capacity <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
-        }
-
-        if (sourceDictionary != null && sourceDictionary.Count > capacity)
-        {
-            throw new ArgumentException("Source dictionary exceeds the specified capacity.", nameof(sourceDictionary));
-        }
-
-        this.capacity = capacity;
-        dictionary = new OrderedDictionary<TKey, TValue?>(capacity);
-        //dictionary = new Dictionary<TKey, TValue?>(capacity);
-        //insertionOrderQueue = new Queue<TKey>(capacity);
-
-        if (sourceDictionary != null)
-        {
-            foreach (KeyValuePair<TKey, TValue?> kvp in sourceDictionary)
-            {
-                dictionary[kvp.Key] = kvp.Value;
-                //insertionOrderQueue.Enqueue(kvp.Key);
-            }
-        }
-    }
-
-    public ICollection<TKey> Keys => dictionary.Keys;
-
-    public ICollection<TValue?> Values => dictionary.Values;
-
-    public int Count => dictionary.Count;
-
-    public bool IsReadOnly => ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).IsReadOnly;
-
-    public TValue? this[TKey key]
-    {
-        get
-        {
-            lock (addRemoveLock)
-            {
-                return dictionary[key];
-            }
-        }
-        set
-        {
-            lock (addRemoveLock)
-            {
-                if (dictionary.ContainsKey(key))
-                {
-                    // Update existing item
-                    dictionary[key] = value; // Note: We're not changing its position in the queue
-                }
-                else
-                {
-                    // Add new item
-                    if (dictionary.Count >= capacity)
-                    {
-                        // Remove oldest item
-                        TKey oldestKey = dictionary.GetAt(0).Key;
-                        dictionary.Remove(oldestKey);
-                    }
-                    dictionary[key] = value;
-                }
-            }
-        }
-    }
-
-    public bool ContainsKey(TKey key)
-    {
-        return dictionary.ContainsKey(key);
-    }
-
-    public bool TryGetValue(TKey key, out TValue? value)
-    {
-        return dictionary.TryGetValue(key, out value);
-    }
-
-    public void Clear()
-    {
-        lock (addRemoveLock)
-        {
-            dictionary.Clear();
-        }
-    }
-
-    public void Add(TKey key, TValue? value)
-    {
-        lock (addRemoveLock)
-        {
-            if (!dictionary.TryAdd(key, value))
-            {
-                // Update existing item
-                dictionary[key] = value; // Note: We're not changing its position in the queue
-            }
-            else
-            {
-                // Add new item
-                if (dictionary.Count >= capacity)
-                {
-                    // Remove oldest item
-                    TKey oldestKey = dictionary.GetAt(0).Key;
-                    dictionary.Remove(oldestKey);
-                }
-            }
-        }
-    }
-
-    public bool Remove(TKey key)
-    {
-        lock (addRemoveLock)
-        {
-            return dictionary.Remove(key);
-        }
-    }
-
-    public void Add(KeyValuePair<TKey, TValue?> item)
-    {
-        lock (addRemoveLock)
-        {
-            if (!dictionary.TryAdd(item.Key, item.Value))
-            {
-                // Update existing item
-                dictionary[item.Key] = item.Value; // Note: We're not changing its position in the queue
-            }
-            else
-            {
-                // Add new item
-                if (dictionary.Count >= capacity)
-                {
-                    // Remove oldest item
-                    TKey oldestKey = dictionary.GetAt(0).Key;
-                    dictionary.Remove(oldestKey);
-                }
-            }
-        }
-    }
-
-    public bool Contains(KeyValuePair<TKey, TValue?> item)
-    {
-        return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Contains(item);
-    }
-
-    public void CopyTo(KeyValuePair<TKey, TValue?>[] array, int arrayIndex)
-    {
-        ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).CopyTo(array, arrayIndex);
-    }
-
-    public bool Remove(KeyValuePair<TKey, TValue?> item)
-    {
-        return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item);
-    }
-
-    public IEnumerator<KeyValuePair<TKey, TValue?>> GetEnumerator()
-    {
-        return ((IEnumerable<KeyValuePair<TKey, TValue?>>)dictionary).GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return ((IEnumerable)dictionary).GetEnumerator();
-    }
-}
-
-//public class FixedFIFODictionaryAlt<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
-//{
-//    private readonly Lock addRemoveLock = new();
-//    private readonly int capacity;
-//    private readonly Dictionary<TKey, TValue?> dictionary;
-
-//    private Queue<TKey> insertionOrderQueue;
-
-//    public FixedFIFODictionaryAlt(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
-//    {
-//        if (capacity <= 0)
-//        {
-//            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
-//        }
-
-//        if (sourceDictionary != null && sourceDictionary.Count > capacity)
-//        {
-//            throw new ArgumentException("Source dictionary exceeds the specified capacity.", nameof(sourceDictionary));
-//        }
-
-//        this.capacity = capacity;
-//        dictionary = new Dictionary<TKey, TValue?>(capacity);
-//        insertionOrderQueue = new Queue<TKey>(capacity);
-
-//        if (sourceDictionary != null)
-//        {
-//            foreach (KeyValuePair<TKey, TValue?> kvp in sourceDictionary)
-//            {
-//                dictionary[kvp.Key] = kvp.Value;
-//                insertionOrderQueue.Enqueue(kvp.Key);
-//            }
-//        }
-//    }
-
-//    public ICollection<TKey> Keys => dictionary.Keys;
-
-//    public ICollection<TValue?> Values => dictionary.Values;
-
-//    public int Count => dictionary.Count;
-
-//    public bool IsReadOnly => ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).IsReadOnly;
-
-//    public TValue? this[TKey key]
-//    {
-//        get
-//        {
-//            lock (addRemoveLock)
-//            {
-//                return dictionary[key];
-//            }
-//        }
-//        set
-//        {
-//            lock (addRemoveLock)
-//            {
-//                if (dictionary.ContainsKey(key))
-//                {
-//                    // Update existing item
-//                    dictionary[key] = value; // Note: We're not changing its position in the queue
-//                }
-//                else
-//                {
-//                    // Add new item
-//                    if (dictionary.Count >= capacity)
-//                    {
-//                        // Remove oldest item
-//                        TKey oldestKey = insertionOrderQueue.Dequeue();
-//                        dictionary.Remove(oldestKey);
-//                    }
-//                    dictionary[key] = value;
-//                    insertionOrderQueue.Enqueue(key);
-//                }
-//            }
-//        }
-//    }
-
-//    public bool ContainsKey(TKey key)
-//    {
-//        return dictionary.ContainsKey(key);
-//    }
-
-//    public bool TryGetValue(TKey key, out TValue? value)
-//    {
-//        return dictionary.TryGetValue(key, out value);
-//    }
-
-//    public void Clear()
-//    {
-//        dictionary.Clear();
-//        insertionOrderQueue.Clear();
-//    }
-
-//    public void Add(TKey key, TValue? value)
-//    {
-//        lock (addRemoveLock)
-//        {
-//          if (dictionary.ContainsKey(key))
-//          {
-//              // Update existing item
-//              dictionary[key] = value; // Note: We're not changing its position in the queue
-//          }
-//          else
-//          {
-//              // Add new item
-//              if (dictionary.Count >= capacity)
-//              {
-//                  // Remove oldest item
-//                  TKey oldestKey = insertionOrderQueue.Dequeue();
-//                  dictionary.Remove(oldestKey);
-//              }
-//              dictionary.Add(key, value);
-//              insertionOrderQueue.Enqueue(key);
-//          }
-//        }
-//    }
-
-//    public bool Remove(TKey key)
-//    {
-//        lock (addRemoveLock)
-//        {
-//          if (dictionary.Remove(key))
-//          {
-//              insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, key)));
-//              return true;
-//          }
-//        }
-//        return false;
-//    }
-
-//    public void Add(KeyValuePair<TKey, TValue?> item)
-//    {
-//        lock (addRemoveLock)
-//        {
-//          ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Add(item);
-//          insertionOrderQueue.Enqueue(item.Key);
-//        }
-//    }
-
-//    public bool Contains(KeyValuePair<TKey, TValue?> item)
-//    {
-//        return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Contains(item);
-//    }
-
-//    public void CopyTo(KeyValuePair<TKey, TValue?>[] array, int arrayIndex)
-//    {
-//        ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).CopyTo(array, arrayIndex);
-//    }
-
-//    public bool Remove(KeyValuePair<TKey, TValue?> item)
-//    {
-//        if (((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item))
-//        {
-//            insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, item.Key)));
-//            return true;
-//        }
-//        return false;
-//    }
-
-//    public IEnumerator<KeyValuePair<TKey, TValue?>> GetEnumerator()
-//    {
-//        return ((IEnumerable<KeyValuePair<TKey, TValue?>>)dictionary).GetEnumerator();
-//    }
-
-//    IEnumerator IEnumerable.GetEnumerator()
-//    {
-//        return ((IEnumerable)dictionary).GetEnumerator();
-//    }
-//}

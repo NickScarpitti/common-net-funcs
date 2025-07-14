@@ -4,17 +4,12 @@ namespace Core.Tests;
 
 public sealed class CopyTests
 {
-    private readonly Fixture _fixture;
-
-    public CopyTests()
-    {
-        _fixture = new Fixture();
-    }
-
     #region CopyPropertiesTo Tests
 
-    [Fact]
-    public void CopyPropertiesTo_ShouldCopyMatchingProperties()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesTo_ShouldCopyMatchingProperties(bool useCache)
     {
         // Arrange
         SourceClass source = new()
@@ -27,7 +22,7 @@ public sealed class CopyTests
         DestinationClass destination = new();
 
         // Act
-        source.CopyPropertiesTo(destination);
+        source.CopyPropertiesTo(destination, useCache);
 
         // Assert
         destination.Id.ShouldBe(source.Id);
@@ -36,19 +31,23 @@ public sealed class CopyTests
         // Description is not in destination, so it shouldn't be copied
     }
 
-    [Fact]
-    public void CopyPropertiesTo_WithNullSource_ShouldNotThrowException()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesTo_WithNullSource_ShouldNotThrowException(bool useCache)
     {
         // Arrange
         SourceClass? source = null;
         DestinationClass destination = new();
 
         // Act & Assert
-        Should.NotThrow(() => source.CopyPropertiesTo(destination));
+        Should.NotThrow(() => source.CopyPropertiesTo(destination, useCache));
     }
 
-    [Fact]
-    public void CopyPropertiesTo_WithNullDestination_ShouldNotThrowException()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesTo_WithNullDestination_ShouldNotThrowException(bool useCache)
     {
         // Arrange
         SourceClass source = new()
@@ -59,11 +58,13 @@ public sealed class CopyTests
         DestinationClass? destination = null;
 
         // Act & Assert
-        Should.NotThrow(() => source.CopyPropertiesTo(destination));
+        Should.NotThrow(() => source.CopyPropertiesTo(destination, useCache));
     }
 
-    [Fact]
-    public void CopyPropertiesTo_WithDifferentPropertyTypes_ShouldNotCopyIncompatibleProperties()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesTo_WithDifferentPropertyTypes_ShouldNotCopyIncompatibleProperties(bool useCache)
     {
         // Arrange
         SourceClass source = new()
@@ -81,7 +82,7 @@ public sealed class CopyTests
         };
 
         // Act
-        source.CopyPropertiesTo(destination);
+        source.CopyPropertiesTo(destination, useCache);
 
         // Assert
         destination.Id.ShouldBe(source.Id);
@@ -89,8 +90,10 @@ public sealed class CopyTests
         destination.CreatedDate.ShouldBe(0); // Should remain unchanged
     }
 
-    [Fact]
-    public void CopyPropertiesTo_WithReadOnlyDestinationProperties_ShouldNotCopyToReadOnlyProperties()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesTo_WithReadOnlyDestinationProperties_ShouldNotCopyToReadOnlyProperties(bool useCache)
     {
         // Arrange
         SourceClass source = new()
@@ -102,7 +105,7 @@ public sealed class CopyTests
         ClassWithReadOnlyProperty destination = new();
 
         // Act
-        source.CopyPropertiesTo(destination);
+        source.CopyPropertiesTo(destination, useCache);
 
         // Assert
         destination.Id.ShouldBe(0); // Should remain unchanged as it's read-only
@@ -113,8 +116,10 @@ public sealed class CopyTests
 
     #region CopyPropertiesToNew<T> Tests
 
-    [Fact]
-    public void CopyPropertiesToNew_ShouldCreateNewInstanceWithCopiedProperties()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesToNew_ShouldCreateNewInstanceWithCopiedProperties(bool useCache)
     {
         // Arrange
         SourceClass source = new()
@@ -125,7 +130,7 @@ public sealed class CopyTests
         };
 
         // Act
-        SourceClass result = source.CopyPropertiesToNew();
+        SourceClass result = source.CopyPropertiesToNew(useCache: useCache);
 
         // Assert
         result.ShouldNotBeNull();
@@ -135,14 +140,16 @@ public sealed class CopyTests
         result.Description.ShouldBe(source.Description);
     }
 
-    [Fact]
-    public void CopyPropertiesToNew_WithNullSource_ShouldReturnNull()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesToNew_WithNullSource_ShouldReturnNull(bool useCache)
     {
         // Arrange
         SourceClass? source = null;
 
         // Act
-        SourceClass? result = source.CopyPropertiesToNew();
+        SourceClass? result = source.CopyPropertiesToNew(useCache: useCache);
 
         // Assert
         result.ShouldBeNull();
@@ -152,8 +159,10 @@ public sealed class CopyTests
 
     #region CopyPropertiesToNew<T, UT> Tests
 
-    [Fact]
-    public void CopyPropertiesToNew_Generic_ShouldCreateNewInstanceOfDifferentTypeWithCopiedProperties()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesToNew_Generic_ShouldCreateNewInstanceOfDifferentTypeWithCopiedProperties(bool useCache)
     {
         // Arrange
         SourceClass source = new()
@@ -164,7 +173,7 @@ public sealed class CopyTests
         };
 
         // Act
-        DestinationClass result = source.CopyPropertiesToNew<SourceClass, DestinationClass>();
+        DestinationClass result = source.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: useCache);
 
         // Assert
         result.ShouldNotBeNull();
@@ -175,14 +184,16 @@ public sealed class CopyTests
         // Description is not in destination, so it shouldn't be copied
     }
 
-    [Fact]
-    public void CopyPropertiesToNew_Generic_WithNullSource_ShouldReturnNull()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesToNew_Generic_WithNullSource_ShouldReturnNull(bool useCache)
     {
         // Arrange
         SourceClass? source = null;
 
         // Act
-        DestinationClass? result = source?.CopyPropertiesToNew<SourceClass, DestinationClass>();
+        DestinationClass? result = source?.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: useCache);
 
         // Assert
         result.ShouldBeNull();
@@ -192,8 +203,10 @@ public sealed class CopyTests
 
     #region CopyPropertiesRecursive Tests
 
-    [Fact]
-    public void CopyPropertiesToNewRecursive_ShouldCopySimpleProperties()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesToNewRecursive_ShouldCopySimpleProperties(bool useCache)
     {
         // Arrange
         ComplexSourceClass source = new()
@@ -203,7 +216,7 @@ public sealed class CopyTests
         };
 
         // Act
-        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>();
+        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>(useCache: useCache);
 
         // Assert
         result.ShouldNotBeNull();
@@ -211,8 +224,10 @@ public sealed class CopyTests
         result.Name.ShouldBe(source.Name);
     }
 
-    [Fact]
-    public void CopyPropertiesToNewRecursive_ShouldCopyNestedObjects()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesToNewRecursive_ShouldCopyNestedObjects(bool useCache)
     {
         // Arrange
         ComplexSourceClass source = new()
@@ -227,7 +242,7 @@ public sealed class CopyTests
         };
 
         // Act
-        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>();
+        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>(useCache: useCache);
 
         // Assert
         result.ShouldNotBeNull();
@@ -238,8 +253,10 @@ public sealed class CopyTests
         result.Child.Name.ShouldBe(source.Child.Name);
     }
 
-    [Fact]
-    public void CopyPropertiesToNewRecursive_ShouldCopyCollections()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesToNewRecursive_ShouldCopyCollections(bool useCache)
     {
         // Arrange
         ComplexSourceClass source = new()
@@ -254,7 +271,7 @@ public sealed class CopyTests
         };
 
         // Act
-        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>();
+        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>(useCache: useCache);
 
         // Assert
         result.ShouldNotBeNull();
@@ -268,8 +285,10 @@ public sealed class CopyTests
         result.Items[1].Name.ShouldBe(source.Items[1].Name);
     }
 
-    [Fact]
-    public void CopyPropertiesRecursive_ShouldCopyDictionaries()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesRecursive_ShouldCopyDictionaries(bool useCache)
     {
         // Arrange
         ComplexSourceClass source = new()
@@ -284,7 +303,7 @@ public sealed class CopyTests
         };
 
         // Act
-        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>();
+        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>(useCache: useCache);
 
         // Assert
         result.ShouldNotBeNull();
@@ -298,8 +317,10 @@ public sealed class CopyTests
         result.Dictionary["key2"].Name.ShouldBe(source.Dictionary["key2"].Name);
     }
 
-    [Fact]
-    public void CopyPropertiesToNewRecursive_WithMaxDepth_ShouldLimitRecursionDepth()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesToNewRecursive_WithMaxDepth_ShouldLimitRecursionDepth(bool useCache)
     {
         // Arrange
         ComplexSourceClass source = new()
@@ -324,7 +345,7 @@ public sealed class CopyTests
         };
 
         // Act - Set max depth to 1
-        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>(1);
+        ComplexDestinationClass result = source.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>(1, useCache);
 
         // Assert
         result.ShouldNotBeNull();
@@ -342,14 +363,16 @@ public sealed class CopyTests
         result.NestedChild.Child.ShouldBeNull();
     }
 
-    [Fact]
-    public void CopyPropertiesToNewRecursive_WithNullSource_ShouldReturnNull()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CopyPropertiesToNewRecursive_WithNullSource_ShouldReturnNull(bool useCache)
     {
         // Arrange
         ComplexSourceClass? source = null;
 
         // Act
-        ComplexDestinationClass? result = source?.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>();
+        ComplexDestinationClass? result = source?.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>(useCache: useCache);
 
         // Assert
         result.ShouldBeNull();
@@ -438,6 +461,206 @@ public sealed class CopyTests
         result.ShouldBeSameAs(target); // Should return the same instance
         result.Id.ShouldBe(1); // Should keep original value
         result.Name.ShouldBe("Original"); // Should keep original value since it's non-default
+    }
+
+    #endregion
+
+    #region CacheManager API Tests
+
+    [Fact]
+    public void SetLimitedCacheSize_ShouldBeSetSize()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
+
+        // Assert
+        Copy.DeepCopyCacheManager.GetLimitedCacheSize().ShouldBe(10);
+    }
+
+    [Fact]
+    public void SetCopyCacheSize_ShouldBeSetSize()
+    {
+        // Act
+        Copy.CopyCacheManager.SetLimitedCacheSize(10);
+
+        // Assert
+        Copy.CopyCacheManager.GetLimitedCacheSize().ShouldBe(10);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SetUseLimitedCache_houldBeUseLimited(bool useLimited)
+    {
+        // Act
+        Copy.DeepCopyCacheManager.SetUseLimitedCache(useLimited);
+
+        // Assert
+        Copy.DeepCopyCacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SetUseCopyCache_ShouldBeUseLimited(bool useLimited)
+    {
+        // Act
+        Copy.CopyCacheManager.SetUseLimitedCache(useLimited);
+
+        // Assert
+        Copy.CopyCacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
+    }
+
+    [Fact]
+    public void ClearDeepCopyCaches_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+        source.CopyPropertiesTo(dest, useCache: true); // Create cached value
+
+        // Act
+        Copy.DeepCopyCacheManager.ClearAllCaches();
+
+        // Assert
+        Copy.DeepCopyCacheManager.GetCache().Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearCopyCaches_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.CopyCacheManager.SetLimitedCacheSize(10);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+        source.CopyPropertiesTo(dest, useCache: true); // Create cached value
+
+        // Act
+        Copy.CopyCacheManager.ClearAllCaches();
+
+        // Assert
+        Copy.CopyCacheManager.GetCache().Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetLimitedDeepCopyCache_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+
+        // Act
+        DestinationClass dest = source.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>(useCache: true); // Create cached value
+
+        // Assert
+        dest.ShouldNotBeNull();
+        Copy.DeepCopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
+        Copy.DeepCopyCacheManager.GetLimitedCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
+        Copy.DeepCopyCacheManager.GetLimitedCache().Values.First().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetLimitedCache_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.CopyCacheManager.SetLimitedCacheSize(10);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+
+        // Act
+        source.CopyPropertiesTo(dest, useCache: true); // Create cached value
+
+        // Assert
+        Copy.CopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
+        Copy.CopyCacheManager.GetLimitedCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
+        Copy.CopyCacheManager.GetLimitedCache().Values.First().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetCache_ShouldNotThrow()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+
+        // Act
+        DestinationClass dest = source.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>(useCache: true); // Create cached value
+
+        // Assert
+        dest.ShouldNotBeNull();
+        Copy.DeepCopyCacheManager.GetCache().Count.ShouldBe(1);
+        Copy.DeepCopyCacheManager.GetLimitedCache().Count.ShouldBe(0);
+        Copy.DeepCopyCacheManager.GetLimitedCacheSize().ShouldBe(1);
+        Copy.DeepCopyCacheManager.GetCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
+        Copy.DeepCopyCacheManager.GetCache().Values.First().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetCache_ShouldNotBeUsingLimitedCache()
+    {
+        // Arrange
+        Copy.CopyCacheManager.SetUseLimitedCache(false);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+
+        // Act
+        source.CopyPropertiesTo(dest, useCache: true); // Create cached value
+
+        // Assert
+        Copy.CopyCacheManager.GetCache().Count.ShouldBe(1);
+        Copy.CopyCacheManager.GetLimitedCache().Count.ShouldBe(0);
+        Copy.CopyCacheManager.GetLimitedCacheSize().ShouldBe(1);
+        Copy.CopyCacheManager.GetCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
+        Copy.CopyCacheManager.GetCache().Values.First().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void DeepCopyCacheManager_Api_ShouldNotAffectCopyBehavior()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetUseLimitedCache(true);
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(5);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+
+        // Act
+        source.CopyPropertiesTo(dest, useCache: true);
+
+        // Assert
+        dest.Id.ShouldBe(42);
+        dest.Name.ShouldBe("CacheTest");
+
+        // Now clear cache and copy again
+        Copy.DeepCopyCacheManager.ClearAllCaches();
+        dest = new();
+        source.CopyPropertiesTo(dest, useCache: true);
+        dest.Id.ShouldBe(42);
+        dest.Name.ShouldBe("CacheTest");
+    }
+
+    [Fact]
+    public void CopyCacheManager_Api_ShouldNotAffectCopyBehavior()
+    {
+        // Arrange
+        Copy.DeepCopyCacheManager.SetUseLimitedCache(true);
+        Copy.DeepCopyCacheManager.SetLimitedCacheSize(5);
+        SourceClass source = new() { Id = 42, Name = "CacheTest" };
+        DestinationClass dest = new();
+
+        // Act
+        source.CopyPropertiesTo(dest, useCache: true);
+
+        // Assert
+        dest.Id.ShouldBe(42);
+        dest.Name.ShouldBe("CacheTest");
+
+        // Now clear cache and copy again
+        Copy.DeepCopyCacheManager.ClearAllCaches();
+        dest = new();
+        source.CopyPropertiesTo(dest, useCache: true);
+        dest.Id.ShouldBe(42);
+        dest.Name.ShouldBe("CacheTest");
     }
 
     #endregion

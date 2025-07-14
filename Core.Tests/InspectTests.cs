@@ -66,10 +66,7 @@ public sealed class InspectTests
     };
 
     [Theory]
-
-    #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     [MemberData(nameof(IsEqualRTestData))]
-    #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public void IsEqualR_Works(object? a, object? b, IEnumerable<string>? exempt, bool expected)
     {
         #pragma warning disable CS0618 // Type or member is obsolete
@@ -78,9 +75,7 @@ public sealed class InspectTests
     }
 
     [Theory]
-    #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     [MemberData(nameof(IsEqualRTestData))]
-    #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public void IsEqualR_And_IsEqual_Consistency(object? a, object? b, IEnumerable<string>? exempt, bool expected)
     {
         a.IsEqual(b, exemptProps: exempt).ShouldBe(expected);
@@ -157,9 +152,7 @@ public sealed class InspectTests
     }
 
     [Theory]
-    #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     [MemberData(nameof(HashTestData))]
-    #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
     public async Task GetHashCode_And_GetHashForObjectAsync_Consistency(SimpleClass a, SimpleClass b, bool shouldMatch)
     {
         // a.GetHashCode().ShouldBe(b.GetHashCode(), shouldMatch ? "Hashes should match" : "Hashes should not match");

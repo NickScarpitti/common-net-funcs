@@ -1,10 +1,10 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using CommonNetFuncs.Core;
 using FastExpressionCompiler;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
@@ -12,7 +12,9 @@ namespace CommonNetFuncs.FastMap;
 
 public static class FastMapper
 {
-    private readonly struct MapperCacheKey(Type sourceType, Type destType) : IEquatable<MapperCacheKey>
+    #region Caching
+
+    public readonly struct MapperCacheKey(Type sourceType, Type destType) : IEquatable<MapperCacheKey>
     {
         public readonly Type SourceType = sourceType;
         public readonly Type DestType = destType;
@@ -31,10 +33,47 @@ public static class FastMapper
         {
             return SourceType.GetHashCode() + DestType.GetHashCode();
         }
+
+        public static bool operator ==(MapperCacheKey left, MapperCacheKey right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(MapperCacheKey left, MapperCacheKey right)
+        {
+            return !(left == right);
+        }
     }
 
-    private static readonly ConcurrentDictionary<MapperCacheKey, Delegate> mapperCache = [];
-    //private static readonly ConcurrentDictionary<Type, PropertyInfo[]> propertyCache = new();
+    private static readonly CacheManager<MapperCacheKey, Delegate> MapperCache = new();
+
+    public static ICacheManagerApi<MapperCacheKey, Delegate> CacheManager => MapperCache;
+
+    /// <summary>
+    /// Clears LimitedMapperCache cache and sets the size to the specified value.
+    /// </summary>
+    private static Delegate GetOrAddPropertiesFromMapperCache<T, UT>(MapperCacheKey key)
+    {
+        bool isLimitedCache = CacheManager.IsUsingLimitedCache();
+        if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Delegate? function) :
+            CacheManager.GetCache().TryGetValue(key, out function))
+        {
+            return function!;
+        }
+
+        function = CreateMapper<T, UT>(true);
+        if (isLimitedCache)
+        {
+            CacheManager.TryAddLimitedCache(key, function);
+        }
+        else
+        {
+            CacheManager.TryAddCache(key, function!);
+        }
+        return function;
+    }
+
+    #endregion
 
     /// <summary>
     /// Method that maps one object onto another by property name using expression trees
@@ -44,18 +83,19 @@ public static class FastMapper
     /// <param name="source">Object to map data from</param>
     /// <returns>New instance of type UT with values populated from source object</returns>
     [return: NotNullIfNotNull(nameof(source))]
-    public static UT? FastMap<T, UT>(this T source)
+    public static UT? FastMap<T, UT>(this T source, bool useCache = true)
     {
         if (source == null)
         {
             return default;
         }
 
-        Func<T, UT> mapper = (Func<T, UT>)mapperCache.GetOrAdd(new(typeof(T), typeof(UT)), _ => CreateMapper<T, UT>());
+        Func<T, UT> mapper = useCache ? (Func<T, UT>)GetOrAddPropertiesFromMapperCache<T, UT>(new(typeof(T), typeof(UT))) :
+            CreateMapper<T, UT>(useCache);
         return mapper(source)!;
     }
 
-    private static Func<T, UT> CreateMapper<T, UT>()
+    private static Func<T, UT> CreateMapper<T, UT>(bool useCache)
     {
         ParameterExpression sourceParameter = Expression.Parameter(typeof(T), "source");
         ParameterExpression destinationVariable = Expression.Variable(typeof(UT), "destination");
@@ -71,7 +111,7 @@ public static class FastMapper
         {
             // Always initialize the destination
             bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(UT))));
-            bindings.Add(CreateCollectionMapping(sourceParameter, destinationVariable, sourceType, destType));
+            bindings.Add(CreateCollectionMapping(sourceParameter, destinationVariable, sourceType, destType, useCache));
         }
         else if (typeof(IEnumerable).IsAssignableFrom(sourceType) && typeof(IEnumerable).IsAssignableFrom(destType) && sourceType != typeof(string) && destType != typeof(string))
         {
@@ -90,7 +130,7 @@ public static class FastMapper
                 variables.Add(tempList);
                 bindings.Add(Expression.Assign(tempList, Expression.New(listType)));
 
-                if (destType.IsInterface || destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(ReadOnlyCollection<>))
+                if (destType.IsInterface || (destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(ReadOnlyCollection<>)))
                 {
                     Type concreteType = typeof(ReadOnlyCollection<>).MakeGenericType(elementType);
                     bindings.Add(Expression.Assign(destinationVariable, Expression.New(concreteType.GetConstructor([typeof(IList<>).MakeGenericType(elementType)])!, tempList)));
@@ -129,15 +169,15 @@ public static class FastMapper
                 bindings.Add(Expression.Assign(destinationVariable, Expression.New(listType)));
             }
 
-            bindings.Add(CreateCollectionMapping(sourceParameter, destinationVariable, sourceType, destType)); // Add collection mapping
+            bindings.Add(CreateCollectionMapping(sourceParameter, destinationVariable, sourceType, destType, useCache)); // Add collection mapping
         }
         else
         {
             bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(UT)))); // Initialize destination object if not a collection
             //PropertyInfo[] sourceProperties = propertyCache.GetOrAdd(typeof(T), t => t.GetProperties());
             //PropertyInfo[] destinationProperties = propertyCache.GetOrAdd(typeof(UT), t => t.GetProperties());
-            PropertyInfo[] sourceProperties = GetOrAddPropertiesFromCache(typeof(T));
-            PropertyInfo[] destinationProperties = GetOrAddPropertiesFromCache(typeof(UT));
+            PropertyInfo[] sourceProperties = GetOrAddPropertiesFromReflectionCache(typeof(T));
+            PropertyInfo[] destinationProperties = GetOrAddPropertiesFromReflectionCache(typeof(UT));
             HashSet<string> assignedProperties = [];
             foreach (PropertyInfo destProp in destinationProperties.Where(x => x.CanWrite))
             {
@@ -169,7 +209,7 @@ public static class FastMapper
                             Expression.Condition(
                                 Expression.Equal(sourceAccess, Expression.Constant(null, sourceProp.PropertyType)),
                                 Expression.Default(destProp.PropertyType),
-                                CreateCollectionMapping(sourceAccess, destAccess, sourceProp.PropertyType, destProp.PropertyType).Right));
+                                CreateCollectionMapping(sourceAccess, destAccess, sourceProp.PropertyType, destProp.PropertyType, useCache).Right));
                     }
                     else if (!sourceProp.PropertyType.IsValueType && !destProp.PropertyType.IsValueType)
                     {
@@ -179,7 +219,7 @@ public static class FastMapper
                             Expression.Condition(
                                 Expression.Equal(sourceAccess, Expression.Constant(null, sourceProp.PropertyType)),
                                 Expression.Default(destProp.PropertyType),
-                                Expression.Call(null, nestedMapMethod, sourceAccess)));
+                                Expression.Call(null, nestedMapMethod, sourceAccess, Expression.Constant(useCache, typeof(bool)))));
                     }
                     else
                     {
@@ -215,7 +255,7 @@ public static class FastMapper
         return lambda.CompileFast();
     }
 
-    private static BinaryExpression CreateCollectionMapping(Expression sourceAccess, Expression destAccess, Type sourceType, Type destType)
+    private static BinaryExpression CreateCollectionMapping(Expression sourceAccess, Expression destAccess, Type sourceType, Type destType, bool useCache)
     {
         Type sourceElementType = GetElementType(sourceType);
         Type destElementType = GetElementType(destType);
@@ -340,7 +380,7 @@ public static class FastMapper
             Expression valueAccess = Expression.Property(kvpParam, valueProp);
 
             MethodInfo mapMethod = MethodInfoCache.FastMap.MakeGenericMethod(sourceValueType, destValueType);
-            Expression mappedValue = Expression.Call(null, mapMethod, valueAccess);
+            Expression mappedValue = Expression.Call(null, mapMethod, valueAccess, Expression.Constant(useCache, typeof(bool)));
 
             NewExpression newKvp = Expression.New(destKvpType.GetConstructor([destKeyType, destValueType])!, keyAccess, mappedValue);
             LambdaExpression selectLambda = Expression.Lambda(newKvp, kvpParam);
@@ -364,7 +404,7 @@ public static class FastMapper
             MethodInfo selectMethod = MethodInfoCache.Select.MakeGenericMethod(sourceElementType, destElementType);
 
             ParameterExpression itemParam = Expression.Parameter(sourceElementType, "item");
-            MethodCallExpression mapCall = Expression.Call(null, mapMethod, itemParam);
+            MethodCallExpression mapCall = Expression.Call(null, mapMethod, itemParam, Expression.Constant(useCache, typeof(bool)));
             LambdaExpression selectLambda = Expression.Lambda(mapCall, itemParam);
 
             MethodCallExpression selectCall = Expression.Call(null, selectMethod, sourceAccess, selectLambda);
@@ -430,32 +470,6 @@ public static class FastMapper
                 .Select(i => i.GetGenericArguments()[0])
                 .FirstOrDefault() ?? typeof(object);
         }
-    }
-
-    // Duplicated in CommonNetFuncs.Core.TypeChecks, recreated here to remove dependency
-    private static bool IsReadOnlyCollectionType(this Type type)
-    {
-        if (!type.IsGenericType)
-        {
-            return false;
-        }
-
-        Type genericType = type.GetGenericTypeDefinition();
-
-        if (type.IsInterface)
-        {
-            return genericType == typeof(IReadOnlyCollection<>) || genericType == typeof(IReadOnlyList<>);
-        }
-
-        return genericType == typeof(ReadOnlyCollection<>) || type.GetInterfaces().Any(interfaceType =>
-        {
-            if (!interfaceType.IsGenericType)
-            {
-                return false;
-            }
-            Type genericInterfaceType = interfaceType.GetGenericTypeDefinition();
-            return interfaceType.IsGenericType && (genericInterfaceType == typeof(IReadOnlyCollection<>) || genericInterfaceType == typeof(IReadOnlyList<>));
-        });
     }
 }
 

@@ -54,8 +54,8 @@ public class SubsetValidatorGeneratorTests
 
         // Assert
         SyntaxTree generatedFile = result.GeneratedTrees[0];
-        Assert.Contains("[MetadataType(typeof(OriginalClass))]", generatedFile.ToString());
-        Assert.Contains("public partial class SubsetClass", generatedFile.ToString());
+        generatedFile.ToString().ShouldContain("[MetadataType(typeof(OriginalClass))]");
+        generatedFile.ToString().ShouldContain("public partial class SubsetClass");
     }
 
     [Fact]
@@ -93,8 +93,8 @@ public class SubsetValidatorGeneratorTests
 
         // Assert
         Diagnostic diagnostic = result.Diagnostics[0];
-        Assert.Equal("SG0001", diagnostic.Id);
-        Assert.Contains("has a different type than in the original class", diagnostic.GetMessage());
+        diagnostic.Id.ShouldBe("SG0001");
+        diagnostic.GetMessage().ShouldContain("has a different type than in the original class");
     }
 
     private static CSharpCompilation CreateCompilation(string source)

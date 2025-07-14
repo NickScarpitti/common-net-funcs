@@ -218,6 +218,45 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    public bool TryAdd(TKey key, TValue? value)
+    {
+        readWriteLock.EnterUpgradeableReadLock();
+        try
+        {
+            if (dictionary.ContainsKey(key))
+            {
+                return false;
+            }
+            readWriteLock.EnterWriteLock();
+            try
+            {
+                if (dictionary.Count >= capacity)
+                {
+                    TKey oldestKey = dictionary.GetAt(dictionary.Count - 1).Key;
+                    dictionary.Remove(oldestKey);
+                }
+                dictionary.Insert(0, key, value);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                readWriteLock.ExitWriteLock();
+            }
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            readWriteLock.ExitUpgradeableReadLock();
+        }
+    }
+
     public bool Remove(TKey key)
     {
         readWriteLock.EnterWriteLock();

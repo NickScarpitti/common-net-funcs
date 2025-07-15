@@ -3,8 +3,30 @@ using CommonNetFuncs.Images;
 
 namespace Images.Tests;
 
-public sealed class OptimizerTests
+public sealed class OptimizerTests : IDisposable
 {
+    private bool disposed;
+
+    public void Dispose()
+    {
+        //File.Delete(_tempSavePath);
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing) { }
+            disposed = true;
+        }
+    }
+
+    ~OptimizerTests()
+    {
+        Dispose(false);
+    }
+
     private readonly Fixture _fixture;
     private readonly string _testPngPath;
     private readonly string _testJpgPath;

@@ -68,6 +68,57 @@ bool isValid = IsValidBase64Image(base64String); // true
 
 ---
 
+## Manipulation
+
+Helper methods for manipulating images, such as resizing, and changing image quality.
+
+## Manipulation Usage Examples
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### ResizeImage
+
+Resizes an image to the specified width and height, maintaining the aspect ratio if desired.
+
+```cs
+await ResizeImage(@"C:\path\to\input_image.jpg", @"C:\path\to\output_image.jpg", 800, 600); // "C:\path\to\output_image.jpg" contains the 800px x 600px resized image.
+```
+
+#### ConvertImageFormat
+
+Converts an image from one format to another (e.g., JPEG to PNG).
+
+```cs
+await ConvertImageFormat(@"C:\path\to\input_image.jpg", @"C:\path\to\output_image.png", PngFormat.Instance); // "C:\path\to\output_image.png" contains the converted image in png format.
+```
+
+#### ReduceImageQuality
+
+Reduces the quality of an image by applying a specified JPEG quality level, which can help in reducing file size. Neither input nor output are required to be JPEG format.
+```cs
+await ReduceImageQuality(@"C:\path\to\input_image.jpg", @"C:\path\to\output_image.jpg", 50); // "C:\path\to\output_image.jpg" contains the image with reduced 50% quality
+```
+
+#### TryDetectImageType
+Detects the image format of a file based on its content, returning the format as a string.
+
+```cs
+TryDetectImageType(@"C:\path\to\input_image.jpg", out IImageFormat? format); // Returns true and format is the "JPEG" IImageFormat.
+```
+
+#### TryGetMetadata
+
+Attempts to retrieve ImageMetadata from an image file.
+
+```cs
+TryGetMetadata(@"C:\path\to\input_image.jpg", out ImageMetadata metadata); // Returns ImageMetadata with properties like Width, Height, Format, etc.
+```
+
+</details>
+
+---
+
 ## Optimizer
 
 Helper methods for optimizing images.

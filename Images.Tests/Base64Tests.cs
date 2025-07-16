@@ -134,7 +134,9 @@ public sealed class Base64Tests : IDisposable
     public void CleanImageValue_WithValidInput_ReturnsCleanedValue(string input, string expected)
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         string? result = input.CleanImageValue();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.ShouldBe(expected);
@@ -184,7 +186,9 @@ public sealed class Base64Tests : IDisposable
     public void CleanImageValue_WithInvalidInput_ReturnsNull(string? input)
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         string? result = input.CleanImageValue();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.ShouldBeNull();

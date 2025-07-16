@@ -8,6 +8,7 @@ using SixLabors.ImageSharp.Formats.Tiff;
 using SixLabors.ImageSharp.Metadata;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using static CommonNetFuncs.Core.DimensionScale;
 
 namespace CommonNetFuncs.Images;
 
@@ -18,23 +19,49 @@ public static class Manipulation
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-    internal static bool ResizeImageBase(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageEncoder? imageEncoder, Action<IImageProcessingContext>? mutate)
+    private static void ResizeImageBase(this Image image, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, bool useDimsAsMax, bool resizeRequired)
+    {
+        if (resizeOptions != null)
+        {
+            if (useDimsAsMax)
+            {
+                (width, height) = ScaleDimensionsToConstraint(image.Width, image.Height, resizeOptions.Size.Width, resizeOptions.Size.Height);
+                if (width == image.Width && height == image.Height)
+                {
+                    return; // Return if no scaling is needed
+                }
+                resizeOptions.Size = new Size(width.Value, height.Value);
+            }
+
+            image.Mutate(x => x.Resize(resizeOptions));
+        }
+        else if (width != null && height != null && (width > 0 || height > 0))
+        {
+            if (useDimsAsMax)
+            {
+                (width, height) = ScaleDimensionsToConstraint(image.Width, image.Height, (int)width, (int)height);
+                if (width == image.Width && height == image.Height)
+                {
+                    return; // Return if no scaling is needed
+                }
+            }
+
+            image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
+        }
+        else if (resizeRequired)
+        {
+            throw new Exception("Either resizeOptions or width and height must be provided for resizing the image.");
+        }
+    }
+
+    internal static bool ResizeImageBase(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
+        IImageEncoder? imageEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         try
         {
             using Image image = Image.Load(inputFilePath);
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
-            else
-            {
-                throw new Exception("Either resizeOptions or width and height must be provided for resizing the image.");
-            }
+
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
             if (mutate != null)
             {
@@ -59,24 +86,14 @@ public static class Manipulation
         return false;
     }
 
-    internal static bool ResizeImageBase(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageEncoder? imageEncoder, IImageFormat? imageFormat, Action<IImageProcessingContext>? mutate)
+    internal static bool ResizeImageBase(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageEncoder? imageEncoder,
+        IImageFormat? imageFormat, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         try
         {
             using Image image = Image.Load(inputStream);
 
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
-            else
-            {
-                throw new Exception("Either resizeOptions or width and height must be provided for resizing the image.");
-            }
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
             if (mutate != null)
             {
@@ -115,24 +132,14 @@ public static class Manipulation
         return false;
     }
 
-    internal static bool ResizeImageBase(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageEncoder? imageEncoder, IImageFormat? imageFormat, Action<IImageProcessingContext>? mutate)
+    internal static bool ResizeImageBase(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
+        IImageEncoder? imageEncoder, IImageFormat? imageFormat, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         try
         {
             using Image image = Image.Load(inputSpan);
 
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
-            else
-            {
-                throw new Exception("Either resizeOptions or width and height must be provided for resizing the image.");
-            }
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
             if (mutate != null)
             {
@@ -166,7 +173,8 @@ public static class Manipulation
         return false;
     }
 
-    internal static bool ReduceImageQualityBase(string inputFilePath, string outputFilePath, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, Action<IImageProcessingContext>? mutate)
+    internal static bool ReduceImageQualityBase(string inputFilePath, string outputFilePath, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
+        IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         if (quality is < 1 or > 100)
         {
@@ -177,14 +185,7 @@ public static class Manipulation
         {
             using Image image = Image.Load(inputFilePath);
 
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
             if (mutate != null)
             {
@@ -218,7 +219,8 @@ public static class Manipulation
         return false;
     }
 
-    internal static bool ReduceImageQualityBase(Stream inputStream, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, Action<IImageProcessingContext>? mutate)
+    internal static bool ReduceImageQualityBase(Stream inputStream, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
+        IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         if (quality is < 1 or > 100)
         {
@@ -229,14 +231,7 @@ public static class Manipulation
         {
             using Image image = Image.Load(inputStream);
 
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
             if (mutate != null)
             {
@@ -276,7 +271,8 @@ public static class Manipulation
         return false;
     }
 
-    internal static bool ReduceImageQualityBase(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, Action<IImageProcessingContext>? mutate)
+    internal static bool ReduceImageQualityBase(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
+        IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         if (quality is < 1 or > 100)
         {
@@ -287,14 +283,7 @@ public static class Manipulation
         {
             using Image image = Image.Load(inputSpan);
 
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
             if (mutate != null)
             {
@@ -329,23 +318,14 @@ public static class Manipulation
         return false;
     }
 
-    internal static async Task<bool> ResizeImageBaseAsync(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageEncoder? imageEncoder, Action<IImageProcessingContext>? mutate)
+    internal static async Task<bool> ResizeImageBaseAsync(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
+        IImageEncoder? imageEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         try
         {
             using Image image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
-            else
-            {
-                throw new Exception("Either resizeOptions or width and height must be provided for resizing the image.");
-            }
+
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
             if (mutate != null)
             {
@@ -370,24 +350,14 @@ public static class Manipulation
         return false;
     }
 
-    internal static async Task<bool> ResizeImageBaseAsync(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageEncoder? imageEncoder, IImageFormat? imageFormat, Action<IImageProcessingContext>? mutate)
+    internal static async Task<bool> ResizeImageBaseAsync(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
+        IImageEncoder? imageEncoder, IImageFormat? imageFormat, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         try
         {
             using Image image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
 
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
-            else
-            {
-                throw new Exception("Either resizeOptions or width and height must be provided for resizing the image.");
-            }
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
             if (mutate != null)
             {
@@ -426,7 +396,8 @@ public static class Manipulation
         return false;
     }
 
-    internal static async Task<bool> ReduceImageQualityBaseAsync(string inputFilePath, string outputFilePath, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, Action<IImageProcessingContext>? mutate)
+    internal static async Task<bool> ReduceImageQualityBaseAsync(string inputFilePath, string outputFilePath, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
+        IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         if (quality is < 1 or > 100)
         {
@@ -437,14 +408,7 @@ public static class Manipulation
         {
             using Image image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
 
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
             if (mutate != null)
             {
@@ -478,7 +442,8 @@ public static class Manipulation
         return false;
     }
 
-    internal static async Task<bool> ReduceImageQualityBaseAsync(Stream inputStream, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, Action<IImageProcessingContext>? mutate)
+    internal static async Task<bool> ReduceImageQualityBaseAsync(Stream inputStream, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
+        IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
         if (quality is < 1 or > 100)
         {
@@ -489,14 +454,7 @@ public static class Manipulation
         {
             using Image image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
 
-            if (resizeOptions != null)
-            {
-                image.Mutate(x => x.Resize(resizeOptions));
-            }
-            else if (width != null && height != null && (width > 0 || height > 0))
-            {
-                image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
-            }
+            ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
             if (mutate != null)
             {
@@ -544,9 +502,15 @@ public static class Manipulation
     /// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Optional: Encoder to use for the resizing operation.</param>
     /// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-    public static bool ResizeImage(string inputFilePath, string outputFilePath, int width, int height, IImageEncoder? imageEncoder = null, IResampler? resampler = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(string inputFilePath, string outputFilePath, int width, int height, IImageEncoder? imageEncoder = null, IResampler? resampler = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputFilePath, outputFilePath, null, width, height, resampler, imageEncoder, mutate);
+        return ResizeImageBase(inputFilePath, outputFilePath, null, width, height, resampler, imageEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -556,9 +520,15 @@ public static class Manipulation
     /// <param name="outputFilePath">Path to output resized image file to.</param>
     /// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Optional: Encoder to use for the resizing operation.</param>
-    public static bool ResizeImage(string inputFilePath, string outputFilePath, ResizeOptions resizeOptions, IImageEncoder? imageEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(string inputFilePath, string outputFilePath, ResizeOptions resizeOptions, IImageEncoder? imageEncoder = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputFilePath, outputFilePath, resizeOptions, null, null, null, imageEncoder, mutate);
+        return ResizeImageBase(inputFilePath, outputFilePath, resizeOptions, null, null, null, imageEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -570,9 +540,15 @@ public static class Manipulation
     /// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
     /// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-    public static bool ResizeImage(Stream inputStream, Stream outputStream, int width, int height, IImageEncoder imageEncoder, IResampler? resampler = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(Stream inputStream, Stream outputStream, int width, int height, IImageEncoder imageEncoder, IResampler? resampler = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputStream, outputStream, null, width, height, resampler, imageEncoder, null, mutate);
+        return ResizeImageBase(inputStream, outputStream, null, width, height, resampler, imageEncoder, null, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -582,9 +558,15 @@ public static class Manipulation
     /// <param name="outputStream">Stream to output resized image stream to.</param>
     /// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
-    public static bool ResizeImage(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageEncoder imageEncoder, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageEncoder imageEncoder,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputStream, outputStream, resizeOptions, null, null, null, imageEncoder, null, mutate);
+        return ResizeImageBase(inputStream, outputStream, resizeOptions, null, null, null, imageEncoder, null, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -596,9 +578,15 @@ public static class Manipulation
     /// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="imageFormat">Output format to use for the resizing operation.</param>
     /// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-    public static bool ResizeImage(Stream inputStream, Stream outputStream, int width, int height, IImageFormat imageFormat, IResampler? resampler = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(Stream inputStream, Stream outputStream, int width, int height, IImageFormat imageFormat, IResampler? resampler = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputStream, outputStream, null, width, height, resampler, null, imageFormat, mutate);
+        return ResizeImageBase(inputStream, outputStream, null, width, height, resampler, null, imageFormat, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -608,9 +596,15 @@ public static class Manipulation
     /// <param name="outputStream">Stream to output resized image stream to.</param>
     /// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="imageFormat">Output format to use for the resizing operation.</param>
-    public static bool ResizeImage(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageFormat imageFormat, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageFormat imageFormat,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputStream, outputStream, resizeOptions, null, null, null, null, imageFormat, mutate);
+        return ResizeImageBase(inputStream, outputStream, resizeOptions, null, null, null, null, imageFormat, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -622,9 +616,15 @@ public static class Manipulation
     /// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
     /// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-    public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, int width, int height, IImageEncoder imageEncoder, IResampler? resampler = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, int width, int height, IImageEncoder imageEncoder, IResampler? resampler = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputSpan, outputStream, null, width, height, resampler, imageEncoder, null, mutate);
+        return ResizeImageBase(inputSpan, outputStream, null, width, height, resampler, imageEncoder, null, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -634,9 +634,15 @@ public static class Manipulation
     /// <param name="outputStream">Stream to output resized image stream to.</param>
     /// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
-    public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions resizeOptions, IImageEncoder imageEncoder, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions resizeOptions, IImageEncoder imageEncoder,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputSpan, outputStream, resizeOptions, null, null, null, imageEncoder, null, mutate);
+        return ResizeImageBase(inputSpan, outputStream, resizeOptions, null, null, null, imageEncoder, null, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -648,9 +654,15 @@ public static class Manipulation
     /// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="imageFormat">Output format to use for the resizing operation.</param>
     /// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-    public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, int width, int height, IImageFormat imageFormat, IResampler? resampler = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, int width, int height, IImageFormat imageFormat, IResampler? resampler = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputSpan, outputStream, null, width, height, resampler, null, imageFormat, mutate);
+        return ResizeImageBase(inputSpan, outputStream, null, width, height, resampler, null, imageFormat, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -660,9 +672,15 @@ public static class Manipulation
     /// <param name="outputStream">Stream to output resized image stream to.</param>
     /// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="imageFormat">Output format to use for the resizing operation.</param>
-    public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions resizeOptions, IImageFormat imageFormat, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions resizeOptions, IImageFormat imageFormat,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBase(inputSpan, outputStream, resizeOptions, null, null, null, null, imageFormat, mutate);
+        return ResizeImageBase(inputSpan, outputStream, resizeOptions, null, null, null, null, imageFormat, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -674,9 +692,15 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, null, width, height, resampler, null, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -687,9 +711,15 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, null, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -701,9 +731,15 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+        IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -714,9 +750,15 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -728,9 +770,15 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputStream, outputStream, quality, null, width, height, resampler, null, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputStream, outputStream, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -741,9 +789,15 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputStream, outputStream, quality, resizeOptions, null, null, null, null, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputStream, outputStream, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -755,9 +809,15 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+        IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputStream, outputStream, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputStream, outputStream, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -768,9 +828,15 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputStream, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputStream, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -782,9 +848,15 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputSpan, outputStream, quality, null, width, height, resampler, null, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputSpan, outputStream, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -795,9 +867,15 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputSpan, outputStream, quality, resizeOptions, null, null, null, null, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputSpan, outputStream, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -809,9 +887,15 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+        IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputSpan, outputStream, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputSpan, outputStream, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -822,9 +906,15 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    /// <param name="useDimsAsMax">
+    /// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+    /// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+    /// </param>
+    /// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
+    public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBase(inputSpan, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBase(inputSpan, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1086,9 +1176,9 @@ public static class Manipulation
     /// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Optional: Encoder to use for the resizing operation.</param>
     /// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-    public static Task<bool> ResizeImageAsync(string inputFilePath, string outputFilePath, int width, int height, IImageEncoder? imageEncoder = null, IResampler? resampler = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ResizeImageAsync(string inputFilePath, string outputFilePath, int width, int height, IImageEncoder? imageEncoder = null, IResampler? resampler = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBaseAsync(inputFilePath, outputFilePath, null, width, height, resampler, imageEncoder, mutate);
+        return ResizeImageBaseAsync(inputFilePath, outputFilePath, null, width, height, resampler, imageEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1098,9 +1188,9 @@ public static class Manipulation
     /// <param name="outputFilePath">Path to output resized image file to.</param>
     /// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Optional: Encoder to use for the resizing operation.</param>
-    public static Task<bool> ResizeImageAsync(string inputFilePath, string outputFilePath, ResizeOptions resizeOptions, IImageEncoder? imageEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ResizeImageAsync(string inputFilePath, string outputFilePath, ResizeOptions resizeOptions, IImageEncoder? imageEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBaseAsync(inputFilePath, outputFilePath, resizeOptions, null, null, null, imageEncoder, mutate);
+        return ResizeImageBaseAsync(inputFilePath, outputFilePath, resizeOptions, null, null, null, imageEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1112,9 +1202,10 @@ public static class Manipulation
     /// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
     /// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-    public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, int width, int height, IImageEncoder imageEncoder, IResampler? resampler = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, int width, int height, IImageEncoder imageEncoder, IResampler? resampler = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBaseAsync(inputStream, outputStream, null, width, height, resampler, imageEncoder, null, mutate);
+        return ResizeImageBaseAsync(inputStream, outputStream, null, width, height, resampler, imageEncoder, null, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1124,9 +1215,10 @@ public static class Manipulation
     /// <param name="outputStream">Stream to output resized image stream to.</param>
     /// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
-    public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageEncoder imageEncoder, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageEncoder imageEncoder,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBaseAsync(inputStream, outputStream, resizeOptions, null, null, null, imageEncoder, null, mutate);
+        return ResizeImageBaseAsync(inputStream, outputStream, resizeOptions, null, null, null, imageEncoder, null, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1138,9 +1230,10 @@ public static class Manipulation
     /// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="imageFormat">Output format to use for the resizing operation.</param>
     /// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-    public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, int width, int height, IImageFormat imageFormat, IResampler? resampler = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, int width, int height, IImageFormat imageFormat, IResampler? resampler = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBaseAsync(inputStream, outputStream, null, width, height, resampler, null, imageFormat, mutate);
+        return ResizeImageBaseAsync(inputStream, outputStream, null, width, height, resampler, null, imageFormat, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1150,9 +1243,10 @@ public static class Manipulation
     /// <param name="outputStream">Stream to output resized image stream to.</param>
     /// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="imageFormat">Output format to use for the resizing operation.</param>
-    public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageFormat imageFormat, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageFormat imageFormat,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ResizeImageBaseAsync(inputStream, outputStream, resizeOptions, null, null, null, null, imageFormat, mutate);
+        return ResizeImageBaseAsync(inputStream, outputStream, resizeOptions, null, null, null, null, imageFormat, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1164,9 +1258,10 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, null, width, height, resampler, null, jpegEncoder, mutate);
+        return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1177,9 +1272,10 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, null, jpegEncoder, mutate);
+        return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1191,9 +1287,10 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+        IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1204,9 +1301,10 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1218,9 +1316,10 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, null, width, height, resampler, null, jpegEncoder, mutate);
+        return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1231,9 +1330,10 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
+        bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, resizeOptions, null, null, null, null, jpegEncoder, mutate);
+        return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1245,9 +1345,10 @@ public static class Manipulation
     /// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
     /// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+        IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>
@@ -1258,9 +1359,10 @@ public static class Manipulation
     /// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
     /// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
     /// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-    public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null, Action<IImageProcessingContext>? mutate = null)
+    public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+        JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
     {
-        return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, mutate);
+        return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
     }
 
     /// <summary>

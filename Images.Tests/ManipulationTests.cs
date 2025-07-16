@@ -727,7 +727,7 @@ public class ManipulationTests : IDisposable
         string outputPath = GetTempFilePath(".jpg");
 
         // Act
-        bool result = Manipulation.ResizeImageBase(inputPath, outputPath, null, width, height, null, null, null);
+        bool result = Manipulation.ResizeImageBase(inputPath, outputPath, null, width, height, null, null, false, null);
 
         //Assert
         result.ShouldBeFalse();
@@ -745,7 +745,7 @@ public class ManipulationTests : IDisposable
         string outputPath = GetTempFilePath(".jpg");
 
         // Act & Assert
-        Should.Throw<ArgumentException>(() => Manipulation.ReduceImageQualityBase(inputPath, outputPath, quality, null, null, null, null, null, null, null));
+        Should.Throw<ArgumentException>(() => Manipulation.ReduceImageQualityBase(inputPath, outputPath, quality, null, null, null, null, null, null, false, null));
     }
 
     [Fact]
@@ -1627,6 +1627,211 @@ public class ManipulationTests : IDisposable
 
         bool isInverted = IsInvertedVersion(origClone, imgClone);
         isInverted.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("test.jpg", 100, 100, false, false)]
+    [InlineData("test.jpg", 100, 100, true, false)]
+    [InlineData("test.png", 50, 25, false, false)]
+    [InlineData("test.png", 50, 25, true, false)]
+    [InlineData("test.png", -1, -1, true, false)]
+    [InlineData("test.jpg", 100, 100, false, true)]
+    [InlineData("test.jpg", 100, 100, true, true)]
+    [InlineData("test.png", 50, 25, false, true)]
+    [InlineData("test.png", 50, 25, true, true)]
+    [InlineData("test.png", -1, -1, true, true)]
+    public void ResizeImage_FilePath_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+    {
+        // Arrange
+        string inputPath = GetTestImagePath(fileName);
+        string outputPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.jpg");
+
+        try
+        {
+            if (width < 0 && height < 0)
+            {
+                using Image originalImg = Image.Load(inputPath);
+                width = originalImg.Width;
+                height = originalImg.Height;
+                originalImg.Dispose();
+            }
+
+            // Act
+            bool result = !useResizeOptions ? Manipulation.ResizeImage(inputPath, outputPath, width, height, useDimsAsMax: useDimsAsMax)
+                : Manipulation.ResizeImage(inputPath, outputPath, new() { Size = new(width, height) }, useDimsAsMax: useDimsAsMax);
+
+            // Assert
+            result.ShouldBeTrue();
+            File.Exists(outputPath).ShouldBeTrue();
+            using Image img = Image.Load(outputPath);
+
+            if (useDimsAsMax)
+            {
+                img.Width.ShouldBeLessThanOrEqualTo(width);
+                img.Height.ShouldBeLessThanOrEqualTo(height);
+            }
+            else
+            {
+                img.Width.ShouldBe(width);
+                img.Height.ShouldBe(height);
+            }
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+            {
+                File.Delete(outputPath);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("test.jpg", 100, 100, false, false)]
+    [InlineData("test.jpg", 100, 100, true, false)]
+    [InlineData("test.png", 50, 25, false, false)]
+    [InlineData("test.png", 50, 25, true, false)]
+    [InlineData("test.png", -1, -1, true, false)]
+    [InlineData("test.jpg", 100, 100, false, true)]
+    [InlineData("test.jpg", 100, 100, true, true)]
+    [InlineData("test.png", 50, 25, false, true)]
+    [InlineData("test.png", 50, 25, true, true)]
+    [InlineData("test.png", -1, -1, true, true)]
+    public void ResizeImage_Stream_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+    {
+        // Arrange
+        using MemoryStream input = GetTestImageStream(fileName);
+        using MemoryStream output = new();
+
+        if (width < 0 && height < 0)
+        {
+            using Image originalImg = Image.Load(input);
+            width = originalImg.Width;
+            height = originalImg.Height;
+            originalImg.Dispose();
+            input.Position = 0; // Reset stream position after loading
+        }
+
+        // Act
+        bool result = !useResizeOptions ? Manipulation.ResizeImage(input, output, width, height, new JpegEncoder(), useDimsAsMax: useDimsAsMax) :
+            Manipulation.ResizeImage(input, output, new() { Size = new(width, height) }, new JpegEncoder(), useDimsAsMax: useDimsAsMax);
+
+        // Assert
+        result.ShouldBeTrue();
+        output.Position = 0;
+        using Image img = Image.Load(output);
+
+        if (useDimsAsMax)
+        {
+            img.Width.ShouldBeLessThanOrEqualTo(width);
+            img.Height.ShouldBeLessThanOrEqualTo(height);
+        }
+        else
+        {
+            img.Width.ShouldBe(width);
+            img.Height.ShouldBe(height);
+        }
+    }
+
+    [Theory]
+    [InlineData("test.jpg", 100, 100, false, false)]
+    [InlineData("test.jpg", 100, 100, true, false)]
+    [InlineData("test.png", 50, 25, false, false)]
+    [InlineData("test.png", 50, 25, true, false)]
+    [InlineData("test.png", -1, -1, true, false)]
+    [InlineData("test.jpg", 100, 100, false, true)]
+    [InlineData("test.jpg", 100, 100, true, true)]
+    [InlineData("test.png", 50, 25, false, true)]
+    [InlineData("test.png", 50, 25, true, true)]
+    [InlineData("test.png", -1, -1, true, true)]
+    public void ResizeImage_Span_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+    {
+        // Arrange
+        byte[] bytes = GetTestImageBytes(fileName);
+        using MemoryStream output = new();
+
+        if (width < 0 && height < 0)
+        {
+            using Image originalImg = Image.Load(bytes);
+            width = originalImg.Width;
+            height = originalImg.Height;
+            originalImg.Dispose();
+        }
+
+        // Act
+        bool result = !useResizeOptions ? Manipulation.ResizeImage(bytes, output, width, height, new JpegEncoder(), useDimsAsMax: useDimsAsMax) :
+             Manipulation.ResizeImage(bytes, output, new() { Size = new(width, height) }, new JpegEncoder(), useDimsAsMax: useDimsAsMax);
+
+        // Assert
+        result.ShouldBeTrue();
+        output.Position = 0;
+        using Image img = Image.Load(output);
+
+        if (useDimsAsMax)
+        {
+            img.Width.ShouldBeLessThanOrEqualTo(width);
+            img.Height.ShouldBeLessThanOrEqualTo(height);
+        }
+        else
+        {
+            img.Width.ShouldBe(width);
+            img.Height.ShouldBe(height);
+        }
+    }
+
+    [Theory]
+    [InlineData("test.jpg", 100, 100, false, false)]
+    [InlineData("test.jpg", 100, 100, true, false)]
+    [InlineData("test.png", 50, 25, false, false)]
+    [InlineData("test.png", 50, 25, true, false)]
+    [InlineData("test.png", -1, -1, true, false)]
+    [InlineData("test.jpg", 100, 100, false, true)]
+    [InlineData("test.jpg", 100, 100, true, true)]
+    [InlineData("test.png", 50, 25, false, true)]
+    [InlineData("test.png", 50, 25, true, true)]
+    [InlineData("test.png", -1, -1, true, true)]
+    public async Task ResizeImageAsync_FilePath_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+    {
+        // Arrange
+        string inputPath = GetTestImagePath(fileName);
+        string outputPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.jpg");
+
+        try
+        {
+            if (width < 0 && height < 0)
+            {
+                using Image originalImg = Image.Load(inputPath);
+                width = originalImg.Width;
+                height = originalImg.Height;
+                originalImg.Dispose();
+            }
+
+            // Act
+            bool result = !useResizeOptions ? await Manipulation.ResizeImageAsync(inputPath, outputPath, width, height, useDimsAsMax: useDimsAsMax) :
+                await Manipulation.ResizeImageAsync(inputPath, outputPath, new() { Size = new(width, height) }, useDimsAsMax: useDimsAsMax);
+
+            // Assert
+            result.ShouldBeTrue();
+            File.Exists(outputPath).ShouldBeTrue();
+            using Image img = Image.Load(outputPath);
+
+            if (useDimsAsMax)
+            {
+                img.Width.ShouldBeLessThanOrEqualTo(width);
+                img.Height.ShouldBeLessThanOrEqualTo(height);
+            }
+            else
+            {
+                img.Width.ShouldBe(width);
+                img.Height.ShouldBe(height);
+            }
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+            {
+                File.Delete(outputPath);
+            }
+        }
     }
 
     public static bool IsInvertedVersion<TPixel>(Image<TPixel> original, Image<TPixel> potentialInverted, float tolerance = 1f) where TPixel : unmanaged, IPixel<TPixel>

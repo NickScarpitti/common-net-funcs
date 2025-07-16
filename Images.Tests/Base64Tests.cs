@@ -118,10 +118,45 @@ public sealed class Base64Tests : IDisposable
     [InlineData($"data:image/png;base64,{TestBase64String}", TestBase64String)]
     [InlineData($"base64{TestBase64String}", TestBase64String)]
     [InlineData(TestBase64String, TestBase64String)]
+    public void ExtractBase64_WithValidInput_ReturnsCleanedValue(string input, string expected)
+    {
+        // Act
+        string? result = input.ExtractBase64();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData($"data:image/png;base64,{TestBase64String}", TestBase64String)]
+    [InlineData($"base64{TestBase64String}", TestBase64String)]
+    [InlineData(TestBase64String, TestBase64String)]
     public void CleanImageValue_WithValidInput_ReturnsCleanedValue(string input, string expected)
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         string? result = input.CleanImageValue();
+        #pragma warning restore CS0618 // Type or member is obsolete
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("https://example.com/image.png?v=123", "https://example.com/image.png")]
+    [InlineData("https://example.com/image.png?V=456", "https://example.com/image.png")]
+    [InlineData("https://example.com/image.png?v=abc&other=1", "https://example.com/image.png")]
+    [InlineData("https://example.com/image.png", "https://example.com/image.png")]
+    [InlineData("https://example.com/image.png?x=1", "https://example.com/image.png?x=1")]
+    [InlineData("?v=123", "")]
+    [InlineData("?V=123", "")]
+    [InlineData("", "")]
+    [InlineData("   ", "   ")]
+    [InlineData(null, null)]
+    public void RemoveImageVersionQuery_Should_Remove_Version_Parameter_Correctly(string? input, string? expected)
+    {
+        // Act
+        string result = Base64.RemoveImageVersionQuery(input!);
 
         // Assert
         result.ShouldBe(expected);
@@ -133,10 +168,27 @@ public sealed class Base64Tests : IDisposable
     [InlineData(" ")]
     [InlineData("invalid")]
     [InlineData("base64")]
+    public void ExtractBase64_WithInvalidInput_ReturnsNull(string? input)
+    {
+        // Act
+        string? result = input.ExtractBase64();
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("invalid")]
+    [InlineData("base64")]
     public void CleanImageValue_WithInvalidInput_ReturnsNull(string? input)
     {
         // Act
+        #pragma warning disable CS0618 // Type or member is obsolete
         string? result = input.CleanImageValue();
+        #pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert
         result.ShouldBeNull();

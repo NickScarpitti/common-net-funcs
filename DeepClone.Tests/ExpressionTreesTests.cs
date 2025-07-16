@@ -46,7 +46,10 @@ public sealed class ExpressionTreesTests : IDisposable
         public TestClass? Child { get; set; }
 
         public readonly string ReadOnlyField = "test";
+
+        #pragma warning disable RCS1213 // Remove unused member declaration
         private readonly int _privateReadOnlyField = 42;
+        #pragma warning restore RCS1213 // Remove unused member declaration
     }
 
     public struct TestStruct

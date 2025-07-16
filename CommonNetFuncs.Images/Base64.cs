@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp;
+﻿using System.Text.RegularExpressions;
+using SixLabors.ImageSharp;
 using static System.Convert;
 
 namespace CommonNetFuncs.Images;
@@ -6,8 +7,12 @@ namespace CommonNetFuncs.Images;
 /// <summary>
 /// Helper methods for converting images
 /// </summary>
-public static class Base64
+public static partial class Base64
 {
+    //[GeneratedRegex(@"data:image\/([^;]+);base64,([^'"")\s]+)")]
+    [GeneratedRegex(@"data:image\/([^;]+);base64,([^'"")\s]+)|base64([^'"")\s]+)")]
+    private static partial Regex ExtractBase64Regex();
+
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
@@ -55,17 +60,17 @@ public static class Base64
         return null;
     }
 
-    private const string B64 = "base64";
-
     /// <summary>
     /// Clean up a base 64 image value by removing any prefix or unwanted characters
     /// </summary>
     /// <param name="imgValue">Base 64 string from web element to clean up</param>
     /// <returns>CLean base 64 image string, or null if invalid</returns>
+    [Obsolete("Please use ExtractBase64 instead.")]
     public static string? CleanImageValue(this string? imgValue)
     {
         if (!string.IsNullOrWhiteSpace(imgValue))
         {
+            const string B64 = "base64";
             if (imgValue?.Contains(',') == true)
             {
                 int numChars = imgValue.Length - imgValue.IndexOf(',') - 1;
@@ -82,6 +87,63 @@ public static class Base64
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Extract a base 64 image value from a typical CSS background image string.
+    /// </summary>
+    /// <param name="imgValue">Background image string from web element CSS containing a base 64 image to extract.</param>
+    /// <remarks>Will also remove "base64" from the beginning of the imgValue string if the CSS format is not matched</remarks>
+    /// <returns>Base 64 image string, or null if invalid base64 image or "none"</returns>
+    public static string? ExtractBase64(this string? imgValue)
+    {
+        string? resultValue = null;
+        if (!string.IsNullOrWhiteSpace(imgValue))
+        {
+            Regex regex = ExtractBase64Regex();
+            MatchCollection matches = regex.Matches(imgValue);
+
+            if (matches.Count > 0)
+            {
+                if (!string.IsNullOrWhiteSpace(matches[0].Groups[2].Value))
+                {
+                    resultValue = matches[0].Groups[2].Value; // Get the base64 part
+                }
+                else if (!string.IsNullOrWhiteSpace(matches[0].Groups[3].Value))
+                {
+                    resultValue = matches[0].Groups[3].Value; // Get the base64 part
+                }
+
+                if (resultValue?.Length > 0)
+                {
+                    return resultValue.IsValidBase64Image() ? resultValue : null;
+                }
+            }
+
+            // If no match, check if imgValue is a valid base64 image already
+            if (imgValue.Length > 0 && !string.Equals(imgValue, "none", StringComparison.InvariantCultureIgnoreCase) && !string.Equals(imgValue[..4], "http", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return imgValue.IsValidBase64Image() ? imgValue : null;
+            }
+        }
+        return resultValue.IsValidBase64Image() ? resultValue : null;
+    }
+
+    /// <summary>
+    /// Removes the version query parameter from the specified image source URL if present.
+    /// </summary>
+    /// <remarks>This method identifies the version query parameter by the pattern "?v=" and removes it along with any subsequent characters. The comparison is case-insensitive.</remarks>
+    /// <param name="imgSrc">The image source URL to process.</param>
+    /// <returns>The image source URL without the version query parameter. If the input does not contain a version query parameter, the original string is returned.</returns>
+    public static string RemoveImageVersionQuery(string imgSrc)
+    {
+        const string ImgVersionStart = "?v=";
+        string result = imgSrc;
+        if (!string.IsNullOrWhiteSpace(imgSrc) && imgSrc.Contains(ImgVersionStart, StringComparison.InvariantCultureIgnoreCase) && imgSrc.Length > ImgVersionStart.Length)
+        {
+            result = imgSrc[..imgSrc.IndexOf(ImgVersionStart, StringComparison.InvariantCultureIgnoreCase)];
+        }
+        return result;
     }
 
     /// <summary>

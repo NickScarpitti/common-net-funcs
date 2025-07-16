@@ -37,13 +37,23 @@ Converts an image file or stream to a Base64 string.
 string base64String = ConvertImageFileToBase64(@"C:\path\to\image.jpg"); // Returns the Base64 string representation of the image file.
 ```
 
-#### CleanImageValue
+#### CleanImageValue [Obsolete, please use [ExtractBase64](#extractbase64)]
 
 Attempts to clean a Base64 string by removing any metadata or unwanted characters that may come with it when reading from an HTML element.
 
 ```cs
 string base64String = "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
 string? cleanedBase64 = CleanImageValue(base64String); // "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+```
+
+#### ExtractBase64
+
+Attempts to clean a CSS background image containing a Base64 string by removing any metadata or unwanted characters that may come with it when reading from an HTML element.
+Validates that the Base64 string is a valid image format.
+
+```cs
+string base64String = "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
+string? cleanedBase64 = base64String.ExtractBase64(); // "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
 ```
 
 #### ImageSaveToFile

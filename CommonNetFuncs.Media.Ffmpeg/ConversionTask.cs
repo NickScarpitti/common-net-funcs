@@ -98,9 +98,9 @@ public static class ConversionTask
         cancellationTokenSource ??= new();
         try
         {
-            DateTime lastOutput1 = DateTime.Now.AddSeconds(-6);
-            DateTime lastOutput2 = DateTime.Now.AddSeconds(-6);
-            DateTime lastOutput3 = DateTime.Now.AddSeconds(-6);
+            DateTime lastOutput1 = DateTime.UtcNow.AddSeconds(-6);
+            DateTime lastOutput2 = DateTime.UtcNow.AddSeconds(-6);
+            DateTime lastOutput3 = DateTime.UtcNow.AddSeconds(-6);
 
             Conversion conversion = new();
             mediaInfo ??= await FFmpeg.GetMediaInfo($"{fileToConvert.@FullName}").ConfigureAwait(false);
@@ -141,17 +141,17 @@ public static class ConversionTask
             //Add log to OnProgress
             conversion.OnProgress += (sender, args) =>
             {
-                if (DateTime.Now > lastOutput1.AddSeconds(5))
+                if (DateTime.UtcNow > lastOutput1.AddSeconds(5))
                 {
                     //Show all output from FFmpeg to console
                     logger.Info($"#{conversionIndex} Progress:[{args.Duration}/{args.TotalLength}][{args.Percent}%]-[{fileToConvert.Name}]{(!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty)}{(!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty)}{(conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty)}[Total FPS: {GetTotalFps(fpsDict)}]");
-                    lastOutput1 = DateTime.Now;
+                    lastOutput1 = DateTime.UtcNow;
                 }
             };
 
             conversion.OnDataReceived += (sender, args) =>
             {
-                if (DateTime.Now > lastOutput2.AddSeconds(5))
+                if (DateTime.UtcNow > lastOutput2.AddSeconds(5))
                 {
                     //Example output:
                     //frame=   48 fps=5.8 q=0.0 size=       1kB time=00:00:01.77 bitrate=   4.5kbits/s dup=0 drop=45 speed=0.215x
@@ -232,13 +232,13 @@ public static class ConversionTask
 
                         logger.Debug($"#{conversionIndex} ETA={timeLeftString} {normalizedData[..(normalizedData.Contains("bitrate=") ? normalizedData.IndexOf("bitrate=") : normalizedData.Length)]} - [{fileToConvert.Name}]{(!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty)}{(!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty)}{(conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty)}[Total FPS: {GetTotalFps(fpsDict)}]");
 
-                        if (DateTime.Now > lastOutput3.AddSeconds(30))
+                        if (DateTime.UtcNow > lastOutput3.AddSeconds(30))
                         {
                             logger.Info($"#{conversionIndex} ETA={timeLeftString} {normalizedData[..(normalizedData.Contains("bitrate=") ? normalizedData.IndexOf("bitrate=") : normalizedData.Length)]} - [{fileToConvert.Name}]{(!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty)}{(!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty)}{(conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty)}[Total FPS: {GetTotalFps(fpsDict)}]");
-                            lastOutput3 = DateTime.Now;
+                            lastOutput3 = DateTime.UtcNow;
                         }
                     }
-                    lastOutput2 = DateTime.Now;
+                    lastOutput2 = DateTime.UtcNow;
                 }
             };
 

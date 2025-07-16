@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using SixLabors.ImageSharp;
 using static System.Convert;
 
@@ -135,10 +136,11 @@ public static partial class Base64
     /// <remarks>This method identifies the version query parameter by the pattern "?v=" and removes it along with any subsequent characters. The comparison is case-insensitive.</remarks>
     /// <param name="imgSrc">The image source URL to process.</param>
     /// <returns>The image source URL without the version query parameter. If the input does not contain a version query parameter, the original string is returned.</returns>
-    public static string RemoveImageVersionQuery(string imgSrc)
+    [return: NotNullIfNotNull(nameof(imgSrc))]
+    public static string? RemoveImageVersionQuery(this string? imgSrc)
     {
         const string ImgVersionStart = "?v=";
-        string result = imgSrc;
+        string? result = imgSrc;
         if (!string.IsNullOrWhiteSpace(imgSrc) && imgSrc.Contains(ImgVersionStart, StringComparison.InvariantCultureIgnoreCase) && imgSrc.Length > ImgVersionStart.Length)
         {
             result = imgSrc[..imgSrc.IndexOf(ImgVersionStart, StringComparison.InvariantCultureIgnoreCase)];

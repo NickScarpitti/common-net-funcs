@@ -230,10 +230,9 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
 
             // Upload parts in parallel
             Task<PartETag?>[] uploadTasks = new Task<PartETag?>[totalParts];
-
-            for (int partNumber = 1; partNumber <= totalParts; partNumber++)
+            for (int i = 1; i <= totalParts; i++)
             {
-                uploadTasks[partNumber - 1] = UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, cancellationToken);
+                uploadTasks[i - 1] = UploadPartAsync(bucketName, fileName, uploadId, stream, i, chunkSize, totalSize, semaphore, cancellationToken);
             }
 
             // Wait for all uploads to complete
@@ -290,59 +289,66 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
 
     private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Shared;
 
-    internal async Task<PartETag?> UploadPartAsync(string bucketName, string fileName, string uploadId, Stream sourceStream, int partNumber, long chunkSize, long totalSize, SemaphoreSlim semaphore, CancellationToken cancellationToken)
+    internal async Task<PartETag?> UploadPartAsync(string bucketName, string fileName, string uploadId, Stream sourceStream, int partNumber, long chunkSize, long totalSize, SemaphoreSlim semaphore, CancellationToken cancellationToken, bool isLastPart = false)
     {
         await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        byte[] buffer = BufferPool.Rent((int)chunkSize); // Create a buffer for this chunk
 
         try
         {
             long startPosition = (partNumber - 1) * chunkSize;
             long actualChunkSize = Math.Min(chunkSize, totalSize - startPosition);
-
-            // Read the chunk from the source stream (thread-safe)
-            lock (sourceStream)
+            byte[] buffer = BufferPool.Rent((int)actualChunkSize); // Create a buffer for this chunk
+            try
             {
-                sourceStream.Seek(startPosition, SeekOrigin.Begin);
-                int totalBytesRead = 0;
-                int bytesRead;
-
-                while (totalBytesRead < actualChunkSize &&
-                       (bytesRead = sourceStream.Read(buffer, totalBytesRead, (int)(actualChunkSize - totalBytesRead))) > 0)
+                // Read the chunk from the source stream (thread-safe)
+                int totalBytesRead;
+                lock (sourceStream)
                 {
-                    totalBytesRead += bytesRead;
+                    sourceStream.Seek(startPosition, SeekOrigin.Begin);
+                    totalBytesRead = 0;
+                    int bytesRead;
+
+                    while (totalBytesRead < actualChunkSize && (bytesRead = sourceStream.Read(buffer, totalBytesRead, (int)(actualChunkSize - totalBytesRead))) > 0)
+                    {
+                        totalBytesRead += bytesRead;
+                    }
                 }
 
                 if (totalBytesRead != actualChunkSize)
                 {
                     throw new InvalidOperationException($"Expected to read {actualChunkSize} bytes but only read {totalBytesRead} bytes for part {partNumber}");
                 }
+
+                // Upload the part
+                //await using MemoryStream partStream = new(buffer);
+                await using MemoryStream partStream = new(buffer, 0, totalBytesRead, writable: false);
+
+                UploadPartRequest uploadPartRequest = new()
+                {
+                    BucketName = bucketName,
+                    Key = fileName,
+                    UploadId = uploadId,
+                    PartNumber = partNumber,
+                    InputStream = partStream,
+                    PartSize = actualChunkSize,
+                    //IsLastPart = isLastPart,
+                };
+
+                UploadPartResponse response = await s3Client.UploadPartAsync(uploadPartRequest, cancellationToken).ConfigureAwait(false);
+                if (response.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    logger.LogDebug("Successfully uploaded part {partNumber} ({actualChunkSize} bytes)", partNumber, actualChunkSize);
+                    return new PartETag(partNumber, response.ETag);
+                }
+                else
+                {
+                    logger.LogError("Failed to upload part {partNumber}. Status: {statusCode}", partNumber, response.HttpStatusCode);
+                    return null;
+                }
             }
-
-            // Upload the part
-            await using MemoryStream partStream = new(buffer);
-
-            UploadPartRequest uploadPartRequest = new()
+            finally
             {
-                BucketName = bucketName,
-                Key = fileName,
-                UploadId = uploadId,
-                PartNumber = partNumber,
-                InputStream = partStream,
-                PartSize = actualChunkSize
-            };
-
-            UploadPartResponse response = await s3Client.UploadPartAsync(uploadPartRequest, cancellationToken).ConfigureAwait(false);
-
-            if (response.HttpStatusCode == HttpStatusCode.OK)
-            {
-                logger.LogDebug("Successfully uploaded part {partNumber} ({actualChunkSize} bytes)", partNumber, actualChunkSize);
-                return new PartETag(partNumber, response.ETag);
-            }
-            else
-            {
-                logger.LogError("Failed to upload part {partNumber}. Status: {statusCode}", partNumber, response.HttpStatusCode);
-                return null;
+                BufferPool.Return(buffer, true);
             }
         }
         catch (Exception ex)
@@ -352,7 +358,6 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
         }
         finally
         {
-            BufferPool.Return(buffer, true);
             semaphore.Release();
         }
     }

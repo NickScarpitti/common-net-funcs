@@ -7,6 +7,8 @@ public interface IAwsS3
 {
     Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip, CancellationToken cancellationToken = default);
 
+    Task<bool> UploadS3File(string bucketName, string fileName, string filePath, ConcurrentDictionary<string, bool>? validatedBuckets = null, CancellationToken cancellationToken = default);
+
     Task GetS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool decompressGzipData = true, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteS3File(string bucketName, string fileName, ConcurrentDictionary<string, bool>? validatedBuckets = null, CancellationToken cancellationToken = default);

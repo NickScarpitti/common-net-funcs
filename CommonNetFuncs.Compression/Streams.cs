@@ -260,36 +260,6 @@ public static class Streams
 
     public static async Task<byte[]> Compress(this byte[] data, ECompressionType compressionType, CancellationToken cancellationToken = default)
     {
-        //await using MemoryStream memoryStream = new();
-        //switch (compressionType)
-        //{
-        //    case ECompressionType.Brotli:
-        //        await using (BrotliStream brotliStream = new(memoryStream, CompressionLevel.Optimal, true))
-        //        {
-        //            await brotliStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-        //        }
-        //        break;
-        //    case ECompressionType.Gzip:
-        //        await using (GZipStream gzipStream = new(memoryStream, CompressionLevel.Optimal, true))
-        //        {
-        //            await gzipStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-        //        }
-        //        break;
-        //    case ECompressionType.Deflate:
-        //        await using (DeflateStream deflateStream = new(memoryStream, CompressionLevel.Optimal, true))
-        //        {
-        //            await deflateStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-        //        }
-        //        break;
-        //    case ECompressionType.ZLib:
-        //        await using (ZLibStream zlibStream = new(memoryStream, CompressionLevel.Optimal, true))
-        //        {
-        //            await zlibStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-        //        }
-        //        break;
-        //}
-        //return memoryStream.ToArray();
-
         await using MemoryStream memoryStream = new();
         if (data.Length < ChunkThreshold)
         {
@@ -374,38 +344,6 @@ public static class Streams
 
     public static async Task<byte[]> Decompress(this byte[] compressedData, ECompressionType compressionType, CancellationToken cancellationToken = default)
     {
-        //await using MemoryStream compressedStream = new(compressedData);
-        //await using MemoryStream decompressedStream = new();
-        //switch (compressionType)
-        //{
-        //    case ECompressionType.Brotli:
-        //        await using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress, true))
-        //        {
-        //            await brotliStream.CopyToAsync(decompressedStream, cancellationToken).ConfigureAwait(false);
-        //        }
-        //        break;
-        //    case ECompressionType.Gzip:
-        //        await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress, true))
-        //        {
-        //            await gzipStream.CopyToAsync(decompressedStream, cancellationToken).ConfigureAwait(false);
-        //        }
-        //        break;
-        //    case ECompressionType.Deflate:
-        //        await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
-        //        {
-        //            await deflateStream.CopyToAsync(decompressedStream, cancellationToken).ConfigureAwait(false);
-        //        }
-        //        break;
-        //    case ECompressionType.ZLib:
-        //        await using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress, true))
-        //        {
-        //            await zlibStream.CopyToAsync(decompressedStream, cancellationToken).ConfigureAwait(false);
-        //        }
-        //        break;
-        //}
-
-        //return decompressedStream.ToArray();
-
         await using MemoryStream compressedStream = new(compressedData);
         await using MemoryStream decompressedStream = new();
 

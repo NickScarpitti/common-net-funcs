@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.7" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.1" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.2" />
     <PackageReference Include="AutoFixture" Version="4.18.1" />
     <PackageReference Include="coverlet.collector" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
@@ -29,7 +29,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="9.103.9.1" />
+    <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="9.103.9.2" />
   </ItemGroup>
 
   <ItemGroup>

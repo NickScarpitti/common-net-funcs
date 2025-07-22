@@ -289,7 +289,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
 
     private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Shared;
 
-    internal async Task<PartETag?> UploadPartAsync(string bucketName, string fileName, string uploadId, Stream sourceStream, int partNumber, long chunkSize, long totalSize, SemaphoreSlim semaphore, CancellationToken cancellationToken, bool isLastPart = false)
+    internal async Task<PartETag?> UploadPartAsync(string bucketName, string fileName, string uploadId, Stream sourceStream, int partNumber, long chunkSize, long totalSize, SemaphoreSlim semaphore, CancellationToken cancellationToken)
     {
         await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 

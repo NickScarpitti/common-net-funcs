@@ -1,9 +1,12 @@
 ﻿using System.IO.Compression;
+using static CommonNetFuncs.Compression.Streams;
 
 namespace CommonNetFuncs.Compression;
 
 public static class Files
 {
+    private const int ChunkSize = 1024 * 1024; // 1 MB
+
     /// <summary>
     /// Compress a file in the form of a stream into a memory stream
     /// </summary>
@@ -97,5 +100,59 @@ public static class Files
             await fileStream.CopyToAsync(entryStream, cancellationToken).ConfigureAwait(false);
             await entryStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    /// <summary>
+    /// Compress a file directly to another file using streams (memory efficient)
+    /// </summary>
+    /// <param name="inputFilePath">Path to the input file</param>
+    /// <param name="outputFilePath">Path to the compressed output file</param>
+    /// <param name="compressionType">Type of compression to use</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    public static async Task CompressFile(string inputFilePath, string outputFilePath, ECompressionType compressionType, CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(inputFilePath))
+        {
+            throw new FileNotFoundException($"Input file not found: {inputFilePath}");
+        }
+
+        // Ensure output directory exists
+        string? outputDir = Path.GetDirectoryName(outputFilePath);
+        if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+        {
+            Directory.CreateDirectory(outputDir);
+        }
+
+        await using FileStream inputStream = new(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, ChunkSize, FileOptions.SequentialScan);
+        await using FileStream outputStream = new(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, ChunkSize, FileOptions.SequentialScan);
+
+        await inputStream.CompressStream(outputStream, compressionType, cancellationToken);
+    }
+
+    /// <summary>
+    /// Decompress a file directly to another file using streams (memory efficient)
+    /// </summary>
+    /// <param name="compressedFilePath">Path to the compressed input file</param>
+    /// <param name="outputFilePath">Path to the decompressed output file</param>
+    /// <param name="compressionType">Type of compression used</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    public static async Task DecompressFile(string compressedFilePath, string outputFilePath, ECompressionType compressionType, CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(compressedFilePath))
+        {
+            throw new FileNotFoundException($"Compressed file not found: {compressedFilePath}");
+        }
+
+        // Ensure output directory exists
+        string? outputDir = Path.GetDirectoryName(outputFilePath);
+        if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+        {
+            Directory.CreateDirectory(outputDir);
+        }
+
+        await using FileStream inputStream = new(compressedFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, ChunkSize, FileOptions.SequentialScan);
+        await using FileStream outputStream = new(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, ChunkSize, FileOptions.SequentialScan);
+
+        await inputStream.DecompressStream(outputStream, compressionType, cancellationToken);
     }
 }

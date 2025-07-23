@@ -1,5 +1,6 @@
 ﻿using System.IO.Compression;
 using static CommonNetFuncs.Compression.Files;
+using static CommonNetFuncs.Compression.Streams;
 
 namespace Compression.Tests;
 
@@ -160,5 +161,191 @@ public sealed class FilesTests
         // Assert
         using ZipArchive readArchive = new(memoryStream, ZipArchiveMode.Read, true);
         readArchive.Entries.Count.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Brotli)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.ZLib)]
+    public async Task CompressFile_Should_Create_Compressed_File(ECompressionType compressionType)
+    {
+        // Arrange
+        string tempInput = Path.GetTempFileName();
+        string tempOutput = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.cmp");
+        try
+        {
+            byte[] data = Enumerable.Range(0, 1000).Select(i => (byte)i).ToArray();
+            await File.WriteAllBytesAsync(tempInput, data);
+
+            // Act
+            await CompressFile(tempInput, tempOutput, compressionType);
+
+            // Assert
+            File.Exists(tempOutput).ShouldBeTrue();
+            new FileInfo(tempOutput).Length.ShouldBeGreaterThan(0);
+        }
+        finally
+        {
+            if (File.Exists(tempInput))
+            {
+                File.Delete(tempInput);
+            }
+
+            if (File.Exists(tempOutput))
+            {
+                File.Delete(tempOutput);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task CompressFile_Should_Throw_If_Input_File_Does_Not_Exist()
+    {
+        // Arrange
+        string nonExistent = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.txt");
+        string output = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.cmp");
+
+        // Act & Assert
+        FileNotFoundException ex = await Should.ThrowAsync<FileNotFoundException>(() => CompressFile(nonExistent, output, ECompressionType.Gzip));
+        ex.Message.ShouldContain("Input file not found");
+    }
+
+    [Fact]
+    public async Task CompressFile_Should_Create_Output_Directory_If_Not_Exists()
+    {
+        // Arrange
+        string tempInput = Path.GetTempFileName();
+        string outputDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string tempOutput = Path.Combine(outputDir, "out.cmp");
+        try
+        {
+            await File.WriteAllTextAsync(tempInput, "test data");
+
+            // Act
+            await CompressFile(tempInput, tempOutput, ECompressionType.Gzip);
+
+            // Assert
+            File.Exists(tempOutput).ShouldBeTrue();
+            Directory.Exists(outputDir).ShouldBeTrue();
+        }
+        finally
+        {
+            if (File.Exists(tempInput))
+            {
+                File.Delete(tempInput);
+            }
+
+            if (File.Exists(tempOutput))
+            {
+                File.Delete(tempOutput);
+            }
+
+            if (Directory.Exists(outputDir))
+            {
+                Directory.Delete(outputDir, true);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Brotli)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.ZLib)]
+    public async Task DecompressFile_Should_Restore_Original_Data(ECompressionType compressionType)
+    {
+        // Arrange
+        string tempInput = Path.GetTempFileName();
+        string tempCompressed = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.cmp");
+        string tempOutput = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.out");
+        try
+        {
+            byte[] data = Enumerable.Range(0, 1000).Select(i => (byte)i).ToArray();
+            await File.WriteAllBytesAsync(tempInput, data);
+
+            await CompressFile(tempInput, tempCompressed, compressionType);
+
+            // Act
+            await DecompressFile(tempCompressed, tempOutput, compressionType);
+
+            // Assert
+            File.Exists(tempOutput).ShouldBeTrue();
+            byte[] decompressed = await File.ReadAllBytesAsync(tempOutput);
+            decompressed.ShouldBe(data);
+        }
+        finally
+        {
+            if (File.Exists(tempInput))
+            {
+                File.Delete(tempInput);
+            }
+
+            if (File.Exists(tempCompressed))
+            {
+                File.Delete(tempCompressed);
+            }
+
+            if (File.Exists(tempOutput))
+            {
+                File.Delete(tempOutput);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task DecompressFile_Should_Throw_If_Compressed_File_Does_Not_Exist()
+    {
+        // Arrange
+        string nonExistent = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.cmp");
+        string output = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.out");
+
+        // Act & Assert
+        FileNotFoundException ex = await Should.ThrowAsync<FileNotFoundException>(() => DecompressFile(nonExistent, output, ECompressionType.Gzip));
+        ex.Message.ShouldContain("Compressed file not found");
+    }
+
+    [Fact]
+    public async Task DecompressFile_Should_Create_Output_Directory_If_Not_Exists()
+    {
+        // Arrange
+        string tempInput = Path.GetTempFileName();
+        string tempCompressed = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.cmp");
+        string outputDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string tempOutput = Path.Combine(outputDir, "out.txt");
+        try
+        {
+            await File.WriteAllTextAsync(tempInput, "test data");
+            await CompressFile(tempInput, tempCompressed, ECompressionType.Gzip);
+
+            // Act
+            await DecompressFile(tempCompressed, tempOutput, ECompressionType.Gzip);
+
+            // Assert
+            File.Exists(tempOutput).ShouldBeTrue();
+            Directory.Exists(outputDir).ShouldBeTrue();
+        }
+        finally
+        {
+            if (File.Exists(tempInput))
+            {
+                File.Delete(tempInput);
+            }
+
+            if (File.Exists(tempCompressed))
+            {
+                File.Delete(tempCompressed);
+            }
+
+            if (File.Exists(tempOutput))
+            {
+                File.Delete(tempOutput);
+            }
+
+            if (Directory.Exists(outputDir))
+            {
+                Directory.Delete(outputDir, true);
+            }
+        }
     }
 }

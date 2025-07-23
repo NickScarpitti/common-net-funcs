@@ -26,7 +26,7 @@ public static class Export
     /// <param name="createTable">If true, will format the exported data into an Excel table</param>
     /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
     public static MemoryStream? GenericExcelExport<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, bool createTable = false,
-        string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null)
+        string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
         try
         {
@@ -37,7 +37,7 @@ public static class Export
             uint newSheetId = document.InitializeExcelFile(sheetName);
             Worksheet? worksheet = document.GetWorksheetById(newSheetId);
 
-            if ((worksheet != null) && !ExportFromTable(document, worksheet, dataList, createTable, tableName, skipColumnNames))
+            if ((worksheet != null) && !ExportFromTable(document, worksheet, dataList, createTable, tableName, skipColumnNames, wrapText))
             {
                 return null;
             }
@@ -63,7 +63,7 @@ public static class Export
     /// <param name="createTable">If true, will format the exported data into an Excel table</param>
     /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
     public static MemoryStream? GenericExcelExport(this DataTable datatable, MemoryStream? memoryStream = null, bool createTable = false,
-        string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null)
+        string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
         try
         {
@@ -73,7 +73,7 @@ public static class Export
             uint newSheetId = document.InitializeExcelFile(sheetName);
             Worksheet? worksheet = document.GetWorksheetById(newSheetId);
 
-            if ((worksheet != null) && !ExportFromTable(document, worksheet, datatable, createTable, tableName, skipColumnNames))
+            if ((worksheet != null) && !ExportFromTable(document, worksheet, datatable, createTable, tableName, skipColumnNames, wrapText))
             {
                 return null;
             }
@@ -101,9 +101,9 @@ public static class Export
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <returns>True if data was successfully added to the workbook</returns>
-    public static bool AddGenericTable<T>(this SpreadsheetDocument document, IEnumerable<T> data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
+    public static bool AddGenericTable<T>(this SpreadsheetDocument document, IEnumerable<T> data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
-        return document.AddGenericTableInternal<T>(data, typeof(IEnumerable<T>), sheetName, createTable, tableName, skipColumnNames);
+        return document.AddGenericTableInternal<T>(data, typeof(IEnumerable<T>), sheetName, createTable, tableName, skipColumnNames, wrapText);
     }
 
     /// <summary>
@@ -115,9 +115,9 @@ public static class Export
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <returns>True if data was successfully added to the workbook</returns>
-    public static bool AddGenericTable(this SpreadsheetDocument document, DataTable data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
+    public static bool AddGenericTable(this SpreadsheetDocument document, DataTable data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
-        return document.AddGenericTableInternal<char>(data, typeof(DataTable), sheetName, createTable, tableName, skipColumnNames);
+        return document.AddGenericTableInternal<char>(data, typeof(DataTable), sheetName, createTable, tableName, skipColumnNames, wrapText);
     }
 
     /// <summary>
@@ -131,7 +131,7 @@ public static class Export
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <returns>True if data was successfully added to the workbook</returns>
-    private static bool AddGenericTableInternal<T>(this SpreadsheetDocument document, object? data, Type dataType, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null)
+    private static bool AddGenericTableInternal<T>(this SpreadsheetDocument document, object? data, Type dataType, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
         bool success = false;
         try
@@ -149,11 +149,11 @@ public static class Export
             {
                 if (dataType == typeof(IEnumerable<T>))
                 {
-                    success = ExportFromTable(document, worksheet, (IEnumerable<T>)data, createTable, tableName, skipColumnNames);
+                    success = ExportFromTable(document, worksheet, (IEnumerable<T>)data, createTable, tableName, skipColumnNames, wrapText);
                 }
                 else if (dataType == typeof(DataTable))
                 {
-                    success = ExportFromTable(document, worksheet, (DataTable)data, createTable, tableName, skipColumnNames);
+                    success = ExportFromTable(document, worksheet, (DataTable)data, createTable, tableName, skipColumnNames, wrapText);
                 }
                 else
                 {
@@ -179,7 +179,7 @@ public static class Export
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <returns>True if excel file was created successfully</returns>
     /// <exception cref="ArgumentException"></exception>
-    public static bool ExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, CancellationToken cancellationToken = default)
+    public static bool ExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -187,8 +187,8 @@ public static class Export
             {
                 SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
 
-                uint headerStyleId = document.GetStandardCellStyle(EStyle.Header);
-                uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body);
+                uint headerStyleId = document.GetStandardCellStyle(EStyle.Header, wrapText: wrapText);
+                uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body, wrapText: wrapText);
 
                 uint x = 1;
                 uint y = 1;
@@ -251,7 +251,7 @@ public static class Export
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <returns>True if excel file was created successfully</returns>
     /// <exception cref="ArgumentException"></exception>
-    public static bool ExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, CancellationToken cancellationToken = default)
+    public static bool ExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -259,8 +259,8 @@ public static class Export
             {
                 SheetData? sheetData = worksheet.GetFirstChild<SheetData>() ?? throw new ArgumentException("The worksheet does not contain sheetData, which is required for this operation.");
 
-                uint headerStyleId = document.GetStandardCellStyle(EStyle.Header);
-                uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body);
+                uint headerStyleId = document.GetStandardCellStyle(EStyle.Header, wrapText: wrapText);
+                uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body, wrapText: wrapText);
 
                 uint y = 1;
                 uint x = 1;

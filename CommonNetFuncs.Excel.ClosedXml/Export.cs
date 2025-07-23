@@ -23,14 +23,14 @@ public static class Export
     /// <param name="data">Data to be exported</param>
     /// <param name="createTable">Make the exported data into an Excel table</param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, IEnumerable<T>? data, bool createTable = false, CancellationToken cancellationToken = default)
+    public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, IEnumerable<T>? data, bool createTable = false, bool wrapText = false, CancellationToken cancellationToken = default)
     {
         try
         {
             if (data?.Any() == true)
             {
-                IXLStyle? headerStyle = GetStyle(EStyle.Header, wb);
-                IXLStyle? bodyStyle = GetStyle(EStyle.Body, wb);
+                IXLStyle? headerStyle = GetStyle(EStyle.Header, wb, wrapText: wrapText);
+                IXLStyle? bodyStyle = GetStyle(EStyle.Body, wb, wrapText: wrapText);
 
                 int x = 1;
                 int y = 1;
@@ -119,14 +119,14 @@ public static class Export
     /// <param name="data">Data to be exported</param>
     /// <param name="createTable">Make the exported data into an Excel table</param>
     /// <returns>True if excel file was created successfully</returns>
-    public static bool ExportFromTable(IXLWorkbook wb, IXLWorksheet ws, DataTable? data, bool createTable = false, CancellationToken cancellationToken = default)
+    public static bool ExportFromTable(IXLWorkbook wb, IXLWorksheet ws, DataTable? data, bool createTable = false, bool wrapText = false, CancellationToken cancellationToken = default)
     {
         try
         {
             if (data?.Rows.Count > 0)
             {
-                IXLStyle? headerStyle = GetStyle(EStyle.Header, wb);
-                IXLStyle? bodyStyle = GetStyle(EStyle.Body, wb);
+                IXLStyle? headerStyle = GetStyle(EStyle.Header, wb, wrapText: wrapText);
+                IXLStyle? bodyStyle = GetStyle(EStyle.Body, wb, wrapText: wrapText);
 
                 int x = 1;
                 int y = 1;

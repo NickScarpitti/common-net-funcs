@@ -25,7 +25,9 @@ public static partial class Common
     /// <param name="sheetName">Optional name for the new sheet that will be created</param>
     /// <returns>Id of the sheet that was created during initialization</returns>
     public static uint InitializeExcelFile(this SpreadsheetDocument document, string? sheetName = null)
-    { return document.CreateNewSheet(sheetName); }
+    {
+        return document.CreateNewSheet(sheetName);
+    }
 
     /// <summary>
     /// Adds a new sheet to a SpreadsheetDocument named according to the value passed into sheetName or "Sheet #"
@@ -229,7 +231,9 @@ public static partial class Common
     /// <param name="cell">The Cell to check</param>
     /// <returns>True if the Cell is empty, false otherwise</returns>
     public static bool IsCellEmpty(this Cell? cell)
-    { return (cell == null) || string.IsNullOrWhiteSpace(cell.InnerText); }
+    {
+        return (cell == null) || string.IsNullOrWhiteSpace(cell.InnerText);
+    }
 
     /// <summary>
     /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
@@ -461,7 +465,10 @@ public static partial class Common
     /// <summary>
     /// Clears all cached standard formats for all workbooks
     /// </summary>
-    public static void ClearStandardFormatCache() { WorkbookStandardFormatCache = []; }
+    public static void ClearStandardFormatCache()
+    {
+        WorkbookStandardFormatCache = [];
+    }
 
     /// <summary>
     /// Clears standard format cache for specific workbook
@@ -480,7 +487,10 @@ public static partial class Common
     /// <summary>
     /// Clears all cached custom formats for all workbooks
     /// </summary>
-    public static void ClearCustomFormatCache() { WorkbookCustomFormatCaches = []; }
+    public static void ClearCustomFormatCache()
+    {
+        WorkbookCustomFormatCaches = [];
+    }
 
     /// <summary>
     /// Clears custom format cache for specific workbook
@@ -495,7 +505,9 @@ public static partial class Common
     }
 
     public static Dictionary<string, WorkbookStyleCache> GetWorkbookCustomFormatCaches()
-    { return new(WorkbookCustomFormatCaches); }
+    {
+        return new(WorkbookCustomFormatCaches);
+    }
 
     /// <summary>
     /// Gets the Stylesheet from a SpreadsheetDocument
@@ -643,7 +655,7 @@ public static partial class Common
     /// <param name="style">Enum value indicating which style to create</param>
     /// <param name="cellLocked">Whether or not the cells with this style should be locked or not</param>
     /// <returns>The ID of the style that was created</returns>
-    public static uint GetStandardCellStyle(this SpreadsheetDocument document, EStyle style, bool cellLocked = false)
+    public static uint GetStandardCellStyle(this SpreadsheetDocument document, EStyle style, bool cellLocked = false, bool wrapText = false)
     {
         Stylesheet stylesheet = document.GetStylesheet()!;
 
@@ -803,6 +815,19 @@ public static partial class Common
             cellFormat.ApplyProtection = true;
         }
 
+        if (wrapText)
+        {
+            if (cellFormat.Alignment != null)
+            {
+                cellFormat.Alignment.WrapText = true;
+            }
+            else
+            {
+                cellFormat.Alignment = new Alignment { WrapText = true };
+                cellFormat.ApplyAlignment = true;
+            }
+        }
+
         // Check if an identical CellFormat already exists
         CellFormats cellFormats = stylesheet.GetCellFormats()!;
         for (uint i = 0; i < (uint)cellFormats.Count(); i++)
@@ -902,7 +927,7 @@ public static partial class Common
             return false;
         }
 
-        return alignment1.Horizontal == alignment2.Horizontal;
+        return alignment1.Horizontal == alignment2.Horizontal && alignment1.WrapText == alignment2.WrapText;
     }
 
     /// <summary>
@@ -948,7 +973,7 @@ public static partial class Common
     /// <param name="border">Sets Border value of CellFormat, creates if no identical border exists yet</param>
     /// <returns>ID of the new CellFormat</returns>
     public static uint? GetCustomStyle(this SpreadsheetDocument document, bool cellLocked = false, Font? font = null,
-        HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null)
+        HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null, bool wrapText = false)
     {
         Stylesheet? stylesheet = document.GetStylesheet();
 
@@ -965,7 +990,7 @@ public static partial class Common
         uint borderId = GetOrAddBorder(stylesheet, cache, border);
 
         // Create a unique key for the cell format
-        string cellFormatKey = $"{fontId}|{fillId}|{borderId}|{alignment}|{cellLocked}";
+        string cellFormatKey = $"{fontId}|{fillId}|{borderId}|{alignment}|{cellLocked}|{wrapText}";
 
         if (cache.CellFormatCache.TryGetValue(cellFormatKey, out uint existingFormatId))
         {
@@ -982,9 +1007,19 @@ public static partial class Common
             ApplyBorder = border != null
         };
 
-        if (alignment.HasValue)
+        if (alignment.HasValue || wrapText)
         {
-            cellFormat.Alignment = new() { Horizontal = alignment };
+            if (alignment.HasValue)
+            {
+                cellFormat.Alignment = new() { Horizontal = alignment };
+            }
+
+            if (wrapText)
+            {
+                cellFormat.Alignment ??= new Alignment();
+                cellFormat.Alignment.WrapText = true;
+            }
+
             cellFormat.ApplyAlignment = true;
         }
 
@@ -1111,7 +1146,10 @@ public static partial class Common
     /// </summary>
     /// <param name="element">Element to get hash of</param>
     /// <returns>Hash for the passed in OpenXmlElement</returns>
-    public static int GetHashCode(this OpenXmlElement element) { return element.OuterXml.GetHashCode(); }
+    public static int GetHashCode(this OpenXmlElement element)
+    {
+        return element.OuterXml.GetHashCode();
+    }
 
     /// <summary>
     /// Gets a unique identifier for the current SpreadsheetDocument
@@ -1403,7 +1441,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="cellName">Named range to insert image at</param>
     public static void AddImage(this SpreadsheetDocument document, byte[] imageData, string cellName)
-    { document.AddImages([imageData], [cellName]); }
+    {
+        document.AddImages([imageData], [cellName]);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -1453,7 +1493,9 @@ public static partial class Common
     /// <param name="imageData">Image byte array</param>
     /// <param name="mergedCellArea">Tuple defining the first (top left) and last (bottom right) cell of the range to insert the image into</param>
     public static void AddImage(this SpreadsheetDocument document, byte[] imageData, (CellReference FirstCell, CellReference LastCell) mergedCellArea)
-    { document.AddImages([imageData], [mergedCellArea]); }
+    {
+        document.AddImages([imageData], [mergedCellArea]);
+    }
 
     /// <summary>
     /// Adds images into a workbook at the designated named ranges
@@ -1827,7 +1869,9 @@ public static partial class Common
     /// <param name="cellReference">CellReference of cell to get value of</param>
     /// <returns>String value of the indicated cell</returns>
     public static string GetCellValue(this SheetData sheetData, CellReference cellReference)
-    { return sheetData.GetCellValue(cellReference.RowIndex, cellReference.ColumnIndex); }
+    {
+        return sheetData.GetCellValue(cellReference.RowIndex, cellReference.ColumnIndex);
+    }
 
     /// <summary>
     /// Gets the string value of a cell
@@ -2218,7 +2262,9 @@ public static partial class Common
     /// <param name="cell">Cell to calculate the width of</param>
     /// <returns>Fitted width of the cell</returns>
     public static double CalculateWidth(this Cell cell)
-    { return CalculateWidth(cell.GetCellValue(), cell.StyleIndex?.Value); }
+    {
+        return CalculateWidth(cell.GetCellValue(), cell.StyleIndex?.Value);
+    }
 
     /// <summary>
     /// Calculate the width of a cell based on the provided text
@@ -2311,7 +2357,10 @@ public static partial class Common
             RowIndex = row;
         }
 
-        public override string ToString() { return $"{NumberToColumnName(ColumnIndex)}{RowIndex}"; }
+        public override string ToString()
+        {
+            return $"{NumberToColumnName(ColumnIndex)}{RowIndex}";
+        }
 
         /// <summary>
         /// Get the 1 based column number for the column name provided (1 = A)

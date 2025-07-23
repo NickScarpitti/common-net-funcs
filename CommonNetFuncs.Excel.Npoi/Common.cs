@@ -675,7 +675,7 @@ public static partial class Common
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
     private static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, string? hexColor = null, short? hssfColor = null, IFont? font = null, HorizontalAlignment? alignment = null,
-        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100)
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
     {
         //ICellStyle cellStyle;
         CellStyle cellStyle = new();
@@ -772,6 +772,8 @@ public static partial class Common
 
         cellStyle.IsLocked = cellLocked;
 
+        cellStyle.WrapText = wrapText;
+
         return wb.GetOrCreateStyle(cellStyle, cachedColorLimit);
     }
 
@@ -783,9 +785,10 @@ public static partial class Common
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null, FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null)
+    public static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
     {
-        return GetCustomStyle(wb, cellLocked, null, null, font, alignment, fillPattern, borderStyles);
+        return GetCustomStyle(wb, cellLocked, null, null, font, alignment, fillPattern, borderStyles, wrapText: wrapText);
     }
 
     /// <summary>
@@ -798,9 +801,9 @@ public static partial class Common
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
     public static ICellStyle GetCustomStyle(this IWorkbook wb, string hexColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
-        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100)
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
     {
-        return wb.GetCustomStyle(cellLocked, hexColor, null, font, alignment, fillPattern, borderStyles, cachedColorLimit);
+        return wb.GetCustomStyle(cellLocked, hexColor, null, font, alignment, fillPattern, borderStyles, cachedColorLimit, wrapText);
     }
 
     /// <summary>
@@ -813,9 +816,9 @@ public static partial class Common
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
     public static ICellStyle GetCustomStyle(this IWorkbook wb, short? hssfColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
-        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null)
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
     {
-        return wb.GetCustomStyle(cellLocked, null, hssfColor, font, alignment, fillPattern, borderStyles);
+        return wb.GetCustomStyle(cellLocked, null, hssfColor, font, alignment, fillPattern, borderStyles, wrapText: wrapText);
     }
 
     /// <summary>
@@ -826,7 +829,7 @@ public static partial class Common
     /// <param name="cellLocked">Optional: Whether or not the cells with this style should be locked or not. Default = false</param>
     /// <param name="borderStyles">Optional: Border styling overrides</param>
     /// <returns>The ICellStyle that was created</returns>
-    public static ICellStyle GetStandardCellStyle(this IWorkbook wb, EStyle style, bool cellLocked = false, NpoiBorderStyles? borderStyles = null)
+    public static ICellStyle GetStandardCellStyle(this IWorkbook wb, EStyle style, bool cellLocked = false, bool wrapText = false, NpoiBorderStyles? borderStyles = null)
     {
         //ICellStyle cellStyle = wb.CreateCellStyle();
         CellStyle cellStyle = new();
@@ -1015,6 +1018,7 @@ public static partial class Common
         }
 
         cellStyle.IsLocked = cellLocked;
+        cellStyle.WrapText = wrapText;
 
         return wb.GetOrCreateStyle(cellStyle);
     }

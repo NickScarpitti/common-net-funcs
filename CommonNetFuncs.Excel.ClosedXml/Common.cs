@@ -55,7 +55,7 @@ public static class Common
     /// <param name="font">Font to use for the cells this style applies to</param>
     /// <param name="alignment">Text alignment for the cells this style applies to</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyle option</returns>
-    public static IXLStyle? GetStyle(EStyle style, IXLWorkbook wb, bool cellLocked = false, string? htmlColor = null, IXLFont? font = null, XLAlignmentHorizontalValues? alignment = null)
+    public static IXLStyle? GetStyle(EStyle style, IXLWorkbook wb, bool cellLocked = false, bool wrapText = false, string? htmlColor = null, IXLFont? font = null, XLAlignmentHorizontalValues? alignment = null)
     {
         IXLStyle? cellStyle = CreateEmptyStyle();
         if (cellStyle == null)
@@ -106,7 +106,10 @@ public static class Common
                 cellStyle = xStyle;
                 break;
         }
+
         cellStyle.Protection.Locked = cellLocked;
+        cellStyle.Alignment.WrapText = wrapText;
+
         return cellStyle;
     }
 

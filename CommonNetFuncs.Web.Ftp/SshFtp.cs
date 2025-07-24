@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using Renci.SshNet;
 using Renci.SshNet.Sftp;
 using static CommonNetFuncs.Core.Strings;
@@ -41,7 +42,10 @@ public static class SshFtp
         {
             sftpClient.Disconnect();
         }
-        sftpClient = new(fileTransferConnection.HostName, fileTransferConnection.Port, fileTransferConnection.UserName, fileTransferConnection.Password);
+        sftpClient = new(fileTransferConnection.HostName, fileTransferConnection.Port, fileTransferConnection.UserName, fileTransferConnection.Password)
+        {
+            BufferSize = fileTransferConnection.BufferSize > 0 ? fileTransferConnection.BufferSize : 32768 // Default to 32 KB if not specified
+        };
         sftpClient.Connect();
 
         return sftpClient;
@@ -61,7 +65,10 @@ public static class SshFtp
         {
             sftpClient.Disconnect();
         }
-        sftpClient = new(fileTransferConnection.HostName, fileTransferConnection.Port, fileTransferConnection.UserName, fileTransferConnection.Password);
+        sftpClient = new(fileTransferConnection.HostName, fileTransferConnection.Port, fileTransferConnection.UserName, fileTransferConnection.Password)
+        {
+            BufferSize = fileTransferConnection.BufferSize > 0 ? fileTransferConnection.BufferSize : 32768 // Default to 32 KB if not specified
+        };
         await sftpClient.ConnectAsync(cancellationTokenSource.Token).ConfigureAwait(false);
         return sftpClient;
     }
@@ -167,7 +174,7 @@ public static class SshFtp
     /// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
     /// <returns>List of T read from the CSV file.</returns>
-    public static async Task<List<T>> GetDataFromCsvAsync<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null)
+    public static async Task<List<T>> GetDataFromCsvAsync<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         if (!remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryOrFileExistsAsync(remoteFilePath).ConfigureAwait(false))
         {
@@ -175,7 +182,7 @@ public static class SshFtp
         }
 
         await using SftpFileStream stream = sftpClient!.OpenRead(remoteFilePath);
-        return await ReadCsvAsync<T>(stream, csvHasHeaderRow, cultureInfo);
+        return await ReadCsvAsync<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken);
     }
 
     /// <summary>
@@ -187,15 +194,14 @@ public static class SshFtp
     /// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
     /// <returns>Async enumerable of T read from the CSV file.</returns>
-    public static async IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerable<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null)
+    public static async IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerable<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (!remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryOrFileExistsAsync(remoteFilePath).ConfigureAwait(false))
         {
             throw new Exception($"File {remoteFilePath} is not a csv file.  Please use DownloadStream instead.");
         }
-
         await using SftpFileStream stream = sftpClient!.OpenRead(remoteFilePath);
-        await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo))
+        await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken))
         {
             yield return item;
         }
@@ -210,7 +216,7 @@ public static class SshFtp
     /// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
     /// <returns>List of T read from the CSV file.</returns>
-    public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null)
+    public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
     {
         if (!remoteFilePath.EndsWith(".csv") || !sftpClient.DirectoryOrFileExists(remoteFilePath))
         {
@@ -218,7 +224,7 @@ public static class SshFtp
         }
 
         using SftpFileStream stream = sftpClient.OpenRead(remoteFilePath);
-        return ReadCsv<T>(stream, csvHasHeaderRow, cultureInfo);
+        return ReadCsv<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize);
     }
 
     /// <summary>

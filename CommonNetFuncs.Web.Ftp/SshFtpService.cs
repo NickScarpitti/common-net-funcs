@@ -23,11 +23,11 @@ public interface ISshFtpService
 
     IAsyncEnumerable<string> GetFileListAsync(string path, string extension = "*", CancellationTokenSource? cancellationTokenSource = null);
 
-    List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null);
+    List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096);
 
-    Task<List<T>>GetDataFromCsvAsync<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null);
+    Task<List<T>>GetDataFromCsvAsync<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerable<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null);
+    IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerable<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default);
 
     bool DeleteFile(string remoteFilePath);
 
@@ -103,19 +103,19 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
         return Client.GetFileListAsync(path, extension, cancellationTokenSource);
     }
 
-    public Task<List<T>> GetDataFromCsvAsync<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null)
+    public Task<List<T>> GetDataFromCsvAsync<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
-        return Client.GetDataFromCsvAsync<T>(remoteFilePath, csvHasHeaderRow, cultureInfo);
+        return Client.GetDataFromCsvAsync<T>(remoteFilePath, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken);
     }
 
-    public IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerable<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null)
+    public IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerable<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
-        return Client.GetDataFromCsvAsyncEnumerable<T>(remoteFilePath, csvHasHeaderRow, cultureInfo);
+        return Client.GetDataFromCsvAsyncEnumerable<T>(remoteFilePath, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken);
     }
 
-    public List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null)
+    public List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
     {
-        return Client.GetDataFromCsv<T>(remoteFilePath, csvHasHeaderRow, cultureInfo);
+        return Client.GetDataFromCsv<T>(remoteFilePath, csvHasHeaderRow, cultureInfo, bufferSize);
     }
 
     public bool DeleteFile(string remoteFilePath)

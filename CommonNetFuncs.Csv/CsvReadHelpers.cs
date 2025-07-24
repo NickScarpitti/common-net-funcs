@@ -111,7 +111,8 @@ public static class CsvReadHelpers
     /// <returns>Enumerated results of T read from the CSV stream</returns>
     public static async IAsyncEnumerable<T> ReadCsvAsyncEnumerable<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        await foreach (T record in ReadCsvAsyncEnumerable<T>(stream, hasHeaders, cultureInfo, bufferSize, cancellationToken))
+        using StreamReader reader = new(stream, bufferSize: bufferSize);
+        await foreach (T record in ReadCsvAsyncEnumerable<T>(reader, hasHeaders, cultureInfo, bufferSize, cancellationToken))
         {
             yield return record;
         }

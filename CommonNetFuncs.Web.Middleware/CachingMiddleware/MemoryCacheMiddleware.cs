@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
-using NLog;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Core.UnitConversion;
@@ -17,7 +16,7 @@ namespace CommonNetFuncs.Web.Middleware.CachingMiddleware;
 
 internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, CacheOptions cacheOptions, CacheMetrics? cacheMetrics, CacheTracker cacheTracker) : IDisposable
 {
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     private readonly RequestDelegate next = next;
     private readonly IMemoryCache cache = cache;
@@ -414,7 +413,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 // Extension method for easy middleware registration
 public static class MemoryCacheEvictionMiddlewareExtensions
 {
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     public static IApplicationBuilder UseMemoryValueCaching(this IApplicationBuilder app, CacheOptions? options = null, bool trackMetrics = false)
     {

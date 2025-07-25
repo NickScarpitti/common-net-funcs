@@ -644,6 +644,8 @@ public static class Streams
                 throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxBytes} bytes");
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             destination.Write(buffer, 0, bytesRead);
         }
     }

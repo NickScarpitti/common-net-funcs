@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Threading.Channels;
-using Microsoft.Extensions.Logging;
 using static CommonNetFuncs.Core.Collections;
 
 namespace CommonNetFuncs.Web.Api.TaskQueing.EndpointQueue;
@@ -8,10 +7,11 @@ namespace CommonNetFuncs.Web.Api.TaskQueing.EndpointQueue;
 
 public class EndpointQueue : IDisposable
 {
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
     private readonly Channel<QueuedTask> channel;
     private readonly ChannelWriter<QueuedTask> writer;
     private readonly ChannelReader<QueuedTask> reader;
-    private readonly ILogger<EndpointQueue> logger;
     private readonly CancellationTokenSource cancellationTokenSource;
     private readonly Task processingTask;
     private readonly QueueStats stats;
@@ -23,10 +23,9 @@ public class EndpointQueue : IDisposable
 
     public QueueStats Stats => GetCurrentStats();
 
-    public EndpointQueue(string endpointKey, ILogger<EndpointQueue> logger, BoundedChannelOptions boundedChannelOptions, int processTimeWindow = 1000)
+    public EndpointQueue(string endpointKey, BoundedChannelOptions boundedChannelOptions, int processTimeWindow = 1000)
     {
         EndpointKey = endpointKey;
-        this.logger = logger;
         cancellationTokenSource = new CancellationTokenSource();
 
         channel = Channel.CreateBounded<QueuedTask>(boundedChannelOptions);
@@ -40,10 +39,9 @@ public class EndpointQueue : IDisposable
         processingTask = ProcessTasksAsync(cancellationTokenSource.Token);
     }
 
-    public EndpointQueue(string endpointKey, ILogger<EndpointQueue> logger, UnboundedChannelOptions unboundedChannelOptions, int processTimeWindow = 1000)
+    public EndpointQueue(string endpointKey, UnboundedChannelOptions unboundedChannelOptions, int processTimeWindow = 1000)
     {
         EndpointKey = endpointKey;
-        this.logger = logger;
         cancellationTokenSource = new CancellationTokenSource();
 
         channel = Channel.CreateUnbounded<QueuedTask>(unboundedChannelOptions);
@@ -79,7 +77,7 @@ public class EndpointQueue : IDisposable
 
             try
             {
-                logger.LogDebug("Processing task {TaskId} for endpoint {EndpointKey}", task.Id, EndpointKey);
+                logger.Debug("Processing task {TaskId} for endpoint {EndpointKey}", task.Id, EndpointKey);
 
                 object? result = await task.TaskFunction(cancellationToken);
                 task.CompletionSource.SetResult(result);
@@ -99,7 +97,7 @@ public class EndpointQueue : IDisposable
                     }
                 }
 
-                logger.LogDebug("Completed task {TaskId} for endpoint {EndpointKey} in {Duration}ms",
+                logger.Debug("Completed task {TaskId} for endpoint {EndpointKey} in {Duration}ms",
                     task.Id, EndpointKey, stopwatch.ElapsedMilliseconds);
             }
             catch (Exception ex)
@@ -111,7 +109,7 @@ public class EndpointQueue : IDisposable
                     stats.FailedTasks++;
                 }
 
-                logger.LogError(ex, "Error processing task {TaskId} for endpoint {EndpointKey}", task.Id, EndpointKey);
+                logger.Error(ex, "Error processing task {TaskId} for endpoint {EndpointKey}", task.Id, EndpointKey);
                 task.CompletionSource.SetException(ex);
             }
         }
@@ -161,7 +159,7 @@ public class EndpointQueue : IDisposable
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning(ex, "Error waiting for processing task to complete for endpoint {EndpointKey}", EndpointKey);
+                    logger.Warn(ex, "Error waiting for processing task to complete for endpoint {EndpointKey}", EndpointKey);
                 }
 
                 cancellationTokenSource.Dispose();

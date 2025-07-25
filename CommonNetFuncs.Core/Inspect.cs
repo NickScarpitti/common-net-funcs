@@ -5,14 +5,13 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using FastExpressionCompiler;
-using NLog;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
 
 public static class Inspect
 {
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
     /// Gets the default value of the provided type
@@ -263,7 +262,7 @@ public static class Inspect
         UnaryExpression typedObj1 = Expression.Convert(obj1Param, type);
         UnaryExpression typedObj2 = Expression.Convert(obj2Param, type);
 
-        IEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromReflectionCache(type).Where(p => p.CanRead && (p.GetIndexParameters().Length == 0));
+        IEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromReflectionCache(type).Where(x => x.CanRead && (x.GetIndexParameters().Length == 0));
 
         List<Expression> comparisons = [];
 
@@ -442,8 +441,8 @@ public static class Inspect
 
         // Handle complex objects recursively
         IOrderedEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromReflectionCache(type)
-            .Where(p => p.CanRead)
-            .OrderBy(p => p.Name);
+            .Where(x => x.CanRead)
+            .OrderBy(x => x.Name);
 
         writer.Write("{");
         foreach (PropertyInfo property in properties)

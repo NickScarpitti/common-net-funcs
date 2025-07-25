@@ -447,7 +447,7 @@ using DataTable table = people.ToDataTableReflection(); // DataTable object cont
 Combine multiple expressions into one.
 
 ```cs
-Expression<Func<Person, bool>>[] expressions = [p => p.Age > 18, p => p.Name.StartsWith("N")];
+Expression<Func<Person, bool>>[] expressions = [x => x.Age > 18, x => x.Name.StartsWith("N")];
 var combinedExpression = CombineExpressions(expressions); // combinedExpression will do both > 18 and Name starts with "N"
 ```
 

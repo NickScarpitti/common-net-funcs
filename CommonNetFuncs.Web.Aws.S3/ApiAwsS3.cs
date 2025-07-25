@@ -239,7 +239,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
             PartETag?[] results = await Task.WhenAll(uploadTasks).ConfigureAwait(false);
 
             // Check if all parts uploaded successfully
-            partETags = results.Where(r => r != null).Cast<PartETag>().OrderBy(p => p.PartNumber).ToList();
+            partETags = results.Where(r => r != null).Cast<PartETag>().OrderBy(x => x.PartNumber).ToList();
 
             if (partETags.Count != totalParts)
             {

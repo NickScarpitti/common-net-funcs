@@ -275,7 +275,7 @@ public static class DirectQuery
         NewExpression instanceExp = Expression.New(type);
 
         // Get all settable properties
-        IEnumerable<PropertyInfo> properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite);
+        IEnumerable<PropertyInfo> properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.CanWrite);
 
         // Create property assignments
         List<MemberBinding> assignments = [];

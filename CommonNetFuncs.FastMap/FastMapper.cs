@@ -181,7 +181,7 @@ public static class FastMapper
             HashSet<string> assignedProperties = [];
             foreach (PropertyInfo destProp in destinationProperties.Where(x => x.CanWrite))
             {
-                PropertyInfo? sourceProp = sourceProperties.FirstOrDefault(p => p.CanRead && string.Equals(p.Name, destProp.Name));
+                PropertyInfo? sourceProp = sourceProperties.FirstOrDefault(x => x.CanRead && string.Equals(p.Name, destProp.Name));
                 if (sourceProp != null)
                 {
                     Expression sourceAccess = Expression.Property(sourceParameter, sourceProp);

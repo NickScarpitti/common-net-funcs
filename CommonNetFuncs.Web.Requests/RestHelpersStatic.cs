@@ -9,7 +9,6 @@ using MemoryPack;
 using MemoryPack.Compression;
 using MessagePack;
 using Newtonsoft.Json;
-using NLog;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -28,7 +27,7 @@ public static class RestHelpersStatic
     private const double DefaultRequestTimeout = 100;
 
     //public static JsonSerializerOptions? JsonSerializerOptions { get; set; }
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
     public static readonly JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles, PropertyNameCaseInsensitive = true };
 
     /// <summary>

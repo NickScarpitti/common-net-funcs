@@ -1,23 +1,41 @@
-﻿using System.Threading.Channels;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
 namespace CommonNetFuncs.Web.Api.TaskQueing.EndpointQueue;
 
-public static class EndpointQueueExtensions
+public enum TaskPriority
 {
-    public static async Task<T?> ExecuteQueuedAsync<T>(this ControllerBase controller, IEndpointQueueService queueService, Func<CancellationToken, Task<T>> taskFunction, BoundedChannelOptions boundedChannelOptions, string? customKey = null)
+    Low = 0,
+    Normal = 1,
+    High = 2,
+    Critical = 3,
+    Emergency = 4
+}
+
+public static class PrioritizedEndpointQueueExtensions
+{
+    public static async Task<T?> ExecutePrioritizedAsync<T>(
+        this ControllerBase controller,
+        IPrioritizedEndpointQueueService queueService,
+        Func<CancellationToken, Task<T>> taskFunction,
+        TaskPriority priority = TaskPriority.Normal,
+        string? customKey = null)
     {
         string endpointKey = customKey ?? GenerateEndpointKey(controller);
-        return await queueService.ExecuteAsync(endpointKey, taskFunction, boundedChannelOptions, controller.HttpContext?.RequestAborted ?? default);
+        return await queueService.ExecuteAsync(endpointKey, taskFunction, priority, controller.HttpContext?.RequestAborted ?? default);
     }
 
-    public static async Task<T?> ExecuteQueuedAsync<T>(this ControllerBase controller, IEndpointQueueService queueService, Func<CancellationToken, Task<T>> taskFunction, UnboundedChannelOptions unboundedChannelOptions, string? customKey = null)
+    public static async Task<T?> ExecutePrioritizedAsync<T>(
+        this ControllerBase controller,
+        IPrioritizedEndpointQueueService queueService,
+        Func<CancellationToken, Task<T>> taskFunction,
+        int customPriority,
+        string? customKey = null)
     {
         string endpointKey = customKey ?? GenerateEndpointKey(controller);
-        return await queueService.ExecuteAsync(endpointKey, taskFunction, unboundedChannelOptions, controller.HttpContext?.RequestAborted ?? default);
+        return await queueService.ExecuteAsync(endpointKey, taskFunction, customPriority, controller.HttpContext?.RequestAborted ?? default);
     }
 
     private static string GenerateEndpointKey(ControllerBase controller)
@@ -29,11 +47,11 @@ public static class EndpointQueueExtensions
 
     public static IEndpointRouteBuilder EndpointQueueMetrics(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/api/endpoint-queue-metrics", async ([FromServices] EndpointQueueService queueService) =>
+        endpoints.MapGet("/api/endpoint-queue-metrics", async ([FromServices] PrioritizedEndpointQueueService queueService) =>
         {
             try
             {
-                Dictionary<string, QueueStats> stats = await queueService.GetAllQueueStatsAsync();
+                Dictionary<string, PrioritizedQueueStats> stats = await queueService.GetAllQueueStatsAsync();
                 return Results.Ok(stats);
             }
             catch (Exception ex)
@@ -43,11 +61,11 @@ public static class EndpointQueueExtensions
         })
         .WithName("GetEndpointQueueMetrics");
 
-        endpoints.MapGet("/api/endpoint-queue-metrics/{endpointKey}", async ([FromServices] EndpointQueueService queueService, string endpointKey) =>
+        endpoints.MapGet("/api/endpoint-queue-metrics/{endpointKey}", async ([FromServices] PrioritizedEndpointQueueService queueService, string endpointKey) =>
         {
             try
             {
-                QueueStats stats = await queueService.GetQueueStatsAsync(endpointKey);
+                PrioritizedQueueStats stats = await queueService.GetQueueStatsAsync(endpointKey);
                 return Results.Ok(stats);
             }
             catch (Exception ex)

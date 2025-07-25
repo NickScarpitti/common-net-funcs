@@ -3,7 +3,6 @@ using MemoryPack;
 using MessagePack;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
-using NLog;
 using static CommonNetFuncs.Sql.Common.QueryParameters;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static System.Convert;
@@ -15,7 +14,7 @@ namespace CommonNetFuncs.Web.Interface;
 /// </summary>
 public static class DataTableHelpers
 {
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
     /// Parse the DataTables HttpRequest object into the DataTableRequest class

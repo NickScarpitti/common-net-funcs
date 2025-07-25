@@ -1,6 +1,4 @@
-﻿using NLog;
-
-namespace CommonNetFuncs.Core;
+﻿namespace CommonNetFuncs.Core;
 
 /// <summary>
 /// Run batches of operations on a collection of items.
@@ -11,7 +9,7 @@ public static class RunBatches
     //public delegate Task<bool> AsyncBatchedProcess<T>(IReadOnlyList<T> itemsToProcess);
     //public delegate Task<bool> AsyncBatchedProcessList<T>(List<T> itemsToProcess);
 
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
     /// Takes a collection of items and processes them in batches using the provided async processor.

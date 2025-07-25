@@ -1,15 +1,15 @@
 ﻿using System.Diagnostics;
 using System.Threading.Channels;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using static CommonNetFuncs.Core.Collections;
 
 namespace CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
 
 public class SequentialTaskProcessor : BackgroundService, IDisposable
 {
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
     private readonly Channel<QueuedTask> queue;
-    private readonly ILogger<SequentialTaskProcessor> logger;
     private readonly CancellationTokenSource cancellationTokenSource;
     private readonly ChannelWriter<QueuedTask> writer;
     private readonly ChannelReader<QueuedTask> reader;
@@ -18,9 +18,8 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
     private readonly Lock statsLock = new();
     private readonly int processTimeWindow;
 
-    public SequentialTaskProcessor(ILogger<SequentialTaskProcessor> logger, BoundedChannelOptions boundedChannelOptions, int processTimeWindow = 1000)
+    public SequentialTaskProcessor(BoundedChannelOptions boundedChannelOptions, int processTimeWindow = 1000)
     {
-        this.logger = logger;
         cancellationTokenSource = new CancellationTokenSource();
 
         queue = Channel.CreateBounded<QueuedTask>(boundedChannelOptions);
@@ -31,9 +30,8 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
         stats = new QueueStats("All");
     }
 
-    public SequentialTaskProcessor(ILogger<SequentialTaskProcessor> logger, UnboundedChannelOptions unboundedChannelOptions, int processTimeWindow = 1000)
+    public SequentialTaskProcessor(UnboundedChannelOptions unboundedChannelOptions, int processTimeWindow = 1000)
     {
-        this.logger = logger;
         cancellationTokenSource = new CancellationTokenSource();
 
         queue = Channel.CreateUnbounded<QueuedTask>(unboundedChannelOptions);
@@ -46,7 +44,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 
     public QueueStats Stats => GetCurrentStats();
 
-    public async Task<T?> EnqueueAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, CancellationToken cancellationToken = default)
+    public virtual async Task<T?> EnqueueAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, CancellationToken cancellationToken = default)
     {
         QueuedTask queuedTask = new(async ct => await taskFunction(ct));
         await writer.WriteAsync(queuedTask, cancellationToken);
@@ -68,7 +66,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 
             try
             {
-                logger.LogInformation("Processing task {TaskId}", task.Id);
+                logger.Debug("Processing task {TaskId}", task.Id);
 
                 object? result = await task.TaskFunction(stoppingToken);
                 task.CompletionSource.SetResult(result);
@@ -85,7 +83,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
                     }
                 }
 
-                logger.LogInformation("Completed task {TaskId}", task.Id);
+                logger.Debug("Completed task {TaskId}", task.Id);
             }
             catch (Exception ex)
             {
@@ -96,7 +94,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
                     stats.FailedTasks++;
                 }
 
-                logger.LogError(ex, "Error processing task {TaskId}", task.Id);
+                logger.Error(ex, "Error processing task {TaskId}", task.Id);
                 task.CompletionSource.SetException(ex);
             }
         }
@@ -121,6 +119,11 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 
             return currentStats;
         }
+    }
+
+    public Task<QueueStats> GetAllQueueStatsAsync()
+    {
+        return Task.FromResult(stats);
     }
 
     private bool disposed;
@@ -154,11 +157,10 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning(ex, "Error waiting for processing queued task to complete");
+                    logger.Warn(ex, "Error waiting for processing queued task to complete");
                 }
 
                 cancellationTokenSource.Dispose();
-                writer?.Complete();
             }
             disposed = true;
         }

@@ -69,7 +69,7 @@ public sealed class FilesTests
         archive.Entries.Count.ShouldBe(files.Count);
         foreach ((Stream?, string fileName) file in files)
         {
-            archive.Entries.ShouldContain(e => e.Name == file.fileName);
+            archive.Entries.ShouldContain(x => x.Name == file.fileName);
         }
     }
 
@@ -93,7 +93,7 @@ public sealed class FilesTests
         archive.Entries.Count.ShouldBe(files.Count);
         foreach ((Stream?, string fileName) file in files)
         {
-            archive.Entries.ShouldContain(e => e.Name == file.fileName);
+            archive.Entries.ShouldContain(x => x.Name == file.fileName);
         }
     }
 
@@ -120,7 +120,7 @@ public sealed class FilesTests
         readArchive.Entries.Count.ShouldBe(files.Count);
         foreach ((Stream?, string fileName) file in files)
         {
-            readArchive.Entries.ShouldContain(e => e.Name == file.fileName);
+            readArchive.Entries.ShouldContain(x => x.Name == file.fileName);
         }
     }
 

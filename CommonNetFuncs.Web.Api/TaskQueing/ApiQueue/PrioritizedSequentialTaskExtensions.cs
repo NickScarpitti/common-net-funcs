@@ -5,15 +5,15 @@ using Microsoft.AspNetCore.Routing;
 
 namespace CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
 
-public static class SequentialTaskExtensions
+public static class PrioritizedSequentialTaskExtensions
 {
     public static IEndpointRouteBuilder EndpointQueueMetrics(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/api/sequential-api-tasks-metrics", async ([FromServices] SequentialTaskProcessor processor) =>
+        endpoints.MapGet("/api/prioritized-sequential-api-tasks-metrics", async ([FromServices] PrioritizedSequentialTaskProcessor processor) =>
         {
             try
             {
-                QueueStats stats = await processor.GetAllQueueStatsAsync();
+                PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
                 return Results.Ok(stats);
             }
             catch (Exception ex)

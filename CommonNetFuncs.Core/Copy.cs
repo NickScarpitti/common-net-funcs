@@ -264,7 +264,7 @@ public static class Copy
         else
         {
             IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(sourceType).Where(x => x.CanRead);
-            Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(x => x.CanWrite).ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
+            Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
             foreach (PropertyInfo sourceProp in sourceProps)
             {
@@ -409,8 +409,8 @@ public static class Copy
     {
         Dictionary<string, (Delegate Set, Delegate Get)> cacheableMaps = new();
 
-        IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(TSource)).Where(p => p.CanRead);
-        Dictionary<string, PropertyInfo> destProps = GetOrAddPropertiesFromReflectionCache(typeof(TDest)).Where(p => p.CanWrite).ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
+        IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(TSource)).Where(x => x.CanRead);
+        Dictionary<string, PropertyInfo> destProps = GetOrAddPropertiesFromReflectionCache(typeof(TDest)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
         foreach (PropertyInfo sProp in sourceProps)
         {
@@ -519,8 +519,8 @@ public static class Copy
             expressions.Add(Expression.Assign(typedDest, CreateInstanceExpression(destType)));
 
             // Get properties for both types
-            PropertyInfo[] sourceProps = GetOrAddPropertiesFromReflectionCache(sourceType).Where(p => p.CanRead).ToArray();
-            Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(p => p.CanWrite).ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
+            PropertyInfo[] sourceProps = GetOrAddPropertiesFromReflectionCache(sourceType).Where(x => x.CanRead).ToArray();
+            Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
             // Create property copy expressions
             foreach (PropertyInfo sourceProp in sourceProps)

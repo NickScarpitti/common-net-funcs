@@ -42,8 +42,8 @@ public static class PatchCreator
     /// <param name="path">Property path</param>
     private static void FillPatchForObject(JObject originalObject, JObject modObject, JsonPatchDocument patch, string path)
     {
-        Dictionary<string, JProperty> origProps = originalObject.Properties().ToDictionary(p => p.Name, p => p);
-        Dictionary<string, JProperty> modProps = modObject.Properties().ToDictionary(p => p.Name, p => p);
+        Dictionary<string, JProperty> origProps = originalObject.Properties().ToDictionary(x => x.Name, x => x);
+        Dictionary<string, JProperty> modProps = modObject.Properties().ToDictionary(x => x.Name, x => x);
 
         HashSet<string> origNames = new(origProps.Keys);
         HashSet<string> modNames = new(modProps.Keys);

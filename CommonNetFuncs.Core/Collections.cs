@@ -661,7 +661,7 @@ public static class Collections
 
         public TypeAccessor(Type type)
         {
-            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanRead).ToArray();
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.CanRead).ToArray();
 
             SchemaTable = new DataTable();
             PropertyGetters = new Func<object, object>[properties.Length];
@@ -839,7 +839,7 @@ public static class Collections
 
         if (!parallel)
         {
-            return collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? string.Empty)) })
+            return collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(x => x.GetValue(x)?.ToString() ?? string.Empty)) })
                 .Select(g =>
                 {
                     T result = new();
@@ -862,7 +862,7 @@ public static class Collections
         else
         {
             return collection.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered)
-                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? string.Empty)) })
+                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(x => x.GetValue(x)?.ToString() ?? string.Empty)) })
                 .Select(g =>
                 {
                     T result = new();

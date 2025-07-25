@@ -53,7 +53,7 @@ public static partial class Common
         uint sheetId = 1;
         if (sheets.Elements<Sheet>().Any())
         {
-            sheetId = sheets.Elements<Sheet>().Max(s => s.SheetId?.Value) + 1 ?? ((uint)sheets.Elements<Sheet>().Count()) + 1;
+            sheetId = sheets.Elements<Sheet>().Max(x => x.SheetId?.Value) + 1 ?? ((uint)sheets.Elements<Sheet>().Count()) + 1;
         }
 
         // Append the new worksheet and associate it with the workbook.
@@ -391,7 +391,7 @@ public static partial class Common
                 string sheetName = reference.Split('!')[0].Trim('\'');
                 string cellReference = reference.Split('!')[1].Replace("$", null);
 
-                Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().First(s => s.Name == sheetName);
+                Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().First(x => x.Name == sheetName);
                 WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
                 return worksheetPart.Worksheet.GetCellFromReference(cellReference, colOffset, rowOffset);
             }
@@ -446,7 +446,7 @@ public static partial class Common
                 string sheetName = reference.Split('!')[0].Trim('\'');
                 string cellReference = reference.Split('!')[1].Replace("$", null);
 
-                Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().First(s => s.Name == sheetName);
+                Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().First(x => x.Name == sheetName);
                 WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
                 Cell? cell = worksheetPart.Worksheet.GetCellFromReference(cellReference, colOffset, rowOffset);
                 return (cell?.CellReference != null) ? new(cell.CellReference!) : null;
@@ -2055,7 +2055,7 @@ public static partial class Common
                     string relId = workbookPart.GetIdOfPart(worksheetPart);
 
                     // Find the Sheet with this relationship Id
-                    return workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Id != null && s.Id == relId);
+                    return workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(x => x.Id != null && x.Id == relId);
                 }
             }
         }

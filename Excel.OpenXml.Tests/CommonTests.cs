@@ -84,8 +84,7 @@ public sealed class CommonTests : IDisposable
 
         // Assert
         worksheet.ShouldNotBeNull();
-        Sheet sheet = document.WorkbookPart!.Workbook.Descendants<Sheet>()
-            .First(s => s.Name == sheetName);
+        Sheet sheet = document.WorkbookPart!.Workbook.Descendants<Sheet>().First(x => x.Name == sheetName);
         sheet.ShouldNotBeNull();
     }
 

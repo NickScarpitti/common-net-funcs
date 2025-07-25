@@ -1,8 +1,11 @@
-﻿namespace CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
+﻿using CommonNetFuncs.Web.Api.TaskQueing.EndpointQueue;
+
+namespace CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
 
 public interface IPrioritizedSequentialTaskService
 {
-    Task<T?> ExecuteAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, int priority = 0, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task<T?> ExecuteAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, int priority = (int)TaskPriority.Normal, TaskPriority taskPriority = TaskPriority.Normal,
+        TimeSpan ? timeout = null, CancellationToken cancellationToken = default);
 }
 
 // Service Implementation
@@ -10,8 +13,9 @@ public class PrioritizedSequentialTaskService(PrioritizedSequentialTaskProcessor
 {
     private readonly PrioritizedSequentialTaskProcessor processor = processor;
 
-    public async Task<T?> ExecuteAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, int priority = 0, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task<T?> ExecuteAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, int priority = (int)TaskPriority.Normal, TaskPriority taskPriority = TaskPriority.Normal,
+        TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return await processor.EnqueueWithPriorityAsync(taskFunction, priority, timeout, cancellationToken);
+        return await processor.EnqueueWithPriorityAsync(taskFunction, priority, taskPriority, timeout, cancellationToken);
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading.Channels;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace CommonNetFuncs.Web.Api.TaskQueing.EndpointQueue;
 
@@ -18,18 +16,15 @@ public interface IEndpointQueueService
 
 public class EndpointQueueService : IEndpointQueueService, IDisposable
 {
-    private readonly ConcurrentDictionary<string, EndpointQueue> _queues = new();
-    private readonly ILogger<EndpointQueueService> _logger;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly Timer _cleanupTimer;
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-    public EndpointQueueService(ILogger<EndpointQueueService> logger, IServiceProvider serviceProvider)
+    private readonly ConcurrentDictionary<string, EndpointQueue> queues = new();
+    private readonly Timer cleanupTimer;
+
+    public EndpointQueueService()
     {
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-
         // Cleanup unused queues every 5 minutes
-        _cleanupTimer = new Timer(CleanupUnusedQueues, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        cleanupTimer = new Timer(CleanupUnusedQueues, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
     public async Task<T?> ExecuteAsync<T>(string endpointKey, Func<CancellationToken, Task<T>> taskFunction, BoundedChannelOptions boundedChannelOptions, CancellationToken cancellationToken = default)
@@ -46,33 +41,31 @@ public class EndpointQueueService : IEndpointQueueService, IDisposable
 
     public Task<QueueStats> GetQueueStatsAsync(string endpointKey)
     {
-        QueueStats stats = _queues.TryGetValue(endpointKey, out EndpointQueue? queue) ? queue.Stats : new QueueStats(endpointKey);
+        QueueStats stats = queues.TryGetValue(endpointKey, out EndpointQueue? queue) ? queue.Stats : new QueueStats(endpointKey);
         return Task.FromResult(stats);
     }
 
     public Task<Dictionary<string, QueueStats>> GetAllQueueStatsAsync()
     {
-        Dictionary<string, QueueStats> allStats = _queues.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Stats);
+        Dictionary<string, QueueStats> allStats = queues.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Stats);
         return Task.FromResult(allStats);
     }
 
     private EndpointQueue GetOrCreateQueue(string endpointKey, BoundedChannelOptions boundedChannelOptions)
     {
-        return _queues.GetOrAdd(endpointKey, key =>
+        return queues.GetOrAdd(endpointKey, key =>
         {
-            _logger.LogInformation("Creating new queue for endpoint: {EndpointKey}", key);
-            ILogger<EndpointQueue> logger = _serviceProvider.GetRequiredService<ILogger<EndpointQueue>>();
-            return new EndpointQueue(key, logger, boundedChannelOptions);
+            logger.Info("Creating new queue for endpoint: {EndpointKey}", key);
+            return new EndpointQueue(key, boundedChannelOptions);
         });
     }
 
     private EndpointQueue GetOrCreateQueue(string endpointKey, UnboundedChannelOptions unboundedChannelOptions)
     {
-        return _queues.GetOrAdd(endpointKey, key =>
+        return queues.GetOrAdd(endpointKey, key =>
         {
-            _logger.LogInformation("Creating new queue for endpoint: {EndpointKey}", key);
-            ILogger<EndpointQueue> logger = _serviceProvider.GetRequiredService<ILogger<EndpointQueue>>();
-            return new EndpointQueue(key, logger, unboundedChannelOptions);
+            logger.Info("Creating new queue for endpoint: {EndpointKey}", key);
+            return new EndpointQueue(key, unboundedChannelOptions);
         });
     }
 
@@ -81,7 +74,7 @@ public class EndpointQueueService : IEndpointQueueService, IDisposable
         DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-30); // Remove queues unused for 30 minutes
         List<string> keysToRemove = [];
 
-        foreach (KeyValuePair<string, EndpointQueue> kvp in _queues)
+        foreach (KeyValuePair<string, EndpointQueue> kvp in queues)
         {
             EndpointQueue queue = kvp.Value;
             if (queue.Stats.LastProcessedAt.HasValue && queue.Stats.LastProcessedAt < cutoffTime)
@@ -92,9 +85,9 @@ public class EndpointQueueService : IEndpointQueueService, IDisposable
 
         foreach (string key in keysToRemove)
         {
-            if (_queues.TryRemove(key, out EndpointQueue? queue))
+            if (queues.TryRemove(key, out EndpointQueue? queue))
             {
-                _logger.LogInformation("Removing unused queue for endpoint: {EndpointKey}", key);
+                logger.Info("Removing unused queue for endpoint: {EndpointKey}", key);
                 queue.Dispose();
             }
         }
@@ -114,14 +107,14 @@ public class EndpointQueueService : IEndpointQueueService, IDisposable
         {
             if (disposing)
             {
-                _cleanupTimer?.Dispose();
+                cleanupTimer?.Dispose();
 
-                foreach (EndpointQueue queue in _queues.Values)
+                foreach (EndpointQueue queue in queues.Values)
                 {
                     queue.Dispose();
                 }
 
-                _queues.Clear();
+                queues.Clear();
             }
             disposed = true;
         }

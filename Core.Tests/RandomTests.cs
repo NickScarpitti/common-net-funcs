@@ -219,7 +219,7 @@ public sealed class RandomTests
 
         // Assert
         results.Count().ShouldBe(count);
-        results.All(s => s.Length == length).ShouldBeTrue();
+        results.All(x => x.Length == length).ShouldBeTrue();
     }
 
     [Theory]

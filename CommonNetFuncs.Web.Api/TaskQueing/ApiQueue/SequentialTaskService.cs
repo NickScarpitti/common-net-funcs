@@ -1,4 +1,4 @@
-﻿namespace CommonNetFuncs.Web.Api.TaskQueing;
+﻿namespace CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
 
 public interface ISequentialTaskService
 {
@@ -8,10 +8,10 @@ public interface ISequentialTaskService
 // Service Implementation
 public class SequentialTaskService(SequentialTaskProcessor processor) : ISequentialTaskService
 {
-    private readonly SequentialTaskProcessor _processor = processor;
+    private readonly SequentialTaskProcessor processor = processor;
 
     public async Task<T?> ExecuteAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, CancellationToken cancellationToken = default)
     {
-        return await _processor.EnqueueAsync(taskFunction, cancellationToken);
+        return await processor.EnqueueAsync(taskFunction, cancellationToken);
     }
 }

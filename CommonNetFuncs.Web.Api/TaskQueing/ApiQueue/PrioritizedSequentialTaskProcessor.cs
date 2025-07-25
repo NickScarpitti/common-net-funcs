@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace CommonNetFuncs.Web.Api.TaskQueing;
+namespace CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
 
 public class PrioritizedSequentialTaskProcessor : BackgroundService
 {
@@ -12,17 +12,17 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService
     private readonly PriorityQueue<PriorityQueuedTask, int> priorityQueue = new();
     private readonly SemaphoreSlim semaphore = new(1, 1);
 
-    public PrioritizedSequentialTaskProcessor(ILogger<PrioritizedSequentialTaskProcessor> logger)
+    public PrioritizedSequentialTaskProcessor(ILogger<PrioritizedSequentialTaskProcessor> logger, BoundedChannelOptions boundedChannelOptions)
     {
         this.logger = logger;
-        BoundedChannelOptions options = new(100)
-        {
-            FullMode = BoundedChannelFullMode.Wait,
-            SingleReader = true,
-            SingleWriter = false
-        };
+        queue = Channel.CreateBounded<PriorityQueuedTask>(boundedChannelOptions);
+        reader = queue.Reader;
+    }
 
-        queue = Channel.CreateBounded<PriorityQueuedTask>(options);
+    public PrioritizedSequentialTaskProcessor(ILogger<PrioritizedSequentialTaskProcessor> logger, UnboundedChannelOptions unboundedChannelOptions)
+    {
+        this.logger = logger;
+        queue = Channel.CreateUnbounded<PriorityQueuedTask>(unboundedChannelOptions);
         reader = queue.Reader;
     }
 

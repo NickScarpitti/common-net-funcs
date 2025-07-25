@@ -1,4 +1,4 @@
-﻿namespace CommonNetFuncs.Web.Api.TaskQueing;
+﻿namespace CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
 
 public interface IPrioritizedSequentialTaskService
 {

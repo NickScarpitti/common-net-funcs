@@ -1,4 +1,4 @@
-﻿namespace CommonNetFuncs.Web.Api.TaskQueing;
+﻿namespace CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
 
 public class PriorityQueuedTask(Func<CancellationToken, Task<object?>> taskFunction) : QueuedTask(taskFunction)
 {

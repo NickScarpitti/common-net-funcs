@@ -80,7 +80,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.2" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.2" PrivateAssets="all" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
   </ItemGroup>
 
@@ -92,7 +92,8 @@
     <None Update="TTLogo.png">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
-    </None><None Include="README.md">
+    </None>
+    <None Include="README.md">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </None>

@@ -57,8 +57,8 @@ public class EndpointQueue : IDisposable
 
     public async Task<T?> EnqueueAsync<T>(Func<CancellationToken, Task<T>> taskFunction, CancellationToken cancellationToken = default)
     {
-        QueuedTask queuedTask = new(async ct => await taskFunction(ct));
-        await writer.WriteAsync(queuedTask, cancellationToken);
+        QueuedTask queuedTask = new(async ct => await taskFunction(ct).ConfigureAwait(false));
+        await writer.WriteAsync(queuedTask, cancellationToken).ConfigureAwait(false);
 
         lock (statsLock)
         {
@@ -79,7 +79,7 @@ public class EndpointQueue : IDisposable
             {
                 logger.Debug("Processing task {TaskId} for endpoint {EndpointKey}", task.Id, EndpointKey);
 
-                object? result = await task.TaskFunction(cancellationToken);
+                object? result = await task.TaskFunction(cancellationToken).ConfigureAwait(false);
                 task.CompletionSource.SetResult(result);
 
                 stopwatch.Stop();

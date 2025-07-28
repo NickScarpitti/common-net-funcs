@@ -1883,8 +1883,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
             //model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
             //model.Entities = results.ConvertAll(x => x.Entities);
 
-            model.TotalRecords = await qModel.CountAsync(cancellationToken); //results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
-            model.Entities = await qModel.Skip(skip).Take(pageSize).ToListAsync(cancellationToken); //results.ConvertAll(x => x.Entities);
+            model.TotalRecords = await qModel.CountAsync(cancellationToken).ConfigureAwait(false); //results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
+            model.Entities = await qModel.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false); //results.ConvertAll(x => x.Entities);
         }
         catch (Exception ex)
         {
@@ -1920,8 +1920,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
             //var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            model.TotalRecords = await qModel.CountAsync(cancellationToken); //results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
-            model.Entities = await qModel.Skip(skip).Take(pageSize).ToListAsync(cancellationToken);//results.ConvertAll(x => x.Entities);
+            model.TotalRecords = await qModel.CountAsync(cancellationToken).ConfigureAwait(false); //results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
+            model.Entities = await qModel.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);//results.ConvertAll(x => x.Entities);
         }
         catch (InvalidOperationException ioEx)
         {

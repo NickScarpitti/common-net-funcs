@@ -30,13 +30,13 @@ public class EndpointQueueService : IEndpointQueueService, IDisposable
     public async Task<T?> ExecuteAsync<T>(string endpointKey, Func<CancellationToken, Task<T>> taskFunction, BoundedChannelOptions boundedChannelOptions, CancellationToken cancellationToken = default)
     {
         EndpointQueue queue = GetOrCreateQueue(endpointKey, boundedChannelOptions);
-        return await queue.EnqueueAsync(taskFunction, cancellationToken);
+        return await queue.EnqueueAsync(taskFunction, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<T?> ExecuteAsync<T>(string endpointKey, Func<CancellationToken, Task<T>> taskFunction, UnboundedChannelOptions unboundedChannelOptions, CancellationToken cancellationToken = default)
     {
         EndpointQueue queue = GetOrCreateQueue(endpointKey, unboundedChannelOptions);
-        return await queue.EnqueueAsync(taskFunction, cancellationToken);
+        return await queue.EnqueueAsync(taskFunction, cancellationToken).ConfigureAwait(false);
     }
 
     public Task<QueueStats> GetQueueStatsAsync(string endpointKey)

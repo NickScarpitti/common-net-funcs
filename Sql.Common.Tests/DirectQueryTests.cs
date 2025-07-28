@@ -5,6 +5,8 @@ using SQLitePCL;
 
 namespace Sql.Common.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class DirectQueryTests : IDisposable
 {
     private readonly SqliteConnection _connection;
@@ -300,3 +302,5 @@ public sealed class DirectQueryTests : IDisposable
         DirectQuery.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

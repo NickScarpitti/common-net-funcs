@@ -4,6 +4,8 @@ using static System.IO.Path;
 
 namespace Office.Common.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class PdfConversionTests //: IDisposable
 {
     private readonly string _testDataPath;
@@ -186,3 +188,5 @@ public sealed class PdfConversionTests //: IDisposable
         Should.Throw<LibreOfficeFailedException>(() => ConvertToPdfAsync(_libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 3));
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -1517,7 +1517,7 @@ public static class Manipulation
                 image.Mutate(mutate);
             }
 
-            await image.SaveAsync(outputStream, outputImageFormat);
+            await image.SaveAsync(outputStream, outputImageFormat).ConfigureAwait(false);
 
             if (outputStream.CanSeek)
             {

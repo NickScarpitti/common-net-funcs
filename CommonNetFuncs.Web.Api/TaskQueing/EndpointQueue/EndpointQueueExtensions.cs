@@ -11,13 +11,13 @@ public static class EndpointQueueExtensions
     public static async Task<T?> ExecuteQueuedAsync<T>(this ControllerBase controller, IEndpointQueueService queueService, Func<CancellationToken, Task<T>> taskFunction, BoundedChannelOptions boundedChannelOptions, string? customKey = null)
     {
         string endpointKey = customKey ?? GenerateEndpointKey(controller);
-        return await queueService.ExecuteAsync(endpointKey, taskFunction, boundedChannelOptions, controller.HttpContext?.RequestAborted ?? default);
+        return await queueService.ExecuteAsync(endpointKey, taskFunction, boundedChannelOptions, controller.HttpContext?.RequestAborted ?? default).ConfigureAwait(false);
     }
 
     public static async Task<T?> ExecuteQueuedAsync<T>(this ControllerBase controller, IEndpointQueueService queueService, Func<CancellationToken, Task<T>> taskFunction, UnboundedChannelOptions unboundedChannelOptions, string? customKey = null)
     {
         string endpointKey = customKey ?? GenerateEndpointKey(controller);
-        return await queueService.ExecuteAsync(endpointKey, taskFunction, unboundedChannelOptions, controller.HttpContext?.RequestAborted ?? default);
+        return await queueService.ExecuteAsync(endpointKey, taskFunction, unboundedChannelOptions, controller.HttpContext?.RequestAborted ?? default).ConfigureAwait(false);
     }
 
     private static string GenerateEndpointKey(ControllerBase controller)
@@ -33,7 +33,7 @@ public static class EndpointQueueExtensions
         {
             try
             {
-                Dictionary<string, QueueStats> stats = await queueService.GetAllQueueStatsAsync();
+                Dictionary<string, QueueStats> stats = await queueService.GetAllQueueStatsAsync().ConfigureAwait(false);
                 return Results.Ok(stats);
             }
             catch (Exception ex)
@@ -47,7 +47,7 @@ public static class EndpointQueueExtensions
         {
             try
             {
-                QueueStats stats = await queueService.GetQueueStatsAsync(endpointKey);
+                QueueStats stats = await queueService.GetQueueStatsAsync(endpointKey).ConfigureAwait(false);
                 return Results.Ok(stats);
             }
             catch (Exception ex)

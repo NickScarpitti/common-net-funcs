@@ -46,8 +46,8 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 
     public virtual async Task<T?> EnqueueAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, CancellationToken cancellationToken = default)
     {
-        QueuedTask queuedTask = new(async ct => await taskFunction(ct));
-        await writer.WriteAsync(queuedTask, cancellationToken);
+        QueuedTask queuedTask = new(async ct => await taskFunction(ct).ConfigureAwait(false));
+        await writer.WriteAsync(queuedTask, cancellationToken).ConfigureAwait(false);
 
         lock (statsLock)
         {
@@ -68,7 +68,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
             {
                 logger.Debug("Processing task {TaskId}", task.Id);
 
-                object? result = await task.TaskFunction(stoppingToken);
+                object? result = await task.TaskFunction(stoppingToken).ConfigureAwait(false);
                 task.CompletionSource.SetResult(result);
 
                 lock (statsLock)

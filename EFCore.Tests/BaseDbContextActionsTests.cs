@@ -7,6 +7,8 @@ using NSubstitute;
 
 namespace EFCore.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class BaseDbContextActionsTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -1781,3 +1783,4 @@ public class TestEntityDetail
     [JsonIgnore]
     public TestEntity? TestEntity { get; set; }
 }
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

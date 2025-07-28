@@ -7,6 +7,8 @@ using Xabe.FFmpeg;
 
 namespace Media.Ffmpeg.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class ConversionTaskTests : IDisposable
 {
     private readonly Fixture _fixture;
@@ -215,3 +217,5 @@ public sealed class ConversionTaskTests : IDisposable
         values.device.ShouldBe(default);
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

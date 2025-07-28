@@ -4,6 +4,8 @@ using CommonNetFuncs.Core;
 namespace Core.Tests;
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class InspectTests
 {
     // Helper classes for testing
@@ -65,6 +67,8 @@ public sealed class InspectTests
         { new SimpleClass(), null, null, false },
     };
 
+    #pragma warning disable xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
+
     [Theory]
     [MemberData(nameof(IsEqualRTestData))]
     public void IsEqualR_Works(object? a, object? b, IEnumerable<string>? exempt, bool expected)
@@ -80,6 +84,8 @@ public sealed class InspectTests
     {
         a.IsEqual(b, exemptProps: exempt).ShouldBe(expected);
     }
+
+    #pragma warning restore xUnit1045 // Avoid using TheoryData type arguments that might not be serializable
 
     [Fact]
     public void IsEqual_Recursive_ReturnsTrue_ForIdenticalNestedObjects()
@@ -197,5 +203,5 @@ public sealed class InspectTests
         public IEnumerable<int>? Items { get; set; }
     }
 }
-
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly
 #pragma warning restore IDE0079 // Remove unnecessary suppression

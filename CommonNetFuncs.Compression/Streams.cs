@@ -193,7 +193,7 @@ public static class Streams
             case ECompressionType.Deflate:
                 await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
                 {
-                    await deflateStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(true);
+                    await deflateStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
                 }
                 break;
             case ECompressionType.ZLib:
@@ -479,11 +479,11 @@ public static class Streams
         // For seekable streams, use the original approach
         if (stream.CanSeek)
         {
-            return await DetectCompressionTypeSeekable(stream);
+            return await DetectCompressionTypeSeekable(stream).ConfigureAwait(false);
         }
 
         // For non-seekable streams, we need to wrap it
-        return await DetectCompressionTypeNonSeekable(stream);
+        return await DetectCompressionTypeNonSeekable(stream).ConfigureAwait(false);
     }
 
     internal static async Task<ECompressionType> DetectCompressionTypeSeekable(Stream stream)
@@ -496,7 +496,7 @@ public static class Streams
         {
             // Read up to 4 bytes for header detection
             //bytesRead = await stream.ReadAsync(header, 0, 4);
-            bytesRead = await stream.ReadAsync(header.AsMemory(0, 4));
+            bytesRead = await stream.ReadAsync(header.AsMemory(0, 4)).ConfigureAwait(false);
             if (bytesRead < 2)
             {
                 return ECompressionType.None;
@@ -515,9 +515,9 @@ public static class Streams
             // Read a larger sample for deflate detection
             byte[] sample = new byte[1024];
             //int sampleBytesRead = await stream.ReadAsync(sample, 0, sample.Length);
-            int sampleBytesRead = await stream.ReadAsync(sample);
+            int sampleBytesRead = await stream.ReadAsync(sample).ConfigureAwait(false);
 
-            if (sampleBytesRead > 0 && await IsDeflateCompressed(sample.Take(sampleBytesRead).ToArray()))
+            if (sampleBytesRead > 0 && await IsDeflateCompressed(sample.Take(sampleBytesRead).ToArray()).ConfigureAwait(false))
             {
                 return ECompressionType.Deflate;
             }
@@ -539,7 +539,7 @@ public static class Streams
         // Try to peek at the first few bytes
         byte[] header = new byte[4];
         //int bytesRead = await bufferedStream.ReadAsync(header, 0, 4);
-        int bytesRead = await bufferedStream.ReadAsync(header.AsMemory(0, 4));
+        int bytesRead = await bufferedStream.ReadAsync(header.AsMemory(0, 4)).ConfigureAwait(false);
 
         if (bytesRead < 2)
         {
@@ -588,7 +588,7 @@ public static class Streams
 
             byte[] buffer = new byte[1];
             //int bytesRead = await deflateStream.ReadAsync(buffer, 0, buffer.Length);
-            int bytesRead = await deflateStream.ReadAsync(buffer);
+            int bytesRead = await deflateStream.ReadAsync(buffer).ConfigureAwait(false);
             return bytesRead > 0;
         }
         catch (Exception)

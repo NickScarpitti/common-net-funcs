@@ -14,6 +14,8 @@ using static CommonNetFuncs.Compression.Streams;
 
 namespace Web.Aws.S3.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class ApiAwsS3Tests
 {
     private readonly IFixture _fixture;
@@ -403,7 +405,7 @@ public sealed class ApiAwsS3Tests
     {
         // Arrange
         string bucketName = Guid.NewGuid().ToString();
-        ConcurrentDictionary<string, bool> validatedBuckets = new ConcurrentDictionary<string, bool>();
+        ConcurrentDictionary<string, bool> validatedBuckets = new();
         validatedBuckets[bucketName] = true;
 
         // Act
@@ -418,7 +420,7 @@ public sealed class ApiAwsS3Tests
     {
         // Arrange
         string bucketName = Guid.NewGuid().ToString();
-        ConcurrentDictionary<string, bool> validatedBuckets = new ConcurrentDictionary<string, bool>();
+        ConcurrentDictionary<string, bool> validatedBuckets = new();
 
         A.CallTo(() => _s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._))
             .Returns(new GetBucketLocationResponse { HttpStatusCode = HttpStatusCode.OK });
@@ -436,7 +438,7 @@ public sealed class ApiAwsS3Tests
     {
         // Arrange
         string bucketName = Guid.NewGuid().ToString();
-        ConcurrentDictionary<string, bool> validatedBuckets = new ConcurrentDictionary<string, bool>();
+        ConcurrentDictionary<string, bool> validatedBuckets = new();
 
         // First call returns false, second returns true
         int callCount = 0;
@@ -463,10 +465,10 @@ public sealed class ApiAwsS3Tests
         const string fileName = "file";
         const string uploadId = "upload-id";
         byte[] data = new byte[25 * 1024 * 1024]; // 25MB, triggers multipart
-        using MemoryStream stream = new MemoryStream(data);
+        await using MemoryStream stream = new(data);
 
-        InitiateMultipartUploadResponse initiateResponse = new InitiateMultipartUploadResponse { UploadId = uploadId };
-        CompleteMultipartUploadResponse completeResponse = new CompleteMultipartUploadResponse { HttpStatusCode = HttpStatusCode.OK };
+        InitiateMultipartUploadResponse initiateResponse = new() { UploadId = uploadId };
+        CompleteMultipartUploadResponse completeResponse = new() { HttpStatusCode = HttpStatusCode.OK };
 
         A.CallTo(() => _s3Client.InitiateMultipartUploadAsync(A<InitiateMultipartUploadRequest>._, A<CancellationToken>._))
             .Returns(initiateResponse);
@@ -496,9 +498,9 @@ public sealed class ApiAwsS3Tests
         const string fileName = "file";
         const string uploadId = "upload-id";
         byte[] data = new byte[15 * 1024 * 1024]; // 15MB, triggers multipart
-        using MemoryStream stream = new MemoryStream(data);
+        await using MemoryStream stream = new(data);
 
-        InitiateMultipartUploadResponse initiateResponse = new InitiateMultipartUploadResponse { UploadId = uploadId };
+        InitiateMultipartUploadResponse initiateResponse = new() { UploadId = uploadId };
 
         A.CallTo(() => _s3Client.InitiateMultipartUploadAsync(A<InitiateMultipartUploadRequest>._, A<CancellationToken>._))
             .Returns(initiateResponse);
@@ -566,7 +568,7 @@ public sealed class ApiAwsS3Tests
         byte[] buffer = new byte[chunkSize];
         await using MemoryStream stream = new(buffer);
 
-        UploadPartResponse uploadPartResponse = new UploadPartResponse { HttpStatusCode = HttpStatusCode.OK, ETag = "etag-1" };
+        UploadPartResponse uploadPartResponse = new() { HttpStatusCode = HttpStatusCode.OK, ETag = "etag-1" };
         A.CallTo(() => _s3Client.UploadPartAsync(A<UploadPartRequest>._, A<CancellationToken>._))
             .Returns(uploadPartResponse);
 
@@ -589,11 +591,11 @@ public sealed class ApiAwsS3Tests
         const int partNumber = 1;
         const long chunkSize = 5 * 1024 * 1024;
         const long totalSize = chunkSize;
-        SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+        SemaphoreSlim semaphore = new(1, 1);
         byte[] buffer = new byte[chunkSize];
-        await using MemoryStream stream = new MemoryStream(buffer);
+        await using MemoryStream stream = new(buffer);
 
-        UploadPartResponse uploadPartResponse = new UploadPartResponse { HttpStatusCode = HttpStatusCode.BadRequest };
+        UploadPartResponse uploadPartResponse = new() { HttpStatusCode = HttpStatusCode.BadRequest };
         A.CallTo(() => _s3Client.UploadPartAsync(A<UploadPartRequest>._, A<CancellationToken>._))
             .Returns(uploadPartResponse);
 
@@ -649,3 +651,5 @@ public sealed class ApiAwsS3Tests
         result.ShouldBeNull();
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

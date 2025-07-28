@@ -127,11 +127,11 @@ public static class PdfConversion
 
         try
         {
-            await semaphore.WaitAsync(cancellationToken ?? default);
+            await semaphore.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
             for (int i = 0; i <= maxRetries; i++)
             {
                 process.Start();
-                await process.WaitForExitAsync(cancellationToken ?? default);
+                await process.WaitForExitAsync(cancellationToken ?? default).ConfigureAwait(false);
 
                 if (process.HasExited && process.ExitCode != 0)
                 {

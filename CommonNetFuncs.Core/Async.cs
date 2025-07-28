@@ -1108,7 +1108,7 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
             {
                 Semaphore.Release();
             }
-        });
+        }).ConfigureAwait(false);
 
         return results;
     }
@@ -1160,7 +1160,7 @@ public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore
             {
                 Semaphore.Release();
             }
-        });
+        }).ConfigureAwait(false);
         Tasks.Clear();
     }
 }

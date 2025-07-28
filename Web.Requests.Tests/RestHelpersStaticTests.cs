@@ -4,6 +4,8 @@ using CommonNetFuncs.Web.Requests;
 
 namespace Web.Requests.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class RestHelpersStaticTests
 {
     [Theory]
@@ -130,3 +132,5 @@ public sealed class RestHelpersStaticTests
         }
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

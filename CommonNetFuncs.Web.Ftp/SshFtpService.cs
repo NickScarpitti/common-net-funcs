@@ -73,7 +73,7 @@ public sealed class SshFtpService : IDisposable, ISshFtpService
     {
         if (!Client.IsConnected())
         {
-            await Client.ConnectAsync(cancellationTokenSource?.Token ?? CancellationToken.None);
+            await Client.ConnectAsync(cancellationTokenSource?.Token ?? CancellationToken.None).ConfigureAwait(false);
         }
         return Client;
     }

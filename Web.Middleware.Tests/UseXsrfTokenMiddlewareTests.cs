@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Http;
 
 namespace Web.Middleware.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class UseXsrfTokenMiddlewareTests
 {
     private readonly IFixture _fixture;
@@ -116,3 +118,5 @@ public sealed class UseXsrfTokenMiddlewareTests
             .MustHaveHappenedOnceExactly();
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

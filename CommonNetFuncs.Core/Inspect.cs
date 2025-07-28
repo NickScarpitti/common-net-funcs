@@ -390,9 +390,9 @@ public static class Inspect
                 WriteValue(writer, value);
             }
         }
-        await ms.FlushAsync();
+        await ms.FlushAsync().ConfigureAwait(false);
         ms.Position = 0; // Reset stream position for reading
-        return Convert.ToHexStringLower(await algorithm.ComputeHashAsync(ms));
+        return Convert.ToHexStringLower(await algorithm.ComputeHashAsync(ms).ConfigureAwait(false));
     }
 
     private static void WriteValue(BinaryWriter writer, object value)

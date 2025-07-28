@@ -49,7 +49,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                 }
 
                 await using MemoryStream compressedStream = new();
-                ECompressionType currentCompression = await fileData.DetectCompressionType();
+                ECompressionType currentCompression = await fileData.DetectCompressionType().ConfigureAwait(false);
                 switch (currentCompression)
                 {
                     case ECompressionType.Brotli: case ECompressionType.ZLib: // Unsupported compression types for upload
@@ -388,7 +388,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                     MemoryStream responseStream = new();
                     try
                     {
-                        await response.ResponseStream.CopyToAsync(responseStream, cancellationToken);
+                        await response.ResponseStream.CopyToAsync(responseStream, cancellationToken).ConfigureAwait(false);
                         responseStream.Position = 0;
 
                         if (decompressGzipData && response.Headers.ContentEncoding.ContainsInvariant(["gzip", "deflate"]))
@@ -421,7 +421,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                         }
                         else
                         {
-                            ECompressionType currentCompression = await responseStream.DetectCompressionType();
+                            ECompressionType currentCompression = await responseStream.DetectCompressionType().ConfigureAwait(false);
                             if (currentCompression != ECompressionType.None)
                             {
                                 await using MemoryStream intermediateStream = new();
@@ -497,7 +497,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                 {
                     try
                     {
-                        await response.ResponseStream.CopyToAsync(fileStream, cancellationToken);
+                        await response.ResponseStream.CopyToAsync(fileStream, cancellationToken).ConfigureAwait(false);
                     }
                     finally
                     {

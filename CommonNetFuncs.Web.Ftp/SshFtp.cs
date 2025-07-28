@@ -151,29 +151,34 @@ public static class SshFtp
     /// <param name="extension">Optional: The file extension to filter by. Default is "*".</param>
     /// <param name="cancellationTokenSource">Optional: The cancellation token source.</param>
     /// <returns>An async enumerable of file paths.</returns>
-    public static async IAsyncEnumerable<string> GetFileListAsync(this SftpClient? sftpClient, string path, string extension = "*", CancellationTokenSource? cancellationTokenSource = null)
+    public static IAsyncEnumerable<string> GetFileListAsync(this SftpClient? sftpClient, string path, string extension = "*", CancellationTokenSource? cancellationTokenSource = null)
     {
         if (sftpClient?.IsConnected() != true)
         {
             throw new SshConnectionException("SFTP client is not connected.");
         }
 
-        if (!sftpClient.Exists(path))
-        {
-            throw new Exception($"Path <{path}> cannot be found on host.");
-        }
+        return GetFileListAsyncInternal(cancellationTokenSource);
 
-        cancellationTokenSource ??= new();
-        await foreach (ISftpFile sftpFile in sftpClient.ListDirectoryAsync(path, cancellationTokenSource.Token))
+        async IAsyncEnumerable<string> GetFileListAsyncInternal(CancellationTokenSource? cancellationTokenSource)
         {
-            if (cancellationTokenSource.Token.IsCancellationRequested)
+            if (!await sftpClient.ExistsAsync(path).ConfigureAwait(false))
             {
-                break;
+                throw new Exception($"Path <{path}> cannot be found on host.");
             }
 
-            if (sftpFile.IsRegularFile && (extension.StrComp("*") || sftpFile.Name.EndsWith($".{extension}")))
+            cancellationTokenSource ??= new();
+            await foreach (ISftpFile sftpFile in sftpClient.ListDirectoryAsync(path, cancellationTokenSource.Token))
             {
-                yield return $"{path}/{sftpFile.Name}";
+                if (cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                if (sftpFile.IsRegularFile && (extension.StrComp("*") || sftpFile.Name.EndsWith($".{extension}")))
+                {
+                    yield return $"{path}/{sftpFile.Name}";
+                }
             }
         }
     }
@@ -199,8 +204,8 @@ public static class SshFtp
             throw new Exception($"File {remoteFilePath} is not a csv file.  Please use DownloadStream instead.");
         }
 
-        await using SftpFileStream stream = await sftpClient.OpenAsync(remoteFilePath, FileMode.Open, FileAccess.Read, cancellationToken);
-        return await ReadCsvAsync<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken);
+        await using SftpFileStream stream = await sftpClient.OpenAsync(remoteFilePath, FileMode.Open, FileAccess.Read, cancellationToken).ConfigureAwait(false);
+        return await ReadCsvAsync<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -212,22 +217,27 @@ public static class SshFtp
     /// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
     /// <returns>Async enumerable of T read from the CSV file.</returns>
-    public static async IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerable<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public static IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerable<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         if (sftpClient?.IsConnected() != true)
         {
             throw new SshConnectionException("SFTP client is not connected.");
         }
 
-        if (remoteFilePath.IsNullOrEmpty() || !remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryOrFileExistsAsync(remoteFilePath).ConfigureAwait(false))
-        {
-            throw new Exception($"File {remoteFilePath} is not a csv file. Please use DownloadStream instead.");
-        }
+        return GetDataFromCsvAsyncEnumerableInternal(cancellationToken);
 
-        await using SftpFileStream stream = await sftpClient.OpenAsync(remoteFilePath, FileMode.Open, FileAccess.Read, cancellationToken);
-        await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken))
+        async IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerableInternal([EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            yield return item;
+            if (remoteFilePath.IsNullOrEmpty() || !remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryOrFileExistsAsync(remoteFilePath).ConfigureAwait(false))
+            {
+                throw new Exception($"File {remoteFilePath} is not a csv file. Please use DownloadStream instead.");
+            }
+
+            await using SftpFileStream stream = await sftpClient.OpenAsync(remoteFilePath, FileMode.Open, FileAccess.Read, cancellationToken).ConfigureAwait(false);
+            await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken))
+            {
+                yield return item;
+            }
         }
     }
 
@@ -240,22 +250,27 @@ public static class SshFtp
     /// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
     /// <returns>Async enumerable of T read from the CSV file.</returns>
-    public static async IAsyncEnumerable<T> GetDataFromCsvCopyAsyncEnumerable<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public static IAsyncEnumerable<T> GetDataFromCsvCopyAsyncEnumerable<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         if (sftpClient?.IsConnected() != true)
         {
             throw new SshConnectionException("SFTP client is not connected.");
         }
 
-        if (remoteFilePath.IsNullOrEmpty() || !remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryOrFileExistsAsync(remoteFilePath).ConfigureAwait(false))
-        {
-            throw new Exception($"File {remoteFilePath} is not a csv file. Please use DownloadStream instead.");
-        }
+        return GetDataFromCsvCopyAsyncEnumerableInternal(cancellationToken);
 
-        await using SftpFileStream stream = await sftpClient.OpenAsync(remoteFilePath, FileMode.Open, FileAccess.Read, cancellationToken);
-        await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken))
+        async IAsyncEnumerable<T> GetDataFromCsvCopyAsyncEnumerableInternal([EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            yield return item;
+            if (remoteFilePath.IsNullOrEmpty() || !remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryOrFileExistsAsync(remoteFilePath).ConfigureAwait(false))
+            {
+                throw new Exception($"File {remoteFilePath} is not a csv file. Please use DownloadStream instead.");
+            }
+
+            await using SftpFileStream stream = await sftpClient.OpenAsync(remoteFilePath, FileMode.Open, FileAccess.Read, cancellationToken).ConfigureAwait(false);
+            await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken))
+            {
+                yield return item;
+            }
         }
     }
 

@@ -92,7 +92,7 @@ public static class RunBatches
         bool logProgress = true, CancellationToken cancellationToken = default)
     {
         // Adapt the List processor to work with IReadOnlyList
-        return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor(batch is List<T> l ? l : batch.ToList()), batchSize, breakOnFail, logProgress, cancellationToken);
+        return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor(batch is List<T> l ? l : batch.ToList()).ConfigureAwait(false), batchSize, breakOnFail, logProgress, cancellationToken);
     }
 
     public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, bool> listProcessor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true,

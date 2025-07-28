@@ -7,6 +7,8 @@ using Microsoft.Extensions.Primitives;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class CacheKeyGenerationTests
 {
     private readonly IFixture _fixture;
@@ -91,3 +93,5 @@ public sealed class CacheKeyGenerationTests
         _context.Request.Body.Position.ShouldBe(0); // Verify body position is reset
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

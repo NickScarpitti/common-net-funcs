@@ -7,6 +7,7 @@ using static CommonNetFuncs.Email.Email;
 
 namespace Email.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class EmailTests
 {
     [Theory]
@@ -170,3 +171,4 @@ public sealed class EmailTests
         result.ShouldBe(false);
     }
 }
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

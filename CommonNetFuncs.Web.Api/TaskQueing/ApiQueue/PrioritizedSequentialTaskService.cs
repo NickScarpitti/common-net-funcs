@@ -16,6 +16,6 @@ public class PrioritizedSequentialTaskService(PrioritizedSequentialTaskProcessor
     public async Task<T?> ExecuteAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, int priority = (int)TaskPriority.Normal, TaskPriority taskPriority = TaskPriority.Normal,
         TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return await processor.EnqueueWithPriorityAsync(taskFunction, priority, taskPriority, timeout, cancellationToken);
+        return await processor.EnqueueWithPriorityAsync(taskFunction, priority, taskPriority, timeout, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -4,6 +4,8 @@ using Renci.SshNet;
 
 namespace Web.Ftp.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public class SshFtpServiceTests
 {
     private readonly IFixture _fixture;
@@ -130,3 +132,5 @@ public class SshFtpServiceTests
     //    return file;
     //}
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

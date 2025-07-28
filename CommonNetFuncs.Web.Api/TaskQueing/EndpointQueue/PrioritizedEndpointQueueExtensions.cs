@@ -24,7 +24,7 @@ public static class PrioritizedEndpointQueueExtensions
         string? customKey = null)
     {
         string endpointKey = customKey ?? GenerateEndpointKey(controller);
-        return await queueService.ExecuteAsync(endpointKey, taskFunction, priority, controller.HttpContext?.RequestAborted ?? default);
+        return await queueService.ExecuteAsync(endpointKey, taskFunction, priority, controller.HttpContext?.RequestAborted ?? default).ConfigureAwait(false);
     }
 
     public static async Task<T?> ExecutePrioritizedAsync<T>(
@@ -35,7 +35,7 @@ public static class PrioritizedEndpointQueueExtensions
         string? customKey = null)
     {
         string endpointKey = customKey ?? GenerateEndpointKey(controller);
-        return await queueService.ExecuteAsync(endpointKey, taskFunction, customPriority, controller.HttpContext?.RequestAborted ?? default);
+        return await queueService.ExecuteAsync(endpointKey, taskFunction, customPriority, controller.HttpContext?.RequestAborted ?? default).ConfigureAwait(false);
     }
 
     private static string GenerateEndpointKey(ControllerBase controller)
@@ -51,7 +51,7 @@ public static class PrioritizedEndpointQueueExtensions
         {
             try
             {
-                Dictionary<string, PrioritizedQueueStats> stats = await queueService.GetAllQueueStatsAsync();
+                Dictionary<string, PrioritizedQueueStats> stats = await queueService.GetAllQueueStatsAsync().ConfigureAwait(false);
                 return Results.Ok(stats);
             }
             catch (Exception ex)
@@ -65,7 +65,7 @@ public static class PrioritizedEndpointQueueExtensions
         {
             try
             {
-                PrioritizedQueueStats stats = await queueService.GetQueueStatsAsync(endpointKey);
+                PrioritizedQueueStats stats = await queueService.GetQueueStatsAsync(endpointKey).ConfigureAwait(false);
                 return Results.Ok(stats);
             }
             catch (Exception ex)

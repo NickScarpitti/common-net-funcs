@@ -12,6 +12,6 @@ public class SequentialTaskService(SequentialTaskProcessor processor) : ISequent
 
     public async Task<T?> ExecuteAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, CancellationToken cancellationToken = default)
     {
-        return await processor.EnqueueAsync(taskFunction, cancellationToken);
+        return await processor.EnqueueAsync(taskFunction, cancellationToken).ConfigureAwait(false);
     }
 }

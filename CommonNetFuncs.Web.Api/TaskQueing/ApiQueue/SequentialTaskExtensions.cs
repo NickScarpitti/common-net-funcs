@@ -13,7 +13,7 @@ public static class SequentialTaskExtensions
         {
             try
             {
-                QueueStats stats = await processor.GetAllQueueStatsAsync();
+                QueueStats stats = await processor.GetAllQueueStatsAsync().ConfigureAwait(false);
                 return Results.Ok(stats);
             }
             catch (Exception ex)

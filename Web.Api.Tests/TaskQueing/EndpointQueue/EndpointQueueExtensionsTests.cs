@@ -5,6 +5,8 @@ using Moq;
 
 namespace Web.Api.Tests.TaskQueing.EndpointQueue;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public class EndpointQueueExtensionsTests
 {
     [Fact]
@@ -37,3 +39,5 @@ public class EndpointQueueExtensionsTests
         result.ShouldBe(456);
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

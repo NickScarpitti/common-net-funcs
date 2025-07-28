@@ -13,7 +13,7 @@ public static class PrioritizedSequentialTaskExtensions
         {
             try
             {
-                PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
+                PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync().ConfigureAwait(false);
                 return Results.Ok(stats);
             }
             catch (Exception ex)

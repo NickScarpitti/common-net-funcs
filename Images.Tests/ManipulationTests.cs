@@ -10,6 +10,8 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Images.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public class ManipulationTests : IDisposable
 {
     private bool disposed;
@@ -1889,3 +1891,4 @@ public class ManipulationTests : IDisposable
         return isInverted;
     }
 }
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -839,21 +839,22 @@ public static class Collections
 
         if (!parallel)
         {
-            return collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(x => x.GetValue(x)?.ToString() ?? string.Empty)) })
-                .Select(g =>
+            return collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(y => y.GetValue(x)?.ToString() ?? string.Empty)) })
+            //return collection.GroupBy(_ => new { GroupKey = string.Join("|", groupingProperties.Select(x => x.GetValue(x)?.ToString() ?? string.Empty)) })
+                .Select(x =>
                 {
                     T result = new();
                     foreach (PropertyInfo prop in properties)
                     {
                         if (propsToAgg.Contains(prop.Name))
                         {
-                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty).Distinct()) :
-                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty));
+                            string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
+                                string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
                             prop.SetValue(result, aggregatedValue);
                         }
                         else
                         {
-                            prop.SetValue(result, prop.GetValue(g.First()));
+                            prop.SetValue(result, prop.GetValue(x.First()));
                         }
                     }
                     return result;
@@ -862,21 +863,21 @@ public static class Collections
         else
         {
             return collection.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered)
-                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(x => x.GetValue(x)?.ToString() ?? string.Empty)) })
-                .Select(g =>
+                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(y => y.GetValue(x)?.ToString() ?? string.Empty)) })
+                .Select(x =>
                 {
                     T result = new();
                     foreach (PropertyInfo prop in properties)
                     {
                         if (propsToAgg.Contains(prop.Name))
                         {
-                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty).Distinct()) :
-                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty));
+                            string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
+                                string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
                             prop.SetValue(result, aggregatedValue);
                         }
                         else
                         {
-                            prop.SetValue(result, prop.GetValue(g.First()));
+                            prop.SetValue(result, prop.GetValue(x.First()));
                         }
                     }
                     return result;

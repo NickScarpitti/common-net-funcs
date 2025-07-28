@@ -4,6 +4,8 @@ using CommonNetFuncs.Web.Requests;
 
 namespace Web.Requests.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public sealed class RestHelpersCommonTests
 {
     private sealed class FakeHttpMessageHandler : HttpMessageHandler
@@ -112,3 +114,5 @@ public sealed class RestHelpersCommonTests
         items.ShouldBe(["x", "y"]);
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

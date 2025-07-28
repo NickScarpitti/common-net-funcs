@@ -43,13 +43,13 @@ public class PrioritizedEndpointQueue : IDisposable
     public async Task<T?> EnqueueAsync<T>(Func<CancellationToken, Task<T>> taskFunction,
         int priority, TaskPriority priorityLevel, CancellationToken cancellationToken = default)
     {
-        PrioritizedQueuedTask queuedTask = new(async ct => await taskFunction(ct))
+        PrioritizedQueuedTask queuedTask = new(async ct => await taskFunction(ct).ConfigureAwait(false))
         {
             Priority = priority,
             PriorityLevel = priorityLevel,
         };
 
-        await queueSemaphore.WaitAsync(cancellationToken);
+        await queueSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             priorityQueue.Enqueue(queuedTask, queuedTask);
@@ -79,7 +79,7 @@ public class PrioritizedEndpointQueue : IDisposable
     {
         int cancelledCount = 0;
 
-        await queueSemaphore.WaitAsync();
+        await queueSemaphore.WaitAsync().ConfigureAwait(false);
         try
         {
             List<PrioritizedQueuedTask> tasksToCancel = new();
@@ -137,7 +137,7 @@ public class PrioritizedEndpointQueue : IDisposable
             PrioritizedQueuedTask? currentTask = null;
 
             // Wait for tasks or cancellation
-            await queueSemaphore.WaitAsync(cancellationToken);
+            await queueSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 if (priorityQueue.TryDequeue(out currentTask, out _))
@@ -194,7 +194,7 @@ public class PrioritizedEndpointQueue : IDisposable
                 using CancellationTokenSource combinedCts = CancellationTokenSource.CreateLinkedTokenSource(
                     cancellationToken, currentTask.CancellationTokenSource.Token);
 
-                object? result = await currentTask.TaskFunction(combinedCts.Token);
+                object? result = await currentTask.TaskFunction(combinedCts.Token).ConfigureAwait(false);
                 currentTask.CompletionSource.SetResult(result);
 
                 stopwatch.Stop();

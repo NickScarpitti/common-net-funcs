@@ -51,13 +51,13 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService
     public virtual async Task<T?> EnqueueWithPriorityAsync<T>(Func<CancellationToken, Task<T?>> taskFunction, int priority = (int)TaskPriority.Normal, TaskPriority priorityLevel = TaskPriority.Normal,
         TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        PrioritizedQueuedTask queuedTask = new(async ct => await taskFunction(ct))
+        PrioritizedQueuedTask queuedTask = new(async ct => await taskFunction(ct).ConfigureAwait(false))
         {
             Priority = priority,
             Timeout = timeout
         };
 
-        await semaphore.WaitAsync(cancellationToken);
+        await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             priorityQueue.Enqueue(queuedTask, -priority); // Negative for max-heap behavior
@@ -100,7 +100,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService
                     stats.CurrentProcessingPriority = currentTask.PriorityLevel;
                 }
 
-                object? result = await currentTask.TaskFunction(stoppingToken);
+                object? result = await currentTask.TaskFunction(stoppingToken).ConfigureAwait(false);
                 currentTask.CompletionSource.SetResult(result);
 
                 stopwatch.Stop();

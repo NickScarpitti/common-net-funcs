@@ -34,14 +34,14 @@ public class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueService,
 
     public async Task<T?> ExecuteAsync<T>(string endpointKey, Func<CancellationToken, Task<T>> taskFunction, TaskPriority priority = TaskPriority.Normal, CancellationToken cancellationToken = default)
     {
-        return await ExecuteAsync(endpointKey, taskFunction, (int)priority, cancellationToken);
+        return await ExecuteAsync(endpointKey, taskFunction, (int)priority, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<T?> ExecuteAsync<T>(string endpointKey, Func<CancellationToken, Task<T>> taskFunction, int customPriority, CancellationToken cancellationToken = default)
     {
         PrioritizedEndpointQueue queue = GetOrCreateQueue(endpointKey);
         TaskPriority priorityLevel = GetPriorityLevel(customPriority);
-        return await queue.EnqueueAsync(taskFunction, customPriority, priorityLevel, cancellationToken);
+        return await queue.EnqueueAsync(taskFunction, customPriority, priorityLevel, cancellationToken).ConfigureAwait(false);
     }
 
     public Task<PrioritizedQueueStats> GetQueueStatsAsync(string endpointKey)
@@ -62,7 +62,7 @@ public class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueService,
     {
         if (queues.TryGetValue(endpointKey, out PrioritizedEndpointQueue? queue))
         {
-            return await queue.CancelTasksByPriorityAsync(priority);
+            return await queue.CancelTasksByPriorityAsync(priority).ConfigureAwait(false);
         }
         return false;
     }

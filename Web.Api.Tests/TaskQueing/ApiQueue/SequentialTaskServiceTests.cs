@@ -4,6 +4,8 @@ using Moq;
 
 namespace Web.Api.Tests.TaskQueing.ApiQueue;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public class SequentialTaskServiceTests
 {
     [Fact]
@@ -21,3 +23,5 @@ public class SequentialTaskServiceTests
         processorMock.Verify(x => x.EnqueueAsync(It.IsAny<Func<CancellationToken, Task<int>>>(), It.IsAny<CancellationToken>()), Moq.Times.Once);
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

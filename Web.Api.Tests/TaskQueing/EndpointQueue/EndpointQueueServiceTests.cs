@@ -4,6 +4,8 @@ using CommonNetFuncs.Web.Api.TaskQueing.EndpointQueue;
 
 namespace Web.Api.Tests.TaskQueing.EndpointQueue;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public class EndpointQueueServiceTests
 {
     [Fact]
@@ -59,3 +61,5 @@ public class EndpointQueueServiceTests
         service.Dispose(); // Should be idempotent
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

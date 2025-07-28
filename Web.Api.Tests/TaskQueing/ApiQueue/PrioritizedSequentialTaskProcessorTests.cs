@@ -4,6 +4,8 @@ using CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
 
 namespace Web.Api.Tests.TaskQueing.ApiQueue;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public class PrioritizedSequentialTaskProcessorTests
 {
     //[Fact]
@@ -57,3 +59,5 @@ public class PrioritizedSequentialTaskProcessorTests
     //    result.ShouldBeNull(); // Should return null due to timeout
     //}
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

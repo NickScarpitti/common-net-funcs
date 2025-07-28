@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace CommonNetFuncs.Core;
+﻿namespace CommonNetFuncs.Core;
 
 public static class Streams
 {
@@ -15,15 +13,13 @@ public static class Streams
         // If stream length is known, use it to pre-allocate
         MemoryStream ms = stream.CanSeek ? new MemoryStream(capacity: (int)stream.Length) : new MemoryStream();
 
-        byte[] buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
         try
         {
-            await stream.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
+            await stream.CopyToAsync(ms, bufferSize, cancellationToken).ConfigureAwait(false);
             return ms.ToArray();
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(buffer);
             await ms.DisposeAsync().ConfigureAwait(false);
         }
     }

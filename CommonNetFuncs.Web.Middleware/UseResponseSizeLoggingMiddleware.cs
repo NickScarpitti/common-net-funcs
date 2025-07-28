@@ -11,7 +11,7 @@ namespace CommonNetFuncs.Web.Middleware;
 /// Middleware to expose response body size for development
 /// NOT recommended for production environments
 /// </summary>
-public sealed class UseResponseSizeLoggingMiddleware(RequestDelegate next, ILogger<UseResponseSizeLoggingMiddleware> logger, long logThreshold = 0)
+public sealed class UseResponseSizeLoggingMiddleware(RequestDelegate next, ILogger<UseResponseSizeLoggingMiddleware> logger, long logThreshold)
 {
     private readonly RequestDelegate next = next;
     private readonly ILogger<UseResponseSizeLoggingMiddleware> logger = logger;
@@ -46,8 +46,8 @@ public sealed class UseResponseSizeLoggingMiddleware(RequestDelegate next, ILogg
 /// </summary>
 public static class ResponseSizeLoggingMiddlewareExtension
 {
-    public static IApplicationBuilder UseResponseSizeLogging(this IApplicationBuilder builder)
+    public static IApplicationBuilder UseResponseSizeLogging(this IApplicationBuilder builder, long logThreshold = -1)
     {
-        return builder.UseMiddleware<UseResponseSizeLoggingMiddleware>();
+        return builder.UseMiddleware<UseResponseSizeLoggingMiddleware>(logThreshold);
     }
 }

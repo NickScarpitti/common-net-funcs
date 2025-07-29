@@ -162,8 +162,23 @@ public class EndpointQueue : IDisposable
                     logger.Warn(ex, "Error waiting for processing task to complete for endpoint {EndpointKey}", EndpointKey);
                 }
 
-                cancellationTokenSource.Dispose();
-                channel?.Writer?.Complete();
+                try
+                {
+                    cancellationTokenSource.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Error disposing cancellationTokenSource");
+                }
+
+                try
+                {
+                    channel?.Writer?.Complete();
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Error completing channel writer");
+                }
             }
             disposed = true;
         }

@@ -24,7 +24,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
     public void Constructor_ValidParameters_CreatesInstance()
     {
         // Act
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger);
+        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
 
         // Assert
         middleware.ShouldNotBeNull();
@@ -37,7 +37,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
     public async Task InvokeAsync_LogsResponseSize_ForVariousContentSizes(int contentSize)
     {
         // Arrange
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger);
+        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
         DefaultHttpContext context = new();
         await using MemoryStream responseBody = new();
         context.Response.Body = responseBody;
@@ -71,7 +71,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
     public async Task InvokeAsync_RestoresOriginalBodyStream()
     {
         // Arrange
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger);
+        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
         DefaultHttpContext context = new();
         await using MemoryStream originalBody = new();
         context.Response.Body = originalBody;
@@ -87,7 +87,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
     public async Task InvokeAsync_HandlesNextDelegateException()
     {
         // Arrange
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger);
+        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
         DefaultHttpContext context = new();
         Exception exception = new("Test exception");
 
@@ -105,7 +105,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
     public async Task InvokeAsync_HandlesEmptyHeaders()
     {
         // Arrange
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger);
+        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
         DefaultHttpContext context = new();
         context.Response.Body = new MemoryStream();
 

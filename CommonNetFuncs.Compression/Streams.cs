@@ -27,11 +27,12 @@ public static class Streams
     }
 
     /// <summary>
-    /// Compress a stream that was compressed using a supported compression type
+    /// Compress a stream using a supported compression type
     /// </summary>
     /// <param name="uncompressedStream">Stream to compress</param>
     /// <param name="compressedStream">Stream to receive compressed form of uncompressedStream</param>
     /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib)</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <exception cref="NotSupportedException"></exception>
     public static async Task CompressStream(this Stream uncompressedStream, Stream compressedStream, ECompressionType compressionType, CancellationToken cancellationToken = default)
     {
@@ -155,6 +156,7 @@ public static class Streams
     /// <param name="compressedStream">Stream with compressed data</param>
     /// <param name="decompressedStream">Stream to receive decompressed form of compressedStream</param>
     /// <param name="compressionType">Type of compression used in stream (GZip, Brotli, Deflate, or ZLib)</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <exception cref="NotSupportedException"></exception>
     public static async Task DecompressStream(this Stream compressedStream, Stream decompressedStream, ECompressionType compressionType, CancellationToken cancellationToken = default)
     {
@@ -272,6 +274,13 @@ public static class Streams
         }
     }
 
+    /// <summary>
+    /// Compress the data contained within a byte array using a supported compression type
+    /// </summary>
+    /// <param name="data">The byte array containing the data to compress</param>
+    /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib)</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <returns>Byte array containing the compressed version of the original byte array</returns>
     public static async Task<byte[]> Compress(this byte[] data, ECompressionType compressionType, CancellationToken cancellationToken = default)
     {
         await using MemoryStream memoryStream = new();
@@ -356,6 +365,14 @@ public static class Streams
         return memoryStream.ToArray();
     }
 
+    /// <summary>
+    /// Decompress the data contained within a byte array that was compressed using a supported compression type
+    /// </summary>
+    /// <param name="compressedData">The byte array containing the compressed data to decompress</param>
+    /// <param name="compressionType">Type of compression used on the data (GZip, Brotli, Deflate, or ZLib)</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <returns>Byte array containing the decompressed version of the original byte array</returns>
+    /// <exception cref="CompressionLimitExceededException"></exception>
     public static async Task<byte[]> Decompress(this byte[] compressedData, ECompressionType compressionType, CancellationToken cancellationToken = default)
     {
         await using MemoryStream compressedStream = new(compressedData);
@@ -578,7 +595,11 @@ public static class Streams
         return ECompressionType.None;
     }
 
-    // Fixed version that doesn't modify the original data
+    /// <summary>
+    /// Checks a byte array to determine if it has been compressed using the deflate compression algorithm.
+    /// </summary>
+    /// <param name="data">Byte array to check for defalte compression.</param>
+    /// <returns>True if byte array contains data that was compressed using the deflate compression algorithm.</returns>
     public static async Task<bool> IsDeflateCompressed(byte[] data)
     {
         try
@@ -598,7 +619,7 @@ public static class Streams
     }
 
     /// <summary>
-    /// Copies data from the source stream to the destination stream, ensuring that the total number of bytes copied
+    /// Asynchronously copies data from the source stream to the destination stream, ensuring that the total number of bytes copied
     /// does not exceed the specified limit.
     /// </summary>
     /// <remarks>This method reads data from the <paramref name="source"/> stream in chunks and writes it to
@@ -607,7 +628,7 @@ public static class Streams
     /// <param name="source">The source stream to read data from.</param>
     /// <param name="destination">The destination stream to write data to.</param>
     /// <param name="maxBytes">The maximum number of bytes to copy. If the limit is exceeded, an exception is thrown.</param>
-    /// <param name="cancellationToken">Optional: Cancelltion token for this operation.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
     /// <returns>A task that represents the asynchronous copy operation.</returns>
     /// <exception cref="CompressionLimitExceededException">Thrown if the total number of bytes copied exceeds <paramref name="maxBytes"/>.</exception>
     public static async Task CopyWithLimitAsync(this Stream source, Stream destination, long maxBytes, CancellationToken cancellationToken = default)
@@ -629,6 +650,19 @@ public static class Streams
         }
     }
 
+    /// <summary>
+    /// Copies data from the source stream to the destination stream, ensuring that the total number of bytes copied
+    /// does not exceed the specified limit.
+    /// </summary>
+    /// <remarks>This method reads data from the <paramref name="source"/> stream in chunks and writes it to
+    /// the <paramref name="destination"/> stream. The operation stops if the total number of bytes copied reaches the
+    /// specified <paramref name="maxBytes"/> limit.</remarks>
+    /// <param name="source">The source stream to read data from.</param>
+    /// <param name="destination">The destination stream to write data to.</param>
+    /// <param name="maxBytes">The maximum number of bytes to copy. If the limit is exceeded, an exception is thrown.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <returns>A task that represents the asynchronous copy operation.</returns>
+    /// <exception cref="CompressionLimitExceededException">Thrown if the total number of bytes copied exceeds <paramref name="maxBytes"/>.</exception>
     public static void CopyWithLimit(this Stream source, Stream destination, long maxBytes, CancellationToken cancellationToken = default)
     {
         byte[] buffer = new byte[ChunkSize];

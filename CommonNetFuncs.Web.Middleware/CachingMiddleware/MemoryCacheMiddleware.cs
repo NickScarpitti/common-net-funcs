@@ -460,9 +460,9 @@ public static class MemoryCacheEvictionMiddlewareExtensions
                 {
                     Hits = metrics.CacheHits,
                     Misses = metrics.CacheMisses,
-                    HitRatio = Math.Round(metrics.CacheHits + metrics.CacheMisses == 0
+                    HitRatio = $"{Math.Round(metrics.CacheHits + metrics.CacheMisses == 0
                         ? 0
-                        : (double)metrics.CacheHits / (metrics.CacheHits + metrics.CacheMisses) * 100, 3) + '%',
+                        : (double)metrics.CacheHits / (metrics.CacheHits + metrics.CacheMisses), 3) * 100}%",
                     SkippedDueToSize = metrics.SkippedDueToSize,
                     CurrentSizeBytes = $"{metrics.CurrentCacheSize}B",
                     CurrentSize = metrics.CurrentCacheSize.GetFileSizeFromBytesWithUnits(2),

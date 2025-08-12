@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.6.19</Version>
+    <Version>3.6.24</Version>
     <MinVerTagPrefix>media.ffmpeg-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -80,8 +80,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.2" PrivateAssets="all" />
-    <PackageReference Include="Xabe.FFmpeg" Version="6.0.1" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.3" PrivateAssets="all" />
+    <PackageReference Include="Xabe.FFmpeg" Version="6.0.2" />
   </ItemGroup>
 
   <ItemGroup>

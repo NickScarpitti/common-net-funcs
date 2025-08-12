@@ -3,6 +3,9 @@ using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Core.CollectionClasses;
 
+/// <summary>
+/// Fixed size dictionary that maintains insertion order and evicts the oldest item when capacity is exceeded.
+/// </summary>
 public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
 {
     private readonly ReaderWriterLockSlim readWriteLock = new();
@@ -123,6 +126,11 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <summary>
+    /// Determines whether the dictionary contains the specified key.
+    /// </summary>
+    /// <param name="key">The key to locate in the dictionary. Cannot be <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the dictionary contains an element with the specified key, otherwise, <see langword="false"/>.</returns>
     public bool ContainsKey(TKey key)
     {
         readWriteLock.EnterReadLock();

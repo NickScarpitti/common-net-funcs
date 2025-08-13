@@ -1,4 +1,5 @@
-﻿using static CommonNetFuncs.Core.MathHelpers;
+﻿using FakeItEasy;
+using static CommonNetFuncs.Core.MathHelpers;
 using static CommonNetFuncs.Core.Random;
 using static CommonNetFuncs.DeepClone.ExpressionTrees;
 
@@ -298,5 +299,148 @@ public sealed class RandomTests
     public void GenerateRandomString_WithInvalidLengthRange_ThrowsException(int minLength, int maxLength)
     {
         Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength, minLength));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(-10)]
+    public void GetUniqueRandomElements_WhenSelectQuantityIsZeroOrNegative_ShouldThrowArgumentException(int selectQuantity)
+    {
+        // Arrange
+        List<int> items = new() { 1, 2, 3 };
+
+        // Act & Assert
+        ArgumentException exception = Should.Throw<ArgumentException>(() => items.GetUniqueRandomElements(selectQuantity).ToList());
+
+        exception.Message.ShouldContain("selectQuantity must be greater than 0");
+        exception.ParamName.ShouldBe("selectQuantity");
+    }
+
+    [Theory]
+    [InlineData(new int[] { })]
+    [InlineData(null)]
+    public void GetUniqueRandomElements_WhenItemsIsEmptyOrNull_ShouldReturnEmptyEnumerable(int[]? items)
+    {
+        // Arrange
+        IEnumerable<int> inputItems = items ?? Enumerable.Empty<int>();
+
+        // Act
+        List<int> result = inputItems.GetUniqueRandomElements(1).ToList();
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(new[] { 1, 2, 3 }, 3)]
+    [InlineData(new[] { 1, 2, 3 }, 4)]
+    [InlineData(new[] { 1, 2, 3 }, 10)]
+    [InlineData(new[] { 5 }, 1)]
+    [InlineData(new[] { 5 }, 2)]
+    public void GetUniqueRandomElements_WhenSelectQuantityIsGreaterThanOrEqualToUniqueItemCount_ShouldReturnAllUniqueItemsShuffled(int[] items, int selectQuantity)
+    {
+        // Arrange
+
+        List<int> expectedShuffledItems = items.Distinct().ToList();
+
+        // Act
+        List<int> result = items.GetUniqueRandomElements(selectQuantity).ToList();
+
+        // Assert
+        result.Count.ShouldBe(expectedShuffledItems.Count);
+        result.ShouldBeSubsetOf(expectedShuffledItems);
+    }
+
+    [Theory]
+    [InlineData(new[] { 1, 2, 3, 4, 5 }, 1, new[] { 0 })]
+    [InlineData(new[] { 1, 2, 3, 4, 5 }, 2, new[] { 1, 3 })]
+    [InlineData(new[] { 1, 2, 3, 4, 5 }, 3, new[] { 2, 0, 1 })]
+    public void GetUniqueRandomElements_WhenSelectQuantityIsLessThanUniqueItemCount_ShouldUseReservoirSampling(int[] items, int selectQuantity, int[] randomIndices)
+    {
+        // Act
+        List<int> result = items.GetUniqueRandomElements(selectQuantity).ToList();
+
+        // Assert
+        result.Count.ShouldBe(selectQuantity);
+        result.ShouldAllBe(item => items.Contains(item));
+        result.Distinct().Count().ShouldBe(selectQuantity); // Ensure all results are unique
+    }
+
+    [Theory]
+    [InlineData(new[] { 1, 1, 2, 2, 3, 3 }, 2, new[] { 0, 1 })]
+    [InlineData(new[] { 5, 5, 5, 5 }, 1, new[] { 0 })]
+    public void GetUniqueRandomElements_WhenItemsContainDuplicates_ShouldWorkWithUniqueItemsOnly(int[] items, int selectQuantity, int[] randomIndices)
+    {
+        // Arrange
+
+        HashSet<int> uniqueItems = new(items);
+        _ = uniqueItems.Count;
+
+        // Act
+        List<int> result = items.GetUniqueRandomElements(selectQuantity).ToList();
+
+        // Assert
+        result.Count.ShouldBe(selectQuantity);
+        result.ShouldAllBe(item => uniqueItems.Contains(item));
+        result.Distinct().Count().ShouldBe(selectQuantity); // Ensure all results are unique
+    }
+
+    [Fact]
+    public void GetUniqueRandomElements_WithStringItems_ShouldWorkCorrectly()
+    {
+        // Arrange
+
+        string[] items = { "apple", "banana", "cherry", "date" };
+        const int selectQuantity = 2;
+
+        // Act
+        List<string> result = items.GetUniqueRandomElements(selectQuantity).ToList();
+
+        // Assert
+        result.Count.ShouldBe(2);
+        result.ShouldAllBe(item => items.Contains(item));
+        result.Distinct().Count().ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetUniqueRandomElements_WithDefaultSelectQuantity_ShouldReturnOneItem()
+    {
+        // Arrange
+
+        int[] items = { 10, 20, 30 };
+
+        // Act
+        List<int> result = items.GetUniqueRandomElements().ToList();
+
+        // Assert
+        result.Count.ShouldBe(1);
+        result[0].ShouldBeOneOf(items); // Should return the item at index 1
+    }
+
+    [Theory]
+    [InlineData(new[] { 1, 2, 3, 4, 5 }, 4)]
+    public void GetUniqueRandomElements_ShouldCorrectlySwapElementsInReservoirSampling(int[] items, int selectQuantity)
+    {
+        // Act
+        List<int> result = items.GetUniqueRandomElements(selectQuantity).ToList();
+
+        // Assert
+        result.Count.ShouldBe(selectQuantity);
+        result.Distinct().Count().ShouldBe(selectQuantity); // All items should be unique
+        result.ShouldAllBe(item => items.Contains(item)); // All items should be from original array
+    }
+
+    [Theory]
+    [InlineData(new object?[] { null, 1, 2 }, 2)]
+    [InlineData(new object?[] { "test", null, "other" }, 1)]
+    public void GetUniqueRandomElements_WithNullableItems_ShouldHandleNullValues(object?[] items, int selectQuantity)
+    {
+        // Act
+        List<object?> result = items.GetUniqueRandomElements(selectQuantity).ToList();
+
+        // Assert
+        result.Count.ShouldBeLessThanOrEqualTo(selectQuantity);
+        result.ShouldAllBe(item => items.Contains(item));
     }
 }

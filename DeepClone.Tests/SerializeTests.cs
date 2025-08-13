@@ -213,8 +213,6 @@ public sealed class SerializeTests
                 }
         }];
 
-        yield return
-        [
-            new TestClass { Number = 42, Text = null, Numbers = [], TimeStamp = DateTime.UtcNow, Child = null }];
+        yield return [new TestClass { Number = 42, Text = null, Numbers = [], TimeStamp = DateTime.UtcNow, Child = null }];
     }
 }

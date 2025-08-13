@@ -25,7 +25,7 @@ public static class SshFtp
     /// Determines whether the SFTP client is connected.
     /// </summary>
     /// <param name="sftpClient">The SFTP client.</param>
-    /// <returns>True if connected, otherwise false.</returns>
+    /// <returns><see langword="true"/> if connected, otherwise false.</returns>
     public static bool IsConnected([NotNullWhen(true)] this SftpClient? sftpClient)
     {
         return sftpClient?.IsConnected ?? false;
@@ -78,7 +78,7 @@ public static class SshFtp
     /// Disconnects the SFTP client if it is connected.
     /// </summary>
     /// <param name="sftpClient">The SFTP client.</param>
-    /// <returns>True if still connected after disconnect attempt, otherwise false.</returns>
+    /// <returns><see langword="true"/> if still connected after disconnect attempt, otherwise false.</returns>
     public static bool DisconnectClient(this SftpClient? sftpClient)
     {
         if (sftpClient.IsConnected())
@@ -94,7 +94,7 @@ public static class SshFtp
     /// </summary>
     /// <param name="sftpClient">The SFTP client.</param>
     /// <param name="path">The path to check.</param>
-    /// <returns>True if the directory or file exists, otherwise false.</returns>
+    /// <returns><see langword="true"/> if the directory or file exists, otherwise false.</returns>
     public static bool DirectoryOrFileExists([NotNullWhen(true)] this SftpClient? sftpClient, string path)
     {
         if (sftpClient?.IsConnected() != true)
@@ -110,7 +110,7 @@ public static class SshFtp
     /// </summary>
     /// <param name="sftpClient">The SFTP client.</param>
     /// <param name="path">The path to check.</param>
-    /// <returns>True if the directory or file exists, otherwise false.</returns>
+    /// <returns><see langword="true"/> if the directory or file exists, otherwise false.</returns>
     public static async Task<bool> DirectoryOrFileExistsAsync([NotNullWhen(true)] this SftpClient? sftpClient, string path)
     {
         if (sftpClient?.IsConnected() != true)
@@ -191,7 +191,7 @@ public static class SshFtp
     /// <param name="remoteFilePath">The remote CSV file path.</param>
     /// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-    /// <returns>List of T read from the CSV file.</returns>
+    /// <returns><see cref="List{T}"/> of T read from the CSV file.</returns>
     public static async Task<List<T>> GetDataFromCsvAsync<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         if (sftpClient?.IsConnected() != true)
@@ -282,7 +282,7 @@ public static class SshFtp
     /// <param name="remoteFilePath">The remote CSV file path.</param>
     /// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-    /// <returns>List of T read from the CSV file.</returns>
+    /// <returns><see cref="List{T}"/> of T read from the CSV file.</returns>
     public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
     {
         if (sftpClient?.IsConnected() != true)
@@ -304,7 +304,7 @@ public static class SshFtp
     /// </summary>
     /// <param name="sftpClient">The SFTP client.</param>
     /// <param name="remoteFilePath">The remote file path to delete.</param>
-    /// <returns>True if the file was deleted or does not exist; otherwise, false.</returns>
+    /// <returns><see langword="true"/> if the file was deleted or does not exist; otherwise, <see langword="false"/>.</returns>
     public static bool DeleteSftpFile(this SftpClient? sftpClient, string remoteFilePath)
     {
         if (sftpClient?.IsConnected() != true)
@@ -324,7 +324,7 @@ public static class SshFtp
     /// </summary>
     /// <param name="sftpClient">The SFTP client.</param>
     /// <param name="remoteFilePath">The remote file path to delete.</param>
-    /// <returns>True if the file was deleted or does not exist; otherwise, false.</returns>
+    /// <returns><see langword="true"/> if the file was deleted or does not exist; otherwise, <see langword="false"/>.</returns>
     public static async Task<bool> DeleteFileAsync(this SftpClient? sftpClient, string remoteFilePath)
     {
         if (sftpClient?.IsConnected() != true)

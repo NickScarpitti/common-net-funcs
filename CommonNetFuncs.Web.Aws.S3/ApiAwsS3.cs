@@ -29,7 +29,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="compressSteam">Optional: If true, will compress stream sent to S3 bucket. Default = true</param>
     /// <param name="compressionType">Optional: Specifies which compression type to use when compressSteam = true. Does nothing if compressSteam = false. Valid values are GZip and Deflate</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this request.</param>
-    /// <returns>True if file was successfully uploaded</returns>
+    /// <returns><see langword="true"/> if file was successfully uploaded</returns>
     public async Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip, CancellationToken cancellationToken = default)
     {
         if (compressSteam && compressionType is not ECompressionType.Gzip and not ECompressionType.Deflate)
@@ -123,7 +123,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="filePath">Path of the file to be uploaded</param>
     /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this request.</param>
-    /// <returns>True if file was successfully uploaded</returns>
+    /// <returns><see langword="true"/> if file was successfully uploaded</returns>
     public async Task<bool> UploadS3File(string bucketName, string fileName, string filePath, ConcurrentDictionary<string, bool>? validatedBuckets = null, CancellationToken cancellationToken = default)
     {
         if (fileName.IsNullOrWhiteSpace())
@@ -532,7 +532,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="bucketName">Name of the S3 bucket to delete the file from</param>
     /// <param name="fileName">Name of the file to delete from the S3 bucket</param>
     /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
-    /// <returns>True if file was deleted successfully</returns>
+    /// <returns><see langword="true"/> if file was deleted successfully</returns>
     public async Task<bool> DeleteS3File(string bucketName, string fileName, ConcurrentDictionary<string, bool>? validatedBuckets = null, CancellationToken cancellationToken = default)
     {
         bool success = false;
@@ -569,7 +569,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="bucketName">Name of the S3 bucket to check for the file</param>
     /// <param name="fileName">Name of the file to look for in the S3 bucket</param>
     /// <param name="versionId">Optional: Version ID for the file being searched for</param>
-    /// <returns>True if the file exists within the given S3 bucket</returns>
+    /// <returns><see langword="true"/> if the file exists within the given S3 bucket</returns>
     public async Task<bool> S3FileExists(string bucketName, string fileName, string? versionId = null, CancellationToken cancellationToken = default)
     {
         bool success = false;
@@ -607,7 +607,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// </summary>
     /// <param name="bucketName">Name of the S3 bucket to get file list from</param>
     /// <param name="maxKeysPerQuery">Number of records to return per request</param>
-    /// <returns>List containing the names of every file within the given S3 bucket</returns>
+    /// <returns><see cref="List{T}"/> containing the names of every file within the given S3 bucket</returns>
     public async Task<List<string>?> GetAllS3BucketFiles(string bucketName, int maxKeysPerQuery = 1000, CancellationToken cancellationToken = default)
     {
         List<string> fileNames = [];
@@ -692,7 +692,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// </summary>
     /// <param name="bucketName">Name of the S3 bucket to validate exists and is reachable</param>
     /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
-    /// <returns>True if the S# bucket exists and is reachable</returns>
+    /// <returns><see langword="true"/> if the S# bucket exists and is reachable</returns>
     public async Task<bool> IsBucketValid(string bucketName, ConcurrentDictionary<string, bool>? validatedBuckets = null)
     {
         bool isValid = false;

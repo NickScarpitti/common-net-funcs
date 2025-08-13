@@ -16,7 +16,7 @@ public static class CsvReadHelpers
     /// <param name="filePath">Path to the CSV file to read from</param>
     /// <param name="hasHeaders">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-    /// <returns>List of T read from the CSV file</returns>
+    /// <returns><see cref="List{T}"/> of T read from the CSV file</returns>
     public static List<T> ReadCsv<T>(string filePath, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
     {
         using StreamReader reader = new(filePath);
@@ -30,7 +30,7 @@ public static class CsvReadHelpers
     /// <param name="stream">Stream of a CSV file</param>
     /// <param name="hasHeaders">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-    /// <returns>List of T read from the CSV stream</returns>
+    /// <returns><see cref="List{T}"/> of T read from the CSV stream</returns>
     public static List<T> ReadCsv<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
     {
         using StreamReader reader = new(stream, bufferSize: bufferSize);
@@ -54,7 +54,7 @@ public static class CsvReadHelpers
     /// <param name="filePath">Path to the CSV file to read from</param>
     /// <param name="hasHeaders">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-    /// <returns>List of T read from the CSV file</returns>
+    /// <returns><see cref="List{T}"/> of T read from the CSV file</returns>
     public static async Task<List<T>> ReadCsvAsync<T>(string filePath, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         using StreamReader reader = new(filePath);
@@ -73,7 +73,7 @@ public static class CsvReadHelpers
     /// <param name="stream">Stream of a CSV file</param>
     /// <param name="hasHeaders">Optional: Indicates file has headers. Default is true.</param>
     /// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-    /// <returns>List of T read from the CSV stream</returns>
+    /// <returns><see cref="List{T}"/> of T read from the CSV stream</returns>
     public static async Task<List<T>> ReadCsvAsync<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         List<T> records = new();

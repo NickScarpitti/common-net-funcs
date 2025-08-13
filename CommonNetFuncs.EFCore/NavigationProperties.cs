@@ -285,7 +285,7 @@ public static class NavigationProperties
     /// <typeparam name="T">The entity type to get the navigation properties of.</typeparam>
     /// <param name="context">The context that contains the definition for entity T.</param>
     /// <param name="navPropAttributesToIgnore">Optional: The attribute types used to ignore top level class properties. If null, uses System.Text.Json.Serialization.JsonIgnoreAttribute and Newtonsoft.Json.JsonIgnoreAttribute</param>
-    /// <returns>List of string representing the names of all of the navigation properties in entity T.</returns>
+    /// <returns><see cref="List{T}"/> of string representing the names of all of the navigation properties in entity T.</returns>
     public static List<string> GetTopLevelNavigations<T>(DbContext context, List<Type>? navPropAttributesToIgnore = null, bool useCaching = true)
     {
         Type entityClassType = typeof(T);

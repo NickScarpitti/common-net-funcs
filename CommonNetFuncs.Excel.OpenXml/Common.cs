@@ -229,7 +229,7 @@ public static partial class Common
     /// Checks if a Cell is empty
     /// </summary>
     /// <param name="cell">The Cell to check</param>
-    /// <returns>True if the Cell is empty, false otherwise</returns>
+    /// <returns><see langword="true"/> if the Cell is empty, false otherwise</returns>
     public static bool IsCellEmpty(this Cell? cell)
     {
         return (cell == null) || string.IsNullOrWhiteSpace(cell.InnerText);
@@ -895,7 +895,7 @@ public static partial class Common
     /// </summary>
     /// <param name="format1">First CellFormat to compare</param>
     /// <param name="format2">Second CellFormat to compare</param>
-    /// <returns>True if both CellFormats share the same Fill, Font, Border, Alignment, and Protection values, otherwise false</returns>
+    /// <returns><see langword="true"/> if both CellFormats share the same Fill, Font, Border, Alignment, and Protection values, otherwise false</returns>
     public static bool CellFormatsAreEqual(CellFormat format1, CellFormat format2)
     {
         // Compare relevant properties of the CellFormat objects
@@ -914,7 +914,7 @@ public static partial class Common
     /// </summary>
     /// <param name="alignment1">First Alignment to compare</param>
     /// <param name="alignment2">Second Alignment to compare</param>
-    /// <returns>True if both Alignment objects are the same</returns>
+    /// <returns><see langword="true"/> if both Alignment objects are the same</returns>
     public static bool FormatAlignmentsAreEqual(Alignment? alignment1, Alignment? alignment2)
     {
         if ((alignment1 == null) && (alignment2 == null))
@@ -935,7 +935,7 @@ public static partial class Common
     /// </summary>
     /// <param name="protection1">First Protection to compare</param>
     /// <param name="protection2">Second Protection to compare</param>
-    /// <returns>True if both Protection objects are the same</returns>
+    /// <returns><see langword="true"/> if both Protection objects are the same</returns>
     public static bool FormatProtectionsAreEqual(Protection? protection1, Protection? protection2)
     {
         if ((protection1 == null) && (protection2 == null))

@@ -15,7 +15,7 @@ public static class Common
     /// Checks if cell is empty
     /// </summary>
     /// <param name="cell">Cell to check if empty</param>
-    /// <returns>True if cell is empty</returns>
+    /// <returns><see langword="true"/> if cell is empty</returns>
     public static bool IsCellEmpty(this IXLCell cell)
     {
         return string.IsNullOrWhiteSpace(cell.Value.ToString());
@@ -26,7 +26,7 @@ public static class Common
     /// </summary>
     /// <param name="wb">Workbook to write to disk</param>
     /// <param name="path">Path to save the workbook to</param>
-    /// <returns>True if write was successful</returns>
+    /// <returns><see langword="true"/> if write was successful</returns>
     public static bool WriteExcelFile(IXLWorkbook wb, string path)
     {
         try

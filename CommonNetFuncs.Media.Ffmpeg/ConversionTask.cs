@@ -46,7 +46,7 @@ public static class ConversionTask
     /// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
     /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
-    /// <returns>True if conversion successfully completed</returns>
+    /// <returns><see langword="true"/> if conversion successfully completed</returns>
     public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, VideoCodec codec, Format outputFormat = Format.mp4, ConversionPreset conversionPreset = ConversionPreset.Slower,
         string? workingPath = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true,
         string? taskDescription = null, bool strict = true, bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal,
@@ -77,7 +77,7 @@ public static class ConversionTask
     /// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
     /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
-    /// <returns>True if conversion successfully completed</returns>
+    /// <returns><see langword="true"/> if conversion successfully completed</returns>
     public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string? ffmpegCommand, string? workingPath = null, int conversionIndex = 0,
         ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true,
         bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, HardwareAccelerationValues? hardwareAccelerationValues = null,

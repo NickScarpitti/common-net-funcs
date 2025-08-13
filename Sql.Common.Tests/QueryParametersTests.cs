@@ -30,7 +30,7 @@ public sealed class QueryParametersTests
         IEnumerable<string>? result = input.CleanQueryParam();
 
         // Assert
-        result.ShouldBeNull();
+        result.ShouldBeEmpty();
     }
 
     [Fact]

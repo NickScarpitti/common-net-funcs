@@ -153,7 +153,7 @@ public static partial class Base64
     /// </summary>
     /// <param name="imageBase64">Base 64 string representation of an image</param>
     /// <param name="savePath">Path (including file name) to save image to</param>
-    /// <returns>True if the image was saved successfully, otherwise false</returns>
+    /// <returns><see langword="true"/> if the image was saved successfully, otherwise false</returns>
     public static bool ImageSaveToFile(this string imageBase64, string savePath)
     {
         try
@@ -179,7 +179,7 @@ public static partial class Base64
     /// Check if a base 64 string is a valid image
     /// </summary>
     /// <param name="imageBase64">String to confirm if is valid Base64 image</param>
-    /// <returns>True if string is a valid base 64 image, otherwise, false</returns>
+    /// <returns><see langword="true"/> if string is a valid base 64 image, otherwise, <see langword="false"/></returns>
     public static bool IsValidBase64Image(this string? imageBase64)
     {
         if (string.IsNullOrWhiteSpace(imageBase64))

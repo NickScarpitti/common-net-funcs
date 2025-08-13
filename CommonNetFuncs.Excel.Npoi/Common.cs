@@ -380,7 +380,7 @@ public static partial class Common
     /// Checks if cell is empty
     /// </summary>
     /// <param name="cell">Cell to check if it is empty</param>
-    /// <returns>True if cell is empty</returns>
+    /// <returns><see langword="true"/> if cell is empty</returns>
     public static bool IsCellEmpty(this ICell cell)
     {
         return string.IsNullOrWhiteSpace(cell.GetStringValue());
@@ -623,7 +623,7 @@ public static partial class Common
     /// </summary>
     /// <param name="wb">SXSSFWorkbook object to write to a file</param>
     /// <param name="path">Full file path (including file name) to write wb object to</param>
-    /// <returns>True if write was successful</returns>
+    /// <returns><see langword="true"/> if write was successful</returns>
     public static bool WriteExcelFile(this SXSSFWorkbook wb, string path)
     {
         try
@@ -647,7 +647,7 @@ public static partial class Common
     /// </summary>
     /// <param name="wb">HSSFWorkbook object to write to a file</param>
     /// <param name="path">Full file path (including file name) to write wb object to</param>
-    /// <returns>True if write was successful</returns>
+    /// <returns><see langword="true"/> if write was successful</returns>
     public static bool WriteExcelFile(this HSSFWorkbook wb, string path)
     {
         try
@@ -1728,7 +1728,7 @@ public static partial class Common
     /// Gets whether or not the stream passed in represents an XLSX type file or not
     /// </summary>
     /// <param name="fileStream">Stream representation of a file</param>
-    /// <returns>True if stream is an XLSX file</returns>
+    /// <returns><see langword="true"/> if stream is an XLSX file</returns>
     public static bool IsXlsx(this Stream fileStream)
     {
         fileStream.Position = 0;
@@ -1739,7 +1739,7 @@ public static partial class Common
     /// Gets whether or not the stream passed in represents an XLSX type file or not
     /// </summary>
     /// <param name="workbook">NPOI Workbook Object</param>
-    /// <returns>True if stream is an XLSX file</returns>
+    /// <returns><see langword="true"/> if stream is an XLSX file</returns>
     public static bool IsXlsx(this IWorkbook workbook)
     {
         return !string.Equals(workbook.GetType().Name, typeof(HSSFWorkbook).Name, StringComparison.InvariantCultureIgnoreCase);

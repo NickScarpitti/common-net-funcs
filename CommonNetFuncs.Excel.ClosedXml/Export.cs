@@ -22,7 +22,7 @@ public static class Export
     /// <param name="ws">IXLWorksheet object to place data into</param>
     /// <param name="data">Data to be exported</param>
     /// <param name="createTable">Make the exported data into an Excel table</param>
-    /// <returns>True if excel file was created successfully</returns>
+    /// <returns><see langword="true"/> if excel file was created successfully</returns>
     public static bool ExportFromTable<T>(IXLWorkbook wb, IXLWorksheet ws, IEnumerable<T>? data, bool createTable = false, bool wrapText = false, CancellationToken cancellationToken = default)
     {
         try
@@ -118,7 +118,7 @@ public static class Export
     /// <param name="ws">IXLWorksheet object to place data into</param>
     /// <param name="data">Data to be exported</param>
     /// <param name="createTable">Make the exported data into an Excel table</param>
-    /// <returns>True if excel file was created successfully</returns>
+    /// <returns><see langword="true"/> if excel file was created successfully</returns>
     public static bool ExportFromTable(IXLWorkbook wb, IXLWorksheet ws, DataTable? data, bool createTable = false, bool wrapText = false, CancellationToken cancellationToken = default)
     {
         try

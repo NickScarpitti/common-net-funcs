@@ -201,7 +201,7 @@ public static class Email
     /// Checks email string with simple regex to confirm that it is a properly formatted address
     /// </summary>
     /// <param name="email">Email address to validate</param>
-    /// <returns>True if email is valid</returns>
+    /// <returns><see langword="true"/> if email is valid</returns>
     public static bool IsValidEmail(this string? email)
     {
         bool isValid = false;

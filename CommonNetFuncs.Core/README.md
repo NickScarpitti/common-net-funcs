@@ -30,6 +30,9 @@ This lightweight project contains helper methods for several common functions re
       - [StringAggProps](#stringaggprops)
       - [IndexOf](#indexof)
       - [IsIn](#isin)
+      - [GetCombinations](#getcombinations)
+      - [GetRandomCombinations](#getrandomcombinations)
+      - [GetEnumeratedCombinations](#getenumeratedcombinations)
   - [Copy](#copy)
     - [Copy Usage Examples](#copy-usage-examples)
       - [CopyPropertiesTo](#copypropertiesto)
@@ -490,6 +493,37 @@ public enum TestEnum
 
 bool result = "Monday".IsIn<TestEnum>(); // True
 bool result = "Not A Day".IsIn<TestEnum>(); // False
+```
+
+
+#### GetCombinations
+
+Get all unique combinations of items from 2+ collections, or optionally, limit to the first # of combinations with the maxCombinations parameter.
+Can use custom separator between items as well as replace null values with a custom value.
+
+```cs
+List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
+HashSet<string> result = sources.GetCombinations(maxCombinations: 5); // ["A|1", "A|2", "A|3", "B|1", "B|2"] - First 5 combinations
+```
+
+#### GetRandomCombinations
+
+Get all or a limited quantity of all possible combinations from 2+ collections in a randomized order.
+Can use custom separator between items as well as replace null values with a custom value.
+
+```cs
+List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
+HashSet<string> result = sources.GetRandomCombinations(maxCombinations: 5); // ["B|3", "C|1", "C|3", "B|1", "A|3"] - Random 5 combinations
+```
+
+#### GetEnumeratedCombinations
+Get an enumerable of all unique combinations of items from 2+ collections, or optionally, limit to the first # of combinations with the maxCombinations parameter.
+Can use custom separator between items as well as replace null values with a custom value.
+Useful for scenarios where a large quantity of values will be generated and consumed since values aren't all collected into one object before being returned.
+
+```cs
+List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
+IEnumerable<string> result = sources.GetCombinations(maxCombinations: 5); // ["A|1", "A|2", "A|3", "B|1", "B|2"] - First 5 combinations
 ```
 
 </details>

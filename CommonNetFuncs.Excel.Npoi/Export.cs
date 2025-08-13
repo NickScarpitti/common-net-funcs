@@ -149,7 +149,7 @@ public static class Export
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>True if data was successfully added to the workbook</returns>
+    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
     public static bool AddGenericTable<T>(this SXSSFWorkbook wb, IEnumerable<T> data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
         return wb.AddGenericTableInternal<T>(data, typeof(IEnumerable<T>), sheetName, createTable, tableName, skipColumnNames, wrapText);
@@ -164,7 +164,7 @@ public static class Export
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>True if data was successfully added to the workbook</returns>
+    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
     public static bool AddGenericTable(this SXSSFWorkbook wb, DataTable data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
         return wb.AddGenericTableInternal<char>(data, typeof(DataTable), sheetName, createTable, tableName, skipColumnNames, wrapText);
@@ -179,7 +179,7 @@ public static class Export
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>True if data was successfully added to the workbook</returns>
+    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
     public static bool AddGenericTable(this XSSFWorkbook wb, DataTable data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
         using SXSSFWorkbook workbook = new(wb);
@@ -196,7 +196,7 @@ public static class Export
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>True if data was successfully added to the workbook</returns>
+    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
     public static bool AddGenericTable<T>(this XSSFWorkbook wb, IEnumerable<T> data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
         using SXSSFWorkbook workbook = new(wb);
@@ -214,7 +214,7 @@ public static class Export
     /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>True if data was successfully added to the workbook</returns>
+    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
     private static bool AddGenericTableInternal<T>(this SXSSFWorkbook wb, object? data, Type dataType, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
     {
         bool success = false;
@@ -286,7 +286,7 @@ public static class Export
     /// <param name="createTable">Turn the output into an Excel table</param>
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>True if excel file was created successfully</returns>
+    /// <returns><see langword="true"/> if excel file was created successfully</returns>
     public static bool ExcelExport<T>(this IEnumerable<T> data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
     {
         skipColumnNames ??= [];
@@ -409,7 +409,7 @@ public static class Export
     /// <param name="createTable">Turn the output into an Excel table</param>
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>True if excel file was created successfully</returns>
+    /// <returns><see langword="true"/> if excel file was created successfully</returns>
     public static bool ExcelExport(this DataTable data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
     {
         skipColumnNames ??= [];

@@ -385,7 +385,9 @@ public sealed class CollectionsTests
         IEnumerable<TestClass> result = items.SetValue(item => item.Name = item.Name?.ToUpper());
 
         // Assert
-        result.ShouldBeSameAs(items);
+        result.Count().ShouldBe(items.Count);
+        result.ShouldBeSubsetOf(items);
+        result.ShouldBeUnique();
         items[0].Name.ShouldBe("TEST1");
         items[1].Name.ShouldBe("TEST2");
     }
@@ -1511,6 +1513,23 @@ public sealed class CollectionsTests
     }
 
     [Fact]
+    public void GetRandomCombinations_GeneratesAllPossibleCombinations()
+    {
+        // Arrange
+        List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
+
+        // Act
+        HashSet<string> result = sources.GetRandomCombinations();
+
+        // Assert
+        result.Count.ShouldBe(4);
+        result.ShouldContain("A|1");
+        result.ShouldContain("A|2");
+        result.ShouldContain("B|1");
+        result.ShouldContain("B|2");
+    }
+
+    [Fact]
     public void GetEnumeratedCombinations_GeneratesAllPossibleCombinations()
     {
         // Arrange
@@ -1535,6 +1554,23 @@ public sealed class CollectionsTests
 
         // Act
         HashSet<string> result = sources.GetCombinations(separator: "-");
+
+        // Assert
+        result.Count.ShouldBe(4);
+        result.ShouldContain("A-1");
+        result.ShouldContain("A-2");
+        result.ShouldContain("B-1");
+        result.ShouldContain("B-2");
+    }
+
+    [Fact]
+    public void GetRandomCombinations_WithCustomSeparator_UsesCorrectSeparator()
+    {
+        // Arrange
+        List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
+
+        // Act
+        HashSet<string> result = sources.GetRandomCombinations(separator: "-");
 
         // Assert
         result.Count.ShouldBe(4);
@@ -1579,6 +1615,23 @@ public sealed class CollectionsTests
     }
 
     [Fact]
+    public void GetRandomCombinations_WithNullReplacement_HandlesNullValues()
+    {
+        // Arrange
+        List<List<string?>> sources = new() { new List<string?> { "A", null }, new List<string?> { "1", "2" } };
+
+        // Act
+        HashSet<string> result = sources.GetRandomCombinations(nullReplacement: "NULL");
+
+        // Assert
+        result.Count.ShouldBe(4);
+        result.ShouldContain("A|1");
+        result.ShouldContain("A|2");
+        result.ShouldContain("NULL|1");
+        result.ShouldContain("NULL|2");
+    }
+
+    [Fact]
     public void GetEnumeratedCombinations_WithNullReplacement_HandlesNullValues()
     {
         // Arrange
@@ -1601,8 +1654,26 @@ public sealed class CollectionsTests
         // Arrange
         List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
 
-        // Act & Assert
-        Should.Throw<ArgumentException>(() => sources.GetCombinations(maxCombinations: 5));
+        // Act
+        IEnumerable<string> result = sources.GetCombinations(maxCombinations: 5);
+
+        // Assert
+        result.Count().ShouldBe(5);
+        result.ShouldBeSubsetOf(["A|1", "A|2", "A|3", "B|1", "B|2", "B|3", "C|1", "C|2", "C|3"]);
+    }
+
+    [Fact]
+    public void GetRandomCombinations_WithMaxCombinations_LimitsResults()
+    {
+        // Arrange
+        List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
+
+        // Act
+        IEnumerable<string> result = sources.GetRandomCombinations(maxCombinations: 5);
+
+        // Assert
+        result.Count().ShouldBe(5);
+        result.ShouldBeSubsetOf(["A|1", "A|2", "A|3", "B|1", "B|2", "B|3", "C|1", "C|2", "C|3"]);
     }
 
     [Fact]
@@ -1611,8 +1682,12 @@ public sealed class CollectionsTests
         // Arrange
         List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
 
-        // Act & Assert
-        Should.Throw<ArgumentException>(() => sources.GetEnumeratedCombinations(maxCombinations: 5).ToList());
+        // Act
+        IEnumerable<string> result = sources.GetEnumeratedCombinations(maxCombinations: 5);
+
+        // Assert
+        result.Count().ShouldBe(5);
+        result.ShouldBeSubsetOf(["A|1", "A|2", "A|3", "B|1", "B|2", "B|3", "C|1", "C|2", "C|3"]);
     }
 
     [Fact]
@@ -1623,6 +1698,19 @@ public sealed class CollectionsTests
 
         // Act
         HashSet<string> result = sources.GetCombinations();
+
+        // Assert
+        result.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetRandomCombinations_WithEmptySource_ReturnsEmptySet()
+    {
+        // Arrange
+        List<List<string>> sources = new();
+
+        // Act
+        HashSet<string> result = sources.GetRandomCombinations();
 
         // Assert
         result.Count.ShouldBe(0);
@@ -1649,6 +1737,21 @@ public sealed class CollectionsTests
 
         // Act
         HashSet<string> result = sources.GetCombinations(nullReplacement: "EMPTY");
+
+        // Assert
+        result.Count.ShouldBe(2);
+        result.ShouldContain("A|EMPTY");
+        result.ShouldContain("B|EMPTY");
+    }
+
+    [Fact]
+    public void GetRandomCombinations_WithEmptyInnerList_HandlesCorrectly()
+    {
+        // Arrange
+        List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string>() };
+
+        // Act
+        HashSet<string> result = sources.GetRandomCombinations(nullReplacement: "EMPTY");
 
         // Assert
         result.Count.ShouldBe(2);

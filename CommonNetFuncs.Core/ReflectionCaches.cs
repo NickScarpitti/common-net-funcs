@@ -9,9 +9,9 @@ public static class ReflectionCaches
     public static ICacheManagerApi<Type, PropertyInfo[]> CacheManager => ReflectionCache;
 
     /// <summary>
-    /// Clears LimitedReflectionCache cache and sets the size to the specified value.
+    /// Gets the properties of <paramref name="type"/> from the reflection cache, or adds them if not already cached.
     /// </summary>
-    /// <param name="type">Type to get properties for. Will store </param>
+    /// <param name="type">Type to get properties for. Will store found properties in cache if <paramref name="type"/> is not already cached</param>
     public static PropertyInfo[] GetOrAddPropertiesFromReflectionCache(Type type)
     {
         bool isLimitedCache = CacheManager.IsUsingLimitedCache();

@@ -599,7 +599,7 @@ public static class Streams
     /// Checks a byte array to determine if it has been compressed using the deflate compression algorithm.
     /// </summary>
     /// <param name="data">Byte array to check for defalte compression.</param>
-    /// <returns>True if byte array contains data that was compressed using the deflate compression algorithm.</returns>
+    /// <returns><see langword="true"/> if byte array contains data that was compressed using the deflate compression algorithm.</returns>
     public static async Task<bool> IsDeflateCompressed(byte[] data)
     {
         try

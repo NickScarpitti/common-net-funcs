@@ -38,7 +38,7 @@ public static class Inspect
     /// </summary>
     /// <param name="type">The type to check for the specified attribute</param>
     /// <param name="attributeName">The name of the attribute you are checking the provided type for</param>
-    /// <returns>True if the object has the specified attribute</returns>
+    /// <returns><see langword="true"/> if the object has the specified attribute, otherwise false</returns>
     public static bool ObjectHasAttribute(this Type type, string attributeName)
     {
         bool hasAttribute = false;
@@ -64,7 +64,7 @@ public static class Inspect
     /// </summary>
     /// <param name="obj1">First object to compare for value equality</param>
     /// <param name="obj2">Second object to compare for value equality</param>
-    /// <returns>True if the two objects have the same value for all elements</returns>
+    /// <returns><see langword="true"/> if the two objects have the same value for all elements, otherwise false</returns>
     [Obsolete("Please use IsEqual method instead")]
     public static bool IsEqualR(this object? obj1, object? obj2)
     {
@@ -77,7 +77,7 @@ public static class Inspect
     /// <param name="obj1">First object to compare for value equality</param>
     /// <param name="obj2">Second object to compare for value equality</param>
     /// <param name="exemptProps">Names of properties to not include in the matching check</param>
-    /// <returns>True if both objects contain identical values for all properties except for the ones identified by exemptProps</returns>
+    /// <returns><see langword="true"/> if both objects contain identical values for all properties except for the ones identified by exemptProps, otherwise false</returns>
     [Obsolete("Please use IsEqual method instead")]
     public static bool IsEqualR(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
     {
@@ -131,39 +131,6 @@ public static class Inspect
         return true;
     }
 
-    // public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
-    // {
-    // // They're both null.
-    // if (obj1 == null && obj2 == null)
-    // {
-    // return true;
-    // }
-
-    // // One is null, so they can't be the same.
-    // if (obj1 == null || obj2 == null)
-    // {
-    // return false;
-    // }
-
-    // Type type = obj1.GetType();
-
-    // // How can they be the same if they're different types?
-    // if (type != obj2.GetType())
-    // {
-    // return false;
-    // }
-
-    // exemptProps ??= [];
-    // Tuple<Type, bool, bool> key = Tuple.Create(type, ignoreStringCase, recursive);
-    // if (!CompareDelegates.TryGetValue(key, out Func<object, object, IEnumerable<string>, bool>? compareDelegate))
-    // {
-    // compareDelegate = CreateCompareDelegate(type, ignoreStringCase, recursive);
-    // CompareDelegates[key] = compareDelegate;
-    // }
-
-    // return compareDelegate(obj1, obj2, exemptProps);
-    // }
-
     // This class is used to track object pairs being compared
     private sealed class ComparisonContext
     {
@@ -191,7 +158,7 @@ public static class Inspect
     /// <param name="exemptProps">Optional: Names of properties to not include in the matching check</param>
     /// <param name="ignoreStringCase">Optional: If true, will ignore case when comparing string properties between obj1 and obj2, otherwise will use case sensitive comparison.</param>
     /// <param name="recursive">Optional: If true, will recursively compare </param>
-    /// <returns></returns>
+    /// <returns><see langword="true"/> if the two objects are equal by values, otherwise false</returns>
     public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
     {
         // Initialize context if this is the top-level call
@@ -253,6 +220,13 @@ public static class Inspect
         }
     }
 
+    /// <summary>
+    /// Creates a delegate for comparing two objects of the specified type for value equality.
+    /// </summary>
+    /// <param name="type">Type of the object to be compared</param>
+    /// <param name="ignoreStringCase">If true, will ignore case when comparing string properties for value equlity</param>
+    /// <param name="recursive">If true, will recursively compare properties of complex types</param>
+    /// <returns>A delegate for comparing two objects of the specified type for value equality</returns>
     private static Func<object, object, IEnumerable<string>, bool> CreateCompareDelegate(Type type, bool ignoreStringCase, bool recursive)
     {
         ParameterExpression obj1Param = Expression.Parameter(typeof(object), "obj1");
@@ -322,7 +296,7 @@ public static class Inspect
     /// Gets a hash string representing the object's value, using the specified algorithm (default MD5). Order of collection elements does not affect the hash.
     /// </summary>
     /// <param name="obj">Object to get hash value from</param>
-    /// <param name="hashAlgorithm">Hash algorithm to use</param>
+    /// <param name="hashAlgorithm">Optional: Hash algorithm to use. Default is MD5.</param>
     /// <returns>Hash string representing the object's value</returns>
     public static string GetHashForObject<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
     {
@@ -360,7 +334,7 @@ public static class Inspect
     /// Gets a hash string representing the object's value asynchronously, using the specified algorithm (default MD5). Order of collection elements does not affect the hash.
     /// </summary>
     /// <param name="obj">Object to get hash value from</param>
-    /// <param name="hashAlgorithm">Hash algorithm to use</param>
+    /// <param name="hashAlgorithm">Optional: Hash algorithm to use. Default is MD5.</param>
     /// <returns>Hash string representing the object's value</returns>
     public static async Task<string> GetHashForObjectAsync<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
     {
@@ -387,7 +361,7 @@ public static class Inspect
             object? value = property.GetValue(obj);
             if (value != null)
             {
-                WriteValue(writer, value);
+                await WriteValueAsync(writer, value).ConfigureAwait(false);
             }
         }
         await ms.FlushAsync().ConfigureAwait(false);
@@ -395,6 +369,11 @@ public static class Inspect
         return Convert.ToHexStringLower(await algorithm.ComputeHashAsync(ms).ConfigureAwait(false));
     }
 
+    /// <summary>
+    /// Writes the value to the binary writer.
+    /// </summary>
+    /// <param name="writer">Binary writer to write the value to</param>
+    /// <param name="value">Value to write to the binary writer</param>
     private static void WriteValue(BinaryWriter writer, object value)
     {
         if (value == null)
@@ -440,9 +419,7 @@ public static class Inspect
         }
 
         // Handle complex objects recursively
-        IOrderedEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromReflectionCache(type)
-            .Where(x => x.CanRead)
-            .OrderBy(x => x.Name);
+        IOrderedEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromReflectionCache(type).Where(x => x.CanRead).OrderBy(x => x.Name);
 
         writer.Write("{");
         foreach (PropertyInfo property in properties)
@@ -450,6 +427,69 @@ public static class Inspect
             writer.Write(property.Name);
             writer.Write(":");
             WriteValue(writer, property.GetValue(value)!);
+            writer.Write(",");
+        }
+        writer.Write("}");
+    }
+
+    /// <summary>
+    /// Writes the value to the binary writer.
+    /// </summary>
+    /// <param name="writer">Binary writer to write the value to</param>
+    /// <param name="value">Value to write to the binary writer</param>
+    private static async Task WriteValueAsync(BinaryWriter writer, object value)
+    {
+        if (value == null)
+        {
+            writer.Write("null");
+            return;
+        }
+
+        Type type = value.GetType();
+
+        // Handle collections
+        if ((value is IEnumerable enumerable) && (value is not string))
+        {
+            // Convert collection to list of sorted hashes
+            List<string> itemHashes = [];
+            foreach (object item in enumerable)
+            {
+                await using MemoryStream itemMs = new();
+                await using BinaryWriter itemWriter = new(itemMs);
+                await WriteValueAsync(itemWriter, item).ConfigureAwait(false);
+                itemHashes.Add(BitConverter.ToString(await MD5.HashDataAsync(itemMs).ConfigureAwait(false)));
+            }
+
+            // Sort the hashes to ensure order independence
+            itemHashes.Sort();
+
+            // Write the sorted collection
+            writer.Write("[");
+            foreach (string itemHash in itemHashes)
+            {
+                writer.Write(itemHash);
+                writer.Write(",");
+            }
+            writer.Write("]");
+            return;
+        }
+
+        // Handle primitive types and strings
+        if (type.IsPrimitive || (value is string) || (value is decimal))
+        {
+            writer.Write(value.ToString()!);
+            return;
+        }
+
+        // Handle complex objects recursively
+        IOrderedEnumerable<PropertyInfo> properties = GetOrAddPropertiesFromReflectionCache(type).Where(x => x.CanRead).OrderBy(x => x.Name);
+
+        writer.Write("{");
+        foreach (PropertyInfo property in properties)
+        {
+            writer.Write(property.Name);
+            writer.Write(":");
+            await WriteValueAsync(writer, property.GetValue(value)!).ConfigureAwait(false);
             writer.Write(",");
         }
         writer.Write("}");

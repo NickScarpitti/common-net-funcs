@@ -20,29 +20,30 @@ public static class QueryParameters
     /// Cleans potential parsing issues out of a list of query parameters
     /// </summary>
     /// <param name="values">Collection of strings to clean for use in a SQL query</param>
-    /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
+    /// <returns><see cref="List{T}"/> of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
     [return: NotNullIfNotNull(nameof(values))]
     public static IEnumerable<string>? CleanQueryParam(this IEnumerable<string>? values)
     {
         if (values == null)
         {
-            return null;
+            yield break;
         }
 
-        ConcurrentBag<string?> cleanValues = [];
-        if (values.Any())
+        foreach (string value in values ?? Enumerable.Empty<string>())
         {
-            Parallel.ForEach(values, value => cleanValues.Add(value.CleanQueryParam()));
+            string? cleanedValue = value.CleanQueryParam();
+            if (cleanedValue != null)
+            {
+                yield return cleanedValue;
+            }
         }
-
-        return (cleanValues ?? []).Where(x => x != null)!;
     }
 
     /// <summary>
     /// Cleans potential parsing issues out of a list of query parameters
     /// </summary>
     /// <param name="values">List of strings to clean for use in a SQL query</param>
-    /// <returns>List of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
+    /// <returns><see cref="List{T}"/> of string equivalents of the values passed in replacing standalone text "null" with null value or removing any new line characters and extra spaces</returns>
     [return: NotNullIfNotNull(nameof(values))]
     public static List<string>? CleanQueryParam(this IList<string>? values)
     {
@@ -64,7 +65,7 @@ public static class QueryParameters
     /// Check if a parameter being used for a query contains any potentially malicious values
     /// </summary>
     /// <param name="parameter">Parameter to check</param>
-    /// <returns>True if there are no suspect characters or strings in the parameter</returns>
+    /// <returns><see langword="true"/> if there are no suspect characters or strings in the parameter</returns>
     public static bool IsClean(this string? parameter, bool excludeSingleQuote = false)
     {
         return parameter.IsNullOrWhiteSpace() || (!parameter.Contains(';') && (excludeSingleQuote || !parameter.Contains('\'')) && !parameter.Contains('[') && !parameter.Contains(']') &&

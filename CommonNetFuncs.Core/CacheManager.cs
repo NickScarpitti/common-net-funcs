@@ -50,7 +50,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     private FixedLRUDictionary<TKey, TValue> LimitedCache { get; set; } = new(limitedCacheSize);
 
     /// <summary>
-    /// Clear both Cache and LimitedCache dictionaries
+    /// Clear both <see cref="Cache"/> and <see cref="LimitedCache"/>.
     /// </summary>
     public void ClearAllCaches()
     {
@@ -59,7 +59,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     }
 
     /// <summary>
-    /// Clear Cache dictionary
+    /// Clears <see cref="Cache"/>.
     /// </summary>
     public void ClearCache()
     {
@@ -75,7 +75,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     }
 
     /// <summary>
-    /// Clear LimitedCache dictionary
+    /// Clears <see cref="LimitedCache"/>.
     /// </summary>
     public void ClearLimitedCache()
     {
@@ -91,9 +91,9 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     }
 
     /// <summary>
-    /// Clears LimitedCache cache and sets the size to the specified value.
+    /// Clears <see cref="LimitedCache"/> and sets the size to the specified value.
     /// </summary>
-    /// <param name="size">Maximum number of entries to allow in LimitedCache before removing least recently used entry</param>
+    /// <param name="size">Maximum number of entries to allow in <see cref="LimitedCache"/> before removing least recently used entry.</param>
     public void SetLimitedCacheSize(int size)
     {
         if (size < 1)
@@ -127,9 +127,9 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     }
 
     /// <summary>
-    /// Clears caches and initializes LimitedCache to use the size specified by LimitedCacheSize or 1 if UseLimitedCache is false.
+    /// Clears caches and initializes <see cref="LimitedCache"/> to use the size specified by <see cref="limitedCacheSize"/> or 1 if <see cref="UseLimitedCache"/> is false.
     /// </summary>
-    /// <param name="useLimitedCache">When true, uses cache with limited number of total records</param>
+    /// <param name="useLimitedCache">When true, uses cache with limited number of total records.</param>
     public void SetUseLimitedCache(bool useLimitedCache)
     {
         ClearAllCaches();
@@ -146,9 +146,9 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     }
 
     /// <summary>
-    /// Gets the limitedCacheSize value
+    /// Gets the <see cref="limitedCacheSize"/> value.
     /// </summary>
-    /// <returns>The value of limitedCacheSize</returns>
+    /// <returns>The value of <see cref="limitedCacheSize"/>.</returns>
     public int GetLimitedCacheSize()
     {
         readWriteLock.EnterReadLock();
@@ -163,9 +163,9 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     }
 
     /// <summary>
-    /// Returns whether the LimitedCache is being used or not
+    /// Returns whether the <see cref="LimitedCache"/> is being used or not.
     /// </summary>
-    /// <returns>True if LimitedCache is being used</returns>
+    /// <returns><see langword="true"/> if <see cref="LimitedCache"/> is being used.</returns>
     public bool IsUsingLimitedCache()
     {
         readWriteLock.EnterReadLock();
@@ -180,9 +180,9 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     }
 
     /// <summary>
-    /// Get a readonly copy of Cache
+    /// Get a readonly copy of <see cref="Cache"/>.
     /// </summary>
-    /// <returns>A readonly copy of Cache.</returns>
+    /// <returns>A readonly copy of <see cref="Cache"/>.</returns>
     public IReadOnlyDictionary<TKey, TValue> GetCache()
     {
         readWriteLock.EnterReadLock();
@@ -197,9 +197,9 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     }
 
     /// <summary>
-    /// Get a readonly copy of LimitedCache
+    /// Get a readonly copy of <see cref="LimitedCache"/>.
     /// </summary>
-    /// <returns>A readonly copy of LimitedCache.</returns>
+    /// <returns>A readonly copy of <see cref="LimitedCache"/>.</returns>
     public IReadOnlyDictionary<TKey, TValue?> GetLimitedCache()
     {
         readWriteLock.EnterReadLock();
@@ -214,32 +214,44 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
     }
 
     /// <summary>
-    /// Gets or adds a record to LimitedCache and returns the value
+    /// Gets or adds a record to <see cref="LimitedCache"/> and returns the value.
     /// </summary>
-    /// <param name="key">Key of the record to get or add to LimitedCache</param>
-    /// <param name="func">Function to generate the value for the new record to get or add to LimitedCache</param>
-    /// <returns>The value of the record that was retrieved or added to LimitedCache</returns>
+    /// <param name="key">Key of the record to get or add to <see cref="LimitedCache"/>.</param>
+    /// <param name="func">Function to generate the value for the new record to get or add to <see cref="LimitedCache"/>.</param>
+    /// <returns>The value of the record that was retrieved or added to <see cref="LimitedCache"/>.</returns>
     public TValue GetOrAddLimitedCache(TKey key, Func<TKey, TValue> func)
     {
         return LimitedCache.GetOrAdd(key, func);
     }
 
     /// <summary>
-    /// Gets or adds a record to Cache and returns the value
+    /// Gets or adds a record to <see cref="Cache"/> and returns the value.
     /// </summary>
-    /// <param name="key">Key of the record to get or add to Cache</param>
-    /// <param name="func">Function to generate the value for the new record to get or add to Cache</param>
-    /// <returns>The value of the record that was retrieved or added to Cache</returns>
+    /// <param name="key">Key of the record to get or add to <see cref="Cache"/>.</param>
+    /// <param name="func">Function to generate the value for the new record to get or add to <see cref="Cache"/>.</param>
+    /// <returns>The value of the record that was retrieved or added to <see cref="Cache"/>.</returns>
     public TValue GetOrAddCache(TKey key, Func<TKey, TValue> func)
     {
         return Cache.GetOrAdd(key, func);
     }
 
+    /// <summary>
+    /// Tries to add a record to <see cref="LimitedCache"/>.
+    /// </summary>
+    /// <param name="key">Key of record to add to <see cref="LimitedCache"/>.</param>
+    /// <param name="value">Value of record to add to <see cref="LimitedCache"/>.</param>
+    /// <returns><see langword="true"/> if the record was added successfully, otherwise <see langword="false"/>.</returns>
     public bool TryAddLimitedCache(TKey key, TValue value)
     {
         return LimitedCache.TryAdd(key, value);
     }
 
+    /// <summary>
+    /// Tries to add a record to <see cref="Cache"/>
+    /// </summary>
+    /// <param name="key">Key of record to add to <see cref="Cache"/>.</param>
+    /// <param name="value">Value of record to add to <see cref="Cache"/>.</param>
+    /// <returns><see langword="true"/> if the record was added successfully, otherwise <see langword="false"/>.</returns>
     public bool TryAddCache(TKey key, TValue value)
     {
         return Cache.TryAdd(key, value);
@@ -247,7 +259,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 }
 
 /// <summary>
-/// Class to manage thread-safe dictionary caches. Offers both a fixed size LRU (Least Recently Used) dictionary called "LimitedCache" and a unlimited sized cache called "Cache".
+/// Class to manage thread-safe dictionary caches. Offers both a fixed size LRU (Least Recently Used) dictionary called "<see cref="LimitedCache"/>" and a unlimited sized cache called "<see cref="Cache"/>".
 /// </summary>
 /// <param name="limitedCacheSize">Optional: How large to make the limited cache. Default value is 100.</param>
 /// <param name="useLimitedCache">Optional: Whether to use limited sized cache or not when first initialized. Default is true.</param>
@@ -264,7 +276,7 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     private FixedFIFODictionary<TKey, TValue> LimitedCache { get; set; } = new(limitedCacheSize);
 
     /// <summary>
-    /// Clear both Cache and LimitedCache dictionaries
+    /// Clears both <see cref="Cache"/> and <see cref="LimitedCache"/>.
     /// </summary>
     public void ClearAllCaches()
     {
@@ -273,7 +285,7 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     }
 
     /// <summary>
-    /// Clear Cache dictionary
+    /// Clears <see cref="Cache"/>.
     /// </summary>
     public void ClearCache()
     {
@@ -289,7 +301,7 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     }
 
     /// <summary>
-    /// Clear LimitedCache dictionary
+    /// Clears <see cref="LimitedCache"/>.
     /// </summary>
     public void ClearLimitedCache()
     {
@@ -305,9 +317,9 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     }
 
     /// <summary>
-    /// Clears LimitedCache cache and sets the size to the specified value.
+    /// Clears <see cref="LimitedCache"/> and sets the size to the specified value.
     /// </summary>
-    /// <param name="size">Maximum number of entries to allow in LimitedCache before removing least recently used entry</param>
+    /// <param name="size">Maximum number of entries to allow in <see cref="LimitedCache"/> before removing least recently used entry.</param>
     public void SetLimitedCacheSize(int size)
     {
         if (size < 1)
@@ -341,9 +353,9 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     }
 
     /// <summary>
-    /// Clears caches and initializes LimitedCache to use the size specified by LimitedCacheSize or 1 if UseLimitedCache is false.
+    /// Clears <see cref="LimitedCache"/> and <see cref="Cache"/> and initializes <see cref="LimitedCache"/> to use the size specified by <see cref="limitedCacheSize"/> or 1 if <see cref="UseLimitedCache"/> is false.
     /// </summary>
-    /// <param name="useLimitedCache">When true, uses cache with limited number of total records</param>
+    /// <param name="useLimitedCache">When <see langword="true"/>, uses cache with limited number of total records.</param>
     public void SetUseLimitedCache(bool useLimitedCache)
     {
         ClearAllCaches();
@@ -360,9 +372,9 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     }
 
     /// <summary>
-    /// Gets the limitedCacheSize value
+    /// Gets the <see cref="limitedCacheSize"/> value.
     /// </summary>
-    /// <returns>The value of limitedCacheSize</returns>
+    /// <returns>The value of <see cref="limitedCacheSize"/>.</returns>
     public int GetLimitedCacheSize()
     {
         readWriteLock.EnterReadLock();
@@ -377,9 +389,9 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     }
 
     /// <summary>
-    /// Returns whether the LimitedCache is being used or not
+    /// Returns whether the <see cref="LimitedCache"/> is being used or not.
     /// </summary>
-    /// <returns>True if LimitedCache is being used</returns>
+    /// <returns><see langword="true"/> if <see cref="LimitedCache"/> is being used, otherwise <see langword="false"/></returns>
     public bool IsUsingLimitedCache()
     {
         readWriteLock.EnterReadLock();
@@ -394,9 +406,9 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     }
 
     /// <summary>
-    /// Get a readonly copy of Cache
+    /// Get a readonly copy of <see cref="Cache"/>.
     /// </summary>
-    /// <returns>A readonly copy of Cache.</returns>
+    /// <returns>A readonly copy of <see cref="Cache"/>.</returns>
     public IReadOnlyDictionary<TKey, TValue> GetCache()
     {
         readWriteLock.EnterReadLock();
@@ -411,9 +423,9 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     }
 
     /// <summary>
-    /// Get a readonly copy of LimitedCache
+    /// Get a readonly copy of <see cref="LimitedCache"/>.
     /// </summary>
-    /// <returns>A readonly copy of LimitedCache.</returns>
+    /// <returns>A readonly copy of <see cref="LimitedCache"/>.</returns>
     public IReadOnlyDictionary<TKey, TValue?> GetLimitedCache()
     {
         readWriteLock.EnterReadLock();
@@ -428,32 +440,44 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
     }
 
     /// <summary>
-    /// Gets or adds a record to LimitedCache and returns the value
+    /// Gets or adds a record to <see cref="LimitedCache"/> and returns the value.
     /// </summary>
-    /// <param name="key">Key of the record to get or add to LimitedCache</param>
-    /// <param name="func">Function to generate the value for the new record to get or add to LimitedCache</param>
-    /// <returns>The value of the record that was retrieved or added to LimitedCache</returns>
+    /// <param name="key">Key of the record to get or add to <see cref="LimitedCache"/>.</param>
+    /// <param name="func">Function to generate the value for the new record to get or add to <see cref="LimitedCache"/>.</param>
+    /// <returns>The value of the record that was retrieved or added to <see cref="LimitedCache"/>.</returns>
     public TValue GetOrAddLimitedCache(TKey key, Func<TKey, TValue> func)
     {
         return LimitedCache.GetOrAdd(key, func);
     }
 
     /// <summary>
-    /// Gets or adds a record to Cache and returns the value
+    /// Gets or adds a record to <see cref="Cache"/> and returns the value.
     /// </summary>
-    /// <param name="key">Key of the record to get or add to Cache</param>
-    /// <param name="func">Function to generate the value for the new record to get or add to Cache</param>
-    /// <returns>The value of the record that was retrieved or added to Cache</returns>
+    /// <param name="key">Key of the record to get or add to <see cref="Cache"/>.</param>
+    /// <param name="func">Function to generate the value for the new record to get or add to <see cref="Cache"/>.</param>
+    /// <returns>The value of the record that was retrieved or added to <see cref="Cache"/>.</returns>
     public TValue GetOrAddCache(TKey key, Func<TKey, TValue> func)
     {
         return Cache.GetOrAdd(key, func);
     }
 
+    /// <summary>
+    /// Tries to add a record to <see cref="LimitedCache"/>.
+    /// </summary>
+    /// <param name="key">Key of the record to add to <see cref="LimitedCache"/>.</param>
+    /// <param name="value">Value of the record to add to <see cref="LimitedCache"/>.</param>
+    /// <returns><see langword="true"/> if the record was added successfully, otherwise <see langword="false"/>.</returns>
     public bool TryAddLimitedCache(TKey key, TValue value)
     {
         return LimitedCache.TryAdd(key, value);
     }
 
+    /// <summary>
+    /// Tries to add a record to <see cref="Cache"/>.
+    /// </summary>
+    /// <param name="key">Key of the record to add to <see cref="Cache"/>.</param>
+    /// <param name="value">Value of the record to add to <see cref="Cache"/>.</param>
+    /// <returns><see langword="true"/> if the record was added successfully, otherwise <see langword="false"/>.</returns>
     public bool TryAddCache(TKey key, TValue value)
     {
         return Cache.TryAdd(key, value);

@@ -1768,7 +1768,7 @@ public static partial class Common
     /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
     /// <param name="startCellReference">Top left corner containing data to read. Will use A1 if not specified.</param>
     /// <param name="endCellReference">Bottom right cell containing data to read. Will read to first full empty row if not specified.</param>
-    /// <returns>DataTable representation of the data read from the excel file</returns>
+    /// <returns><see cref="DataTable"/> representation of the data read from the excel file</returns>
     public static DataTable ReadExcelFileToDataTable(this Stream fileStream, bool hasHeaders = true, string? sheetName = null, string? startCellReference = null, string? endCellReference = null)
     {
         DataTable dataTable = new();
@@ -1971,7 +1971,7 @@ public static partial class Common
     /// </summary>
     /// <param name="fileStream">Stream of Excel file being read</param>
     /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
-    /// <returns>DataTable object containing the data read from Excel stream</returns>
+    /// <returns><see cref="DataTable"/> object containing the data read from Excel stream</returns>
     public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null, CancellationToken cancellationToken = default)
     {
         DataTable dataTable = new();

@@ -20,7 +20,7 @@ public static class DataTableHelpers
     /// Parse the DataTables HttpRequest object into the DataTableRequest class
     /// </summary>
     /// <param name="request">HTTP request sent by DataTables</param>
-    /// <returns>DataTableRequest object containing the parsed request values</returns>
+    /// <returns><see cref="DataTable"/>Request object containing the parsed request values</returns>
     public static DataTableRequest GetDataTableRequest(this HttpRequest request)
     {
         DataTableRequest dataTableRequest = new();

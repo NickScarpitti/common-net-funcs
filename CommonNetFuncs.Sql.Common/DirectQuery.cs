@@ -23,7 +23,7 @@ public static class DirectQuery
     /// <param name="cmd">Command to use with parameters</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>DataTable containing the results of the database command</returns>
+    /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
     public static Task<DataTable> GetDataTable(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
     {
         return GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
@@ -36,7 +36,7 @@ public static class DirectQuery
     /// <param name="cmd">Command to use with parameters</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>DataTable containing the results of the database command</returns>
+    /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
     internal static async Task<DataTable> GetDataTableInternal(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
     {
         using DataTable dt = new();
@@ -75,7 +75,7 @@ public static class DirectQuery
     /// <param name="cmd">Command to use with parameters</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>DataTable containing the results of the database command</returns>
+    /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
     public static DataTable GetDataTableSynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
         return GetDataTableInternalSynchronous(conn, cmd, commandTimeoutSeconds, maxRetry);
@@ -88,7 +88,7 @@ public static class DirectQuery
     /// <param name="cmd">Command to use with parameters</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>DataTable containing the results of the database command</returns>
+    /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
     internal static DataTable GetDataTableInternalSynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
         using DataTable dt = new();

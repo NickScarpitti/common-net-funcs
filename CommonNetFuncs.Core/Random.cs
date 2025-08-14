@@ -84,10 +84,15 @@ public static class Random
             throw new ArgumentOutOfRangeException(nameof(numberToGenerate), "Number to generate must be greater than 0.");
         }
 
-        for (int i = 0; i < numberToGenerate; i++)
+        return Enumerate();
+
+        IEnumerable<int> Enumerate()
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            yield return GetRandomInt(minValue, maxValue);
+            for (int i = 0; i < numberToGenerate; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return GetRandomInt(minValue, maxValue);
+            }
         }
     }
 
@@ -308,33 +313,38 @@ public static class Random
             throw new ArgumentException($"{nameof(selectQuantity)} must be greater than 0", nameof(selectQuantity));
         }
 
-        if (!items.Any())
-        {
-            yield break;
-        }
+        return Enumerate();
 
-        HashSet<T> allUniqueItems = new(items);
-        if (selectQuantity >= allUniqueItems.Count)
+        IEnumerable<T> Enumerate()
         {
-            foreach (T item in allUniqueItems.Shuffle())
+            if (!items.Any())
             {
-                yield return item;
+                yield break;
             }
-            yield break;
-        }
 
-        T[] uniqueList = allUniqueItems.ToArray();
-        int availableCount = uniqueList.Length;
+            HashSet<T> allUniqueItems = new(items);
+            if (selectQuantity >= allUniqueItems.Count)
+            {
+                foreach (T item in allUniqueItems.Shuffle())
+                {
+                    yield return item;
+                }
+                yield break;
+            }
 
-        // Use reservoir sampling approach for efficiency
-        for (int selectedCounter = 0; selectedCounter < selectQuantity; selectedCounter++)
-        {
-            int randomIndex = GetRandomInt(availableCount);
-            yield return uniqueList[randomIndex];
+            T[] uniqueList = allUniqueItems.ToArray();
+            int availableCount = uniqueList.Length;
 
-            // Move used item to end of array and then exclude it from the available indexes by reducing availableCount by 1
-            (uniqueList[randomIndex], uniqueList[availableCount - 1]) = (uniqueList[availableCount - 1], uniqueList[randomIndex]);
-            availableCount--;
+            // Use reservoir sampling approach for efficiency
+            for (int selectedCounter = 0; selectedCounter < selectQuantity; selectedCounter++)
+            {
+                int randomIndex = GetRandomInt(availableCount);
+                yield return uniqueList[randomIndex];
+
+                // Move used item to end of array and then exclude it from the available indexes by reducing availableCount by 1
+                (uniqueList[randomIndex], uniqueList[availableCount - 1]) = (uniqueList[availableCount - 1], uniqueList[randomIndex]);
+                availableCount--;
+            }
         }
     }
 

@@ -382,7 +382,24 @@ public sealed class CollectionsTests
         List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
         // Act
-        IEnumerable<TestClass> result = items.SetValue(item => item.Name = item.Name?.ToUpper());
+        items.SetValue(item => item.Name = item.Name?.ToUpper());
+
+        // Assert
+        items.Count.ShouldBe(items.Count);
+        items.ShouldBeSubsetOf(items);
+        items.ShouldBeUnique();
+        items[0].Name.ShouldBe("TEST1");
+        items[1].Name.ShouldBe("TEST2");
+    }
+
+    [Fact]
+    public void SetValueEnumerate_AppliesActionToAllItems()
+    {
+        // Arrange
+        List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
+
+        // Act
+        IEnumerable<TestClass> result = items.SetValueEnumerate(item => item.Name = item.Name?.ToUpper());
 
         // Assert
         result.Count().ShouldBe(items.Count);
@@ -399,7 +416,22 @@ public sealed class CollectionsTests
         List<string> items = new() { "test1", "test2" };
 
         // Act
-        List<string?> result = items.SetValue(s => s?.ToUpper());
+        items.SetValue(s => s?.ToUpper());
+
+        // Assert
+        items.Count.ShouldBe(2);
+        items[0].ShouldBe("TEST1");
+        items[1].ShouldBe("TEST2");
+    }
+
+    [Fact]
+    public void SetValueEnumerate_ForStrings_AppliesFunctionToAllItems()
+    {
+        // Arrange
+        List<string> items = new() { "test1", "test2" };
+
+        // Act
+        List<string?> result = items.SetValueEnumerate(s => s?.ToUpper()).ToList();
 
         // Assert
         result.Count.ShouldBe(2);
@@ -414,12 +446,12 @@ public sealed class CollectionsTests
         List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
         // Act
-        IEnumerable<TestClass> result = items.SetValueParallel(item => item.Name = item.Name?.ToUpper());
+        items.SetValueParallel(item => item.Name = item.Name?.ToUpper());
 
         // Assert
-        result.Count().ShouldBe(2);
-        result.ShouldContain(item => item.Name == "TEST1");
-        result.ShouldContain(item => item.Name == "TEST2");
+        items.Count.ShouldBe(2);
+        items.ShouldContain(item => item.Name == "TEST1");
+        items.ShouldContain(item => item.Name == "TEST2");
     }
 
     [Fact]
@@ -429,12 +461,12 @@ public sealed class CollectionsTests
         List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
         // Act
-        IEnumerable<TestClass> result = items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), 2);
+        items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), 2);
 
         // Assert
-        result.Count().ShouldBe(2);
-        result.ShouldContain(item => item.Name == "TEST1");
-        result.ShouldContain(item => item.Name == "TEST2");
+        items.Count.ShouldBe(2);
+        items.ShouldContain(item => item.Name == "TEST1");
+        items.ShouldContain(item => item.Name == "TEST2");
     }
 
     #endregion

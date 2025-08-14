@@ -164,13 +164,41 @@ public static class Collections
     /// <param name="updateMethod">Lambda expression of the action to perform.</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
     /// <returns><see cref="IEnumerable{T}"> with values updated according to <paramref name="updateMethod"/></returns>
-    public static IEnumerable<T> SetValue<T>(this IEnumerable<T> items, Action<T> updateMethod, CancellationToken cancellationToken = default)
+    public static void SetValue<T>(this IEnumerable<T> items, Action<T> updateMethod, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
         foreach (T item in items)
         {
             cancellationToken.ThrowIfCancellationRequested();
             updateMethod(item);
-            yield return item;
+        }
+    }
+
+    /// <summary>
+    /// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
+    /// </summary>
+    /// <typeparam name="T">Type of object having values set.</typeparam>
+    /// <param name="items">Items to have the updateMethod expression performed on.</param>
+    /// <param name="updateMethod">Lambda expression of the action to perform.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="IEnumerable{T}"> with values updated according to <paramref name="updateMethod"/></returns>
+    public static IEnumerable<T> SetValueEnumerate<T>(this IEnumerable<T> items, Action<T> updateMethod, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
+        return Enumerate();
+
+        IEnumerable<T> Enumerate()
+        {
+            foreach (T item in items)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                updateMethod(item);
+                yield return item;
+            }
         }
     }
 
@@ -181,7 +209,7 @@ public static class Collections
     /// <param name="updateMethod">Lambda expression of the action to perform.</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
     /// <returns><see cref="IEnumerable{T}"/> with values updated according to <paramref name="updateMethod"/>.</returns>
-    public static List<string?> SetValue(this IEnumerable<string?> items, Func<string?, string?> updateMethod, CancellationToken cancellationToken = default)
+    public static void SetValue(this IEnumerable<string?> items, Func<string?, string?> updateMethod, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(updateMethod);
@@ -193,7 +221,34 @@ public static class Collections
             cancellationToken.ThrowIfCancellationRequested();
             list[i] = updateMethod(list[i]);
         }
-        return list.ToList();
+    }
+
+    /// <summary>
+    /// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
+    /// </summary>
+    /// <param name="items">Items to have the updateMethod expression performed on.</param>
+    /// <param name="updateMethod">Lambda expression of the action to perform.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="IEnumerable{T}"/> with values updated according to <paramref name="updateMethod"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="items"/> or <paramref name="updateMethod"/> are null</exception>
+    public static IEnumerable<string?> SetValueEnumerate(this IEnumerable<string?> items, Func<string?, string?> updateMethod, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
+        List<string?> list = items.ToList();
+
+        return Enumerate();
+
+        IEnumerable<string?> Enumerate()
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                list[i] = updateMethod(list[i]);
+                yield return list[i];
+            }
+        }
     }
 
     /// <summary>
@@ -205,15 +260,16 @@ public static class Collections
     /// <param name="maxDegreeOfParallelism">Integer setting the max number of parallel operations allowed. Default of -1 allows maximum possible.</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
     /// <returns><see cref="IEnumerable{T}"/> with values updated according to <paramref name="updateMethod"/>.</returns>
-    public static IEnumerable<T> SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1, CancellationToken cancellationToken = default)
+    public static void SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1, CancellationToken cancellationToken = default)
     {
-        ConcurrentBag<T> concurrentBag = new(items);
-        Parallel.ForEach(concurrentBag, new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item =>
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
+        Parallel.ForEach(items, new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item =>
         {
             cancellationToken.ThrowIfCancellationRequested();
             updateMethod(item);
         });
-        return concurrentBag;
     }
 
     /// <summary>
@@ -221,10 +277,13 @@ public static class Collections
     /// <para>Used like outerArray.SetValue((array, indices) => array.SetValue(SomeMethod(outerArray.GetValue(indices)), indices))</para>
     /// </summary>
     /// <param name="array">Array to act upon.</param>
-    /// <param name="action">Action to perform on each element in <paramref name="array"/>.</param>
+    /// <param name="updateMethod">Action to perform on each element in <paramref name="array"/>.</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
-    public static void SetValue(this Array array, Action<Array, int[]> action, CancellationToken cancellationToken = default)
+    public static void SetValue(this Array array, Action<Array, int[]> updateMethod, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(array);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
         if (array.LongLength == 0)
         {
             return;
@@ -233,7 +292,7 @@ public static class Collections
         do
         {
             cancellationToken.ThrowIfCancellationRequested();
-            action(array, walker.Position);
+            updateMethod(array, walker.Position);
         } while (walker.Step());
     }
 

@@ -1036,7 +1036,7 @@ public static class Async
     /// <param name="task">Task to run with semaphore.</param>
     /// <param name="semaphore">Semaphore to limit concurrent processes.</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation token source for concurrent operations.</param>
-    /// <param name="breakOnError">Optional: If true, will cancel operations using the same CancellationTokenSource.</param>
+    /// <param name="breakOnError">Optional: If <see langword="true"/>, will cancel operations using the same CancellationTokenSource.</param>
     public static async Task RunAsyncWithSemaphore(this Task task, SemaphoreSlim semaphore, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false, string? errorText = null)
     {
         cancellationTokenSource ??= new();

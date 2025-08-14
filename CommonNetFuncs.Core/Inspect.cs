@@ -156,8 +156,8 @@ public static class Inspect
     /// <param name="obj1">First object to compare for value equality</param>
     /// <param name="obj2">Second object to compare for value equality</param>
     /// <param name="exemptProps">Optional: Names of properties to not include in the matching check</param>
-    /// <param name="ignoreStringCase">Optional: If true, will ignore case when comparing string properties between obj1 and obj2, otherwise will use case sensitive comparison.</param>
-    /// <param name="recursive">Optional: If true, will recursively compare </param>
+    /// <param name="ignoreStringCase">Optional: If <see langword="true"/>, will ignore case when comparing string properties between obj1 and obj2, otherwise will use case sensitive comparison.</param>
+    /// <param name="recursive">Optional: If <see langword="true"/>, will recursively compare </param>
     /// <returns><see langword="true"/> if the two objects are equal by values, otherwise false</returns>
     public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
     {
@@ -224,8 +224,8 @@ public static class Inspect
     /// Creates a delegate for comparing two objects of the specified type for value equality.
     /// </summary>
     /// <param name="type">Type of the object to be compared</param>
-    /// <param name="ignoreStringCase">If true, will ignore case when comparing string properties for value equlity</param>
-    /// <param name="recursive">If true, will recursively compare properties of complex types</param>
+    /// <param name="ignoreStringCase">If <see langword="true"/>, will ignore case when comparing string properties for value equlity</param>
+    /// <param name="recursive">If <see langword="true"/>, will recursively compare properties of complex types</param>
     /// <returns>A delegate for comparing two objects of the specified type for value equality</returns>
     private static Func<object, object, IEnumerable<string>, bool> CreateCompareDelegate(Type type, bool ignoreStringCase, bool recursive)
     {

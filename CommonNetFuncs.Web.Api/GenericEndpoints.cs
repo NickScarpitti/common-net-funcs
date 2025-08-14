@@ -45,7 +45,7 @@ public sealed class GenericEndpoints : ControllerBase
     /// </summary>
     /// <typeparam name="T">Type of entity being deleted</typeparam>
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
-    /// <param name="model">Entity to delete</param>
+    /// <param name="model">Entity to delete.</param>
     /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class where UT : DbContext
@@ -70,7 +70,7 @@ public sealed class GenericEndpoints : ControllerBase
     /// </summary>
     /// <typeparam name="T">Type of entity being deleted</typeparam>
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
-    /// <param name="models">Entities to delete</param>
+    /// <param name="models">Entities to delete.</param>
     /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class where UT : DbContext
@@ -94,7 +94,7 @@ public sealed class GenericEndpoints : ControllerBase
     /// </summary>
     /// <typeparam name="T">Type of entity being deleted</typeparam>
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
-    /// <param name="models">Entities to delete</param>
+    /// <param name="models">Entities to delete.</param>
     /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<List<T>>> DeleteManyByKeys<T, UT>(IEnumerable<object> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
@@ -119,7 +119,7 @@ public sealed class GenericEndpoints : ControllerBase
     /// <typeparam name="T">Type of entity being updated</typeparam>
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
     /// <param name="primaryKey">Primary key of the entity to update</param>
-    /// <param name="patch">Patch document containing the updates to be made to the entity</param>
+    /// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
     /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
@@ -134,7 +134,7 @@ public sealed class GenericEndpoints : ControllerBase
     /// <typeparam name="T">Type of entity being updated</typeparam>
     /// <typeparam name="UT">DB Context to use for this operation</typeparam>
     /// <param name="primaryKey">Ordered values comprising the key of the entity to update</param>
-    /// <param name="patch">Patch document containing the updates to be made to the entity</param>
+    /// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
     /// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
     /// <returns>Ok if successful, otherwise NoContent</returns>
     public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext

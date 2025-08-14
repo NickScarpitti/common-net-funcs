@@ -20,7 +20,7 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns a DataTable using the SQL and data connection passed to the function
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
@@ -35,7 +35,7 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns a DataTable using the SQL and data connection passed to the function
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
@@ -80,7 +80,7 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns a IAsyncEnumerable using the SQL and data connection passed to the function
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
@@ -124,7 +124,7 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns a IEnumerable of T resulting from the SQL query
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
@@ -158,7 +158,7 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns an IEnumerable of T resulting from the SQL query
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>

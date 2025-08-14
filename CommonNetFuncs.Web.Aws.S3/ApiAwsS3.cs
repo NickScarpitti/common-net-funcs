@@ -26,7 +26,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
     /// <param name="fileName">Name to save the file as in the S3 bucket</param>
     /// <param name="fileData">Stream containing the data for the file to be uploaded</param>
     /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status</param>
-    /// <param name="compressSteam">Optional: If true, will compress stream sent to S3 bucket. Default = true</param>
+    /// <param name="compressSteam">Optional: If <see langword="true"/>, will compress stream sent to S3 bucket. Default = true</param>
     /// <param name="compressionType">Optional: Specifies which compression type to use when compressSteam = true. Does nothing if compressSteam = false. Valid values are GZip and Deflate</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this request.</param>
     /// <returns><see langword="true"/> if file was successfully uploaded</returns>

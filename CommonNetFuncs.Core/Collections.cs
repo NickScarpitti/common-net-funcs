@@ -335,7 +335,7 @@ public static class Collections
     /// </summary>
     /// <remarks>Null safe, returns an empty list if <paramref name="obj"/> is <see langword="null"/>.</remarks>
     /// <param name="obj">Object to turn into a single item list.</param>
-    /// <param name="allowEmptyStrings">Optional: If true, allows empty strings in the list, otherwise they are excluded. Default is false.</param>
+    /// <param name="allowEmptyStrings">Optional: If <see langword="true"/>, allows empty strings in the list, otherwise they are excluded. Default is <see langword="false"/>.</param>
     /// <returns>A <see cref="List{T}"/> containing the single item or an empty <see cref="List{T}"> if the item is <see langword="null"/>.</returns>
     public static List<string> SingleToList(this string? obj, bool allowEmptyStrings = false)
     {
@@ -352,7 +352,7 @@ public static class Collections
     /// <typeparam name="T">Object type.</typeparam>
     /// <param name="queryable">Queryable collection to select from</param>
     /// <param name="partialObject">Object with fields to match with objects in the queryable collection</param>
-    /// <param name="ignoreDefaultValues">Optional: Ignore default values in retrieval when true. Default is false.</param>
+    /// <param name="ignoreDefaultValues">Optional: Ignore default values in retrieval when true. Default is <see langword="false"/>.</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
     /// <returns>First object that matches all non-null fields in <paramref name="partialObject"/></returns>
     public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject, bool ignoreDefaultValues = false, CancellationToken cancellationToken = default) where T : class
@@ -634,7 +634,7 @@ public static class Collections
     /// <typeparam name="T">Class to use in table creation.</typeparam>
     /// <param name="data">Collection to convert into a DataTable.</param>
     /// <param name="dataTable">DataTable to optionally insert data into.</param>
-    /// <param name="useParallel">Optional: Parallelizes the conversion. Default is false.</param>
+    /// <param name="useParallel">Optional: Parallelizes the conversion. Default is <see langword="false"/>.</param>
     /// <param name="approximateCount">Optional: Used for pre-allocating variable size when using parallelization, default is data.Count().</param>
     /// <param name="degreeOfParallelism">Optional: Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine).</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
@@ -657,7 +657,7 @@ public static class Collections
     /// <typeparam name="T">Class to use in table creation.</typeparam>
     /// <param name="data">Collection to convert into a DataTable.</param>
     /// <param name="dataTable">DataTable to optionally insert data into.</param>
-    /// <param name="useParallel">Optional: Parallelizes the conversion. Default is false.</param>
+    /// <param name="useParallel">Optional: Parallelizes the conversion. Default is <see langword="false"/>.</param>
     /// <param name="approximateCount">Optional: Used for pre-allocating variable size when using parallelization, default is data.Count().</param>
     /// <param name="degreeOfParallelism">Optional: Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine).</param>
     /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
@@ -921,7 +921,7 @@ public static class Collections
     /// <param name="propToAgg">Property to string aggregate</param>
     /// <param name="separator">Optional: String value used between aggregated values. Default is ';'.</param>
     /// <param name="distinct">Optional: Whether to include only distinct values in the aggregation. Default is true.</param>
-    /// <param name="parallel">Optional: Whether to perform the aggregation in parallel or not. Default is false.</param>
+    /// <param name="parallel">Optional: Whether to perform the aggregation in parallel or not. Default is <see langword="false"/>.</param>
     /// <returns><see cref="IEnumerable{T}"/> with specified <see langword="property"/> aggregated</returns>
     public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string propToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
     {
@@ -935,7 +935,7 @@ public static class Collections
     /// <param name="propsToAgg">Properties to string aggregate</param>
     /// <param name="separator">String value used between aggregated values</param>
     /// <param name="distinct">Optional: Whether to include only distinct values in the aggregation. Default is true.</param>
-    /// <param name="parallel">Optional: Whether to perform the aggregation in parallel or not. Default is false.</param>
+    /// <param name="parallel">Optional: Whether to perform the aggregation in parallel or not. Default is <see langword="false"/>.</param>
     /// <returns><see cref="IEnumerable{T}"/> with specified properties aggregated</returns>
     public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string[] propsToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
     {
@@ -1045,9 +1045,9 @@ public static class Collections
     /// Generates all possible combinations of the provided source collections.
     /// </summary>
     /// <param name="sources">The source collections to combine.</param>
-    /// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is null (no limit).</param>
+    /// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
     /// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
-    /// <param name="nullReplacement">Optional: String value used to replace null values. Default is null.</param>
+    /// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
     /// <returns>A set of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="maxCombinations"/> is not null and is less than 1.</exception>
     public static HashSet<string> GetCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
@@ -1098,9 +1098,9 @@ public static class Collections
     /// Get all or a limited quantity of all possible combinations of the provided source collections in a randomized order.
     /// </summary>
     /// <param name="sources">The source collections to combine.</param>
-    /// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is null (no limit).</param>
+    /// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
     /// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
-    /// <param name="nullReplacement">Optional: String value used to replace null values. Default is null.</param>
+    /// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
     /// <returns>A set of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="maxCombinations"/> is not null and is less than 1.</exception>
     public static HashSet<string> GetRandomCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
@@ -1122,9 +1122,9 @@ public static class Collections
     /// Generates a set of unique combinations from the provided source collections.
     /// </summary>
     /// <param name="sources">The source collections to combine.</param>
-    /// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is null (no limit).</param>
+    /// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
     /// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
-    /// <param name="nullReplacement">Optional: String value used to replace null values. Default is null.</param>
+    /// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
     /// <returns>An <see cref="IEnumerable{T}"/> of unique combinations up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
     /// <exception cref="ArgumentException"></exception>
     public static IEnumerable<string> GetEnumeratedCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)

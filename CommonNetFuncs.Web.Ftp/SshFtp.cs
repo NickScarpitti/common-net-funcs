@@ -184,7 +184,7 @@ public static class SshFtp
     }
 
     /// <summary>
-    /// Asynchronously reads data from a CSV file on the SFTP server and returns a list of records of type T.
+    /// Asynchronously reads data from a CSV file on the SFTP server and returns a list of records of type <typeparamref name="T"/>.
     /// </summary>
     /// <typeparam name="T">Type to read from rows.</typeparam>
     /// <param name="sftpClient">The SFTP client.</param>
@@ -209,7 +209,7 @@ public static class SshFtp
     }
 
     /// <summary>
-    /// Asynchronously reads and enumerates data from a CSV file on the SFTP server and returns an async enumerable of records of type T.
+    /// Asynchronously reads and enumerates data from a CSV file on the SFTP server and returns an async enumerable of records of type <typeparamref name="T"/>.
     /// </summary>
     /// <typeparam name="T">Type to read from rows.</typeparam>
     /// <param name="sftpClient">The SFTP client.</param>
@@ -242,7 +242,7 @@ public static class SshFtp
     }
 
     /// <summary>
-    /// Asynchronously reads and enumerates data from a CSV file on the SFTP server and returns an async enumerable of records of type T.
+    /// Asynchronously reads and enumerates data from a CSV file on the SFTP server and returns an async enumerable of records of type <typeparamref name="T"/>.
     /// </summary>
     /// <typeparam name="T">Type to read from rows.</typeparam>
     /// <param name="sftpClient">The SFTP client.</param>
@@ -275,7 +275,7 @@ public static class SshFtp
     }
 
     /// <summary>
-    /// Reads data from a CSV file on the SFTP server and returns a list of records of type T.
+    /// Reads data from a CSV file on the SFTP server and returns a list of records of type <typeparamref name="T"/>.
     /// </summary>
     /// <typeparam name="T">Type to read from rows.</typeparam>
     /// <param name="sftpClient">The SFTP client.</param>

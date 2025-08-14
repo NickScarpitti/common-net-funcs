@@ -13,7 +13,7 @@ public static class Files
     /// <param name="file">Stream and file name to compress into a zipped file</param>
     /// <param name="zipFileStream">Memory stream to receive the zipped file</param>
     /// <param name="compressionLevel">Optional: Configure compression preference. Default is "Optimal".</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
     public static async Task ZipFile(this (Stream? fileStream, string fileName) file, MemoryStream zipFileStream, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
     {
         List<(Stream? fileStream, string fileName)> files = [file];
@@ -25,7 +25,7 @@ public static class Files
     /// </summary>
     /// <param name="file">Stream and file name to compress into a zipped file</param>
     /// <param name="compressionLevel">Optional: Configure compression preference. Default is "Optimal"</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
     /// <returns>Memory stream containing the zipped file data.</returns>
     public static async Task<MemoryStream> ZipFile(this (Stream? fileStream, string fileName) file, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
     {
@@ -39,7 +39,7 @@ public static class Files
     /// <param name="files">Streams and associated file names to compress into a zipped file</param>
     /// <param name="zipFileStream">Memory stream to receive the zipped files</param>
     /// <param name="compressionLevel">Optional: Configure compression preference. Default is "Optimal"</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
     /// <returns>Memory stream containing the data of the zipped files.</returns>
     public static async Task<MemoryStream> ZipFiles(this IEnumerable<(Stream? fileStream, string fileName)> files, MemoryStream zipFileStream, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
     {
@@ -62,7 +62,7 @@ public static class Files
     /// </summary>
     /// <param name="files">Streams and associated file names to compress into a zipped file</param>
     /// <param name="compressionLevel">Optional: Configure compression preference. Default is "Optimal"</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
     /// <returns>Memory stream containing the data of the zipped files.</returns>
     public static async Task<MemoryStream> ZipFiles(this IEnumerable<(Stream? fileStream, string fileName)> files, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
     {
@@ -82,7 +82,7 @@ public static class Files
     /// <param name="files">Streams and associated file names to compress into a zipped file</param>
     /// <param name="archive">ZipArchive to add zipped files to</param>
     /// <param name="compressionLevel">Optional: Configure compression preference. Default is "Optimal"</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
     public static async Task AddFilesToZip(this IEnumerable<(Stream? fileStream, string fileName)> files, ZipArchive archive, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
     {
         foreach ((Stream? fileStream, string fileName) in files)
@@ -98,7 +98,7 @@ public static class Files
     /// <param name="archive">ZipArchive to add zipped files to</param>
     /// <param name="fileName">Name to use for zipped file</param>
     /// <param name="compressionLevel">Optional: Configure compression preference. Default is "Optimal"</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
     public static async Task AddFileToZip(this Stream? fileStream, ZipArchive archive, string fileName, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
     {
         if (fileStream != null)
@@ -117,7 +117,7 @@ public static class Files
     /// <param name="inputFilePath">Path to the input file</param>
     /// <param name="outputFilePath">Path to the compressed output file</param>
     /// <param name="compressionType">Type of compression to use</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
     public static async Task CompressFile(string inputFilePath, string outputFilePath, ECompressionType compressionType, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(inputFilePath))
@@ -144,7 +144,7 @@ public static class Files
     /// <param name="compressedFilePath">Path to the compressed input file</param>
     /// <param name="outputFilePath">Path to the decompressed output file</param>
     /// <param name="compressionType">Type of compression used</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
     public static async Task DecompressFile(string compressedFilePath, string outputFilePath, ECompressionType compressionType, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(compressedFilePath))

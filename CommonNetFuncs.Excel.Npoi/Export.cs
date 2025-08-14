@@ -23,9 +23,9 @@ public static class Export
     /// data
     /// </summary>
     /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
-    /// <param name="dataList">Data to export as a table</param>
+    /// <param name="dataList">Data to export as a table.</param>
     /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
-    /// <param name="createTable">If true, will format the exported data into an Excel table</param>
+    /// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
     public static async Task<MemoryStream?> GenericExcelExport<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, bool createTable = false,
@@ -83,9 +83,9 @@ public static class Export
     /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
     /// data
     /// </summary>
-    /// <param name="datatable">Data to export as a table</param>
+    /// <param name="datatable">Data to export as a table.</param>
     /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
-    /// <param name="createTable">If true, will format the exported data into an Excel table</param>
+    /// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
     public static async Task<MemoryStream?> GenericExcelExport(this DataTable datatable, MemoryStream? memoryStream = null, bool createTable = false,
@@ -146,7 +146,7 @@ public static class Export
     /// <param name="wb">Workbook to add table to</param>
     /// <param name="data">Data to insert into workbook</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
@@ -161,7 +161,7 @@ public static class Export
     /// <param name="wb">Workbook to add table to</param>
     /// <param name="data">Data to insert into workbook</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
@@ -176,7 +176,7 @@ public static class Export
     /// <param name="wb">Workbook to add table to</param>
     /// <param name="data">Data to insert into workbook</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
@@ -193,7 +193,7 @@ public static class Export
     /// <param name="wb">Workbook to add table to</param>
     /// <param name="data">Data to insert into workbook</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
@@ -211,7 +211,7 @@ public static class Export
     /// <param name="data">Data to populate table with (only accepts IEnumerable and DataTable)</param>
     /// <param name="dataType">Type of the data parameter</param>
     /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If true, will format the inserted data into an Excel table</param>
+    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
     /// <param name="tableName">Name of the table in Excel</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
@@ -283,7 +283,7 @@ public static class Export
     /// <param name="data">Data to be inserted into the workbook</param>
     /// <param name="wb">Workbook to insert the data into</param>
     /// <param name="ws">Worksheet to insert the data into</param>
-    /// <param name="createTable">Turn the output into an Excel table</param>
+    /// <param name="createTable">Turn the output into an Excel table.</param>
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns><see langword="true"/> if excel file was created successfully</returns>
@@ -406,7 +406,7 @@ public static class Export
     /// <param name="data">Data as DataTable to be inserted into the workbook</param>
     /// <param name="wb">Workbook to insert the data into</param>
     /// <param name="ws">Worksheet to insert the data into</param>
-    /// <param name="createTable">Turn the output into an Excel table</param>
+    /// <param name="createTable">Turn the output into an Excel table.</param>
     /// <param name="tableName">Name of the table when createTable is true</param>
     /// <param name="skipColumnNames">List of columns to not include in export</param>
     /// <returns><see langword="true"/> if excel file was created successfully</returns>

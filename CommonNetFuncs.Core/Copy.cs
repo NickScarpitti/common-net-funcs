@@ -75,7 +75,7 @@ public static class Copy
     /// <typeparam name="UT">Type of destination object</typeparam>
     /// <param name="source">Object to copy common properties from</param>
     /// <param name="dest">Object to copy common properties to</param>
-    /// <param name="useCache">Optional: If true, will use cached property mappings. Default is <see langword="true"/></param>
+    /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
     public static void CopyPropertiesTo<T, UT>(this T source, UT dest, bool useCache = true)
     {
         if (source == null)
@@ -115,7 +115,7 @@ public static class Copy
     /// </summary>
     /// <typeparam name="T">Type of object being copied</typeparam>
     /// <param name="source">Object to copy common properties from</param>
-    /// <param name="useCache">Optional: If true, will use cached property mappings. Default is <see langword="true"/></param>
+    /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
     /// <returns>A new instance of T with properties copied from <paramref name="source"/></returns>
     public static T CopyPropertiesToNew<T>(this T source, bool useCache = true) where T : new()
     {
@@ -147,7 +147,7 @@ public static class Copy
     /// </summary>
     /// <typeparam name="T">Type of object being copied</typeparam>
     /// <param name="source">Object to copy common properties from</param>
-    /// <param name="useCache">Optional: If true, will use cached property mappings. Default is <see langword="true"/></param>
+    /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
     /// <returns>A new instance of UT with properties copied from <paramref name="source"/></returns>
     public static UT CopyPropertiesToNew<T, UT>(this T source, bool useCache = true) where UT : new()
     {
@@ -183,7 +183,7 @@ public static class Copy
     /// <typeparam name="UT">Type to copy values to</typeparam>
     /// <param name="source">Object to copy values into new object from</param>
     /// <param name="maxDepth">Optional: How deep to recursively traverse. Default = -1 which is unlimited recursion.</param>
-    /// <param name="useCache">Optional: If true, will use cached property mappings. Default is <see langword="true"/></param>
+    /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
     /// <returns>A new instance of UT with properties of the same name from source populated.</returns>
     [return: NotNullIfNotNull(nameof(source))]
     public static UT? CopyPropertiesToNewRecursive<T, UT>(this T source, int maxDepth = -1, bool useCache = true) where UT : new()

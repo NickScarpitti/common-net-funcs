@@ -221,7 +221,7 @@ public static class Email
     /// </summary>
     /// <param name="attachments">Attachments to add to the email</param>
     /// <param name="bodyBuilder">Builder for the email to add attachments to</param>
-    /// <param name="zipAttachments">If true, will perform zip compression on the attachment files before adding them to the email</param>
+    /// <param name="zipAttachments">If <see langword="true"/>, will perform zip compression on the attachment files before adding them to the email</param>
     public static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments, CancellationToken cancellationToken = default)
     {
         try

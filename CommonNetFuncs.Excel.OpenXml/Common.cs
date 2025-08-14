@@ -513,7 +513,7 @@ public static partial class Common
     /// Gets the Stylesheet from a SpreadsheetDocument
     /// </summary>
     /// <param name="document">The SpreadsheetDocument to get the Stylesheet from</param>
-    /// <param name="createIfMissing">If true, creates Stylesheet (and parent elements if necessary) if missing.</param>
+    /// <param name="createIfMissing">If <see langword="true"/>, creates Stylesheet (and parent elements if necessary) if missing.</param>
     /// <returns>The Stylesheet from the document or null if not found and createIfMissing is false</returns>
     public static Stylesheet? GetStylesheet(this SpreadsheetDocument document, bool createIfMissing = true)
     {
@@ -543,7 +543,7 @@ public static partial class Common
     /// Gets the Borders from a Stylesheet
     /// </summary>
     /// <param name="stylesheet">The Stylesheet to get the Borders from</param>
-    /// <param name="createIfMissing">If true, creates Borders if missing</param>
+    /// <param name="createIfMissing">If <see langword="true"/>, creates Borders if missing</param>
     /// <returns>The Borders object, or null if not found and createIfMissing is false</returns>
     public static Borders? GetBorders(this Stylesheet stylesheet, bool createIfMissing = true)
     {
@@ -563,7 +563,7 @@ public static partial class Common
     /// Gets the Fills from a Stylesheet
     /// </summary>
     /// <param name="stylesheet">The Stylesheet to get the Fills from</param>
-    /// <param name="createIfMissing">If true, creates Fills if missing</param>
+    /// <param name="createIfMissing">If <see langword="true"/>, creates Fills if missing</param>
     /// <returns>The Fills object, or null if not found and createIfMissing is false</returns>
     public static Fills? GetFills(this Stylesheet stylesheet, bool createIfMissing = true)
     {
@@ -599,7 +599,7 @@ public static partial class Common
     /// Gets the Fonts from a Stylesheet
     /// </summary>
     /// <param name="stylesheet">The Stylesheet to get the Fonts from</param>
-    /// <param name="createIfMissing">If true, creates Fonts if not found</param>
+    /// <param name="createIfMissing">If <see langword="true"/>, creates Fonts if not found</param>
     /// <returns>The Fonts object, or null if not found and createIfMissing is false</returns>
     public static Fonts? GetFonts(this Stylesheet stylesheet, bool createIfMissing = true)
     {
@@ -626,7 +626,7 @@ public static partial class Common
     /// Gets the CellFormats from a Stylesheet.
     /// </summary>
     /// <param name="stylesheet">The Stylesheet to get the CellFormats from.</param>
-    /// <param name="createIfMissing">If true, creates CellFormats if not found.</param>
+    /// <param name="createIfMissing">If <see langword="true"/>, creates CellFormats if not found.</param>
     /// <returns>The CellFormats object, or null if not found and not created.</returns>
     public static CellFormats? GetCellFormats(this Stylesheet stylesheet, bool createIfMissing = true)
     {
@@ -1359,10 +1359,10 @@ public static partial class Common
     /// Create a table for the specified sheet in worksheet
     /// </summary>
     /// <param name="worksheet">Worksheet to add table to</param>
-    /// <param name="startRow">One based index of the first row of the table</param>
-    /// <param name="startCol">One based index of the first column of the table</param>
-    /// <param name="endRow">One based index of the last row of the table</param>
-    /// <param name="endColumn">One based index of the last column of the table</param>
+    /// <param name="startRow">One based index of the first row of the table.</param>
+    /// <param name="startCol">One based index of the first column of the table.</param>
+    /// <param name="endRow">One based index of the last row of the table.</param>
+    /// <param name="endColumn">One based index of the last column of the table.</param>
     /// <param name="tableName">Name of the table to add</param>
     /// <param name="styleName">Optional: Style to use for table, defaults to TableStyleMedium1</param>
     /// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
@@ -2065,7 +2065,7 @@ public static partial class Common
     /// <summary>
     /// Get table by table name
     /// </summary>
-    /// <param name="workbookPart">WorkbookPart containing table</param>
+    /// <param name="workbookPart">WorkbookPart containing table.</param>
     /// <param name="tableName">Name of table to retrieve</param>
     /// <returns>Table indicated by tableName, null if not found</returns>
     public static Table? FindTable(this WorkbookPart workbookPart, string? tableName)

@@ -11,7 +11,7 @@ public static class DimensionScale
     /// <param name="originalHeight">Original height dimension to scale</param>
     /// <param name="maxWidth">Maximum width constraint for scaled dimensions</param>
     /// <param name="maxHeight">Maximum height constraint for scaled dimensions</param>
-    /// <param name="scaleUpToFit">If true, will make dimensions as large as possible to fit in container</param>
+    /// <param name="scaleUpToFit">If <see langword="true"/>, will make dimensions as large as possible to fit in container</param>
     /// <returns>Scaled height and width dimensions that fit into the constraints provided</returns>
     /// <exception cref="ArgumentException">Thrown if any dimension is less than or equal to 0</exception>
     public static (int newWidth, int newHeight) ScaleDimensionsToConstraint(int originalWidth, int originalHeight, int maxWidth, int maxHeight, bool scaleUpToFit = true)
@@ -59,7 +59,7 @@ public static class DimensionScale
     /// <param name="originalHeight">Original height dimension to scale</param>
     /// <param name="maxWidth">Maximum width constraint for scaled dimensions</param>
     /// <param name="maxHeight">Maximum height constraint for scaled dimensions</param>
-    /// <param name="scaleUpToFit">If true, will make dimensions as large as possible to fit in container</param>
+    /// <param name="scaleUpToFit">If <see langword="true"/>, will make dimensions as large as possible to fit in container</param>
     /// <returns>Scaled height and width dimensions that fit into the constraints provided</returns>
     /// <exception cref="ArgumentException">Thrown if any dimension is less than or equal to 0</exception>
     public static (decimal newWidth, decimal newHeight) ScaleDimensionsToConstraint(decimal originalWidth, decimal originalHeight, decimal maxWidth, decimal maxHeight,
@@ -108,7 +108,7 @@ public static class DimensionScale
     /// <param name="maxWidth">Maximum width constraint for scaled dimensions</param>
     /// <param name="maxHeight">Maximum height constraint for scaled dimensions</param>
     /// <param name="maxDepth">Maximum depth constraint for scaled dimensions</param>
-    /// <param name="scaleUpToFit">If true, will make dimensions as large as possible to fit in container</param>
+    /// <param name="scaleUpToFit">If <see langword="true"/>, will make dimensions as large as possible to fit in container</param>
     /// <returns>Scaled height and width dimensions that fit into the constraints provided</returns>
     /// <exception cref="ArgumentException">Thrown if any dimension is less than or equal to 0</exception>
     public static (int newWidth, int newHeight, int newDepth) ScaleDimensionsToConstraint(int originalWidth, int originalHeight, int originalDepth, int maxWidth, int maxHeight,
@@ -166,7 +166,7 @@ public static class DimensionScale
     /// <param name="maxWidth">Maximum width constraint for scaled dimensions</param>
     /// <param name="maxHeight">Maximum height constraint for scaled dimensions</param>
     /// <param name="maxDepth">Maximum depth constraint for scaled dimensions</param>
-    /// <param name="scaleUpToFit">If true, will make dimensions as large as possible to fit in container</param>
+    /// <param name="scaleUpToFit">If <see langword="true"/>, will make dimensions as large as possible to fit in container</param>
     /// <returns>Scaled height and width dimensions that fit into the constraints provided</returns>
     /// <exception cref="ArgumentException">Thrown if any dimension is less than or equal to 0</exception>
     public static (decimal newWidth, decimal newHeight, decimal newDepth) ScaleDimensionsToConstraint(decimal originalWidth, decimal originalHeight, decimal originalDepth,

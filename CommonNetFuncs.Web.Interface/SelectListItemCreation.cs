@@ -7,7 +7,7 @@ public static class SelectListItemCreation
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <param name="value">Value to be used for both Value and Text properties.</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static SelectListItem? ToSelectListItem(this string? value, bool selected)
@@ -18,7 +18,7 @@ public static class SelectListItemCreation
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <param name="value">Value to be used for both Value and Text properties.</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static SelectListItem? ToSelectListItem(this string? value)
@@ -53,7 +53,7 @@ public static class SelectListItemCreation
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <param name="value">Value to be used for both Value and Text properties.</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static SelectListItem? ToSelectListItem(this int? value, bool selected)
@@ -64,7 +64,7 @@ public static class SelectListItemCreation
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <param name="value">Value to be used for both Value and Text properties.</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     [return: NotNullIfNotNull(nameof(value))]
     public static SelectListItem? ToSelectListItem(this int? value)
@@ -75,7 +75,7 @@ public static class SelectListItemCreation
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <param name="value">Value to be used for both Value and Text properties.</param>
     /// <param name="text">Value to be used for the Text property</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     [return: NotNullIfNotNull(nameof(value))]
@@ -99,7 +99,7 @@ public static class SelectListItemCreation
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <param name="value">Value to be used for both Value and Text properties.</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     public static SelectListItem ToSelectListItem(this int value, bool selected)
     {
@@ -109,7 +109,7 @@ public static class SelectListItemCreation
     /// <summary>
     /// Converts value to select list item
     /// </summary>
-    /// <param name="value">Value to be used for both Value and Text properties</param>
+    /// <param name="value">Value to be used for both Value and Text properties.</param>
     /// <returns>SelectListItem with text and value properties set to the passed in value</returns>
     public static SelectListItem ToSelectListItem(this int value)
     {

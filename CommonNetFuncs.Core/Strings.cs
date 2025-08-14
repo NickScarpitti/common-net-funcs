@@ -354,7 +354,7 @@ public static partial class Strings
     /// <param name="s">String to search</param>
     /// <param name="textsToFind">Strings to find in s</param>
     /// <param name="useOrComparison">
-    /// <para>If true, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
+    /// <para>If <see langword="true"/>, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
     /// </param>
     /// <returns>
     /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
@@ -441,7 +441,7 @@ public static partial class Strings
     /// <param name="s">String to search</param>
     /// <param name="stringsToFind">Strings to find in s</param>
     /// <param name="useOrComparison">
-    /// <para>If true, will check if any of the stringsToFind values are in s. (OR configuration)</para>
+    /// <para>If <see langword="true"/>, will check if any of the stringsToFind values are in s. (OR configuration)</para>
     /// <para>If false, will check if all of the stringsToFind values are in s. (AND configuration)</para>
     /// </param>
     /// <returns>
@@ -672,7 +672,7 @@ public static partial class Strings
     /// </summary>
     /// <typeparam name="T">Type of object to trim strings in</typeparam>
     /// <param name="obj">Object containing string properties to be trimmed</param>
-    /// <param name="recursive">If true, will recursively apply string trimming to nested object</param>
+    /// <param name="recursive">If <see langword="true"/>, will recursively apply string trimming to nested object</param>
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? TrimObjectStrings<T>(this T? obj, bool recursive = false)
     {
@@ -787,9 +787,9 @@ public static partial class Strings
     /// </summary>
     /// <typeparam name="T">Type of object to normalize strings in</typeparam>
     /// <param name="obj">Object containing string properties to be normalized</param>
-    /// <param name="enableTrim">If true, will trim all object strings</param>
+    /// <param name="enableTrim">If <see langword="true"/>, will trim all object strings</param>
     /// <param name="normalizationForm">String normalization setting</param>
-    /// <param name="recursive">If true, will recursively apply string normalization to nested object</param>
+    /// <param name="recursive">If <see langword="true"/>, will recursively apply string normalization to nested object</param>
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? NormalizeObjectStrings<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false, bool useCache = true)
     {
@@ -812,10 +812,10 @@ public static partial class Strings
     /// Creates an <see cref="Expression{TDelegate}"/> for normalizing <see cref="string"/> properties in an object.
     /// </summary>
     /// <typeparam name="T">Type of the object.</typeparam>
-    /// <param name="enableTrim">If true, will trim all object strings.</param>
+    /// <param name="enableTrim">If <see langword="true"/>, will trim all object strings.</param>
     /// <param name="normalizationForm">String normalization setting</param>
-    /// <param name="recursive">If true, will recursively apply string normalization to nested object.</param>
-    /// <param name="useCache">If true, will use cache for the expression.</param>
+    /// <param name="recursive">If <see langword="true"/>, will recursively apply string normalization to nested object.</param>
+    /// <param name="useCache">If <see langword="true"/>, will use cache for the expression.</param>
     /// <returns><see cref="Expression{TDelegate}"/> for normalizing <see cref="string"/> properties.</returns>
     private static Expression<Action<T>> CreateNormalizeObjectStringsExpression<T>(bool enableTrim, NormalizationForm normalizationForm, bool recursive, bool useCache)
     {
@@ -904,7 +904,7 @@ public static partial class Strings
     /// Makes string properties in an object with the word "null" into a null value
     /// </summary>
     /// <param name="obj">Object containing string properties to be set to null if null</param>
-    /// <param name="recursive">If true, will recursively apply nullification to nested objects</param>
+    /// <param name="recursive">If <see langword="true"/>, will recursively apply nullification to nested objects</param>
     /// <returns>Objects with properties set to null if the string property is null or is the word "null" with no other text characters other than whitespace</returns>
     [return: NotNullIfNotNull(nameof(obj))]
     public static T? MakeObjectNullNull<T>(this T? obj, bool recursive = false)
@@ -1427,7 +1427,7 @@ public static partial class Strings
     /// <param name="input">String to apply regex / replacement to</param>
     /// <param name="regexPattern">Regex pattern used to white list characters in input</param>
     /// <param name="replacement">String to replace any characters that aren't matched by the regex pattern</param>
-    /// <param name="matchFirstOnly">If true, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
+    /// <param name="matchFirstOnly">If <see langword="true"/>, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
     /// <returns>String with any non-matching characters replaced by the replacement string</returns>
     [return: NotNullIfNotNull(nameof(input))]
     public static string? ReplaceInverse(this string? input, string regexPattern, string? replacement = "", bool matchFirstOnly = false)
@@ -1447,7 +1447,7 @@ public static partial class Strings
     /// <param name="regex">Regex used to white list characters in input</param>
     /// <param name="input">String to apply regex / replacement to</param>
     /// <param name="replacement">String to replace any characters that aren't matched by the regex pattern</param>
-    /// <param name="matchFirstOnly">If true, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
+    /// <param name="matchFirstOnly">If <see langword="true"/>, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
     /// <returns>String with any non-matching characters replaced by the replacement string</returns>
     [return: NotNullIfNotNull(nameof(input))]
     public static string? ReplaceInverse(this Regex regex, string? input, string? replacement = "", bool matchFirstOnly = false)
@@ -1502,7 +1502,7 @@ public static partial class Strings
     /// sequence replacements "%20" -> " ", "%2F" -> "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
     /// </param>
     /// <param name="appendDefaultEscapeSequences">
-    /// <para>If true, will append the default escape sequence replacements to any passed in through replaceEscapeSequences</para> <para>The default escape sequence replacements are "%20" -> " ", "%2F" ->
+    /// <para>If <see langword="true"/>, will append the default escape sequence replacements to any passed in through replaceEscapeSequences</para> <para>The default escape sequence replacements are "%20" -> " ", "%2F" ->
     /// "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
     /// </param>
     /// <returns>URL encoded string with the specified escape sequences replaced with their given values</returns>
@@ -1538,7 +1538,7 @@ public static partial class Strings
     /// </summary>
     /// <param name="input">String to be formatted as phone number</param>
     /// <param name="separator">Character to be used to separate segments of the phone number (country code excluded)</param>
-    /// <param name="addParenToAreaCode">If true, will add parentheses around the area code, eg. +1 (123)-456-7890 instead of +1 123-456-7890</param>
+    /// <param name="addParenToAreaCode">If <see langword="true"/>, will add parentheses around the area code, eg. +1 (123)-456-7890 instead of +1 123-456-7890</param>
     /// <returns>String formatted as a phone number</returns>
     [return: NotNullIfNotNull(nameof(input))]
     public static string? FormatPhoneNumber(this string? input, string separator = "-", bool addParenToAreaCode = false)

@@ -37,7 +37,7 @@ public static class RestHelpersStatic
     /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
     /// <param name="client">HttpClient to execute REST request with</param>
     /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>Object of type T resulting from the request - Null if not success</returns>
+    /// <returns>Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
     public static async Task<T?> RestRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
     {
         T? result = default;
@@ -80,7 +80,7 @@ public static class RestHelpersStatic
     /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
     /// <param name="client">HttpClient to execute REST request with</param>
     /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>An IAsyncEnumerable of the Object of type T resulting from the request - Null if not success</returns>
+    /// <returns>An IAsyncEnumerable of the Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
     public static async IAsyncEnumerable<T?> StreamingRestRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IAsyncEnumerator<T?>? enumeratedReader = null;
@@ -154,7 +154,7 @@ public static class RestHelpersStatic
     /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
     /// <param name="client">HttpClient to execute REST request with</param>
     /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>Object of type T resulting from the request - Null if not success</returns>
+    /// <returns>Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
     public static async Task<RestObject<T>> RestObjectRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
     {
         RestObject<T> restObject = new();
@@ -197,7 +197,7 @@ public static class RestHelpersStatic
     /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
     /// <param name="client">HttpClient to execute REST request with</param>
     /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>An IAsyncEnumerable of the Object of type T resulting from the request - Null if not success</returns>
+    /// <returns>An IAsyncEnumerable of the Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
     public static async Task<StreamingRestObject<T>> StreamingRestObjectRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
     {
         StreamingRestObject<T> restObject = new();

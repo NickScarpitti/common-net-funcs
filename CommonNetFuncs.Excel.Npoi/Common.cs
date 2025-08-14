@@ -1068,10 +1068,10 @@ public static partial class Common
     /// <param name="xssfWorkbook">Workbook to add table to</param>
     /// <param name="sheetName">Name of the sheet to add the table to</param>
     /// <param name="tableName">Name of the table to add</param>
-    /// <param name="firstColIndex">Zero based index of the first column of the table</param>
-    /// <param name="lastColIndex">Zero based index of the last column of the table</param>
-    /// <param name="firstRowIndex">Zero based index of the first row of the table</param>
-    /// <param name="lastRowIndex">Zero based index of the last row of the table</param>
+    /// <param name="firstColIndex">Zero based index of the first column of the table.</param>
+    /// <param name="lastColIndex">Zero based index of the last column of the table.</param>
+    /// <param name="firstRowIndex">Zero based index of the first row of the table.</param>
+    /// <param name="lastRowIndex">Zero based index of the last row of the table.</param>
     /// <param name="columnNames">
     /// Optional: Ordered list of names for each column in the table. Will use Column# if not provided or list has fewer
     /// elements than there are columns in the table

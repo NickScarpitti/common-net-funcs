@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Optimized -->
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
@@ -29,14 +30,50 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.4.23</Version>
+    <Version>3.6.26</Version>
     <MinVerTagPrefix>excel.npoi-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.4.0</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.6.11</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>8</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <WarningLevel>8</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <WarningLevel>8</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>8</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <WarningLevel>8</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <WarningLevel>8</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|AnyCPU'">
+    <WarningLevel>8</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|x86'">
+    <WarningLevel>8</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|x64'">
+    <WarningLevel>8</WarningLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,13 +81,14 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.1" PrivateAssets="all" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.3" PrivateAssets="all" />
     <PackageReference Include="NPOI" Version="2.7.4" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" PrivateAssets="all" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Excel.Common\CommonNetFuncs.Excel.Common.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

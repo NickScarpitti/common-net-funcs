@@ -5,6 +5,7 @@ using NPOI.XSSF.UserModel;
 using System.Data;
 
 namespace Excel.Npoi.Tests;
+<<<<<<< HEAD
 
 public class ExportTests
 {
@@ -28,6 +29,33 @@ public class ExportTests
     {
         // Arrange
         List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+=======
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
+public class ExportTests
+{
+    private readonly IFixture _fixture;
+
+    public ExportTests() { _fixture = new Fixture(); }
+
+    public class TestData
+    {
+        public string StringProperty { get; set; } = string.Empty;
+
+        public int IntProperty { get; set; }
+
+        public DateTime DateProperty { get; set; }
+    }
+
+    [Theory]
+    [InlineData(true, "TestSheet", "TestTable")]
+    [InlineData(false, "Data", "Data")]
+    public async Task GenericExcelExport_WithValidList_ShouldReturnMemoryStream(bool createTable, string sheetName, string tableName)
+    {
+        // Arrange
+        List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+>>>>>>> 270705e4f794428a4927e32ef23496c0001e47e7
         List<string> skipColumnNames = new() { "DateProperty" };
 
         // Act
@@ -211,6 +239,7 @@ public class ExportTests
             null,
             new() { StringProperty = null!, IntProperty = 1, DateProperty = DateTime.Now },
             new() { StringProperty = "Test", IntProperty = 2, DateProperty = DateTime.Now }
+<<<<<<< HEAD
         };
 
         // Act
@@ -346,3 +375,142 @@ public class ExportTests
         resultStream.Length.ShouldBe(0); // Should return an empty stream since the original was disposed
     }
 }
+=======
+        };
+
+        // Act
+        bool result = testData.ExcelExport(workbook, sheet, createTable: true, tableName: "TestTable");
+
+        // Assert
+        result.ShouldBeTrue();
+        sheet.LastRowNum.ShouldBe(2); // Header + 2 data rows (null is skipped)
+    }
+
+    [Fact]
+    public void ExcelExport_WithAutoFilter_ShouldApplyFilterCorrectly()
+    {
+        // Arrange
+        using SXSSFWorkbook workbook = new();
+        ISheet sheet = workbook.CreateSheet("TestSheet");
+        List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+
+        // Act
+        bool result = testData.ExcelExport(workbook, sheet, createTable: false); // This will use auto-filter instead of table
+
+        // Assert
+        result.ShouldBeTrue();
+        workbook.NumberOfSheets.ShouldBe(1);
+        sheet.SheetName.ShouldBe("TestSheet");
+        sheet.GetLastPopulatedRowInColumn(0).ShouldBe(3); // Header + 2 data rows
+        sheet.GetLastPopulatedRowInColumn(1).ShouldBe(3); // Header + 2 data rows
+        sheet.GetLastPopulatedRowInColumn(2).ShouldBe(3); // Header + 2 data rows
+    }
+
+    [Theory]
+    [InlineData(true, new[] { "StringProperty" })]
+    [InlineData(false, new[] { "IntProperty", "DateProperty" })]
+    public void ExcelExport_WithSkippedColumns_ShouldExcludeSpecifiedColumns(bool createTable, string[] columnsToSkip)
+    {
+        // Arrange
+        using SXSSFWorkbook workbook = new();
+        ISheet sheet = workbook.CreateSheet();
+        List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+
+        // Act
+        bool result = testData.ExcelExport(workbook, sheet, createTable: createTable, tableName: "TestTable", skipColumnNames: columnsToSkip.ToList());
+
+        // Assert
+        result.ShouldBeTrue();
+        IRow headerRow = sheet.GetRow(0);
+        foreach (string columnName in columnsToSkip)
+        {
+            List<string?> headerValues = Enumerable.Range(0, headerRow.LastCellNum)
+                .Select(i => headerRow.GetCell(i)?.StringCellValue)
+                .ToList();
+            headerValues.ShouldNotContain(columnName);
+        }
+    }
+
+    [Fact]
+    public void AddGenericTable_WithInvalidTableName_ShouldHandleError()
+    {
+        // Arrange
+        using SXSSFWorkbook workbook = new();
+        List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+        string invalidTableName = new('X', 257); // Excel table names have a length limit
+
+        // Act
+        bool result = workbook.AddGenericTable(testData, "TestSheet", createTable: true, tableName: invalidTableName);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GenericExcelExport_WithLargeDataSet_ShouldHandleMemoryEfficiently()
+    {
+        // Arrange
+        List<TestData> largeDataSet = _fixture.CreateMany<TestData>(10000).ToList();
+
+        // Act
+        Task<MemoryStream?> Export()
+        { return largeDataSet.GenericExcelExport(createTable: true, sheetName: "LargeData", tableName: "LargeTable"); }
+
+        // Assert
+        Should.NotThrow(Export);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public async Task GenericExcelExport_WithInvalidSheetName_ShouldUseDefaultName(string? sheetName)
+    {
+        // Arrange
+        List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+
+        // Act
+        await using MemoryStream? result = await testData.GenericExcelExport(sheetName: sheetName!, tableName: "TestTable");
+
+        // Assert
+        result.ShouldNotBeNull();
+        using XSSFWorkbook workbook = new(result);
+        workbook.GetSheet("Data").ShouldNotBeNull(); // Should use default sheet name
+    }
+
+    [Fact]
+    public void ExcelExport_WithCustomStyles_ShouldApplyCorrectFormatting()
+    {
+        // Arrange
+        using SXSSFWorkbook workbook = new();
+        ISheet sheet = workbook.CreateSheet();
+        List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+
+        // Act
+        bool result = testData.ExcelExport(workbook, sheet, createTable: true, tableName: "StyledTable");
+
+        // Assert
+        result.ShouldBeTrue();
+        IRow headerRow = sheet.GetRow(0);
+        headerRow.GetCell(0).CellStyle.FillForegroundColor.ShouldBe(NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index);
+    }
+
+    [Fact]
+    public async Task GenericExcelExport_WithDisposedMemoryStream_ShouldHandleError()
+    {
+        // Arrange
+        List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+        await using MemoryStream memoryStream = new();
+        memoryStream.Dispose();
+
+        // Act
+        await using MemoryStream? resultStream = await testData.GenericExcelExport(memoryStream: memoryStream);
+
+        // Assert
+        resultStream.ShouldNotBeNull();
+        resultStream.Length.ShouldBe(0); // Should return an empty stream since the original was disposed
+    }
+}
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly
+>>>>>>> 270705e4f794428a4927e32ef23496c0001e47e7

@@ -353,10 +353,10 @@ public sealed class RandomTests
     }
 
     [Theory]
-    [InlineData(new[] { 1, 2, 3, 4, 5 }, 1, new[] { 0 })]
-    [InlineData(new[] { 1, 2, 3, 4, 5 }, 2, new[] { 1, 3 })]
-    [InlineData(new[] { 1, 2, 3, 4, 5 }, 3, new[] { 2, 0, 1 })]
-    public void GetUniqueRandomElements_WhenSelectQuantityIsLessThanUniqueItemCount_ShouldUseReservoirSampling(int[] items, int selectQuantity, int[] randomIndices)
+    [InlineData(new[] { 1, 2, 3, 4, 5 }, 1)]
+    [InlineData(new[] { 1, 2, 3, 4, 5 }, 2)]
+    [InlineData(new[] { 1, 2, 3, 4, 5 }, 3)]
+    public void GetUniqueRandomElements_WhenSelectQuantityIsLessThanUniqueItemCount_ShouldUseReservoirSampling(int[] items, int selectQuantity)
     {
         // Act
         List<int> result = items.GetUniqueRandomElements(selectQuantity).ToList();
@@ -368,9 +368,9 @@ public sealed class RandomTests
     }
 
     [Theory]
-    [InlineData(new[] { 1, 1, 2, 2, 3, 3 }, 2, new[] { 0, 1 })]
-    [InlineData(new[] { 5, 5, 5, 5 }, 1, new[] { 0 })]
-    public void GetUniqueRandomElements_WhenItemsContainDuplicates_ShouldWorkWithUniqueItemsOnly(int[] items, int selectQuantity, int[] randomIndices)
+    [InlineData(new[] { 1, 1, 2, 2, 3, 3 }, 2)]
+    [InlineData(new[] { 5, 5, 5, 5 }, 1)]
+    public void GetUniqueRandomElements_WhenItemsContainDuplicates_ShouldWorkWithUniqueItemsOnly(int[] items, int selectQuantity)
     {
         // Arrange
 

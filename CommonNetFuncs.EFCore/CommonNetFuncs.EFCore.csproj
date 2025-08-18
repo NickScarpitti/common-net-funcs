@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Optimized -->
   <PropertyGroup>
@@ -82,10 +82,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" />
     <PackageReference Include="NLog.Extensions.Logging" Version="6.0.3" PrivateAssets="all" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.7" PrivateAssets="all" />
     <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="9.103.9.3" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>

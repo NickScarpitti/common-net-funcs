@@ -1,7 +1,8 @@
-﻿using CommonNetFuncs.Core;
+﻿﻿using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class RunBatchesTests
 {
     private readonly Fixture _fixture = new();
@@ -275,3 +276,4 @@ public sealed class RunBatchesTests
         public string? Name { get; set; }
     }
 }
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -3,12 +3,26 @@ using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Core.CollectionClasses;
 
+/// <summary>
+/// Fixed size dictionary that maintains insertion order and evicts the oldest item when capacity is exceeded.
+/// </summary>
+/// <remarks>This dictionary enforces a maximum capacity. When the capacity is exceeded, the oldest item is automatically removed to make room for new entries.
+/// This implementation is thread-safe and uses a <see cref="ReaderWriterLockSlim"/> to synchronize access.</remarks>
+/// <typeparam name="TKey">The type of the keys in the dictionary. Keys must be non-null.</typeparam>
+/// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
 public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
 {
     private readonly ReaderWriterLockSlim readWriteLock = new();
     private readonly int capacity;
     private readonly OrderedDictionary<TKey, TValue?> dictionary;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FixedFIFODictionary{TKey,TValue}"/> class with the specified capacity and an optional source dictionary.
+    /// </summary>
+    /// <param name="capacity">The maximum number of items the dictionary can hold.</param>
+    /// <param name="sourceDictionary">Optional: A dictionary to initialize the contents of the new dictionary.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the capacity is less than or equal to zero.</exception>
+    /// <exception cref="ArgumentException">Thrown when the source dictionary exceeds the specified capacity.</exception>
     public FixedFIFODictionary(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
     {
         if (capacity <= 0)
@@ -33,6 +47,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public ICollection<TKey> Keys
     {
         get
@@ -40,7 +55,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
             readWriteLock.EnterReadLock();
             try
             {
-                return dictionary.Keys.ToList();
+                return dictionary.Keys;
             }
             finally
             {
@@ -49,6 +64,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public ICollection<TValue?> Values
     {
         get
@@ -56,7 +72,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
             readWriteLock.EnterReadLock();
             try
             {
-                return dictionary.Values.ToList();
+                return dictionary.Values;
             }
             finally
             {
@@ -65,6 +81,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public int Count
     {
         get
@@ -81,8 +98,10 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public bool IsReadOnly => false;
 
+    /// <inheritdoc />
     public TValue? this[TKey key]
     {
         get
@@ -123,6 +142,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public bool ContainsKey(TKey key)
     {
         readWriteLock.EnterReadLock();
@@ -136,6 +156,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public bool TryGetValue(TKey key, out TValue? value)
     {
         readWriteLock.EnterReadLock();
@@ -149,6 +170,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public void Clear()
     {
         readWriteLock.EnterWriteLock();
@@ -162,6 +184,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public void Add(TKey key, TValue? value)
     {
         readWriteLock.EnterWriteLock();
@@ -186,6 +209,12 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <summary>
+    /// Attempts to add the specified key and value to the dictionary.
+    /// </summary>
+    /// <param name="key">Key of the value to add.</param>
+    /// <param name="value">Value to add.</param>
+    /// <returns><see langword="true"/> if the key/value pair was added successfully, <see langword="false"/> otherwise.</returns>
     public bool TryAdd(TKey key, TValue? value)
     {
         readWriteLock.EnterUpgradeableReadLock();
@@ -225,6 +254,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public bool Remove(TKey key)
     {
         readWriteLock.EnterWriteLock();
@@ -238,6 +268,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public void Add(KeyValuePair<TKey, TValue?> item)
     {
         readWriteLock.EnterWriteLock();
@@ -265,6 +296,12 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <summary>
+    /// Gets the value associated with the specified key, or adds a new key/value pair to the dictionary if the key does not exist.
+    /// </summary>
+    /// <param name="key">The key to locate in the dictionary.</param>
+    /// <param name="valueFactory">A function to generate a value for the key if it does not exist.</param>
+    /// <returns>The value associated with the specified key.</returns>
     public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
     {
         readWriteLock.EnterUpgradeableReadLock();
@@ -296,6 +333,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public bool Contains(KeyValuePair<TKey, TValue?> item)
     {
         readWriteLock.EnterReadLock();
@@ -309,6 +347,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public void CopyTo(KeyValuePair<TKey, TValue?>[] array, int arrayIndex)
     {
         readWriteLock.EnterReadLock();
@@ -322,6 +361,7 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public bool Remove(KeyValuePair<TKey, TValue?> item)
     {
         readWriteLock.EnterWriteLock();
@@ -335,12 +375,13 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     public IEnumerator<KeyValuePair<TKey, TValue?>> GetEnumerator()
     {
         readWriteLock.EnterReadLock();
         try
         {
-            return dictionary.ToList().GetEnumerator();
+            return dictionary.GetEnumerator();
         }
         finally
         {
@@ -348,177 +389,9 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    /// <inheritdoc />
     IEnumerator IEnumerable.GetEnumerator()
     {
         return ((IEnumerable)dictionary).GetEnumerator();
     }
 }
-
-//public class FixedFIFODictionaryAlt<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
-//{
-//    private readonly Lock addRemoveLock = new();
-//    private readonly int capacity;
-//    private readonly Dictionary<TKey, TValue?> dictionary;
-
-//    private Queue<TKey> insertionOrderQueue;
-
-//    public FixedFIFODictionaryAlt(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
-//    {
-//        if (capacity <= 0)
-//        {
-//            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
-//        }
-
-//        if (sourceDictionary != null && sourceDictionary.Count > capacity)
-//        {
-//            throw new ArgumentException("Source dictionary exceeds the specified capacity.", nameof(sourceDictionary));
-//        }
-
-//        this.capacity = capacity;
-//        dictionary = new Dictionary<TKey, TValue?>(capacity);
-//        insertionOrderQueue = new Queue<TKey>(capacity);
-
-//        if (sourceDictionary != null)
-//        {
-//            foreach (KeyValuePair<TKey, TValue?> kvp in sourceDictionary)
-//            {
-//                dictionary[kvp.Key] = kvp.Value;
-//                insertionOrderQueue.Enqueue(kvp.Key);
-//            }
-//        }
-//    }
-
-//    public ICollection<TKey> Keys => dictionary.Keys;
-
-//    public ICollection<TValue?> Values => dictionary.Values;
-
-//    public int Count => dictionary.Count;
-
-//    public bool IsReadOnly => ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).IsReadOnly;
-
-//    public TValue? this[TKey key]
-//    {
-//        get
-//        {
-//            lock (addRemoveLock)
-//            {
-//                return dictionary[key];
-//            }
-//        }
-//        set
-//        {
-//            lock (addRemoveLock)
-//            {
-//                if (dictionary.ContainsKey(key))
-//                {
-//                    // Update existing item
-//                    dictionary[key] = value; // Note: We're not changing its position in the queue
-//                }
-//                else
-//                {
-//                    // Add new item
-//                    if (dictionary.Count >= capacity)
-//                    {
-//                        // Remove oldest item
-//                        TKey oldestKey = insertionOrderQueue.Dequeue();
-//                        dictionary.Remove(oldestKey);
-//                    }
-//                    dictionary[key] = value;
-//                    insertionOrderQueue.Enqueue(key);
-//                }
-//            }
-//        }
-//    }
-
-//    public bool ContainsKey(TKey key)
-//    {
-//        return dictionary.ContainsKey(key);
-//    }
-
-//    public bool TryGetValue(TKey key, out TValue? value)
-//    {
-//        return dictionary.TryGetValue(key, out value);
-//    }
-
-//    public void Clear()
-//    {
-//        dictionary.Clear();
-//        insertionOrderQueue.Clear();
-//    }
-
-//    public void Add(TKey key, TValue? value)
-//    {
-//        lock (addRemoveLock)
-//        {
-//          if (dictionary.ContainsKey(key))
-//          {
-//              // Update existing item
-//              dictionary[key] = value; // Note: We're not changing its position in the queue
-//          }
-//          else
-//          {
-//              // Add new item
-//              if (dictionary.Count >= capacity)
-//              {
-//                  // Remove oldest item
-//                  TKey oldestKey = insertionOrderQueue.Dequeue();
-//                  dictionary.Remove(oldestKey);
-//              }
-//              dictionary.Add(key, value);
-//              insertionOrderQueue.Enqueue(key);
-//          }
-//        }
-//    }
-
-//    public bool Remove(TKey key)
-//    {
-//        lock (addRemoveLock)
-//        {
-//          if (dictionary.Remove(key))
-//          {
-//              insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, key)));
-//              return true;
-//          }
-//        }
-//        return false;
-//    }
-
-//    public void Add(KeyValuePair<TKey, TValue?> item)
-//    {
-//        lock (addRemoveLock)
-//        {
-//          ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Add(item);
-//          insertionOrderQueue.Enqueue(item.Key);
-//        }
-//    }
-
-//    public bool Contains(KeyValuePair<TKey, TValue?> item)
-//    {
-//        return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Contains(item);
-//    }
-
-//    public void CopyTo(KeyValuePair<TKey, TValue?>[] array, int arrayIndex)
-//    {
-//        ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).CopyTo(array, arrayIndex);
-//    }
-
-//    public bool Remove(KeyValuePair<TKey, TValue?> item)
-//    {
-//        if (((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item))
-//        {
-//            insertionOrderQueue = new Queue<TKey>(insertionOrderQueue.Where(k => !EqualityComparer<TKey>.Default.Equals(k, item.Key)));
-//            return true;
-//        }
-//        return false;
-//    }
-
-//    public IEnumerator<KeyValuePair<TKey, TValue?>> GetEnumerator()
-//    {
-//        return ((IEnumerable<KeyValuePair<TKey, TValue?>>)dictionary).GetEnumerator();
-//    }
-
-//    IEnumerator IEnumerable.GetEnumerator()
-//    {
-//        return ((IEnumerable)dictionary).GetEnumerator();
-//    }
-//}

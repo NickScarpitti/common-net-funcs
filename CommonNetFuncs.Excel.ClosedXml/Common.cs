@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿﻿using System.Reflection;
 using ClosedXML.Excel;
 using CommonNetFuncs.Excel.Common;
 
@@ -15,7 +15,7 @@ public static class Common
     /// Checks if cell is empty
     /// </summary>
     /// <param name="cell">Cell to check if empty</param>
-    /// <returns>True if cell is empty</returns>
+    /// <returns><see langword="true"/> if cell is empty</returns>
     public static bool IsCellEmpty(this IXLCell cell)
     {
         return string.IsNullOrWhiteSpace(cell.Value.ToString());
@@ -26,7 +26,7 @@ public static class Common
     /// </summary>
     /// <param name="wb">Workbook to write to disk</param>
     /// <param name="path">Path to save the workbook to</param>
-    /// <returns>True if write was successful</returns>
+    /// <returns><see langword="true"/> if write was successful</returns>
     public static bool WriteExcelFile(IXLWorkbook wb, string path)
     {
         try
@@ -55,7 +55,7 @@ public static class Common
     /// <param name="font">Font to use for the cells this style applies to</param>
     /// <param name="alignment">Text alignment for the cells this style applies to</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyle option</returns>
-    public static IXLStyle? GetStyle(EStyle style, IXLWorkbook wb, bool cellLocked = false, string? htmlColor = null, IXLFont? font = null, XLAlignmentHorizontalValues? alignment = null)
+    public static IXLStyle? GetStyle(EStyle style, IXLWorkbook wb, bool cellLocked = false, bool wrapText = false, string? htmlColor = null, IXLFont? font = null, XLAlignmentHorizontalValues? alignment = null)
     {
         IXLStyle? cellStyle = CreateEmptyStyle();
         if (cellStyle == null)
@@ -106,7 +106,10 @@ public static class Common
                 cellStyle = xStyle;
                 break;
         }
+
         cellStyle.Protection.Locked = cellLocked;
+        cellStyle.Alignment.WrapText = wrapText;
+
         return cellStyle;
     }
 

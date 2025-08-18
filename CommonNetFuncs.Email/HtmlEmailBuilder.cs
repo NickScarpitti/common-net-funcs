@@ -32,7 +32,7 @@ public static partial class HtmlEmailBuilder
     /// </summary>
     /// <param name="body">Main text body of the email that goes before a table if there is one</param>
     /// <param name="footer">Any text to be displayed under the table or after the body</param>
-    /// <param name="tableData">Data to be formatted into an HTML table</param>
+    /// <param name="tableData">Data to be formatted into an HTML table.</param>
     /// <returns>HTML Body of an email</returns>
     public static string BuildHtmlEmail(string body, string? footer = null, DataTable? tableData = null, CancellationToken cancellationToken = default)
     {
@@ -112,8 +112,8 @@ public static partial class HtmlEmailBuilder
     /// <summary>
     /// Create an HTML table from given data
     /// </summary>
-    /// <param name="tableData">Data to turn into an HTML table</param>
-    /// <param name="applyTableCss">Apply CSS styling to table</param>
+    /// <param name="tableData">Data to turn into an HTML table.</param>
+    /// <param name="applyTableCss">Apply CSS styling to table.</param>
     /// <param name="customCss">Custom CSS to apply to the table. If not provided, default will be used.</param>
     /// <returns>HTML table based on the data passed in</returns>
     public static string CreateHtmlTable(this DataTable? tableData, bool applyTableCss = true, string? customCss = null, CancellationToken cancellationToken = default)
@@ -166,7 +166,7 @@ public static partial class HtmlEmailBuilder
     /// Create an HTML table from given data
     /// </summary>
     /// <param name="tableData">Data to turn into an HTML table. The first item should contain the header values</param>
-    /// <param name="applyTableCss">Apply CSS styling to table</param>
+    /// <param name="applyTableCss">Apply CSS styling to table.</param>
     /// <param name="customCss">Custom CSS to apply to the table. If not provided, default will be used.</param>
     /// <returns>HTML table based on the data passed in</returns>
     public static string CreateHtmlTable(this List<List<string>>? tableData, bool applyTableCss = true, string? customCss = null, CancellationToken cancellationToken = default)

@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+﻿﻿using System.Security.Cryptography;
 using System.Text;
 using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using Microsoft.AspNetCore.Builder;
@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
-using NLog;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Core.UnitConversion;
@@ -17,7 +16,7 @@ namespace CommonNetFuncs.Web.Middleware.CachingMiddleware;
 
 internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, CacheOptions cacheOptions, CacheMetrics? cacheMetrics, CacheTracker cacheTracker) : IDisposable
 {
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     private readonly RequestDelegate next = next;
     private readonly IMemoryCache cache = cache;
@@ -128,6 +127,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 
                             cache.Set(cacheKey, entry, cacheEntryOptions);
                             cacheMetrics?.AddToSize(responseData.Length);
+                            cacheMetrics?.IncrementCacheEntryCount();
 
                             lock (tagLock)
                             {
@@ -207,6 +207,8 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                                 if (cache.TryGetValue(keyToEvict, out CacheEntry? entry))
                                 {
                                     cacheMetrics?.SubtractFromSize(entry?.Data.Length ?? 0);
+                                    cacheMetrics?.DecrementCacheEntryCount();
+                                    cacheMetrics?.IncrementEviction(EvictionReason.Removed);
                                     cache.Remove(keyToEvict);
                                     if (!cacheOptions.SuppressLogs)
                                     {
@@ -234,6 +236,8 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                 try
                 {
                     cacheMetrics?.SubtractFromSize(entry?.Data.Length ?? 0);
+                    cacheMetrics?.DecrementCacheEntryCount();
+                    cacheMetrics?.IncrementEviction(EvictionReason.Removed);
                     cache.Remove(cacheKey);
                     if (!cacheOptions.SuppressLogs)
                     {
@@ -257,6 +261,8 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         }
 
         cacheMetrics?.SubtractFromSize(entry.Data.Length);
+        cacheMetrics?.DecrementCacheEntryCount();
+        cacheMetrics?.IncrementEviction(EvictionReason.Removed);
         RemoveCacheTags(key.ToString() ?? string.Empty, entry.Tags);
         if (!cacheOptions.SuppressLogs)
         {
@@ -331,7 +337,8 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 
                     // Update metrics
                     cacheMetrics?.SubtractFromSize(entry.Value.Size);
-                    cacheMetrics?.IncrementEvictionsForSpace();
+                    cacheMetrics?.DecrementCacheEntryCount();
+                    cacheMetrics?.IncrementEviction(EvictionReason.Capacity);
 
                     // Clean up tags
                     RemoveCacheTags(entry.Key, cacheEntry?.Tags ?? []);
@@ -414,7 +421,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 // Extension method for easy middleware registration
 public static class MemoryCacheEvictionMiddlewareExtensions
 {
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     public static IApplicationBuilder UseMemoryValueCaching(this IApplicationBuilder app, CacheOptions? options = null, bool trackMetrics = false)
     {
@@ -447,19 +454,28 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         {
             try
             {
+                #pragma warning disable IDE0037 // Use inferred member name
                 return Results.Ok(
                 new
                 {
                     Hits = metrics.CacheHits,
                     Misses = metrics.CacheMisses,
-                    HitRatio = metrics.CacheHits + metrics.CacheMisses == 0
+                    HitRatio = $"{Math.Round(metrics.CacheHits + metrics.CacheMisses == 0
                         ? 0
-                        : (double)metrics.CacheHits / (metrics.CacheHits + metrics.CacheMisses),
-                    CurrentSizeBytes = metrics.CurrentCacheSize,
-                    CurrentSizeMB = Math.Round((double)metrics.CurrentCacheSize / (1024 * 1024), 2),
-                    TagCount = metrics.CacheTags.Count,
-                    Tags = metrics.CacheTags.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count)
+                        : (double)metrics.CacheHits / (metrics.CacheHits + metrics.CacheMisses), 3) * 100}%",
+                    SkippedDueToSize = metrics.SkippedDueToSize,
+                    CurrentSizeBytes = $"{metrics.CurrentCacheSize}B",
+                    CurrentSize = metrics.CurrentCacheSize.GetFileSizeFromBytesWithUnits(2),
+                    CacheEntries = metrics.CurrentCacheEntryCount,
+                    EntriesCountByTag = metrics.CacheTags.Count,
+                    Tags = metrics.CacheTags.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count),
+                    EvictionReason = new
+                    {
+                        Capacity = metrics.EvictedDueToCapacity,
+                        ManuallyRemoved = metrics.EvictedDueToRemoved
+                    }
                 });
+                #pragma warning restore IDE0037 // Use inferred member name
             }
             catch (Exception ex)
             {
@@ -490,6 +506,8 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 
                     // Update metrics
                     metrics?.SubtractFromSize(entry?.Data.Length ?? 0);
+                    metrics?.DecrementCacheEntryCount();
+                    metrics?.IncrementEviction(EvictionReason.Removed);
 
                     // Remove from tags
                     foreach (string tag in entry?.Tags ?? [])
@@ -544,6 +562,8 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 
                             // Update metrics
                             metrics?.SubtractFromSize(entry?.Data.Length ?? 0);
+                            metrics?.DecrementCacheEntryCount();
+                            metrics?.IncrementEviction(EvictionReason.Removed);
 
                             // Remove from all associated tags
                             foreach (string entryTag in entry?.Tags ?? [])

@@ -1,10 +1,11 @@
-﻿using System.Collections.Concurrent;
+﻿﻿using System.Collections.Concurrent;
 using System.Data;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class AsyncTests
 {
     private readonly Fixture _fixture;
@@ -647,3 +648,4 @@ public sealed class AsyncTests
 
     #endregion
 }
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

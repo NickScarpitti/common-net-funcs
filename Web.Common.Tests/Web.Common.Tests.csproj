@@ -33,7 +33,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Web.Common\CommonNetFuncs.Web.Common.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Shouldly" />

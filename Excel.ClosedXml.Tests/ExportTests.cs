@@ -1,4 +1,4 @@
-﻿using System.Data;
+﻿﻿using System.Data;
 using ClosedXML.Excel;
 using static CommonNetFuncs.Excel.ClosedXml.Export;
 
@@ -201,7 +201,7 @@ public sealed class ExportTests : IDisposable
         cts.Cancel();
 
         // Act
-        bool result = ExportFromTable(_workbook, worksheet, testData, false, cts.Token);
+        bool result = ExportFromTable(_workbook, worksheet, testData, false, false, cts.Token);
 
         // Assert
         result.ShouldBe(false);
@@ -223,7 +223,7 @@ public sealed class ExportTests : IDisposable
         cts.Cancel();
 
         // Act
-        bool result = ExportFromTable(_workbook, worksheet, dataTable, false, cts.Token);
+        bool result = ExportFromTable(_workbook, worksheet, dataTable, false, false, cts.Token);
 
         // Assert
         result.ShouldBe(false);

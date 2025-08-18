@@ -1,4 +1,4 @@
-﻿namespace CommonNetFuncs.Web.Ftp;
+﻿﻿namespace CommonNetFuncs.Web.Ftp;
 
 public sealed class FileTransferConnection
 {
@@ -11,4 +11,6 @@ public sealed class FileTransferConnection
     public string ConnectionProtocol { get; set; } = string.Empty;
 
     public int Port { get; set; }
+
+    public uint BufferSize { get; set; }
 }

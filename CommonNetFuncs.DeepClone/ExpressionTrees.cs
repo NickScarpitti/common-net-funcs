@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+﻿﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -52,17 +52,28 @@ public static class ExpressionTrees
     #endregion
 
     /// <summary>
-    /// Deep clone a non-delegate type class (cloned object doesn't retain memory references) using Expression Trees (fastest)
+    /// Deep clone a non-delegate type <see langword="class"/> (cloned object doesn't retain memory references) using Expression Trees (fastest)
     /// </summary>
     /// <typeparam name="T">Object type.</typeparam>
     /// <param name="original">Object to copy.</param>
     /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
+    /// <param name="useCache">Indicates whether or not to cache the compiled expression tree functions to be re-used.</param>
+    /// <returns>An exact copy of the original object that is distinct from the original object.</returns>
     [return: NotNullIfNotNull(nameof(original))]
     public static T? DeepClone<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null, bool useCache = true)
     {
         return (T?)DeepCopyByExpressionTreeObj(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()), useCache);
     }
 
+    /// <summary>
+    /// Deep clone a non-delegate type <see langword="class"/> (cloned object doesn't retain memory references) using Expression Trees (fastest)
+    /// </summary>
+    /// <param name="original">Object to copy.</param>
+    /// <param name="forceDeepCopy">Indicates whether to force deep copy even for non-cloneable types.</param>
+    /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
+    /// <param name="useCache">Indicates whether or not to cache the compiled expression tree functions to be re-used</param>
+    /// <returns>An exact copy of the original object that is completely distinct from the original object.</returns>
+    /// <exception cref="ArgumentException">Throws if the original object is a delegate type.</exception>
     private static object? DeepCopyByExpressionTreeObj(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict, bool useCache)
     {
         if (original == null)
@@ -99,6 +110,12 @@ public static class ExpressionTrees
         return compiledCopyFunction(original, copiedReferencesDict);
     }
 
+    /// <summary>
+    /// Creates a compiled <see cref="Expression"/> that performs a deep copy of the specified type.
+    /// </summary>
+    /// <param name="type">Type to copy</param>
+    /// <param name="useCache">Indicates whether or not to cache the compiled expression tree functions to be re-used in recursed properties.</param>
+    /// <returns>A compiled <see cref="Expression"/></returns>
     internal static Expression<Func<object, Dictionary<object, object>, object>> CreateCompiledLambdaCopyFunctionForType(Type type, bool useCache)
     {
         ///// INITIALIZATION OF EXPRESSIONS AND VARIABLES
@@ -335,7 +352,7 @@ public static class ExpressionTrees
     }
 
     private static readonly Type ThisType = typeof(ExpressionTrees);
-    private static readonly MethodInfo? DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static);
+    private static readonly MethodInfo? DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod(nameof(DeepCopyByExpressionTreeObj), BindingFlags.NonPublic | BindingFlags.Static);
 
     private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions, bool useCache)
     {

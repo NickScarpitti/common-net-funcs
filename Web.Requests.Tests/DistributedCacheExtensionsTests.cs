@@ -1,9 +1,11 @@
-﻿using System.Text;
+﻿﻿using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using static CommonNetFuncs.Web.Requests.DistributedCacheExtensions;
 
 namespace Web.Requests.Tests;
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 
 public class DistributedCacheExtensionsTests
 {
@@ -118,3 +120,5 @@ public class DistributedCacheExtensionsTests
         result.ShouldBe(default);
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

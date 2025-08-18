@@ -1,4 +1,4 @@
-﻿using CommonNetFuncs.Images;
+﻿﻿using CommonNetFuncs.Images;
 using SixLabors.ImageSharp;
 
 namespace Images.Tests;
@@ -156,7 +156,9 @@ public sealed class Base64Tests : IDisposable
     public void RemoveImageVersionQuery_Should_Remove_Version_Parameter_Correctly(string? input, string? expected)
     {
         // Act
+        #pragma warning disable RCS1249 // Unnecessary null-forgiving operator
         string result = Base64.RemoveImageVersionQuery(input!);
+        #pragma warning restore RCS1249 // Unnecessary null-forgiving operator
 
         // Assert
         result.ShouldBe(expected);

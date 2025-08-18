@@ -88,7 +88,7 @@ public sealed class NavigationPropertiesTests : IDisposable
     [Fact]
     public void GetNavigations_WithDifferentDepthsUsingCache_ReturnsCorrectNavigationPaths()
     {
-        //TODO:: Get depth of 1, then 3, then 1 again , and ensure the cache is used correctly and extra navigations are left out when depth is less than max cached depth
+        //Get depth of 1, then 3, then 1 again , and ensure the cache is used correctly and extra navigations are left out when depth is less than max cached depth
         // Arrange
         HashSet<string> originalNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(_context, new(maxNavigationDepth: 1));
         HashSet<string> deeperNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(_context, new(maxNavigationDepth: 3));
@@ -193,24 +193,24 @@ public sealed class NavigationPropertiesTests : IDisposable
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<TestEntity>()
-                .HasOne(e => e.RelatedEntity)
+                .HasOne(x => x.RelatedEntity)
                 .WithMany();
 
             modelBuilder.Entity<TestRelatedEntity>()
-                .HasOne(e => e.Parent)
+                .HasOne(x => x.Parent)
                 .WithMany();
 
             modelBuilder.Entity<DeepTestEntity>()
-                .HasOne(e => e.DeepTestRelatedEntity)
-                .WithMany(e => e.TestEntities);
+                .HasOne(x => x.DeepTestRelatedEntity)
+                .WithMany(x => x.TestEntities);
 
             modelBuilder.Entity<DeepTestRelatedEntity>()
-                .HasOne(e => e.GetDeepTestRelatedEntity2)
-                .WithMany(e => e.DeepTestRelatedEntities);
+                .HasOne(x => x.GetDeepTestRelatedEntity2)
+                .WithMany(x => x.DeepTestRelatedEntities);
 
             modelBuilder.Entity<DeepTestRelatedEntity2>()
-                .HasOne(e => e.DeepTestRelatedEntity3)
-                .WithMany(e => e.DeepTestRelatedEntity2s);
+                .HasOne(x => x.DeepTestRelatedEntity3)
+                .WithMany(x => x.DeepTestRelatedEntity2s);
         }
     }
 

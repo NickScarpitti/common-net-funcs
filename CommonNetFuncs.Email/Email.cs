@@ -35,47 +35,140 @@ public sealed class MailAttachment(string? AttachmentName = null, Stream? Attach
     public Stream? AttachmentStream { get; set; } = AttachmentStream;
 }
 
+public sealed class SendEmailConfig
+{
+    /// <summary>
+    /// Gets or sets the values to use for the SMTP server conncetion.
+    /// </summary>
+    public SmtpSettings SmtpSettings { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the email addresses used in the email, including From, To, CC, and BCC.
+    /// </summary>
+    public EmailAddresses EmailAddresses { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a read receipt request should be added to the email. ReadReceiptEmail must have a value for the read receipt to work.
+    /// </summary>
+    public bool ReadReceipt { get; set; }
+
+    /// <summary>
+    /// Gets or sets the email address to which read receipts should be sent when ReadReceipt is true.
+    /// </summary>
+    public string? ReadReceiptEmail { get; set; }
+
+    /// <summary>
+    /// Gets or sets the email content to be sent, including subject, body, and attachments.
+    /// </summary>
+    public EmailContent EmailContent { get; set; } = new();
+}
+
+public sealed class SmtpSettings
+{
+    /// <summary>
+    /// Gets or sets the SMTP server address used for sending emails.
+    /// </summary>
+    public string? SmtpServer { get; set; }
+
+    /// <summary>
+    /// Gets or sets the port number used for the SMTP server connection.
+    /// </summary>
+    /// <remarks>The port number must match the configuration of the SMTP server being used. Incorrect values may result in connection failures.</remarks>
+    public int SmtpPort { get; set; }
+
+    /// <summary>
+    /// Gets or sets the username used for authenticating with the SMTP server.
+    /// </summary>
+    public string? SmtpUser { get; set; }
+
+    /// <summary>
+    /// Gets or sets the password for the SMTP server, if required.
+    /// </summary>
+    public string? SmtpPassword { get; set; }
+}
+
+public sealed class  EmailAddresses
+{
+    /// <summary>
+    /// Gets or sets the sender's email address for the outgoing mail message.
+    /// </summary>
+    public MailAddress FromAddress { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the collection of recipient email addresses for the message.
+    /// </summary>
+    public IEnumerable<MailAddress> ToAddresses { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the collection of email addresses to be included as CC (carbon copy) recipients.
+    /// </summary>
+    public IEnumerable<MailAddress> CcAddresses { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the collection of email addresses to be included as blind carbon copy (BCC) recipients.
+    /// </summary>
+    public IEnumerable<MailAddress> BccAddresses { get; set; } = [];
+}
+
+public sealed class EmailContent
+{
+    /// <summary>
+    /// Gets or sets the subject of the message.
+    /// </summary>
+    public string? Subject { get; set; }
+
+    /// <summary>
+    /// Gets or sets the body content of the message.
+    /// </summary>
+    public string? Body { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the body of the message is formatted as HTML.
+    /// </summary>
+    public bool BodyIsHtml { get; set; }
+
+    /// <summary>
+    /// Gets or sets the collection of attachments associated with the mail message.
+    /// </summary>
+    public IEnumerable<MailAttachment>? Attachments { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether attachments should be automatically disposed when they are no longer needed.
+    /// </summary>
+    /// <remarks>When this property is set to <see langword="true"/>, any attachments associated with the object will be disposed of automatically to free up resources.
+    /// Set this property to <see langword="false"/> if you want to manage the disposal of attachments manually.</remarks>
+    public bool AutoDisposeAttachments { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether email attachments should be compressed into a ZIP archive.
+    /// </summary>
+    public bool ZipAttachments { get; set; }
+}
+
 public static class Email
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
     /// <summary>
-    /// Sends an email using the SMTP server specified in the parameters
+    /// Sends an email using the SMTP server specified in the parameters.
     /// </summary>
-    /// <param name="smtpServer">The address of the SMTP server to use to sent the email</param>
-    /// <param name="smtpPort">Port to use when connecting to the SMPT server</param>
-    /// <param name="from">
-    /// The MailAddress indicating the email address to use in the From field (does not need to be an actual email address)
-    /// </param>
-    /// <param name="toAddresses">List of MailAdresses that indicates who to add as direct recipients of the email</param>
-    /// <param name="subject">Text to be used as the subject of the email</param>
-    /// <param name="body">Text to be used for the body of the email. Can be HTML or plain text (see bodyIsHtml parameter)</param>
-    /// <param name="bodyIsHtml">Will render body as HTML if true</param>
-    /// <param name="ccAddresses">List of MailAdresses that indicates who to add as CC recipients of the email</param>
-    /// <param name="bccAddresses">List of MailAdresses that indicates who to add as BCC recipients of the email</param>
-    /// <param name="attachments">List of attachments with the name to give the file as well as the file data</param>
-    /// <param name="readReceipt">Whether or not to add a read receipt request to the email</param>
-    /// <param name="readReceiptEmail">Email to send the read receipt to</param>
-    /// <param name="smtpUser">User name for the SMTP server, if required. Requires smtpPassword to be set to use</param>
-    /// <param name="smtpPassword">Password for the SMTP server, if required. Requires smtpUser to be set to use</param>
-    /// <param name="zipAttachments">Will zip all attachments if true</param>
-    /// <returns>Email sent success bool</returns>
-    public static async Task<bool> SendEmail(string? smtpServer, int smtpPort, MailAddress from, IEnumerable<MailAddress> toAddresses, string? subject, string? body, bool bodyIsHtml = false,
-        IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null, IEnumerable<MailAttachment>? attachments = null, bool readReceipt = false,
-        string? readReceiptEmail = null, string? smtpUser = null, string? smtpPassword = null, bool zipAttachments = false, bool autoDisposeAttachments = true, CancellationToken cancellationToken = default)
+    /// <param name="sendEmailConfig">Configuration options for sending the email.</param>
+    /// <param name="cancellationToken">Cancellation token for this operation.</param>
+    /// <returns><see langword="true"/> if email was sent successfully, otherwise <see langword="false"/></returns>
+    public static async Task<bool> SendEmail(SendEmailConfig sendEmailConfig, CancellationToken cancellationToken = default)
     {
         bool success = true;
         try
         {
             // Confirm emails
-            if (!from.Email.IsValidEmail())
+            if (!sendEmailConfig.EmailAddresses.FromAddress.Email.IsValidEmail())
             {
                 success = false;
             }
 
-            if (success && toAddresses.Any())
+            if (success && sendEmailConfig.EmailAddresses.ToAddresses.Any())
             {
-                foreach (MailAddress mailAddress in toAddresses)
+                foreach (MailAddress mailAddress in sendEmailConfig.EmailAddresses.ToAddresses)
                 {
                     if (!mailAddress.Email.IsValidEmail())
                     {
@@ -85,11 +178,11 @@ public static class Email
                 }
             }
 
-            if (success && (ccAddresses != null))
+            if (success && (sendEmailConfig.EmailAddresses.CcAddresses != null))
             {
-                if (ccAddresses.Any())
+                if (sendEmailConfig.EmailAddresses.CcAddresses.Any())
                 {
-                    foreach (MailAddress mailAddress in ccAddresses)
+                    foreach (MailAddress mailAddress in sendEmailConfig.EmailAddresses.CcAddresses)
                     {
                         if (!mailAddress.Email.IsValidEmail())
                         {
@@ -100,11 +193,11 @@ public static class Email
                 }
             }
 
-            if (success && (bccAddresses != null))
+            if (success && (sendEmailConfig.EmailAddresses.BccAddresses != null))
             {
-                if (bccAddresses.Any())
+                if (sendEmailConfig.EmailAddresses.BccAddresses.Any())
                 {
-                    foreach (MailAddress mailAddress in bccAddresses)
+                    foreach (MailAddress mailAddress in sendEmailConfig.EmailAddresses.BccAddresses)
                     {
                         if (!mailAddress.Email.IsValidEmail())
                         {
@@ -118,35 +211,35 @@ public static class Email
             if (success)
             {
                 MimeMessage email = new();
-                email.From.Add(new MailboxAddress(from?.Name, from?.Email));
-                email.To.AddRange(toAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
-                if (ccAddresses?.Any() == true)
+                email.From.Add(new MailboxAddress(sendEmailConfig.EmailAddresses.FromAddress?.Name, sendEmailConfig.EmailAddresses.FromAddress?.Email));
+                email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+                if (sendEmailConfig.EmailAddresses.CcAddresses?.Any() == true)
                 {
-                    email.Cc.AddRange(ccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+                    email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
                 }
-                if (bccAddresses?.Any() == true)
+                if (sendEmailConfig.EmailAddresses.BccAddresses?.Any() == true)
                 {
-                    email.Bcc.AddRange(bccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+                    email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
                 }
-                email.Subject = subject;
+                email.Subject = sendEmailConfig.EmailContent.Subject;
 
                 BodyBuilder bodyBuilder = new();
-                if (bodyIsHtml)
+                if (sendEmailConfig.EmailContent.BodyIsHtml)
                 {
-                    bodyBuilder.HtmlBody = body;
+                    bodyBuilder.HtmlBody = sendEmailConfig.EmailContent.Body;
                 }
                 else
                 {
-                    bodyBuilder.TextBody = body;
+                    bodyBuilder.TextBody = sendEmailConfig.EmailContent.Body;
                 }
 
-                await AddAttachments(attachments, bodyBuilder, zipAttachments, cancellationToken).ConfigureAwait(false);
+                await AddAttachments(sendEmailConfig.EmailContent.Attachments, bodyBuilder, sendEmailConfig.EmailContent.ZipAttachments, cancellationToken).ConfigureAwait(false);
 
                 email.Body = bodyBuilder.ToMessageBody();
 
-                if (readReceipt && !string.IsNullOrWhiteSpace(readReceiptEmail))
+                if (sendEmailConfig.ReadReceipt && !string.IsNullOrWhiteSpace(sendEmailConfig.ReadReceiptEmail))
                 {
-                    email.Headers[HeaderId.DispositionNotificationTo] = readReceiptEmail;
+                    email.Headers[HeaderId.DispositionNotificationTo] = sendEmailConfig.ReadReceiptEmail;
                 }
 
                 for (int i = 0; i < 8; i++)
@@ -154,14 +247,14 @@ public static class Email
                     try
                     {
                         using SmtpClient smtpClient = new();
-                        if (!string.IsNullOrWhiteSpace(smtpUser) && !string.IsNullOrWhiteSpace(smtpPassword))
+                        if (!string.IsNullOrWhiteSpace(sendEmailConfig.SmtpSettings.SmtpUser) && !string.IsNullOrWhiteSpace(sendEmailConfig.SmtpSettings.SmtpPassword))
                         {
-                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls, cancellationToken).ConfigureAwait(false);
-                            await smtpClient.AuthenticateAsync(smtpUser, smtpPassword, cancellationToken).ConfigureAwait(false);
+                            await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, SecureSocketOptions.StartTls, cancellationToken).ConfigureAwait(false);
+                            await smtpClient.AuthenticateAsync(sendEmailConfig.SmtpSettings.SmtpUser, sendEmailConfig.SmtpSettings.SmtpPassword, cancellationToken).ConfigureAwait(false);
                         }
                         else
                         {
-                            await smtpClient.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.None, cancellationToken).ConfigureAwait(false);
+                            await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, SecureSocketOptions.None, cancellationToken).ConfigureAwait(false);
                         }
                         await smtpClient.SendAsync(email, cancellationToken).ConfigureAwait(false);
                         await smtpClient.DisconnectAsync(true, cancellationToken).ConfigureAwait(false);
@@ -172,7 +265,7 @@ public static class Email
                         logger.Warn(ex, "{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error");
                         if (i == 7)
                         {
-                            logger.Error("{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
+                            logger.Error("{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {sendEmailConfig.SmtpSettings.SmtpServer} | SMTP Port: {sendEmailConfig.SmtpSettings.SmtpPort} | SMTP User: {sendEmailConfig.SmtpSettings.SmtpUser}");
                             success = false; //Sets success to false when the email send fails on the last attempt
                         }
                     }
@@ -182,13 +275,13 @@ public static class Email
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}");
+            logger.Error(ex, "{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {sendEmailConfig.SmtpSettings.SmtpServer} | SMTP Port: {sendEmailConfig.SmtpSettings.SmtpPort} | SMTP User: {sendEmailConfig.SmtpSettings.SmtpUser}");
             success = false;
         }
 
-        if (autoDisposeAttachments)
+        if (sendEmailConfig.EmailContent.AutoDisposeAttachments)
         {
-            foreach (MailAttachment attachment in attachments?.Where(x => x.AttachmentStream != null) ?? [])
+            foreach (MailAttachment attachment in sendEmailConfig.EmailContent.Attachments?.Where(x => x.AttachmentStream != null) ?? [])
             {
                 await attachment.AttachmentStream!.DisposeAsync().ConfigureAwait(false);
             }
@@ -201,7 +294,7 @@ public static class Email
     /// Checks email string with simple regex to confirm that it is a properly formatted address
     /// </summary>
     /// <param name="email">Email address to validate</param>
-    /// <returns>True if email is valid</returns>
+    /// <returns><see langword="true"/> if email is valid</returns>
     public static bool IsValidEmail(this string? email)
     {
         bool isValid = false;
@@ -221,7 +314,7 @@ public static class Email
     /// </summary>
     /// <param name="attachments">Attachments to add to the email</param>
     /// <param name="bodyBuilder">Builder for the email to add attachments to</param>
-    /// <param name="zipAttachments">If true, will perform zip compression on the attachment files before adding them to the email</param>
+    /// <param name="zipAttachments">If <see langword="true"/>, will perform zip compression on the attachment files before adding them to the email</param>
     public static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments, CancellationToken cancellationToken = default)
     {
         try

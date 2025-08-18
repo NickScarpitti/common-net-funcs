@@ -1,4 +1,4 @@
-﻿using CommonNetFuncs.Sql.Common;
+﻿﻿using CommonNetFuncs.Sql.Common;
 
 namespace Sql.Common.Tests;
 
@@ -30,7 +30,7 @@ public sealed class QueryParametersTests
         IEnumerable<string>? result = input.CleanQueryParam();
 
         // Assert
-        result.ShouldBeNull();
+        result.ShouldBeEmpty();
     }
 
     [Fact]

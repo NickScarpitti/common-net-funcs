@@ -12,88 +12,89 @@ namespace CommonNetFuncs.Core;
 public static class Collections
 {
     /// <summary>
-    /// Faster alternative to using the .Any() linq method
+    /// Faster alternative to using the .Any() linq method to address the CA1860 code issue.
     /// </summary>
-    /// <typeparam name="T">Object type</typeparam>
-    /// <param name="collection">Collection being checked for having elements</param>
-    /// <returns>True if collection has any objects in it</returns>
+    /// <typeparam name="T">Object type.</typeparam>
+    /// <param name="collection">Collection being checked for having elements.</param>
+    /// <returns><see langword="true"/> if <paramref name="collection"/> has any objects in it.</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? collection)
     {
         return collection?.Count > 0;
     }
 
     /// <summary>
-    /// Faster alternative to using the .Any() linq method
+    /// Faster alternative to using the .Any() linq method to address the CA1860 code issue.
     /// </summary>
-    /// <typeparam name="T">Object type</typeparam>
-    /// <param name="list">Collection being checked for having elements</param>
-    /// <returns>True if collection has any objects in it</returns>
+    /// <typeparam name="T">Object type.</typeparam>
+    /// <param name="list">Collection being checked for having elements.</param>
+    /// <returns><see langword="true"/> if <paramref name="list"/> has any objects in it.</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this IList<T>? list)
     {
         return list?.Count > 0;
     }
 
     /// <summary>
-    /// Faster alternative to using the .Any() linq method
+    /// Faster alternative to using the .Any() linq method to address the CA1860 code issue.
     /// </summary>
-    /// <typeparam name="T">Object type</typeparam>
-    /// <param name="bag">Collection being checked for having elements</param>
-    /// <returns>True if collection has any objects in it</returns>
+    /// <typeparam name="T">Object type.</typeparam>
+    /// <param name="bag">Collection being checked for having elements.</param>
+    /// <returns><see langword="true"/> if <paramref name="bag"/> has any objects in it.</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? bag)
     {
         return bag?.Count > 0;
     }
 
     /// <summary>
-    /// Faster alternative to using the .Any() linq method
+    /// Faster alternative to using the .Any() linq method to address the CA1860 code issue.
     /// </summary>
-    /// <typeparam name="T">Object type</typeparam>
-    /// <param name="array">Collection being checked for having elements</param>
-    /// <returns>True if collection has any objects in it</returns>
+    /// <typeparam name="T">Object type.</typeparam>
+    /// <param name="array">Collection being checked for having elements.</param>
+    /// <returns><see langword="true"/> if <paramref name="array"/> has any objects in it.</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this T[]? array)
     {
         return array?.Length > 0;
     }
 
     /// <summary>
-    /// Faster alternative to using the .Any() linq method
+    /// Faster alternative to using the .Any() linq method to address the CA1860 code issue.
     /// </summary>
-    /// <typeparam name="TKey">Dictionary key type</typeparam>
-    /// <typeparam name="T">Dictionary value type</typeparam>
-    /// <param name="dict">Collection being checked for having elements</param>
-    /// <returns>True if collection has any objects in it</returns>
+    /// <typeparam name="TKey">Dictionary key type.</typeparam>
+    /// <typeparam name="T">Dictionary value type.</typeparam>
+    /// <param name="dict">Collection being checked for having elements.</param>
+    /// <returns><see langword="true"/> if <paramref name="dict"/> has any objects in it.</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this IDictionary<TKey, T>? dict) where TKey : notnull
     {
         return dict?.Count > 0;
     }
 
     /// <summary>
-    /// Faster alternative to using the .Any() linq method
+    /// Faster alternative to using the .Any() linq method to address the CA1860 code issue.
     /// </summary>
-    /// <typeparam name="TKey">Dictionary key type</typeparam>
-    /// <typeparam name="T">Dictionary value type</typeparam>
-    /// <param name="dict">Collection being checked for having elements</param>
-    /// <returns>True if collection has any objects in it</returns>
+    /// <typeparam name="TKey">Dictionary key type.</typeparam>
+    /// <typeparam name="T">Dictionary value type.</typeparam>
+    /// <param name="dict">Collection being checked for having elements.</param>
+    /// <returns><see langword="true"/> if <paramref name="dict"/> has any objects in it.</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this ConcurrentDictionary<TKey, T>? dict) where TKey : notnull
     {
         return dict?.Count > 0;
     }
 
     /// <summary>
-    /// Provides a safe way to add a new Dictionary key without having to worry about duplication
+    /// Provides a safe way to add a new Dictionary key without having to worry about duplication.
     /// </summary>
-    /// <param name="dict">Dictionary to add item to</param>
-    /// <param name="keyValuePair">Key value pair to add to dictionary</param>
+    /// <param name="dict">Dictionary to add item to.</param>
+    /// <param name="keyValuePair">Key value pair to add to <paramref name="dict"/>.</param>
     public static void AddDictionaryItem<K, V>(this IDictionary<K, V> dict, KeyValuePair<K, V> keyValuePair) where K : notnull
     {
         dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
     }
 
     /// <summary>
-    /// Provides a safe way to add a new Dictionary key without having to worry about duplication
+    /// Provides a safe way to add a new <see cref="KeyValuePair{TKey, TValue}"/> to an <see cref="IDictionary{TKey, TValue}"/> key without having to worry about duplication.
     /// </summary>
-    /// <param name="dict">Dictionary to add item to</param>
-    /// <param name="keyValuePairs">Enumerable of items to add to dictionary</param>
+    /// <param name="dict">Dictionary to add item to.</param>
+    /// <param name="keyValuePairs">Enumerable of items to add to <paramref name="dict"/>.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
     public static void AddDictionaryItems<K, V>(this IDictionary<K, V> dict, IEnumerable<KeyValuePair<K, V>> keyValuePairs, CancellationToken cancellationToken = default) where K : notnull
     {
         foreach (KeyValuePair<K, V> keyValuePair in keyValuePairs)
@@ -104,12 +105,14 @@ public static class Collections
     }
 
     /// <summary>
-    /// Adds AddRange functionality to ConcurrentBag similar to a list. Skips null items
+    /// Adds AddRange functionality to <see cref="ConcurrentBag{T}"/> similar to a <see cref="List{T}"/>.
     /// </summary>
+    /// <remarks>Null items are not added to the <paramref name="concurrentBag"/></remarks>
     /// <typeparam name="T">Type of object being added</typeparam>
-    /// <param name="concurrentBag">ConcurrentBag to add list of items to</param>
-    /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
-    /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach</param>
+    /// <param name="concurrentBag"><see cref="ConcurrentBag{T}"/> to add list of items to.</param>
+    /// <param name="toAdd">Items to add to <paramref name="concurrentBag"/>.</param>
+    /// <param name="parallelOptions">ParallelOptions for Parallel.ForEach.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
     public static void AddRangeParallel<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, ParallelOptions? parallelOptions = null, CancellationToken cancellationToken = default)
     {
         Parallel.ForEach(toAdd.SelectNonNull(), parallelOptions ?? new(), item =>
@@ -120,11 +123,13 @@ public static class Collections
     }
 
     /// <summary>
-    /// Adds AddRange functionality to ConcurrentBag similar to a list. Skips null items
+    /// Adds AddRange functionality to <see cref="ConcurrentBag{T}"/> similar to a <see cref="List{T}">.
     /// </summary>
-    /// <typeparam name="T">Type of object being added</typeparam>
-    /// <param name="concurrentBag">ConcurrentBag to add list of items to</param>
-    /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
+    /// <remarks>Null items are not added to the <paramref name="concurrentBag"/>.</remarks>
+    /// <typeparam name="T">Type of object being added.</typeparam>
+    /// <param name="concurrentBag"><see cref="ConcurrentBag{T}"/> to add list of items to.</param>
+    /// <param name="toAdd">Items to add to <paramref name="concurrentBag"/>.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
     public static void AddRange<T>(this ConcurrentBag<T> concurrentBag, IEnumerable<T?> toAdd, CancellationToken cancellationToken = default)
     {
         foreach (T? item in toAdd.SelectNonNull())
@@ -135,11 +140,13 @@ public static class Collections
     }
 
     /// <summary>
-    /// Adds AddRange functionality to HashSet similar to a list. Skips null items
+    /// Adds AddRange functionality to <see cref="HashSet{T}"/> similar to a <see cref="List{T}"/>. Skips null items
     /// </summary>
+    /// <remarks>Null items are not added to the <paramref name="hashSet"/></remarks>
     /// <typeparam name="T">Type of object being added</typeparam>
-    /// <param name="hashSet">HashSet to add list of items to</param>
-    /// <param name="toAdd">Items to add to the ConcurrentBag object</param>
+    /// <param name="hashSet"><see cref="HashSet{T}"/> to add list of items to</param>
+    /// <param name="toAdd">Items to add to <paramref name="hashSet"/></param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
     public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T?> toAdd, CancellationToken cancellationToken = default)
     {
         foreach (T? item in toAdd.SelectNonNull())
@@ -150,29 +157,59 @@ public static class Collections
     }
 
     /// <summary>
-    /// Set values in an IEnumerable as an extension of linq
+    /// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
     /// </summary>
-    /// <typeparam name="T">Type of object having values set</typeparam>
-    /// <param name="items">Items to have the updateMethod expression performed on</param>
-    /// <param name="updateMethod">Lambda expression of the action to perform</param>
-    /// <returns>IEnumerable with values updated according to updateMethod</returns>
-    public static IEnumerable<T> SetValue<T>(this IEnumerable<T> items, Action<T> updateMethod, CancellationToken cancellationToken = default)
+    /// <typeparam name="T">Type of object having values set.</typeparam>
+    /// <param name="items">Items to have the updateMethod expression performed on.</param>
+    /// <param name="updateMethod">Lambda expression of the action to perform.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="IEnumerable{T}"> with values updated according to <paramref name="updateMethod"/></returns>
+    public static void SetValue<T>(this IEnumerable<T> items, Action<T> updateMethod, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
         foreach (T item in items)
         {
             cancellationToken.ThrowIfCancellationRequested();
             updateMethod(item);
         }
-        return items;
     }
 
     /// <summary>
-    /// Set values in an IEnumerable as an extension of linq
+    /// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
     /// </summary>
-    /// <param name="items">Items to have the updateMethod expression performed on</param>
-    /// <param name="updateMethod">Lambda expression of the action to perform</param>
-    /// <returns>IEnumerable with values updated according to updateMethod</returns>
-    public static List<string?> SetValue(this IEnumerable<string?> items, Func<string?, string?> updateMethod, CancellationToken cancellationToken = default)
+    /// <typeparam name="T">Type of object having values set.</typeparam>
+    /// <param name="items">Items to have the updateMethod expression performed on.</param>
+    /// <param name="updateMethod">Lambda expression of the action to perform.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="IEnumerable{T}"> with values updated according to <paramref name="updateMethod"/></returns>
+    public static IEnumerable<T> SetValueEnumerate<T>(this IEnumerable<T> items, Action<T> updateMethod, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
+        return Enumerate();
+
+        IEnumerable<T> Enumerate()
+        {
+            foreach (T item in items)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                updateMethod(item);
+                yield return item;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
+    /// </summary>
+    /// <param name="items">Items to have the updateMethod expression performed on.</param>
+    /// <param name="updateMethod">Lambda expression of the action to perform.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="IEnumerable{T}"/> with values updated according to <paramref name="updateMethod"/>.</returns>
+    public static void SetValue(this IEnumerable<string?> items, Func<string?, string?> updateMethod, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(updateMethod);
@@ -184,35 +221,69 @@ public static class Collections
             cancellationToken.ThrowIfCancellationRequested();
             list[i] = updateMethod(list[i]);
         }
-        return list.ToList();
     }
 
     /// <summary>
-    /// Set values in an IEnumerable as an extension of linq using a Parallel.ForEach loop
+    /// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
     /// </summary>
-    /// <typeparam name="T">Type of object having values set</typeparam>
-    /// <param name="items">Items to have the updateMethod expression performed on</param>
-    /// <param name="updateMethod">Lambda expression of the action to perform</param>
-    /// <param name="maxDegreeOfParallelism">Integer setting the max number of parallel operations allowed. Default of -1 allows maximum possible.</param>
-    /// <returns>IEnumerable with values updated according to updateMethod</returns>
-    public static IEnumerable<T> SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1, CancellationToken cancellationToken = default)
+    /// <param name="items">Items to have the updateMethod expression performed on.</param>
+    /// <param name="updateMethod">Lambda expression of the action to perform.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="IEnumerable{T}"/> with values updated according to <paramref name="updateMethod"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="items"/> or <paramref name="updateMethod"/> are null</exception>
+    public static IEnumerable<string?> SetValueEnumerate(this IEnumerable<string?> items, Func<string?, string?> updateMethod, CancellationToken cancellationToken = default)
     {
-        ConcurrentBag<T> concurrentBag = new(items);
-        Parallel.ForEach(concurrentBag, new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item =>
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
+        List<string?> list = items.ToList();
+
+        return Enumerate();
+
+        IEnumerable<string?> Enumerate()
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                list[i] = updateMethod(list[i]);
+                yield return list[i];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq using a Parallel.ForEach loop.
+    /// </summary>
+    /// <typeparam name="T">Type of object having values set.</typeparam>
+    /// <param name="items">Items to have the updateMethod expression performed on.</param>
+    /// <param name="updateMethod">Lambda expression of the action to perform.</param>
+    /// <param name="maxDegreeOfParallelism">Integer setting the max number of parallel operations allowed. Default of -1 allows maximum possible.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="IEnumerable{T}"/> with values updated according to <paramref name="updateMethod"/>.</returns>
+    public static void SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
+        Parallel.ForEach(items, new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item =>
         {
             cancellationToken.ThrowIfCancellationRequested();
             updateMethod(item);
         });
-        return concurrentBag;
     }
 
     /// <summary>
-    /// <para>Allows you to act upon every element in an Array</para> <para>Used like outerArray.SetValue((array, indices) => array.SetValue(SomeMethod(outerArray.GetValue(indices)), indices))</para>
+    /// <para>Allows you to act upon every element in <paramref name="array"/></para>
+    /// <para>Used like outerArray.SetValue((array, indices) => array.SetValue(SomeMethod(outerArray.GetValue(indices)), indices))</para>
     /// </summary>
-    /// <param name="array">Array to act upon</param>
-    /// <param name="action">Action to perform on each element of the array</param>
-    public static void SetValue(this Array array, Action<Array, int[]> action, CancellationToken cancellationToken = default)
+    /// <param name="array">Array to act upon.</param>
+    /// <param name="updateMethod">Action to perform on each element in <paramref name="array"/>.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    public static void SetValue(this Array array, Action<Array, int[]> updateMethod, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(array);
+        ArgumentNullException.ThrowIfNull(updateMethod);
+
         if (array.LongLength == 0)
         {
             return;
@@ -221,17 +292,15 @@ public static class Collections
         do
         {
             cancellationToken.ThrowIfCancellationRequested();
-            action(array, walker.Position);
+            updateMethod(array, walker.Position);
         } while (walker.Step());
     }
 
     /// <summary>
-    /// Select only strings that are not null, empty, or only whitespace
+    /// Select only strings that are not <see langword="null"/>, empty, or only whitespace.
     /// </summary>
-    /// <param name="items">Enumerable of strings to select from</param>
-    /// <returns>
-    /// An enumerable containing all string values from the original collection that are not null, empty, or only whitespace
-    /// </returns>
+    /// <param name="items">Enumerable of strings to select from.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> containing all string values from <paramref name="items"/> that are not null, empty, or only whitespace.</returns>
     [return: NotNullIfNotNull(nameof(items))]
     public static IEnumerable<string>? SelectNonEmpty(this IEnumerable<string?>? items)
     {
@@ -239,10 +308,10 @@ public static class Collections
     }
 
     /// <summary>
-    /// Select only objects that are not null
+    /// Select only objects that are not <see langword="null"/>.
     /// </summary>
-    /// <param name="items">Enumerable of objects to select from</param>
-    /// <returns>An enumerable containing all object values from the original collection that are not null</returns>
+    /// <param name="items">Enumerable of objects to select from.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> containing all object values from <paramref name="items"/> that are not <see langword="null"/>.</returns>
     [return: NotNullIfNotNull(nameof(items))]
     public static IEnumerable<T>? SelectNonNull<T>(this IEnumerable<T?>? items)
     {
@@ -250,19 +319,24 @@ public static class Collections
     }
 
     /// <summary>
-    /// Create a single item list from an object
+    /// Create a single item <see cref="List{T}"/> from an object.
     /// </summary>
-    /// <typeparam name="T">Type to use in list</typeparam>
-    /// <param name="obj">Object to turn into a single item list</param>
+    /// <remarks>Null safe, returns an empty list if <paramref name="obj"/> is <see langword="null"/>.</remarks>
+    /// <typeparam name="T">Type to use in list.</typeparam>
+    /// <param name="obj">Object to turn into a single item list.</param>
+    /// <returns>A <see cref="List{T}"/> containing the single item or an empty <see cref="List{T}"> if the item is <see langword="null"/>.</returns>
     public static List<T> SingleToList<T>(this T? obj)
     {
         return obj != null ? [obj] : [];
     }
 
     /// <summary>
-    /// Create a single item list from an object
+    /// Create a single item <see cref="List{T}"/> from an object.
     /// </summary>
-    /// <param name="obj">Object to turn into a single item list</param>
+    /// <remarks>Null safe, returns an empty list if <paramref name="obj"/> is <see langword="null"/>.</remarks>
+    /// <param name="obj">Object to turn into a single item list.</param>
+    /// <param name="allowEmptyStrings">Optional: If <see langword="true"/>, allows empty strings in the list, otherwise they are excluded. Default is <see langword="false"/>.</param>
+    /// <returns>A <see cref="List{T}"/> containing the single item or an empty <see cref="List{T}"> if the item is <see langword="null"/>.</returns>
     public static List<string> SingleToList(this string? obj, bool allowEmptyStrings = false)
     {
         if (!allowEmptyStrings)
@@ -273,17 +347,19 @@ public static class Collections
     }
 
     /// <summary>
-    /// Select object from a collection by matching all non-null fields to an object of the same type comprising the collection
+    /// Select object from an <see cref="IQueryable{T}"/> by matching all non-null fields to an object of the same type comprising the collection.
     /// </summary>
-    /// <typeparam name="T">Object type</typeparam>
+    /// <typeparam name="T">Object type.</typeparam>
     /// <param name="queryable">Queryable collection to select from</param>
     /// <param name="partialObject">Object with fields to match with objects in the queryable collection</param>
-    /// <param name="ignoreDefaultValues">Ignore default values in retrieval when true</param>
-    /// <returns>First object that matches all non-null fields in partialObject</returns>
+    /// <param name="ignoreDefaultValues">Optional: Ignore default values in retrieval when true. Default is <see langword="false"/>.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns>First object that matches all non-null fields in <paramref name="partialObject"/></returns>
     public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject, bool ignoreDefaultValues = false, CancellationToken cancellationToken = default) where T : class
     {
         // Get the properties of the object using reflection
-        PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        //PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
 
         // Build the expression tree for the conditions
         ParameterExpression parameter = Expression.Parameter(typeof(T), "x");
@@ -334,12 +410,13 @@ public static class Collections
     }
 
     /// <summary>
-    /// Convert datatable to equivalent list of specified class
+    /// Convert <see cref="DataTable"/> to equivalent <see cref="List{T}"/> of specified <see langword="class"/>.
     /// </summary>
-    /// <typeparam name="T">Class to use in table conversion</typeparam>
-    /// <param name="table">Table to convert to list</param>
-    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
-    /// <returns>List containing table values as the specified class</returns>
+    /// <typeparam name="T">Class to use in table conversion.</typeparam>
+    /// <param name="table">Table to convert to list.</param>
+    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="List{T}"/> containing the values from <see cref="DataTable"/> as the specified <see langword="class"/>.</returns>
     public static List<T> ToList<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         List<T> list = new(table.Rows.Count);
@@ -360,13 +437,14 @@ public static class Collections
     }
 
     /// <summary>
-    /// Convert datatable to equivalent list of specified class using a Parallel.Foreach loop to get data from each row
+    /// Convert <see cref="DataTable"/> to equivalent <see cref="List{T}"/> of specified <see langword="class"/> using a Parallel.Foreach loop to get data from each row.
     /// </summary>
-    /// <typeparam name="T">Class to use in table conversion</typeparam>
-    /// <param name="table">Table to convert to list</param>
-    /// <param name="maxDegreeOfParallelism">Parallelism parameter to be used in Parallel.Foreach loop</param>
-    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
-    /// <returns>List containing table values as the specified class</returns>
+    /// <typeparam name="T">Class to use in table conversion.</typeparam>
+    /// <param name="table">Table to convert to list.</param>
+    /// <param name="maxDegreeOfParallelism">Parallelism parameter to be used in Parallel.Foreach loop.</param>
+    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="List{T}"/> containing values from  <see cref="DataTable"/> as the specified <see langword="class"/></returns>
     public static List<T> ToListParallel<T>(this DataTable table, int maxDegreeOfParallelism = -1, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         ConcurrentBag<T> bag = [];
@@ -386,12 +464,13 @@ public static class Collections
     }
 
     /// <summary>
-    /// Convert datatable to equivalent list of specified class using a Parallel.Foreach loop to get data from each row
+    /// Convert <see cref="DataTable"/> to equivalent <see cref="List{T}"/> of specified <see langword="class"/> using a Parallel.Foreach loop to get data from each row.
     /// </summary>
-    /// <typeparam name="T">Class to use in table conversion</typeparam>
-    /// <param name="table">Table to convert to list</param>
-    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
-    /// <returns>List containing table values as the specified class</returns>
+    /// <typeparam name="T">Class to use in table conversion.</typeparam>
+    /// <param name="table">Table to convert to list.</param>
+    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="List{T}"/> containing table values as the specified <see langword="class"/>.</returns>
     public static IEnumerable<T> ToEnumerableParallel<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         IEnumerable<T> values = [];
@@ -404,12 +483,13 @@ public static class Collections
     }
 
     /// <summary>
-    /// Convert datatable to equivalent list of specified class using a Parallel.Foreach loop to get data from each row
+    /// Convert <see cref="DataTable"/> to equivalent <see cref="List{T}"/> of specified <see langword="class"/> using a Parallel.Foreach loop to get data from each row.
     /// </summary>
-    /// <typeparam name="T">Class to use in table conversion</typeparam>
-    /// <param name="table">Table to convert to list</param>
-    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true</param>
-    /// <returns>List containing table values as the specified class</returns>
+    /// <typeparam name="T">Class to use in table conversion.</typeparam>
+    /// <param name="table">Table to convert to list.</param>
+    /// <param name="convertShortToBool">Optional: Allow checking for parameters that are short values in the table that correlate to a bool parameter when true. Defailt is false.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns><see cref="List{T}"/> containing table values as the specified <see langword="class"/>.</returns>
     public static IEnumerable<T> ToEnumerableStreaming<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
     {
         if (table.Rows.Count > 0)
@@ -445,6 +525,14 @@ public static class Collections
         }
     }
 
+    /// <summary>
+    /// Get the mapping between DataTable columns and class properties for a specific class type.
+    /// </summary>
+    /// <typeparam name="T">Type of class to map.</typeparam>
+    /// <param name="table">DataTable to map.</param>
+    /// <param name="convertShortToBool">Allow checking for parameters that are short values in the table that correlate to a bool parameter when true.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for the operation.</param>
+    /// <returns>Mapping between DataTable columns and class properties.</returns>
     private static List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> GetDataTableMap<T>(this DataTable table, bool convertShortToBool, CancellationToken cancellationToken = default)
     {
         List<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map = [];
@@ -468,6 +556,15 @@ public static class Collections
         return map;
     }
 
+    /// <summary>
+    /// Get the mapping between row values and <see langword="class"/> properties for a specific <see langword="class"/> type.
+    /// </summary>
+    /// <typeparam name="T">Type of class to map.</typeparam>
+    /// <param name="row">DataRow to map.</param>
+    /// <param name="map">Mapping between DataTable columns and class properties.</param>
+    /// <param name="cancellationToken">Optional: Cancellation token for the operation.</param>
+    /// <returns>Mapped <see langword="class"/> instance.</returns>
+    /// <exception cref="InvalidCastException"></exception>
     private static T? ParseRowValues<T>(this DataRow row, IEnumerable<(DataColumn DataColumn, PropertyInfo PropertyInfo, bool IsShort)> map, CancellationToken cancellationToken = default) where T : class, new()
     {
         T? item = new();
@@ -532,15 +629,16 @@ public static class Collections
     }
 
     /// <summary>
-    /// Convert a collection into equivalent DataTable object using expression trees
+    /// Convert an <see cref="IEnumerable{T}"/> into equivalent <see cref="DataTable"/> object using expression trees.
     /// </summary>
-    /// <typeparam name="T">Class to use in table creation</typeparam>
-    /// <param name="data">Collection to convert into a DataTable</param>
-    /// <param name="dataTable">DataTable to optionally insert data into</param>
-    /// <param name="useParallel">Parallelizes the conversion</param>
-    /// <param name="approximateCount">Used for pre-allocating variable size when using parallelization, default is data.Count()</param>
-    /// <param name="degreeOfParallelism">Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine)</param>
-    /// <returns>A DaataTable representation of the collection that was passed in</returns>
+    /// <typeparam name="T">Class to use in table creation.</typeparam>
+    /// <param name="data">Collection to convert into a DataTable.</param>
+    /// <param name="dataTable">DataTable to optionally insert data into.</param>
+    /// <param name="useParallel">Optional: Parallelizes the conversion. Default is <see langword="false"/>.</param>
+    /// <param name="approximateCount">Optional: Used for pre-allocating variable size when using parallelization, default is data.Count().</param>
+    /// <param name="degreeOfParallelism">Optional: Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine).</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns>A <see cref="DataTable"/> representation of <paramref name="data"/>.</returns>
     [return: NotNullIfNotNull(nameof(data))]
     public static DataTable? ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
     {
@@ -554,15 +652,16 @@ public static class Collections
     }
 
     /// <summary>
-    /// Convert a collection into equivalent DataTable object using reflection
+    /// Convert an <see cref="IEnumerable{T}"/> into equivalent <see cref="DataTable"/> object using expression trees.
     /// </summary>
-    /// <typeparam name="T">Class to use in table creation</typeparam>
-    /// <param name="data">Collection to convert into a DataTable</param>
-    /// <param name="dataTable">DataTable to optionally insert data into</param>
-    /// <param name="useParallel">Parallelizes the conversion</param>
-    /// <param name="approximateCount">Used for pre-allocating variable size when using parallelization, default is data.Count()</param>
-    /// <param name="degreeOfParallelism">Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine)</param>
-    /// <returns>A DaataTable representation of the collection that was passed in</returns>
+    /// <typeparam name="T">Class to use in table creation.</typeparam>
+    /// <param name="data">Collection to convert into a DataTable.</param>
+    /// <param name="dataTable">DataTable to optionally insert data into.</param>
+    /// <param name="useParallel">Optional: Parallelizes the conversion. Default is <see langword="false"/>.</param>
+    /// <param name="approximateCount">Optional: Used for pre-allocating variable size when using parallelization, default is data.Count().</param>
+    /// <param name="degreeOfParallelism">Optional: Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine).</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns>A <see cref="DataTable"/> representation of <paramref name="data"/>.</returns>
     [Obsolete("Please use ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) instead", false)]
     [return: NotNullIfNotNull(nameof(data))]
     public static DataTable? ToDataTableReflection<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
@@ -649,7 +748,7 @@ public static class Collections
         return dataTable;
     }
 
-    private static readonly ConcurrentDictionary<Type, TypeAccessor> _typeAccessorCache = new();
+    private static readonly ConcurrentDictionary<Type, TypeAccessor> TypeAccessorCache = new();
 
     private sealed class TypeAccessor
     {
@@ -661,7 +760,7 @@ public static class Collections
 
         public TypeAccessor(Type type)
         {
-            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanRead).ToArray();
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.CanRead).ToArray();
 
             SchemaTable = new DataTable();
             PropertyGetters = new Func<object, object>[properties.Length];
@@ -680,6 +779,12 @@ public static class Collections
             ColumnDefinitions = SchemaTable.Columns;
         }
 
+        /// <summary>
+        /// Creates a <see cref="Delegate"/> to get the value of a  <see langword="property"/> from an instance of a <see langword="class"/>.
+        /// </summary>
+        /// <param name="type">The type of the class.</param>
+        /// <param name="property">The PropertyInfo for the property being accessed.</param>
+        /// <returns>A <see cref="Delegate"/> that gets the property value.</returns>
         private static Func<object, object> CreatePropertyGetter(Type type, PropertyInfo property)
         {
             ParameterExpression instance = Expression.Parameter(typeof(object), "instance");
@@ -690,9 +795,20 @@ public static class Collections
         }
     }
 
+    /// <summary>
+    /// Convert an <see cref="IEnumerable{T}"/> into equivalent <see cref="DataTable"/> object using expression trees.
+    /// </summary>
+    /// <typeparam name="T">The type of the elements in the collection.</typeparam>
+    /// <param name="data">The collection to convert.</param>
+    /// <param name="dataTable">The DataTable to populate.</param>
+    /// <param name="useParallel">Whether to use parallel processing.</param>
+    /// <param name="approximateCount">An optional estimate of the number of items in the collection. If null, <paramref name="data"/>.Count() will be used.</param>
+    /// <param name="degreeOfParallelism">The degree of parallelism to use if <paramref name="useParallel"/> is true.</param>
+    /// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+    /// <returns>A <see cref="DataTable"/> representation of <paramref name="data"/>.</returns>
     private static DataTable ToDataTableExpressionTrees<T>(this IEnumerable<T> data, DataTable dataTable, bool useParallel, int? approximateCount, int degreeOfParallelism, CancellationToken cancellationToken = default) where T : class, new()
     {
-        TypeAccessor typeAccessor = _typeAccessorCache.GetOrAdd(typeof(T), t => new TypeAccessor(t));
+        TypeAccessor typeAccessor = TypeAccessorCache.GetOrAdd(typeof(T), t => new TypeAccessor(t));
 
         // Remove invalid columns
         DataColumn[] columns = new DataColumn[dataTable.Columns.Count];
@@ -768,10 +884,10 @@ public static class Collections
     }
 
     /// <summary>
-    /// Combine multiple expressions into a single expression
+    /// Combine multiple expressions into a single expression.
     /// </summary>
-    /// <param name="expressions">Enumerable containing at least one expression</param>
-    /// <returns>A single expression equivalent of the enumerated expressions passed in</returns>
+    /// <param name="expressions">Enumerable containing at least one expression.</param>
+    /// <returns>A single expression equivalent of the enumerated expressions passed in.</returns>
     public static Expression<Func<T, bool>>? CombineExpressions<T>(IEnumerable<Expression<Func<T, bool>>> expressions)
     {
         Expression<Func<T, bool>>? combined = null;
@@ -799,12 +915,14 @@ public static class Collections
     }
 
     /// <summary>
-    /// Performs a string aggregation on the designated property, using all other properties as the group by
+    /// Performs a string aggregation on the designated <see langword="property"/>, using all other properties as the group by.
     /// </summary>
     /// <param name="collection">Collection to perform the string aggregation on based on the property identified</param>
     /// <param name="propToAgg">Property to string aggregate</param>
-    /// <param name="separator">String value used between aggregated values</param>
-    /// <returns>List with specified property aggregated</returns>
+    /// <param name="separator">Optional: String value used between aggregated values. Default is ';'.</param>
+    /// <param name="distinct">Optional: Whether to include only distinct values in the aggregation. Default is true.</param>
+    /// <param name="parallel">Optional: Whether to perform the aggregation in parallel or not. Default is <see langword="false"/>.</param>
+    /// <returns><see cref="IEnumerable{T}"/> with specified <see langword="property"/> aggregated</returns>
     public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string propToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
     {
         return collection.StringAggProps([propToAgg], separator, distinct, parallel);
@@ -816,7 +934,9 @@ public static class Collections
     /// <param name="collection">Collection to perform the string aggregation on based on the properties identified</param>
     /// <param name="propsToAgg">Properties to string aggregate</param>
     /// <param name="separator">String value used between aggregated values</param>
-    /// <returns>List with specified properties aggregated</returns>
+    /// <param name="distinct">Optional: Whether to include only distinct values in the aggregation. Default is true.</param>
+    /// <param name="parallel">Optional: Whether to perform the aggregation in parallel or not. Default is <see langword="false"/>.</param>
+    /// <returns><see cref="IEnumerable{T}"/> with specified properties aggregated</returns>
     public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string[] propsToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
     {
         if (collection?.Any() != true)
@@ -839,21 +959,22 @@ public static class Collections
 
         if (!parallel)
         {
-            return collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? string.Empty)) })
-                .Select(g =>
+            return collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(y => y.GetValue(x)?.ToString() ?? string.Empty)) })
+            //return collection.GroupBy(_ => new { GroupKey = string.Join("|", groupingProperties.Select(x => x.GetValue(x)?.ToString() ?? string.Empty)) })
+                .Select(x =>
                 {
                     T result = new();
                     foreach (PropertyInfo prop in properties)
                     {
                         if (propsToAgg.Contains(prop.Name))
                         {
-                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty).Distinct()) :
-                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty));
+                            string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
+                                string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
                             prop.SetValue(result, aggregatedValue);
                         }
                         else
                         {
-                            prop.SetValue(result, prop.GetValue(g.First()));
+                            prop.SetValue(result, prop.GetValue(x.First()));
                         }
                     }
                     return result;
@@ -862,21 +983,21 @@ public static class Collections
         else
         {
             return collection.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered)
-                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(p => p.GetValue(x)?.ToString() ?? string.Empty)) })
-                .Select(g =>
+                .GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(y => y.GetValue(x)?.ToString() ?? string.Empty)) })
+                .Select(x =>
                 {
                     T result = new();
                     foreach (PropertyInfo prop in properties)
                     {
                         if (propsToAgg.Contains(prop.Name))
                         {
-                            string aggregatedValue = distinct ? string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty).Distinct()) :
-                                string.Join(separator, g.Select(x => prop.GetValue(x)?.ToString() ?? string.Empty));
+                            string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
+                                string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
                             prop.SetValue(result, aggregatedValue);
                         }
                         else
                         {
-                            prop.SetValue(result, prop.GetValue(g.First()));
+                            prop.SetValue(result, prop.GetValue(x.First()));
                         }
                     }
                     return result;
@@ -885,23 +1006,23 @@ public static class Collections
     }
 
     /// <summary>
-    /// Returns the index of the first occurrence of an object in a collection.
+    /// Returns the index of the first occurrence of an object in a <see cref="IEnumerable{T}"/>.
     /// </summary>
-    /// <param name="collection"></param>
-    /// <param name="value"></param>
-    /// <returns>Index of the first occurrence of value in the collection or -1 if not found</returns>
+    /// <param name="collection">IEnumerable to get index of value in</param>
+    /// <param name="value">Value to get the index of</param>
+    /// <returns>Index of the first occurrence of value in <paramref name="collection"/> or -1 if not found.</returns>
     public static int IndexOf<T>(this IEnumerable<T> collection, T value)
     {
         return collection.IndexOf(value, null);
     }
 
     /// <summary>
-    /// Returns the index of the first occurrence of an object in a collection, using the specified comparer for equality checks.
+    /// Returns the index of the first occurrence of an object in a <see cref="IEnumerable{T}"/>, using the specified <see cref="IEqualityComparer{T}"/> for equality checks.
     /// </summary>
     /// <param name="collection">Collection to get index of object in</param>
     /// <param name="value">Value to check for equality in collection</param>
     /// <param name="comparer">Comparer used when checking for equality with value</param>
-    /// <returns>Index of the first occurrence of value in the collection or -1 if not found</returns>
+    /// <returns>Index of the first occurrence of value in <paramref name="collection"/> or -1 if not found</returns>
     public static int IndexOf<T>(this IEnumerable<T> collection, T value, IEqualityComparer<T>? comparer)
     {
         comparer ??= EqualityComparer<T>.Default;
@@ -910,18 +1031,32 @@ public static class Collections
     }
 
     /// <summary>
-    /// Checks to see if the value is in the enum type specified
+    /// Checks to see if the value is in the <see langword="enum"/> type specified.
     /// </summary>
-    /// <typeparam name="T">Enum to check against for validity</typeparam>
-    /// <param name="value">Value to check to see if it's in the specified enum</param>
-    /// <returns>True if value is a valid value of the specified enum, otherwise false</returns>
+    /// <typeparam name="T">Enum to check against for validity.</typeparam>
+    /// <param name="value">Value to check to see if it's in the specified enum.</param>
+    /// <returns><see langword="true"/> if value is a valid value of the specified <see langword="enum"/>, otherwise false</returns>
     public static bool IsIn<T>(this object value) where T : Enum
     {
         return Enum.IsDefined(typeof(T), value);
     }
 
+    /// <summary>
+    /// Generates all possible combinations of the provided source collections.
+    /// </summary>
+    /// <param name="sources">The source collections to combine.</param>
+    /// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
+    /// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
+    /// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
+    /// <returns>A set of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="maxCombinations"/> is not null and is less than 1.</exception>
     public static HashSet<string> GetCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
     {
+        if (maxCombinations.HasValue && maxCombinations < 1)
+        {
+            throw new ArgumentException("Max combinations must be either null, or greater than 0", nameof(maxCombinations));
+        }
+
         // Convert to array for multiple enumeration and validation
         string?[][] sourcesArray = sources.Select(x => x.Any() ? x.Distinct().Select(x => x ?? nullReplacement).ToArray() : [nullReplacement]).ToArray();
 
@@ -932,13 +1067,7 @@ public static class Collections
         }
 
         // Calculate total possible combinations
-        long totalCombinations = sourcesArray.Aggregate(1L, (acc, curr) => acc * curr.Length);
-
-        // Check if total combinations exceed max (if specified)
-        if (maxCombinations.HasValue && (totalCombinations > maxCombinations.Value))
-        {
-            throw new ArgumentException($"Total possible combinations ({totalCombinations}) exceeds maximum allowed ({maxCombinations.Value})");
-        }
+        //long totalCombinations = sourcesArray.Aggregate(1L, (acc, curr) => acc * curr.Length);
 
         // Get the number of elements we're combining
         int length = sourcesArray.Length;
@@ -950,12 +1079,54 @@ public static class Collections
         for (int i = 1; i < length; i++)
         {
             current = current.SelectMany(existingCombo => sourcesArray[i].Select(x => new List<string>(existingCombo) { x?.ToString() ?? string.Empty })).ToList();
+            if (maxCombinations.HasValue && current.Count >= maxCombinations) // Stop making combinations once reaching the maxCombinations
+            {
+                break;
+            }
         }
 
         // Convert the results to strings with separator and return as HashSet
-        return new HashSet<string>(current.Select(x => string.Join(separator, x)));
+        if (maxCombinations == null || !maxCombinations.HasValue || current.Count < maxCombinations)
+        {
+            return new HashSet<string>(current.Select(x => string.Join(separator, x)));
+        }
+
+        return current.Select(x => string.Join(separator, x)).Take((int)maxCombinations).ToHashSet();
     }
 
+    /// <summary>
+    /// Get all or a limited quantity of all possible combinations of the provided source collections in a randomized order.
+    /// </summary>
+    /// <param name="sources">The source collections to combine.</param>
+    /// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
+    /// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
+    /// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
+    /// <returns>A set of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="maxCombinations"/> is not null and is less than 1.</exception>
+    public static HashSet<string> GetRandomCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
+    {
+        if (maxCombinations is not null and < 1)
+        {
+            throw new ArgumentException("Max combinations must be either null, or greater than 0", nameof(maxCombinations));
+        }
+
+        HashSet<string> allCombinations = sources.GetCombinations(null, separator, nullReplacement);
+        if (maxCombinations != null && maxCombinations < allCombinations.Count)
+        {
+            return sources.GetCombinations(null, separator, nullReplacement).GetUniqueRandomElements((int)maxCombinations).ToHashSet(); // Select elements at random
+        }
+        return allCombinations.Shuffle().ToHashSet(); // Return all options in a randomized order
+    }
+
+    /// <summary>
+    /// Generates a set of unique combinations from the provided source collections.
+    /// </summary>
+    /// <param name="sources">The source collections to combine.</param>
+    /// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
+    /// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
+    /// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
+    /// <returns>An <see cref="IEnumerable{T}"/> of unique combinations up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
+    /// <exception cref="ArgumentException"></exception>
     public static IEnumerable<string> GetEnumeratedCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
     {
         // Prepare the sources as arrays for efficient indexing
@@ -966,11 +1137,11 @@ public static class Collections
             yield break;
         }
 
-        long totalCombinations = sourcesArray.Aggregate(1L, (acc, curr) => acc * curr.Length);
-        if (maxCombinations.HasValue && totalCombinations > maxCombinations.Value)
-        {
-            throw new ArgumentException($"Total possible combinations ({totalCombinations}) exceeds maximum allowed ({maxCombinations.Value})");
-        }
+        //long totalCombinations = sourcesArray.Aggregate(1L, (acc, curr) => acc * curr.Length);
+        //if (maxCombinations.HasValue && totalCombinations > maxCombinations.Value)
+        //{
+        //    throw new ArgumentException($"Total possible combinations ({totalCombinations}) exceeds maximum allowed ({maxCombinations.Value})");
+        //}
 
         HashSet<string> yielded = new();
 
@@ -979,7 +1150,7 @@ public static class Collections
             if (depth == sourcesArray.Length)
             {
                 string combination = string.Join(separator, current);
-                if (yielded.Add(combination))
+                if (yielded.Add(combination) && (maxCombinations == null || yielded.Count <= maxCombinations)) // Break if we've yielded enough combinations
                 {
                     yield return combination;
                 }
@@ -1006,6 +1177,11 @@ public static class Collections
     }
 }
 
+/// <summary>
+/// Replaces occurrences of a specified parameter in an expression tree with a new parameter.
+/// </summary>
+/// <param name="oldParameter">Parameter to be replaced by <paramref name="newParameter"/></param>
+/// <param name="newParameter">New parameter to replace the <paramref name="oldParameter"/>.</param>
 public sealed class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor
 {
     private readonly ParameterExpression _oldParameter = oldParameter;
@@ -1017,6 +1193,9 @@ public sealed class ReplaceParameterVisitor(ParameterExpression oldParameter, Pa
     }
 }
 
+/// <summary>
+/// Traverses a multi-dimensional array.
+/// </summary>
 public sealed class ArrayTraverse
 {
     public int[] Position;
@@ -1032,6 +1211,10 @@ public sealed class ArrayTraverse
         Position = new int[array.Rank];
     }
 
+    /// <summary>
+    /// Move to the next element in the array
+    /// </summary>
+    /// <returns>True if able to move to next element in the array, otherwise false, indicating the end of the array has been reached.</returns>
     public bool Step()
     {
         for (int i = 0; i < Position.Length; ++i)

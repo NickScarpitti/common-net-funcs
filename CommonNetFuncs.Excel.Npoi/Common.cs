@@ -1,4 +1,4 @@
-﻿using System.Data;
+﻿﻿using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -380,7 +380,7 @@ public static partial class Common
     /// Checks if cell is empty
     /// </summary>
     /// <param name="cell">Cell to check if it is empty</param>
-    /// <returns>True if cell is empty</returns>
+    /// <returns><see langword="true"/> if cell is empty</returns>
     public static bool IsCellEmpty(this ICell cell)
     {
         return string.IsNullOrWhiteSpace(cell.GetStringValue());
@@ -623,7 +623,7 @@ public static partial class Common
     /// </summary>
     /// <param name="wb">SXSSFWorkbook object to write to a file</param>
     /// <param name="path">Full file path (including file name) to write wb object to</param>
-    /// <returns>True if write was successful</returns>
+    /// <returns><see langword="true"/> if write was successful</returns>
     public static bool WriteExcelFile(this SXSSFWorkbook wb, string path)
     {
         try
@@ -647,7 +647,7 @@ public static partial class Common
     /// </summary>
     /// <param name="wb">HSSFWorkbook object to write to a file</param>
     /// <param name="path">Full file path (including file name) to write wb object to</param>
-    /// <returns>True if write was successful</returns>
+    /// <returns><see langword="true"/> if write was successful</returns>
     public static bool WriteExcelFile(this HSSFWorkbook wb, string path)
     {
         try
@@ -675,7 +675,7 @@ public static partial class Common
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
     private static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, string? hexColor = null, short? hssfColor = null, IFont? font = null, HorizontalAlignment? alignment = null,
-        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100)
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
     {
         //ICellStyle cellStyle;
         CellStyle cellStyle = new();
@@ -772,6 +772,8 @@ public static partial class Common
 
         cellStyle.IsLocked = cellLocked;
 
+        cellStyle.WrapText = wrapText;
+
         return wb.GetOrCreateStyle(cellStyle, cachedColorLimit);
     }
 
@@ -783,9 +785,10 @@ public static partial class Common
     /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
-    public static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null, FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null)
+    public static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
     {
-        return GetCustomStyle(wb, cellLocked, null, null, font, alignment, fillPattern, borderStyles);
+        return GetCustomStyle(wb, cellLocked, null, null, font, alignment, fillPattern, borderStyles, wrapText: wrapText);
     }
 
     /// <summary>
@@ -798,9 +801,9 @@ public static partial class Common
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
     public static ICellStyle GetCustomStyle(this IWorkbook wb, string hexColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
-        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100)
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
     {
-        return wb.GetCustomStyle(cellLocked, hexColor, null, font, alignment, fillPattern, borderStyles, cachedColorLimit);
+        return wb.GetCustomStyle(cellLocked, hexColor, null, font, alignment, fillPattern, borderStyles, cachedColorLimit, wrapText);
     }
 
     /// <summary>
@@ -813,9 +816,9 @@ public static partial class Common
     /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
     /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
     public static ICellStyle GetCustomStyle(this IWorkbook wb, short? hssfColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
-        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null)
+        FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
     {
-        return wb.GetCustomStyle(cellLocked, null, hssfColor, font, alignment, fillPattern, borderStyles);
+        return wb.GetCustomStyle(cellLocked, null, hssfColor, font, alignment, fillPattern, borderStyles, wrapText: wrapText);
     }
 
     /// <summary>
@@ -826,7 +829,7 @@ public static partial class Common
     /// <param name="cellLocked">Optional: Whether or not the cells with this style should be locked or not. Default = false</param>
     /// <param name="borderStyles">Optional: Border styling overrides</param>
     /// <returns>The ICellStyle that was created</returns>
-    public static ICellStyle GetStandardCellStyle(this IWorkbook wb, EStyle style, bool cellLocked = false, NpoiBorderStyles? borderStyles = null)
+    public static ICellStyle GetStandardCellStyle(this IWorkbook wb, EStyle style, bool cellLocked = false, bool wrapText = false, NpoiBorderStyles? borderStyles = null)
     {
         //ICellStyle cellStyle = wb.CreateCellStyle();
         CellStyle cellStyle = new();
@@ -1015,6 +1018,7 @@ public static partial class Common
         }
 
         cellStyle.IsLocked = cellLocked;
+        cellStyle.WrapText = wrapText;
 
         return wb.GetOrCreateStyle(cellStyle);
     }
@@ -1064,10 +1068,10 @@ public static partial class Common
     /// <param name="xssfWorkbook">Workbook to add table to</param>
     /// <param name="sheetName">Name of the sheet to add the table to</param>
     /// <param name="tableName">Name of the table to add</param>
-    /// <param name="firstColIndex">Zero based index of the first column of the table</param>
-    /// <param name="lastColIndex">Zero based index of the last column of the table</param>
-    /// <param name="firstRowIndex">Zero based index of the first row of the table</param>
-    /// <param name="lastRowIndex">Zero based index of the last row of the table</param>
+    /// <param name="firstColIndex">Zero based index of the first column of the table.</param>
+    /// <param name="lastColIndex">Zero based index of the last column of the table.</param>
+    /// <param name="firstRowIndex">Zero based index of the first row of the table.</param>
+    /// <param name="lastRowIndex">Zero based index of the last row of the table.</param>
     /// <param name="columnNames">
     /// Optional: Ordered list of names for each column in the table. Will use Column# if not provided or list has fewer
     /// elements than there are columns in the table
@@ -1470,7 +1474,7 @@ public static partial class Common
     /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
     /// <param name="startCellReference">Top left corner containing data to read in A1 notation. Will use A1 if not specified.</param>
     /// <param name="endCellReference">Bottom right cell containing data to read in A1 notation. Will read to first full empty row if not specified.</param>
-    /// <returns>DataTable representation of the data read from the excel file</returns>
+    /// <returns><see cref="DataTable"/> representation of the data read from the excel file</returns>
     public static DataTable ReadExcelFileToDataTable(this Stream fileStream, bool hasHeaders = true, string? sheetName = null, string? startCellReference = null, string? endCellReference = null, CancellationToken cancellationToken = default)
     {
         DataTable dataTable = new();
@@ -1640,7 +1644,7 @@ public static partial class Common
     /// </summary>
     /// <param name="fileStream">Stream of Excel file being read</param>
     /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
-    /// <returns>DataTable object containing the data read from Excel stream</returns>
+    /// <returns><see cref="DataTable"/> object containing the data read from Excel stream</returns>
     public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null, CancellationToken cancellationToken = default)
     {
         DataTable dataTable = new();
@@ -1724,7 +1728,7 @@ public static partial class Common
     /// Gets whether or not the stream passed in represents an XLSX type file or not
     /// </summary>
     /// <param name="fileStream">Stream representation of a file</param>
-    /// <returns>True if stream is an XLSX file</returns>
+    /// <returns><see langword="true"/> if stream is an XLSX file</returns>
     public static bool IsXlsx(this Stream fileStream)
     {
         fileStream.Position = 0;
@@ -1735,7 +1739,7 @@ public static partial class Common
     /// Gets whether or not the stream passed in represents an XLSX type file or not
     /// </summary>
     /// <param name="workbook">NPOI Workbook Object</param>
-    /// <returns>True if stream is an XLSX file</returns>
+    /// <returns><see langword="true"/> if stream is an XLSX file</returns>
     public static bool IsXlsx(this IWorkbook workbook)
     {
         return !string.Equals(workbook.GetType().Name, typeof(HSSFWorkbook).Name, StringComparison.InvariantCultureIgnoreCase);

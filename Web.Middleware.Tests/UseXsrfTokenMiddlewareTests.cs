@@ -1,9 +1,11 @@
-﻿using CommonNetFuncs.Web.Middleware;
+﻿﻿using CommonNetFuncs.Web.Middleware;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
 namespace Web.Middleware.Tests;
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 
 public sealed class UseXsrfTokenMiddlewareTests
 {
@@ -116,3 +118,5 @@ public sealed class UseXsrfTokenMiddlewareTests
             .MustHaveHappenedOnceExactly();
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

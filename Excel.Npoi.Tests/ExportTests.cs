@@ -6,6 +6,8 @@ using System.Data;
 
 namespace Excel.Npoi.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
+
 public class ExportTests
 {
     private readonly IFixture _fixture;
@@ -346,3 +348,5 @@ public class ExportTests
         resultStream.Length.ShouldBe(0); // Should return an empty stream since the original was disposed
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

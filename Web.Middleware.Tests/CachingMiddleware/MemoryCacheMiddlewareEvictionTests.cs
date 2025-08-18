@@ -1,10 +1,12 @@
-﻿using CommonNetFuncs.Web.Common.CachingSupportClasses;
+﻿﻿using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using CommonNetFuncs.Web.Middleware.CachingMiddleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 
 public sealed class MemoryCacheMiddlewareEvictionTests
 {
@@ -91,3 +93,5 @@ public sealed class MemoryCacheMiddlewareEvictionTests
         _tracker.CacheTags.ContainsKey(tag).ShouldBeFalse();
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

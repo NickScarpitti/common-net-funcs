@@ -61,8 +61,8 @@ public class ReflectionCachesTests : IDisposable
         // Assert
         // Should be empty, so a new call should trigger reflection again (no exception)
         PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
-        props.ShouldContain(p => p.Name == nameof(TestClass.Prop1));
-        props.ShouldContain(p => p.Name == nameof(TestClass.Prop2));
+        props.ShouldContain(x => x.Name == nameof(TestClass.Prop1));
+        props.ShouldContain(x => x.Name == nameof(TestClass.Prop2));
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public class ReflectionCachesTests : IDisposable
 
         // Assert
         PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
-        props.ShouldContain(p => p.Name == nameof(TestClass.Prop1));
+        props.ShouldContain(x => x.Name == nameof(TestClass.Prop1));
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class ReflectionCachesTests : IDisposable
 
         // Assert
         PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
-        props.ShouldContain(p => p.Name == nameof(TestClass.Prop2));
+        props.ShouldContain(x => x.Name == nameof(TestClass.Prop2));
     }
 
     [Fact]

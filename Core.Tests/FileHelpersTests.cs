@@ -1,8 +1,9 @@
-﻿using System.Text;
+﻿﻿using System.Text;
 using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class FileHelpersTests : IDisposable
 {
     private readonly string _tempDir;
@@ -182,7 +183,7 @@ public sealed class FileHelpersTests : IDisposable
         File.WriteAllText(file2, "2");
 
         // Act
-        List<string> files = FileHelpers.GetAllFilesRecursive(_tempDir);
+        IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(_tempDir);
 
         // Assert
         files.ShouldContain(file1);
@@ -196,8 +197,8 @@ public sealed class FileHelpersTests : IDisposable
         string missingDir = Path.Combine(_tempDir, "notfound");
 
         // Act
-        List<string> files1 = FileHelpers.GetAllFilesRecursive(missingDir);
-        List<string> files2 = FileHelpers.GetAllFilesRecursive(null);
+        IEnumerable<string> files1 = FileHelpers.GetAllFilesRecursive(missingDir);
+        IEnumerable<string> files2 = FileHelpers.GetAllFilesRecursive(null);
 
         // Assert
         files1.ShouldBeEmpty();
@@ -218,7 +219,7 @@ public sealed class FileHelpersTests : IDisposable
         File.WriteAllText(file3, "3");
 
         // Act
-        List<string> files = FileHelpers.GetAllFilesRecursive(_tempDir, "*.txt");
+        IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(_tempDir, "*.txt");
 
         // Assert
         files.ShouldContain(file1);
@@ -277,3 +278,4 @@ public sealed class FileHelpersTests : IDisposable
         safeName.ShouldEndWith(".txt");
     }
 }
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -1,9 +1,11 @@
-﻿using System.Data;
+﻿﻿using System.Data;
 using CommonNetFuncs.Sql.Common;
 using Microsoft.Data.Sqlite;
 using SQLitePCL;
 
 namespace Sql.Common.Tests;
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 
 public sealed class DirectQueryTests : IDisposable
 {
@@ -300,3 +302,5 @@ public sealed class DirectQueryTests : IDisposable
         DirectQuery.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

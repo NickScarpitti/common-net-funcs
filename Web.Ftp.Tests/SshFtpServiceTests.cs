@@ -1,8 +1,10 @@
-﻿using AutoFixture.AutoFakeItEasy;
+﻿﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Web.Ftp;
 using Renci.SshNet;
 
 namespace Web.Ftp.Tests;
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 
 public class SshFtpServiceTests
 {
@@ -130,3 +132,5 @@ public class SshFtpServiceTests
     //    return file;
     //}
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

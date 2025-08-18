@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+﻿﻿using System.Buffers;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -9,7 +9,6 @@ using MemoryPack;
 using MemoryPack.Compression;
 using MessagePack;
 using Newtonsoft.Json;
-using NLog;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -28,7 +27,7 @@ public static class RestHelpersStatic
     private const double DefaultRequestTimeout = 100;
 
     //public static JsonSerializerOptions? JsonSerializerOptions { get; set; }
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
     public static readonly JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles, PropertyNameCaseInsensitive = true };
 
     /// <summary>
@@ -38,14 +37,14 @@ public static class RestHelpersStatic
     /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
     /// <param name="client">HttpClient to execute REST request with</param>
     /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>Object of type T resulting from the request - Null if not success</returns>
+    /// <returns>Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
     public static async Task<T?> RestRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
     {
         T? result = default;
         try
         {
             logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
-                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken) : string.Empty)}" : string.Empty));
+                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false) : string.Empty)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
             using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
@@ -81,7 +80,7 @@ public static class RestHelpersStatic
     /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
     /// <param name="client">HttpClient to execute REST request with</param>
     /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>An IAsyncEnumerable of the Object of type T resulting from the request - Null if not success</returns>
+    /// <returns>An IAsyncEnumerable of the Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
     public static async IAsyncEnumerable<T?> StreamingRestRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         IAsyncEnumerator<T?>? enumeratedReader = null;
@@ -91,7 +90,7 @@ public static class RestHelpersStatic
             try
             {
                 logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
-                    $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken) : string.Empty)}" : string.Empty));
+                    $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false) : string.Empty)}" : string.Empty));
                 using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
                 using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 
@@ -155,14 +154,14 @@ public static class RestHelpersStatic
     /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
     /// <param name="client">HttpClient to execute REST request with</param>
     /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>Object of type T resulting from the request - Null if not success</returns>
+    /// <returns>Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
     public static async Task<RestObject<T>> RestObjectRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
     {
         RestObject<T> restObject = new();
         try
         {
             logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
-                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken) : string.Empty)}" : string.Empty));
+                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false) : string.Empty)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
             using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
@@ -198,14 +197,14 @@ public static class RestHelpersStatic
     /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
     /// <param name="client">HttpClient to execute REST request with</param>
     /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>An IAsyncEnumerable of the Object of type T resulting from the request - Null if not success</returns>
+    /// <returns>An IAsyncEnumerable of the Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
     public static async Task<StreamingRestObject<T>> StreamingRestObjectRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
     {
         StreamingRestObject<T> restObject = new();
         try
         {
             logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
-                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken) : string.Empty)}" : string.Empty));
+                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false) : string.Empty)}" : string.Empty));
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
             using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 

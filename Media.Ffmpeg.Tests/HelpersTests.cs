@@ -1,8 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿﻿using System.Collections.Concurrent;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
 
 namespace Media.Ffmpeg.Tests;
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 
 public sealed class HelpersTests : IDisposable
 {
@@ -225,3 +227,5 @@ public sealed class HelpersTests : IDisposable
         values.ShouldContain("Bit_Rate");
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

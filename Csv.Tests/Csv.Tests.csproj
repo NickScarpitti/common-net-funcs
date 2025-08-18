@@ -32,7 +32,7 @@
     <Using Include="Shouldly" />
     <Using Include="AutoFixture" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Csv\CommonNetFuncs.Csv.csproj" />
   </ItemGroup>

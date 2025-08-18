@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+﻿﻿using System.Text.Json;
 using static CommonNetFuncs.DeepClone.Serialize;
 
 namespace DeepClone.Tests;
@@ -213,8 +213,6 @@ public sealed class SerializeTests
                 }
         }];
 
-        yield return
-        [
-            new TestClass { Number = 42, Text = null, Numbers = [], TimeStamp = DateTime.UtcNow, Child = null }];
+        yield return [new TestClass { Number = 42, Text = null, Numbers = [], TimeStamp = DateTime.UtcNow, Child = null }];
     }
 }

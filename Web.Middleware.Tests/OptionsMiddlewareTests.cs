@@ -1,7 +1,9 @@
-﻿using CommonNetFuncs.Web.Middleware;
+﻿﻿using CommonNetFuncs.Web.Middleware;
 using Microsoft.AspNetCore.Http;
 
 namespace Web.Middleware.Tests;
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 
 public sealed class OptionsMiddlewareTests
 {
@@ -99,3 +101,5 @@ public sealed class OptionsMiddlewareTests
         Should.Throw<ArgumentNullException>(() => new OptionsMiddleware(null!));
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

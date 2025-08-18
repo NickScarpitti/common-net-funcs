@@ -1,9 +1,10 @@
-﻿using System.Data;
+﻿﻿using System.Data;
 using CommonNetFuncs.Email;
 using static CommonNetFuncs.Email.HtmlEmailBuilder;
 
 namespace Email.Tests;
 
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class HtmlEmailBuilderTests
 {
     [Theory]
@@ -271,3 +272,4 @@ public sealed class HtmlEmailBuilderTests
         }
     }
 }
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

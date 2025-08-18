@@ -1,7 +1,9 @@
-﻿using AutoFixture.AutoFakeItEasy;
+﻿﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Images;
 
 namespace Images.Tests;
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 
 public sealed class OptimizerTests : IDisposable
 {
@@ -134,3 +136,5 @@ public sealed class OptimizerTests : IDisposable
         await Should.NotThrowAsync(async () => await Optimizer.OptimizeImage(testPath, gifsicleArgs, jpegoptimArgs, optipngArgs));
     }
 }
+
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

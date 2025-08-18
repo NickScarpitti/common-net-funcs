@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿﻿using System.Reflection;
 using CommonNetFuncs.Web.Requests;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
@@ -16,7 +16,11 @@ public class PatchCreatorTests
 
         public decimal Amount { get; set; }
 
-        public DateTime? Date { get; set; }
+        public DateTime? DateTime { get; set; }
+
+        public DateOnly? DateOnly { get; set; }
+
+        public DateTimeOffset? DateTimeOffset { get; set; }
 
         public NestedModel? Nested { get; set; }
     }
@@ -33,7 +37,7 @@ public class PatchCreatorTests
     [Fact]
     public void CreatePatch_ShouldReturnEmptyPatch_WhenObjectsAreEqual()
     {
-        TestModel original = new() { Id = 1, Name = "Test", Amount = 10.5m, Date = DateTime.UtcNow, Nested = new NestedModel { Value = "A" } };
+        TestModel original = new() { Id = 1, Name = "Test", Amount = 10.5m, DateTime = DateTime.UtcNow, DateTimeOffset = DateTimeOffset.Now, DateOnly = DateOnly.FromDateTime(DateTime.Now), Nested = new NestedModel { Value = "A" } };
         TestModel modified = JsonConvert.DeserializeObject<TestModel>(JsonConvert.SerializeObject(original))!;
 
         JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
@@ -93,16 +97,28 @@ public class PatchCreatorTests
     [Fact]
     public void CreatePatch_ShouldDetectDateChange()
     {
-        TestModel original = new() { Id = 1, Date = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
-        TestModel modified = new() { Id = 1, Date = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
+        DateTime originalDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        DateTime modifiedDate = new(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        TestModel original = new() { Id = 1, DateTime = originalDate, DateOnly = DateOnly.FromDateTime(originalDate), DateTimeOffset = new(originalDate) };
+        TestModel modified = new() { Id = 1, DateTime = modifiedDate, DateOnly = DateOnly.FromDateTime(modifiedDate), DateTimeOffset = new(modifiedDate) };
 
         JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
 
-        patch.Operations.Count.ShouldBe(1);
+        patch.Operations.Count.ShouldBe(3);
         patch.Operations[0].op.ShouldBe(ReplaceOperation);
-        patch.Operations[0].path.ShouldBe("/Date");
+        patch.Operations[0].path.ShouldBe("/DateTime");
         patch.Operations[0].value.ShouldBeOfType<JValue>();
-        ((JValue)patch.Operations[0].value).Value.ShouldBe(modified.Date);
+        patch.Operations[1].op.ShouldBe(ReplaceOperation);
+        patch.Operations[1].path.ShouldBe("/DateOnly");
+        patch.Operations[1].value.ShouldBeOfType<JValue>();
+        patch.Operations[2].op.ShouldBe(ReplaceOperation);
+        patch.Operations[2].path.ShouldBe("/DateTimeOffset");
+        patch.Operations[2].value.ShouldBeOfType<JValue>();
+        ((JValue)patch.Operations[0].value).Value.ShouldBe(modified.DateTime);
+        DateOnly.TryParse(((JValue)patch.Operations[1].value).Value?.ToString(), out DateOnly dateOnlyResult).ShouldBeTrue();
+        DateOnly? nullableDateOnlyResult = dateOnlyResult;
+        nullableDateOnlyResult.ShouldBe(modified.DateOnly);
+        ((DateTimeOffset?)((JValue)patch.Operations[2].value).Value).ShouldBe(modified.DateTimeOffset);
     }
 
     [Fact]

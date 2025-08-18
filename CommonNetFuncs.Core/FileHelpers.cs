@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+﻿﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -15,9 +15,7 @@ public static partial class FileHelpers
     /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same name exists already
     /// </summary>
     /// <param name="originalFullFileName">Full path and file name</param>
-    /// <param name="startFromZero">
-    /// Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.
-    /// </param>
+    /// <param name="startFromZero">Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.</param>
     /// <param name="suppressLogging">Will prevent this method from emitting logs</param>
     /// <param name="createPathIfMissing">Will create the file path if it does not exist</param>
     /// <returns>Unique file name for the given destination</returns>
@@ -83,9 +81,7 @@ public static partial class FileHelpers
                 else
                 {
                     string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(cleanFileName);
-                    testPath = Path.GetFullPath(Path.Combine(
-                        Path.GetDirectoryName(originalFullFileName) ?? string.Empty,
-                        $"{fileNameWithoutExtension} ({i}){ext}"));
+                    testPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(originalFullFileName) ?? string.Empty, $"{fileNameWithoutExtension} ({i}){ext}"));
                 }
 
                 if (!suppressLogging)
@@ -120,9 +116,7 @@ public static partial class FileHelpers
     /// </summary>
     /// <param name="path">Full path to look in for duplicated file names</param>
     /// <param name="fileName">The file name to check for uniqueness with in the given file path</param>
-    /// <param name="startFromZero">
-    /// Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.
-    /// </param>
+    /// <param name="startFromZero">Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.</param>
     /// <param name="suppressLogging">Will prevent this method from emitting logs</param>
     /// <param name="createPathIfMissing">Will create the file path if it does not exist</param>
     /// <returns>Unique file name for the given destination</returns>
@@ -213,7 +207,7 @@ public static partial class FileHelpers
     /// </summary>
     /// <param name="fileName">Full file name (with extension) to check for a valid file extension</param>
     /// <param name="validExtensions">Array of valid file extensions</param>
-    /// <returns>True if the file has a valid extension</returns>
+    /// <returns><see langword="true"/> if the file has a valid extension</returns>
     public static bool ValidateFileExtension(this string fileName, string[] validExtensions)
     {
         string extension = Path.GetExtension(fileName);
@@ -221,11 +215,11 @@ public static partial class FileHelpers
     }
 
     /// <summary>
-    /// Gets the hash for a file
+    /// Gets the hash for a file using the designated algorithm.
     /// </summary>
-    /// <param name="fileName">Full file name including directory pointing to the file to get the hash of</param>
-    /// <param name="algorithm">Algorithm to use to generate the hash</param>
-    /// <returns>Hash for the file</returns>
+    /// <param name="fileName">Full file name including directory pointing to the file to get the hash of.</param>
+    /// <param name="algorithm">Optional: Algorithm to use to generate the hash. Defaults to SHA512.</param>
+    /// <returns>Hash for the file.</returns>
     public static async Task<string> GetHashFromFile(this string fileName, EHashAlgorithm algorithm = EHashAlgorithm.SHA512)
     {
         if (!File.Exists(fileName))
@@ -246,11 +240,11 @@ public static partial class FileHelpers
     }
 
     /// <summary>
-    /// Generates hash based on the contents of a stream using the designated algorithm
+    /// Generates hash based on the contents of a stream using the designated algorithm.
     /// </summary>
     /// <param name="stream">Stream generate hash for</param>
-    /// <param name="hashAlgorithm">Algorithm to use to generate the hash</param>
-    /// <returns>Hash for the contents of the stream</returns>
+    /// <param name="hashAlgorithm">Optional: Algorithm to use to generate the hash. Defaults to SHA512</param>
+    /// <returns>Hash for the contents of the stream.</returns>
     public static async Task<string> GetHashFromStream(this Stream stream, EHashAlgorithm hashAlgorithm = EHashAlgorithm.SHA512)
     {
         HashAlgorithm algorithm = hashAlgorithm switch
@@ -278,47 +272,54 @@ public static partial class FileHelpers
         }
     }
 
-    public static List<string> GetAllFilesRecursive(string? startDirectory, string searchPattern = "*")
+    /// <summary>
+    /// Gets all files in a directory and its subdirectories.
+    /// </summary>
+    /// <param name="startDirectory">Directory to start searching from.</param>
+    /// <param name="searchPattern">Search pattern to use when looking for files.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>A list of all files found.</returns>
+    public static IEnumerable<string> GetAllFilesRecursive(string? startDirectory, string searchPattern = "*", CancellationToken cancellationToken = default)
     {
-        List<string> files = [];
-
         if (string.IsNullOrWhiteSpace(startDirectory) || !Directory.Exists(startDirectory))
         {
-            return files;
+            yield break;
         }
 
         Stack<string> dirs = new();
         dirs.Push(startDirectory);
 
-        try
+        while (dirs.Count > 0)
         {
-            while (dirs.Count > 0)
+            cancellationToken.ThrowIfCancellationRequested();
+            string currentDir = dirs.Pop();
+            List<string> files = [];
+            try
             {
-                string currentDir = dirs.Pop();
+                // Add files in the current directory
+                files.AddRange(Directory.EnumerateFiles(currentDir, searchPattern));
 
-                try
+                // Push subdirectories onto the stack
+                foreach (string subDir in Directory.EnumerateDirectories(currentDir))
                 {
-                    // Add files in the current directory
-                    files.AddRange(Directory.EnumerateFiles(currentDir, searchPattern));
-
-                    // Push subdirectories onto the stack
-                    foreach (string subDir in Directory.EnumerateDirectories(currentDir))
-                    {
-                        dirs.Push(subDir);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex, $"Error accessing directory: {currentDir}");
+                    dirs.Push(subDir);
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, $"Error getting files from directory: {startDirectory}");
-        }
+            catch (Exception ex)
+            {
+                logger.Error(ex, $"Error accessing directory: {currentDir}");
+            }
 
-        return files;
+            if (files.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (string file in files)
+            {
+                yield return file;
+            }
+        }
     }
 
     /// <summary>

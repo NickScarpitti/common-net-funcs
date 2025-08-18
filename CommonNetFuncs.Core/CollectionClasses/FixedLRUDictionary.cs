@@ -3,12 +3,27 @@ using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Core.CollectionClasses;
 
+/// <summary>
+/// Represents a fixed-capacity, thread-safe dictionary that maintains the most recently used (MRU) items. When the capacity is exceeded, the least recently used (LRU) item is removed.
+/// </summary>
+/// <remarks>This dictionary enforces a maximum capacity. When the capacity is exceeded, the least recently used
+/// item is automatically removed to make room for new entries. Accessing or adding an item updates its usage order,
+/// moving it to the most recently used position.  This implementation is thread-safe and uses a <see cref="ReaderWriterLockSlim"/> to synchronize access.</remarks>
+/// <typeparam name="TKey">The type of the keys in the dictionary. Keys must be non-null.</typeparam>
+/// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
 public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
 {
     private readonly ReaderWriterLockSlim readWriteLock = new();
     private readonly int capacity;
     private readonly OrderedDictionary<TKey, TValue?> dictionary;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FixedLRUDictionary{TKey, TValue}"/> class with the specified capacity and an optional source dictionary.
+    /// </summary>
+    /// <param name="capacity">The maximum number of items the dictionary can hold.</param>
+    /// <param name="sourceDictionary">Optional: A dictionary to initialize the contents of the new dictionary.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the capacity is less than or equal to zero.</exception>
+    /// <exception cref="ArgumentException">Thrown when the source dictionary exceeds the specified capacity.</exception>
     public FixedLRUDictionary(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
     {
         if (capacity <= 0)
@@ -33,6 +48,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public ICollection<TKey> Keys
     {
         get
@@ -40,7 +56,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
             readWriteLock.EnterReadLock();
             try
             {
-                return dictionary.Keys.ToList();
+                return dictionary.Keys;
             }
             finally
             {
@@ -49,6 +65,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public ICollection<TValue?> Values
     {
         get
@@ -56,7 +73,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
             readWriteLock.EnterReadLock();
             try
             {
-                return dictionary.Values.ToList();
+                return dictionary.Values;
             }
             finally
             {
@@ -65,6 +82,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public int Count
     {
         get
@@ -81,8 +99,10 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public bool IsReadOnly => false;
 
+    /// <inheritdoc />
     public TValue? this[TKey key]
     {
         get
@@ -137,6 +157,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public bool ContainsKey(TKey key)
     {
         readWriteLock.EnterReadLock();
@@ -150,6 +171,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public bool TryGetValue(TKey key, out TValue? value)
     {
         readWriteLock.EnterUpgradeableReadLock();
@@ -182,6 +204,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public void Clear()
     {
         readWriteLock.EnterWriteLock();
@@ -195,6 +218,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public void Add(TKey key, TValue? value)
     {
         readWriteLock.EnterWriteLock();
@@ -218,6 +242,12 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <summary>
+    /// Attempts to add the specified key and value to the dictionary.
+    /// </summary>
+    /// <param name="key">Key of the value to add.</param>
+    /// <param name="value">Value to add.</param>
+    /// <returns><see langword="true"/> if the key/value pair was added successfully, <see langword="false"/> otherwise.</returns>
     public bool TryAdd(TKey key, TValue? value)
     {
         readWriteLock.EnterUpgradeableReadLock();
@@ -257,6 +287,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public bool Remove(TKey key)
     {
         readWriteLock.EnterWriteLock();
@@ -270,11 +301,13 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public void Add(KeyValuePair<TKey, TValue?> item)
     {
         Add(item.Key, item.Value);
     }
 
+    /// <inheritdoc />
     public bool Contains(KeyValuePair<TKey, TValue?> item)
     {
         readWriteLock.EnterReadLock();
@@ -288,6 +321,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public void CopyTo(KeyValuePair<TKey, TValue?>[] array, int arrayIndex)
     {
         readWriteLock.EnterReadLock();
@@ -301,6 +335,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public bool Remove(KeyValuePair<TKey, TValue?> item)
     {
         readWriteLock.EnterWriteLock();
@@ -314,6 +349,12 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <summary>
+    /// Gets the value associated with the specified key, or adds a new key/value pair to the dictionary if the key does not exist.
+    /// </summary>
+    /// <param name="key">The key to locate in the dictionary.</param>
+    /// <param name="valueFactory">A function to generate a value for the key if it does not exist.</param>
+    /// <returns>The value associated with the specified key.</returns>
     public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
     {
         readWriteLock.EnterUpgradeableReadLock();
@@ -364,12 +405,13 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     public IEnumerator<KeyValuePair<TKey, TValue?>> GetEnumerator()
     {
         readWriteLock.EnterReadLock();
         try
         {
-            return dictionary.ToList().GetEnumerator();
+            return dictionary.GetEnumerator();
         }
         finally
         {
@@ -377,6 +419,7 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    /// <inheritdoc />
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();

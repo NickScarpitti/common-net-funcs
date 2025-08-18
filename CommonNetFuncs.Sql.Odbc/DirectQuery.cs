@@ -1,4 +1,4 @@
-﻿using System.Data;
+﻿﻿using System.Data;
 using System.Data.Common;
 using System.Data.Odbc;
 using System.Runtime.CompilerServices;
@@ -20,11 +20,11 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns a DataTable using the SQL and data connection passed to the function
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>DataTable containing the results of the SQL query</returns>
+    /// <returns><see cref="DataTable"/> containing the results of the SQL query</returns>
     public async Task<DataTable> GetDataTable(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
     {
         await using OdbcConnection sqlConn = connectionFactory(connStr);
@@ -35,11 +35,11 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns a DataTable using the SQL and data connection passed to the function
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>DataTable containing the results of the SQL query</returns>
+    /// <returns><see cref="DataTable"/> containing the results of the SQL query</returns>
     public DataTable GetDataTableSynchronous(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3)
     {
         using OdbcConnection sqlConn = connectionFactory(connStr);
@@ -80,11 +80,11 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns a IAsyncEnumerable using the SQL and data connection passed to the function
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>DataTable containing the results of the SQL query</returns>
+    /// <returns><see cref="DataTable"/> containing the results of the SQL query</returns>
     public async IAsyncEnumerable<T> GetDataStreamAsync<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, bool useCache = true, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
         await using OdbcConnection sqlConn = connectionFactory(connStr);
@@ -124,11 +124,11 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns a IEnumerable of T resulting from the SQL query
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>DataTable containing the results of the SQL query</returns>
+    /// <returns><see cref="DataTable"/> containing the results of the SQL query</returns>
     public IEnumerable<T> GetDataStreamSynchronous<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, bool useCache = true, CancellationToken cancellationToken = default) where T : class, new()
     {
         using OdbcConnection sqlConn = connectionFactory(connStr);
@@ -158,11 +158,11 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
     /// <summary>
     /// Returns an IEnumerable of T resulting from the SQL query
     /// </summary>
-    /// <param name="sql">Select query to retrieve populate datatable</param>
+    /// <param name="sql">Select query to retrieve populate datatable.</param>
     /// <param name="connStr">Connection string to run the query on</param>
     /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
     /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>DataTable containing the results of the SQL query</returns>
+    /// <returns><see cref="DataTable"/> containing the results of the SQL query</returns>
     public async Task<IEnumerable<T>> GetDataDirectAsync<T>(string sql, string connStr, int commandTimeoutSeconds = 30, int maxRetry = 3, bool useCache = true, CancellationToken cancellationToken = default) where T : class, new()
     {
         await using OdbcConnection sqlConn = connectionFactory(connStr);

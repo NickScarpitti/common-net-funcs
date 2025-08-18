@@ -35,11 +35,11 @@
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.EFCore\CommonNetFuncs.EFCore.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
     <Using Include="AutoFixture" />
   </ItemGroup>
-  
+
 </Project>

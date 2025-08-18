@@ -922,7 +922,7 @@ public static class Manipulation
     /// </summary>
     /// <param name="imagePath">Path to the image to detect image type of.</param>
     /// <param name="format">The format of the image if detected, otherwise null.</param>
-    /// <returns>True if the image format was successfully read.</returns>
+    /// <returns><see langword="true"/> if the image format was successfully read.</returns>
     public static bool TryDetectImageType(string imagePath, out IImageFormat? format)
     {
         format = null;
@@ -947,7 +947,7 @@ public static class Manipulation
     /// </summary>
     /// <param name="imageStream">Stream containing the image data to detect image type of.</param>
     /// <param name="format">The format of the image if detected, otherwise null.</param>
-    /// <returns>True if the image format was successfully read.</returns>
+    /// <returns><see langword="true"/> if the image format was successfully read.</returns>
     public static bool TryDetectImageType(Stream imageStream, out IImageFormat? format)
     {
         format = null;
@@ -978,7 +978,7 @@ public static class Manipulation
     /// </summary>
     /// <param name="imageData">Span containing the image data to detect image type of.</param>
     /// <param name="format">The format of the image if detected, otherwise null.</param>
-    /// <returns>True if the image format was successfully read.</returns>
+    /// <returns><see langword="true"/> if the image format was successfully read.</returns>
     public static bool TryDetectImageType(ReadOnlySpan<byte> imageData, out IImageFormat? format)
     {
         format = null;
@@ -996,7 +996,7 @@ public static class Manipulation
     /// </summary>
     /// <param name="imagePath">Image path for the file to get metadata from.</param>
     /// <param name="metadata">Metadata read from the image.</param>
-    /// <returns>True if the metadata was successfully read.</returns>
+    /// <returns><see langword="true"/> if the metadata was successfully read.</returns>
     public static bool TryGetMetadata(string imagePath, out ImageMetadata metadata)
     {
         metadata = new ImageMetadata();
@@ -1022,7 +1022,7 @@ public static class Manipulation
     /// </summary>
     /// <param name="imageStream">Stream containing the image data to get metadata from.</param>
     /// <param name="metadata">Metadata read from the image.</param>
-    /// <returns>True if the metadata was successfully read.</returns>
+    /// <returns><see langword="true"/> if the metadata was successfully read.</returns>
     public static bool TryGetMetadata(Stream imageStream, out ImageMetadata metadata)
     {
         metadata = new ImageMetadata();
@@ -1054,7 +1054,7 @@ public static class Manipulation
     /// </summary>
     /// <param name="imageData">Span containing the image data to get metadata from.</param>
     /// <param name="metadata">Metadata read from the image.</param>
-    /// <returns>True if the metadata was successfully read.</returns>
+    /// <returns><see langword="true"/> if the metadata was successfully read.</returns>
     public static bool TryGetMetadata(ReadOnlySpan<byte> imageData, out ImageMetadata metadata)
     {
         metadata = new ImageMetadata();
@@ -1517,7 +1517,7 @@ public static class Manipulation
                 image.Mutate(mutate);
             }
 
-            await image.SaveAsync(outputStream, outputImageFormat);
+            await image.SaveAsync(outputStream, outputImageFormat).ConfigureAwait(false);
 
             if (outputStream.CanSeek)
             {

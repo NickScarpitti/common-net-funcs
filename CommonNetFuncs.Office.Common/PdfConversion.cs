@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿﻿using System.Diagnostics;
 using static System.IO.Path;
 using static System.Web.HttpUtility;
 
@@ -23,7 +23,7 @@ public static class PdfConversion
     /// <summary>
     /// Converts an office formatted document into a PDF (Requires LibreOffice to be installed on the host machine)
     /// </summary>
-    /// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable</param>
+    /// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable.</param>
     /// <param name="fileName">File name including full file path to the file to convert to a PDF</param>
     /// <param name="outputPath">Optional: Path to output file to, defaults to the same path as fileName if null</param>
     /// <param name="conversionTimeout">Optional: Time limit for how long the conversion can take before being canceled</param>
@@ -102,7 +102,7 @@ public static class PdfConversion
     /// <summary>
     /// Converts an office formatted document into a PDF (Requires LibreOffice to be installed on the host machine)
     /// </summary>
-    /// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable</param>
+    /// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable.</param>
     /// <param name="fileName">File name including full file path to the file to convert to a PDF</param>
     /// <param name="outputPath">Optional: Path to output file to, defaults to the same path as fileName if null</param>
     /// <param name="cancellationToken">Optional: Cancellation token for asynchronous conversion operation</param>
@@ -127,11 +127,11 @@ public static class PdfConversion
 
         try
         {
-            await semaphore.WaitAsync(cancellationToken ?? default);
+            await semaphore.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
             for (int i = 0; i <= maxRetries; i++)
             {
                 process.Start();
-                await process.WaitForExitAsync(cancellationToken ?? default);
+                await process.WaitForExitAsync(cancellationToken ?? default).ConfigureAwait(false);
 
                 if (process.HasExited && process.ExitCode != 0)
                 {

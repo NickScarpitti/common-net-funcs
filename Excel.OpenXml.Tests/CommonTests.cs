@@ -1,4 +1,4 @@
-﻿using System.Data;
+﻿﻿using System.Data;
 using CommonNetFuncs.Excel.Common;
 using CommonNetFuncs.Excel.OpenXml;
 using DocumentFormat.OpenXml;
@@ -84,8 +84,7 @@ public sealed class CommonTests : IDisposable
 
         // Assert
         worksheet.ShouldNotBeNull();
-        Sheet sheet = document.WorkbookPart!.Workbook.Descendants<Sheet>()
-            .First(s => s.Name == sheetName);
+        Sheet sheet = document.WorkbookPart!.Workbook.Descendants<Sheet>().First(x => x.Name == sheetName);
         sheet.ShouldNotBeNull();
     }
 

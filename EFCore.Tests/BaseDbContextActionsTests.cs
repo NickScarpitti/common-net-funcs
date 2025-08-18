@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+﻿﻿using System.Linq.Expressions;
 using System.Text.Json.Serialization;
 using CommonNetFuncs.EFCore;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 
 namespace EFCore.Tests;
+
+#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 
 public sealed class BaseDbContextActionsTests
 {
@@ -1781,3 +1783,4 @@ public class TestEntityDetail
     [JsonIgnore]
     public TestEntity? TestEntity { get; set; }
 }
+#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

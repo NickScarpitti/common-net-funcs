@@ -31,7 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Excel.ClosedXml\CommonNetFuncs.Excel.ClosedXml.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Shouldly" />

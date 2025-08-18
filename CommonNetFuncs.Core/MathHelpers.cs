@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+﻿﻿using System.Globalization;
 using static System.Convert;
 
 namespace CommonNetFuncs.Core;
@@ -9,11 +9,11 @@ namespace CommonNetFuncs.Core;
 public static class MathHelpers
 {
     /// <summary>
-    /// Rounds value up to the next whole value specified by significance parameter
+    /// Rounds value up to the next whole value specified by significance parameter.
     /// </summary>
     /// <param name="value">Value to round up</param>
-    /// <param name="significance">Next step to round value parameter up to</param>
-    /// <returns>Double representation of the rounded value</returns>
+    /// <param name="significance">Next step to round value parameter up to.</param>
+    /// <returns>Double representation of the rounded value.</returns>
     public static double Ceiling(this double? value, double significance)
     {
         double val = value ?? 0;
@@ -153,6 +153,7 @@ public static class MathHelpers
     /// Get the number of decimal places of a double value
     /// </summary>
     /// <param name="value">Value to get the precision of</param>
+    /// <param name="decimalSeparator">The decimal separator to use.</param>
     /// <returns>The number of decimal places of the given double value</returns>
     public static int GetPrecision(this double value, string? decimalSeparator = null)
     {
@@ -177,24 +178,15 @@ public static class MathHelpers
         return Enumerable.Range(start, end - start + 1);
     }
 
+    /// <summary>
+    /// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
+    /// </summary>
+    /// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
+    /// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
+    /// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
+    /// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
     public static void GreatestCommonDenominator(ref long numerator, ref long denominator, out long greatestCommonDenominator)
     {
-        // Slow brute-force GCD calculation
-        //greatestCommonDenominator = 0;
-        //for (long x = 1; x <= denominator; x++)
-        //{
-        //    if ((numerator % x == 0) && (denominator % x == 0))
-        //    {
-        //        greatestCommonDenominator = x;
-        //    }
-        //}
-
-        //if (greatestCommonDenominator != 0)
-        //{
-        //    numerator /= greatestCommonDenominator;
-        //    denominator /= greatestCommonDenominator;
-        //}
-
         // Fast Euclidean algorithm for GCD calculation
         long a = Math.Abs(numerator);
         long b = Math.Abs(denominator);
@@ -204,6 +196,7 @@ public static class MathHelpers
             b = a % b;
             a = temp;
         }
+
         greatestCommonDenominator = a;
         if (greatestCommonDenominator != 0)
         {
@@ -212,6 +205,13 @@ public static class MathHelpers
         }
     }
 
+    /// <summary>
+    /// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
+    /// </summary>
+    /// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
+    /// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
+    /// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
+    /// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
     public static void GreatestCommonDenominator(ref int numerator, ref int denominator, out int greatestCommonDenominator)
     {
         // Fast Euclidean algorithm for GCD calculation
@@ -223,6 +223,7 @@ public static class MathHelpers
             b = a % b;
             a = temp;
         }
+
         greatestCommonDenominator = a;
         if (greatestCommonDenominator != 0)
         {
@@ -231,6 +232,13 @@ public static class MathHelpers
         }
     }
 
+    /// <summary>
+    /// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
+    /// </summary>
+    /// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
+    /// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
+    /// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
+    /// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
     public static void GreatestCommonDenominator(ref decimal numerator, ref decimal denominator, out decimal greatestCommonDenominator)
     {
         // Fast Euclidean algorithm for GCD calculation
@@ -242,6 +250,7 @@ public static class MathHelpers
             b = a % b;
             a = temp;
         }
+
         greatestCommonDenominator = a;
         if (greatestCommonDenominator != 0)
         {

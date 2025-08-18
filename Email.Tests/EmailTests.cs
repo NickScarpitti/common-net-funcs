@@ -1,4 +1,4 @@
-﻿﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using AutoFixture.Xunit2;
 using CommonNetFuncs.Email;
 using MimeKit;
@@ -67,11 +67,26 @@ public sealed class EmailTests
     public async Task SendEmail_WithInvalidFromAddress_ShouldReturnFalse(string smtpServer, int smtpPort)
     {
         // Arrange
-        MailAddress from = new("Test", "invalid-email");
-        MailAddress[] to = new[] { new MailAddress("Test Recipient", "valid@example.com") };
+        SmtpSettings smtpSettings = new()
+        {
+            SmtpServer = smtpServer,
+            SmtpPort = smtpPort,
+        };
+
+        EmailAddresses emailAddresses = new()
+        {
+            FromAddress = new("Test", "invalid-email"),
+            ToAddresses = new[] { new MailAddress("Test Recipient", "valid@example.com") }
+        };
+
+        EmailContent emailContent = new()
+        {
+            Subject = "Test Subject",
+            Body = "Test Body"
+        };
 
         // Act
-        bool result = await SendEmail(smtpServer, smtpPort, from, to, "Test Subject", "Test Body");
+        bool result = await SendEmail(new() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent });
 
         // Assert
         result.ShouldBeFalse();
@@ -82,11 +97,26 @@ public sealed class EmailTests
     public async Task SendEmail_WithInvalidToAddress_ShouldReturnFalse(string smtpServer, int smtpPort)
     {
         // Arrange
-        MailAddress from = new("Test", "valid@example.com");
-        MailAddress[] to = new[] { new MailAddress("Test Recipient", "invalid-email") };
+        SmtpSettings smtpSettings = new()
+        {
+            SmtpServer = smtpServer,
+            SmtpPort = smtpPort,
+        };
+
+        EmailAddresses emailAddresses = new()
+        {
+            FromAddress = new("Test", "valid@example.com"),
+            ToAddresses = new[] { new MailAddress("Test Recipient", "invalid-email") }
+        };
+
+        EmailContent emailContent = new()
+        {
+            Subject = "Test Subject",
+            Body = "Test Body"
+        };
 
         // Act
-        bool result = await SendEmail(smtpServer, smtpPort, from, to, "Test Subject", "Test Body");
+        bool result = await SendEmail(new() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent });
 
         // Assert
         result.ShouldBeFalse();
@@ -143,11 +173,26 @@ public sealed class EmailTests
     public async Task SendEmail_WithReadReceipt_ShouldSetHeader(string smtpServer, int smtpPort)
     {
         // Arrange
-        MailAddress from = new("Test", "sender@example.com");
-        MailAddress[] to = new[] { new MailAddress("Test Recipient", "recipient@example.com") };
+        SmtpSettings smtpSettings = new()
+        {
+            SmtpServer = smtpServer,
+            SmtpPort = smtpPort,
+        };
+
+        EmailAddresses emailAddresses = new()
+        {
+            FromAddress = new("Test", "sender@example.com"),
+            ToAddresses = new[] { new MailAddress("Test Recipient", "recipient@example.com") }
+        };
+
+        EmailContent emailContent = new()
+        {
+            Subject = "Test Subject",
+            Body = "Test Body"
+        };
 
         // Act
-        bool result = await SendEmail(smtpServer, smtpPort, from, to, "Test Subject", "Test Body", readReceipt: true, readReceiptEmail: "receipt@example.com");
+        bool result = await SendEmail(new() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent, ReadReceipt = true, ReadReceiptEmail = "receipt@example.com" });
 
         // Note: We can't actually verify the header here since the SMTP interaction
         // is encapsulated, but the method should complete without throwing
@@ -159,12 +204,27 @@ public sealed class EmailTests
     public async Task SendEmail_WithHtmlBody_ShouldSetContentTypeCorrectly(string smtpServer, int smtpPort)
     {
         // Arrange
-        MailAddress from = new("Test", "sender@example.com");
-        MailAddress[] to = new[] { new MailAddress("Test Recipient", "recipient@example.com") };
-        const string htmlBody = "<h1>Test</h1><p>This is a test email</p>";
+        SmtpSettings smtpSettings = new()
+        {
+            SmtpServer = smtpServer,
+            SmtpPort = smtpPort,
+        };
+
+        EmailAddresses emailAddresses = new()
+        {
+            FromAddress = new("Test", "sender@example.com"),
+            ToAddresses = new[] { new MailAddress("Test Recipient", "recipient@example.com") }
+        };
+
+        EmailContent emailContent = new()
+        {
+            Subject = "Test ",
+            Body = "<h1>Test</h1><p>This is a test email</p>",
+            BodyIsHtml = true
+        };
 
         // Act
-        bool result = await SendEmail(smtpServer, smtpPort, from, to, "Test  ", htmlBody, bodyIsHtml: true);
+        bool result = await SendEmail(new() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent });
 
         // Note: Similar to above, we can't directly verify the content type
         // but the method should complete without throwing

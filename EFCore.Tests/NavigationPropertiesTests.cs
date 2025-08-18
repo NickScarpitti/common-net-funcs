@@ -1,4 +1,4 @@
-﻿﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using CommonNetFuncs.EFCore;
 using Microsoft.EntityFrameworkCore;
@@ -88,7 +88,7 @@ public sealed class NavigationPropertiesTests : IDisposable
     [Fact]
     public void GetNavigations_WithDifferentDepthsUsingCache_ReturnsCorrectNavigationPaths()
     {
-        //TODO:: Get depth of 1, then 3, then 1 again , and ensure the cache is used correctly and extra navigations are left out when depth is less than max cached depth
+        //Get depth of 1, then 3, then 1 again , and ensure the cache is used correctly and extra navigations are left out when depth is less than max cached depth
         // Arrange
         HashSet<string> originalNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(_context, new(maxNavigationDepth: 1));
         HashSet<string> deeperNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(_context, new(maxNavigationDepth: 3));

@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+﻿﻿using ClosedXML.Excel;
 using CommonNetFuncs.Excel.ClosedXml;
 using CommonNetFuncs.Excel.Common;
 using NSubstitute;

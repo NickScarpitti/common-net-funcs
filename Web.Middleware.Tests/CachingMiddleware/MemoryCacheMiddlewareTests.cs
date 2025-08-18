@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿﻿using System.Text;
 using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using CommonNetFuncs.Web.Middleware.CachingMiddleware;
 using Microsoft.AspNetCore.Http;

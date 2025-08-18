@@ -1,4 +1,4 @@
-﻿using CommonNetFuncs.Sql.Common;
+﻿﻿using CommonNetFuncs.Sql.Common;
 
 namespace Sql.Common.Tests;
 

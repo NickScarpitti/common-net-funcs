@@ -1,4 +1,4 @@
-﻿using CommonNetFuncs.Core;
+﻿﻿using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 

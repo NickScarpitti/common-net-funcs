@@ -1,4 +1,4 @@
-﻿using CommonNetFuncs.Web.Middleware;
+﻿﻿using CommonNetFuncs.Web.Middleware;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

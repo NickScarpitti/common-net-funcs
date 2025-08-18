@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+﻿﻿using System.Buffers;
 using CommonNetFuncs.Core;
 
 namespace Core.Tests;

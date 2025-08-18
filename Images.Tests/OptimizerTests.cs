@@ -1,4 +1,4 @@
-﻿using AutoFixture.AutoFakeItEasy;
+﻿﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Images;
 
 namespace Images.Tests;

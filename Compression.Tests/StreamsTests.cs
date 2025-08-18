@@ -1,4 +1,4 @@
-﻿using CommonNetFuncs.Compression;
+﻿﻿using CommonNetFuncs.Compression;
 using static CommonNetFuncs.Compression.Streams;
 
 namespace Compression.Tests;

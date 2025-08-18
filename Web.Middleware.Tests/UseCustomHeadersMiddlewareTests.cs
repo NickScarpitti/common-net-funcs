@@ -1,4 +1,4 @@
-﻿using CommonNetFuncs.Web.Middleware;
+﻿﻿using CommonNetFuncs.Web.Middleware;
 using Microsoft.AspNetCore.Http;
 
 namespace Web.Middleware.Tests;

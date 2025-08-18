@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+﻿﻿using System.Text.Json.Serialization;
 using MemoryPack;
 using MessagePack;
 using Microsoft.AspNetCore.Http;
@@ -159,4 +159,3 @@ public partial class SortAndLimitPostModel
 }
 
 #endregion Classes
-

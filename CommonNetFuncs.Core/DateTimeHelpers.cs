@@ -1,4 +1,4 @@
-﻿namespace CommonNetFuncs.Core;
+﻿﻿namespace CommonNetFuncs.Core;
 
 /// <summary>
 /// Helpers for dealing with DateTimes

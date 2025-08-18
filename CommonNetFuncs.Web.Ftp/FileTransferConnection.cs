@@ -1,4 +1,4 @@
-﻿namespace CommonNetFuncs.Web.Ftp;
+﻿﻿namespace CommonNetFuncs.Web.Ftp;
 
 public sealed class FileTransferConnection
 {

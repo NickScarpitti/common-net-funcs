@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+﻿﻿using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace CommonNetFuncs.Word.OpenXml;

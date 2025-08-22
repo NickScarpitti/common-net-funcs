@@ -1,8 +1,9 @@
-﻿﻿using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
+using CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
 using Xabe.FFmpeg;
 
 namespace Media.Ffmpeg.Tests;
@@ -46,6 +47,7 @@ public sealed class ConversionTaskTests : IDisposable
             if (disposing)
             {
                 // Cleanup temporary files after tests
+                Thread.Sleep(5000);
                 if (Directory.Exists(_workingDir))
                 {
                     try
@@ -92,7 +94,24 @@ public sealed class ConversionTaskTests : IDisposable
         const string ffmpegCommand = "-c:v libx264 -preset medium -crf 50";
 
         // Act
+        //bool result = await RawConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommand, true, _workingDir);
         bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommand, _workingDir);
+
+        // Assert
+        result.ShouldBeTrue();
+        File.Exists(Path.Combine(_workingDir, outputFileName)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task RawFfmpegConversionTask_WithCustomCommand_ShouldExecuteCommand()
+    {
+        // Arrange
+        FileInfo fileToConvert = new(_testVideoPath);
+        string outputFileName = $"output_{Guid.NewGuid()}.mp4";
+        const string ffmpegCommand = "-c:v libx264 -preset medium -crf 50";
+
+        // Act
+        bool result = await RawConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommand, true, _workingDir);
 
         // Assert
         result.ShouldBeTrue();

@@ -1,6 +1,7 @@
 ﻿using CommonNetFuncs.Web.Api.OpenApiTransformers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.OpenApi;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 
@@ -58,7 +59,8 @@ public sealed class OpenApiTransformerTests
             new AuthenticationScheme("Other", "Other", typeof(IAuthenticationHandler))
         };
         A.CallTo(() => fakeProvider.GetAllSchemesAsync()).Returns(Task.FromResult<IEnumerable<AuthenticationScheme>>(schemes));
-        BearerSecuritySchemeTransformer transformer = new(fakeProvider, schemeName);
+        IOptions<BearerSecuritySchemeOptions> options = Options.Create(new BearerSecuritySchemeOptions { AuthenticationSchemeName = schemeName ?? "Bearer" });
+        BearerSecuritySchemeTransformer transformer = new(fakeProvider, options);
         OpenApiDocument document = new();
         OpenApiDocumentTransformerContext context = new()
         {
@@ -83,13 +85,45 @@ public sealed class OpenApiTransformerTests
         document.SecurityRequirements.Any(req => req.Keys.Any(k => k.Reference?.Id == "Bearer" && k.Reference.Type == ReferenceType.SecurityScheme)).ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("NonExistentScheme")]
+    public async Task BearerSecuritySchemeTransformer_TransformAsync_DoesNotAdd_WhenNoMatchingScheme(string schemeName)
+    {
+        // Arrange
+        IAuthenticationSchemeProvider fakeProvider = A.Fake<IAuthenticationSchemeProvider>();
+        List<AuthenticationScheme> schemes = new()
+        {
+            new AuthenticationScheme("Bearer", "Bearer", typeof(IAuthenticationHandler)),
+            new AuthenticationScheme("Other", "Other", typeof(IAuthenticationHandler))
+        };
+        A.CallTo(() => fakeProvider.GetAllSchemesAsync()).Returns(Task.FromResult<IEnumerable<AuthenticationScheme>>(schemes));
+        IOptions<BearerSecuritySchemeOptions> options = Options.Create(new BearerSecuritySchemeOptions { AuthenticationSchemeName = schemeName });
+        BearerSecuritySchemeTransformer transformer = new(fakeProvider, options);
+        OpenApiDocument document = new();
+        OpenApiDocumentTransformerContext context = new()
+        {
+            DocumentName = "TestDoc",
+            DescriptionGroups = [],
+            ApplicationServices = null!
+        };
+        CancellationToken cancellationToken = CancellationToken.None;
+
+        // Act
+        await transformer.TransformAsync(document, context, cancellationToken);
+
+        // Assert
+        document.Components.ShouldBeNull();
+        document.SecurityRequirements.ShouldBeEmpty();
+    }
+
     [Fact]
     public async Task BearerSecuritySchemeTransformer_TransformAsync_DoesNotAdd_WhenNoSchemes()
     {
         // Arrange
         IAuthenticationSchemeProvider fakeProvider = A.Fake<IAuthenticationSchemeProvider>();
         A.CallTo(() => fakeProvider.GetAllSchemesAsync()).Returns(Task.FromResult<IEnumerable<AuthenticationScheme>>(new List<AuthenticationScheme>()));
-        BearerSecuritySchemeTransformer transformer = new(fakeProvider, "Bearer");
+        IOptions<BearerSecuritySchemeOptions> options = Options.Create(new BearerSecuritySchemeOptions { AuthenticationSchemeName = "Bearer" });
+        BearerSecuritySchemeTransformer transformer = new(fakeProvider, options);
         OpenApiDocument document = new();
         OpenApiDocumentTransformerContext context = new()
         {

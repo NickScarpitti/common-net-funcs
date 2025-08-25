@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.OpenApi;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
 namespace CommonNetFuncs.Web.Api.OpenApiTransformers;
 
-public sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvider authenticationSchemeProvider, string? authenticationSchemeName = "Bearer") : IOpenApiDocumentTransformer
+public sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvider authenticationSchemeProvider, IOptions<BearerSecuritySchemeOptions> options) : IOpenApiDocumentTransformer
 {
     private readonly IAuthenticationSchemeProvider authenticationSchemeProvider = authenticationSchemeProvider;
-    private readonly string? authenticationSchemeName = authenticationSchemeName;
+    private readonly string authenticationSchemeName = options.Value.AuthenticationSchemeName;
 
     public async Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
@@ -34,4 +35,12 @@ public sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvide
             });
         }
     }
+}
+
+/// <summary>
+/// Name of the authentication scheme to look for when deciding whether to add the Bearer security scheme to the OpenAPI document.
+/// </summary>
+public class BearerSecuritySchemeOptions
+{
+    public string AuthenticationSchemeName { get; set; } = "Bearer";
 }

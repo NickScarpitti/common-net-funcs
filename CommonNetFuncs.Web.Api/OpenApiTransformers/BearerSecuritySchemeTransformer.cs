@@ -6,6 +6,9 @@ namespace CommonNetFuncs.Web.Api.OpenApiTransformers;
 
 public sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvider authenticationSchemeProvider, string? authenticationSchemeName = "Bearer") : IOpenApiDocumentTransformer
 {
+    private readonly IAuthenticationSchemeProvider authenticationSchemeProvider = authenticationSchemeProvider;
+    private readonly string? authenticationSchemeName = authenticationSchemeName;
+
     public async Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
         IEnumerable<AuthenticationScheme> authenticationSchemes = await authenticationSchemeProvider.GetAllSchemesAsync().ConfigureAwait(false);

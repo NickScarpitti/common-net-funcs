@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 
 namespace CommonNetFuncs.Web.Api.OpenApiTransformers;
 
-internal sealed class HeaderTransformer() : IOpenApiOperationTransformer
+public sealed class HeaderTransformer : IOpenApiOperationTransformer
 {
     public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
     {
@@ -17,7 +16,7 @@ internal sealed class HeaderTransformer() : IOpenApiOperationTransformer
             Schema = new OpenApiSchema
             {
                 Type = "string",
-                Default = new OpenApiString("application/json")
+                Default = new Microsoft.OpenApi.Any.OpenApiString("application/json")
             }
         });
         return Task.CompletedTask;

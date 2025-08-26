@@ -88,7 +88,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NLog.Extensions.Logging" Version="6.0.3" PrivateAssets="all" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.7.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.7.2" />
   </ItemGroup>
 
   <ItemGroup>

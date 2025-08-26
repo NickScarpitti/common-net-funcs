@@ -1,45 +1,81 @@
-﻿﻿using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace CommonNetFuncs.Web.Common.CachingSupportClasses;
 
 public sealed class CacheMetrics(ConcurrentDictionary<string, HashSet<string>>? cacheTags = null)
 {
-    private long _cacheHits;
-    private long _cacheMisses;
-    private long _currentCacheSize;
+    private readonly Lock cacheHitsLock = new();
+    private readonly Lock cacheMissesLock = new();
+    private readonly Lock currentCacheSizeLock = new();
+    private readonly Lock evictedDueToCapacityLock = new();
+    private readonly Lock evictedDueToRemovedLock = new();
+    private readonly Lock skippedDueToSizeLock = new();
+    private readonly Lock currentCacheEntryCountLock = new();
+
+    private long cacheHits;
+    private long cacheMisses;
+    private long currentCacheSize;
     //private long _evictedDueToExpired;
-    private long _evictedDueToCapacity;
+    private long evictedDueToCapacity;
     //private long _evictedDueToNone;
-    private long _evictedDueToRemoved;
+    private long evictedDueToRemoved;
     //private long _evictedDueToReplaced;
     //private long _evictedDueToTokenExpired;
-    private long _skippedDueToSize;
-    private long _currentCacheEntryCount;
+    private long skippedDueToSize;
+    private long currentCacheEntryCount;
+
+    public ConcurrentDictionary<string, HashSet<string>> CacheTags { get; } = cacheTags ??= new(); //Key = tag, Value = All cache keys that have that tag
 
     //public long EvictedDueToExpiration => Interlocked.Read(ref _evictedDueToExpired);
 
-    public long EvictedDueToCapacity => Interlocked.Read(ref _evictedDueToCapacity);
+    public long EvictedDueToCapacity()
+    {
+        lock (evictedDueToCapacityLock)
+        {
+            return evictedDueToCapacity;
+        }
+    }
 
     //public long EvictedDueToNone => Interlocked.Read(ref _evictedDueToNone);
 
-    public long EvictedDueToRemoved => Interlocked.Read(ref _evictedDueToRemoved);
+    public long EvictedDueToRemoved()
+    {
+        lock (evictedDueToRemovedLock)
+        {
+            return evictedDueToRemoved;
+        }
+    }
 
     //public long EvictedDueToReplaced => Interlocked.Read(ref _evictedDueToReplaced);
 
     //public long EvictedDueToExpired => Interlocked.Read(ref _evictedDueToTokenExpired);
 
-    public long SkippedDueToSize => Interlocked.Read(ref _skippedDueToSize);
+    public long SkippedDueToSize()
+    {
+        lock (skippedDueToSizeLock)
+        {
+            return skippedDueToSize;
+        }
+    }
 
     public void IncrementEviction(EvictionReason reason)
     {
         switch (reason)
         {
             case EvictionReason.Removed:
-                Interlocked.Increment(ref _evictedDueToRemoved);
+                lock (evictedDueToRemovedLock)
+                {
+                    evictedDueToRemoved++;
+                    //Interlocked.Increment(ref evictedDueToRemoved);
+                }
                 break;
             case EvictionReason.Capacity:
-                Interlocked.Increment(ref _evictedDueToCapacity);
+                lock (evictedDueToCapacityLock)
+                {
+                    evictedDueToCapacity++;
+                    //Interlocked.Increment(ref evictedDueToCapacity);
+                }
                 break;
             //case EvictionReason.None:
             //    //Interlocked.Increment(ref _evictedDueToNone);
@@ -58,46 +94,133 @@ public sealed class CacheMetrics(ConcurrentDictionary<string, HashSet<string>>? 
 
     public void IncrementSkippedDueToSize()
     {
-        Interlocked.Increment(ref _skippedDueToSize);
+        lock (skippedDueToSizeLock)
+        {
+            skippedDueToSize++;
+        }
     }
 
-    public ConcurrentDictionary<string, HashSet<string>> CacheTags { get; } = cacheTags ??= new(); //Key = tag, Value = All cache keys that have that tag
+    public long CacheHits()
+    {
+        lock (cacheHitsLock)
+        {
+            return cacheHits;
+        }
+    }
 
-    public long CacheHits => Interlocked.Read(ref _cacheHits);
+    public long CacheMisses()
+    {
+        lock (cacheMissesLock)
+        {
+            return cacheMisses;
+        }
+    }
 
-    public long CacheMisses => Interlocked.Read(ref _cacheMisses);
+    public long CurrentCacheSize()
+    {
+        lock (currentCacheSizeLock)
+        {
+            return currentCacheSize;
+        }
+    }
 
-    public long CurrentCacheSize => Interlocked.Read(ref _currentCacheSize);
-
-    public long CurrentCacheEntryCount => Interlocked.Read(ref _currentCacheEntryCount);
+    public long CurrentCacheEntryCount()
+    {
+        lock (currentCacheEntryCountLock)
+        {
+            return currentCacheEntryCount;
+        }
+    }
 
     public void IncrementHits()
     {
-        Interlocked.Increment(ref _cacheHits);
+        lock (cacheHitsLock)
+        {
+            cacheHits++;
+        }
     }
 
     public void IncrementMisses()
     {
-        Interlocked.Increment(ref _cacheMisses);
+        lock (cacheMissesLock)
+        {
+            cacheMisses++;
+        }
     }
 
     public void IncrementCacheEntryCount()
     {
-        Interlocked.Increment(ref _currentCacheEntryCount);
+        lock (currentCacheEntryCountLock)
+        {
+            currentCacheEntryCount++;
+        }
     }
 
     public void DecrementCacheEntryCount()
     {
-        Interlocked.Decrement(ref _currentCacheEntryCount);
+        lock (currentCacheEntryCountLock)
+        {
+            if (currentCacheEntryCount > 0)
+            {
+                currentCacheEntryCount--;
+            }
+        }
     }
 
     public void AddToSize(long bytes)
     {
-        Interlocked.Add(ref _currentCacheSize, bytes);
+        lock (currentCacheSizeLock)
+        {
+            currentCacheSize += bytes < 0 ? bytes * -1 : bytes;
+        }
     }
 
     public void SubtractFromSize(long bytes)
     {
-        Interlocked.Add(ref _currentCacheSize, bytes);
+        lock (currentCacheSizeLock)
+        {
+            if (currentCacheSize > 0)
+            {
+                currentCacheSize += bytes > 0 ? bytes * -1 : bytes;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Resets all values in the cache
+    /// </summary>
+
+    public void Clear()
+    {
+        CacheTags.Clear();
+
+        lock (cacheHitsLock)
+        {
+            lock (cacheMissesLock)
+            {
+                lock (currentCacheSizeLock)
+                {
+                    lock (evictedDueToCapacityLock)
+                    {
+                        lock (evictedDueToRemovedLock)
+                        {
+                            lock (skippedDueToSizeLock)
+                            {
+                                lock (currentCacheEntryCountLock)
+                                {
+                                    cacheHits = 0;
+                                    cacheMisses = 0;
+                                    currentCacheSize = 0;
+                                    evictedDueToCapacity = 0;
+                                    evictedDueToRemoved = 0;
+                                    skippedDueToSize = 0;
+                                    currentCacheEntryCount = 0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

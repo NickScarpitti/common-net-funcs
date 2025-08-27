@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="TestData\test.mp4" />
+    <None Remove="ConversionTaskTests.cs~RFb0fef57.TMP" />
   </ItemGroup>
 
   <ItemGroup>

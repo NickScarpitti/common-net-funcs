@@ -1,5 +1,7 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using Xabe.FFmpeg;
 using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -227,6 +229,124 @@ public static class Helpers
             logger.Error(ex, $"{ex.GetLocationOfException()} Error");
         }
         return -1;
+    }
+
+    public static void LogFfmpegOutput(this DataReceivedEventArgs args, ref DateTime lastOutput, ref DateTime lastSummaryOutput, ref bool conversionFailed, ref bool sizeFailure, FileInfo fileToConvert, TimeSpan videoTimespan,
+        int conversionIndex, bool cancelIfLarger, string? taskDescription, string? additionalLogText, ConcurrentBag<string>? conversionOutputs, ConcurrentDictionary<int, decimal>? fpsDict,
+        CancellationTokenSource? cancellationTokenSource)
+    {
+        if (DateTime.UtcNow > lastOutput.AddSeconds(5))
+        {
+            if (args.Data.IsNullOrWhiteSpace())
+            {
+                return;
+            }
+
+            //Example output:
+            //frame=   48 fps=5.8 q=0.0 size=       1kB time=00:00:01.77 bitrate=   4.5kbits/s dup=0 drop=45 speed=0.215x
+            string unbrokenData = args.Data?.Replace(" ", string.Empty) ?? string.Empty;
+            int outputSize = 0;
+
+            if (unbrokenData.Contains("kBtime=") && unbrokenData.Contains("size="))
+            {
+                //Extract size from data
+                string sizeInkiB = unbrokenData[(unbrokenData.IndexOf("size=") + 5)..unbrokenData.IndexOf("kBtime=")];
+                if (int.TryParse(sizeInkiB, out int kiBSize))
+                {
+                    outputSize = kiBSize * 1024; //Uses kibibytes
+                }
+            }
+
+            if (!fpsDict?.Any(x => x.Key == conversionIndex) ?? true)
+            {
+                if (args.Data?.Contains(" fps=") ?? false)
+                {
+                    decimal fps = args.Data.ParseFfmpegLogFps();
+                    if (fps >= 0)
+                    {
+                        fpsDict?.TryAdd(conversionIndex, fps);
+                    }
+                }
+            }
+            else
+            {
+                decimal? value = fpsDict?.FirstOrDefault(x => x.Key == conversionIndex).Value;
+                if (value != null && (args.Data?.Contains(" fps=") ?? false))
+                {
+                    decimal fps = args.Data.ParseFfmpegLogFps();
+                    if (fps >= 0)
+                    {
+                        fpsDict?.TryUpdate(conversionIndex, fps, (decimal)value);
+                    }
+                }
+            }
+
+            if (cancelIfLarger && fileToConvert.Length < outputSize) //Cancel if new file is larger if that option is enabled
+            {
+                logger.Warn($"Canceling conversion due to converted size being greater than the source for #{conversionIndex} [{fileToConvert.Name}]");
+                conversionFailed = true;
+                sizeFailure = true;
+                cancellationTokenSource?.Cancel();
+            }
+            else
+            {
+                string normalizedData = args.Data.NormalizeWhiteSpace().Replace("00:", string.Empty);
+
+                //round((totalTime - time) / speed)
+                decimal speed = 1m;
+                if (decimal.TryParse(unbrokenData[(unbrokenData.IndexOf("speed=") + 6)..(unbrokenData.Length - 2)], out decimal speedDecimal))
+                {
+                    speed = speedDecimal;
+                }
+
+                //frame=   48 fps=5.8 q=0.0 size=       1kB time=00:00:01.77 bitrate=   4.5kbits/s dup=0 drop=45 speed=0.215x
+                string timeLeftString = "Unknown";
+                if (unbrokenData.Contains("time=") && unbrokenData.Contains("bitrate=") && speed != 0)
+                {
+                    if (TimeSpan.TryParseExact(unbrokenData[(unbrokenData.IndexOf("time=") + 5)..unbrokenData.IndexOf("bitrate=")], @"hh\:mm\:ss\.ff", CultureInfo.InvariantCulture, out TimeSpan currentTime))
+                    {
+                        decimal offset = decimal.Parse(videoTimespan.Subtract(currentTime).TotalSeconds.ToString());
+                        TimeSpan timeLeft = TimeSpan.FromSeconds((int)Math.Ceiling(offset / speed));
+                        timeLeftString = timeLeft.ToString(@"hh\:mm\:ss");
+                    }
+                    else
+                    {
+                        timeLeftString = unbrokenData[(unbrokenData.IndexOf("time=") + 5)..unbrokenData.IndexOf("bitrate=")];
+                        if (!timeLeftString.StrEq("N/A"))
+                        {
+                            logger.Warn($"Unable to parse timeLeftString. Using raw value [{timeLeftString}] instead.\nFull unbroken output from ffmpeg = {unbrokenData}");
+                        }
+                    }
+                }
+
+                StringBuilder stringBuilder = new();
+                stringBuilder.Append('#');
+                stringBuilder.Append(conversionIndex);
+                stringBuilder.Append(" ETA =");
+                stringBuilder.Append(timeLeftString);
+                stringBuilder.Append(' ');
+                stringBuilder.Append(normalizedData[..(normalizedData.Contains("bitrate=") ? normalizedData.IndexOf("bitrate=") : normalizedData.Length)]);
+                stringBuilder.Append(" - [");
+                stringBuilder.Append(fileToConvert.Name);
+                stringBuilder.Append(']');
+                stringBuilder.Append(!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty);
+                stringBuilder.Append(!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty);
+                stringBuilder.Append(conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty);
+                stringBuilder.Append("[Total FPS: ");
+                stringBuilder.Append(GetTotalFps(fpsDict ?? []));
+                stringBuilder.Append(']');
+
+                string logString = stringBuilder.ToString();
+                logger.Debug(logString);
+
+                if (DateTime.UtcNow > lastSummaryOutput.AddSeconds(30))
+                {
+                    logger.Info(logString);
+                    lastSummaryOutput = DateTime.UtcNow;
+                }
+            }
+            lastOutput = DateTime.UtcNow;
+        }
     }
 
     private static List<decimal> ParseKeyFrameProbe(string probeResult)

@@ -2,13 +2,10 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Xabe.FFmpeg;
-using static CommonNetFuncs.Core.Collections;
-using static CommonNetFuncs.Core.Strings;
-using static CommonNetFuncs.Media.Ffmpeg.Helpers;
 
 namespace CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
 
-internal static partial class ConversionTask
+public static partial class RawConversionTask
 {
     private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -35,16 +32,16 @@ internal static partial class ConversionTask
     /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
     /// <returns><see langword="true"/> if conversion successfully completed</returns>
-    public static async Task<bool> FfmpegConversionTaskFromXabe(FileInfo fileToConvert, string outputFileName, VideoCodec codec, Format outputFormat = Format.mp4, ConversionPreset conversionPreset = ConversionPreset.Slower,
-        string? workingPath = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true,
-        string? taskDescription = null, bool strict = true, bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal,
-        HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null,
-        CancellationTokenSource? cancellationTokenSource = null)
+    public static async Task<bool> FfmpegConversionTaskFromXabe(FileInfo fileToConvert, string outputFileName, VideoCodec codec, bool overwriteExisting, Format outputFormat = Format.mp4,
+        ConversionPreset conversionPreset = ConversionPreset.Slower, string? workingPath = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null,
+        IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true, bool overwriteOutput = true,
+        ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null,
+        string? additionalLogText = null, CancellationTokenSource? cancellationTokenSource = null)
     {
         string ffmpegCommandArguments = await GetConversionCommandFromXabe(fileToConvert, outputFileName, codec, outputFormat, conversionPreset, workingPath, mediaInfo, numberOfThreads,
             strict, overwriteOutput, processPriority, hardwareAccelerationValues).ConfigureAwait(false);
 
-        return await FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommandArguments, workingPath, conversionIndex, fpsDict, cancelIfLarger, taskDescription, conversionOutputs,
+        return await FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommandArguments, overwriteExisting, workingPath, conversionIndex, fpsDict, cancelIfLarger, taskDescription, conversionOutputs,
             additionalLogText, processPriority, cancellationTokenSource).ConfigureAwait(false);
     }
 
@@ -100,12 +97,20 @@ internal static partial class ConversionTask
     /// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
     /// <returns><see langword="true"/> if conversion successfully completed</returns>
-    public static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string ffmpegCommandArguments, string? workingPath = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null,
-        bool cancelIfLarger = true, string? taskDescription = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null,
-        ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, CancellationTokenSource ? cancellationTokenSource = null)
+    public static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string ffmpegCommandArguments, bool overwriteExisting, string? workingPath = null, int conversionIndex = 0,
+        ConcurrentDictionary<int, decimal>? fpsDict = null, bool cancelIfLarger = true, string? taskDescription = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null,
+        ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, CancellationTokenSource? cancellationTokenSource = null)
     {
         try
         {
+            string outputPath = Path.Combine(workingPath ?? Path.GetTempPath(), outputFileName);
+            if (!overwriteExisting && File.Exists(outputPath))
+            {
+                return true;
+            }
+
+            ffmpegCommandArguments = $"{(overwriteExisting ? "-y " : null)}-i \"{fileToConvert.FullName}\" {ffmpegCommandArguments} \"{outputPath}\"";
+
             ProcessStartInfo startInfo = new()
             {
                 FileName = "ffmpeg",
@@ -117,87 +122,47 @@ internal static partial class ConversionTask
             };
 
             using Process process = new() { StartInfo = startInfo };
+            process.EnableRaisingEvents = true;
 
             // Set up progress tracking
-            DateTime lastProgressUpdate = DateTime.Now;
-            Regex progressRegex = ProgressRegex();
+            DateTime lastProgressUpdate = DateTime.Now.AddSeconds(-5);
+            DateTime lastSummaryUpdate = DateTime.Now.AddSeconds(-5);
+            _ = ProgressRegex();
 
             RawMediaInfo mediaInfo = await Helpers.GetMediaInfoAsync(fileToConvert.FullName).ConfigureAwait(false);
 
-            string outputPath = Path.Combine(workingPath ?? Path.GetTempPath(), outputFileName);
-
             // TODO:: Check to make sure this is the correct regex for my ffmpeg version
-            //TODO:: Check to make sure that this is the correct event to use for progress updates
-            process.ErrorDataReceived += (sender, e) =>
+            // TODO:: Check to make sure that this is the correct event to use for progress updates
+
+            process.ErrorDataReceived += (sender, args) =>
             {
-                if (DateTime.Now - lastProgressUpdate >= TimeSpan.FromSeconds(5))
-                {
-                    if (string.IsNullOrEmpty(e.Data))
-                    {
-                        return;
-                    }
-
-                    // Parse progress from FFmpeg output
-                    Match match = progressRegex.Match(e.Data);
-                    if (match.Success)
-                    {
-                        int hours = int.Parse(match.Groups[1].Value);
-                        int minutes = int.Parse(match.Groups[2].Value);
-                        int seconds = int.Parse(match.Groups[3].Value);
-                        int centiseconds = int.Parse(match.Groups[4].Value);
-                        decimal fps = decimal.Parse(match.Groups[5].Value);
-
-                        TimeSpan currentTime = new(0, hours, minutes, seconds, centiseconds * 10);
-                        decimal progress = mediaInfo.Duration.TotalSeconds > 0 ? (decimal)(currentTime.TotalSeconds / mediaInfo.Duration.TotalSeconds * 100) : 0;
-
-                        // Update FPS dictionary
-                        #pragma warning disable RCS1163 // Unused parameter
-                        fpsDict?.AddOrUpdate(conversionIndex, fps, (key, oldValue) => fps);
-                        #pragma warning restore RCS1163 // Unused parameter
-
-                        // Log progress every 5 seconds (mimicking Xabe behavior)
-                        string taskDescriptionText = !string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty;
-                        string additionalLogTextStr = !additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty;
-                        string totalDiffString = conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty;
-                        decimal totalFps = fpsDict?.Values.Sum() ?? fps;
-                        logger.Info($"#{conversionIndex}: Progress:[{currentTime.TotalSeconds}/{mediaInfo.Duration.TotalSeconds}][{progress:F1}%]-[{fileToConvert.Name}]{taskDescriptionText}{additionalLogTextStr}{totalDiffString} FPS:[{fps:F1}] Total FPS:[{totalFps:F1}]");
-                        lastProgressUpdate = DateTime.Now;
-                    }
-
-                    // TODO:: Check for cancelIfLarger and size being larger than original file and if true for both, cancel the task
-
-                    // TODO:: Display est remaining conversion time
-
-                    // Check output file size if requested
-                    if (cancelIfLarger && File.Exists(outputPath))
-                    {
-                        FileInfo outputInfo = new(outputPath);
-                        if (outputInfo.Length > fileToConvert.Length)
-                        {
-                            logger.Info($"Task {conversionIndex}: Output file is larger than input, deleting output");
-                            File.Delete(outputPath);
-                            cancellationTokenSource?.Cancel();
-                            logger.Info($"Task {conversionIndex}: Conversion cancelled due to output size");
-                            process.Kill();
-                        }
-                    }
-                }
+                bool conversionFailed = false;
+                bool sizeFailure = false;
+                args.LogFfmpegOutput(ref lastProgressUpdate, ref lastSummaryUpdate, ref conversionFailed, ref sizeFailure, fileToConvert, mediaInfo.Duration, conversionIndex,
+                    cancelIfLarger, taskDescription, additionalLogText, conversionOutputs, fpsDict, cancellationTokenSource);
             };
 
             process.Start();
-            process.PriorityClass = processPriority;
             process.BeginErrorReadLine();
-
+            process.PriorityClass = processPriority;
             // Wait for completion or cancellation
+
             Task completionTask = process.WaitForExitAsync();
-            Task<bool> cancellationTask = cancellationTokenSource?.Token.WaitHandle.WaitOneAsync() ?? Task.FromResult(false);
+            List<Task> tasks = [completionTask];
 
-            Task completedTask = await Task.WhenAny(completionTask, cancellationTask).ConfigureAwait(false);
+            Task<bool>? cancellationTask = null;
+            if (cancellationTokenSource != null)
+            {
+                cancellationTask = cancellationTokenSource.Token.WaitHandle.WaitOneAsync();
+                tasks.Add(cancellationTask);
+            }
 
-            if (completedTask == cancellationTask)
+            Task completedTask = await Task.WhenAny(tasks).ConfigureAwait(false);
+
+            if (cancellationTask != null && completedTask == cancellationTask)
             {
                 process.Kill();
-                logger.Info($"Task {conversionIndex}: Conversion cancelled");
+                logger.Info($"Task {conversionIndex}: Conversion canceled");
                 return false;
             }
 

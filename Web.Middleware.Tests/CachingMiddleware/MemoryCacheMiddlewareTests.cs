@@ -1,4 +1,4 @@
-﻿﻿using System.Text;
+﻿using System.Text;
 using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using CommonNetFuncs.Web.Middleware.CachingMiddleware;
 using Microsoft.AspNetCore.Http;
@@ -115,7 +115,7 @@ public sealed class MemoryCacheMiddlewareTests
         responseStream.Position = 0;
         string result = await new StreamReader(responseStream).ReadToEndAsync();
         result.ShouldBe("cached response");
-        _metrics.CacheHits.ShouldBe(1);
+        _metrics.CacheHits().ShouldBe(1);
         A.CallTo(() => _next(_context)).MustNotHaveHappened();
     }
 
@@ -156,7 +156,7 @@ public sealed class MemoryCacheMiddlewareTests
         await middleware.InvokeAsync(_context);
 
         // Assert
-        _metrics.CacheMisses.ShouldBe(1);
+        _metrics.CacheMisses().ShouldBe(1);
         A.CallTo(() => _cache.CreateEntry(A<object>._)).MustHaveHappened();
     }
 }

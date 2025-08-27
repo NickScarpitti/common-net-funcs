@@ -134,7 +134,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                                 // Register tags
                                 foreach (string tag in entry.Tags)
                                 {
-                                    cacheTracker.cacheTags.AddOrUpdate(tag, [cacheKey], (_, keys) =>
+                                    cacheTracker.CacheTags.AddOrUpdate(tag, [cacheKey], (_, keys) =>
                                     {
                                         keys.Add(cacheKey);
                                         return keys;
@@ -200,7 +200,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                 {
                     foreach (string tag in tagsToEvict)
                     {
-                        if (cacheTracker != null && cacheTracker.cacheTags.TryGetValue(tag, out HashSet<string>? keysToEvict))
+                        if (cacheTracker != null && cacheTracker.CacheTags.TryGetValue(tag, out HashSet<string>? keysToEvict))
                         {
                             foreach (string keyToEvict in keysToEvict)
                             {
@@ -216,7 +216,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
                                     }
                                 }
                             }
-                            cacheTracker.cacheTags.TryRemove(tag, out _);
+                            cacheTracker.CacheTags.TryRemove(tag, out _);
                             cacheMetrics?.CacheTags.TryRemove(tag, out _);
                         }
                     }
@@ -276,12 +276,12 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         {
             foreach (string tag in tags)
             {
-                if (cacheTracker?.cacheTags.TryGetValue(tag, out HashSet<string>? keys) == true)
+                if (cacheTracker?.CacheTags.TryGetValue(tag, out HashSet<string>? keys) == true)
                 {
                     keys.Remove(key);
                     if (keys.Count == 0)
                     {
-                        cacheTracker.cacheTags.TryRemove(tag, out _);
+                        cacheTracker.CacheTags.TryRemove(tag, out _);
                         cacheMetrics?.CacheTags.TryRemove(tag, out _);
                     }
                 }
@@ -512,12 +512,12 @@ public static class MemoryCacheEvictionMiddlewareExtensions
                     // Remove from tags
                     foreach (string tag in entry?.Tags ?? [])
                     {
-                        if (tracker.cacheTags.TryGetValue(tag, out HashSet<string>? keys))
+                        if (tracker.CacheTags.TryGetValue(tag, out HashSet<string>? keys))
                         {
                             keys.Remove(key);
                             if (keys.Count == 0)
                             {
-                                tracker.cacheTags.TryRemove(tag, out _);
+                                tracker.CacheTags.TryRemove(tag, out _);
                                 metrics?.CacheTags.TryRemove(tag, out _);
                             }
                         }
@@ -548,7 +548,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
                     return Results.BadRequest("Cache tag is required");
                 }
 
-                if (tracker.cacheTags.TryGetValue(tag, out HashSet<string>? keysToEvict))
+                if (tracker.CacheTags.TryGetValue(tag, out HashSet<string>? keysToEvict))
                 {
                     int evictedCount = 0;
 
@@ -568,12 +568,12 @@ public static class MemoryCacheEvictionMiddlewareExtensions
                             // Remove from all associated tags
                             foreach (string entryTag in entry?.Tags ?? [])
                             {
-                                if (tracker.cacheTags.TryGetValue(entryTag, out HashSet<string>? tagKeys))
+                                if (tracker.CacheTags.TryGetValue(entryTag, out HashSet<string>? tagKeys))
                                 {
                                     tagKeys.Remove(keyToEvict);
                                     if (tagKeys.Count == 0)
                                     {
-                                        tracker.cacheTags.TryRemove(entryTag, out _);
+                                        tracker.CacheTags.TryRemove(entryTag, out _);
                                         metrics?.CacheTags.TryRemove(entryTag, out _);
                                     }
                                 }

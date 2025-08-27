@@ -1,4 +1,4 @@
-﻿﻿using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using Microsoft.AspNetCore.Builder;
@@ -299,7 +299,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         }
 
         // If we have enough space, return immediately
-        if (cacheMetrics?.CurrentCacheSize + requiredSize <= cacheOptions.MaxCacheSizeInBytes)
+        if (cacheMetrics?.CurrentCacheSize() + requiredSize <= cacheOptions.MaxCacheSizeInBytes)
         {
             return true;
         }
@@ -308,7 +308,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
         try
         {
             // Double check after acquiring lock
-            if (cacheMetrics?.CurrentCacheSize + requiredSize <= cacheOptions.MaxCacheSizeInBytes)
+            if (cacheMetrics?.CurrentCacheSize() + requiredSize <= cacheOptions.MaxCacheSizeInBytes)
             {
                 return true;
             }
@@ -317,7 +317,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
             IOrderedEnumerable<KeyValuePair<string, CacheTracker.CacheEntryMetadata>> entries = cacheTracker.GetEntries().OrderBy(x => x.Value.TimeCreated);
 
             // Calculate how much space we need to free
-            long spaceToFree = cacheMetrics?.CurrentCacheSize + requiredSize - cacheOptions.MaxCacheSizeInBytes ?? 0;
+            long spaceToFree = cacheMetrics?.CurrentCacheSize() + requiredSize - cacheOptions.MaxCacheSizeInBytes ?? 0;
             long freedSpace = 0;
 
             // Remove entries until we have enough space
@@ -458,21 +458,21 @@ public static class MemoryCacheEvictionMiddlewareExtensions
                 return Results.Ok(
                 new
                 {
-                    Hits = metrics.CacheHits,
-                    Misses = metrics.CacheMisses,
-                    HitRatio = $"{Math.Round(metrics.CacheHits + metrics.CacheMisses == 0
+                    Hits = metrics.CacheHits(),
+                    Misses = metrics.CacheMisses(),
+                    HitRatio = $"{Math.Round(metrics.CacheHits() + metrics.CacheMisses() == 0
                         ? 0
-                        : (double)metrics.CacheHits / (metrics.CacheHits + metrics.CacheMisses), 3) * 100}%",
-                    SkippedDueToSize = metrics.SkippedDueToSize,
-                    CurrentSizeBytes = $"{metrics.CurrentCacheSize}B",
-                    CurrentSize = metrics.CurrentCacheSize.GetFileSizeFromBytesWithUnits(2),
-                    CacheEntries = metrics.CurrentCacheEntryCount,
+                        : (double)metrics.CacheHits() / (metrics.CacheHits() + metrics.CacheMisses()), 3) * 100}%",
+                    SkippedDueToSize = metrics.SkippedDueToSize(),
+                    CurrentSizeBytes = $"{metrics.CurrentCacheSize()}B",
+                    CurrentSize = metrics.CurrentCacheSize().GetFileSizeFromBytesWithUnits(2),
+                    CacheEntries = metrics.CurrentCacheEntryCount(),
                     EntriesCountByTag = metrics.CacheTags.Count,
                     Tags = metrics.CacheTags.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count),
                     EvictionReason = new
                     {
-                        Capacity = metrics.EvictedDueToCapacity,
-                        ManuallyRemoved = metrics.EvictedDueToRemoved
+                        Capacity = metrics.EvictedDueToCapacity(),
+                        ManuallyRemoved = metrics.EvictedDueToRemoved()
                     }
                 });
                 #pragma warning restore IDE0037 // Use inferred member name
@@ -538,7 +538,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         .WithName("EvictCacheByKey")
         .WithDisplayName("Evict Cache Entry by Key");
 
-        // New endpoint for evicting by tag
+        // Endpoint for evicting by tag
         RouteHandlerBuilder evictByTagEndpoint = endpoints.MapPost("/api/memorycache/evict/tag/{tag}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string tag, CancellationToken cancellationToken = default) =>
         {
             try
@@ -598,6 +598,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
         .WithName("EvictCacheByTag")
         .WithDisplayName("Evict Cache Entries by Tag");
 
+        // Endpoint that clears out the cache and resets trackers and metrics. Will have count of evicted items in "manuallyRemoved". Call this endpoint again to fully zero it out.
         RouteHandlerBuilder evictAllCacheEndpoint = endpoints.MapPost("/api/memorycache/evict/all", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics) =>
         {
             try
@@ -605,10 +606,11 @@ public static class MemoryCacheEvictionMiddlewareExtensions
                 int cacheSize = 0;
                 if (cache is MemoryCache concreteMemoryCache)
                 {
+                    metrics ??= new();
+                    metrics.Clear();
+                    tracker.Clear();
                     cacheSize = concreteMemoryCache.Count;
                     concreteMemoryCache.Clear();
-                    tracker = new();
-                    metrics = new();
                     return Results.Ok(cacheSize);
                 }
             }

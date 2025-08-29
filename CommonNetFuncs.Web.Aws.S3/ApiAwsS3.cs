@@ -62,12 +62,12 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
 
                 if (fileData.Length < thresholdForMultiPartUpload)
                 {
-                    Stream uploadStream = decompressedStream;
+                    await using MemoryStream uploadStream = (MemoryStream)(compressSteam ? new MemoryStream() : decompressedStream);
                     string? contentEncoding = null;
 
                     if (compressSteam)
                     {
-                        uploadStream = decompressedStream.Compress(compressionType, true);
+                        await decompressedStream.CompressStream(uploadStream, compressionType, cancellationToken).ConfigureAwait(false);
                     }
                     else if (currentCompression != ECompressionType.None)
                     {
@@ -88,7 +88,9 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                         request.Headers["Content-Encoding"] = contentEncoding;
                     }
 
-                    // Content-Length is not set for streaming uploads; S3 will handle chunked transfer encoding.
+                    await using MemoryStream lengthStream = new();
+                    await uploadStream.CopyToAsync(lengthStream, cancellationToken).ConfigureAwait(false);
+                    request.Headers["Content-Length"] = lengthStream.Length.ToString();
 
                     PutObjectResponse? response = await s3Client.PutObjectAsync(request, cancellationToken).ConfigureAwait(false);
                     success = response?.HttpStatusCode == HttpStatusCode.OK;
@@ -392,18 +394,92 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client, ILogger<ApiAwsS3> logger) : IAw
                     }
                     else
                     {
-                        ECompressionType currentCompression = await response.ResponseStream.DetectCompressionType().ConfigureAwait(false);
+                        //ECompressionType currentCompression = await response.ResponseStream.DetectCompressionType().ConfigureAwait(false);
+                        (ECompressionType currentCompression, Stream resetStream) = await DetectCompressionTypeAndReset(response.ResponseStream).ConfigureAwait(false);
                         if (currentCompression != ECompressionType.None)
                         {
-                            await response.ResponseStream.Decompress(currentCompression, true).CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+                            await resetStream.Decompress(currentCompression, true).CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
                         }
                         else
                         {
                             //await responseStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
-                            await response.ResponseStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+                            await resetStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
                         }
+
+                        fileData.Position = 0;
                     }
                 }
+
+                //    if (response != null)
+                //    {
+                //        MemoryStream responseStream = new();
+                //        try
+                //        {
+                //            await response.ResponseStream.CopyToAsync(responseStream, cancellationToken).ConfigureAwait(false);
+                //            responseStream.Position = 0;
+
+                //            if (decompressGzipData && response.Headers.ContentEncoding.ContainsInvariant(["gzip", "deflate"]))
+                //            {
+                //                //await using MemoryStream decompressedStream = new();
+                //                await using MemoryStream intermediateStream = new();
+                //                await responseStream.CopyToAsync(intermediateStream, cancellationToken).ConfigureAwait(false);
+                //                await intermediateStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                //                intermediateStream.Position = 0;
+                //                try
+                //                {
+                //                    await intermediateStream.DecompressStream(fileData, response.Headers.ContentEncoding.ContainsInvariant("gzip") ? ECompressionType.Gzip : ECompressionType.Deflate, cancellationToken: cancellationToken).ConfigureAwait(false);
+                //                }
+                //                catch (Exception ex)
+                //                {
+                //                    try
+                //                    {
+                //                        logger.LogWarning(ex, "{msg}", $"Failed to decompress {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket. Attempting to copy raw data instead.");
+                //                        intermediateStream.Position = 0;
+                //                        await intermediateStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+
+                //                        // Re-upload the raw data to without Content-Encoding header if decompression fails
+                //                        await UploadS3File(bucketName, fileName, intermediateStream, validatedBuckets, compressSteam: false, cancellationToken: cancellationToken).ConfigureAwait(false);
+                //                    }
+                //                    catch (Exception ex2)
+                //                    {
+                //                        logger.LogError(ex2, "{msg}", $"Failed to copy raw data from {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} in {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket after decompression failure. Abandoning request.");
+                //                    }
+                //                }
+                //            }
+                //            else
+                //            {
+                //                ECompressionType currentCompression = await responseStream.DetectCompressionType().ConfigureAwait(false);
+                //                if (currentCompression != ECompressionType.None)
+                //                {
+                //                    await using MemoryStream intermediateStream = new();
+                //                    await responseStream.CopyToAsync(intermediateStream, cancellationToken).ConfigureAwait(false);
+                //                    await intermediateStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                //                    intermediateStream.Position = 0;
+                //                    try
+                //                    {
+                //                        await intermediateStream.DecompressStream(fileData, currentCompression, cancellationToken: cancellationToken).ConfigureAwait(false);
+                //                    }
+                //                    catch
+                //                    {
+                //                        logger.LogWarning("{msg}", $"Failed to decompress {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket. Attempting to copy raw data instead.");
+                //                        intermediateStream.Position = 0;
+                //                        await intermediateStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+                //                    }
+                //                }
+                //                else
+                //                {
+                //                    await responseStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+                //                }
+                //            }
+                //            await fileData.FlushAsync(cancellationToken).ConfigureAwait(false);
+                //            fileData.Position = 0;
+                //        }
+                //        finally
+                //        {
+                //            await responseStream.DisposeAsync().ConfigureAwait(false);
+                //        }
+                //    }
+                //}
             }
         }
         catch (AmazonS3Exception awsEx)

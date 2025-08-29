@@ -744,4 +744,104 @@ public static class Streams
             destination.Write(buffer, 0, bytesRead);
         }
     }
+
+    /// <summary>
+    /// Detect compression type of <see cref="Stream"/> that is non-seekable and bytes are lost after reading (ie. AWS S3 ResponseStream)
+    /// </summary>
+    /// <param name="stream">Stream to get compression type from.</param>
+    /// <returns>A tuple with the compression type and a new stream object that contains the bytes read originally plus the rest of the original stream.</returns>
+    public static async Task<(ECompressionType, Stream)> DetectCompressionTypeAndReset(Stream stream)
+    {
+        const int headerLength = 8; // Enough for all supported compression types
+        byte[] header = new byte[headerLength];
+
+        // Read header bytes (do not advance original stream if seekable)
+        if (stream.CanSeek)
+        {
+            long originalPosition = stream.Position;
+            ECompressionType type = await DetectCompressionType(stream).ConfigureAwait(false);
+            stream.Position = originalPosition;
+            return (type, stream);
+        }
+        else
+        {
+            int bytesRead = await stream.ReadAsync(header.AsMemory(0, headerLength)).ConfigureAwait(false);
+            MemoryStream headerStream = new(header, 0, bytesRead, writable: false);
+            ECompressionType type = await DetectCompressionType(headerStream).ConfigureAwait(false);
+            headerStream.Position = 0;
+            ConcatenatedStream combinedStream = new(headerStream, stream);
+            return (type, combinedStream);
+        }
+    }
+}
+
+// Helper to concatenate two streams
+public class ConcatenatedStream(Stream first, Stream second) : Stream
+{
+    private readonly Stream first = first;
+    private readonly Stream second = second;
+
+    public override bool CanRead => true;
+
+    public override bool CanSeek => false;
+
+    public override bool CanWrite => false;
+
+    public override long Length => throw new NotSupportedException();
+
+    public override long Position
+    {
+        get => throw new NotSupportedException();
+        set => throw new NotSupportedException();
+    }
+
+    public override void Flush() { }
+
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        int read = first.Read(buffer, offset, count);
+        if (read < count)
+        {
+            read += second.Read(buffer, offset + read, count - read);
+        }
+
+        return read;
+    }
+
+    public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        int read = await first.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+        if (read < count)
+        {
+            read += await second.ReadAsync(buffer.AsMemory(offset + read, count - read), cancellationToken).ConfigureAwait(false);
+        }
+
+        return read;
+    }
+
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        int read = await first.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+        if (read < buffer.Length)
+        {
+            Memory<byte> remaining = buffer[read..];
+            read += await second.ReadAsync(remaining, cancellationToken).ConfigureAwait(false);
+        }
+        return read;
+    }
+
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override void SetLength(long value)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        throw new NotSupportedException();
+    }
 }

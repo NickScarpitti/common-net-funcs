@@ -389,14 +389,10 @@ public static class RestHelpersStatic
                 {
                     if (contentEncoding.StrEq(GZip))
                     {
-                        //await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-                        //await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
-                        //result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
-
                         MemoryStream outputStream = new(); //Decompressed data will be written to this stream
                         try
                         {
-                            outputStream = (MemoryStream)responseStream.Decompress(ECompressionType.Gzip);
+                            responseStream.Decompress(ECompressionType.Gzip).CopyTo(outputStream);
                             result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
                         }
                         finally
@@ -406,10 +402,6 @@ public static class RestHelpersStatic
                     }
                     else if (contentEncoding.StrEq(Brotli))
                     {
-                        //BrotliDecompressor decompressor = new();
-                        //ReadOnlySequence<byte> decompressedBuffer = decompressor.Decompress(new ReadOnlySpan<byte>(await responseStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false)));
-                        //result = MemoryPackSerializer.Deserialize<T>(decompressedBuffer);
-
                         BrotliDecompressor decompressor = new();
                         result = MemoryPackSerializer.Deserialize<T>(decompressor.Decompress(new ReadOnlySpan<byte>(await responseStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false))));
                     }

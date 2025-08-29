@@ -443,7 +443,7 @@ public static class RestHelpersStatic
                         }
                         else
                         {
-                            result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 0 ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+                            result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(usedDecompression ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
                         }
                     }
                     finally

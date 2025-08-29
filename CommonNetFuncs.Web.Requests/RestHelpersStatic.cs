@@ -1,5 +1,4 @@
-﻿﻿using System.Buffers;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -390,15 +389,29 @@ public static class RestHelpersStatic
                 {
                     if (contentEncoding.StrEq(GZip))
                     {
-                        await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
-                        result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
+                        //await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
+                        //await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        //result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
+
+                        MemoryStream outputStream = new(); //Decompressed data will be written to this stream
+                        try
+                        {
+                            outputStream = (MemoryStream)responseStream.Decompress(ECompressionType.Gzip);
+                            result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
+                        }
+                        finally
+                        {
+                            await outputStream.DisposeAsync().ConfigureAwait(false);
+                        }
                     }
                     else if (contentEncoding.StrEq(Brotli))
                     {
+                        //BrotliDecompressor decompressor = new();
+                        //ReadOnlySequence<byte> decompressedBuffer = decompressor.Decompress(new ReadOnlySpan<byte>(await responseStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false)));
+                        //result = MemoryPackSerializer.Deserialize<T>(decompressedBuffer);
+
                         BrotliDecompressor decompressor = new();
-                        ReadOnlySequence<byte> decompressedBuffer = decompressor.Decompress(new ReadOnlySpan<byte>(await responseStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false)));
-                        result = MemoryPackSerializer.Deserialize<T>(decompressedBuffer);
+                        result = MemoryPackSerializer.Deserialize<T>(decompressor.Decompress(new ReadOnlySpan<byte>(await responseStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false))));
                     }
                     else
                     {
@@ -408,44 +421,82 @@ public static class RestHelpersStatic
                 else if (contentType.ContainsInvariant("json"))//Assume JSON
                 {
                     //Deserialize as stream - More memory efficient than string deserialization
-                    await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-                    if (contentEncoding.StrEq(GZip))
-                    {
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
-                    }
-                    else if (contentEncoding.StrEq(Brotli))
-                    {
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
-                    }
+                    //await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
+                    Stream? outputStream = null; //Decompressed data will be written to this stream
+                    bool usedDecompression = false;
 
-                    if (useNewtonsoftDeserializer)
+                    try
                     {
-                        using StreamReader streamReader = new(outputStream.Length > 1 ? outputStream : responseStream);
-                        await using JsonTextReader jsonReader = new(streamReader); //Newtonsoft
-                        Newtonsoft.Json.JsonSerializer serializer = new(); //Newtonsoft
-                        result = serializer.Deserialize<T>(jsonReader); //using static Newtonsoft.Json.JsonSerializer;
+                        if (contentEncoding.StrEq(GZip))
+                        {
+                            usedDecompression = true;
+                            outputStream = responseStream.Decompress(ECompressionType.Gzip);
+                            //await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        }
+                        else if (contentEncoding.StrEq(Brotli))
+                        {
+                            usedDecompression = true;
+                            outputStream = responseStream.Decompress(ECompressionType.Brotli);
+                            //await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        }
+
+                        outputStream ??= new MemoryStream();
+                        if (useNewtonsoftDeserializer)
+                        {
+                            //using StreamReader streamReader = new(outputStream.Length > 1 ? outputStream : responseStream);
+                            using StreamReader streamReader = new(usedDecompression ? outputStream : responseStream);
+                            await using JsonTextReader jsonReader = new(streamReader); //Newtonsoft
+                            Newtonsoft.Json.JsonSerializer serializer = new(); //Newtonsoft
+                            result = serializer.Deserialize<T>(jsonReader); //using static Newtonsoft.Json.JsonSerializer;
+                        }
+                        else
+                        {
+                            result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 0 ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+                        }
                     }
-                    else
+                    finally
                     {
-                        result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(outputStream.Length > 0 ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+                        if (outputStream != null)
+                        {
+                            await outputStream.DisposeAsync().ConfigureAwait(false);
+                        }
                     }
                 }
                 else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
                 {
-                    await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-                    if (contentEncoding.StrEq(GZip))
-                    {
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
-                    }
-                    else if (contentEncoding.StrEq(Brotli))
-                    {
-                        await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
-                    }
+                    //await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
+                    Stream? outputStream = null; //Decompressed data will be written to this stream
+                    bool usedDecompression = false;
 
-                    string stringResult;
-                    using StreamReader reader = new(outputStream.Length == 0 ? responseStream : outputStream, Encoding.UTF8);
-                    stringResult = reader.ReadToEnd();
-                    result = (T)(object)stringResult;
+                    try
+                    {
+                        if (contentEncoding.StrEq(GZip))
+                        {
+                            usedDecompression = true;
+                            outputStream = responseStream.Decompress(ECompressionType.Gzip);
+                            //await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        }
+                        else if (contentEncoding.StrEq(Brotli))
+                        {
+                            usedDecompression = true;
+                            outputStream = responseStream.Decompress(ECompressionType.Brotli);
+                            //await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        }
+
+                        outputStream ??= new MemoryStream();
+                        string stringResult;
+                        //using StreamReader reader = new(outputStream.Length == 0 ? responseStream : outputStream, Encoding.UTF8);
+                        using StreamReader reader = new(usedDecompression ? outputStream : responseStream, Encoding.UTF8);
+                        stringResult = reader.ReadToEnd();
+                        result = (T)(object)stringResult;
+                    }
+                    finally
+                    {
+                        if (outputStream != null)
+                        {
+                            await outputStream.DisposeAsync().ConfigureAwait(false);
+                        }
+                    }
                 }
             }
         }
@@ -460,55 +511,30 @@ public static class RestHelpersStatic
     {
         if (contentType.ContainsInvariant("json"))
         {
-            await using MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-
-            //Deserialize as stream - More memory efficient than string deserialization
-            if (contentEncoding.StrEq(GZip))
+            Stream streamToRead = responseStream;
+            try
             {
-                await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
-            }
-            else if (contentEncoding.StrEq(Brotli))
-            {
-                await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
-            }
-
-            await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(outputStream.Length > 1 ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken))
-            {
-                if (item != null)
+                if (contentEncoding.StrEq(GZip))
                 {
-                    yield return item;
+                    streamToRead = responseStream.Decompress(ECompressionType.Gzip);
+                }
+                else if (contentEncoding.StrEq(Brotli))
+                {
+                    streamToRead = responseStream.Decompress(ECompressionType.Brotli);
+                }
+
+                await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken))
+                {
+                    if (item != null)
+                    {
+                        yield return item;
+                    }
                 }
             }
-
-            //if (outputStream.Length > 1)
-            //{
-            //    if (outputStream.CanSeek)
-            //    {
-            //        outputStream.Position = 0;
-            //    }
-            //    await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(outputStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken))
-            //    {
-            //        if (item != null)
-            //        {
-            //            yield return item;
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    if (responseStream.CanSeek)
-            //    {
-            //        responseStream.Position = 0;
-            //    }
-
-            //    await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken))
-            //    {
-            //        if (item != null)
-            //        {
-            //            yield return item;
-            //        }
-            //    }
-            //}
+            finally
+            {
+                streamToRead.Dispose();
+            }
         }
         else
         {

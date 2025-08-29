@@ -5,6 +5,7 @@ using System.Text;
 using Amazon.S3;
 using Amazon.S3.Model;
 using AutoFixture.AutoFakeItEasy;
+using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Aws.S3;
 using FakeItEasy;
 
@@ -49,7 +50,7 @@ public sealed class ApiAwsS3Tests
         A.CallTo(() => _s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._)).Returns(response);
 
         // Act
-        bool result = await _sut.UploadS3File(bucketName, fileName, fileData, null, compressStream, compressionType);
+        bool result = await _sut.UploadS3File(bucketName, fileName, fileData, null, compressSteam: compressStream, compressionType: compressionType);
 
         // Assert
         result.ShouldBeTrue();
@@ -83,9 +84,14 @@ public sealed class ApiAwsS3Tests
         byte[] fileContent = Encoding.UTF8.GetBytes("Test content");
         await using MemoryStream fileData = new();
 
+        byte[] compressedContent = fileContent;
+        if (!contentEncoding.IsNullOrWhiteSpace())
+        {
+            compressedContent = await fileContent.Compress(contentEncoding == "gzip" ? ECompressionType.Gzip : ECompressionType.Deflate);
+        }
         GetObjectResponse response = new()
         {
-            ResponseStream = new MemoryStream(fileContent),
+            ResponseStream = new MemoryStream(compressedContent),
             Headers = { ["Content-Encoding"] = contentEncoding }
         };
 

@@ -1,4 +1,4 @@
-﻿﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using SixLabors.ImageSharp;
 using static System.Convert;
@@ -45,6 +45,16 @@ public static partial class Base64
         {
             if (ms.Length > 0)
             {
+                if (!ms.CanRead)
+                {
+                    throw new NotSupportedException("Memory stream must be readable to conver to base 64");
+                }
+
+                if (ms.CanSeek && ms.Position != 0)
+                {
+                    ms.Position = 0;
+                }
+
                 using Image image = Image.Load(ms);
                 if (image?.Height > 0 && image.Width > 0)
                 {

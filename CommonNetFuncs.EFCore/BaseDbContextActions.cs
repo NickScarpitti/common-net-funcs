@@ -1,4 +1,4 @@
-﻿﻿using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;

@@ -14,7 +14,6 @@ public static class RunBatches
     /// <summary>
     /// Takes a collection of items and processes them in batches using the provided async processor.
     /// </summary>
-    //public static async Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, AsyncBatchProcessor<T> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true)
     public static async Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, Task<bool>> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(itemsToProcess);

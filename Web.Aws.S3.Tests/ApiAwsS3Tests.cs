@@ -1,14 +1,15 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
+using System.IO.Compression;
 using System.Net;
 using System.Text;
 using Amazon.S3;
 using Amazon.S3.Model;
 using AutoFixture.AutoFakeItEasy;
+using CommonNetFuncs.Compression;
+using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Aws.S3;
 using FakeItEasy;
-
-using Microsoft.Extensions.Logging;
 using static CommonNetFuncs.Compression.Streams;
 
 namespace Web.Aws.S3.Tests;
@@ -19,7 +20,6 @@ public sealed class ApiAwsS3Tests
 {
     private readonly IFixture _fixture;
     private readonly IAmazonS3 _s3Client;
-    private readonly ILogger<ApiAwsS3> _logger;
     private readonly ApiAwsS3 _sut;
 
     public ApiAwsS3Tests()
@@ -27,8 +27,7 @@ public sealed class ApiAwsS3Tests
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
 
         _s3Client = A.Fake<IAmazonS3>();
-        _logger = A.Fake<ILogger<ApiAwsS3>>();
-        _sut = new ApiAwsS3(_s3Client, _logger);
+        _sut = new ApiAwsS3(_s3Client);
     }
 
     [Theory]
@@ -49,7 +48,7 @@ public sealed class ApiAwsS3Tests
         A.CallTo(() => _s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._)).Returns(response);
 
         // Act
-        bool result = await _sut.UploadS3File(bucketName, fileName, fileData, null, compressStream, compressionType);
+        bool result = await _sut.UploadS3File(bucketName, fileName, fileData, null, compressSteam: compressStream, compressionType: compressionType);
 
         // Assert
         result.ShouldBeTrue();
@@ -83,9 +82,14 @@ public sealed class ApiAwsS3Tests
         byte[] fileContent = Encoding.UTF8.GetBytes("Test content");
         await using MemoryStream fileData = new();
 
+        byte[] compressedContent = fileContent;
+        if (!contentEncoding.IsNullOrWhiteSpace())
+        {
+            compressedContent = await fileContent.Compress(contentEncoding == "gzip" ? ECompressionType.Gzip : ECompressionType.Deflate);
+        }
         GetObjectResponse response = new()
         {
-            ResponseStream = new MemoryStream(fileContent),
+            ResponseStream = new MemoryStream(compressedContent),
             Headers = { ["Content-Encoding"] = contentEncoding }
         };
 
@@ -648,6 +652,204 @@ public sealed class ApiAwsS3Tests
 
         // Assert
         result.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.None)]
+    public async Task DetectCompressionTypeAndReset_SeekableStream_ReturnsCorrectTypeAndResets(ECompressionType compressionType)
+    {
+        // Arrange
+        byte[] original = Encoding.UTF8.GetBytes("Hello Compression!");
+        MemoryStream stream;
+        if (compressionType == ECompressionType.Gzip)
+        {
+            stream = new MemoryStream();
+            await using (GZipStream gzip = new(stream, CompressionLevel.Optimal, leaveOpen: true))
+            {
+                gzip.Write(original, 0, original.Length);
+            }
+
+            stream.Position = 0;
+        }
+        else if (compressionType == ECompressionType.Deflate)
+        {
+            stream = new MemoryStream();
+            await using (DeflateStream deflate = new(stream, CompressionLevel.Optimal, leaveOpen: true))
+            {
+                deflate.Write(original, 0, original.Length);
+            }
+
+            stream.Position = 0;
+        }
+        else
+        {
+            stream = new MemoryStream(original);
+        }
+
+        long initialPosition = stream.Position;
+
+        // Act
+        (ECompressionType detected, Stream resetStream) = await DetectCompressionTypeAndReset(stream);
+
+        // Assert
+        detected.ShouldBe(compressionType);
+        resetStream.ShouldBe(stream);
+        stream.Position.ShouldBe(initialPosition);
+    }
+
+    [Theory]
+    [InlineData(ECompressionType.Gzip)]
+    [InlineData(ECompressionType.Deflate)]
+    [InlineData(ECompressionType.None)]
+    public async Task DetectCompressionTypeAndReset_UnseekableStream_ReturnsCorrectTypeAndConcatenatedStream(ECompressionType compressionType)
+    {
+        // Arrange
+        byte[] original = Encoding.UTF8.GetBytes("Hello Compression!");
+        MemoryStream baseStream;
+        if (compressionType == ECompressionType.Gzip)
+        {
+            baseStream = new MemoryStream();
+            await using (GZipStream gzip = new(baseStream, CompressionLevel.Optimal, leaveOpen: true))
+            {
+                gzip.Write(original, 0, original.Length);
+            }
+            baseStream.Position = 0;
+        }
+        else if (compressionType == ECompressionType.Deflate)
+        {
+            baseStream = new MemoryStream();
+            await using (DeflateStream deflate = new(baseStream, CompressionLevel.Optimal, leaveOpen: true))
+            {
+                deflate.Write(original, 0, original.Length);
+            }
+            baseStream.Position = 0;
+        }
+        else
+        {
+            baseStream = new MemoryStream(original);
+        }
+
+        // Wrap in a stream that is not seekable
+        UnseekableStream unseekable = new(baseStream);
+
+        // Act
+        (ECompressionType detected, Stream resetStream) = await DetectCompressionTypeAndReset(unseekable);
+
+        // Assert
+        detected.ShouldBe(compressionType);
+        resetStream.ShouldBeOfType<ConcatenatedStream>();
+
+        // Decompress if needed, then read the original string
+        Stream toRead;
+        if (compressionType == ECompressionType.Gzip)
+        {
+            toRead = new GZipStream(resetStream, CompressionMode.Decompress, leaveOpen: true);
+        }
+        else if (compressionType == ECompressionType.Deflate)
+        {
+            toRead = new DeflateStream(resetStream, CompressionMode.Decompress, leaveOpen: true);
+        }
+        else
+        {
+            toRead = resetStream;
+        }
+
+        using StreamReader reader = new(toRead);
+        string text = await reader.ReadToEndAsync();
+        text.ShouldBe("Hello Compression!");
+    }
+
+    [Fact]
+    public async Task DetectCompressionTypeAndReset_UnseekableStream_Empty_ReturnsNone()
+    {
+        // Arrange
+        UnseekableStream emptyStream = new(new MemoryStream());
+
+        // Act
+        (ECompressionType detected, Stream resetStream) = await DetectCompressionTypeAndReset(emptyStream);
+
+        // Assert
+        detected.ShouldBe(ECompressionType.None);
+        resetStream.ShouldBeOfType<ConcatenatedStream>();
+    }
+
+    // Helper for unseekable stream
+    private sealed class UnseekableStream(Stream inner) : Stream
+    {
+        private readonly Stream _inner = inner;
+
+        public override bool CanRead => _inner.CanRead;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => _inner.CanWrite;
+
+        public override long Length => _inner.Length;
+
+        public override long Position { get => _inner.Position; set => _inner.Position = value; }
+
+        public override void Flush()
+        {
+            _inner.Flush();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            return _inner.Read(buffer, offset, count);
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            _inner.SetLength(value);
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            _inner.Write(buffer, offset, count);
+        }
+
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            return await _inner.ReadAsync(buffer, cancellationToken);
+        }
+
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return await _inner.ReadAsync(buffer.AsMemory(offset, count), cancellationToken);
+        }
+
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            await _inner.WriteAsync(buffer.AsMemory(offset, count), cancellationToken);
+        }
+
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            return _inner.WriteAsync(buffer, cancellationToken);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _inner.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        public override async ValueTask DisposeAsync()
+        {
+            await _inner.DisposeAsync();
+            await base.DisposeAsync();
+        }
     }
 }
 

@@ -10,7 +10,6 @@ using CommonNetFuncs.Compression;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Aws.S3;
 using FakeItEasy;
-using Microsoft.Extensions.Logging;
 using static CommonNetFuncs.Compression.Streams;
 
 namespace Web.Aws.S3.Tests;
@@ -21,7 +20,6 @@ public sealed class ApiAwsS3Tests
 {
     private readonly IFixture _fixture;
     private readonly IAmazonS3 _s3Client;
-    private readonly ILogger<ApiAwsS3> _logger;
     private readonly ApiAwsS3 _sut;
 
     public ApiAwsS3Tests()
@@ -29,8 +27,7 @@ public sealed class ApiAwsS3Tests
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
 
         _s3Client = A.Fake<IAmazonS3>();
-        _logger = A.Fake<ILogger<ApiAwsS3>>();
-        _sut = new ApiAwsS3(_s3Client, _logger);
+        _sut = new ApiAwsS3(_s3Client);
     }
 
     [Theory]

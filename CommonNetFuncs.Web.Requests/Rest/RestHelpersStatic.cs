@@ -16,9 +16,9 @@ using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Common.EncodingTypes;
 using static CommonNetFuncs.Web.Common.UriHelpers;
-using static CommonNetFuncs.Web.Requests.RestHelperConstants;
+using static CommonNetFuncs.Web.Requests.Rest.RestHelperConstants;
 
-namespace CommonNetFuncs.Web.Requests;
+namespace CommonNetFuncs.Web.Requests.Rest;
 
 public static class RestHelpersStatic
 {
@@ -175,7 +175,7 @@ public static class RestHelpersStatic
             string exceptionLocation = tcex.GetLocationOfException();
             if (requestOptions.ExpectTaskCancellation)
             {
-                logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+                logger.Warn("{msg}", $"Run once REST task was canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
             }
             else
             {

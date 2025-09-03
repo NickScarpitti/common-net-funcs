@@ -1,6 +1,7 @@
-﻿﻿using System.Net;
+﻿using System.Net;
 using System.Text;
 using CommonNetFuncs.Web.Requests;
+using CommonNetFuncs.Web.Requests.Rest;
 
 namespace Web.Requests.Tests;
 

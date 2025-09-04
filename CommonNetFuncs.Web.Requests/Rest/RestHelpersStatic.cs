@@ -44,8 +44,10 @@ public static class RestHelpersStatic
         {
             logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
                 $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false) : string.Empty)}" : string.Empty));
+
             using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
             using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
+
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 

@@ -36,4 +36,6 @@ public class ResilienceOptions(int MaxRetry = 10, int RetryDelay = 1000, long? T
     /// The first parameter is the ApiName, the second parameter indicates if the token should be forcefully refreshed (true on retry).
     /// </remarks>
     public Func<string, bool, ValueTask<string>>? GetBearerTokenFunc { get; set; } = GetBearerTokenFunc;
+
+    internal bool RefreshToken { get; set; }
 }

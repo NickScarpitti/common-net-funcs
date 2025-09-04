@@ -18,17 +18,17 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
 
     public async Task<T?> Get<T>(RestHelperOptions options, CancellationToken cancellationToken = default)
     {
+        string baseLogString = $"GET {options.Url}";
         using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
+        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions);
+        logger.Info("{msg}", $"{baseLogString} Attempt 1");
 
-        int attemptCounter = 0;
         Dictionary<string, string> headers = GetHeaders(options, false);
         return await wrappedClient.ExecuteWithResilience(async (client, _) =>
                {
-                   logger.Info("{msg}", $"GET {options.Url} Attempt {attemptCounter + 1}");
-                   bool forceRefresh = attemptCounter > 0;
-                   Interlocked.Add(ref attemptCounter, 1);
+                   //bool forceRefresh = attemptCounter > 0;
+                   bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
                    RequestOptions<T> baseRequestOptions = new()
                     {
                         Url = $"{client.BaseAddress}{options.Url}",
@@ -62,18 +62,17 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
             options.HttpHeaders.TryAdd(header.Key, header.Value);
         }
 
+        string baseLogString = $"GET (Streaming) {options.Url}";
         using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
-        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions);
+        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-        int attemptCounter = 0;
+        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+
         Dictionary<string, string> headers = GetHeaders(options, true);
         IAsyncEnumerable<T?>? streamingResult =
             await wrappedClient.ExecuteStreamingWithResilience(async (client, _) =>
             {
-                logger.Info("{msg}", $"GET (Streaming) {options.Url} Attempt {attemptCounter + 1}");
-                bool forceRefresh = attemptCounter > 0;
-                Interlocked.Add(ref attemptCounter, 1);
-
+                bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
                 RequestOptions<T> baseRequestOptions = new()
                 {
                     Url = $"{client.BaseAddress}{options.Url}",
@@ -111,17 +110,16 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
 
     public async Task<T?> PostRequest<T>(RestHelperOptions options, T postObject, CancellationToken cancellationToken = default)
     {
+        string baseLogString = $"POST {options.Url}";
         using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
-        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions);
+        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-        int attemptCounter = 0;
+        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+
         Dictionary<string, string> headers = GetHeaders(options, false);
         return await wrappedClient.ExecuteWithResilience(async (client, _) =>
                {
-                   logger.Info("{msg}", $"POST {options.Url} Attempt {attemptCounter + 1}");
-                   bool forceRefresh = attemptCounter > 0;
-                   Interlocked.Add(ref attemptCounter, 1);
-
+                   bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
                    RequestOptions<T> baseRequestOptions = new()
                    {
                        Url = $"{client.BaseAddress}{options.Url}",
@@ -138,7 +136,7 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
                        BodyObject = postObject,
                    };
 
-                   RestObject<T>? result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken);
+                   RestObject<T>? result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
                    if (result == null)
                    {
@@ -157,18 +155,17 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
             options.HttpHeaders.TryAdd(header.Key, header.Value);
         }
 
+        string baseLogString = $"POST (Streaming) {options.Url}";
         using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
-        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions);
+        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-        int attemptCounter = 0;
+        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+
         Dictionary<string, string> headers = GetHeaders(options, true);
         IAsyncEnumerable<T?>? streamingResult =
             await wrappedClient.ExecuteStreamingWithResilience(async (client, _) =>
             {
-                logger.Info("{msg}", $"POST (Streaming) {options.Url} Attempt {attemptCounter + 1}");
-                bool forceRefresh = attemptCounter > 0;
-                Interlocked.Add(ref attemptCounter, 1);
-
+                bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
                 RequestOptions<T> baseRequestOptions = new()
                 {
                     Url = $"{client.BaseAddress}{options.Url}",
@@ -204,17 +201,16 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
 
     public async Task<T?> GenericPostRequest<T, UT>(RestHelperOptions options, UT postObject, CancellationToken cancellationToken = default)
     {
+        string baseLogString = $"POST (Generic) {options.Url}";
         using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
-        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions);
+        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-        int attemptCounter = 0;
+        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+
         Dictionary<string, string> headers = GetHeaders(options, false);
         return await wrappedClient.ExecuteWithResilience(async (client, _) =>
                {
-                   logger.Info("{msg}", $"POST {options.Url} Attempt {attemptCounter + 1}");
-                   bool forceRefresh = attemptCounter > 0;
-                   Interlocked.Add(ref attemptCounter, 1);
-
+                   bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
                    RequestOptions<UT> baseRequestOptions = new()
                    {
                        Url = $"{client.BaseAddress}{options.Url}",
@@ -250,18 +246,17 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
             options.HttpHeaders.TryAdd(header.Key, header.Value);
         }
 
+        string baseLogString = $"POST (Generic String) {options.Url}";
         using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
-        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions);
+        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-        int attemptCounter = 0;
+        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+
         Dictionary<string, string> headers = GetHeaders(options, true);
         IAsyncEnumerable<T?>? streamingResult =
             await wrappedClient.ExecuteStreamingWithResilience(async (client, _) =>
             {
-                logger.Info("{msg}", $"POST (Streaming) {options.Url} Attempt {attemptCounter + 1}");
-                bool forceRefresh = attemptCounter > 0;
-                Interlocked.Add(ref attemptCounter, 1);
-
+                bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
                 RequestOptions<UT> baseRequestOptions = new()
                 {
                     Url = $"{client.BaseAddress}{options.Url}",
@@ -297,17 +292,16 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
 
     public async Task<string?> StringPostRequest<T>(RestHelperOptions options, T postObject, CancellationToken cancellationToken = default)
     {
+        string baseLogString = $"POST (String) {options.Url}";
         using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
-        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions);
+        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-        int attemptCounter = 0;
+        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+
         Dictionary<string, string> headers = GetHeaders(options, false);
         return await wrappedClient.ExecuteWithResilience(async (client, _) =>
                {
-                   logger.Info("{msg}", $"POST {options.Url} Attempt {attemptCounter + 1}");
-                   bool forceRefresh = attemptCounter > 0;
-                   Interlocked.Add(ref attemptCounter, 1);
-
+                   bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
                    RequestOptions<T> baseRequestOptions = new()
                    {
                        Url = $"{client.BaseAddress}{options.Url}",
@@ -331,8 +325,15 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
 
     private static async Task<string?> PopulateBearerToken(RestHelperOptions options, bool forceRefresh = false)
     {
-        return options.UseBearerToken ? !options.BearerToken.IsNullOrWhiteSpace() ? options.BearerToken :
-        options.ResilienceOptions?.GetBearerTokenFunc != null ? await options.ResilienceOptions.GetBearerTokenFunc(options.ApiName, forceRefresh).ConfigureAwait(false) : null : null;
+        if (forceRefresh)
+        {
+            logger.Warn("here");
+        }
+        return options.UseBearerToken ? !options.BearerToken.IsNullOrWhiteSpace() ?
+            options.BearerToken : options.ResilienceOptions?.GetBearerTokenFunc != null ?
+            await options.ResilienceOptions.GetBearerTokenFunc(options.ApiName, forceRefresh).ConfigureAwait(false) :
+            null :
+        null;
     }
 
     #endregion
@@ -341,18 +342,18 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
 
     public async Task<T?> PatchRequest<T>(RestHelperOptions options, T model, T oldModel, CancellationToken cancellationToken = default) where T : class
     {
+        string baseLogString = $"PATCH {options.Url}";
         using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
-        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions);
+        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
         JsonPatchDocument patchDocument = PatchCreator.CreatePatch(oldModel, model);
+        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+
         if (patchDocument.Operations.Count > 0)
         {
-            int attemptCounter = 0;
             Dictionary<string, string> headers = GetHeaders(options, false);
             return await wrappedClient.ExecuteWithResilience(async (client, _) =>
                    {
-                       bool forceRefresh = attemptCounter > 0;
-                       Interlocked.Add(ref attemptCounter, 1);
-
+                       bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
                        RequestOptions<T> baseRequestOptions = new()
                        {
                            Url = $"{client.BaseAddress}{options.Url}",
@@ -492,7 +493,11 @@ public sealed class RestHelpersResilient(IHttpClientFactory httpClientFactory)
         {
             foreach (KeyValuePair<string, string> header in compressionHeaders)
             {
-                httpHeaders.AddOrUpdate(header.Key, header.Value, (key, oldValue) => header.Value);
+                if (!httpHeaders.ContainsKey(header.Key))
+                {
+                    httpHeaders.TryAdd(header.Key, header.Value);
+                }
+                //httpHeaders.AddOrUpdate(header.Key, header.Value, (_, __) => header.Value);
             }
             return httpHeaders ?? [];
         }

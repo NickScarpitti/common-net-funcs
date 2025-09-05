@@ -4,6 +4,7 @@ using System.Text;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Common;
 using CommonNetFuncs.Web.Requests.Rest.Options;
+using CommonNetFuncs.Web.Requests.RestHelperWrapper;
 using Microsoft.AspNetCore.JsonPatch;
 using NLog;
 using static CommonNetFuncs.Compression.Streams;

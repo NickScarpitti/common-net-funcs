@@ -8,6 +8,7 @@ using Polly.Retry;
 using Polly.Timeout;
 using static CommonNetFuncs.Web.Requests.Rest.Resilient.HttpClientBuilderExtensions;
 using static System.Net.HttpStatusCode;
+using CommonNetFuncs.Web.Requests.RestHelperWrapper;
 
 namespace CommonNetFuncs.Web.Requests.Rest.Resilient;
 

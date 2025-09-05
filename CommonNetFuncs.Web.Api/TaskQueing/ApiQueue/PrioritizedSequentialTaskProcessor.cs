@@ -77,9 +77,9 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService
         return (T?)await queuedTask.CompletionSource.Task;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        await foreach (PrioritizedQueuedTask currentTask in reader.ReadAllAsync(stoppingToken))
+        await foreach (PrioritizedQueuedTask currentTask in reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
         {
             try
             {
@@ -100,7 +100,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService
                     stats.CurrentProcessingPriority = currentTask.PriorityLevel;
                 }
 
-                object? result = await currentTask.TaskFunction(stoppingToken).ConfigureAwait(false);
+                object? result = await currentTask.TaskFunction(cancellationToken).ConfigureAwait(false);
                 currentTask.CompletionSource.SetResult(result);
 
                 stopwatch.Stop();

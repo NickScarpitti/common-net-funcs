@@ -1,6 +1,6 @@
 ﻿using static CommonNetFuncs.Compression.Streams;
 
-namespace CommonNetFuncs.Web.Requests.RestHelperWrapper;
+namespace CommonNetFuncs.Web.Requests.Rest.Options;
 
 public sealed class CompressionOptions(bool UseCompression = false, ECompressionType? CompressionType = null, bool UseMemPack = false, bool UseMsgPack = false)
 {

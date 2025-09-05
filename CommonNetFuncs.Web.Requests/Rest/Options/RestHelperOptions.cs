@@ -1,6 +1,4 @@
 ﻿using System.Text.Json;
-using CommonNetFuncs.Web.Requests.Rest.Resilient;
-using CommonNetFuncs.Web.Requests.RestHelperWrapper;
 
 namespace CommonNetFuncs.Web.Requests.Rest.Options;
 

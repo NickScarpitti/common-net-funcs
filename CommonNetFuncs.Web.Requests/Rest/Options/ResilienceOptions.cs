@@ -1,10 +1,10 @@
 ﻿using System.Net;
-using Polly;
+using static CommonNetFuncs.Web.Requests.Rest.RestHelperConstants;
 
 namespace CommonNetFuncs.Web.Requests.Rest.Options;
 
 public class ResilienceOptions(int MaxRetry = 10, int RetryDelay = 1000, long? TimeoutValue = 100, bool RunOnce = false, bool NullOk = false,
-    Func<HttpStatusCode, bool>? ShouldRetryByStatusFunc = null, DelayBackoffType DelayBackoffType = DelayBackoffType.Constant, bool UseJitter = true,
+    Func<HttpStatusCode, bool>? ShouldRetryByStatusFunc = null, EDelayBackoffType DelayBackoffType = EDelayBackoffType.Constant, bool UseJitter = true,
     Func<HttpResponseMessage, ResilienceOptions, bool>? ShouldRetryFunc = null, Func<string, bool, ValueTask<string>>? GetBearerTokenFunc = null)
 {
     public bool NullOk { get; set; } = NullOk;
@@ -23,7 +23,7 @@ public class ResilienceOptions(int MaxRetry = 10, int RetryDelay = 1000, long? T
 
     public Func<HttpStatusCode, bool>? ShouldRetryByStatusFunc { get; set; } = ShouldRetryByStatusFunc;
 
-    public DelayBackoffType DelayBackoffType { get; set; } = DelayBackoffType;
+    public EDelayBackoffType DelayBackoffType { get; set; } = DelayBackoffType;
 
     public bool UseJitter { get; set; } = UseJitter;
 

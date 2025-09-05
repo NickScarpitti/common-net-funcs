@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.Buffers;
+using System.IO.Compression;
 
 namespace CommonNetFuncs.Compression;
 
@@ -16,6 +17,8 @@ public static class Streams
     private const int ChunkThreshold = 16 * 1024 * 1024; // 16 MB
     private const int ChunkSize = 1024 * 1024; // 1 MB
     private const int MaxCompressionRatio = 1000; // Detect compression bombs
+
+    private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
     public class CompressionLimitExceededException : Exception
     {
@@ -694,20 +697,27 @@ public static class Streams
     /// <exception cref="CompressionLimitExceededException">Thrown if the total number of bytes copied exceeds <paramref name="maxBytes"/>.</exception>
     public static async Task CopyWithLimitAsync(this Stream source, Stream destination, long maxBytes, CancellationToken cancellationToken = default)
     {
-        byte[] buffer = new byte[ChunkSize];
+        byte[] buffer = bufferPool.Rent(ChunkSize); //new byte[ChunkSize];
         long totalBytes = 0;
         int bytesRead;
 
-        while ((bytesRead = await source.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false)) > 0)
+        try
         {
-            totalBytes += bytesRead;
-
-            if (totalBytes > maxBytes)
+            while ((bytesRead = await source.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false)) > 0)
             {
-                throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxBytes} bytes");
-            }
+                totalBytes += bytesRead;
 
-            await destination.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
+                if (totalBytes > maxBytes)
+                {
+                    throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxBytes} bytes");
+                }
+
+                await destination.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            bufferPool.Return(buffer);
         }
     }
 
@@ -726,22 +736,29 @@ public static class Streams
     /// <exception cref="CompressionLimitExceededException">Thrown if the total number of bytes copied exceeds <paramref name="maxBytes"/>.</exception>
     public static void CopyWithLimit(this Stream source, Stream destination, long maxBytes, CancellationToken cancellationToken = default)
     {
-        byte[] buffer = new byte[ChunkSize];
         long totalBytes = 0;
         int bytesRead;
 
-        while ((bytesRead = source.Read(buffer)) > 0)
+        byte[] buffer = bufferPool.Rent(ChunkSize); //new byte[ChunkSize];
+        try
         {
-            totalBytes += bytesRead;
-
-            if (totalBytes > maxBytes)
+            while ((bytesRead = source.Read(buffer)) > 0)
             {
-                throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxBytes} bytes");
+                totalBytes += bytesRead;
+
+                if (totalBytes > maxBytes)
+                {
+                    throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxBytes} bytes");
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                destination.Write(buffer, 0, bytesRead);
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            destination.Write(buffer, 0, bytesRead);
+        }
+        finally
+        {
+            bufferPool.Return(buffer);
         }
     }
 

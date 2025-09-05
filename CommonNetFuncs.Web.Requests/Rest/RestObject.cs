@@ -1,4 +1,4 @@
-﻿namespace CommonNetFuncs.Web.Requests;
+﻿namespace CommonNetFuncs.Web.Requests.Rest;
 
 /// <summary>
 /// Helper class to get around not being able to pass primitive types directly to a generic type

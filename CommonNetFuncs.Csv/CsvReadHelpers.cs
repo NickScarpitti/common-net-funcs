@@ -1,4 +1,4 @@
-﻿﻿using System.Data;
+﻿using System.Data;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -72,7 +72,7 @@ public static class CsvReadHelpers
     {
         using StreamReader reader = new(filePath);
         List<T> records = new();
-        await foreach (T record in ReadCsvAsyncEnumerable<T>(reader, hasHeaders, cultureInfo, bufferSize, cancellationToken))
+        await foreach (T record in ReadCsvAsyncEnumerable<T>(reader, hasHeaders, cultureInfo, bufferSize, cancellationToken).ConfigureAwait(false))
         {
             records.Add(record);
         }
@@ -92,7 +92,7 @@ public static class CsvReadHelpers
     public static async Task<List<T>> ReadCsvAsync<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
     {
         List<T> records = new();
-        await foreach (T record in ReadCsvAsyncEnumerable<T>(stream, hasHeaders, cultureInfo, bufferSize, cancellationToken))
+        await foreach (T record in ReadCsvAsyncEnumerable<T>(stream, hasHeaders, cultureInfo, bufferSize, cancellationToken).ConfigureAwait(false))
         {
             records.Add(record);
         }
@@ -112,7 +112,7 @@ public static class CsvReadHelpers
     public static async IAsyncEnumerable<T> ReadCsvAsyncEnumerable<T>(string filePath, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         await using FileStream fileStream = new(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize);
-        await foreach (T record in ReadCsvAsyncEnumerable<T>(fileStream, hasHeaders, cultureInfo, bufferSize, cancellationToken))
+        await foreach (T record in ReadCsvAsyncEnumerable<T>(fileStream, hasHeaders, cultureInfo, bufferSize, cancellationToken).ConfigureAwait(false))
         {
             yield return record;
         }
@@ -131,7 +131,7 @@ public static class CsvReadHelpers
     public static async IAsyncEnumerable<T> ReadCsvAsyncEnumerable<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using StreamReader reader = new(stream, bufferSize: bufferSize);
-        await foreach (T record in ReadCsvAsyncEnumerable<T>(reader, hasHeaders, cultureInfo, bufferSize, cancellationToken))
+        await foreach (T record in ReadCsvAsyncEnumerable<T>(reader, hasHeaders, cultureInfo, bufferSize, cancellationToken).ConfigureAwait(false))
         {
             yield return record;
         }
@@ -155,7 +155,7 @@ public static class CsvReadHelpers
             BufferSize = bufferSize
         });
 
-        await foreach (T record in csv.GetRecordsAsync<T>(cancellationToken))
+        await foreach (T record in csv.GetRecordsAsync<T>(cancellationToken).ConfigureAwait(false))
         {
             yield return record;
         }

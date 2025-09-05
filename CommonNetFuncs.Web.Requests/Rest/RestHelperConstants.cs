@@ -5,6 +5,13 @@ namespace CommonNetFuncs.Web.Requests.Rest;
 
 public static class RestHelperConstants
 {
+    public enum EDelayBackoffType
+    {
+        Constant,
+        Linear,
+        Exponential
+    }
+
     public const string ContentTypeHeader = "Content-Type";
     public const string AcceptEncodingHeader = "Accept-Encoding";
     public const string AcceptHeader = "Accept";

@@ -366,16 +366,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T enumerator in enumeratedReader)
+            await foreach (T enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }
@@ -490,16 +483,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T enumerator in enumeratedReader)
+            await foreach (T enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }
@@ -636,16 +622,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T2 enumerator in enumeratedReader)
+            await foreach (T2 enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }
@@ -768,16 +747,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T2 enumerator in enumeratedReader)
+            await foreach (T2 enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }
@@ -917,16 +889,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T enumerator in enumeratedReader)
+            await foreach (T enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }
@@ -1046,16 +1011,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T enumerator in enumeratedReader)
+            await foreach (T enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }
@@ -1201,16 +1159,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T2 enumerator in enumeratedReader)
+            await foreach (T2 enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }
@@ -1339,16 +1290,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T2 enumerator in enumeratedReader)
+            await foreach (T2 enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }
@@ -1542,16 +1486,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T enumerator in enumeratedReader)
+            await foreach (T enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }
@@ -1760,16 +1697,9 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
         if (enumeratedReader != null)
         {
-            await foreach (T enumerator in enumeratedReader)
+            await foreach (T enumerator in enumeratedReader.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    yield return enumerator;
-                }
-                else
-                {
-                    yield break;
-                }
+                yield return enumerator;
             }
         }
     }

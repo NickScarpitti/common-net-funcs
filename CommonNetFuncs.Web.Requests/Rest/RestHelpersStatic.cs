@@ -42,17 +42,19 @@ public static class RestHelpersStatic
         T? result = default;
         try
         {
-            logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
-                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false) : string.Empty)}" : string.Empty));
+            LogRequest(requestOptions, cancellationToken);
 
-            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
+            using CancellationTokenSource combinedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            combinedTokenSource.CancelAfter(GetTimeout(requestOptions));
+            //using CancellationTokenSource tokenSource = new(GetTimeout(requestOptions));
+
             using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
             //client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
-            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
+            using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
             result = await HandleResponse<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url, requestOptions.UseNewtonsoftDeserializer, requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         catch (TaskCanceledException tcex)
@@ -90,9 +92,12 @@ public static class RestHelpersStatic
         {
             try
             {
-                logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
-                    $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false) : string.Empty)}" : string.Empty));
-                using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
+                LogRequest(requestOptions, cancellationToken);
+
+                using CancellationTokenSource combinedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                combinedTokenSource.CancelAfter(GetTimeout(requestOptions));
+                //using CancellationTokenSource tokenSource = new(GetTimeout(requestOptions));
+
                 using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 
                 //Ensure JSON header is being used
@@ -109,7 +114,7 @@ public static class RestHelpersStatic
                 httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
                 //client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
-                response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
+                response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
                 enumeratedReader = HandleResponseAsync<T>(response, requestOptions.HttpMethod.ToString(), requestOptions.Url, cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
             }
             catch (TaskCanceledException tcex)
@@ -161,15 +166,18 @@ public static class RestHelpersStatic
         RestObject<T> restObject = new();
         try
         {
-            logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
-                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false) : string.Empty)}" : string.Empty));
-            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
+            LogRequest(requestOptions, cancellationToken);
+
+            using CancellationTokenSource combinedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            combinedTokenSource.CancelAfter(GetTimeout(requestOptions));
+            //using CancellationTokenSource tokenSource = new(GetTimeout(requestOptions));
+
             using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
             httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
             //client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
-            restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
+            restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
             restObject.Result = await HandleResponse<T>(restObject.Response, requestOptions.HttpMethod.ToString(), requestOptions.Url, requestOptions.UseNewtonsoftDeserializer, requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, requestOptions.HttpHeaders, cancellationToken).ConfigureAwait(false);
         }
         catch (TaskCanceledException tcex)
@@ -204,9 +212,11 @@ public static class RestHelpersStatic
         StreamingRestObject<T> restObject = new();
         try
         {
-            logger.Info("{msg}", $"{requestOptions.HttpMethod.ToString().ToUpper()} URL: {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}" + (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod) ?
-                $" | {(requestOptions.BodyObject != null ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions) : requestOptions.PatchDocument != null ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false) : string.Empty)}" : string.Empty));
-            using CancellationTokenSource tokenSource = new(TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout));
+            LogRequest(requestOptions, cancellationToken);
+
+            using CancellationTokenSource combinedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            combinedTokenSource.CancelAfter(GetTimeout(requestOptions));
+            //using CancellationTokenSource tokenSource = new(GetTimeout(requestOptions));
             using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 
             //Ensure JSON header is being used
@@ -223,7 +233,7 @@ public static class RestHelpersStatic
             httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
 
             //client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
-            restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, tokenSource.Token).ConfigureAwait(false) ?? new();
+            restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
             restObject.Result = HandleResponseAsync<T>(restObject.Response, requestOptions.HttpMethod.ToString(), requestOptions.Url, cancellationToken: cancellationToken);
         }
         catch (TaskCanceledException tcex)
@@ -517,7 +527,7 @@ public static class RestHelpersStatic
                     streamToRead = responseStream.Decompress(ECompressionType.Brotli);
                 }
 
-                await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken))
+                await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false))
                 {
                     if (item != null)
                     {
@@ -633,5 +643,27 @@ public static class RestHelpersStatic
             numberOfChunks = (int)numberOfChunksDecimal + (numberOfChunksDecimal > 0 && numberOfChunksDecimal % 1 != 0 ? 1 : 0);
         }
         return (itemsPerChunk, numberOfChunks);
+    }
+
+    private static TimeSpan GetTimeout<T>(RequestOptions<T> requestOptions)
+    {
+        return TimeSpan.FromSeconds(requestOptions.Timeout == null || requestOptions.Timeout <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout);
+    }
+
+    private static async void LogRequest<T>(RequestOptions<T> requestOptions, CancellationToken cancellationToken)
+    {
+        string method = requestOptions.HttpMethod.Method; // Avoid ToString().ToUpper()
+        string url = requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri();
+        logger.Info("HTTP Request: {Method} {Url}", method, url);
+
+        if (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod))
+        {
+            string body = requestOptions.BodyObject != null
+                ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions)
+                : requestOptions.PatchDocument != null
+                    ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
+                    : string.Empty;
+            logger.Info("Request Body: {Body}", body);
+        }
     }
 }

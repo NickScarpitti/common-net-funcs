@@ -1,6 +1,4 @@
-﻿using CommonNetFuncs.Web.Requests.Rest;
-
-namespace CommonNetFuncs.Web.Requests;
+﻿namespace CommonNetFuncs.Web.Requests.Rest;
 
 /// <summary>
 /// Helper functions that send requests to specified URI and return resulting values where applicable

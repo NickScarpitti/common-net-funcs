@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using CommonNetFuncs.Core.CollectionClasses;
 using CommonNetFuncs.Web.Requests.Rest.Options;
+using CommonNetFuncs.Web.Requests.RestHelperWrapper;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;

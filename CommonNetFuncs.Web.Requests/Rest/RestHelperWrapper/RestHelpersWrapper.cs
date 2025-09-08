@@ -6,7 +6,7 @@ using Microsoft.Extensions.ObjectPool;
 using NLog;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper.WrapperHelpers;
-//using static Newtonsoft.Json.JsonConvert;
+using static Newtonsoft.Json.JsonConvert;
 
 namespace CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
@@ -358,7 +358,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
                     bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
                 }
 
-                RequestOptions<UT> baseRequestOptions = GetRequestOptions<UT>(options, client, headers, HttpMethod.Post, bearerToken, postObject);
+                RequestOptions<UT> baseRequestOptions = GetRequestOptions(options, client, headers, HttpMethod.Post, bearerToken, postObject);
 
                 result = await client.RestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -590,7 +590,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
                 }
 
                 RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client, headers, HttpMethod.Patch, bearerToken,
-                    patchDocument: new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json));  //new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json));
+                    patchDocument: new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json)); //new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json)); // System.Text.Json has issues producing JsonPatchDocument in the correct format
 
                 result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 

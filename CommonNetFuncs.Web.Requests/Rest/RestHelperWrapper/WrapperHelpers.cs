@@ -171,23 +171,19 @@ internal static class WrapperHelpers
 
     internal static bool ShouldRetry(HttpResponseMessage? response, ResilienceOptions options)
     {
-        if (response == null)
-        {
-            return true;
-        }
-
         if (options.ShouldRetryFunc != null && options.ShouldRetryFunc(response, options))
         {
             return false;
         }
-        else if ((options.RunOnce && response.StatusCode != Unauthorized && response.StatusCode != Forbidden) ||
-            ((options.NullOk || response != null) && response.IsSuccessStatusCode) ||
-            (options.ShouldRetryByStatusFunc != null && response != null && options.ShouldRetryByStatusFunc(response.StatusCode)))
+        else
         {
-            return false;
-        }
+            if ((options.RunOnce && response?.StatusCode != Unauthorized) || ((options.NullOk || response != null) && response?.IsSuccessStatusCode == true))
+            {
+                return false;
+            }
 
-        return true;
+            return options.ShouldRetryByStatusFunc != null && response != null && options.ShouldRetryByStatusFunc(response.StatusCode);
+        }
     }
 
     internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, HttpClient client, Dictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)

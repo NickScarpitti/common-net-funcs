@@ -19,7 +19,12 @@ public static class Collections
     /// <returns><see langword="true"/> if <paramref name="collection"/> has any objects in it.</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? collection)
     {
-        return collection?.Count > 0;
+        if (collection == null)
+        {
+            return false;
+        }
+
+        return collection.Count > 0;
     }
 
     /// <summary>
@@ -30,7 +35,12 @@ public static class Collections
     /// <returns><see langword="true"/> if <paramref name="list"/> has any objects in it.</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this IList<T>? list)
     {
-        return list?.Count > 0;
+        if (list == null)
+        {
+            return false;
+        }
+
+        return list.Count > 0;
     }
 
     /// <summary>
@@ -41,7 +51,12 @@ public static class Collections
     /// <returns><see langword="true"/> if <paramref name="bag"/> has any objects in it.</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? bag)
     {
-        return bag?.Count > 0;
+        if (bag == null)
+        {
+            return false;
+        }
+
+        return !bag.IsEmpty;
     }
 
     /// <summary>
@@ -52,7 +67,12 @@ public static class Collections
     /// <returns><see langword="true"/> if <paramref name="array"/> has any objects in it.</returns>
     public static bool AnyFast<T>([NotNullWhen(true)] this T[]? array)
     {
-        return array?.Length > 0;
+        if (array == null)
+        {
+            return false;
+        }
+
+        return array.Length > 0;
     }
 
     /// <summary>
@@ -64,7 +84,12 @@ public static class Collections
     /// <returns><see langword="true"/> if <paramref name="dict"/> has any objects in it.</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this IDictionary<TKey, T>? dict) where TKey : notnull
     {
-        return dict?.Count > 0;
+        if (dict == null)
+        {
+            return false;
+        }
+
+        return dict.Count > 0;
     }
 
     /// <summary>
@@ -76,7 +101,12 @@ public static class Collections
     /// <returns><see langword="true"/> if <paramref name="dict"/> has any objects in it.</returns>
     public static bool AnyFast<TKey, T>([NotNullWhen(true)] this ConcurrentDictionary<TKey, T>? dict) where TKey : notnull
     {
-        return dict?.Count > 0;
+        if (dict == null)
+        {
+            return false;
+        }
+
+        return !dict.IsEmpty;
     }
 
     /// <summary>

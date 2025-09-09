@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using CommonNetFuncs.Web.Requests;
+using CommonNetFuncs.Web.Requests.Rest;
 
 namespace Web.Requests.Tests;
 

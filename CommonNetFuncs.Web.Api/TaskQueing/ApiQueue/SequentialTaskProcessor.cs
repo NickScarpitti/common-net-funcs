@@ -58,9 +58,9 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
         return (T?)result;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        await foreach (QueuedTask task in reader.ReadAllAsync(stoppingToken))
+        await foreach (QueuedTask task in reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -68,7 +68,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
             {
                 logger.Debug("Processing task {TaskId}", task.Id);
 
-                object? result = await task.TaskFunction(stoppingToken).ConfigureAwait(false);
+                object? result = await task.TaskFunction(cancellationToken).ConfigureAwait(false);
                 task.CompletionSource.SetResult(result);
 
                 lock (statsLock)

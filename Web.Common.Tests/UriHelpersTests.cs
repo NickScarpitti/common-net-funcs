@@ -25,6 +25,24 @@ public class UriHelpersTests
     }
 
     [Theory]
+    [InlineData(null, "")]
+    [InlineData(new int[0], "")]
+    [InlineData(new[] { 1 }, "param=1")]
+    [InlineData(new[] { 1, 2 }, "param=1&param=2")]
+    [InlineData(new[] { 1, 2, 3 }, "param=1&param=2&param=3")]
+    public void ListToQueryParameters_KeyValuePairOverload_ShouldHandleVariousInputs(IEnumerable<int>? values, string expected)
+    {
+        // Arrange
+        IEnumerable<KeyValuePair<string, int>>? parameters = values?.Select(v => new KeyValuePair<string, int>("param", v));
+
+        // Act
+        string result = parameters.ListToQueryParameters();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
     [InlineData("2025-06-22", null, "20250622000000")]
     [InlineData("2025-06-22", "yyyy-MM-dd", "2025-06-22")]
     [InlineData("2025-06-22", "MM/dd/yyyy", "06/22/2025")]

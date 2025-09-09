@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using static CommonNetFuncs.Core.Strings;
 using static System.Web.HttpUtility;
@@ -17,24 +18,54 @@ public static class UriHelpers
     /// <returns>String representation of the list passed in as query parameters with the name passed in as queryParameterName</returns>
     public static string ListToQueryParameters<T>(this IEnumerable<T>? parameters, string? queryParameterName)
     {
-        string queryString = string.Empty;
-        bool firstItem = true;
-        if (parameters?.Any() == true && !queryParameterName.IsNullOrWhiteSpace())
+        if (parameters?.Any() != true || queryParameterName.IsNullOrWhiteSpace())
         {
-            foreach (T parameter in parameters)
-            {
-                if (!firstItem)
-                {
-                    queryString += $"&{queryParameterName}={parameter}";
-                }
-                else
-                {
-                    queryString = $"{queryParameterName}={parameter}";
-                    firstItem = false;
-                }
-            }
+            return string.Empty;
         }
-        return queryString;
+
+        StringBuilder stringBuilder = new();
+        bool firstItem = true;
+        foreach (T parameter in parameters)
+        {
+            if (!firstItem)
+            {
+                stringBuilder.Append('&');
+            }
+            stringBuilder.Append(queryParameterName);
+            stringBuilder.Append('=');
+            stringBuilder.Append(parameter);
+            firstItem = false;
+        }
+        return stringBuilder.ToString();
+    }
+
+    /// <summary>
+    /// Converts list of query parameters into a query parameter string.
+    /// </summary>
+    /// <typeparam name="T">The type of the value in the KeyValuePair that can be converted to string.</typeparam>
+    /// <param name="parameters">Collection of key value pairs with a value that can be converted to string.</param>
+    /// <returns>String representation of the list passed in as query parameters with the name passed in as queryParameterName</returns>
+    public static string ListToQueryParameters<T>(this IEnumerable<KeyValuePair<string, T>>? parameters)
+    {
+        if (parameters?.Any() != true)
+        {
+            return string.Empty;
+        }
+
+        StringBuilder stringBuilder = new();
+        bool firstItem = true;
+        foreach (KeyValuePair<string, T> parameter in parameters)
+        {
+            if (!firstItem)
+            {
+                stringBuilder.Append('&');
+            }
+            stringBuilder.Append(parameter.Key);
+            stringBuilder.Append('=');
+            stringBuilder.Append(parameter.Value);
+            firstItem = false;
+        }
+        return stringBuilder.ToString();
     }
 
     [return: NotNullIfNotNull(nameof(dateTime))]

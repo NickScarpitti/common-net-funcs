@@ -71,7 +71,7 @@ public class EndpointQueue : IDisposable
 
     private async Task ProcessTasksAsync(CancellationToken cancellationToken)
     {
-        await foreach (QueuedTask task in reader.ReadAllAsync(cancellationToken))
+        await foreach (QueuedTask task in reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 

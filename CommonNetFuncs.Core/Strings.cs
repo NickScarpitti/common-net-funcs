@@ -1,4 +1,4 @@
-﻿﻿using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -135,6 +135,29 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Clone of VBA Left() function that gets n characters from the left side of the string
+    /// </summary>
+    /// <param name="s">String to get left substring from</param>
+    /// <param name="numChars">Number of characters to take from the right side of the string</param>
+    /// <returns>String of the length indicated from the left side of the source string</returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static ReadOnlySpan<char> Left(this ReadOnlySpan<char> s, int numChars)
+    {
+        if (s.IsEmpty)
+        {
+            return string.Empty;
+        }
+        else if (numChars <= s.Length)
+        {
+            return s[..numChars];
+        }
+        else
+        {
+            return s;
+        }
+    }
+
+    /// <summary>
     /// Clone of VBA Right() function that gets n characters from the right side of the string
     /// </summary>
     /// <param name="s">String to extract right substring from</param>
@@ -162,6 +185,29 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Clone of VBA Right() function that gets n characters from the right side of the string
+    /// </summary>
+    /// <param name="s">String to extract right substring from</param>
+    /// <param name="numChars">Number of characters to take from the right side of the string</param>
+    /// <returns>String of the length indicated from the right side of the source string</returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static ReadOnlySpan<char> Right(this ReadOnlySpan<char> s, int numChars)
+    {
+        if (s.IsEmpty)
+        {
+            return string.Empty;
+        }
+        else if (numChars <= s.Length)
+        {
+            return s[^numChars..];
+        }
+        else
+        {
+            return s;
+        }
+    }
+
+    /// <summary>
     /// Extract the string between two string values
     /// </summary>
     /// <param name="s">String value to extract value from</param>
@@ -180,8 +226,33 @@ public static partial class Strings
             int length = sEndStartIndex - sStartEndIndex;//Length of the sub string by subtracting index beginning of word2 from the end of word1
             if (sStartStartIndex != -1 && sEndStartIndex != -1 && length > 0 && sStartEndIndex + length <= s.Length - 1)
             {
-                ReadOnlySpan<char> textToSlice = s.ToCharArray();
+                ReadOnlySpan<char> textToSlice = s.AsSpan();
                 result = textToSlice.Slice(sStartEndIndex, length).ToString();//Get the substring based on the end of word1 and length
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Extract the string between two string values
+    /// </summary>
+    /// <param name="s">String value to extract value from</param>
+    /// <param name="sStart">Text that ends immediately before the end of the string you wish to extract</param>
+    /// <param name="sEnd">Text that starts immediately after the end of the string you wish to extract</param>
+    /// <returns>Extracted string found between the two given string values</returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static ReadOnlySpan<char> ExtractBetween(this ReadOnlySpan<char> s, string sStart, string sEnd)
+    {
+        string? result = string.Empty;
+        if (!s.IsEmpty)
+        {
+            int sStartStartIndex = s.IndexOf(sStart);//Find the beginning index of the word1
+            int sStartEndIndex = sStartStartIndex + sStart.Length;//Add the length of the word1 to starting index to find the end of the word1
+            int sEndStartIndex = s.LastIndexOf(sEnd);//Find the beginning index of word2
+            int length = sEndStartIndex - sStartEndIndex;//Length of the sub string by subtracting index beginning of word2 from the end of word1
+            if (sStartStartIndex != -1 && sEndStartIndex != -1 && length > 0 && sStartEndIndex + length <= s.Length - 1)
+            {
+                result = s.Slice(sStartEndIndex, length).ToString();//Get the substring based on the end of word1 and length
             }
         }
         return result;
@@ -205,7 +276,56 @@ public static partial class Strings
     [return: NotNullIfNotNull(nameof(s))]
     public static string? ParsePascalCase(this string? s)
     {
-        return !s.IsNullOrWhiteSpace() ? string.Concat(s.Select(x => char.IsUpper(x) ? $" {x}" : x.ToString())).TrimStart(' ') : s;
+        if (s.IsNullOrWhiteSpace())
+        {
+            return s;
+        }
+
+        StringBuilder result = new(s.Length + 10); // Pre-allocate with buffer
+        bool first = true;
+
+        foreach (char c in s.AsSpan())
+        {
+            if (char.IsUpper(c) && !first)
+            {
+                result.Append(' ');
+            }
+
+            result.Append(c);
+            first = false;
+        }
+
+        return result.ToString();
+    }
+
+    /// <summary>
+    /// Parses a string that is using pascal casing (works with camel case as well) so that each word is separated by a space
+    /// </summary>
+    /// <param name="s">String to parse</param>
+    /// <returns>Original string with spaces between all words starting with a capital letter</returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static ReadOnlySpan<char> ParsePascalCase(this ReadOnlySpan<char> s)
+    {
+        if (s.IsEmpty)
+        {
+            return s;
+        }
+
+        StringBuilder result = new(s.Length + 10); // Pre-allocate with buffer
+        bool first = true;
+
+        foreach (char c in s)
+        {
+            if (char.IsUpper(c) && !first)
+            {
+                result.Append(' ');
+            }
+
+            result.Append(c);
+            first = false;
+        }
+
+        return result.ToString();
     }
 
     /// <summary>
@@ -338,6 +458,17 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Checks if the given string contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+    public static bool ContainsInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
+    {
+        return !s.IsEmpty && s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) >= 0;
+    }
+
+    /// <summary>
     /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
     /// </summary>
     /// <param name="s">String to search</param>
@@ -346,6 +477,24 @@ public static partial class Strings
     public static bool ContainsInvariant(this IEnumerable<string?>? s, string? textToFind)
     {
         return s?.Contains(textToFind, StringComparer.InvariantCultureIgnoreCase) ?? false;
+    }
+
+    /// <summary>
+    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+    public static bool ContainsInvariant(this IEnumerable<ReadOnlySpan<char>> s, ReadOnlySpan<char> textToFind)
+    {
+        foreach (ReadOnlySpan<char> item in s)
+        {
+            if (item.ContainsInvariant(textToFind))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -392,6 +541,49 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Checks if the given string contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textsToFind">Strings to find in s</param>
+    /// <param name="useOrComparison">
+    /// <para>If <see langword="true"/>, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
+    /// </param>
+    /// <returns>
+    /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
+    /// False</para>
+    /// </returns>
+    public static bool ContainsInvariant(this ReadOnlySpan<char> s, IEnumerable<ReadOnlySpan<char>> textsToFind, bool useOrComparison = true)
+    {
+        if (s.IsEmpty)
+        {
+            return false;
+        }
+
+        if (useOrComparison)
+        {
+            foreach (ReadOnlySpan<char> textToFind in textsToFind)
+            {
+                if (s.ContainsInvariant(textToFind))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else
+        {
+            foreach (ReadOnlySpan<char> textToFind in textsToFind)
+            {
+                if (!s.ContainsInvariant(textToFind))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /// <summary>
     /// Checks if the given string begins with a specific string regardless of culture or case
     /// </summary>
     /// <param name="s">String to search</param>
@@ -400,6 +592,17 @@ public static partial class Strings
     public static bool StartsWithInvariant(this string? s, string? textToFind)
     {
         return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
+    }
+
+    /// <summary>
+    /// Checks if the given string begins with a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+    public static bool StartsWithInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
+    {
+        return !textToFind.IsEmpty && s.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase);
     }
 
     /// <summary>
@@ -414,6 +617,17 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Checks if the given string contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+    public static bool EndsWithInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
+    {
+        return !textToFind.IsEmpty && s.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase);
+    }
+
+    /// <summary>
     /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
     /// </summary>
     /// <param name="s">String to search</param>
@@ -425,6 +639,17 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="textToFind">String to find in s</param>
+    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+    public static int IndexOfInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
+    {
+        return !textToFind.IsEmpty ? s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) : 0;
+    }
+
+    /// <summary>
     /// Gets the index of a character in a string, ignoring culture and case
     /// </summary>
     /// <param name="s">String to search</param>
@@ -433,6 +658,17 @@ public static partial class Strings
     public static int IndexOfInvariant(this string? s, char? charToFind)
     {
         return charToFind != null ? s?.IndexOf((char)charToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
+    }
+
+    /// <summary>
+    /// Gets the index of a character in a string, ignoring culture and case
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="charToFind">Character to find in s</param>
+    /// <returns>The zero-based index of the first occurrence of charToFind, or -1 if not found</returns>
+    public static int IndexOfInvariant(this ReadOnlySpan<char> s, char? charToFind)
+    {
+        return charToFind != null ? s.IndexOf((char)charToFind) : 0;
     }
 
     /// <summary>
@@ -471,6 +707,50 @@ public static partial class Strings
             foreach (string textToFind in stringsToFind)
             {
                 if (!s.Contains(textToFind))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Checks if the given string contains at least one or all of the strings in a collection of strings, regardless of culture or case.
+    /// </summary>
+    /// <param name="s">String to search</param>
+    /// <param name="stringsToFind">Strings to find in s</param>
+    /// <param name="useOrComparison">
+    /// <para>If <see langword="true"/>, will check if any of the stringsToFind values are in s. (OR configuration)</para>
+    /// <para>If false, will check if all of the stringsToFind values are in s. (AND configuration)</para>
+    /// </param>
+    /// <returns>
+    /// <para>True if s contains any of the strings in stringsToFind in any form when useOrComparison = True</para>
+    /// <para>True if s contains all of the strings in stringsToFind when useOrComparison = False</para>
+    /// </returns>
+    public static bool Contains(this ReadOnlySpan<char> s, IEnumerable<ReadOnlySpan<char>> stringsToFind, bool useOrComparison = true, StringComparison stringComparison = StringComparison.Ordinal)
+    {
+        if (s.IsEmpty)
+        {
+            return false;
+        }
+
+        if (useOrComparison)
+        {
+            foreach (ReadOnlySpan<char> textToFind in stringsToFind)
+            {
+                if (s.Contains(textToFind, stringComparison))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else
+        {
+            foreach (ReadOnlySpan<char> textToFind in stringsToFind)
+            {
+                if (!s.Contains(textToFind, stringComparison))
                 {
                     return false;
                 }
@@ -583,6 +863,17 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
+    /// </summary>
+    /// <param name="testString">String to check if it only contains alphanumeric characters</param>
+    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+    /// <returns><see langword="true"/> if testString contains only letters and numbers and optionally spaces</returns>
+    public static bool IsAlphanumeric(this ReadOnlySpan<char> testString, bool allowSpaces = false)
+    {
+        return !testString.IsEmpty && (!allowSpaces ? AlphanumericRegex().IsMatch(testString) : AlphanumericWithSpacesRegex().IsMatch(testString));
+    }
+
+    /// <summary>
     /// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
     /// </summary>
     /// <param name="testString">String to check if it only contains alphabetical characters</param>
@@ -594,6 +885,17 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
+    /// </summary>
+    /// <param name="testString">String to check if it only contains alphabetical characters</param>
+    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+    /// <returns><see langword="true"/> if testString only contains letters and optionally spaces</returns>
+    public static bool IsAlphaOnly(this ReadOnlySpan<char> testString, bool allowSpaces = false)
+    {
+        return !testString.IsEmpty && (!allowSpaces ? AlphaOnlyRegex().IsMatch(testString) : AlphaOnlyWithSpacesRegex().IsMatch(testString));
+    }
+
+    /// <summary>
     /// Check string to see if a string only contains numbers (0-9). Null returns false.
     /// </summary>
     /// <param name="testString">String to check if it only contains numeric characters</param>
@@ -601,7 +903,18 @@ public static partial class Strings
     /// <returns><see langword="true"/> if testString only contains numbers and optionally spaces</returns>
     public static bool IsNumericOnly(this string? testString, bool allowSpaces = false)
     {
-        return testString != null && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
+        return !testString.IsNullOrWhiteSpace() && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
+    }
+
+    /// <summary>
+    /// Check string to see if a string only contains numbers (0-9). Null returns false.
+    /// </summary>
+    /// <param name="testString">String to check if it only contains numeric characters</param>
+    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+    /// <returns><see langword="true"/> if testString only contains numbers and optionally spaces</returns>
+    public static bool IsNumericOnly(this ReadOnlySpan<char> testString, bool allowSpaces = false)
+    {
+        return !testString.IsEmpty && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
     }
 
     /// <summary>
@@ -622,6 +935,23 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Gets string up until before the last instance of a character (exclusive)
+    /// </summary>
+    /// <param name="s">String to extract from</param>
+    /// <param name="charToFind">Character to find last instance of</param>
+    /// <returns>String up until the last instance of charToFind (exclusive)</returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static ReadOnlySpan<char> ExtractToLastInstance(this ReadOnlySpan<char> s, char charToFind)
+    {
+        if (s.IsEmpty)
+        {
+            return ReadOnlySpan<char>.Empty;
+        }
+        int lastIndex = s.LastIndexOf(charToFind);
+        return lastIndex != -1 ? s[..lastIndex] : s;
+    }
+
+    /// <summary>
     /// Gets string remaining after the last instance of a character (exclusive)
     /// </summary>
     /// <param name="s">String to extract from</param>
@@ -633,6 +963,23 @@ public static partial class Strings
         if (s == null)
         {
             return null;
+        }
+        int lastIndex = s.LastIndexOf(charToFind);
+        return lastIndex != -1 ? s[(lastIndex + 1)..] : s;
+    }
+
+    /// <summary>
+    /// Gets string remaining after the last instance of a character (exclusive)
+    /// </summary>
+    /// <param name="s">String to extract from</param>
+    /// <param name="charToFind">Character to find last instance of</param>
+    /// <returns>Remaining string after the last instance of charToFind (exclusive)</returns>
+    [return: NotNullIfNotNull(nameof(s))]
+    public static ReadOnlySpan<char> ExtractFromLastInstance(this ReadOnlySpan<char> s, char charToFind)
+    {
+        if (s.IsEmpty)
+        {
+            return ReadOnlySpan<char>.Empty;
         }
         int lastIndex = s.LastIndexOf(charToFind);
         return lastIndex != -1 ? s[(lastIndex + 1)..] : s;
@@ -1086,6 +1433,22 @@ public static partial class Strings
     /// </summary>
     /// <param name="values">Collection of strings to be converted to integers</param>
     /// <returns><see cref="List{T}"/> of integers where the strings could be parsed to integers and not null</returns>
+    public static IEnumerable<int> ToListInt(this IEnumerable<ReadOnlySpan<char>> values)
+    {
+        foreach (ReadOnlySpan<char> item in values)
+        {
+            if (int.TryParse(item, out int i))
+            {
+                yield return i;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Converts list of string representations of integers into list of integers
+    /// </summary>
+    /// <param name="values">Collection of strings to be converted to integers</param>
+    /// <returns><see cref="List{T}"/> of integers where the strings could be parsed to integers and not null</returns>
     public static List<int> ToListInt(this IList<string> values)
     {
         return values.Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value).ToList();
@@ -1102,6 +1465,16 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Used to reduce boilerplate code for parsing strings into nullable integers
+    /// </summary>
+    /// <param name="value">String value to be converted to nullable int</param>
+    /// <returns>Nullable int parsed from a string</returns>
+    public static int? ToNInt(this ReadOnlySpan<char> value)
+    {
+        return !value.IsEmpty && int.TryParse(value, out int i) ? i : null;
+    }
+
+    /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable doubles
     /// </summary>
     /// <param name="value">String value to be converted to nullable double</param>
@@ -1112,6 +1485,16 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Used to reduce boilerplate code for parsing strings into nullable doubles
+    /// </summary>
+    /// <param name="value">String value to be converted to nullable double</param>
+    /// <returns>Nullable double parsed from a string</returns>
+    public static double? ToNDouble(this ReadOnlySpan<char> value)
+    {
+        return !value.IsEmpty && double.TryParse(value, out double i) ? i : null;
+    }
+
+    /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable decimals
     /// </summary>
     /// <param name="value">String value to be converted to nullable decimal</param>
@@ -1119,6 +1502,16 @@ public static partial class Strings
     public static decimal? ToNDecimal(this string? value)
     {
         return !string.IsNullOrWhiteSpace(value) && decimal.TryParse(value, out decimal i) ? i : null;
+    }
+
+    /// <summary>
+    /// Used to reduce boilerplate code for parsing strings into nullable decimals
+    /// </summary>
+    /// <param name="value">String value to be converted to nullable decimal</param>
+    /// <returns>Nullable decimal parsed from a string</returns>
+    public static decimal? ToNDecimal(this ReadOnlySpan<char> value)
+    {
+        return !value.IsEmpty && decimal.TryParse(value, out decimal i) ? i : null;
     }
 
     /// <summary>
@@ -1141,11 +1534,49 @@ public static partial class Strings
     }
 
     /// <summary>
+    /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
+    /// </summary>
+    /// <param name="value">String to parse into a DateTime</param>
+    /// <returns>Nullable DateTime parsed from a string</returns>
+    public static DateTime? ToNDateTime(this ReadOnlySpan<char> value)
+    {
+        DateTime? dtn = null;
+        if (DateTime.TryParse(value, out DateTime dt))
+        {
+            dtn = dt;
+        }
+        else if (double.TryParse(value, out double dbl))
+        {
+            dtn = DateTime.FromOADate(dbl);
+        }
+        return dtn;
+    }
+
+    /// <summary>
     /// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
     /// </summary>
     /// <param name="value">String to parse into a DateOnly</param>
     /// <returns>Nullable DateOnly parsed from a string</returns>
     public static DateOnly? ToNDateOnly(this string? value)
+    {
+        DateOnly? dtn = null;
+        if (DateOnly.TryParse(value, out DateOnly dt))
+        {
+            dtn = dt;
+        }
+        else if (double.TryParse(value, out double dbl))
+        {
+            dtn = DateOnly.FromDateTime(DateTime.FromOADate(dbl));
+        }
+        return dtn;
+    }
+
+    /// <summary>
+    /// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
+    /// </summary>
+    /// <param name="value">String to parse into a DateOnly</param>
+    /// <returns>Nullable DateOnly parsed from a string</returns>
+    public static DateOnly? ToNDateOnly(this ReadOnlySpan<char> value)
     {
         DateOnly? dtn = null;
         if (DateOnly.TryParse(value, out DateOnly dt))
@@ -1419,6 +1850,19 @@ public static partial class Strings
     public static string? FormatDateString(this string? dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
     {
         return dateString == null ? null : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? "MM/dd/yyyy" : outputFormat);
+    }
+
+    /// <summary>
+    /// Take any format of a date time string and convert it to a different format
+    /// </summary>
+    /// <param name="dateString">Input date string to be converted</param>
+    /// <param name="sourceFormat">Format of dateString string</param>
+    /// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
+    /// <returns>Date formatted as a string following the output format</returns>
+    [return: NotNullIfNotNull(nameof(dateString))]
+    public static ReadOnlySpan<char> FormatDateString(this ReadOnlySpan<char> dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
+    {
+        return dateString.IsEmpty ? ReadOnlySpan<char>.Empty : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? "MM/dd/yyyy" : outputFormat);
     }
 
     /// <summary>
@@ -2107,6 +2551,28 @@ public static partial class Strings
     /// <param name="input">The input string to process.</param>
     /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
     [return: NotNullIfNotNull(nameof(input))]
+    public static ReadOnlySpan<char> RemoveLeadingNonAlphanumeric(this ReadOnlySpan<char> input)
+    {
+        if (input.IsEmpty)
+        {
+            return input;
+        }
+
+        int index = 0;
+        while (index < input.Length && !char.IsLetterOrDigit(input[index]))
+        {
+            index++;
+        }
+
+        return input[index..];
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
     public static string? RemoveTrailingNonAlphanumeric(this string? input)
     {
         if (input.IsNullOrWhiteSpace())
@@ -2117,6 +2583,28 @@ public static partial class Strings
         ReadOnlySpan<char> span = input.AsSpan();
         int index = span.Length - 1;
         while (index > 0 && !char.IsLetterOrDigit(span[index]))
+        {
+            index--;
+        }
+
+        return input[..(index + 1)];
+    }
+
+    /// <summary>
+    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+    /// </summary>
+    /// <param name="input">The input string to process.</param>
+    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+    [return: NotNullIfNotNull(nameof(input))]
+    public static ReadOnlySpan<char> RemoveTrailingNonAlphanumeric(this ReadOnlySpan<char> input)
+    {
+        if (input.IsEmpty)
+        {
+            return input;
+        }
+
+        int index = input.Length - 1;
+        while (index > 0 && !char.IsLetterOrDigit(input[index]))
         {
             index--;
         }

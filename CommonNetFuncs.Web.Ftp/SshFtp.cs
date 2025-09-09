@@ -1,4 +1,4 @@
-﻿﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Renci.SshNet;
@@ -168,7 +168,7 @@ public static class SshFtp
             }
 
             cancellationTokenSource ??= new();
-            await foreach (ISftpFile sftpFile in sftpClient.ListDirectoryAsync(path, cancellationTokenSource.Token))
+            await foreach (ISftpFile sftpFile in sftpClient.ListDirectoryAsync(path, cancellationTokenSource.Token).ConfigureAwait(false))
             {
                 if (cancellationTokenSource.Token.IsCancellationRequested)
                 {
@@ -234,7 +234,7 @@ public static class SshFtp
             }
 
             await using SftpFileStream stream = await sftpClient.OpenAsync(remoteFilePath, FileMode.Open, FileAccess.Read, cancellationToken).ConfigureAwait(false);
-            await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken))
+            await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken).ConfigureAwait(false))
             {
                 yield return item;
             }
@@ -267,7 +267,7 @@ public static class SshFtp
             }
 
             await using SftpFileStream stream = await sftpClient.OpenAsync(remoteFilePath, FileMode.Open, FileAccess.Read, cancellationToken).ConfigureAwait(false);
-            await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken))
+            await foreach (T item in ReadCsvAsyncEnumerable<T>(stream, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken).ConfigureAwait(false))
             {
                 yield return item;
             }

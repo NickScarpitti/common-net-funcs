@@ -440,6 +440,106 @@ public static class Collections
     }
 
     /// <summary>
+    /// Clears the <see cref="List{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+    /// </summary>
+    /// <param name="list">The list to run the Clear and TrimExcess actions on.</param>
+    /// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+    public static void ClearTrim<T>(this List<T>? list, bool forceGc = false)
+    {
+        if (list == null)
+        {
+            return;
+        }
+        list.Clear();
+        list.TrimExcess();
+
+        if (forceGc)
+        {
+            GC.Collect();
+        }
+    }
+
+    /// <summary>
+    /// Clears the <see cref="Dictionary{TKey, TValue}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+    /// </summary>
+    /// <param name="dict">The dictionary to run the Clear and TrimExcess actions on.</param>
+    /// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+    public static void ClearTrim<T, UT>(this Dictionary<T, UT>? dict, bool forceGc = false) where T : notnull
+    {
+        if (dict == null)
+        {
+            return;
+        }
+        dict.Clear();
+        dict.TrimExcess();
+
+        if (forceGc)
+        {
+            GC.Collect();
+        }
+    }
+
+    /// <summary>
+    /// Clears the <see cref="HashSet{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+    /// </summary>
+    /// <param name="hashSet">The hashSet to run the Clear and TrimExcess actions on.</param>
+    /// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+    public static void ClearTrim<T>(this HashSet<T>? hashSet, bool forceGc = false)
+    {
+        if (hashSet == null)
+        {
+            return;
+        }
+        hashSet.Clear();
+        hashSet.TrimExcess();
+
+        if (forceGc)
+        {
+            GC.Collect();
+        }
+    }
+
+    /// <summary>
+    /// Clears the <see cref="Stack{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+    /// </summary>
+    /// <param name="stack">The stack to run the Clear and TrimExcess actions on.</param>
+    /// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+    public static void ClearTrim<T>(this Stack<T>? stack, bool forceGc = false)
+    {
+        if (stack == null)
+        {
+            return;
+        }
+        stack.Clear();
+        stack.TrimExcess();
+
+        if (forceGc)
+        {
+            GC.Collect();
+        }
+    }
+
+    /// <summary>
+    /// Clears the <see cref="Queue{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+    /// </summary>
+    /// <param name="queue">The queue to run the Clear and TrimExcess actions on.</param>
+    /// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+    public static void ClearTrim<T>(this Queue<T>? queue, bool forceGc = false)
+    {
+        if (queue == null)
+        {
+            return;
+        }
+        queue.Clear();
+        queue.TrimExcess();
+
+        if (forceGc)
+        {
+            GC.Collect();
+        }
+    }
+
+    /// <summary>
     /// Convert <see cref="DataTable"/> to equivalent <see cref="List{T}"/> of specified <see langword="class"/>.
     /// </summary>
     /// <typeparam name="T">Class to use in table conversion.</typeparam>

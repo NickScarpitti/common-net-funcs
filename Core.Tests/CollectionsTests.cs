@@ -1,4 +1,4 @@
-﻿﻿using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Linq.Expressions;
 using CommonNetFuncs.Core;
@@ -1164,158 +1164,155 @@ public sealed class CollectionsTests
         result[0].Name.ShouldBe("test1,test2");
     }
 
-    public sealed class ArrayTraverseTests
+    [Fact]
+    public void Constructor_ShouldInitializePositionAndMaxLengths_For1DArray()
     {
-        [Fact]
-        public void Constructor_ShouldInitializePositionAndMaxLengths_For1DArray()
+        // Arrange
+        int[] array = new int[5];
+
+        // Act
+        ArrayTraverse traverse = new(array);
+
+        // Assert
+        traverse.Position.ShouldNotBeNull();
+        traverse.Position.Length.ShouldBe(1);
+        traverse.Position[0].ShouldBe(0);
+    }
+
+    [Fact]
+    public void Constructor_ShouldInitializePositionAndMaxLengths_For2DArray()
+    {
+        // Arrange
+        int[,] array = new int[3, 4];
+
+        // Act
+        ArrayTraverse traverse = new(array);
+
+        // Assert
+        traverse.Position.ShouldNotBeNull();
+        traverse.Position.Length.ShouldBe(2);
+        traverse.Position[0].ShouldBe(0);
+        traverse.Position[1].ShouldBe(0);
+    }
+
+    [Fact]
+    public void Step_ShouldIterateAllPositions_For1DArray()
+    {
+        // Arrange
+        const int length = 4;
+        int[] array = new int[length];
+        ArrayTraverse traverse = new(array);
+        int[][] expectedPositions = new int[length][];
+        for (int i = 0; i < length; i++)
         {
-            // Arrange
-            int[] array = new int[5];
-
-            // Act
-            ArrayTraverse traverse = new(array);
-
-            // Assert
-            traverse.Position.ShouldNotBeNull();
-            traverse.Position.Length.ShouldBe(1);
-            traverse.Position[0].ShouldBe(0);
+            expectedPositions[i] = new[] { i };
         }
 
-        [Fact]
-        public void Constructor_ShouldInitializePositionAndMaxLengths_For2DArray()
+        // Act & Assert
+        int stepCount = 0;
+        do
         {
-            // Arrange
-            int[,] array = new int[3, 4];
+            traverse.Position[0].ShouldBe(expectedPositions[stepCount][0]);
+            stepCount++;
+        } while (traverse.Step());
 
-            // Act
-            ArrayTraverse traverse = new(array);
+        // After last step, should have iterated all positions
+        stepCount.ShouldBe(length);
+    }
 
-            // Assert
-            traverse.Position.ShouldNotBeNull();
-            traverse.Position.Length.ShouldBe(2);
-            traverse.Position[0].ShouldBe(0);
-            traverse.Position[1].ShouldBe(0);
-        }
+    [Fact]
+    public void Step_ShouldIterateAllPositions_For2DArray()
+    {
+        // Arrange
+        const int dim0 = 2, dim1 = 3;
+        int[,] array = new int[dim0, dim1];
+        ArrayTraverse traverse = new(array);
+        const int total = dim0 * dim1;
+        int count = 0;
+        int[,] visited = new int[dim0, dim1];
 
-        [Fact]
-        public void Step_ShouldIterateAllPositions_For1DArray()
+        // Act
+        do
         {
-            // Arrange
-            const int length = 4;
-            int[] array = new int[length];
-            ArrayTraverse traverse = new(array);
-            int[][] expectedPositions = new int[length][];
-            for (int i = 0; i < length; i++)
+            int i = traverse.Position[0];
+            int j = traverse.Position[1];
+            visited[i, j]++;
+            count++;
+        } while (traverse.Step());
+
+        // Assert
+        count.ShouldBe(total);
+        for (int i = 0; i < dim0; i++)
+        {
+            for (int j = 0; j < dim1; j++)
             {
-                expectedPositions[i] = new[] { i };
+                visited[i, j].ShouldBe(1);
             }
-
-            // Act & Assert
-            int stepCount = 0;
-            do
-            {
-                traverse.Position[0].ShouldBe(expectedPositions[stepCount][0]);
-                stepCount++;
-            } while (traverse.Step());
-
-            // After last step, should have iterated all positions
-            stepCount.ShouldBe(length);
         }
+    }
 
-        [Fact]
-        public void Step_ShouldIterateAllPositions_For2DArray()
+    [Fact]
+    public void Step_ShouldIterateAllPositions_For3DArray()
+    {
+        // Arrange
+        const int d0 = 2, d1 = 2, d2 = 2;
+        int[,,] array = new int[d0, d1, d2];
+        ArrayTraverse traverse = new(array);
+        const int total = d0 * d1 * d2;
+        int count = 0;
+        int[,,] visited = new int[d0, d1, d2];
+
+        // Act
+        do
         {
-            // Arrange
-            const int dim0 = 2, dim1 = 3;
-            int[,] array = new int[dim0, dim1];
-            ArrayTraverse traverse = new(array);
-            const int total = dim0 * dim1;
-            int count = 0;
-            int[,] visited = new int[dim0, dim1];
+            int i = traverse.Position[0];
+            int j = traverse.Position[1];
+            int k = traverse.Position[2];
+            visited[i, j, k]++;
+            count++;
+        } while (traverse.Step());
 
-            // Act
-            do
+        // Assert
+        count.ShouldBe(total);
+        for (int i = 0; i < d0; i++)
+        {
+            for (int j = 0; j < d1; j++)
             {
-                int i = traverse.Position[0];
-                int j = traverse.Position[1];
-                visited[i, j]++;
-                count++;
-            } while (traverse.Step());
-
-            // Assert
-            count.ShouldBe(total);
-            for (int i = 0; i < dim0; i++)
-            {
-                for (int j = 0; j < dim1; j++)
+                for (int k = 0; k < d2; k++)
                 {
-                    visited[i, j].ShouldBe(1);
+                    visited[i, j, k].ShouldBe(1);
                 }
             }
         }
+    }
 
-        [Fact]
-        public void Step_ShouldIterateAllPositions_For3DArray()
-        {
-            // Arrange
-            const int d0 = 2, d1 = 2, d2 = 2;
-            int[,,] array = new int[d0, d1, d2];
-            ArrayTraverse traverse = new(array);
-            const int total = d0 * d1 * d2;
-            int count = 0;
-            int[,,] visited = new int[d0, d1, d2];
+    [Fact]
+    public void Step_ShouldReturnFalse_WhenArrayIsEmpty()
+    {
+        // Arrange
+        int[] array = Array.Empty<int>();
+        ArrayTraverse traverse = new(array);
 
-            // Act
-            do
-            {
-                int i = traverse.Position[0];
-                int j = traverse.Position[1];
-                int k = traverse.Position[2];
-                visited[i, j, k]++;
-                count++;
-            } while (traverse.Step());
+        // Act
+        bool result = traverse.Step();
 
-            // Assert
-            count.ShouldBe(total);
-            for (int i = 0; i < d0; i++)
-            {
-                for (int j = 0; j < d1; j++)
-                {
-                    for (int k = 0; k < d2; k++)
-                    {
-                        visited[i, j, k].ShouldBe(1);
-                    }
-                }
-            }
-        }
+        // Assert
+        result.ShouldBeFalse();
+    }
 
-        [Fact]
-        public void Step_ShouldReturnFalse_WhenArrayIsEmpty()
-        {
-            // Arrange
-            int[] array = Array.Empty<int>();
-            ArrayTraverse traverse = new(array);
+    [Fact]
+    public void Step_ShouldReturnFalse_WhenAtEndOfArray()
+    {
+        // Arrange
+        int[] array = new int[2];
+        ArrayTraverse traverse = new(array);
 
-            // Act
-            bool result = traverse.Step();
+        // Act
+        traverse.Step(); // Move to index 1
+        bool result = traverse.Step(); // Should be at end
 
-            // Assert
-            result.ShouldBeFalse();
-        }
-
-        [Fact]
-        public void Step_ShouldReturnFalse_WhenAtEndOfArray()
-        {
-            // Arrange
-            int[] array = new int[2];
-            ArrayTraverse traverse = new(array);
-
-            // Act
-            traverse.Step(); // Move to index 1
-            bool result = traverse.Step(); // Should be at end
-
-            // Assert
-            result.ShouldBeFalse();
-        }
+        // Assert
+        result.ShouldBeFalse();
     }
 
     [Fact]
@@ -2362,4 +2359,139 @@ public sealed class CollectionsTests
     }
 
     #endregion
+
+    [Fact]
+    public void ClearTrim_List_Null_DoesNothing()
+    {
+        List<int>? list = null;
+        Should.NotThrow(() => list.ClearTrim());
+        Should.NotThrow(() => list.ClearTrim(forceGc: true));
+    }
+
+    [Fact]
+    public void ClearTrim_List_ClearsAndTrims()
+    {
+        List<int> list = new() { 1, 2, 3, 4 };
+        int oldCapacity = list.Capacity;
+
+        list.ClearTrim();
+
+        list.Count.ShouldBe(0);
+        list.Capacity.ShouldBeLessThanOrEqualTo(oldCapacity);
+    }
+
+    [Fact]
+    public void ClearTrim_List_ClearsAndTrims_WithForceGc()
+    {
+        List<int> list = new() { 1, 2, 3, 4 };
+        int oldCapacity = list.Capacity;
+
+        Should.NotThrow(() => list.ClearTrim(forceGc: true));
+        list.Count.ShouldBe(0);
+        list.Capacity.ShouldBeLessThanOrEqualTo(oldCapacity);
+    }
+
+    [Fact]
+    public void ClearTrim_Dictionary_Null_DoesNothing()
+    {
+        Dictionary<int, string>? dict = null;
+        Should.NotThrow(() => dict.ClearTrim());
+        Should.NotThrow(() => dict.ClearTrim(forceGc: true));
+    }
+
+    [Fact]
+    public void ClearTrim_Dictionary_ClearsAndTrims()
+    {
+        Dictionary<int, string> dict = new() { [1] = "a", [2] = "b" };
+        dict.ClearTrim();
+        dict.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearTrim_Dictionary_ClearsAndTrims_WithForceGc()
+    {
+        Dictionary<int, string> dict = new() { [1] = "a", [2] = "b" };
+        Should.NotThrow(() => dict.ClearTrim(forceGc: true));
+        dict.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearTrim_HashSet_Null_DoesNothing()
+    {
+        HashSet<int>? set = null;
+        Should.NotThrow(() => set.ClearTrim());
+        Should.NotThrow(() => set.ClearTrim(forceGc: true));
+    }
+
+    [Fact]
+    public void ClearTrim_HashSet_ClearsAndTrims()
+    {
+        HashSet<int> set = new() { 1, 2, 3 };
+        set.ClearTrim();
+        set.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearTrim_HashSet_ClearsAndTrims_WithForceGc()
+    {
+        HashSet<int> set = new() { 1, 2, 3 };
+        Should.NotThrow(() => set.ClearTrim(forceGc: true));
+        set.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearTrim_Stack_Null_DoesNothing()
+    {
+        Stack<int>? stack = null;
+        Should.NotThrow(() => stack.ClearTrim());
+        Should.NotThrow(() => stack.ClearTrim(forceGc: true));
+    }
+
+    [Fact]
+    public void ClearTrim_Stack_ClearsAndTrims()
+    {
+        Stack<int> stack = new();
+        stack.Push(1);
+        stack.Push(2);
+        stack.ClearTrim();
+        stack.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearTrim_Stack_ClearsAndTrims_WithForceGc()
+    {
+        Stack<int> stack = new();
+        stack.Push(1);
+        stack.Push(2);
+        Should.NotThrow(() => stack.ClearTrim(forceGc: true));
+        stack.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearTrim_Queue_Null_DoesNothing()
+    {
+        Queue<int>? queue = null;
+        Should.NotThrow(() => queue.ClearTrim());
+        Should.NotThrow(() => queue.ClearTrim(forceGc: true));
+    }
+
+    [Fact]
+    public void ClearTrim_Queue_ClearsAndTrims()
+    {
+        Queue<int> queue = new();
+        queue.Enqueue(1);
+        queue.Enqueue(2);
+        queue.ClearTrim();
+        queue.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearTrim_Queue_ClearsAndTrims_WithForceGc()
+    {
+        Queue<int> queue = new();
+        queue.Enqueue(1);
+        queue.Enqueue(2);
+        Should.NotThrow(() => queue.ClearTrim(forceGc: true));
+        queue.Count.ShouldBe(0);
+    }
 }

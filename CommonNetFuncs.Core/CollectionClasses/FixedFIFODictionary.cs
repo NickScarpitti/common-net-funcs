@@ -184,6 +184,19 @@ public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
         }
     }
 
+    public void TrimExcess()
+    {
+        readWriteLock.EnterWriteLock();
+        try
+        {
+            dictionary.TrimExcess();
+        }
+        finally
+        {
+            readWriteLock.ExitWriteLock();
+        }
+    }
+
     /// <inheritdoc />
     public void Add(TKey key, TValue? value)
     {

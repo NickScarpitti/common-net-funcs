@@ -83,6 +83,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
         try
         {
             LimitedCache.Clear();
+            LimitedCache.TrimExcess();
         }
         finally
         {
@@ -309,6 +310,7 @@ public sealed class CacheManagerFIFO<TKey, TValue>(int limitedCacheSize = 100, b
         try
         {
             LimitedCache.Clear();
+            LimitedCache.TrimExcess();
         }
         finally
         {

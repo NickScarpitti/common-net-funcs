@@ -50,10 +50,6 @@ jobs:
 
       - name: Update Font Cache
         run: fc-cache -f
-      #- name: Add LibreOffice
-      #  run: apt-get install libreoffice -y
-      #- name: Get Libre Office Version
-      #  run: soffice --version
 
       - name: Restore dependencies
         run: dotnet restore

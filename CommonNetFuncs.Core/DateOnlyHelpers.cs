@@ -1,4 +1,4 @@
-﻿﻿namespace CommonNetFuncs.Core;
+﻿namespace CommonNetFuncs.Core;
 
 /// <summary>
 /// Helpers for dealing with DateOnlys
@@ -122,8 +122,8 @@ public static class DateOnlyHelpers
     /// Gets today's date
     /// </summary>
     /// <returns>Date only value for today's date</returns>
-    public static DateOnly GetToday()
+    public static DateOnly GetToday(bool useUtc = false)
     {
-        return DateOnly.FromDateTime(DateTime.Today);
+        return !useUtc ? DateOnly.FromDateTime(DateTime.Today) : DateOnly.FromDateTime(DateTime.UtcNow);
     }
 }

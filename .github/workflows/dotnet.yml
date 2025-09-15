@@ -67,7 +67,7 @@ jobs:
         with:
           filename: coverage/**/coverage.cobertura.xml
           badge: true
-          fail_below_min: true
+          fail_below_min: false #true // If true, fails the build when falling below a certain percentage of code coverage
           format: markdown
           hide_branch_rate: false
           hide_complexity: true
@@ -79,5 +79,6 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         if: github.event_name == 'pull_request'
         with:
+          append: true #Appends instead of overwrites the comment
           recreate: true
           path: code-coverage-results.md

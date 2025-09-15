@@ -1,5 +1,8 @@
 # CommonNetFuncs.Sql.Common
 
+[![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
+[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Sql.Common)](https://www.nuget.org/packages/CommonNetFuncs.Sql.Common/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Sql.Common)](https://www.nuget.org/packages/CommonNetFuncs.Sql.Common/)
 
 This project contains helper methods for executing SQL queries and commands.

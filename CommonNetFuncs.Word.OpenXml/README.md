@@ -1,5 +1,8 @@
 # CommonNetFuncs.Word.OpenXml
 
+[![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
+[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Word.OpenXml)](https://www.nuget.org/packages/CommonNetFuncs.Word.OpenXml/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Word.OpenXml)](https://www.nuget.org/packages/CommonNetFuncs.Word.OpenXml/)
 
 This lightweight project contains helper methods related to MS Word formatted documents (.doc & .docx).

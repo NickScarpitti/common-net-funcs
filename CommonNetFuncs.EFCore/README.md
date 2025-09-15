@@ -1,5 +1,8 @@
 # CommonNetFuncs.EFCore
 
+[![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
+[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.EFCore)](https://www.nuget.org/packages/CommonNetFuncs.EFCore/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.EFCore)](https://www.nuget.org/packages/CommonNetFuncs.EFCore/)
 
 This project contains helper methods for several common Entity Framework Core operations.

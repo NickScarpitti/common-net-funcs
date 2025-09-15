@@ -1,5 +1,8 @@
 # CommonNetFuncs.DeepClone
 
+[![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
+[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.DeepClone)](https://www.nuget.org/packages/CommonNetFuncs.DeepClone/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.DeepClone)](https://www.nuget.org/packages/CommonNetFuncs.DeepClone/)
 
 This project contains helper methods for deep cloning objects in .NET applications (i.e. creating a new instance of an object with the same values as an existing instance but without the same references in memory).

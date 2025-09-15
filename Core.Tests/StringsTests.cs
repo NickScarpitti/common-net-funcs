@@ -1,4 +1,4 @@
-﻿﻿using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
 
@@ -136,6 +136,35 @@ public sealed class StringsTests
     {
         // Act
         bool result = input.ContainsInvariant(searchTexts, useOrComparison);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("The quick brown fox", new[] { "quick", "fox" }, true, true)]
+    [InlineData("The quick brown fox", new[] { "quick", "missing" }, true, true)]
+    [InlineData("The quick brown fox", new[] { "quick", "fox" }, false, true)]
+    [InlineData("The quick brown fox", new[] { "quick", "missing" }, false, false)]
+    [InlineData("", new[] { "quick", "missing" }, false, false)]
+    public void SpanContainsInvariant_MultipleStrings_HandlesLogicalOperations(string input, string[] searchTexts, bool useOrComparison, bool expected)
+    {
+        // Act
+        bool result = input.AsSpan().ContainsInvariant(searchTexts, useOrComparison);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Hello WORLD", "world", true)]
+    [InlineData("Test", "no match", false)]
+    [InlineData(null, "test", false)]
+    [InlineData("test", null, false)]
+    public void ContainsInvariant_ChecksSpanContains(string? input, string? searchText, bool expected)
+    {
+        // Act
+        bool result = input.AsSpan().ContainsInvariant(searchText.AsSpan());
 
         // Assert
         result.ShouldBe(expected);
@@ -461,6 +490,21 @@ public sealed class StringsTests
         result.ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData("Hello World", "World", "Hello", true)]
+    [InlineData("Hello World", "missing", "value", false)]
+    public void SpanContainsInvariant_MultipleTexts(string input, string text1, string text2, bool expected)
+    {
+        // Arrange
+        string[] textsToFind = new[] { text1, text2 };
+
+        // Act
+        bool result = input.AsSpan().ContainsInvariant(textsToFind);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
     [Fact]
     public void GetHash_GeneratesCorrectHash()
     {
@@ -717,8 +761,8 @@ public sealed class StringsTests
     [InlineData("Hello", "l", 2)]
     [InlineData("Hello", "LO", 3)]
     [InlineData("Hello", "x", -1)]
-    [InlineData(null, "l", 0)]
-    [InlineData("Hello", null, 0)]
+    [InlineData(null, "l", -1)]
+    [InlineData("Hello", null, -1)]
     public void IndexOfInvariant_String_Works(string? s, string? textToFind, int expected)
     {
         // Act
@@ -731,7 +775,7 @@ public sealed class StringsTests
     [Theory]
     [InlineData("Hello", 'l', 2)]
     [InlineData("Hello", 'x', -1)]
-    [InlineData(null, 'l', 0)]
+    [InlineData(null, 'l', -1)]
     public void IndexOfInvariant_Char_Works(string? s, char? charToFind, int expected)
     {
         // Act
@@ -751,6 +795,21 @@ public sealed class StringsTests
     {
         // Act
         bool result = s.Contains(search, useOr);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("abc def", new[] { "abc", "def" }, true, true)]
+    [InlineData("abc def", new[] { "abc", "xyz" }, true, true)]
+    [InlineData("abc def", new[] { "abc", "xyz" }, false, false)]
+    [InlineData("abc def", new[] { "abc", "def" }, false, true)]
+    [InlineData(null, new[] { "abc" }, true, false)]
+    public void ContainsSpan_MultipleStrings_Works(string? s, string[] search, bool useOr, bool expected)
+    {
+        // Act
+        bool result = s.AsSpan().Contains(search, useOr);
 
         // Assert
         result.ShouldBe(expected);
@@ -961,6 +1020,12 @@ public sealed class StringsTests
         decimal? dec = 2.71m;
         bool? b = true;
         object? o = "test";
+        int? ni = null;
+        long? nl = null;
+        double? ndbl = null;
+        decimal? ndec = null;
+        bool? nb = null;
+        object? no = null;
 
         // Act & Assert
         dt.ToNString().ShouldBe(dt.ToString());
@@ -972,6 +1037,13 @@ public sealed class StringsTests
         dec.ToNString().ShouldBe("2.71");
         b.ToNString().ShouldBe("True");
         o.ToNString().ShouldBe("test");
+
+        ni.ToNString().ShouldBe(null);
+        nl.ToNString().ShouldBe(null);
+        ndbl.ToNString().ShouldBe(null);
+        ndec.ToNString().ShouldBe(null);
+        nb.ToNString().ShouldBe(null);
+        no.ToNString().ShouldBe(null);
         ((object?)null).ToNString().ShouldBeNull();
     }
 
@@ -1534,4 +1606,832 @@ public sealed class StringsTests
             cacheManager.SetUseLimitedCache(wasLimited);
         }
     }
+
+    #region ReadOnlySpan<char> Overloads
+
+    [Theory]
+    [InlineData("Hello", 3, "Hel")]
+    [InlineData("Test", 5, "Test")]
+    [InlineData("ABC", 0, "")]
+    [InlineData("", 1, "")]
+    public void Left_Span_ReturnsCorrectSubstring(string input, int numChars, string expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        ReadOnlySpan<char> result = span.Left(numChars);
+
+        // Assert
+        result.ToString().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Left_Span_Empty_ReturnsEmpty()
+    {
+        // Arrange
+        ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
+
+        // Act
+        ReadOnlySpan<char> result = span.Left(3);
+
+        // Assert
+        result.ToString().ShouldBe(string.Empty);
+    }
+
+    [Theory]
+    [InlineData("Hello", 3, "llo")]
+    [InlineData("Test", 5, "Test")]
+    [InlineData("ABC", 0, "")]
+    [InlineData("", 1, "")]
+    public void Right_Span_ReturnsCorrectSubstring(string input, int numChars, string expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        ReadOnlySpan<char> result = span.Right(numChars);
+
+        // Assert
+        result.ToString().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Right_Span_Empty_ReturnsEmpty()
+    {
+        // Arrange
+        ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
+
+        // Act
+        ReadOnlySpan<char> result = span.Right(3);
+
+        // Assert
+        result.ToString().ShouldBe(string.Empty);
+    }
+
+    [Theory]
+    [InlineData("Start[Middle]End", "[", "]", "Middle")]
+    [InlineData("NoDelimiters", "[", "]", "")]
+    [InlineData("", "[", "]", "")]
+    public void ExtractBetween_Span_ReturnsCorrectSubstring(string input, string start, string end, string expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        ReadOnlySpan<char> result = span.ExtractBetween(start, end);
+
+        // Assert
+        result.ToString().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ExtractBetween_Span_Empty_ReturnsEmpty()
+    {
+        // Arrange
+        ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
+
+        // Act
+        ReadOnlySpan<char> result = span.ExtractBetween("[", "]");
+
+        // Assert
+        result.ToString().ShouldBe(string.Empty);
+    }
+
+    [Theory]
+    [InlineData("PascalCaseTest", "Pascal Case Test")]
+    [InlineData("camelCase", "camel Case")]
+    [InlineData("ABC", "A B C")]
+    [InlineData("", "")]
+    public void ParsePascalCase_Span_CorrectlySeparatesWords(string input, string expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        ReadOnlySpan<char> result = span.ParsePascalCase();
+
+        // Assert
+        result.ToString().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ParsePascalCase_Span_Empty_ReturnsEmpty()
+    {
+        // Arrange
+        ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
+
+        // Act
+        ReadOnlySpan<char> result = span.ParsePascalCase();
+
+        // Assert
+        result.ToString().ShouldBe(string.Empty);
+    }
+
+    [Theory]
+    [InlineData("abc123", true)]
+    [InlineData("abc 123", true, true)]
+    [InlineData("abc@123", false)]
+    [InlineData("", false)]
+    public void IsAlphanumeric_Span_ValidatesInput(string input, bool expected, bool allowSpaces = false)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        bool result = span.IsAlphanumeric(allowSpaces);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("abcDEF", true)]
+    [InlineData("abc DEF", true, true)]
+    [InlineData("abc123", false)]
+    [InlineData("", false)]
+    public void IsAlphaOnly_Span_ValidatesInput(string input, bool expected, bool allowSpaces = false)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        bool result = span.IsAlphaOnly(allowSpaces);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("12345", false, true)]
+    [InlineData("123 45", false, false)]
+    [InlineData("123 45", true, true)]
+    [InlineData("abc", false, false)]
+    [InlineData("", false, false)]
+    public void IsNumericOnly_Span_Works(string input, bool allowSpaces, bool expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        bool result = span.IsNumericOnly(allowSpaces);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("abc.def.ghi", '.', "abc.def")]
+    [InlineData("abc", '.', "abc")]
+    [InlineData("", '.', "")]
+    public void ExtractToLastInstance_Span_Works(string input, char c, string expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        ReadOnlySpan<char> result = span.ExtractToLastInstance(c);
+
+        // Assert
+        result.ToString().ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("abc.def.ghi", '.', "ghi")]
+    [InlineData("abc", '.', "abc")]
+    [InlineData("", '.', "")]
+    public void ExtractFromLastInstance_Span_Works(string input, char c, string expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        ReadOnlySpan<char> result = span.ExtractFromLastInstance(c);
+
+        // Assert
+        result.ToString().ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("hello", 'l', 2, true)]
+    [InlineData("hello", 'l', 1, false)]
+    [InlineData("", 'x', 0, true)]
+    public void HasNoMoreThanNumberOfChars_Span_Works(string input, char charToFind, int max, bool expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        bool result = span.HasNoMoreThanNumberOfChars(charToFind, max);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("hello", 'l', 2, true)]
+    [InlineData("hello", 'l', 3, false)]
+    [InlineData("", 'x', 0, true)]
+    public void HasNoLessThanNumberOfChars_Span_Works(string input, char charToFind, int min, bool expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        bool result = span.HasNoLessThanNumberOfChars(charToFind, min);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Hello", "he", true)]
+    [InlineData("Hello", "LO", true)]
+    [InlineData("Hello", "x", false)]
+    [InlineData("", "he", false)]
+    public void ContainsInvariant_Span_Works(string input, string textToFind, bool expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+        ReadOnlySpan<char> find = textToFind;
+
+        // Act
+        bool result = span.ContainsInvariant(find);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Hello", "he", true)]
+    [InlineData("Hello", "He", true)]
+    [InlineData("Hello", "lo", false)]
+    [InlineData("", "he", false)]
+    public void StartsWithInvariant_Span_Works(string input, string textToFind, bool expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+        ReadOnlySpan<char> find = textToFind;
+
+        // Act
+        bool result = span.StartsWithInvariant(find);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Hello", "LO", true)]
+    [InlineData("Hello", "lo", true)]
+    [InlineData("Hello", "he", false)]
+    [InlineData("", "lo", false)]
+    public void EndsWithInvariant_Span_Works(string input, string textToFind, bool expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+        ReadOnlySpan<char> find = textToFind;
+
+        // Act
+        bool result = span.EndsWithInvariant(find);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Hello", "l", 2)]
+    [InlineData("Hello", "LO", 3)]
+    [InlineData("Hello", "x", -1)]
+    [InlineData("", "l", -1)]
+    public void IndexOfInvariant_Span_Works(string input, string textToFind, int expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+        ReadOnlySpan<char> find = textToFind;
+
+        // Act
+        int result = span.IndexOfInvariant(find);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Hello", 'l', 2)]
+    [InlineData("Hello", 'x', -1)]
+    [InlineData("", 'l', -1)]
+    public void IndexOfInvariant_Char_Span_Works(string input, char charToFind, int expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        int result = span.IndexOfInvariant(charToFind);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("hello", 'l', 2)]
+    [InlineData("test", 't', 2)]
+    [InlineData("", 'x', 0)]
+    public void CountChars_Span_Char_Works(string input, char charToFind, int expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        int result = span.CountChars(charToFind);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("hello", 'l', 2, true)]
+    [InlineData("hello", 'l', 1, false)]
+    [InlineData("", 'x', 0, true)]
+    public void HasNoMoreThanNumberOfChars_Span_Char_Works(string input, char charToFind, int max, bool expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        bool result = span.HasNoMoreThanNumberOfChars(charToFind, max);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("hello", 'l', 2, true)]
+    [InlineData("hello", 'l', 3, false)]
+    [InlineData("", 'x', 0, true)]
+    public void HasNoLessThanNumberOfChars_Span_Char_Works(string input, char charToFind, int min, bool expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        bool result = span.HasNoLessThanNumberOfChars(charToFind, min);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("20230101", "yyyyMMdd", "MM/dd/yyyy", "01/01/2023")]
+    [InlineData("2023-01-01", "yyyy-MM-dd", "yyyy.MM.dd", "2023.01.01")]
+    public void FormatDateString_Span_Works(string input, string sourceFormat, string outputFormat, string expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        ReadOnlySpan<char> result = span.FormatDateString(sourceFormat, outputFormat);
+
+        // Assert
+        result.ToString().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void FormatDateString_Span_Empty_ReturnsEmpty()
+    {
+        // Arrange
+        ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
+
+        // Act
+        ReadOnlySpan<char> result = span.FormatDateString("yyyyMMdd", "MM/dd/yyyy");
+
+        // Assert
+        result.ToString().ShouldBe(string.Empty);
+    }
+
+    [Theory]
+    [InlineData("123", 123)]
+    [InlineData("notanint", null)]
+    [InlineData("", null)]
+    public void ToNInt_Span_Works(string input, int? expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        int? result = span.ToNInt();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("3.14", 3.14)]
+    [InlineData("notanumber", null)]
+    [InlineData("", null)]
+    public void ToNDouble_Span_Works(string input, double? expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        double? result = span.ToNDouble();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("2.71", 2.71)]
+    [InlineData("notanumber", null)]
+    [InlineData("", null)]
+    public void ToNDecimal_Span_Works(string input, double? expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        decimal? result = span.ToNDecimal();
+
+        // Assert
+        result.ShouldBe((decimal?)expected);
+    }
+
+    [Theory]
+    [InlineData("2024-01-02", 2024, 1, 2)]
+    [InlineData("", null, null, null)]
+    public void ToNDateTime_Span_Works(string input, int? year, int? month, int? day)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        DateTime? result = span.ToNDateTime();
+
+        // Assert
+        if (year is null)
+        {
+            result.ShouldBeNull();
+        }
+        else
+        {
+            result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value));
+        }
+    }
+
+    [Theory]
+    [InlineData("2024-01-02", 2024, 1, 2)]
+    [InlineData("", null, null, null)]
+    public void ToNDateOnly_Span_Works(string input, int? year, int? month, int? day)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        DateOnly? result = span.ToNDateOnly();
+
+        // Assert
+        if (year is null)
+        {
+            result.ShouldBeNull();
+        }
+        else
+        {
+            result.ShouldBe(new DateOnly(year.Value, month!.Value, day!.Value));
+        }
+    }
+
+    [Theory]
+    [InlineData("!@#abc123", "abc123")]
+    [InlineData("---test", "test")]
+    [InlineData("abc123", "abc123")]
+    [InlineData("", "")]
+    public void RemoveLeadingNonAlphanumeric_Span_Works(string input, string expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        ReadOnlySpan<char> result = span.RemoveLeadingNonAlphanumeric();
+
+        // Assert
+        result.ToString().ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("abc123!@#", "abc123")]
+    [InlineData("test---", "test")]
+    [InlineData("abc123", "abc123")]
+    [InlineData("", "")]
+    public void RemoveTrailingNonAlphanumeric_Span_Works(string input, string expected)
+    {
+        // Arrange
+        ReadOnlySpan<char> span = input;
+
+        // Act
+        ReadOnlySpan<char> result = span.RemoveTrailingNonAlphanumeric();
+
+        // Assert
+        result.ToString().ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ContainsInvariant_IEnumerableString_NullCollection_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?>? collection = null;
+
+        // Act
+        bool result = collection.ContainsInvariant("test");
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SpanContainsInvariant_IEnumerableString_NullCollection_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?>? collection = null;
+
+        // Act
+        bool result = collection.ContainsInvariant("test".AsSpan());
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ContainsInvariant_IEnumerableString_EmptyCollection_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?> collection = [];
+
+        // Act
+        bool result = collection.ContainsInvariant("test");
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SpanContainsInvariant_IEnumerableString_EmptyCollection_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?> collection = [];
+
+        // Act
+        bool result = collection.ContainsInvariant("test".AsSpan());
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ContainsInvariant_IEnumerableString_ContainsExactMatch_ReturnsTrue()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", "banana", "cherry"];
+
+        // Act
+        bool result = collection.ContainsInvariant("banana");
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SpanContainsInvariant_IEnumerableString_ContainsExactMatch_ReturnsTrue()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", "banana", "cherry"];
+
+        // Act
+        bool result = collection.ContainsInvariant("banana".AsSpan());
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ContainsInvariant_IEnumerableString_ContainsCaseInsensitiveMatch_ReturnsTrue()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", "BANANA", "cherry"];
+
+        // Act
+        bool result = collection.ContainsInvariant("banana");
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SpanContainsInvariant_IEnumerableString_ContainsCaseInsensitiveMatch_ReturnsTrue()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", "BANANA", "cherry"];
+
+        // Act
+        bool result = collection.ContainsInvariant("banana");
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ContainsInvariant_IEnumerableString_DoesNotContain_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", "banana", "cherry"];
+
+        // Act
+        bool result = collection.ContainsInvariant("date");
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SpanContainsInvariant_IEnumerableString_DoesNotContain_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", "banana", "cherry"];
+
+        // Act
+        bool result = collection.ContainsInvariant("date".AsSpan());
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ContainsInvariant_IEnumerableString_ContainsNulls_ReturnsTrueIfMatchExists()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", null, "banana"];
+
+        // Act
+        bool result = collection.ContainsInvariant("banana");
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SpanContainsInvariant_IEnumerableString_ContainsNulls_ReturnsTrueIfMatchExists()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", null, "banana"];
+
+        // Act
+        bool result = collection.ContainsInvariant("banana".AsSpan());
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ContainsInvariant_IEnumerableString_ContainsNulls_ReturnsFalseIfNoMatch()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", null, "banana"];
+
+        // Act
+        bool result = collection.ContainsInvariant("date");
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SpanContainsInvariant_IEnumerableString_ContainsNulls_ReturnsFalseIfNoMatch()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", null, "banana"];
+
+        // Act
+        bool result = collection.ContainsInvariant("date".AsSpan());
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ContainsInvariant_IEnumerableString_SearchTextIsNull_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", "banana"];
+
+        // Act
+        bool result = collection.ContainsInvariant(null);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ContainsInvariantSpan_IEnumerableString_SearchSpanIsEmpty_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?> collection = ["apple", "banana"];
+
+        // Act
+        bool result = collection.ContainsInvariant(new Span<char>());
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ContainsInvariant_IEnumerableString_AllNulls_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?> collection = [null, null];
+
+        // Act
+        bool result = collection.ContainsInvariant("banana");
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ContainsInvariantSpan_IEnumerableString_AllNulls_ReturnsFalse()
+    {
+        // Arrange
+        IEnumerable<string?> collection = [null, null];
+
+        // Act
+        bool result = collection.ContainsInvariant("banana".AsSpan());
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    private class Nested
+    {
+        public string? Value { get; set; }
+    }
+
+    private class Container
+    {
+        public string? Name { get; set; }
+
+        public Nested? NestedObj { get; set; }
+    }
+
+    [Fact]
+    public void MakeObjectNullNull_Recursive_SetsNestedStringPropertyToNull()
+    {
+        Container obj = new()
+        {
+            Name = "null",
+            NestedObj = new Nested { Value = "null" }
+        };
+
+        // Act: recursive = true triggers the non-string property path
+        Container result = obj.MakeObjectNullNull(recursive: true);
+
+        result.ShouldNotBeNull();
+        result.Name.ShouldBeNull(); // Top-level string property
+        result.NestedObj.ShouldNotBeNull();
+        result.NestedObj!.Value.ShouldBeNull(); // Nested string property
+    }
+
+    [Fact]
+    public void MakeObjectNullNull_Recursive_DoesNotChangeNonNullNestedString()
+    {
+        Container obj = new()
+        {
+            Name = "null",
+            NestedObj = new Nested { Value = "not null" }
+        };
+
+        Container result = obj.MakeObjectNullNull(recursive: true);
+
+        result.ShouldNotBeNull();
+        result.Name.ShouldBeNull();
+        result.NestedObj.ShouldNotBeNull();
+        result.NestedObj!.Value.ShouldBe("not null");
+    }
+
+    [Fact]
+    public void MakeObjectNullNull_Recursive_NullNestedObject_DoesNotThrow()
+    {
+        Container obj = new()
+        {
+            Name = "null",
+            NestedObj = null
+        };
+
+        Container result = obj.MakeObjectNullNull(recursive: true);
+
+        result.ShouldNotBeNull();
+        result.Name.ShouldBeNull();
+        result.NestedObj.ShouldBeNull();
+    }
 }
+
+    #endregion
+
+

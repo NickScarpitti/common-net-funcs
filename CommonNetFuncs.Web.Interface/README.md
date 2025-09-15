@@ -1,5 +1,8 @@
 # CommonNetFuncs.Web.Interface
 
+[![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
+[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Web.Interface)](https://www.nuget.org/packages/CommonNetFuncs.Web.Interface/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Web.Interface)](https://www.nuget.org/packages/CommonNetFuncs.Web.Interface/)
 
 This lightweight project contains helper methods related to web interface functionality (specifically designed for MVC)

@@ -116,4 +116,11 @@ public sealed class DateOnlyHelpersTests
         DateOnly expected = DateOnly.FromDateTime(DateTime.Today);
         DateOnlyHelpers.GetToday().ShouldBe(expected);
     }
+
+    [Fact]
+    public void GetToday_UsingUtc_ReturnsTodaysDate()
+    {
+        DateOnly expected = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnlyHelpers.GetToday(true).ShouldBe(expected);
+    }
 }

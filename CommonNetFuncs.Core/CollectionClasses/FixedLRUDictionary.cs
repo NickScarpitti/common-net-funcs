@@ -218,6 +218,19 @@ public class FixedLRUDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
         }
     }
 
+    public void TrimExcess()
+    {
+        readWriteLock.EnterWriteLock();
+        try
+        {
+            dictionary.TrimExcess();
+        }
+        finally
+        {
+            readWriteLock.ExitWriteLock();
+        }
+    }
+
     /// <inheritdoc />
     public void Add(TKey key, TValue? value)
     {

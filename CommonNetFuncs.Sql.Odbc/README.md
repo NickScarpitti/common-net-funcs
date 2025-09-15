@@ -1,5 +1,8 @@
 # CommonNetFuncs.Sql.Odbc
 
+[![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
+[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Sql.Odbc)](https://www.nuget.org/packages/CommonNetFuncs.Sql.Odbc/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Sql.Odbc)](https://www.nuget.org/packages/CommonNetFuncs.Sql.Odbc/)
 
 This project contains helper methods for executing SQL queries and commands against an ODBC database.

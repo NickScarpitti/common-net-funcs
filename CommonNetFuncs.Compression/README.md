@@ -1,6 +1,10 @@
 # CommonNetFuncs.Compression
 
+[![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
+[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Compression)](https://www.nuget.org/packages/CommonNetFuncs.Compression/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Compression)](https://www.nuget.org/packages/CommonNetFuncs.Compression/)
+
 
 This project contains helper methods for compressing files into a zip file as well as compress and decompress streams.
 
@@ -100,7 +104,7 @@ Currently supported compression algorithms:
 <details>
 <summary><h3>Usage Examples</h3></summary>
 
-Compress and then decompress a stream. [CommonNetFuncs.Web.Requests]((https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Requests)) has a more practical implementation decompressing compressed API responses.
+Compress and then decompress a stream. [CommonNetFuncs.Web.Requests](<(https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Requests)>) has a more practical implementation decompressing compressed API responses.
 
 ```cs
 public async Task CompressAndDecompressFile()

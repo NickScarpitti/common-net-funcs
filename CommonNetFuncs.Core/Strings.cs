@@ -465,7 +465,7 @@ public static partial class Strings
     /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
     public static bool ContainsInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
     {
-        return !s.IsEmpty && s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) >= 0;
+        return !s.IsEmpty && !textToFind.IsEmpty && s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) >= 0;
     }
 
     /// <summary>
@@ -485,8 +485,13 @@ public static partial class Strings
     /// <param name="s">String to search</param>
     /// <param name="textToFind">String to find in s</param>
     /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
-    public static bool ContainsInvariant(this IEnumerable<ReadOnlySpan<char>> s, ReadOnlySpan<char> textToFind)
+    public static bool ContainsInvariant(this IEnumerable<string?>? s, ReadOnlySpan<char> textToFind)
     {
+        if (s == null || textToFind.IsEmpty)
+        {
+            return false;
+        }
+
         foreach (ReadOnlySpan<char> item in s)
         {
             if (item.ContainsInvariant(textToFind))
@@ -552,7 +557,7 @@ public static partial class Strings
     /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
     /// False</para>
     /// </returns>
-    public static bool ContainsInvariant(this ReadOnlySpan<char> s, IEnumerable<ReadOnlySpan<char>> textsToFind, bool useOrComparison = true)
+    public static bool ContainsInvariant(this ReadOnlySpan<char> s, IEnumerable<string> textsToFind, bool useOrComparison = true)
     {
         if (s.IsEmpty)
         {
@@ -617,58 +622,58 @@ public static partial class Strings
     }
 
     /// <summary>
-    /// Checks if the given string contains a specific string regardless of culture or case
+    /// Checks if the given <see cref="ReadOnlySpan{T}"/> contains a specific <see cref="ReadOnlySpan{T}"/> regardless of culture or case.
     /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+    /// <param name="s"><see cref="ReadOnlySpan{T}"/> to search.</param>
+    /// <param name="textToFind"><see cref="ReadOnlySpan{T}"/> to find in s.</param>
+    /// <returns><see langword="true"/> if <paramref name="s"/> contains <paramref name="textToFind"/> in any form, otherwise <see langword="false">.</returns>
     public static bool EndsWithInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
     {
         return !textToFind.IsEmpty && s.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase);
     }
 
     /// <summary>
-    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+    /// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
     /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+    /// <param name="s">String to search.</param>
+    /// <param name="textToFind">String to find in s.</param>
+    /// <returns>The zero-based index of first occurrence of <paramref name="textToFind"/> if <paramref name="s"/> contains <paramref name="textToFind"/> in any form or -1 if <paramref name="s"/> is <see langword="null"/> or <paramref name="textToFind"/> is not found.</returns>
     public static int IndexOfInvariant(this string? s, string? textToFind)
     {
-        return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
+        return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? -1 : -1;
     }
 
     /// <summary>
-    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+    /// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
     /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
-    public static int IndexOfInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
-    {
-        return !textToFind.IsEmpty ? s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) : 0;
-    }
-
-    /// <summary>
-    /// Gets the index of a character in a string, ignoring culture and case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="charToFind">Character to find in s</param>
-    /// <returns>The zero-based index of the first occurrence of charToFind, or -1 if not found</returns>
+    /// <param name="s">String to search.</param>
+    /// <param name="charToFind">Char to find in s.</param>
+    /// <returns>The zero-based index of first occurrence of <paramref name="charToFind"/> if <paramref name="s"/> contains <paramref name="charToFind"/> in any form or -1 if <paramref name="s"/> is <see langword="null"/> or <paramref name="textToFind"/> is not found.</returns>
     public static int IndexOfInvariant(this string? s, char? charToFind)
     {
-        return charToFind != null ? s?.IndexOf((char)charToFind, StringComparison.InvariantCultureIgnoreCase) ?? 0 : 0;
+        return charToFind != null ? s?.IndexOf((char)charToFind, StringComparison.InvariantCultureIgnoreCase) ?? -1 : -1;
     }
 
     /// <summary>
-    /// Gets the index of a character in a string, ignoring culture and case
+    /// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
     /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="charToFind">Character to find in s</param>
-    /// <returns>The zero-based index of the first occurrence of charToFind, or -1 if not found</returns>
+    /// <param name="s"><see cref="ReadOnlySpan{T}"/> to search.</param>
+    /// <param name="textToFind"><see cref="ReadOnlySpan{T}"/> to find in s.</param>
+    /// <returns>The zero-based index of first occurrence of <paramref name="textToFind"/> if <paramref name="s"/> contains <paramref name="textToFind"/> in any form or -1 if <paramref name="s"/> is empty or <paramref name="textToFind"/> is not found.</returns>
+    public static int IndexOfInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
+    {
+        return !textToFind.IsEmpty ? s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) : -1;
+    }
+
+    /// <summary>
+    /// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
+    /// </summary>
+    /// <param name="s">String to search.</param>
+    /// <param name="charToFind">Character to find in s.</param>
+    /// <returns>The zero-based index of first occurrence of <paramref name="charToFind"/> if <paramref name="s"/> contains <paramref name="charToFind"/> in any form or -1 if <paramref name="s"/> is empty or <paramref name="charToFind"/> is not found.</returns>
     public static int IndexOfInvariant(this ReadOnlySpan<char> s, char? charToFind)
     {
-        return charToFind != null ? s.IndexOf((char)charToFind) : 0;
+        return charToFind != null ? s.IndexOf((char)charToFind) : -1;
     }
 
     /// <summary>
@@ -728,7 +733,7 @@ public static partial class Strings
     /// <para>True if s contains any of the strings in stringsToFind in any form when useOrComparison = True</para>
     /// <para>True if s contains all of the strings in stringsToFind when useOrComparison = False</para>
     /// </returns>
-    public static bool Contains(this ReadOnlySpan<char> s, IEnumerable<ReadOnlySpan<char>> stringsToFind, bool useOrComparison = true, StringComparison stringComparison = StringComparison.Ordinal)
+    public static bool Contains(this ReadOnlySpan<char> s, IEnumerable<string> stringsToFind, bool useOrComparison = true, StringComparison stringComparison = StringComparison.Ordinal)
     {
         if (s.IsEmpty)
         {
@@ -1426,22 +1431,6 @@ public static partial class Strings
     public static IEnumerable<int> ToListInt(this IEnumerable<string> values)
     {
         return values.Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value);
-    }
-
-    /// <summary>
-    /// Converts list of string representations of integers into list of integers
-    /// </summary>
-    /// <param name="values">Collection of strings to be converted to integers</param>
-    /// <returns><see cref="List{T}"/> of integers where the strings could be parsed to integers and not null</returns>
-    public static IEnumerable<int> ToListInt(this IEnumerable<ReadOnlySpan<char>> values)
-    {
-        foreach (ReadOnlySpan<char> item in values)
-        {
-            if (int.TryParse(item, out int i))
-            {
-                yield return i;
-            }
-        }
     }
 
     /// <summary>

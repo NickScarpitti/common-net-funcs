@@ -58,7 +58,7 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Test
-        run: dotnet test --verbosity normal --no-build
+        run: dotnet test --verbosity normal --no-build -p:TestTfmsInParallel=false #Fix issue with shared resources still being locked causing random media related tests to fail
       #   run: dotnet test --verbosity normal --no-build -p:CollectCoverage=true -p:CoverletOutput=TestResults/ -p:CoverletOutputFormat=opencover
       #   run: dotnet test --verbosity normal --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./coverage
 

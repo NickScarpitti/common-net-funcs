@@ -33,9 +33,19 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+        working-directory: ./Core.Tests
 
       - name: Build
         run: dotnet build --no-restore
+        working-directory: ./Core.Tests
+
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: ./CommonNetFuncs.Core
+
+      - name: Build
+        run: dotnet build --no-restore
+        working-directory: ./CommonNetFuncs.Core
 
       - name: Test
         # run: dotnet test --verbosity normal -p:TestTfmsInParallel=false #Fix issue with shared resources still being locked causing random media related tests to fail

@@ -57,9 +57,10 @@ public static class Manipulation
     internal static bool ResizeImageBase(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
         IImageEncoder? imageEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
+        Image? image = null;
         try
         {
-            using Image image = Image.Load(inputFilePath);
+            image = Image.Load(inputFilePath);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
@@ -83,15 +84,21 @@ public static class Manipulation
         {
             logger.Error(ex, "Error resizing image from {InputFilePath} to {OutputFilePath} with width {Width} and height {Height}", inputFilePath, outputFilePath, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
     internal static bool ResizeImageBase(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageEncoder? imageEncoder,
         IImageFormat? imageFormat, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
+        Image? image = null;
         try
         {
-            using Image image = Image.Load(inputStream);
+            image = Image.Load(inputStream);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
@@ -129,15 +136,21 @@ public static class Manipulation
         {
             logger.Error(ex, "Error resizing image with width {Width} and height {Height}", resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
     internal static bool ResizeImageBase(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
         IImageEncoder? imageEncoder, IImageFormat? imageFormat, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
+        Image? image = null;
         try
         {
-            using Image image = Image.Load(inputSpan);
+            image = Image.Load(inputSpan);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
@@ -170,6 +183,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error resizing image with width {Width} and height {Height}", resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -181,9 +199,10 @@ public static class Manipulation
             throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
         }
 
+        Image? image = null;
         try
         {
-            using Image image = Image.Load(inputFilePath);
+            image = Image.Load(inputFilePath);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
@@ -216,6 +235,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error reducing image quality from {InputFilePath} to {OutputFilePath} with quality {Quality}", inputFilePath, outputFilePath, quality);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -227,9 +251,10 @@ public static class Manipulation
             throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
         }
 
+        Image? image = null;
         try
         {
-            using Image image = Image.Load(inputStream);
+            image = Image.Load(inputStream);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
@@ -268,6 +293,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error reducing image quality to {Quality} with width {Width} and height {Height}", quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -279,9 +309,10 @@ public static class Manipulation
             throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
         }
 
+        Image? image = null;
         try
         {
-            using Image image = Image.Load(inputSpan);
+            image = Image.Load(inputSpan);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
@@ -315,15 +346,21 @@ public static class Manipulation
         {
             logger.Error(ex, "Error reducing image quality to {Quality} with width {Width} and height {Height}", quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
     internal static async Task<bool> ResizeImageBaseAsync(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
         IImageEncoder? imageEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
+        Image? image = null;
         try
         {
-            using Image image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
+            image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
@@ -347,15 +384,21 @@ public static class Manipulation
         {
             logger.Error(ex, "Error resizing image from {InputFilePath} to {OutputFilePath} with width {Width} and height {Height}", inputFilePath, outputFilePath, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
     internal static async Task<bool> ResizeImageBaseAsync(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
         IImageEncoder? imageEncoder, IImageFormat? imageFormat, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
     {
+        Image? image = null;
         try
         {
-            using Image image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
+            image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
 
@@ -393,6 +436,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error resizing image with width {Width} and height {Height}", resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -404,9 +452,10 @@ public static class Manipulation
             throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
         }
 
+        Image? image = null;
         try
         {
-            using Image image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
+            image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
@@ -439,6 +488,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error reducing image quality to {Quality} with width {Width} and height {Height}", quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -450,9 +504,10 @@ public static class Manipulation
             throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
         }
 
+        Image? image = null;
         try
         {
-            using Image image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
+            image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
 
             ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
 
@@ -490,6 +545,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error reducing image quality to {Quality} with width {Width} and height {Height}", quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -926,19 +986,25 @@ public static class Manipulation
     public static bool TryDetectImageType(string imagePath, out IImageFormat? format)
     {
         format = null;
+        Image? image = null;
         try
         {
             if (imagePath.Length < 4)
             {
                 return false; // Not enough data to determine format
             }
-            using Image image = Image.Load(imagePath);
+            image = Image.Load(imagePath);
             format = image.Metadata.DecodedImageFormat;
         }
         catch (Exception ex)
         {
             logger.Error(ex, "Error detecting image type for file {ImagePath}", imagePath);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return format != null;
     }
 
@@ -951,18 +1017,23 @@ public static class Manipulation
     public static bool TryDetectImageType(Stream imageStream, out IImageFormat? format)
     {
         format = null;
+        Image? image = null;
         try
         {
             if (imageStream.Length < 4)
             {
                 return false; // Not enough data to determine format
             }
-            using Image image = Image.Load(imageStream);
+            image = Image.Load(imageStream);
             format = image.Metadata.DecodedImageFormat;
         }
         catch (Exception ex)
         {
             logger.Error(ex, "Error detecting image type for stream");
+        }
+        finally
+        {
+            image?.Dispose();
         }
 
         if (imageStream.CanSeek)
@@ -981,13 +1052,26 @@ public static class Manipulation
     /// <returns><see langword="true"/> if the image format was successfully read.</returns>
     public static bool TryDetectImageType(ReadOnlySpan<byte> imageData, out IImageFormat? format)
     {
+        Image? image = null;
         format = null;
-        if (imageData.Length < 4)
+        try
         {
-            return false; // Not enough data to determine format
+            if (imageData.Length < 4)
+            {
+                return false; // Not enough data to determine format
+            }
+            image = Image.Load(imageData);
+            format = image.Metadata.DecodedImageFormat;
         }
-        using Image image = Image.Load(imageData);
-        format = image.Metadata.DecodedImageFormat;
+        catch (Exception ex)
+        {
+            logger.Error(ex, "Error trying to detect image type");
+        }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return format != null;
     }
 
@@ -1000,13 +1084,14 @@ public static class Manipulation
     public static bool TryGetMetadata(string imagePath, out ImageMetadata metadata)
     {
         metadata = new ImageMetadata();
+        Image? image = null;
         try
         {
             if (imagePath.Length < 4)
             {
                 return false; // Not enough data to determine format
             }
-            using Image image = Image.Load(imagePath);
+            image = Image.Load(imagePath);
             metadata = image.Metadata;
             return true;
         }
@@ -1014,6 +1099,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error reading metadata from image file {ImagePath}", imagePath);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -1026,13 +1116,14 @@ public static class Manipulation
     public static bool TryGetMetadata(Stream imageStream, out ImageMetadata metadata)
     {
         metadata = new ImageMetadata();
+        Image? image = null;
         try
         {
             if (imageStream.Length < 4)
             {
                 return false; // Not enough data to determine format
             }
-            using Image image = Image.Load(imageStream);
+            image = Image.Load(imageStream);
             metadata = image.Metadata;
 
             if (imageStream.CanSeek)
@@ -1046,6 +1137,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error reading metadata from image stream");
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -1058,13 +1154,14 @@ public static class Manipulation
     public static bool TryGetMetadata(ReadOnlySpan<byte> imageData, out ImageMetadata metadata)
     {
         metadata = new ImageMetadata();
+        Image? image = null;
         try
         {
             if (imageData.Length < 4)
             {
                 return false; // Not enough data to determine format
             }
-            using Image image = Image.Load(imageData);
+            image = Image.Load(imageData);
             metadata = image.Metadata;
             return true;
         }
@@ -1072,6 +1169,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error reading metadata from image data");
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return metadata != null;
     }
 
@@ -1079,7 +1181,7 @@ public static class Manipulation
     /// Converts an image from one format to another.
     /// </summary>
     /// <param name="inputFilePath">Path to image file to re-format.</param>
-    /// <param name="outputFilePath">Path to output re-formated image file to.</param>
+    /// <param name="outputFilePath">Path to output re-formatted image file to.</param>
     public static bool ConvertImageFormat(string inputFilePath, string outputFilePath)
     {
         return ConvertImageFormat(inputFilePath, outputFilePath, GetImageFormatByExtension(Path.GetExtension(outputFilePath)));
@@ -1089,14 +1191,16 @@ public static class Manipulation
     /// Converts an image from one format to another.
     /// </summary>
     /// <param name="inputFilePath">Path to image file to re-format.</param>
-    /// <param name="outputFilePath">Path to output re-formated image file to.</param>
+    /// <param name="outputFilePath">Path to output re-formatted image file to.</param>
     /// <param name="outputImageFormat">Image format to convert to</param>
     public static bool ConvertImageFormat(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat)
     {
+        Image? image = null;
+        FileStream? fileStream = null;
         try
         {
-            using Image image = Image.Load(inputFilePath);
-            using FileStream fileStream = new(outputFilePath, FileMode.Create, FileAccess.Write);
+            image = Image.Load(inputFilePath);
+            fileStream = new(outputFilePath, FileMode.Create, FileAccess.Write);
             image.Save(fileStream, outputImageFormat);
             fileStream.Flush();
             return true;
@@ -1105,6 +1209,12 @@ public static class Manipulation
         {
             logger.Error(ex, "Error converting image format from {InputFilePath} to {OutputFilePath} with output format {OutputImageFormat}", inputFilePath, outputFilePath, outputImageFormat.Name);
         }
+        finally
+        {
+            image?.Dispose();
+            fileStream?.Dispose();
+        }
+
         return false;
     }
 
@@ -1112,13 +1222,14 @@ public static class Manipulation
     /// Converts an image from one format to another.
     /// </summary>
     /// <param name="inputStream">Stream containing the image data to re-format.</param>
-    /// <param name="outputStream">Stream to output re-formated image file to.</param>
+    /// <param name="outputStream">Stream to output re-formatted image file to.</param>
     /// <param name="outputImageFormat">Image format to convert to</param>
     public static bool ConvertImageFormat(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat)
     {
+        Image? image = null;
         try
         {
-            using Image image = Image.Load(inputStream);
+            image = Image.Load(inputStream);
             image.Save(outputStream, outputImageFormat);
             if (inputStream.CanSeek)
             {
@@ -1135,6 +1246,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error converting image format from stream to output stream with output format {OutputImageFormat}", outputImageFormat.Name);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -1142,13 +1258,14 @@ public static class Manipulation
     /// Converts an image from one format to another.
     /// </summary>
     /// <param name="inputStream">Stream containing the image data to re-format.</param>
-    /// <param name="outputStream">Stream to output re-formated image file to.</param>
+    /// <param name="outputStream">Stream to output re-formatted image file to.</param>
     /// <param name="outputImageFormat">Image format to convert to</param>
     public static bool ConvertImageFormat(ReadOnlySpan<byte> inputStream, Stream outputStream, IImageFormat outputImageFormat)
     {
+        Image? image = null;
         try
         {
-            using Image image = Image.Load(inputStream);
+            image = Image.Load(inputStream);
             image.Save(outputStream, outputImageFormat);
 
             if (outputStream.CanSeek)
@@ -1162,6 +1279,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error converting image format from span to output stream with output format {OutputImageFormat}", outputImageFormat.Name);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -1373,19 +1495,25 @@ public static class Manipulation
     public static async Task<IImageFormat?> TryDetectImageTypeAsync(string imagePath)
     {
         IImageFormat? format = null;
+        Image? image = null;
         try
         {
             if (imagePath.Length < 4)
             {
                 return format; // Not enough data to determine format
             }
-            using Image image = await Image.LoadAsync(imagePath).ConfigureAwait(false);
+            image = await Image.LoadAsync(imagePath).ConfigureAwait(false);
             format = image.Metadata.DecodedImageFormat;
         }
         catch (Exception ex)
         {
             logger.Error(ex, "Error detecting image type for file {ImagePath}", imagePath);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return format;
     }
 
@@ -1397,18 +1525,23 @@ public static class Manipulation
     public static async Task<IImageFormat?> TryDetectImageTypeAsync(Stream imageStream)
     {
         IImageFormat? format = null;
+        Image? image = null;
         try
         {
             if (imageStream.Length < 4)
             {
                 return format; // Not enough data to determine format
             }
-            using Image image = await Image.LoadAsync(imageStream).ConfigureAwait(false);
+            image = await Image.LoadAsync(imageStream).ConfigureAwait(false);
             format = image.Metadata.DecodedImageFormat;
         }
         catch (Exception ex)
         {
             logger.Error(ex, "Error detecting image type for stream");
+        }
+        finally
+        {
+            image?.Dispose();
         }
 
         if (imageStream.CanSeek)
@@ -1427,19 +1560,25 @@ public static class Manipulation
     public static async Task<ImageMetadata?> TryGetMetadataAsync(string imagePath)
     {
         ImageMetadata? metadata = null;
+        Image? image = null;
         try
         {
             if (imagePath.Length < 4)
             {
                 return metadata; // Not enough data to determine format
             }
-            using Image image = await Image.LoadAsync(imagePath).ConfigureAwait(false);
+            image = await Image.LoadAsync(imagePath).ConfigureAwait(false);
             metadata = image.Metadata;
         }
         catch (Exception ex)
         {
             logger.Error(ex, "Error reading metadata from image file {ImagePath}", imagePath);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return metadata;
     }
 
@@ -1451,18 +1590,23 @@ public static class Manipulation
     public static async Task<ImageMetadata?> TryGetMetadataAsync(Stream imageStream)
     {
         ImageMetadata? metadata = null;
+        Image? image = null;
         try
         {
             if (imageStream.Length < 4)
             {
                 return metadata; // Not enough data to determine format
             }
-            using Image image = await Image.LoadAsync(imageStream).ConfigureAwait(false);
+            image = await Image.LoadAsync(imageStream).ConfigureAwait(false);
             metadata = image.Metadata;
         }
         catch (Exception ex)
         {
             logger.Error(ex, "Error reading metadata from image stream");
+        }
+        finally
+        {
+            image?.Dispose();
         }
 
         if (imageStream.CanSeek)
@@ -1477,13 +1621,14 @@ public static class Manipulation
     /// Converts an image from one format to another asynchronously.
     /// </summary>
     /// <param name="inputFilePath">Path to image file to re-format.</param>
-    /// <param name="outputFilePath">Path to output re-formated image file to.</param>
+    /// <param name="outputFilePath">Path to output re-formatted image file to.</param>
     /// <param name="outputImageFormat">Image format to convert to</param>
     public static async Task<bool> ConvertImageFormatAsync(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, Action<IImageProcessingContext>? mutate = null)
     {
+        Image? image = null;
         try
         {
-            using Image image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
+            image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
             if (mutate != null)
             {
                 image.Mutate(mutate);
@@ -1498,6 +1643,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error converting image format from {InputFilePath} to {OutputFilePath} with output format {OutputImageFormat}", inputFilePath, outputFilePath, outputImageFormat.Name);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 
@@ -1505,13 +1655,14 @@ public static class Manipulation
     /// Converts an image from one format to another asynchronously.
     /// </summary>
     /// <param name="inputStream">Stream containing the image data to re-format.</param>
-    /// <param name="outputStream">Stream to output re-formated image file to.</param>
+    /// <param name="outputStream">Stream to output re-formatted image file to.</param>
     /// <param name="outputImageFormat">Image format to convert to</param>
     public static async Task<bool> ConvertImageFormatAsync(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, Action<IImageProcessingContext>? mutate = null)
     {
+        Image? image = null;
         try
         {
-            using Image image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
+            image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
             if (mutate != null)
             {
                 image.Mutate(mutate);
@@ -1535,6 +1686,11 @@ public static class Manipulation
         {
             logger.Error(ex, "Error converting image format from stream to output stream with output format {OutputImageFormat}", outputImageFormat.Name);
         }
+        finally
+        {
+            image?.Dispose();
+        }
+
         return false;
     }
 

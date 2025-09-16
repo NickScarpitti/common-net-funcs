@@ -26,7 +26,9 @@ public class ManipulationTests : IDisposable
     {
         if (!disposed)
         {
-            if (disposing) { }
+            if (disposing) {
+                Thread.Sleep(2000);
+             }
             disposed = true;
         }
     }

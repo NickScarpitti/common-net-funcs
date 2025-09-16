@@ -27,10 +27,22 @@ jobs:
       - name: Get Curl
         run: apt-get update && apt-get install -y curl
 
+      - name: Add LibreOffice
+        run: apt-get install libreoffice -y
+
+      - name: Get Libre Office Version
+        run: soffice --version
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.x.x
+
+      - name: Add Fonts
+        run: apt-get update && apt-get install -y fonts-dejavu fonts-liberation fonts-ubuntu
+
+      - name: Update Font Cache
+        run: fc-cache -f
 
       - name: Restore dependencies
         run: dotnet restore
@@ -41,8 +53,6 @@ jobs:
         working-directory: ./Office.Common.Tests
 
       - name: Test
-        # run: dotnet test --verbosity normal -p:TestTfmsInParallel=false #Fix issue with shared resources still being locked causing random media related tests to fail
-        # run: dotnet test --verbosity normal --no-build -p:CollectCoverage=true -p:CoverletOutput=TestResults/ -p:CoverletOutputFormat=opencover
         run: dotnet test --verbosity normal -p:TestTfmsInParallel=false --collect:"XPlat Code Coverage" --results-directory ./coverage # Change this to run inside each .csproj file with separate actions
         working-directory: ./Office.Common.Tests
 

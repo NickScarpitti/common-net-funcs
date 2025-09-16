@@ -41,8 +41,6 @@ jobs:
         working-directory: ./DeepClone.Tests
 
       - name: Test
-        # run: dotnet test --verbosity normal -p:TestTfmsInParallel=false #Fix issue with shared resources still being locked causing random media related tests to fail
-        # run: dotnet test --verbosity normal --no-build -p:CollectCoverage=true -p:CoverletOutput=TestResults/ -p:CoverletOutputFormat=opencover
         run: dotnet test --verbosity normal -p:TestTfmsInParallel=false --collect:"XPlat Code Coverage" --results-directory ./coverage # Change this to run inside each .csproj file with separate actions
         working-directory: ./DeepClone.Tests
 

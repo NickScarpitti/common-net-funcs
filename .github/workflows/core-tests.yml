@@ -23,6 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get Curl
+        run: apt-get update && apt-get install -y curl
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:

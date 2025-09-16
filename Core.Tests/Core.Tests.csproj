@@ -28,7 +28,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
-    <ProjectReference Include="..\CommonNetFuncs.DeepClone\CommonNetFuncs.DeepClone.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,6 @@
-﻿﻿using FakeItEasy;
+﻿using FakeItEasy;
 using static CommonNetFuncs.Core.MathHelpers;
 using static CommonNetFuncs.Core.Random;
-using static CommonNetFuncs.DeepClone.ExpressionTrees;
 
 namespace Core.Tests;
 
@@ -161,7 +160,8 @@ public sealed class RandomTests
         int[] original = Enumerable.Range(1, 1000).ToArray();
 
         // Act
-        int[] shuffled = original.DeepClone();
+        int[] shuffled = new int[1000];
+        original.CopyTo(shuffled, 0);
         shuffled.Shuffle();
 
         // Assert

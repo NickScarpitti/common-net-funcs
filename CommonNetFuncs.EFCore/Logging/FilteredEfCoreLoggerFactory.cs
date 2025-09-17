@@ -9,60 +9,60 @@ namespace CommonNetFuncs.EFCore.Logging;
 /// <param name="stringFilters">A <see cref="Dictionary{TKey, TValue}"/> of filters where TKey is the source name, and TValue is the minimum log level that will result in emitted logs for that source.</param>
 public sealed class FilteredEfCoreLoggerFactory(ILoggerFactory innerFactory, IReadOnlyDictionary<string, LogLevel> stringFilters) : ILoggerFactory
 {
-    private readonly ILoggerFactory _innerFactory = innerFactory;
+  private readonly ILoggerFactory _innerFactory = innerFactory;
 
-    public ILogger CreateLogger(string categoryName)
+  public ILogger CreateLogger(string categoryName)
+  {
+    ILogger logger = _innerFactory.CreateLogger(categoryName);
+
+    // Filter out database command logs using stringFilters
+    KeyValuePair<string, LogLevel>? filter = stringFilters.FirstOrDefault(x => categoryName.Contains(x.Key));
+    if (filter != null)
     {
-        ILogger logger = _innerFactory.CreateLogger(categoryName);
-
-        // Filter out database command logs using stringFilters
-        KeyValuePair<string, LogLevel>? filter = stringFilters.FirstOrDefault(x => categoryName.Contains(x.Key));
-        if (filter != null)
-        {
-            return new FilteredEfCoreLogger(logger, filter.Value.Value);
-        }
-
-        return logger;
+      return new FilteredEfCoreLogger(logger, filter.Value.Value);
     }
 
-    /// <summary>
+    return logger;
+  }
+
+  /// <summary>
     /// Adds a provider to the inner <see cref="ILoggerFactory"/>.
     /// </summary>
     /// <param name="provider">The <see cref="ILoggerProvider"/> to add.</param>
-    public void AddProvider(ILoggerProvider provider)
-    {
-        _innerFactory.AddProvider(provider);
-    }
+  public void AddProvider(ILoggerProvider provider)
+  {
+    _innerFactory.AddProvider(provider);
+  }
 
-    /// <summary>
+  /// <summary>
     /// Disposes the <see cref="FilteredEfCoreLoggerFactory"/> and its inner factory.
     /// </summary>
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+  public void Dispose()
+  {
+    Dispose(true);
+    GC.SuppressFinalize(this);
+  }
 
-    bool disposed;
+  bool disposed;
 
-    /// <summary>
+  /// <summary>
     /// Disposes the <see cref="FilteredEfCoreLoggerFactory"/> and its inner factory.
     /// </summary>
     /// <param name="disposing">If <see langword="true"/>, the method is called from Dispose, otherwise from the finalizer.</param>
-    private void Dispose(bool disposing)
+  private void Dispose(bool disposing)
+  {
+    if (!disposed)
     {
-        if (!disposed)
-        {
-            if (disposing)
-            {
-                _innerFactory.Dispose();
-            }
-            disposed = true;
-        }
+      if (disposing)
+      {
+        _innerFactory.Dispose();
+      }
+      disposed = true;
     }
+  }
 
-    ~FilteredEfCoreLoggerFactory()
-    {
-        Dispose(false);
-    }
+  ~FilteredEfCoreLoggerFactory()
+  {
+    Dispose(false);
+  }
 }

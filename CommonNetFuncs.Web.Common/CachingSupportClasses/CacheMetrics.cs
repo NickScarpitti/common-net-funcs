@@ -5,222 +5,222 @@ namespace CommonNetFuncs.Web.Common.CachingSupportClasses;
 
 public sealed class CacheMetrics(ConcurrentDictionary<string, HashSet<string>>? cacheTags = null)
 {
-    private readonly Lock cacheHitsLock = new();
-    private readonly Lock cacheMissesLock = new();
-    private readonly Lock currentCacheSizeLock = new();
-    private readonly Lock evictedDueToCapacityLock = new();
-    private readonly Lock evictedDueToRemovedLock = new();
-    private readonly Lock skippedDueToSizeLock = new();
-    private readonly Lock currentCacheEntryCountLock = new();
+  private readonly Lock cacheHitsLock = new();
+  private readonly Lock cacheMissesLock = new();
+  private readonly Lock currentCacheSizeLock = new();
+  private readonly Lock evictedDueToCapacityLock = new();
+  private readonly Lock evictedDueToRemovedLock = new();
+  private readonly Lock skippedDueToSizeLock = new();
+  private readonly Lock currentCacheEntryCountLock = new();
 
-    private long cacheHits;
-    private long cacheMisses;
-    private long currentCacheSize;
-    //private long _evictedDueToExpired;
-    private long evictedDueToCapacity;
-    //private long _evictedDueToNone;
-    private long evictedDueToRemoved;
-    //private long _evictedDueToReplaced;
-    //private long _evictedDueToTokenExpired;
-    private long skippedDueToSize;
-    private long currentCacheEntryCount;
+  private long cacheHits;
+  private long cacheMisses;
+  private long currentCacheSize;
+  //private long _evictedDueToExpired;
+  private long evictedDueToCapacity;
+  //private long _evictedDueToNone;
+  private long evictedDueToRemoved;
+  //private long _evictedDueToReplaced;
+  //private long _evictedDueToTokenExpired;
+  private long skippedDueToSize;
+  private long currentCacheEntryCount;
 
-    public ConcurrentDictionary<string, HashSet<string>> CacheTags { get; } = cacheTags ??= new(); //Key = tag, Value = All cache keys that have that tag
+  public ConcurrentDictionary<string, HashSet<string>> CacheTags { get; } = cacheTags ??= new(); //Key = tag, Value = All cache keys that have that tag
 
-    //public long EvictedDueToExpiration => Interlocked.Read(ref _evictedDueToExpired);
+  //public long EvictedDueToExpiration => Interlocked.Read(ref _evictedDueToExpired);
 
-    public long EvictedDueToCapacity()
+  public long EvictedDueToCapacity()
+  {
+    lock (evictedDueToCapacityLock)
     {
-        lock (evictedDueToCapacityLock)
-        {
-            return evictedDueToCapacity;
-        }
+      return evictedDueToCapacity;
     }
+  }
 
-    //public long EvictedDueToNone => Interlocked.Read(ref _evictedDueToNone);
+  //public long EvictedDueToNone => Interlocked.Read(ref _evictedDueToNone);
 
-    public long EvictedDueToRemoved()
+  public long EvictedDueToRemoved()
+  {
+    lock (evictedDueToRemovedLock)
     {
+      return evictedDueToRemoved;
+    }
+  }
+
+  //public long EvictedDueToReplaced => Interlocked.Read(ref _evictedDueToReplaced);
+
+  //public long EvictedDueToExpired => Interlocked.Read(ref _evictedDueToTokenExpired);
+
+  public long SkippedDueToSize()
+  {
+    lock (skippedDueToSizeLock)
+    {
+      return skippedDueToSize;
+    }
+  }
+
+  public void IncrementEviction(EvictionReason reason)
+  {
+    switch (reason)
+    {
+      case EvictionReason.Removed:
         lock (evictedDueToRemovedLock)
         {
-            return evictedDueToRemoved;
+          evictedDueToRemoved++;
+          //Interlocked.Increment(ref evictedDueToRemoved);
         }
-    }
-
-    //public long EvictedDueToReplaced => Interlocked.Read(ref _evictedDueToReplaced);
-
-    //public long EvictedDueToExpired => Interlocked.Read(ref _evictedDueToTokenExpired);
-
-    public long SkippedDueToSize()
-    {
-        lock (skippedDueToSizeLock)
+        break;
+      case EvictionReason.Capacity:
+        lock (evictedDueToCapacityLock)
         {
-            return skippedDueToSize;
+          evictedDueToCapacity++;
+          //Interlocked.Increment(ref evictedDueToCapacity);
         }
+        break;
+      //case EvictionReason.None:
+      //    //Interlocked.Increment(ref _evictedDueToNone);
+      //    break;
+      //case EvictionReason.Replaced:
+      //    //Interlocked.Increment(ref _evictedDueToReplaced);
+      //    break;
+      //case EvictionReason.Expired:
+      //    //Interlocked.Increment(ref _evictedDueToExpired);
+      //    break;
+      //case EvictionReason.TokenExpired:
+      //    //Interlocked.Increment(ref _evictedDueToTokenExpired);
+      //    break;
     }
+  }
 
-    public void IncrementEviction(EvictionReason reason)
+  public void IncrementSkippedDueToSize()
+  {
+    lock (skippedDueToSizeLock)
     {
-        switch (reason)
-        {
-            case EvictionReason.Removed:
-                lock (evictedDueToRemovedLock)
-                {
-                    evictedDueToRemoved++;
-                    //Interlocked.Increment(ref evictedDueToRemoved);
-                }
-                break;
-            case EvictionReason.Capacity:
-                lock (evictedDueToCapacityLock)
-                {
-                    evictedDueToCapacity++;
-                    //Interlocked.Increment(ref evictedDueToCapacity);
-                }
-                break;
-            //case EvictionReason.None:
-            //    //Interlocked.Increment(ref _evictedDueToNone);
-            //    break;
-            //case EvictionReason.Replaced:
-            //    //Interlocked.Increment(ref _evictedDueToReplaced);
-            //    break;
-            //case EvictionReason.Expired:
-            //    //Interlocked.Increment(ref _evictedDueToExpired);
-            //    break;
-            //case EvictionReason.TokenExpired:
-            //    //Interlocked.Increment(ref _evictedDueToTokenExpired);
-            //    break;
-        }
+      skippedDueToSize++;
     }
+  }
 
-    public void IncrementSkippedDueToSize()
+  public long CacheHits()
+  {
+    lock (cacheHitsLock)
     {
-        lock (skippedDueToSizeLock)
-        {
-            skippedDueToSize++;
-        }
+      return cacheHits;
     }
+  }
 
-    public long CacheHits()
+  public long CacheMisses()
+  {
+    lock (cacheMissesLock)
     {
-        lock (cacheHitsLock)
-        {
-            return cacheHits;
-        }
+      return cacheMisses;
     }
+  }
 
-    public long CacheMisses()
+  public long CurrentCacheSize()
+  {
+    lock (currentCacheSizeLock)
     {
-        lock (cacheMissesLock)
-        {
-            return cacheMisses;
-        }
+      return currentCacheSize;
     }
+  }
 
-    public long CurrentCacheSize()
+  public long CurrentCacheEntryCount()
+  {
+    lock (currentCacheEntryCountLock)
     {
+      return currentCacheEntryCount;
+    }
+  }
+
+  public void IncrementHits()
+  {
+    lock (cacheHitsLock)
+    {
+      cacheHits++;
+    }
+  }
+
+  public void IncrementMisses()
+  {
+    lock (cacheMissesLock)
+    {
+      cacheMisses++;
+    }
+  }
+
+  public void IncrementCacheEntryCount()
+  {
+    lock (currentCacheEntryCountLock)
+    {
+      currentCacheEntryCount++;
+    }
+  }
+
+  public void DecrementCacheEntryCount()
+  {
+    lock (currentCacheEntryCountLock)
+    {
+      if (currentCacheEntryCount > 0)
+      {
+        currentCacheEntryCount--;
+      }
+    }
+  }
+
+  public void AddToSize(long bytes)
+  {
+    lock (currentCacheSizeLock)
+    {
+      currentCacheSize += bytes < 0 ? bytes * -1 : bytes;
+    }
+  }
+
+  public void SubtractFromSize(long bytes)
+  {
+    lock (currentCacheSizeLock)
+    {
+      if (currentCacheSize > 0)
+      {
+        currentCacheSize += bytes > 0 ? bytes * -1 : bytes;
+      }
+    }
+  }
+
+  /// <summary>
+  /// Resets all values in the cache
+  /// </summary>
+
+  public void Clear()
+  {
+    CacheTags.Clear();
+
+    lock (cacheHitsLock)
+    {
+      lock (cacheMissesLock)
+      {
         lock (currentCacheSizeLock)
         {
-            return currentCacheSize;
-        }
-    }
-
-    public long CurrentCacheEntryCount()
-    {
-        lock (currentCacheEntryCountLock)
-        {
-            return currentCacheEntryCount;
-        }
-    }
-
-    public void IncrementHits()
-    {
-        lock (cacheHitsLock)
-        {
-            cacheHits++;
-        }
-    }
-
-    public void IncrementMisses()
-    {
-        lock (cacheMissesLock)
-        {
-            cacheMisses++;
-        }
-    }
-
-    public void IncrementCacheEntryCount()
-    {
-        lock (currentCacheEntryCountLock)
-        {
-            currentCacheEntryCount++;
-        }
-    }
-
-    public void DecrementCacheEntryCount()
-    {
-        lock (currentCacheEntryCountLock)
-        {
-            if (currentCacheEntryCount > 0)
+          lock (evictedDueToCapacityLock)
+          {
+            lock (evictedDueToRemovedLock)
             {
-                currentCacheEntryCount--;
-            }
-        }
-    }
-
-    public void AddToSize(long bytes)
-    {
-        lock (currentCacheSizeLock)
-        {
-            currentCacheSize += bytes < 0 ? bytes * -1 : bytes;
-        }
-    }
-
-    public void SubtractFromSize(long bytes)
-    {
-        lock (currentCacheSizeLock)
-        {
-            if (currentCacheSize > 0)
-            {
-                currentCacheSize += bytes > 0 ? bytes * -1 : bytes;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Resets all values in the cache
-    /// </summary>
-
-    public void Clear()
-    {
-        CacheTags.Clear();
-
-        lock (cacheHitsLock)
-        {
-            lock (cacheMissesLock)
-            {
-                lock (currentCacheSizeLock)
+              lock (skippedDueToSizeLock)
+              {
+                lock (currentCacheEntryCountLock)
                 {
-                    lock (evictedDueToCapacityLock)
-                    {
-                        lock (evictedDueToRemovedLock)
-                        {
-                            lock (skippedDueToSizeLock)
-                            {
-                                lock (currentCacheEntryCountLock)
-                                {
-                                    cacheHits = 0;
-                                    cacheMisses = 0;
-                                    currentCacheSize = 0;
-                                    evictedDueToCapacity = 0;
-                                    evictedDueToRemoved = 0;
-                                    skippedDueToSize = 0;
-                                    currentCacheEntryCount = 0;
-                                }
-                            }
-                        }
-                    }
+                  cacheHits = 0;
+                  cacheMisses = 0;
+                  currentCacheSize = 0;
+                  evictedDueToCapacity = 0;
+                  evictedDueToRemoved = 0;
+                  skippedDueToSize = 0;
+                  currentCacheEntryCount = 0;
                 }
+              }
             }
+          }
         }
+      }
     }
+  }
 }

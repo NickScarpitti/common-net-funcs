@@ -2,6 +2,7 @@
 
 public sealed class UpdateResult
 {
-    public int RecordsChanged { get; set; }
-    public bool Success { get; set; }
+  public int RecordsChanged { get; set; }
+
+  public bool Success { get; set; }
 }

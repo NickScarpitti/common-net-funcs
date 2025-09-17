@@ -11,20 +11,20 @@ namespace CommonNetFuncs.Media.Ffmpeg;
 
 public sealed class HardwareAccelerationValues()
 {
-    public HardwareAccelerator hardwareAccelerator { get; set; }
+  public HardwareAccelerator hardwareAccelerator { get; set; }
 
-    public VideoCodec decoder { get; set; }
+  public VideoCodec decoder { get; set; }
 
-    public VideoCodec encoder { get; set; }
+  public VideoCodec encoder { get; set; }
 
-    public int device { get; set; }
+  public int device { get; set; }
 }
 
 public static class ConversionTask
 {
-    private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+  private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-    /// <summary>
+  /// <summary>
     /// Run basic ffmpeg conversion via Xabe.FFmpeg settings. Requires Xabe to have the executables path set.
     /// </summary>
     /// <param name="fileToConvert">Full file path and file name of the file to be converted</param>
@@ -47,17 +47,17 @@ public static class ConversionTask
     /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
     /// <returns><see langword="true"/> if conversion successfully completed</returns>
-    public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, VideoCodec codec, Format outputFormat = Format.mp4, ConversionPreset conversionPreset = ConversionPreset.Slower,
+  public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, VideoCodec codec, Format outputFormat = Format.mp4, ConversionPreset conversionPreset = ConversionPreset.Slower,
         string? workingPath = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true,
         string? taskDescription = null, bool strict = true, bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal,
         HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null,
         CancellationTokenSource? cancellationTokenSource = null)
-    {
-        return FfmpegConversionTask(fileToConvert, outputFileName, workingPath, codec, outputFormat, conversionPreset, conversionIndex, fpsDict, mediaInfo, null, numberOfThreads, cancelIfLarger,
+  {
+    return FfmpegConversionTask(fileToConvert, outputFileName, workingPath, codec, outputFormat, conversionPreset, conversionIndex, fpsDict, mediaInfo, null, numberOfThreads, cancelIfLarger,
             taskDescription, strict, overwriteOutput, processPriority, hardwareAccelerationValues, conversionOutputs, additionalLogText, cancellationTokenSource);
-    }
+  }
 
-    /// <summary>
+  /// <summary>
     /// Run ffmpeg conversion via ffmpeg command. Requires Xabe to have the executables path set.
     /// </summary>
     /// <param name="fileToConvert">Full file path and file name of the file to be converted</param>
@@ -78,132 +78,132 @@ public static class ConversionTask
     /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
     /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
     /// <returns><see langword="true"/> if conversion successfully completed</returns>
-    public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string? ffmpegCommand, string? workingPath = null, int conversionIndex = 0,
+  public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string? ffmpegCommand, string? workingPath = null, int conversionIndex = 0,
         ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true,
         bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, HardwareAccelerationValues? hardwareAccelerationValues = null,
         ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null, CancellationTokenSource? cancellationTokenSource = null)
-    {
-        return FfmpegConversionTask(fileToConvert, outputFileName, workingPath, null, null, null, conversionIndex, fpsDict, mediaInfo, ffmpegCommand, numberOfThreads, cancelIfLarger,
+  {
+    return FfmpegConversionTask(fileToConvert, outputFileName, workingPath, null, null, null, conversionIndex, fpsDict, mediaInfo, ffmpegCommand, numberOfThreads, cancelIfLarger,
             taskDescription, strict, overwriteOutput, processPriority, hardwareAccelerationValues, conversionOutputs, additionalLogText, cancellationTokenSource);
-    }
+  }
 
-    private static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string? workingPath = null, VideoCodec? codec = null, Format? outputFormat = null,
+  private static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string? workingPath = null, VideoCodec? codec = null, Format? outputFormat = null,
         ConversionPreset? conversionPreset = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, string? ffmpegCommand = null,
         int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true, bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal,
         HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null, CancellationTokenSource? cancellationTokenSource = null)
+  {
+    bool conversionFailed = false;
+    bool sizeFailure = false;
+    fpsDict ??= new();
+    cancellationTokenSource ??= new();
+    try
     {
-        bool conversionFailed = false;
-        bool sizeFailure = false;
-        fpsDict ??= new();
-        cancellationTokenSource ??= new();
-        try
-        {
-            DateTime lastOutput1 = DateTime.UtcNow.AddSeconds(-6);
-            DateTime lastOutput2 = DateTime.UtcNow.AddSeconds(-6);
-            DateTime lastOutput3 = DateTime.UtcNow.AddSeconds(-6);
+      DateTime lastOutput1 = DateTime.UtcNow.AddSeconds(-6);
+      DateTime lastOutput2 = DateTime.UtcNow.AddSeconds(-6);
+      DateTime lastOutput3 = DateTime.UtcNow.AddSeconds(-6);
 
-            Conversion conversion = new();
-            mediaInfo ??= await FFmpeg.GetMediaInfo($"{fileToConvert.@FullName}").ConfigureAwait(false);
-            IVideoStream? videoStream = mediaInfo.VideoStreams.FirstOrDefault();
-            IAudioStream? audioStream = mediaInfo.AudioStreams.FirstOrDefault();
+      Conversion conversion = new();
+      mediaInfo ??= await FFmpeg.GetMediaInfo($"{fileToConvert.@FullName}").ConfigureAwait(false);
+      IVideoStream? videoStream = mediaInfo.VideoStreams.FirstOrDefault();
+      IAudioStream? audioStream = mediaInfo.AudioStreams.FirstOrDefault();
 
-            TimeSpan videoTimespan = videoStream?.Duration ?? TimeSpan.FromSeconds(0);
+      TimeSpan videoTimespan = videoStream?.Duration ?? TimeSpan.FromSeconds(0);
 
-            conversion
+      conversion
                 .AddStream(audioStream)
                 .SetOutput(Path.GetFullPath(Path.Combine(workingPath ?? Path.GetTempPath(), outputFileName)))
                 .SetOverwriteOutput(overwriteOutput)
                 .UseMultiThread(numberOfThreads)
                 .SetPriority(processPriority);
 
-            if (string.IsNullOrWhiteSpace(ffmpegCommand))
-            {
-                conversion.AddStream(videoStream?.SetCodec((VideoCodec)codec!)).SetOutputFormat((Format)outputFormat!).SetPreset((ConversionPreset)conversionPreset!);
-            }
-            else
-            {
-                conversion.AddStream(videoStream).AddParameter(ffmpegCommand);
-            }
+      if (string.IsNullOrWhiteSpace(ffmpegCommand))
+      {
+        conversion.AddStream(videoStream?.SetCodec((VideoCodec)codec!)).SetOutputFormat((Format)outputFormat!).SetPreset((ConversionPreset)conversionPreset!);
+      }
+      else
+      {
+        conversion.AddStream(videoStream).AddParameter(ffmpegCommand);
+      }
 
-            if (hardwareAccelerationValues != null)
-            {
-                conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
-                //.UseHardwareAcceleration(HardwareAccelerator.auto, VideoCodec.h264, VideoCodec.av1) //This works
-                //.UseHardwareAcceleration(HardwareAccelerator.auto, VideoCodec.h264_cuvid, VideoCodec.av1)
-                //.UseHardwareAcceleration(HardwareAccelerator.auto, VideoCodec.h264_nvenc, VideoCodec.av1)
-            }
+      if (hardwareAccelerationValues != null)
+      {
+        conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
+        //.UseHardwareAcceleration(HardwareAccelerator.auto, VideoCodec.h264, VideoCodec.av1) //This works
+        //.UseHardwareAcceleration(HardwareAccelerator.auto, VideoCodec.h264_cuvid, VideoCodec.av1)
+        //.UseHardwareAcceleration(HardwareAccelerator.auto, VideoCodec.h264_nvenc, VideoCodec.av1)
+      }
 
-            if (hardwareAccelerationValues != null)
-            {
-                conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
-            }
+      if (hardwareAccelerationValues != null)
+      {
+        conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
+      }
 
-            //Add log to OnProgress
-            conversion.OnProgress += (sender, args) =>
-            {
-                if (DateTime.UtcNow > lastOutput1.AddSeconds(5))
-                {
-                    //Show all output from FFmpeg to console
-                    StringBuilder stringBuilder = new();
-                    stringBuilder.Append('#');
-                    stringBuilder.Append(conversionIndex);
-                    stringBuilder.Append(" Progress:[");
-                    stringBuilder.Append(args.Duration);
-                    stringBuilder.Append('/');
-                    stringBuilder.Append(args.TotalLength);
-                    stringBuilder.Append("][");
-                    stringBuilder.Append(args.Percent);
-                    stringBuilder.Append("%]-[");
-                    stringBuilder.Append(fileToConvert.Name);
-                    stringBuilder.Append(!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty);
-                    stringBuilder.Append(!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty);
-                    stringBuilder.Append(conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty);
-                    stringBuilder.Append("[Total FPS: ");
-                    stringBuilder.Append(GetTotalFps(fpsDict));
-                    stringBuilder.Append(']');
+      //Add log to OnProgress
+      conversion.OnProgress += (sender, args) =>
+      {
+        if (DateTime.UtcNow > lastOutput1.AddSeconds(5))
+        {
+          //Show all output from FFmpeg to console
+          StringBuilder stringBuilder = new();
+          stringBuilder.Append('#');
+          stringBuilder.Append(conversionIndex);
+          stringBuilder.Append(" Progress:[");
+          stringBuilder.Append(args.Duration);
+          stringBuilder.Append('/');
+          stringBuilder.Append(args.TotalLength);
+          stringBuilder.Append("][");
+          stringBuilder.Append(args.Percent);
+          stringBuilder.Append("%]-[");
+          stringBuilder.Append(fileToConvert.Name);
+          stringBuilder.Append(!string.IsNullOrWhiteSpace(taskDescription) ? $"[{taskDescription}]" : string.Empty);
+          stringBuilder.Append(!additionalLogText.IsNullOrWhiteSpace() ? $"[{additionalLogText}]" : string.Empty);
+          stringBuilder.Append(conversionOutputs.AnyFast() ? $"[Total Diff: {GetTotalFileDif(conversionOutputs)}]" : string.Empty);
+          stringBuilder.Append("[Total FPS: ");
+          stringBuilder.Append(GetTotalFps(fpsDict));
+          stringBuilder.Append(']');
 
-                    logger.Info(stringBuilder.ToString());
-                    lastOutput1 = DateTime.UtcNow;
-                }
-            };
+          logger.Info(stringBuilder.ToString());
+          lastOutput1 = DateTime.UtcNow;
+        }
+      };
 
-            conversion.OnDataReceived += (sender, args) => args.LogFfmpegOutput(ref lastOutput2, ref lastOutput3, ref conversionFailed, ref sizeFailure, fileToConvert, videoTimespan, conversionIndex,
+      conversion.OnDataReceived += (sender, args) => args.LogFfmpegOutput(ref lastOutput2, ref lastOutput3, ref conversionFailed, ref sizeFailure, fileToConvert, videoTimespan, conversionIndex,
                 cancelIfLarger, taskDescription, additionalLogText, conversionOutputs, fpsDict, cancellationTokenSource);
 
-            //Start conversion
-            logger.Info($"Starting ffmpeg conversion with command: {ffmpegCommand}");
+      //Start conversion
+      logger.Info($"Starting ffmpeg conversion with command: {ffmpegCommand}");
 
-            try
-            {
-                if (strict)
-                {
-                    conversion.AddParameter("-strict -2");
-                    await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
-                }
-                else
-                {
-                    await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
-                }
-            }
-            catch (OperationCanceledException ex)
-            {
-                //Xabe seems to throw OperationCanceledException so this is explicitly handled here
-                logger.Warn(ex, $"Conversion of file [{fileToConvert.Name}] successfully canceled in ffmpeg task for reason: {(sizeFailure ? "[Result Too Large]." : "[Unknown Failure]")}.");
-                conversionFailed = true;
-            }
-
-            //await Console.Out.WriteLineAsync($"Finished conversion file [{fileToConvert.Name}]");
-            logger.Info($"Finished conversion for #{conversionIndex} [{fileToConvert.Name}] with {(conversionFailed ? "[FAILED]" : "[SUCCESS]")} Status");
-        }
-        catch (ConversionException cex)
+      try
+      {
+        if (strict)
         {
-            logger.Error(cex, "Conversion task failed!");
+          conversion.AddParameter("-strict -2");
+          await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
         }
-        finally
+        else
         {
-            fpsDict.Remove(conversionIndex, out _); //Remove FPS item for completed conversions
+          await conversion.Start(cancellationTokenSource.Token).ConfigureAwait(false);
         }
+      }
+      catch (OperationCanceledException ex)
+      {
+        //Xabe seems to throw OperationCanceledException so this is explicitly handled here
+        logger.Warn(ex, $"Conversion of file [{fileToConvert.Name}] successfully canceled in ffmpeg task for reason: {(sizeFailure ? "[Result Too Large]." : "[Unknown Failure]")}.");
+        conversionFailed = true;
+      }
 
-        return !conversionFailed; //Returns as success status by inverting this value
+      //await Console.Out.WriteLineAsync($"Finished conversion file [{fileToConvert.Name}]");
+      logger.Info($"Finished conversion for #{conversionIndex} [{fileToConvert.Name}] with {(conversionFailed ? "[FAILED]" : "[SUCCESS]")} Status");
     }
+    catch (ConversionException cex)
+    {
+      logger.Error(cex, "Conversion task failed!");
+    }
+    finally
+    {
+      fpsDict.Remove(conversionIndex, out _); //Remove FPS item for completed conversions
+    }
+
+    return !conversionFailed; //Returns as success status by inverting this value
+  }
 }

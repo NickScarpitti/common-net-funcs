@@ -6,16 +6,16 @@ namespace CommonNetFuncs.Web.Middleware;
 
 public sealed class UseXsrfTokenMiddleware(RequestDelegate next, IAntiforgery antiforgery, bool httpOnly)
 {
-    private readonly RequestDelegate next = next;
-    private readonly IAntiforgery antiforgery = antiforgery;
-    private readonly bool httpOnly = httpOnly;
+  private readonly RequestDelegate next = next;
+  private readonly IAntiforgery antiforgery = antiforgery;
+  private readonly bool httpOnly = httpOnly;
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        AntiforgeryTokenSet tokenSet = antiforgery.GetAndStoreTokens(context);
-        context.Response.Cookies.Append("XSRF-TOKEN", tokenSet.RequestToken!, new CookieOptions { HttpOnly = httpOnly });
-        await next(context).ConfigureAwait(false);
-    }
+  public async Task InvokeAsync(HttpContext context)
+  {
+    AntiforgeryTokenSet tokenSet = antiforgery.GetAndStoreTokens(context);
+    context.Response.Cookies.Append("XSRF-TOKEN", tokenSet.RequestToken!, new CookieOptions { HttpOnly = httpOnly });
+    await next(context).ConfigureAwait(false);
+  }
 }
 
 /// <summary>
@@ -23,8 +23,8 @@ public sealed class UseXsrfTokenMiddleware(RequestDelegate next, IAntiforgery an
 /// </summary>
 public static class UseXsrfTokenMiddlewareExtension
 {
-    public static IApplicationBuilder UseXsrfToken(this IApplicationBuilder builder, bool httpOnly = false)
-    {
-        return builder.UseMiddleware<UseXsrfTokenMiddleware>(httpOnly);
-    }
+  public static IApplicationBuilder UseXsrfToken(this IApplicationBuilder builder, bool httpOnly = false)
+  {
+    return builder.UseMiddleware<UseXsrfTokenMiddleware>(httpOnly);
+  }
 }

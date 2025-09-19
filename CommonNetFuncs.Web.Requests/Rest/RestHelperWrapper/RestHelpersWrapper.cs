@@ -33,7 +33,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     string? bearerToken = null;
 
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();
@@ -105,7 +105,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     int attempts = 0;
     string? bearerToken = null;
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();
@@ -187,7 +187,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     int attempts = 0;
     string? bearerToken = null;
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();
@@ -260,7 +260,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     int attempts = 0;
     string? bearerToken = null;
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();
@@ -338,7 +338,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     int attempts = 0;
     string? bearerToken = null;
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();
@@ -412,7 +412,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     int attempts = 0;
     string? bearerToken = null;
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();
@@ -489,7 +489,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     int attempts = 0;
     string? bearerToken = null;
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();
@@ -569,7 +569,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     int attempts = 0;
     string? bearerToken = null;
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();
@@ -641,7 +641,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     int attempts = 0;
     string? bearerToken = null;
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();
@@ -710,7 +710,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     int attempts = 0;
     string? bearerToken = null;
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    using HttpClient client = httpClientFactory.CreateClient(options.ApiName);
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();

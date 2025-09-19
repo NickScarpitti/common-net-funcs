@@ -188,9 +188,10 @@ internal static class WrapperHelpers
 
   internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, HttpClient client, Dictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
   {
+    new Uri(client.BaseAddress ?? new(string.Empty), options.Url);
     RequestOptions<T> baseRequestOptions = new()
         {
-            Url = $"{client.BaseAddress}{options.Url}",
+            Url = new Uri(client.BaseAddress ?? new(string.Empty), options.Url).ToString(),
             HttpMethod = httpMethod,
             BearerToken = bearerToken,
             Timeout = options.ResilienceOptions?.TimeoutValue?.TotalSeconds,

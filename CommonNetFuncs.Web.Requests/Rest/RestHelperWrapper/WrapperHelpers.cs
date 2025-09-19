@@ -188,21 +188,20 @@ internal static class WrapperHelpers
 
   internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, HttpClient client, Dictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
   {
-    new Uri(client.BaseAddress ?? new(string.Empty), options.Url);
     RequestOptions<T> baseRequestOptions = new()
-        {
-            Url = new Uri(client.BaseAddress ?? new(string.Empty), options.Url).ToString(),
-            HttpMethod = httpMethod,
-            BearerToken = bearerToken,
-            Timeout = options.ResilienceOptions?.TimeoutValue?.TotalSeconds,
-            HttpHeaders = headers,
-            JsonSerializerOptions = options.JsonSerializerOptions,
-            UseNewtonsoftDeserializer = options.UseNewtonsoftDeserializer,
-            ExpectTaskCancellation = options.ResilienceOptions?.RunOnce ?? false,
-            LogQuery = options.LogQuery,
-            LogBody = options.LogBody,
-            MsgPackOptions = options.MsgPackOptions
-        };
+    {
+      Url = new Uri(client.BaseAddress ?? new(string.Empty), options.Url).ToString(), //$"{client.BaseAddress}{options.Url}",
+      HttpMethod = httpMethod,
+      BearerToken = bearerToken,
+      Timeout = options.ResilienceOptions?.TimeoutValue?.TotalSeconds,
+      HttpHeaders = headers,
+      JsonSerializerOptions = options.JsonSerializerOptions,
+      UseNewtonsoftDeserializer = options.UseNewtonsoftDeserializer,
+      ExpectTaskCancellation = options.ResilienceOptions?.RunOnce ?? false,
+      LogQuery = options.LogQuery,
+      LogBody = options.LogBody,
+      MsgPackOptions = options.MsgPackOptions
+    };
 
     if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
     {

@@ -40,8 +40,7 @@ public static class EndpointQueueExtensions
       {
         return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving endpoint queue metrics");
       }
-    })
-        .WithName("GetEndpointQueueMetrics");
+    }).WithName("GetEndpointQueueMetrics");
 
     endpoints.MapGet("/api/endpoint-queue-metrics/{endpointKey}", async ([FromServices] EndpointQueueService queueService, string endpointKey) =>
     {
@@ -54,8 +53,7 @@ public static class EndpointQueueExtensions
       {
         return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving endpoint queue metrics");
       }
-    })
-       .WithName("GetEndpointQueueMetrics");
+    }).WithName("GetEndpointQueueMetrics");
 
     return endpoints;
   }

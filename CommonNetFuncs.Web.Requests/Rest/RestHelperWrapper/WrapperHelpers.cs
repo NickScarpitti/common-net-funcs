@@ -190,7 +190,7 @@ internal static class WrapperHelpers
   {
     RequestOptions<T> baseRequestOptions = new()
     {
-      Url = new Uri(client.BaseAddress ?? new(string.Empty), options.Url).ToString(), //$"{client.BaseAddress}{options.Url}",
+      Url = $"{client.BaseAddress}{options.Url}", //new Uri(client.BaseAddress ?? new(string.Empty), options.Url).ToString(), ,
       HttpMethod = httpMethod,
       BearerToken = bearerToken,
       Timeout = options.ResilienceOptions?.TimeoutValue?.TotalSeconds,

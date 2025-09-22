@@ -33,7 +33,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
     string? bearerToken = null;
 
     HttpResponseMessage? lastResponse = null;
-    HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+    HttpClient client = httpClientFactory.CreateClient(options.ApiName); // HttpClientFactory manages the lifetime of the clients it creates
     options.ResilienceOptions ??= new();
 
     Dictionary<string, string> headers = headerPool.Get();

@@ -9,14 +9,14 @@ namespace CommonNetFuncs.Web.Middleware;
 public static class OptionsMiddlewareExtensions
 {
   public static IApplicationBuilder UseOptions(this IApplicationBuilder builder, string defaultAllowedOrigin = "*", string[]? allowedHeaders = null, string[]? allowedMethods = null,
-        bool allowCredentials = true, int? maxAge = 3600, HttpStatusCode defaultStatusCode = HttpStatusCode.OK)
+    bool allowCredentials = true, int? maxAge = 3600, HttpStatusCode defaultStatusCode = HttpStatusCode.OK)
   {
     return builder.UseMiddleware<OptionsMiddleware>(defaultAllowedOrigin, allowedHeaders ?? [], allowedMethods ?? [], allowCredentials, maxAge, defaultStatusCode);
   }
 }
 
 public sealed class OptionsMiddleware(RequestDelegate next, string defaultAllowedOrigin, string[] allowedHeaders, string[] allowedMethods,
-        bool allowCredentials, int maxAge, HttpStatusCode defaultStatusCode)
+  bool allowCredentials, int maxAge, HttpStatusCode defaultStatusCode)
 {
   private readonly RequestDelegate next = next ?? throw new ArgumentNullException(nameof(next), "RequestDelegate \"next\" cannot be null!");
 

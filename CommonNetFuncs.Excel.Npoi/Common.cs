@@ -24,7 +24,7 @@ namespace CommonNetFuncs.Excel.Npoi;
 
 public sealed class NpoiBorderStyles
 {
-  public NpoiBorderStyles(ICellStyle? cellStyle = null)
+  public NpoiBorderStyles(ICellStyle? cellStyle)
   {
     if (cellStyle != null)
     {

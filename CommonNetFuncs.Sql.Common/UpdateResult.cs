@@ -1,8 +1,8 @@
 ﻿namespace CommonNetFuncs.Sql.Common;
 
-public sealed class UpdateResult
+public sealed class UpdateResult(int recordsChanged, bool success)
 {
-  public int RecordsChanged { get; set; }
+  public int RecordsChanged { get; init; } = recordsChanged;
 
-  public bool Success { get; set; }
+  public bool Success { get; init; } = success;
 }

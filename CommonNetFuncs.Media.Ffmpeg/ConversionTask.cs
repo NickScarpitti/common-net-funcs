@@ -9,7 +9,7 @@ using static CommonNetFuncs.Media.Ffmpeg.Helpers;
 
 namespace CommonNetFuncs.Media.Ffmpeg;
 
-public sealed class HardwareAccelerationValues()
+public sealed class HardwareAccelerationValues
 {
   public HardwareAccelerator hardwareAccelerator { get; set; }
 

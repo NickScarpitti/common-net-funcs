@@ -18,8 +18,8 @@ namespace CommonNetFuncs.EFCore;
 public sealed class FullQueryOptions(bool? splitQueryOverride = null) : NavigationPropertiesOptions
 {
   /// <summary>
-    /// Optional: Override the database default split query behavior. Only used when running "Full" queries that include navigation properties.
-    /// </summary>
+  /// Optional: Override the database default split query behavior. Only used when running "Full" queries that include navigation properties.
+  /// </summary>
   public bool? SplitQueryOverride { get; set; } = splitQueryOverride;
 }
 

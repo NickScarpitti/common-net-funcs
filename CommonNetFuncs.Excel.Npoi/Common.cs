@@ -32,6 +32,20 @@ public sealed class NpoiBorderStyles
     }
   }
 
+  public NpoiBorderStyles(BorderStyle? borderTop = null, BorderStyle? borderLeft = null, BorderStyle? borderRight = null, BorderStyle? borderBottom = null,
+    short? borderTopColor = null, short? borderLeftColor = null, short? borderRightColor = null, short? borderBottomColor = null)
+  {
+    BorderTop = borderTop;
+    BorderLeft = borderLeft;
+    BorderRight = borderRight;
+    BorderBottom = borderBottom;
+
+    BorderTopColor = borderTopColor;
+    BorderLeftColor = borderLeftColor;
+    BorderRightColor = borderRightColor;
+    BorderBottomColor = borderBottomColor;
+  }
+
   public BorderStyle? BorderTop { get; set; }
 
   public BorderStyle? BorderLeft { get; set; }

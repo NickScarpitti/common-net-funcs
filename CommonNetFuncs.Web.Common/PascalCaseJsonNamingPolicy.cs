@@ -11,16 +11,20 @@ public sealed class PascalCaseJsonNamingPolicy : JsonNamingPolicy
       return name;
     }
 
-        #if NETCOREAPP
+    #if NETCOREAPP
+
     return string.Create(name.Length, name, (chars, value) =>
     {
       value.CopyTo(chars);
       FixCasing(chars);
     });
+
     #else
-                char[] chars = name.ToCharArray();
-                FixCasing(chars);
-                return new string(chars);
+
+    char[] chars = name.ToCharArray();
+    FixCasing(chars);
+    return new string(chars);
+
     #endif
   }
 

@@ -32,7 +32,7 @@ public sealed class OptionsMiddlewareTests
       _context.Request.Headers.Origin = originHeader;
     }
 
-    OptionsMiddleware middleware = new(_next, "*", [], [], true, 3600, HttpStatusCode.OK);
+    OptionsMiddleware middleware = new(_next, "*", [ "Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN" ], [ "GET, POST, PUT, DELETE, OPTIONS" ], true, 3600, HttpStatusCode.OK);
 
     // Act
     await middleware.InvokeAsync(_context);

@@ -7,22 +7,22 @@ namespace CommonNetFuncs.Web.Api.TaskQueing.ApiQueue;
 
 public static class PrioritizedSequentialTaskExtensions
 {
-    public static IEndpointRouteBuilder EndpointQueueMetrics(this IEndpointRouteBuilder endpoints)
+  public static IEndpointRouteBuilder EndpointQueueMetrics(this IEndpointRouteBuilder endpoints)
+  {
+    endpoints.MapGet("/api/prioritized-sequential-api-tasks-metrics", async ([FromServices] PrioritizedSequentialTaskProcessor processor) =>
     {
-        endpoints.MapGet("/api/prioritized-sequential-api-tasks-metrics", async ([FromServices] PrioritizedSequentialTaskProcessor processor) =>
-        {
-            try
-            {
-                PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync().ConfigureAwait(false);
-                return Results.Ok(stats);
-            }
-            catch (Exception ex)
-            {
-                return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving endpoint queue metrics");
-            }
-        })
+      try
+      {
+        PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync().ConfigureAwait(false);
+        return Results.Ok(stats);
+      }
+      catch (Exception ex)
+      {
+        return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving endpoint queue metrics");
+      }
+    })
         .WithName("GetSequentialApiTasksMetrics");
 
-        return endpoints;
-    }
+    return endpoints;
+  }
 }

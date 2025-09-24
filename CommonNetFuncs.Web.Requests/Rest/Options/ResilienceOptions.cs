@@ -7,35 +7,35 @@ public class ResilienceOptions(int MaxRetry = 10, int RetryDelay = 1000, long? T
     Func<HttpStatusCode, bool>? ShouldRetryByStatusFunc = null, EDelayBackoffType DelayBackoffType = EDelayBackoffType.Constant, bool UseJitter = true,
     Func<HttpResponseMessage?, ResilienceOptions, bool>? ShouldRetryFunc = null, Func<string, bool, ValueTask<string>>? GetBearerTokenFunc = null)
 {
-    public bool NullOk { get; set; } = NullOk;
+  public bool NullOk { get; set; } = NullOk;
 
-    public bool RunOnce { get; set; } = RunOnce;
+  public bool RunOnce { get; set; } = RunOnce;
 
-    public int MaxRetry { get; set; } = MaxRetry;
+  public int MaxRetry { get; set; } = MaxRetry;
 
-    public TimeSpan RetryDelay { get; set; } = TimeSpan.FromMilliseconds(RetryDelay);
+  public TimeSpan RetryDelay { get; set; } = TimeSpan.FromMilliseconds(RetryDelay);
 
-    public TimeSpan? TimeoutValue
-    {
-        get;
-        set;
-    } = TimeSpan.FromSeconds(TimeoutValue == null || TimeoutValue < 0 ? 100 : (long)TimeoutValue);
+  public TimeSpan? TimeoutValue
+  {
+    get;
+    set;
+  } = TimeSpan.FromSeconds(TimeoutValue == null || TimeoutValue < 0 ? 100 : (long)TimeoutValue);
 
-    public Func<HttpStatusCode, bool>? ShouldRetryByStatusFunc { get; set; } = ShouldRetryByStatusFunc;
+  public Func<HttpStatusCode, bool>? ShouldRetryByStatusFunc { get; set; } = ShouldRetryByStatusFunc;
 
-    public EDelayBackoffType DelayBackoffType { get; set; } = DelayBackoffType;
+  public EDelayBackoffType DelayBackoffType { get; set; } = DelayBackoffType;
 
-    public bool UseJitter { get; set; } = UseJitter;
+  public bool UseJitter { get; set; } = UseJitter;
 
-    public Func<HttpResponseMessage?, ResilienceOptions, bool>? ShouldRetryFunc { get; set; } = ShouldRetryFunc;
+  public Func<HttpResponseMessage?, ResilienceOptions, bool>? ShouldRetryFunc { get; set; } = ShouldRetryFunc;
 
-    /// <summary>
+  /// <summary>
     /// This function is called to get a bearer token if UseBearerToken is true and BearerToken is not set.
     /// </summary>
     /// <remarks>
     /// The first parameter is the ApiName, the second parameter indicates if the token should be forcefully refreshed (true on retry).
     /// </remarks>
-    public Func<string, bool, ValueTask<string>>? GetBearerTokenFunc { get; set; } = GetBearerTokenFunc;
+  public Func<string, bool, ValueTask<string>>? GetBearerTokenFunc { get; set; } = GetBearerTokenFunc;
 
-    internal bool RefreshToken { get; set; }
+  internal bool RefreshToken { get; set; }
 }

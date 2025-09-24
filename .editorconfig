@@ -18,7 +18,7 @@ indent_size = 2
 
 # Code files
 [*.{cs,csx,vb,vbx}]
-indent_size = 4
+indent_size = 2
 insert_final_newline = true
 charset = utf-8-bom
 ###############################
@@ -69,7 +69,7 @@ dotnet_naming_symbols.constant_fields.applicable_accessibilities  = *
 dotnet_naming_symbols.constant_fields.required_modifiers          = const
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
-tab_width = 4
+tab_width = 2
 end_of_line = crlf
 dotnet_style_namespace_match_folder = true:suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion

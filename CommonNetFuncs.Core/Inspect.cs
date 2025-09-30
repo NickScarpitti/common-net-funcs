@@ -14,31 +14,31 @@ public static class Inspect
   private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
   /// <summary>
-    /// Gets the default value of the provided type
-    /// </summary>
-    /// <param name="type">Type to get the default value of</param>
-    /// <returns>The default value of the provided type</returns>
+  /// Gets the default value of the provided type
+  /// </summary>
+  /// <param name="type">Type to get the default value of</param>
+  /// <returns>The default value of the provided type</returns>
   public static object? GetDefaultValue(this Type type)
   {
     return type.IsValueType ? RuntimeHelpers.GetUninitializedObject(type) : null;
   }
 
   /// <summary>
-    /// Get the number of properties in a class that are set to their default value
-    /// </summary>
-    /// <param name="obj">Object to count default properties in</param>
-    /// <returns>Number of properties in a class that are set to their default value</returns>
+  /// Get the number of properties in a class that are set to their default value
+  /// </summary>
+  /// <param name="obj">Object to count default properties in</param>
+  /// <returns>Number of properties in a class that are set to their default value</returns>
   public static int CountDefaultProps<T>(this T obj) where T : class
   {
     return GetOrAddPropertiesFromReflectionCache(typeof(T)).Count(x => x.CanWrite && Equals(x.GetValue(obj), x.PropertyType.GetDefaultValue()));
   }
 
   /// <summary>
-    /// Returns whether a Type has the specified attribute or not
-    /// </summary>
-    /// <param name="type">The type to check for the specified attribute</param>
-    /// <param name="attributeName">The name of the attribute you are checking the provided type for</param>
-    /// <returns><see langword="true"/> if the object has the specified attribute, otherwise false</returns>
+  /// Returns whether a Type has the specified attribute or not
+  /// </summary>
+  /// <param name="type">The type to check for the specified attribute</param>
+  /// <param name="attributeName">The name of the attribute you are checking the provided type for</param>
+  /// <returns><see langword="true"/> if the object has the specified attribute, otherwise false</returns>
   public static bool ObjectHasAttribute(this Type type, string attributeName)
   {
     bool hasAttribute = false;
@@ -60,11 +60,11 @@ public static class Inspect
   }
 
   /// <summary>
-    /// Compares two like objects against each other to check to see if they contain the same values
-    /// </summary>
-    /// <param name="obj1">First object to compare for value equality</param>
-    /// <param name="obj2">Second object to compare for value equality</param>
-    /// <returns><see langword="true"/> if the two objects have the same value for all elements, otherwise false</returns>
+  /// Compares two like objects against each other to check to see if they contain the same values
+  /// </summary>
+  /// <param name="obj1">First object to compare for value equality</param>
+  /// <param name="obj2">Second object to compare for value equality</param>
+  /// <returns><see langword="true"/> if the two objects have the same value for all elements, otherwise false</returns>
   [Obsolete("Please use IsEqual method instead")]
   public static bool IsEqualR(this object? obj1, object? obj2)
   {
@@ -72,12 +72,12 @@ public static class Inspect
   }
 
   /// <summary>
-    /// Compare two class objects for value equality
-    /// </summary>
-    /// <param name="obj1">First object to compare for value equality</param>
-    /// <param name="obj2">Second object to compare for value equality</param>
-    /// <param name="exemptProps">Names of properties to not include in the matching check</param>
-    /// <returns><see langword="true"/> if both objects contain identical values for all properties except for the ones identified by exemptProps, otherwise false</returns>
+  /// Compare two class objects for value equality
+  /// </summary>
+  /// <param name="obj1">First object to compare for value equality</param>
+  /// <param name="obj2">Second object to compare for value equality</param>
+  /// <param name="exemptProps">Names of properties to not include in the matching check</param>
+  /// <returns><see langword="true"/> if both objects contain identical values for all properties except for the ones identified by exemptProps, otherwise false</returns>
   [Obsolete("Please use IsEqual method instead")]
   public static bool IsEqualR(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
   {
@@ -151,14 +151,14 @@ public static class Inspect
   private static readonly ConcurrentDictionary<Tuple<Type, bool, bool>, Func<object, object, IEnumerable<string>, bool>> CompareDelegates = [];
 
   /// <summary>
-    /// Compare two class objects for value equality
-    /// </summary>
-    /// <param name="obj1">First object to compare for value equality</param>
-    /// <param name="obj2">Second object to compare for value equality</param>
-    /// <param name="exemptProps">Optional: Names of properties to not include in the matching check</param>
-    /// <param name="ignoreStringCase">Optional: If <see langword="true"/>, will ignore case when comparing string properties between obj1 and obj2, otherwise will use case sensitive comparison.</param>
-    /// <param name="recursive">Optional: If <see langword="true"/>, will recursively compare </param>
-    /// <returns><see langword="true"/> if the two objects are equal by values, otherwise false</returns>
+  /// Compare two class objects for value equality
+  /// </summary>
+  /// <param name="obj1">First object to compare for value equality</param>
+  /// <param name="obj2">Second object to compare for value equality</param>
+  /// <param name="exemptProps">Optional: Names of properties to not include in the matching check</param>
+  /// <param name="ignoreStringCase">Optional: If <see langword="true"/>, will ignore case when comparing string properties between obj1 and obj2, otherwise will use case sensitive comparison.</param>
+  /// <param name="recursive">Optional: If <see langword="true"/>, will recursively compare </param>
+  /// <returns><see langword="true"/> if the two objects are equal by values, otherwise false</returns>
   public static bool IsEqual(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null, bool ignoreStringCase = false, bool recursive = true)
   {
     // Initialize context if this is the top-level call
@@ -221,12 +221,12 @@ public static class Inspect
   }
 
   /// <summary>
-    /// Creates a delegate for comparing two objects of the specified type for value equality.
-    /// </summary>
-    /// <param name="type">Type of the object to be compared</param>
-    /// <param name="ignoreStringCase">If <see langword="true"/>, will ignore case when comparing string properties for value equlity</param>
-    /// <param name="recursive">If <see langword="true"/>, will recursively compare properties of complex types</param>
-    /// <returns>A delegate for comparing two objects of the specified type for value equality</returns>
+  /// Creates a delegate for comparing two objects of the specified type for value equality.
+  /// </summary>
+  /// <param name="type">Type of the object to be compared</param>
+  /// <param name="ignoreStringCase">If <see langword="true"/>, will ignore case when comparing string properties for value equlity</param>
+  /// <param name="recursive">If <see langword="true"/>, will recursively compare properties of complex types</param>
+  /// <returns>A delegate for comparing two objects of the specified type for value equality</returns>
   private static Func<object, object, IEnumerable<string>, bool> CreateCompareDelegate(Type type, bool ignoreStringCase, bool recursive)
   {
     ParameterExpression obj1Param = Expression.Parameter(typeof(object), "obj1");
@@ -293,11 +293,11 @@ public static class Inspect
   }
 
   /// <summary>
-    /// Gets a hash string representing the object's value, using the specified algorithm (default MD5). Order of collection elements does not affect the hash.
-    /// </summary>
-    /// <param name="obj">Object to get hash value from</param>
-    /// <param name="hashAlgorithm">Optional: Hash algorithm to use. Default is MD5.</param>
-    /// <returns>Hash string representing the object's value</returns>
+  /// Gets a hash string representing the object's value, using the specified algorithm (default MD5). Order of collection elements does not affect the hash.
+  /// </summary>
+  /// <param name="obj">Object to get hash value from</param>
+  /// <param name="hashAlgorithm">Optional: Hash algorithm to use. Default is MD5.</param>
+  /// <returns>Hash string representing the object's value</returns>
   public static string GetHashForObject<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
   {
     if (obj == null)
@@ -331,11 +331,11 @@ public static class Inspect
   }
 
   /// <summary>
-    /// Gets a hash string representing the object's value asynchronously, using the specified algorithm (default MD5). Order of collection elements does not affect the hash.
-    /// </summary>
-    /// <param name="obj">Object to get hash value from</param>
-    /// <param name="hashAlgorithm">Optional: Hash algorithm to use. Default is MD5.</param>
-    /// <returns>Hash string representing the object's value</returns>
+  /// Gets a hash string representing the object's value asynchronously, using the specified algorithm (default MD5). Order of collection elements does not affect the hash.
+  /// </summary>
+  /// <param name="obj">Object to get hash value from</param>
+  /// <param name="hashAlgorithm">Optional: Hash algorithm to use. Default is MD5.</param>
+  /// <returns>Hash string representing the object's value</returns>
   public static async Task<string> GetHashForObjectAsync<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
   {
     if (obj == null)
@@ -370,10 +370,10 @@ public static class Inspect
   }
 
   /// <summary>
-    /// Writes the value to the binary writer.
-    /// </summary>
-    /// <param name="writer">Binary writer to write the value to</param>
-    /// <param name="value">Value to write to the binary writer</param>
+  /// Writes the value to the binary writer.
+  /// </summary>
+  /// <param name="writer">Binary writer to write the value to</param>
+  /// <param name="value">Value to write to the binary writer</param>
   private static void WriteValue(BinaryWriter writer, object value)
   {
     if (value == null)
@@ -433,10 +433,10 @@ public static class Inspect
   }
 
   /// <summary>
-    /// Writes the value to the binary writer.
-    /// </summary>
-    /// <param name="writer">Binary writer to write the value to</param>
-    /// <param name="value">Value to write to the binary writer</param>
+  /// Writes the value to the binary writer.
+  /// </summary>
+  /// <param name="writer">Binary writer to write the value to</param>
+  /// <param name="value">Value to write to the binary writer</param>
   private static async Task WriteValueAsync(BinaryWriter writer, object value)
   {
     if (value == null)

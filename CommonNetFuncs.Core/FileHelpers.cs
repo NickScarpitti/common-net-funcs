@@ -12,13 +12,13 @@ public static partial class FileHelpers
   private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
   /// <summary>
-    /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same name exists already
-    /// </summary>
-    /// <param name="originalFullFileName">Full path and file name</param>
-    /// <param name="startFromZero">Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.</param>
-    /// <param name="suppressLogging">Will prevent this method from emitting logs</param>
-    /// <param name="createPathIfMissing">Will create the file path if it does not exist</param>
-    /// <returns>Unique file name for the given destination</returns>
+  /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same name exists already
+  /// </summary>
+  /// <param name="originalFullFileName">Full path and file name</param>
+  /// <param name="startFromZero">Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.</param>
+  /// <param name="suppressLogging">Will prevent this method from emitting logs</param>
+  /// <param name="createPathIfMissing">Will create the file path if it does not exist</param>
+  /// <returns>Unique file name for the given destination</returns>
   public static string GetSafeSaveName(this string originalFullFileName, bool startFromZero = true, bool suppressLogging = false, bool createPathIfMissing = false)
   {
     // Remove invalid characters from
@@ -112,14 +112,14 @@ public static partial class FileHelpers
   }
 
   /// <summary>
-    /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same name exists already
-    /// </summary>
-    /// <param name="path">Full path to look in for duplicated file names</param>
-    /// <param name="fileName">The file name to check for uniqueness with in the given file path</param>
-    /// <param name="startFromZero">Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.</param>
-    /// <param name="suppressLogging">Will prevent this method from emitting logs</param>
-    /// <param name="createPathIfMissing">Will create the file path if it does not exist</param>
-    /// <returns>Unique file name for the given destination</returns>
+  /// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same name exists already
+  /// </summary>
+  /// <param name="path">Full path to look in for duplicated file names</param>
+  /// <param name="fileName">The file name to check for uniqueness with in the given file path</param>
+  /// <param name="startFromZero">Will start incrementing unique value from 0 if true. If false, will start at the integer value present inside of parentheses directly before the extension if such value is present.</param>
+  /// <param name="suppressLogging">Will prevent this method from emitting logs</param>
+  /// <param name="createPathIfMissing">Will create the file path if it does not exist</param>
+  /// <returns>Unique file name for the given destination</returns>
   public static string GetSafeSaveName(string path, string fileName, bool startFromZero = true, bool suppressLogging = false, bool createPathIfMissing = false)
   {
     fileName = CleanFileName(fileName);
@@ -203,11 +203,11 @@ public static partial class FileHelpers
   }
 
   /// <summary>
-    /// Validates file extension based on list of valid extensions
-    /// </summary>
-    /// <param name="fileName">Full file name (with extension) to check for a valid file extension</param>
-    /// <param name="validExtensions">Array of valid file extensions</param>
-    /// <returns><see langword="true"/> if the file has a valid extension</returns>
+  /// Validates file extension based on list of valid extensions
+  /// </summary>
+  /// <param name="fileName">Full file name (with extension) to check for a valid file extension</param>
+  /// <param name="validExtensions">Array of valid file extensions</param>
+  /// <returns><see langword="true"/> if the file has a valid extension</returns>
   public static bool ValidateFileExtension(this string fileName, string[] validExtensions)
   {
     string extension = Path.GetExtension(fileName);
@@ -215,11 +215,11 @@ public static partial class FileHelpers
   }
 
   /// <summary>
-    /// Gets the hash for a file using the designated algorithm.
-    /// </summary>
-    /// <param name="fileName">Full file name including directory pointing to the file to get the hash of.</param>
-    /// <param name="algorithm">Optional: Algorithm to use to generate the hash. Defaults to SHA512.</param>
-    /// <returns>Hash for the file.</returns>
+  /// Gets the hash for a file using the designated algorithm.
+  /// </summary>
+  /// <param name="fileName">Full file name including directory pointing to the file to get the hash of.</param>
+  /// <param name="algorithm">Optional: Algorithm to use to generate the hash. Defaults to SHA512.</param>
+  /// <returns>Hash for the file.</returns>
   public static async Task<string> GetHashFromFile(this string fileName, EHashAlgorithm algorithm = EHashAlgorithm.SHA512)
   {
     if (!File.Exists(fileName))
@@ -240,11 +240,11 @@ public static partial class FileHelpers
   }
 
   /// <summary>
-    /// Generates hash based on the contents of a stream using the designated algorithm.
-    /// </summary>
-    /// <param name="stream">Stream generate hash for</param>
-    /// <param name="hashAlgorithm">Optional: Algorithm to use to generate the hash. Defaults to SHA512</param>
-    /// <returns>Hash for the contents of the stream.</returns>
+  /// Generates hash based on the contents of a stream using the designated algorithm.
+  /// </summary>
+  /// <param name="stream">Stream generate hash for</param>
+  /// <param name="hashAlgorithm">Optional: Algorithm to use to generate the hash. Defaults to SHA512</param>
+  /// <returns>Hash for the contents of the stream.</returns>
   public static async Task<string> GetHashFromStream(this Stream stream, EHashAlgorithm hashAlgorithm = EHashAlgorithm.SHA512)
   {
     HashAlgorithm algorithm = hashAlgorithm switch
@@ -273,12 +273,12 @@ public static partial class FileHelpers
   }
 
   /// <summary>
-    /// Gets all files in a directory and its subdirectories.
-    /// </summary>
-    /// <param name="startDirectory">Directory to start searching from.</param>
-    /// <param name="searchPattern">Search pattern to use when looking for files.</param>
-    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    /// <returns>A list of all files found.</returns>
+  /// Gets all files in a directory and its subdirectories.
+  /// </summary>
+  /// <param name="startDirectory">Directory to start searching from.</param>
+  /// <param name="searchPattern">Search pattern to use when looking for files.</param>
+  /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+  /// <returns>A list of all files found.</returns>
   public static IEnumerable<string> GetAllFilesRecursive(string? startDirectory, string searchPattern = "*", CancellationToken cancellationToken = default)
   {
     if (string.IsNullOrWhiteSpace(startDirectory) || !Directory.Exists(startDirectory))
@@ -323,10 +323,10 @@ public static partial class FileHelpers
   }
 
   /// <summary>
-    /// Cleans a filename by removing invalid characters
-    /// </summary>
-    /// <param name="fileName">The filename to clean</param>
-    /// <returns>A clean filename</returns>
+  /// Cleans a filename by removing invalid characters
+  /// </summary>
+  /// <param name="fileName">The filename to clean</param>
+  /// <returns>A clean filename</returns>
   private static string CleanFileName(string fileName)
   {
     // Replace invalid characters with safe alternatives

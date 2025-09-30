@@ -50,8 +50,8 @@ public static class FastMapper
   public static ICacheManagerApi<MapperCacheKey, Delegate> CacheManager => MapperCache;
 
   /// <summary>
-    /// Clears LimitedMapperCache cache and sets the size to the specified value.
-    /// </summary>
+  /// Clears LimitedMapperCache cache and sets the size to the specified value.
+  /// </summary>
   private static Delegate GetOrAddPropertiesFromMapperCache<T, UT>(MapperCacheKey key)
   {
     bool isLimitedCache = CacheManager.IsUsingLimitedCache();
@@ -76,12 +76,12 @@ public static class FastMapper
   #endregion
 
   /// <summary>
-    /// Method that maps one object onto another by property name using expression trees
-    /// </summary>
-    /// <typeparam name="T">Type to map data from</typeparam>
-    /// <typeparam name="UT">Type to map data to</typeparam>
-    /// <param name="source">Object to map data from</param>
-    /// <returns>New instance of type UT with values populated from source object</returns>
+  /// Method that maps one object onto another by property name using expression trees
+  /// </summary>
+  /// <typeparam name="T">Type to map data from</typeparam>
+  /// <typeparam name="UT">Type to map data to</typeparam>
+  /// <param name="source">Object to map data from</param>
+  /// <returns>New instance of type UT with values populated from source object</returns>
   [return: NotNullIfNotNull(nameof(source))]
   public static UT? FastMap<T, UT>(this T source, bool useCache = true)
   {

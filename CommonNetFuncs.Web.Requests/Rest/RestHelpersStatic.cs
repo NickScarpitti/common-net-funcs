@@ -30,13 +30,13 @@ public static class RestHelpersStatic
   public static readonly JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles, PropertyNameCaseInsensitive = true };
 
   /// <summary>
-    /// Executes a REST request against the provided URL with the requestOptions
-    /// </summary>
-    /// <typeparam name="T">Type of return object</typeparam>
-    /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
-    /// <param name="client">HttpClient to execute REST request with</param>
-    /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
+  /// Executes a REST request against the provided URL with the requestOptions
+  /// </summary>
+  /// <typeparam name="T">Type of return object</typeparam>
+  /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
+  /// <param name="client">HttpClient to execute REST request with</param>
+  /// <param name="requestOptions">Configuration parameters for the REST request</param>
+  /// <returns>Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
   public static async Task<T?> RestRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
   {
     T? result = default;
@@ -77,13 +77,13 @@ public static class RestHelpersStatic
   }
 
   /// <summary>
-    /// Executes a REST request against the provided URL with the requestOptions and streams the results using IAsyncEnumerable
-    /// </summary>
-    /// <typeparam name="T">Type of return object</typeparam>
-    /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
-    /// <param name="client">HttpClient to execute REST request with</param>
-    /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>An IAsyncEnumerable of the Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
+  /// Executes a REST request against the provided URL with the requestOptions and streams the results using IAsyncEnumerable
+  /// </summary>
+  /// <typeparam name="T">Type of return object</typeparam>
+  /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
+  /// <param name="client">HttpClient to execute REST request with</param>
+  /// <param name="requestOptions">Configuration parameters for the REST request</param>
+  /// <returns>An IAsyncEnumerable of the Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
   public static async IAsyncEnumerable<T?> StreamingRestRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
     IAsyncEnumerator<T?>? enumeratedReader = null;
@@ -154,13 +154,13 @@ public static class RestHelpersStatic
   }
 
   /// <summary>
-    /// Executes a REST request against the provided URL with the requestOptions
-    /// </summary>
-    /// <typeparam name="T">Type of return object</typeparam>
-    /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
-    /// <param name="client">HttpClient to execute REST request with</param>
-    /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
+  /// Executes a REST request against the provided URL with the requestOptions
+  /// </summary>
+  /// <typeparam name="T">Type of return object</typeparam>
+  /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
+  /// <param name="client">HttpClient to execute REST request with</param>
+  /// <param name="requestOptions">Configuration parameters for the REST request</param>
+  /// <returns>Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
   public static async Task<RestObject<T>> RestObjectRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
   {
     RestObject<T> restObject = new();
@@ -200,13 +200,13 @@ public static class RestHelpersStatic
   }
 
   /// <summary>
-    /// Executes a REST request against the provided URL with the requestOptions and streams the results using IAsyncEnumerable
-    /// </summary>
-    /// <typeparam name="T">Type of return object</typeparam>
-    /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
-    /// <param name="client">HttpClient to execute REST request with</param>
-    /// <param name="requestOptions">Configuration parameters for the REST request</param>
-    /// <returns>An IAsyncEnumerable of the Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
+  /// Executes a REST request against the provided URL with the requestOptions and streams the results using IAsyncEnumerable
+  /// </summary>
+  /// <typeparam name="T">Type of return object</typeparam>
+  /// <typeparam name="UT">Type of object used in body (if any)</typeparam>
+  /// <param name="client">HttpClient to execute REST request with</param>
+  /// <param name="requestOptions">Configuration parameters for the REST request</param>
+  /// <returns>An IAsyncEnumerable of the Object of type <typeparamref name="T"/> resulting from the request - Null if not success.</returns>
   public static async Task<StreamingRestObject<T>> StreamingRestObjectRequest<T, UT>(this HttpClient client, RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
   {
     StreamingRestObject<T> restObject = new();
@@ -257,14 +257,14 @@ public static class RestHelpersStatic
   }
 
   /// <summary>
-    /// Checks if the HTTP request was successful and then parses the response if it is
-    /// </summary>
-    /// <typeparam name="T">Type of expected response content</typeparam>
-    /// <param name="response">Response message from the HTTP request</param>
-    /// <param name="httpMethod">HTTP method used to make the HTTP request</param>
-    /// <param name="url">URL HTTP request was made against</param>
-    /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
-    /// <returns>Response content if HTTP request was successful</returns>
+  /// Checks if the HTTP request was successful and then parses the response if it is
+  /// </summary>
+  /// <typeparam name="T">Type of expected response content</typeparam>
+  /// <param name="response">Response message from the HTTP request</param>
+  /// <param name="httpMethod">HTTP method used to make the HTTP request</param>
+  /// <param name="url">URL HTTP request was made against</param>
+  /// <param name="useNewtonsoftDeserializer">When true, Newtonsoft.Json will be used to deserialize the response instead of system.Text.Json</param>
+  /// <returns>Response content if HTTP request was successful</returns>
   internal static async Task<T?> HandleResponse<T>(this HttpResponseMessage response, string httpMethod, string url, bool useNewtonsoftDeserializer, JsonSerializerOptions? jsonSerializerOptions = null,
         MsgPackOptions? msgPackOptions = null, Dictionary<string, string>? httpHeaders = null, CancellationToken cancellationToken = default)
   {
@@ -302,13 +302,13 @@ public static class RestHelpersStatic
   }
 
   /// <summary>
-    /// Checks if the HTTP request was successful and then parses the response if it is
-    /// </summary>
-    /// <typeparam name="T">Type of expected response content</typeparam>
-    /// <param name="response">Response message from the HTTP request</param>
-    /// <param name="httpMethod">HTTP method used to make the HTTP request</param>
-    /// <param name="url">URL HTTP request was made against</param>
-    /// <returns>Response content if HTTP request was successful</returns>
+  /// Checks if the HTTP request was successful and then parses the response if it is
+  /// </summary>
+  /// <typeparam name="T">Type of expected response content</typeparam>
+  /// <param name="response">Response message from the HTTP request</param>
+  /// <param name="httpMethod">HTTP method used to make the HTTP request</param>
+  /// <param name="url">URL HTTP request was made against</param>
+  /// <returns>Response content if HTTP request was successful</returns>
   internal static async IAsyncEnumerable<T?> HandleResponseAsync<T>(this HttpResponseMessage response, string httpMethod, string url, Dictionary<string, string>? httpHeaders = null,
         JsonSerializerOptions? jsonSerializerOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
@@ -547,14 +547,14 @@ public static class RestHelpersStatic
   }
 
   /// <summary>
-    /// Adds content to HTTP request if not using GET HTTP request method
-    /// </summary>
-    /// <typeparam name="T">Type of the post object being added to the HTTP request content</typeparam>
-    /// <param name="httpRequestMessage">HTTP request to add content to</param>
-    /// <param name="httpMethod">HTTP request method</param>
-    /// <param name="httpHeaders">Headers used in the HTTP request</param>
-    /// <param name="postObject">Object to add as the content (POST and PUT only)</param>
-    /// <param name="patchDoc">Patch document for PATCH requests</param>
+  /// Adds content to HTTP request if not using GET HTTP request method
+  /// </summary>
+  /// <typeparam name="T">Type of the post object being added to the HTTP request content</typeparam>
+  /// <param name="httpRequestMessage">HTTP request to add content to</param>
+  /// <param name="httpMethod">HTTP request method</param>
+  /// <param name="httpHeaders">Headers used in the HTTP request</param>
+  /// <param name="postObject">Object to add as the content (POST and PUT only)</param>
+  /// <param name="patchDoc">Patch document for PATCH requests</param>
   internal static void AddContent<T>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, Dictionary<string, string>? httpHeaders = null, T? postObject = default, HttpContent? patchDoc = null)
   {
     if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
@@ -582,10 +582,10 @@ public static class RestHelpersStatic
   }
 
   /// <summary>
-    /// Attaches headers to client from httpHeaders if applicable, else only attaches authorization.
-    /// </summary>
-    /// <param name="bearerToken">Token used for bearer authentication</param>
-    /// <param name="httpHeaders">Dictionary of headers</param>
+  /// Attaches headers to client from httpHeaders if applicable, else only attaches authorization.
+  /// </summary>
+  /// <param name="bearerToken">Token used for bearer authentication</param>
+  /// <param name="httpHeaders">Dictionary of headers</param>
   internal static void AttachHeaders(this HttpRequestMessage httpRequestMessage, string? bearerToken, Dictionary<string, string>? httpHeaders)
   {
     //Changed this from inline if due to setting .Authorization to null if bearerToken is empty/null resulting in an exception during the post request: "A task was canceled"
@@ -618,14 +618,14 @@ public static class RestHelpersStatic
   }
 
   /// <summary>
-    /// Gets the number of chunks and items per chunk to return with yield return to fit within MvcOptions.MaxIAsyncEnumerableBufferLimit
-    /// </summary>
-    /// <param name="itemCount">Total number of items to transmit</param>
-    /// <param name="startingitemsPerChunk">
-    /// Minimum chunk size to see if it fits within the buffer limit.<br/>Will increase from initial value until the number of chunks fits within the buffer limit
-    /// </param>
-    /// <param name="bufferLimit">Maximum number of buffer operations allowed by IAsyncEnumerable. Default = 8192</param>
-    /// <returns>itemsPerChunk and numberOfChunks</returns>
+  /// Gets the number of chunks and items per chunk to return with yield return to fit within MvcOptions.MaxIAsyncEnumerableBufferLimit
+  /// </summary>
+  /// <param name="itemCount">Total number of items to transmit</param>
+  /// <param name="startingitemsPerChunk">
+  /// Minimum chunk size to see if it fits within the buffer limit.<br/>Will increase from initial value until the number of chunks fits within the buffer limit
+  /// </param>
+  /// <param name="bufferLimit">Maximum number of buffer operations allowed by IAsyncEnumerable. Default = 8192</param>
+  /// <returns>itemsPerChunk and numberOfChunks</returns>
   public static (int itemsPerChunk, int numberOfChunks) GetChunkingParameters(int itemCount, int startingitemsPerChunk = 10000, int bufferLimit = 8192)
   {
     //IAsyncEnumerable is limited to MvcOptions.MaxIAsyncEnumerableBufferLimit which is 8192 by default

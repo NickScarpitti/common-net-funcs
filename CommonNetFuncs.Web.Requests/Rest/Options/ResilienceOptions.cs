@@ -30,11 +30,11 @@ public class ResilienceOptions(int MaxRetry = 10, int RetryDelay = 1000, long? T
   public Func<HttpResponseMessage?, ResilienceOptions, bool>? ShouldRetryFunc { get; set; } = ShouldRetryFunc;
 
   /// <summary>
-    /// This function is called to get a bearer token if UseBearerToken is true and BearerToken is not set.
-    /// </summary>
-    /// <remarks>
-    /// The first parameter is the ApiName, the second parameter indicates if the token should be forcefully refreshed (true on retry).
-    /// </remarks>
+  /// This function is called to get a bearer token if UseBearerToken is true and BearerToken is not set.
+  /// </summary>
+  /// <remarks>
+  /// The first parameter is the ApiName, the second parameter indicates if the token should be forcefully refreshed (true on retry).
+  /// </remarks>
   public Func<string, bool, ValueTask<string>>? GetBearerTokenFunc { get; set; } = GetBearerTokenFunc;
 
   internal bool RefreshToken { get; set; }

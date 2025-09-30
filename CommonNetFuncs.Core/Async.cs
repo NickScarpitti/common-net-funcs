@@ -10,10 +10,10 @@ public static class Async
   private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Async task that returns the value to insert into obj object.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Async task that returns the value to insert into obj object.</param>
   public static async Task ObjectFill<T>(this T obj, Task<T> task)
   {
     try
@@ -41,10 +41,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Async task that returns the value to insert into obj object.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Async task that returns the value to insert into obj object.</param>
   public static async Task ObjectFill<T>(this IList<T?> obj, Task<T?> task)
   {
     try
@@ -62,10 +62,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Async task that returns the value to insert into obj object.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Async task that returns the value to insert into obj object.</param>
   public static async Task ObjectFill<T>(this ConcurrentBag<T?> obj, Task<T?> task)
   {
     try
@@ -80,10 +80,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Async task that returns the value to insert into obj object.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Async task that returns the value to insert into obj object.</param>
   public static async Task ObjectFill<T>(this HashSet<T?> obj, Task<T?> task)
   {
     try
@@ -101,11 +101,11 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
   public static async Task ObjectFill<T>(this T obj, Func<Task<T>> task, SemaphoreSlim? semaphore)
   {
     try
@@ -141,12 +141,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this ConcurrentBag<T?> obj, Func<Task<T?>> task, SemaphoreSlim? semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -172,12 +172,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this IList<T?> obj, Func<Task<T?>> task, SemaphoreSlim? semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -203,12 +203,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this HashSet<T?> obj, Func<Task<T?>> task, SemaphoreSlim? semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -237,10 +237,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Async task that returns the value to insert into obj object.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Async task that returns the value to insert into obj object.</param>
   public static async Task ObjectFill<T>(this List<T> obj, Task<List<T>?> task)
   {
     try
@@ -261,10 +261,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Async task that returns the value to insert into obj object.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Async task that returns the value to insert into obj object.</param>
   public static async Task ObjectFill<T>(this HashSet<T> obj, Task<HashSet<T>?> task)
   {
     try
@@ -285,10 +285,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Async task that returns the value to insert into obj object.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Async task that returns the value to insert into obj object.</param>
   public static async Task ObjectFill<T>(this HashSet<T> obj, Task<List<T>?> task)
   {
     try
@@ -309,12 +309,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this List<T> obj, Func<Task<List<T>>> task, SemaphoreSlim? semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -343,12 +343,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<HashSet<T>>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -377,12 +377,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<List<T>>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -411,10 +411,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
   public static async Task ObjectFill<T>(this List<T> obj, Task<IEnumerable<T>> task)
   {
     try
@@ -435,10 +435,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
   public static async Task ObjectFill<T>(this HashSet<T> obj, Task<IEnumerable<T>> task)
   {
     try
@@ -459,12 +459,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this List<T> obj, Func<Task<IEnumerable<T>>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -493,12 +493,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<IEnumerable<T>>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -527,10 +527,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
   public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<IEnumerable<T>?> task)
   {
     try
@@ -555,12 +555,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Func<Task<IEnumerable<T>>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -593,10 +593,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
   public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<ConcurrentBag<T>?> task)
   {
     try
@@ -621,10 +621,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
   public static async Task ObjectFill<T>(this HashSet<T> obj, Task<ConcurrentBag<T>?> task)
   {
     try
@@ -645,12 +645,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Func<Task<ConcurrentBag<T>>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -683,10 +683,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Async task that returns the list of values to insert into obj object.</param>
   public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>?> task)
   {
     try
@@ -711,12 +711,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill list obj variable asynchronously.
-    /// </summary>
-    /// <param name="obj">List object to insert data into.</param>
-    /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill list obj variable asynchronously.
+  /// </summary>
+  /// <param name="obj">List object to insert data into.</param>
+  /// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Func<Task<List<T>>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -749,10 +749,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill a <see cref="DataTable"/> asynchronously.
-    /// </summary>
-    /// <param name="dt">DataTable to insert data into.</param>
-    /// <param name="task">Async task that returns a <see cref="DataTable"/> object to insert into <paramref name="dt"/>.</param>
+  /// Task to fill a <see cref="DataTable"/> asynchronously.
+  /// </summary>
+  /// <param name="dt">DataTable to insert data into.</param>
+  /// <param name="task">Async task that returns a <see cref="DataTable"/> object to insert into <paramref name="dt"/>.</param>
   public static async Task ObjectFill(this DataTable dt, Task<DataTable> task)
   {
     try
@@ -774,12 +774,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill a <see cref="DataTable"/> asynchronously.
-    /// </summary>
-    /// <param name="dt">DataTable to insert data into.</param>
-    /// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run that returns a DataTable object to insert into <paramref name="dt"/>.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill a <see cref="DataTable"/> asynchronously.
+  /// </summary>
+  /// <param name="dt">DataTable to insert data into.</param>
+  /// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run that returns a DataTable object to insert into <paramref name="dt"/>.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill(this DataTable dt, Func<Task<DataTable>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -809,10 +809,10 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill <paramref name="ms"/> variable asynchronously.
-    /// </summary>
-    /// <param name="ms">MemoryStream to insert data into.</param>
-    /// <param name="task">Async task that returns a <see cref="MemoryStream"/> object to insert into <paramref name="ms"/>.</param>
+  /// Task to fill <paramref name="ms"/> variable asynchronously.
+  /// </summary>
+  /// <param name="ms">MemoryStream to insert data into.</param>
+  /// <param name="task">Async task that returns a <see cref="MemoryStream"/> object to insert into <paramref name="ms"/>.</param>
   public static async Task ObjectFill(this MemoryStream ms, Task<MemoryStream> task)
   {
     try
@@ -830,12 +830,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to fill <paramref name="ms"/> variable asynchronously.
-    /// </summary>
-    /// <param name="ms">MemoryStream to insert data into.</param>
-    /// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run and returns a <see cref="MemoryStream"/> object to insert into <paramref name="ms"/>.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to fill <paramref name="ms"/> variable asynchronously.
+  /// </summary>
+  /// <param name="ms">MemoryStream to insert data into.</param>
+  /// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run and returns a <see cref="MemoryStream"/> object to insert into <paramref name="ms"/>.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectFill(this MemoryStream ms, Func<Task<MemoryStream>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -861,11 +861,11 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to update an object <see langword="property"/> asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to update.</param>
-    /// <param name="propertyName">Name of property to update within <paramref name="obj"/>.</param>
-    /// <param name="task">Async task to run that returns the value to assign to the property indicated.</param>
+  /// Task to update an object <see langword="property"/> asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to update.</param>
+  /// <param name="propertyName">Name of property to update within <paramref name="obj"/>.</param>
+  /// <param name="task">Async task to run that returns the value to assign to the property indicated.</param>
   public static async Task ObjectUpdate<T, UT>(this T? obj, string propertyName, Task<UT> task)
   {
     try
@@ -896,13 +896,13 @@ public static class Async
   }
 
   /// <summary>
-    /// Task to update obj <see langword="property"/> asynchronously.
-    /// </summary>
-    /// <param name="obj">Object to update.</param>
-    /// <param name="propertyName">Name of property to update within obj object.</param>
-    /// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run.</param>
-    /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// Task to update obj <see langword="property"/> asynchronously.
+  /// </summary>
+  /// <param name="obj">Object to update.</param>
+  /// <param name="propertyName">Name of property to update within obj object.</param>
+  /// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run.</param>
+  /// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   public static async Task ObjectUpdate<T, UT>(this T? obj, string propertyName, Func<Task<UT>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     try
@@ -943,13 +943,13 @@ public static class Async
   }
 
   /// <summary>
-    /// Run a group of tasks in parallel, with an optional semaphore to limit concurrency.
-    /// </summary>
-    /// <param name="tasks">Tasks to run</param>
-    /// <param name="semaphore">Optional: Semaphore to limit concurrency.</param>
-    /// <param name="cancellationTokenSource">Optional: Token source to cancel task with.</param>
-    /// <param name="breakOnError">Optional: Triggers task cancellation if any task fails.</param>
-    /// <returns>ConcurrentBag filled with task results.</returns>
+  /// Run a group of tasks in parallel, with an optional semaphore to limit concurrency.
+  /// </summary>
+  /// <param name="tasks">Tasks to run</param>
+  /// <param name="semaphore">Optional: Semaphore to limit concurrency.</param>
+  /// <param name="cancellationTokenSource">Optional: Token source to cancel task with.</param>
+  /// <param name="breakOnError">Optional: Triggers task cancellation if any task fails.</param>
+  /// <returns>ConcurrentBag filled with task results.</returns>
   public static async Task<ConcurrentBag<T>> RunAll<T>(this IEnumerable<Func<Task<T>>> tasks, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false)
   {
     cancellationTokenSource ??= new();
@@ -988,12 +988,12 @@ public static class Async
   }
 
   /// <summary>
-    /// Run a group of tasks in parallel, with an optional semaphore to limit concurrency.
-    /// </summary>
-    /// <param name="tasks">Tasks to run.</param>
-    /// <param name="semaphore">Optional: Semaphore to limit concurrency.</param>
-    /// <param name="cancellationTokenSource">Optional: Token source to cancel task with.</param>
-    /// <param name="breakOnError">Optional: Triggers task cancellation if any task fails.</param>
+  /// Run a group of tasks in parallel, with an optional semaphore to limit concurrency.
+  /// </summary>
+  /// <param name="tasks">Tasks to run.</param>
+  /// <param name="semaphore">Optional: Semaphore to limit concurrency.</param>
+  /// <param name="cancellationTokenSource">Optional: Token source to cancel task with.</param>
+  /// <param name="breakOnError">Optional: Triggers task cancellation if any task fails.</param>
   public static async Task RunAll(this IEnumerable<Func<Task>> tasks, SemaphoreSlim? semaphore = null, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false)
   {
     cancellationTokenSource ??= new();
@@ -1030,13 +1030,13 @@ public static class Async
   }
 
   /// <summary>
-    /// <para>Run a task with a semaphore to limit the number of concurrent operations.</para>
-    /// <remarks>Useful when running tasks with Parallel.ForEachAsync where you want operations to run in parallel but sequentially within the same loop</remarks>
-    /// </summary>
-    /// <param name="task">Task to run with semaphore.</param>
-    /// <param name="semaphore">Semaphore to limit concurrent processes.</param>
-    /// <param name="cancellationTokenSource">Optional: Cancellation token source for concurrent operations.</param>
-    /// <param name="breakOnError">Optional: If <see langword="true"/>, will cancel operations using the same CancellationTokenSource.</param>
+  /// <para>Run a task with a semaphore to limit the number of concurrent operations.</para>
+  /// <remarks>Useful when running tasks with Parallel.ForEachAsync where you want operations to run in parallel but sequentially within the same loop</remarks>
+  /// </summary>
+  /// <param name="task">Task to run with semaphore.</param>
+  /// <param name="semaphore">Semaphore to limit concurrent processes.</param>
+  /// <param name="cancellationTokenSource">Optional: Cancellation token source for concurrent operations.</param>
+  /// <param name="breakOnError">Optional: If <see langword="true"/>, will cancel operations using the same CancellationTokenSource.</param>
   public static async Task RunAsyncWithSemaphore(this Task task, SemaphoreSlim semaphore, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false, string? errorText = null)
   {
     cancellationTokenSource ??= new();

@@ -386,23 +386,23 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Checks if cell is empty
-    /// </summary>
-    /// <param name="cell">Cell to check if it is empty</param>
-    /// <returns><see langword="true"/> if cell is empty</returns>
+  /// Checks if cell is empty
+  /// </summary>
+  /// <param name="cell">Cell to check if it is empty</param>
+  /// <returns><see langword="true"/> if cell is empty</returns>
   public static bool IsCellEmpty(this ICell cell)
   {
     return string.IsNullOrWhiteSpace(cell.GetStringValue());
   }
 
   /// <summary>
-    /// Get ICell offset from cellReference
-    /// </summary>
-    /// <param name="ws">Worksheet that cell is in</param>
-    /// <param name="cellReference">Cell reference in A1 notation. If a range is provided, the top left cell of the range will be used</param>
-    /// <param name="colOffset">X axis offset from the named cell reference</param>
-    /// <param name="rowOffset">Y axis offset from the named cell reference</param>
-    /// <returns>ICell object of the specified offset of the named cell</returns>
+  /// Get ICell offset from cellReference
+  /// </summary>
+  /// <param name="ws">Worksheet that cell is in</param>
+  /// <param name="cellReference">Cell reference in A1 notation. If a range is provided, the top left cell of the range will be used</param>
+  /// <param name="colOffset">X axis offset from the named cell reference</param>
+  /// <param name="rowOffset">Y axis offset from the named cell reference</param>
+  /// <returns>ICell object of the specified offset of the named cell</returns>
   public static ICell? GetCellFromReference(this ISheet ws, string cellReference, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -424,12 +424,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get ICell offset from the startCell
-    /// </summary>
-    /// <param name="startCell">Cell to get offset from</param>
-    /// <param name="colOffset">X axis offset from the named cell reference</param>
-    /// <param name="rowOffset">Y axis offset from the named cell reference</param>
-    /// <returns>ICell object of the specified offset of the startCell</returns>
+  /// Get ICell offset from the startCell
+  /// </summary>
+  /// <param name="startCell">Cell to get offset from</param>
+  /// <param name="colOffset">X axis offset from the named cell reference</param>
+  /// <param name="rowOffset">Y axis offset from the named cell reference</param>
+  /// <returns>ICell object of the specified offset of the startCell</returns>
   public static ICell? GetCellOffset(this ICell startCell, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -446,14 +446,14 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get ICell offset from the cell indicated with the x and y coordinates
-    /// </summary>
-    /// <param name="ws">Worksheet that cell is in</param>
-    /// <param name="colIndex">0 based X coordinate of starting cell</param>
-    /// <param name="rowIndex">0 based Y coordinate of starting cell</param>
-    /// <param name="colOffset">X axis offset from the cell reference</param>
-    /// <param name="rowOffset">Y axis offset from the cell reference</param>
-    /// <returns>ICell object of the specified offset of the cell indicated with the x and y coordinates</returns>
+  /// Get ICell offset from the cell indicated with the x and y coordinates
+  /// </summary>
+  /// <param name="ws">Worksheet that cell is in</param>
+  /// <param name="colIndex">0 based X coordinate of starting cell</param>
+  /// <param name="rowIndex">0 based Y coordinate of starting cell</param>
+  /// <param name="colOffset">X axis offset from the cell reference</param>
+  /// <param name="rowOffset">Y axis offset from the cell reference</param>
+  /// <returns>ICell object of the specified offset of the cell indicated with the x and y coordinates</returns>
   public static ICell? GetCellFromCoordinates(this ISheet ws, int colIndex, int rowIndex, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -469,11 +469,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the 0 based index of the last row with a non-blank value
-    /// </summary>
-    /// <param name="ws">Worksheet that contains the column to get the last populated row from</param>
-    /// <param name="colIndex">0 based index of the column to find the last populated row in</param>
-    /// <returns>0 based index of the last row with a non-blank value</returns>
+  /// Gets the 0 based index of the last row with a non-blank value
+  /// </summary>
+  /// <param name="ws">Worksheet that contains the column to get the last populated row from</param>
+  /// <param name="colIndex">0 based index of the column to find the last populated row in</param>
+  /// <returns>0 based index of the last row with a non-blank value</returns>
   public static int GetLastPopulatedRowInColumn(this ISheet ws, int colIndex)
   {
     //int i = 0;
@@ -499,24 +499,24 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the 0 based index of the last row with a non-blank value
-    /// </summary>
-    /// <param name="ws">Worksheet that contains the column to get the last populated row from</param>
-    /// <param name="colName">Column name of the column to find the last populated row in</param>
-    /// <returns>0 based index of the last row with a non-blank value</returns>
+  /// Gets the 0 based index of the last row with a non-blank value
+  /// </summary>
+  /// <param name="ws">Worksheet that contains the column to get the last populated row from</param>
+  /// <param name="colName">Column name of the column to find the last populated row in</param>
+  /// <returns>0 based index of the last row with a non-blank value</returns>
   public static int GetLastPopulatedRowInColumn(this ISheet ws, string colName)
   {
     return ws.GetLastPopulatedRowInColumn(colName.ColumnNameToNumber());
   }
 
   /// <summary>
-    /// Get ICell offset from the cell with named reference cellName
-    /// </summary>
-    /// <param name="wb">Workbook that cell is in</param>
-    /// <param name="cellName">Name of cell being looked for</param>
-    /// <param name="colOffset">X axis offset from the named cell reference<</param>
-    /// <param name="rowOffset">Y axis offset from the named cell reference<</param>
-    /// <returns>ICell object of the specified offset of the cell with named reference cellName</returns>
+  /// Get ICell offset from the cell with named reference cellName
+  /// </summary>
+  /// <param name="wb">Workbook that cell is in</param>
+  /// <param name="cellName">Name of cell being looked for</param>
+  /// <param name="colOffset">X axis offset from the named cell reference<</param>
+  /// <param name="rowOffset">Y axis offset from the named cell reference<</param>
+  /// <returns>ICell object of the specified offset of the cell with named reference cellName</returns>
   public static ICell? GetCellFromName(this IWorkbook wb, string cellName, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -570,10 +570,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Clear contents from cell with named reference cellName
-    /// </summary>
-    /// <param name="wb">Workbook that cell is in</param>
-    /// <param name="cellName">Name of cell to clear contents from</param>
+  /// Clear contents from cell with named reference cellName
+  /// </summary>
+  /// <param name="wb">Workbook that cell is in</param>
+  /// <param name="cellName">Name of cell to clear contents from</param>
   public static void ClearAllFromName(this IWorkbook wb, string cellName)
   {
     try
@@ -617,22 +617,22 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Initializes cell at indicated row and column
-    /// </summary>
-    /// <param name="row">Row to create cell in</param>
-    /// <param name="columnIndex">0 based column index of the cell to create</param>
-    /// <returns>ICell object of the cell that was created</returns>
+  /// Initializes cell at indicated row and column
+  /// </summary>
+  /// <param name="row">Row to create cell in</param>
+  /// <param name="columnIndex">0 based column index of the cell to create</param>
+  /// <returns>ICell object of the cell that was created</returns>
   public static ICell CreateCell(this IRow row, int columnIndex)
   {
     return row.CreateCell(columnIndex);
   }
 
   /// <summary>
-    /// Writes an excel file to the specified path
-    /// </summary>
-    /// <param name="wb">SXSSFWorkbook object to write to a file</param>
-    /// <param name="path">Full file path (including file name) to write wb object to</param>
-    /// <returns><see langword="true"/> if write was successful</returns>
+  /// Writes an excel file to the specified path
+  /// </summary>
+  /// <param name="wb">SXSSFWorkbook object to write to a file</param>
+  /// <param name="path">Full file path (including file name) to write wb object to</param>
+  /// <returns><see langword="true"/> if write was successful</returns>
   public static bool WriteExcelFile(this SXSSFWorkbook wb, string path)
   {
     try
@@ -652,11 +652,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Writes an excel file to the specified path
-    /// </summary>
-    /// <param name="wb">HSSFWorkbook object to write to a file</param>
-    /// <param name="path">Full file path (including file name) to write wb object to</param>
-    /// <returns><see langword="true"/> if write was successful</returns>
+  /// Writes an excel file to the specified path
+  /// </summary>
+  /// <param name="wb">HSSFWorkbook object to write to a file</param>
+  /// <param name="path">Full file path (including file name) to write wb object to</param>
+  /// <returns><see langword="true"/> if write was successful</returns>
   public static bool WriteExcelFile(this HSSFWorkbook wb, string path)
   {
     try
@@ -676,13 +676,13 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get cell style based on enum EStyle options
-    /// </summary>
-    /// <param name="wb">Workbook the style will be used in</param>
-    /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
-    /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
-    /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
-    /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
+  /// Get cell style based on enum EStyle options
+  /// </summary>
+  /// <param name="wb">Workbook the style will be used in</param>
+  /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
+  /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
+  /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
+  /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
   private static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, string? hexColor = null, short? hssfColor = null, IFont? font = null, HorizontalAlignment? alignment = null,
         FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
   {
@@ -787,13 +787,13 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get cell style based on enum EStyle options
-    /// </summary>
-    /// <param name="wb">Workbook the style will be used in</param>
-    /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
-    /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
-    /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
-    /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
+  /// Get cell style based on enum EStyle options
+  /// </summary>
+  /// <param name="wb">Workbook the style will be used in</param>
+  /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
+  /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
+  /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
+  /// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
   public static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
         FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
   {
@@ -801,14 +801,14 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get cell style based on enum EStyle options
-    /// </summary>
-    /// <param name="wb">Workbook the style will be used in</param>
-    /// <param name="hexColor">Cell background color to be used (only used for custom font)</param>
-    /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
-    /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
-    /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
-    /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
+  /// Get cell style based on enum EStyle options
+  /// </summary>
+  /// <param name="wb">Workbook the style will be used in</param>
+  /// <param name="hexColor">Cell background color to be used (only used for custom font)</param>
+  /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
+  /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
+  /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
+  /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
   public static ICellStyle GetCustomStyle(this IWorkbook wb, string hexColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
         FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
   {
@@ -816,14 +816,14 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get cell style based on enum EStyle options
-    /// </summary>
-    /// <param name="wb">Workbook the style will be used in</param>
-    /// <param name="hssfColor">Cell background color to be used (only used for custom font)</param>
-    /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
-    /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
-    /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
-    /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
+  /// Get cell style based on enum EStyle options
+  /// </summary>
+  /// <param name="wb">Workbook the style will be used in</param>
+  /// <param name="hssfColor">Cell background color to be used (only used for custom font)</param>
+  /// <param name="cellLocked">True if the cell should be locked / disabled for user input</param>
+  /// <param name="font">NPOI.SS.UserModel.IFont object defining the cell font to be used (only used for custom font)</param>
+  /// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
+  /// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
   public static ICellStyle GetCustomStyle(this IWorkbook wb, short? hssfColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
         FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
   {
@@ -831,13 +831,13 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the standard ICellStyle corresponding to the style enum passed in
-    /// </summary>
-    /// <param name="wb">Workbook to add the standard cell style to</param>
-    /// <param name="style">Enum value indicating which style to create</param>
-    /// <param name="cellLocked">Optional: Whether or not the cells with this style should be locked or not. Default = false</param>
-    /// <param name="borderStyles">Optional: Border styling overrides</param>
-    /// <returns>The ICellStyle that was created</returns>
+  /// Gets the standard ICellStyle corresponding to the style enum passed in
+  /// </summary>
+  /// <param name="wb">Workbook to add the standard cell style to</param>
+  /// <param name="style">Enum value indicating which style to create</param>
+  /// <param name="cellLocked">Optional: Whether or not the cells with this style should be locked or not. Default = false</param>
+  /// <param name="borderStyles">Optional: Border styling overrides</param>
+  /// <returns>The ICellStyle that was created</returns>
   public static ICellStyle GetStandardCellStyle(this IWorkbook wb, EStyle style, bool cellLocked = false, bool wrapText = false, NpoiBorderStyles? borderStyles = null)
   {
     //ICellStyle cellStyle = wb.CreateCellStyle();
@@ -1033,11 +1033,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get font styling based on EFonts option
-    /// </summary>
-    /// <param name="wb">Workbook the font will be used in</param>
-    /// <param name="font">Enum for preset fonts</param>
-    /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
+  /// Get font styling based on EFonts option
+  /// </summary>
+  /// <param name="wb">Workbook the font will be used in</param>
+  /// <param name="font">Enum for preset fonts</param>
+  /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
   public static IFont GetFont(this IWorkbook wb, EFont font)
   {
     //IFont cellFont = wb.CreateFont();
@@ -1072,22 +1072,22 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Create a table for the specified sheet in an XSSFWorkbook
-    /// </summary>
-    /// <param name="xssfWorkbook">Workbook to add table to</param>
-    /// <param name="sheetName">Name of the sheet to add the table to</param>
-    /// <param name="tableName">Name of the table to add</param>
-    /// <param name="firstColIndex">Zero based index of the first column of the table.</param>
-    /// <param name="lastColIndex">Zero based index of the last column of the table.</param>
-    /// <param name="firstRowIndex">Zero based index of the first row of the table.</param>
-    /// <param name="lastRowIndex">Zero based index of the last row of the table.</param>
-    /// <param name="columnNames">
-    /// Optional: Ordered list of names for each column in the table. Will use Column# if not provided or list has fewer
-    /// elements than there are columns in the table
-    /// </param>
-    /// <param name="tableStyle">Optional: Style to use for table, defaults to TableStyleMedium1</param>
-    /// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
-    /// <param name="showColStripes">Optional: Styles the table to show column stripes or not</param>
+  /// Create a table for the specified sheet in an XSSFWorkbook
+  /// </summary>
+  /// <param name="xssfWorkbook">Workbook to add table to</param>
+  /// <param name="sheetName">Name of the sheet to add the table to</param>
+  /// <param name="tableName">Name of the table to add</param>
+  /// <param name="firstColIndex">Zero based index of the first column of the table.</param>
+  /// <param name="lastColIndex">Zero based index of the last column of the table.</param>
+  /// <param name="firstRowIndex">Zero based index of the first row of the table.</param>
+  /// <param name="lastRowIndex">Zero based index of the last row of the table.</param>
+  /// <param name="columnNames">
+  /// Optional: Ordered list of names for each column in the table. Will use Column# if not provided or list has fewer
+  /// elements than there are columns in the table
+  /// </param>
+  /// <param name="tableStyle">Optional: Style to use for table, defaults to TableStyleMedium1</param>
+  /// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
+  /// <param name="showColStripes">Optional: Styles the table to show column stripes or not</param>
   public static void CreateTable(this XSSFWorkbook xssfWorkbook, string sheetName, string tableName, int firstColIndex, int lastColIndex, int firstRowIndex, int lastRowIndex, List<string>? columnNames = null,
         ETableStyle tableStyle = ETableStyle.TableStyleMedium1, bool showRowStripes = true, bool showColStripes = false)
   {
@@ -1121,10 +1121,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets string value contained in cell
-    /// </summary>
-    /// <param name="cell">Cell to get the string value from</param>
-    /// <returns>String representation of the value in cell</returns>
+  /// Gets string value contained in cell
+  /// </summary>
+  /// <param name="cell">Cell to get the string value from</param>
+  /// <returns>String representation of the value in cell</returns>
   [return: NotNullIfNotNull(nameof(cell))]
   public static string? GetStringValue(this ICell? cell)
   {
@@ -1156,10 +1156,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Writes excel file to a MemoryStream object
-    /// </summary>
-    /// <param name="memoryStream">MemoryStream object to write SXSSFWorkbook object to</param>
-    /// <param name="wb">XSSFWorkbook object to write into a MemoryStream</param>
+  /// Writes excel file to a MemoryStream object
+  /// </summary>
+  /// <param name="memoryStream">MemoryStream object to write SXSSFWorkbook object to</param>
+  /// <param name="wb">XSSFWorkbook object to write into a MemoryStream</param>
   public static async Task WriteFileToMemoryStreamAsync(this MemoryStream memoryStream, IWorkbook wb, CancellationToken cancellationToken = default)
   {
     await using MemoryStream tempStream = new();
@@ -1173,22 +1173,22 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="wb">Workbook to insert images into</param>
-    /// <param name="imageData">Image byte array</param>
-    /// <param name="cellName">Named range to insert image at</param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="wb">Workbook to insert images into</param>
+  /// <param name="imageData">Image byte array</param>
+  /// <param name="cellName">Named range to insert image at</param>
   public static void AddImage(this IWorkbook wb, byte[] imageData, string cellName, AnchorType anchorType = AnchorType.MoveAndResize)
   {
     wb.AddImages([ imageData ], [ cellName ], anchorType);
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="wb">Workbook to insert images into</param>
-    /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
-    /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="wb">Workbook to insert images into</param>
+  /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
+  /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
   public static void AddImages(this IWorkbook wb, List<byte[]> imageData, List<string> cellNames, AnchorType anchorType = AnchorType.MoveAndResize)
   {
     if ((wb != null) && (imageData.Count > 0) && (cellNames.Count > 0) && (imageData.Count == cellNames.Count))
@@ -1219,44 +1219,44 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="wb">Workbook to insert images into</param>
-    /// <param name="imageData">Image byte array</param>
-    /// <param name="range">Range to insert image at</param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="wb">Workbook to insert images into</param>
+  /// <param name="imageData">Image byte array</param>
+  /// <param name="range">Range to insert image at</param>
   public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, string range, AnchorType anchorType = AnchorType.MoveAndResize)
   {
     wb.AddImages(ws, [ imageData ], [ ws.GetCellFromReference(range).GetRangeOfMergedCells() ], anchorType);
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="wb">Workbook to insert images into</param>
-    /// <param name="imageData">Image byte array</param>
-    /// <param name="range">Range to insert image at</param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="wb">Workbook to insert images into</param>
+  /// <param name="imageData">Image byte array</param>
+  /// <param name="range">Range to insert image at</param>
   public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, CellRangeAddress range, AnchorType anchorType = AnchorType.MoveAndResize)
   {
     wb.AddImages(ws, [ imageData ], [ range ], anchorType);
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="wb">Workbook to insert images into</param>
-    /// <param name="imageData">Image byte array</param>
-    /// <param name="cell">Cell in range to insert image at</param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="wb">Workbook to insert images into</param>
+  /// <param name="imageData">Image byte array</param>
+  /// <param name="cell">Cell in range to insert image at</param>
   public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, ICell cell, AnchorType anchorType = AnchorType.MoveAndResize)
   {
     wb.AddImages(ws, [ imageData ], [ cell.GetRangeOfMergedCells() ], anchorType);
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="wb">Workbook to insert images into</param>
-    /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
-    /// <param name="ranges">List of ranges to insert images at. Must be equal in length to imageData parameter</param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="wb">Workbook to insert images into</param>
+  /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
+  /// <param name="ranges">List of ranges to insert images at. Must be equal in length to imageData parameter</param>
   public static void AddImages(this IWorkbook wb, ISheet ws, List<byte[]> imageData, List<CellRangeAddress> ranges, AnchorType anchorType = AnchorType.MoveAndResize)
   {
     if ((wb != null) && (imageData.Count > 0) && (ranges.Count > 0) && (imageData.Count == ranges.Count))
@@ -1276,19 +1276,19 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Adds picture element to specified CellRangeAddress
-    /// </summary>
-    /// <param name="wb">Workbook to insert image into</param>
-    /// <param name="ws">Worksheet to insert image into</param>
-    /// <param name="area">CellRangeAddress where the image is to be inserted</param>
-    /// <param name="imageData">Byte array containing the image to be inserted</param>
-    /// <param name="drawing">Drawing patriarch to create the picture with</param>
-    /// <param name="anchorType">Optional: Anchor type to define the behavior of the inserted image</param>
-    /// <param name="helper">Optional: Creation helper to make anchor with</param>
-    /// <param name="cellStyle">
-    /// Optional: Cell style to use in cells where pasting image. Using the image background font is strongly
-    /// recommended as it ensures proper measurements when sizing the picture
-    /// </param>
+  /// Adds picture element to specified CellRangeAddress
+  /// </summary>
+  /// <param name="wb">Workbook to insert image into</param>
+  /// <param name="ws">Worksheet to insert image into</param>
+  /// <param name="area">CellRangeAddress where the image is to be inserted</param>
+  /// <param name="imageData">Byte array containing the image to be inserted</param>
+  /// <param name="drawing">Drawing patriarch to create the picture with</param>
+  /// <param name="anchorType">Optional: Anchor type to define the behavior of the inserted image</param>
+  /// <param name="helper">Optional: Creation helper to make anchor with</param>
+  /// <param name="cellStyle">
+  /// Optional: Cell style to use in cells where pasting image. Using the image background font is strongly
+  /// recommended as it ensures proper measurements when sizing the picture
+  /// </param>
   public static void AddPicture(this IWorkbook wb, ISheet ws, CellRangeAddress area, byte[] imageData, IDrawing<IShape> drawing, AnchorType anchorType = AnchorType.MoveAndResize, ICreationHelper? helper = null, ICellStyle? cellStyle = null)
   {
     ICell? cell = ws.GetCellFromCoordinates(area.FirstColumn, area.FirstRow);
@@ -1306,12 +1306,12 @@ public static partial class Common
       // Using old GDI+ System.Drawing
       // using (MemoryStream ms = new(imageData[i]))
       // {
-            // using Image img = Image.FromStream(ms);
-            // imgWidth = img?.Width ?? 0;
-            // imgHeight = img?.Height ?? 0;
-            // }
+      // using Image img = Image.FromStream(ms);
+      // imgWidth = img?.Width ?? 0;
+      // imgHeight = img?.Height ?? 0;
+      // }
 
-            using Image image = Image.Load(imageData);
+      using Image image = Image.Load(imageData);
       imgWidth = image.Width;
       imgHeight = image.Height;
 
@@ -1344,10 +1344,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets CellRangeAddress of merged cells
-    /// </summary>
-    /// <param name="cell">Cell to get CellRangeAddress from</param>
-    /// <returns>CellRangeAddress of merged cells</returns>
+  /// Gets CellRangeAddress of merged cells
+  /// </summary>
+  /// <param name="cell">Cell to get CellRangeAddress from</param>
+  /// <returns>CellRangeAddress of merged cells</returns>
   public static CellRangeAddress? GetRangeOfMergedCells(this ICell? cell)
   {
     if (cell?.IsMergedCell == true)
@@ -1356,8 +1356,7 @@ public static partial class Common
       for (int i = 0; i < sheet.NumMergedRegions; i++)
       {
         CellRangeAddress region = sheet.GetMergedRegion(i);
-        if (region.ContainsRow(cell.RowIndex) &&
-                    region.ContainsColumn(cell.ColumnIndex))
+        if (region.ContainsRow(cell.RowIndex) && region.ContainsColumn(cell.ColumnIndex))
         {
           return region;
         }
@@ -1372,12 +1371,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get the width of a specified range in pixels
-    /// </summary>
-    /// <param name="ws">Worksheet containing range to get width of</param>
-    /// <param name="startCol">0 based index of the first column in range being measured</param>
-    /// <param name="endCol">0 based index of the last column in range being measured</param>
-    /// <returns>Double representation of the width of the column range in pixels</returns>
+  /// Get the width of a specified range in pixels
+  /// </summary>
+  /// <param name="ws">Worksheet containing range to get width of</param>
+  /// <param name="startCol">0 based index of the first column in range being measured</param>
+  /// <param name="endCol">0 based index of the last column in range being measured</param>
+  /// <returns>Double representation of the width of the column range in pixels</returns>
   public static int GetRangeWidthInPx(this ISheet ws, int startCol, int endCol)
   {
     if (startCol > endCol)
@@ -1399,12 +1398,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get the height of a specified range in pixels
-    /// </summary>
-    /// <param name="ws">Worksheet containing range to get height of</param>
-    /// <param name="startRow">0 based index of the first row in range being measured</param>
-    /// <param name="endRow">0 based index of the last row in range being measured</param>
-    /// <returns>Double representation of the height of the rows range in pixels</returns>
+  /// Get the height of a specified range in pixels
+  /// </summary>
+  /// <param name="ws">Worksheet containing range to get height of</param>
+  /// <param name="startRow">0 based index of the first row in range being measured</param>
+  /// <param name="endRow">0 based index of the last row in range being measured</param>
+  /// <returns>Double representation of the height of the rows range in pixels</returns>
   public static int GetRangeHeightInPx(this ISheet ws, int startRow, int endRow)
   {
     if (startRow > endRow)
@@ -1422,11 +1421,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get cells contained within a range
-    /// </summary>
-    /// <param name="sheet">Sheet to get range from</param>
-    /// <param name="range">String cell / range reference in A1 notation</param>
-    /// <returns>Array of cells contained within the range specified</returns>
+  /// Get cells contained within a range
+  /// </summary>
+  /// <param name="sheet">Sheet to get range from</param>
+  /// <param name="range">String cell / range reference in A1 notation</param>
+  /// <returns>Array of cells contained within the range specified</returns>
   public static ICell[,] GetRange(this ISheet sheet, string range)
   {
     string[] cellStartStop = range.Split(':');
@@ -1449,11 +1448,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Adds list validation to all cells specified by cellRangeAddressList
-    /// </summary>
-    /// <param name="ws">ISheet object to add data validation to</param>
-    /// <param name="cellRangeAddressList">Cells to add data validation to</param>
-    /// <param name="options">Options to be used as the valid choices in the drop down</param>
+  /// Adds list validation to all cells specified by cellRangeAddressList
+  /// </summary>
+  /// <param name="ws">ISheet object to add data validation to</param>
+  /// <param name="cellRangeAddressList">Cells to add data validation to</param>
+  /// <param name="options">Options to be used as the valid choices in the drop down</param>
   public static void AddDataValidation(this ISheet ws, CellRangeAddressList cellRangeAddressList, List<string> options)
   {
     IDataValidationHelper validationHelper = ws.GetDataValidationHelper();
@@ -1466,24 +1465,22 @@ public static partial class Common
     dataValidation.ShowErrorBox = true;
     dataValidation.ShowPromptBox = false;
 
-    // ws.AddValidationData(dataValidation);
-
     ws.AddValidationData(dataValidation);
   }
 
   /// <summary>
-    /// Reads tabular data from an unformatted excel sheet to a DataTable object similar to Python Pandas
-    /// </summary>
-    /// <param name="fileStream">Stream of Excel file being read</param>
-    /// <param name="hasHeaders">
-    /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0',
-    /// 'Column1'... if true. If no headers specified, first row of data must have a value for all columns in order to
-    /// read all columns correctly./>
-    /// </param>
-    /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
-    /// <param name="startCellReference">Top left corner containing data to read in A1 notation. Will use A1 if not specified.</param>
-    /// <param name="endCellReference">Bottom right cell containing data to read in A1 notation. Will read to first full empty row if not specified.</param>
-    /// <returns><see cref="DataTable"/> representation of the data read from the excel file</returns>
+  /// Reads tabular data from an unformatted excel sheet to a DataTable object similar to Python Pandas
+  /// </summary>
+  /// <param name="fileStream">Stream of Excel file being read</param>
+  /// <param name="hasHeaders">
+  /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0',
+  /// 'Column1'... if true. If no headers specified, first row of data must have a value for all columns in order to
+  /// read all columns correctly./>
+  /// </param>
+  /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
+  /// <param name="startCellReference">Top left corner containing data to read in A1 notation. Will use A1 if not specified.</param>
+  /// <param name="endCellReference">Bottom right cell containing data to read in A1 notation. Will read to first full empty row if not specified.</param>
+  /// <returns><see cref="DataTable"/> representation of the data read from the excel file</returns>
   public static DataTable ReadExcelFileToDataTable(this Stream fileStream, bool hasHeaders = true, string? sheetName = null, string? startCellReference = null, string? endCellReference = null, CancellationToken cancellationToken = default)
   {
     DataTable dataTable = new();
@@ -1649,11 +1646,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Reads an Excel table into a DataTable object similar to Python Pandas
-    /// </summary>
-    /// <param name="fileStream">Stream of Excel file being read</param>
-    /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
-    /// <returns><see cref="DataTable"/> object containing the data read from Excel stream</returns>
+  /// Reads an Excel table into a DataTable object similar to Python Pandas
+  /// </summary>
+  /// <param name="fileStream">Stream of Excel file being read</param>
+  /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
+  /// <returns><see cref="DataTable"/> object containing the data read from Excel stream</returns>
   public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null, CancellationToken cancellationToken = default)
   {
     DataTable dataTable = new();
@@ -1734,10 +1731,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets whether or not the stream passed in represents an XLSX type file or not
-    /// </summary>
-    /// <param name="fileStream">Stream representation of a file</param>
-    /// <returns><see langword="true"/> if stream is an XLSX file</returns>
+  /// Gets whether or not the stream passed in represents an XLSX type file or not
+  /// </summary>
+  /// <param name="fileStream">Stream representation of a file</param>
+  /// <returns><see langword="true"/> if stream is an XLSX file</returns>
   public static bool IsXlsx(this Stream fileStream)
   {
     fileStream.Position = 0;
@@ -1746,10 +1743,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets whether or not the stream passed in represents an XLSX type file or not
-    /// </summary>
-    /// <param name="workbook">NPOI Workbook Object</param>
-    /// <returns><see langword="true"/> if stream is an XLSX file</returns>
+  /// Gets whether or not the stream passed in represents an XLSX type file or not
+  /// </summary>
+  /// <param name="workbook">NPOI Workbook Object</param>
+  /// <returns><see langword="true"/> if stream is an XLSX file</returns>
   public static bool IsXlsx(this IWorkbook workbook)
   {
     return !string.Equals(workbook.GetType().Name, typeof(HSSFWorkbook).Name, StringComparison.InvariantCultureIgnoreCase);
@@ -1760,14 +1757,14 @@ public static partial class Common
   private static readonly Lazy<IEnumerable<HSSFColor>> HssfColors = new(() => HSSFColor.GetIndexHash().Select(x => x.Value));
 
   /// <summary>
-    /// Converts a hex color to the closest available HSSFColor
-    /// </summary>
-    /// <param name="hexColor">Hex color to convert</param>
-    /// <param name="cachedColorLimit">
-    /// Maximum number of colors to cache. Once cache reaches this limit, oldest cached value will be removed when a new
-    /// value is added
-    /// </param>
-    /// <returns>The closest HSSFColor to the provided hex color</returns>
+  /// Converts a hex color to the closest available HSSFColor
+  /// </summary>
+  /// <param name="hexColor">Hex color to convert</param>
+  /// <param name="cachedColorLimit">
+  /// Maximum number of colors to cache. Once cache reaches this limit, oldest cached value will be removed when a new
+  /// value is added
+  /// </param>
+  /// <returns>The closest HSSFColor to the provided hex color</returns>
   public static HSSFColor GetClosestHssfColor(string hexColor, int cachedColorLimit = 100)
   {
     if (HssfColorCache.TryGetValue(hexColor, out HSSFColor? hSSFColor))
@@ -1783,29 +1780,29 @@ public static partial class Common
       outputColor = HssfColors.Value.MinBy(hssfColor => ColorDistance(rgb, hssfColor.RGB)) ?? new HSSFColor();
 
       // Old way to do this
-            // Span<byte> rgb =
-            // [
-            // ToByte(hexColor.Substring(1, 2), 16),
-            // ToByte(hexColor.Substring(3, 2), 16),
-            // ToByte(hexColor.Substring(5, 2), 16),
-            // ];
+      // Span<byte> rgb =
+      // [
+      // ToByte(hexColor.Substring(1, 2), 16),
+      // ToByte(hexColor.Substring(3, 2), 16),
+      // ToByte(hexColor.Substring(5, 2), 16),
+      // ];
 
-            // int deviation = int.MaxValue;
-            // foreach (HSSFColor hssfColor in HSSFColor.GetIndexHash().Select(x => x.Value))
-            // {
-            // byte[] hssfRgb = hssfColor.RGB;
-            // int totalDeviation = (int)Pow((double)rgb[0] - hssfRgb[0], 2) + (int)Pow((double)rgb[1] - hssfRgb[1], 2) + (int)Pow((double)rgb[2] - hssfRgb[2], 2);
-            // if (totalDeviation < deviation)
-            // {
-            // outputColor = hssfColor;
-            // deviation = totalDeviation;
-            // if (deviation == 0)
-            // {
-            // break;
-            // }
-            // }
-            // }
-        }
+      // int deviation = int.MaxValue;
+      // foreach (HSSFColor hssfColor in HSSFColor.GetIndexHash().Select(x => x.Value))
+      // {
+      // byte[] hssfRgb = hssfColor.RGB;
+      // int totalDeviation = (int)Pow((double)rgb[0] - hssfRgb[0], 2) + (int)Pow((double)rgb[1] - hssfRgb[1], 2) + (int)Pow((double)rgb[2] - hssfRgb[2], 2);
+      // if (totalDeviation < deviation)
+      // {
+      // outputColor = hssfColor;
+      // deviation = totalDeviation;
+      // if (deviation == 0)
+      // {
+      // break;
+      // }
+      // }
+      // }
+    }
     else
     {
       throw new ArgumentException("Invalid hex color format. Expected format: #RRGGBB", nameof(hexColor));
@@ -1832,10 +1829,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get the 0 based column number for the column name provided (0 = A)
-    /// </summary>
-    /// <param name="columnName">The column name to get the 0 based (0 = A) column index of</param>
-    /// <returns>The 0 based column index (0 = A) corresponding to the value of columnName</returns>
+  /// Get the 0 based column number for the column name provided (0 = A)
+  /// </summary>
+  /// <param name="columnName">The column name to get the 0 based (0 = A) column index of</param>
+  /// <returns>The 0 based column index (0 = A) corresponding to the value of columnName</returns>
   public static int ColumnNameToNumber(this string? columnName)
   {
     if (string.IsNullOrEmpty(columnName))
@@ -1856,10 +1853,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get the column name corresponding to the provided 0 based column number (A = 0)
-    /// </summary>
-    /// <param name="columnNumber">0 based column number (A = 0) to get name of</param>
-    /// <returns>Column name corresponding to the value of columnNumber</returns>
+  /// Get the column name corresponding to the provided 0 based column number (A = 0)
+  /// </summary>
+  /// <param name="columnNumber">0 based column number (A = 0) to get name of</param>
+  /// <returns>Column name corresponding to the value of columnNumber</returns>
   public static string ColumnIndexToName(this int? columnNumber)
   {
     if ((columnNumber == null) || (columnNumber < 0))
@@ -1871,10 +1868,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get the column name corresponding to the provided 0 based column number (A = 0)
-    /// </summary>
-    /// <param name="columnNumber">0 based column number (A = 0) to get name of</param>
-    /// <returns>Column name corresponding to the value of columnNumber</returns>
+  /// Get the column name corresponding to the provided 0 based column number (A = 0)
+  /// </summary>
+  /// <param name="columnNumber">0 based column number (A = 0) to get name of</param>
+  /// <returns>Column name corresponding to the value of columnNumber</returns>
   public static string ColumnIndexToName(this int columnNumber)
   {
     if (columnNumber < 0)

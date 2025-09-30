@@ -12,8 +12,8 @@ public static class RunBatches
   private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
   /// <summary>
-    /// Takes a collection of items and processes them in batches using the provided async processor.
-    /// </summary>
+  /// Takes a collection of items and processes them in batches using the provided async processor.
+  /// </summary>
   public static async Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, Task<bool>> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
   {
     ArgumentNullException.ThrowIfNull(itemsToProcess);
@@ -49,8 +49,8 @@ public static class RunBatches
   }
 
   /// <summary>
-    /// Takes a collection of items and processes them in batches using the provided sync processor.
-    /// </summary>
+  /// Takes a collection of items and processes them in batches using the provided sync processor.
+  /// </summary>
   //public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, SyncBatchProcessor<T> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true)
   public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, bool> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
   {

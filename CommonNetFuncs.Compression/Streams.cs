@@ -30,13 +30,13 @@ public static class Streams
   }
 
   /// <summary>
-    /// Compress a <see cref="Stream" /> using a supported compression type.
-    /// </summary>
-    /// <param name="uncompressedStream">Stream to compress.</param>
-    /// <param name="compressedStream">Stream to receive compressed form of uncompressedStream.</param>
-    /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-    /// <exception cref="NotSupportedException">Thrown if the compressed stream does not support writing or the uncompressed stream does not support reading.</exception>
+  /// Compress a <see cref="Stream" /> using a supported compression type.
+  /// </summary>
+  /// <param name="uncompressedStream">Stream to compress.</param>
+  /// <param name="compressedStream">Stream to receive compressed form of uncompressedStream.</param>
+  /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// <exception cref="NotSupportedException">Thrown if the compressed stream does not support writing or the uncompressed stream does not support reading.</exception>
   public static async Task CompressStream(this Stream uncompressedStream, Stream compressedStream, ECompressionType compressionType, CancellationToken cancellationToken = default)
   {
     if (!compressedStream.CanWrite)
@@ -93,12 +93,12 @@ public static class Streams
   }
 
   /// <summary>
-    /// Compress a <see cref="Stream" /> that was compressed using a supported compression type.
-    /// </summary>
-    /// <param name="uncompressedStream">Stream to compress.</param>
-    /// <param name="compressedStream">Stream to receive compressed form of uncompressedStream.</param>
-    /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
-    /// <exception cref="NotSupportedException">Thrown if the compressed stream does not support writing or the uncompressed stream does not support reading.</exception>
+  /// Compress a <see cref="Stream" /> that was compressed using a supported compression type.
+  /// </summary>
+  /// <param name="uncompressedStream">Stream to compress.</param>
+  /// <param name="compressedStream">Stream to receive compressed form of uncompressedStream.</param>
+  /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
+  /// <exception cref="NotSupportedException">Thrown if the compressed stream does not support writing or the uncompressed stream does not support reading.</exception>
   public static void CompressStreamSynchronous(this Stream uncompressedStream, Stream compressedStream, ECompressionType compressionType)
   {
     if (!compressedStream.CanWrite)
@@ -154,13 +154,13 @@ public static class Streams
   }
 
   /// <summary>
-    /// Decompress a <see cref="Stream" /> that was compressed using a supported compression type.
-    /// </summary>
-    /// <param name="compressedStream">Stream with compressed data.</param>
-    /// <param name="decompressedStream">Stream to receive decompressed form of compressedStream.</param>
-    /// <param name="compressionType">Type of compression used in stream (GZip, Brotli, Deflate, or ZLib).</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-    /// <exception cref="NotSupportedException">Thrown if the decompressed stream does not support writing or the compressed stream does not support reading.</exception>
+  /// Decompress a <see cref="Stream" /> that was compressed using a supported compression type.
+  /// </summary>
+  /// <param name="compressedStream">Stream with compressed data.</param>
+  /// <param name="decompressedStream">Stream to receive decompressed form of compressedStream.</param>
+  /// <param name="compressionType">Type of compression used in stream (GZip, Brotli, Deflate, or ZLib).</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// <exception cref="NotSupportedException">Thrown if the decompressed stream does not support writing or the compressed stream does not support reading.</exception>
   public static async Task DecompressStream(this Stream compressedStream, Stream decompressedStream, ECompressionType compressionType, CancellationToken cancellationToken = default)
   {
     if (!decompressedStream.CanWrite)
@@ -218,12 +218,12 @@ public static class Streams
   }
 
   /// <summary>
-    /// Decompress a <see cref="Stream" /> that was compressed using a supported compression type.
-    /// </summary>
-    /// <param name="compressedStream">Stream with compressed data.</param>
-    /// <param name="decompressedStream">Stream to receive decompressed form of compressedStream.</param>
-    /// <param name="compressionType">Type of compression used in stream (GZip, Brotli, Deflate, or ZLib).</param>
-    /// <exception cref="NotSupportedException">Thrown if the decompressed stream does not support writing or the compressed stream does not support reading.</exception>
+  /// Decompress a <see cref="Stream" /> that was compressed using a supported compression type.
+  /// </summary>
+  /// <param name="compressedStream">Stream with compressed data.</param>
+  /// <param name="decompressedStream">Stream to receive decompressed form of compressedStream.</param>
+  /// <param name="compressionType">Type of compression used in stream (GZip, Brotli, Deflate, or ZLib).</param>
+  /// <exception cref="NotSupportedException">Thrown if the decompressed stream does not support writing or the compressed stream does not support reading.</exception>
   public static void DecompressStreamSynchronous(this Stream compressedStream, Stream decompressedStream, ECompressionType compressionType)
   {
     if (!decompressedStream.CanWrite)
@@ -278,14 +278,14 @@ public static class Streams
   }
 
   /// <summary>
-    /// Decompress a <see cref="Stream" /> that was compressed using a supported compression type.
-    /// </summary>
-    /// <param name="compressedStream">Stream with compressed data</param>
-    /// <param name="compressionType">Type of compression used in stream (GZip, Brotli, Deflate, or ZLib).</param>
-    /// <param name="leaveOpen">Whether to leave the compressed stream open after decompression.</param>
-    /// <returns>A stream containing the decompressed data.</returns>
-    /// <exception cref="NotSupportedException">Thrown if stream is not readable.</exception>
-    /// <exception cref="NotImplementedException">Thrown if compression type has not been implemented yet.</exception>
+  /// Decompress a <see cref="Stream" /> that was compressed using a supported compression type.
+  /// </summary>
+  /// <param name="compressedStream">Stream with compressed data</param>
+  /// <param name="compressionType">Type of compression used in stream (GZip, Brotli, Deflate, or ZLib).</param>
+  /// <param name="leaveOpen">Whether to leave the compressed stream open after decompression.</param>
+  /// <returns>A stream containing the decompressed data.</returns>
+  /// <exception cref="NotSupportedException">Thrown if stream is not readable.</exception>
+  /// <exception cref="NotImplementedException">Thrown if compression type has not been implemented yet.</exception>
   public static Stream Decompress(this Stream compressedStream, ECompressionType compressionType, bool leaveOpen = false)
   {
     if (!compressedStream.CanRead)
@@ -309,14 +309,14 @@ public static class Streams
   }
 
   /// <summary>
-    /// Compress a <see cref="Stream" /> using a supported compression type.
-    /// </summary>
-    /// <param name="uncompressedStream">Stream to compress.</param>
-    /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
-    /// <param name="leaveOpen">Whether to leave the uncompressed stream open after compression.</param>
-    /// <returns>A stream containing the compressed data.</returns>
-    /// <exception cref="NotSupportedException">Thrown if stream is not readable.</exception>
-    /// <exception cref="NotImplementedException">Thrown if compression type has not been implemented yet.</exception>
+  /// Compress a <see cref="Stream" /> using a supported compression type.
+  /// </summary>
+  /// <param name="uncompressedStream">Stream to compress.</param>
+  /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
+  /// <param name="leaveOpen">Whether to leave the uncompressed stream open after compression.</param>
+  /// <returns>A stream containing the compressed data.</returns>
+  /// <exception cref="NotSupportedException">Thrown if stream is not readable.</exception>
+  /// <exception cref="NotImplementedException">Thrown if compression type has not been implemented yet.</exception>
   public static Stream Compress(this Stream uncompressedStream, ECompressionType compressionType, bool leaveOpen = false)
   {
     if (!uncompressedStream.CanRead)
@@ -338,12 +338,12 @@ public static class Streams
   }
 
   /// <summary>
-    /// Compress the data contained within a byte array using a supported compression type.
-    /// </summary>
-    /// <param name="data">The byte array containing the data to compress.</param>
-    /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-    /// <returns>Byte array containing the compressed version of the original byte array.</returns>
+  /// Compress the data contained within a byte array using a supported compression type.
+  /// </summary>
+  /// <param name="data">The byte array containing the data to compress.</param>
+  /// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// <returns>Byte array containing the compressed version of the original byte array.</returns>
   public static async Task<byte[]> Compress(this byte[] data, ECompressionType compressionType, CancellationToken cancellationToken = default)
   {
     await using MemoryStream memoryStream = new();
@@ -429,14 +429,14 @@ public static class Streams
   }
 
   /// <summary>
-    /// Decompress the data contained within a byte array that was compressed using a supported compression type.
-    /// </summary>
-    /// <param name="compressedData">The byte array containing the compressed data to decompress.</param>
-    /// <param name="compressionType">Type of compression used on the data (GZip, Brotli, Deflate, or ZLib).</param>
-    /// <param name="maxCompressionRatio">Optional: If the compressed data exceeds this compression ratio the method will stop execution as a safety mechanism.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-    /// <returns>Byte array containing the decompressed version of the original byte array.</returns>
-    /// <exception cref="CompressionLimitExceededException">Thrown if the decompressed data exceeds the maximum allowed size which defaults to 1000 times the compressed size.</exception>
+  /// Decompress the data contained within a byte array that was compressed using a supported compression type.
+  /// </summary>
+  /// <param name="compressedData">The byte array containing the compressed data to decompress.</param>
+  /// <param name="compressionType">Type of compression used on the data (GZip, Brotli, Deflate, or ZLib).</param>
+  /// <param name="maxCompressionRatio">Optional: If the compressed data exceeds this compression ratio the method will stop execution as a safety mechanism.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// <returns>Byte array containing the decompressed version of the original byte array.</returns>
+  /// <exception cref="CompressionLimitExceededException">Thrown if the decompressed data exceeds the maximum allowed size which defaults to 1000 times the compressed size.</exception>
   public static async Task<byte[]> Decompress(this byte[] compressedData, ECompressionType compressionType, int maxCompressionRatio = MaxCompressionRatio, CancellationToken cancellationToken = default)
   {
     await using MemoryStream compressedStream = new(compressedData);
@@ -545,11 +545,11 @@ public static class Streams
   }
 
   /// <summary>
-    /// Detect the compression type of a <see cref="Stream"/> based on its header without advancing the <see cref="Stream"/> position.
-    /// </summary>
-    /// <param name="stream">Stream to analyze.</param>
-    /// <returns>Detected compression type, or "None" if not recognized.</returns>
-    /// <remarks>If the <see cref="Stream"/> is not seekable, there is no way to detect deflate compression.</remarks>
+  /// Detect the compression type of a <see cref="Stream"/> based on its header without advancing the <see cref="Stream"/> position.
+  /// </summary>
+  /// <param name="stream">Stream to analyze.</param>
+  /// <returns>Detected compression type, or "None" if not recognized.</returns>
+  /// <remarks>If the <see cref="Stream"/> is not seekable, there is no way to detect deflate compression.</remarks>
   public static async Task<ECompressionType> DetectCompressionType(this Stream? stream)
   {
     if (stream?.CanRead != true)
@@ -660,10 +660,10 @@ public static class Streams
   }
 
   /// <summary>
-    /// Checks a <see cref="byte"/> <see cref="Array"/> to determine if it has been compressed using the deflate compression algorithm.
-    /// </summary>
-    /// <param name="data">Byte array to check for defalte compression.</param>
-    /// <returns><see langword="true"/> if byte array contains data that was compressed using the deflate compression algorithm.</returns>
+  /// Checks a <see cref="byte"/> <see cref="Array"/> to determine if it has been compressed using the deflate compression algorithm.
+  /// </summary>
+  /// <param name="data">Byte array to check for defalte compression.</param>
+  /// <returns><see langword="true"/> if byte array contains data that was compressed using the deflate compression algorithm.</returns>
   public static async Task<bool> IsDeflateCompressed(byte[] data)
   {
     try
@@ -683,18 +683,18 @@ public static class Streams
   }
 
   /// <summary>
-    /// Asynchronously copies data from the source <see cref="Stream"/> to the destination <see cref="Stream"/>, ensuring that the total number of bytes copied does not exceed the specified limit.
-    /// </summary>
-    /// <remarks>
-    /// This method reads data from the <paramref name="source"/> <see cref="Stream"/> in chunks and writes it to the <paramref name="destination"/> stream.
-    /// The operation stops if the total number of bytes copied reaches the specified <paramref name="maxBytes"/> limit.
-    /// </remarks>
-    /// <param name="source">The source stream to read data from.</param>
-    /// <param name="destination">The destination stream to write data to.</param>
-    /// <param name="maxBytes">The maximum number of bytes to copy. If the limit is exceeded, an exception is thrown.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-    /// <returns>A task that represents the asynchronous copy operation.</returns>
-    /// <exception cref="CompressionLimitExceededException">Thrown if the total number of bytes copied exceeds <paramref name="maxBytes"/>.</exception>
+  /// Asynchronously copies data from the source <see cref="Stream"/> to the destination <see cref="Stream"/>, ensuring that the total number of bytes copied does not exceed the specified limit.
+  /// </summary>
+  /// <remarks>
+  /// This method reads data from the <paramref name="source"/> <see cref="Stream"/> in chunks and writes it to the <paramref name="destination"/> stream.
+  /// The operation stops if the total number of bytes copied reaches the specified <paramref name="maxBytes"/> limit.
+  /// </remarks>
+  /// <param name="source">The source stream to read data from.</param>
+  /// <param name="destination">The destination stream to write data to.</param>
+  /// <param name="maxBytes">The maximum number of bytes to copy. If the limit is exceeded, an exception is thrown.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// <returns>A task that represents the asynchronous copy operation.</returns>
+  /// <exception cref="CompressionLimitExceededException">Thrown if the total number of bytes copied exceeds <paramref name="maxBytes"/>.</exception>
   public static async Task CopyWithLimitAsync(this Stream source, Stream destination, long maxBytes, CancellationToken cancellationToken = default)
   {
     byte[] buffer = bufferPool.Rent(ChunkSize); //new byte[ChunkSize];
@@ -722,18 +722,18 @@ public static class Streams
   }
 
   /// <summary>
-    /// Copies data from the source <see cref="Stream"/> to the destination <see cref="Stream"/>, ensuring that the total number of bytes copied does not exceed the specified limit.
-    /// </summary>
-    /// <remarks>
-    /// This method reads data from the <paramref name="source"/> stream in chunks and writes it to the <paramref name="destination"/> <see cref="Stream"/>.
-    /// The operation stops if the total number of bytes copied reaches the specified <paramref name="maxBytes"/> limit.
-    /// </remarks>
-    /// <param name="source">The source stream to read data from.</param>
-    /// <param name="destination">The destination stream to write data to.</param>
-    /// <param name="maxBytes">The maximum number of bytes to copy. If the limit is exceeded, an exception is thrown.</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-    /// <returns>A task that represents the asynchronous copy operation.</returns>
-    /// <exception cref="CompressionLimitExceededException">Thrown if the total number of bytes copied exceeds <paramref name="maxBytes"/>.</exception>
+  /// Copies data from the source <see cref="Stream"/> to the destination <see cref="Stream"/>, ensuring that the total number of bytes copied does not exceed the specified limit.
+  /// </summary>
+  /// <remarks>
+  /// This method reads data from the <paramref name="source"/> stream in chunks and writes it to the <paramref name="destination"/> <see cref="Stream"/>.
+  /// The operation stops if the total number of bytes copied reaches the specified <paramref name="maxBytes"/> limit.
+  /// </remarks>
+  /// <param name="source">The source stream to read data from.</param>
+  /// <param name="destination">The destination stream to write data to.</param>
+  /// <param name="maxBytes">The maximum number of bytes to copy. If the limit is exceeded, an exception is thrown.</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+  /// <returns>A task that represents the asynchronous copy operation.</returns>
+  /// <exception cref="CompressionLimitExceededException">Thrown if the total number of bytes copied exceeds <paramref name="maxBytes"/>.</exception>
   public static void CopyWithLimit(this Stream source, Stream destination, long maxBytes, CancellationToken cancellationToken = default)
   {
     long totalBytes = 0;
@@ -763,10 +763,10 @@ public static class Streams
   }
 
   /// <summary>
-    /// Detect compression type of <see cref="Stream"/> that is non-seekable and bytes are lost after reading (ie. AWS S3 ResponseStream)
-    /// </summary>
-    /// <param name="stream">Stream to get compression type from.</param>
-    /// <returns>A tuple with the compression type and a new stream object that contains the bytes read originally plus the rest of the original stream.</returns>
+  /// Detect compression type of <see cref="Stream"/> that is non-seekable and bytes are lost after reading (ie. AWS S3 ResponseStream)
+  /// </summary>
+  /// <param name="stream">Stream to get compression type from.</param>
+  /// <returns>A tuple with the compression type and a new stream object that contains the bytes read originally plus the rest of the original stream.</returns>
   public static async Task<(ECompressionType, Stream)> DetectCompressionTypeAndReset(Stream stream)
   {
     const int headerLength = 8; // Enough for all supported compression types

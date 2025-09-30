@@ -6,12 +6,12 @@
 public static class DateTimeHelpers
 {
   /// <summary>
-    /// Get the number of business days found within a date range (inclusive)
-    /// </summary>
-    /// <param name="startDate">First date of range to get business days for</param>
-    /// <param name="endDate">Last date of range to get business days for</param>
-    /// <param name="exceptionDates">Days that will not be counted as a business day such as holidays</param>
-    /// <returns>The number of business days between <paramref name="startDate"/> and <paramref name="endDate"/></returns>
+  /// Get the number of business days found within a date range (inclusive)
+  /// </summary>
+  /// <param name="startDate">First date of range to get business days for</param>
+  /// <param name="endDate">Last date of range to get business days for</param>
+  /// <param name="exceptionDates">Days that will not be counted as a business day such as holidays</param>
+  /// <returns>The number of business days between <paramref name="startDate"/> and <paramref name="endDate"/></returns>
   public static int GetBusinessDays(DateTime? startDate, DateTime? endDate, List<DateTime>? exceptionDates = null)
   {
     if ((startDate == null) || (endDate == null))
@@ -44,11 +44,11 @@ public static class DateTimeHelpers
   }
 
   /// <summary>
-    /// Get the date of the day requested given the week provided via the dateTime parameter
-    /// </summary>
-    /// <param name="dateTime">Date to search for the day of the week for</param>
-    /// <param name="dayOfWeek">The day of the indicated week to return the date for</param>
-    /// <returns>The date of the day of the week indicated by <paramref name="dayOfWeek"/></returns>
+  /// Get the date of the day requested given the week provided via the dateTime parameter
+  /// </summary>
+  /// <param name="dateTime">Date to search for the day of the week for</param>
+  /// <param name="dayOfWeek">The day of the indicated week to return the date for</param>
+  /// <returns>The date of the day of the week indicated by <paramref name="dayOfWeek"/></returns>
   public static DateTime GetDayOfWeek(this in DateTime dateTime, DayOfWeek dayOfWeek = DayOfWeek.Monday)
   {
     int diff = (7 + (dateTime.DayOfWeek - dayOfWeek)) % 7;
@@ -56,74 +56,74 @@ public static class DateTimeHelpers
   }
 
   /// <summary>
-    /// Gets the first and last day of the month provided
-    /// </summary>
-    /// <returns>Tuple containing the first and last date of the specified month</returns>
+  /// Gets the first and last day of the month provided
+  /// </summary>
+  /// <returns>Tuple containing the first and last date of the specified month</returns>
   public static (DateTime firstDay, DateTime lastDay) GetMonthBoundaries(int month, int year)
   {
     return (GetFirstDayOfMonth(month, year), GetLastDayOfMonth(month, year));
   }
 
   /// <summary>
-    /// Gets the first and last day of the month provided
-    /// </summary>
-    /// <returns>Tuple containing the first and last date of the specified month</returns>
+  /// Gets the first and last day of the month provided
+  /// </summary>
+  /// <returns>Tuple containing the first and last date of the specified month</returns>
   public static (DateTime firstDay, DateTime lastDay) GetMonthBoundaries(this DateTime date)
   {
     return GetMonthBoundaries(date.Month, date.Year);
   }
 
   /// <summary>
-    /// Gets the first day of the month provided
-    /// </summary>
-    /// <returns>DateTime for the first day of the specified month</returns>
+  /// Gets the first day of the month provided
+  /// </summary>
+  /// <returns>DateTime for the first day of the specified month</returns>
   public static DateTime GetFirstDayOfMonth(int month, int year)
   {
     return new(year, month, 1);
   }
 
   /// <summary>
-    /// Gets the first day of the month provided
-    /// </summary>
-    /// <returns>DateTime for the first day of the specified month</returns>
+  /// Gets the first day of the month provided
+  /// </summary>
+  /// <returns>DateTime for the first day of the specified month</returns>
   public static DateTime GetFirstDayOfMonth(this DateTime date)
   {
     return GetFirstDayOfMonth(date.Month, date.Year);
   }
 
   /// <summary>
-    /// Gets the lest day of the month provided
-    /// </summary>
-    /// <returns>DateTime for the lest day of the specified month</returns>
+  /// Gets the lest day of the month provided
+  /// </summary>
+  /// <returns>DateTime for the lest day of the specified month</returns>
   public static DateTime GetLastDayOfMonth(int month, int year)
   {
     return new(year, month, DateTime.DaysInMonth(year, month));
   }
 
   /// <summary>
-    /// Gets the lest day of the month provided
-    /// </summary>
-    /// <returns>DateTime for the lest day of the specified month</returns>
+  /// Gets the lest day of the month provided
+  /// </summary>
+  /// <returns>DateTime for the lest day of the specified month</returns>
   public static DateTime GetLastDayOfMonth(this DateTime date)
   {
     return GetLastDayOfMonth(date.Month, date.Year);
   }
 
   /// <summary>
-    /// Returns whether or not the provided double value is a valid OADate
-    /// </summary>
-    /// <param name="oaDate">Double to check as OADate</param>
-    /// <returns><see langword="true"/> if double passed in represents a valid OA Date</returns>
+  /// Returns whether or not the provided double value is a valid OADate
+  /// </summary>
+  /// <param name="oaDate">Double to check as OADate</param>
+  /// <returns><see langword="true"/> if double passed in represents a valid OA Date</returns>
   public static bool IsValidOaDate(this double? oaDate)
   {
     return (oaDate != null) && (oaDate >= 657435.0) && (oaDate <= 2958465.99999999);
   }
 
   /// <summary>
-    /// Returns whether or not the provided double value is a valid OADate
-    /// </summary>
-    /// <param name="oaDate">Double to check as OADate</param>
-    /// <returns><see langword="true"/> if double passed in represents a valid OA Date</returns>
+  /// Returns whether or not the provided double value is a valid OADate
+  /// </summary>
+  /// <param name="oaDate">Double to check as OADate</param>
+  /// <returns><see langword="true"/> if double passed in represents a valid OA Date</returns>
   public static bool IsValidOaDate(this double oaDate)
   {
     return (oaDate >= 657435.0) && (oaDate <= 2958465.99999999);

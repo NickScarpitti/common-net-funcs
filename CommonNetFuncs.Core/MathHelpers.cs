@@ -9,11 +9,11 @@ namespace CommonNetFuncs.Core;
 public static class MathHelpers
 {
   /// <summary>
-    /// Rounds value up to the next whole value specified by significance parameter.
-    /// </summary>
-    /// <param name="value">Value to round up</param>
-    /// <param name="significance">Next step to round value parameter up to.</param>
-    /// <returns>Double representation of the rounded value.</returns>
+  /// Rounds value up to the next whole value specified by significance parameter.
+  /// </summary>
+  /// <param name="value">Value to round up</param>
+  /// <param name="significance">Next step to round value parameter up to.</param>
+  /// <returns>Double representation of the rounded value.</returns>
   public static double Ceiling(this double? value, double significance)
   {
     double val = value ?? 0;
@@ -33,11 +33,11 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Rounds value up to the next whole value specified by significance parameter
-    /// </summary>
-    /// <param name="value">Value to round up</param>
-    /// <param name="significance">Next step to round value parameter up to</param>
-    /// <returns>Decimal representation of the rounded value</returns>
+  /// Rounds value up to the next whole value specified by significance parameter
+  /// </summary>
+  /// <param name="value">Value to round up</param>
+  /// <param name="significance">Next step to round value parameter up to</param>
+  /// <returns>Decimal representation of the rounded value</returns>
   public static decimal Ceiling(this decimal? value, decimal significance)
   {
     decimal val = value ?? 0;
@@ -57,11 +57,11 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Rounds value down to the next whole value specified by significance parameter
-    /// </summary>
-    /// <param name="value">Value to round up</param>
-    /// <param name="significance">Next step to round value parameter down to</param>
-    /// <returns>Double representation of the rounded value</returns>
+  /// Rounds value down to the next whole value specified by significance parameter
+  /// </summary>
+  /// <param name="value">Value to round up</param>
+  /// <param name="significance">Next step to round value parameter down to</param>
+  /// <returns>Double representation of the rounded value</returns>
   public static double Floor(this double? value, double significance)
   {
     double val = value ?? 0;
@@ -81,11 +81,11 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Rounds value down to the next whole value specified by significance parameter
-    /// </summary>
-    /// <param name="value">Value to round up</param>
-    /// <param name="significance">Next step to round value parameter down to</param>
-    /// <returns>Decimal representation of the rounded value</returns>
+  /// Rounds value down to the next whole value specified by significance parameter
+  /// </summary>
+  /// <param name="value">Value to round up</param>
+  /// <param name="significance">Next step to round value parameter down to</param>
+  /// <returns>Decimal representation of the rounded value</returns>
   public static decimal Floor(this decimal? value, decimal significance)
   {
     decimal val = value ?? 0;
@@ -105,10 +105,10 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Get the number of decimal places of a decimal value
-    /// </summary>
-    /// <param name="value">Value to get the precision of</param>
-    /// <returns>The number of decimal places of the given double value</returns>
+  /// Get the number of decimal places of a decimal value
+  /// </summary>
+  /// <param name="value">Value to get the precision of</param>
+  /// <returns>The number of decimal places of the given double value</returns>
   public static int GetPrecision(this decimal? value)
   {
     if (value == null)
@@ -121,10 +121,10 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Get the number of decimal places of a double value
-    /// </summary>
-    /// <param name="value">Value to get the precision of</param>
-    /// <returns>The number of decimal places of the given double value</returns>
+  /// Get the number of decimal places of a double value
+  /// </summary>
+  /// <param name="value">Value to get the precision of</param>
+  /// <returns>The number of decimal places of the given double value</returns>
   public static int GetPrecision(this double? value, string? decimalSeparator = null)
   {
     if (value == null)
@@ -139,10 +139,10 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Get the number of decimal places of a decimal value
-    /// </summary>
-    /// <param name="value">Value to get the precision of</param>
-    /// <returns>The number of decimal places of the given double value</returns>
+  /// Get the number of decimal places of a decimal value
+  /// </summary>
+  /// <param name="value">Value to get the precision of</param>
+  /// <returns>The number of decimal places of the given double value</returns>
   public static int GetPrecision(this decimal value)
   {
     int[] bits = decimal.GetBits(value);
@@ -150,11 +150,11 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Get the number of decimal places of a double value
-    /// </summary>
-    /// <param name="value">Value to get the precision of</param>
-    /// <param name="decimalSeparator">The decimal separator to use.</param>
-    /// <returns>The number of decimal places of the given double value</returns>
+  /// Get the number of decimal places of a double value
+  /// </summary>
+  /// <param name="value">Value to get the precision of</param>
+  /// <param name="decimalSeparator">The decimal separator to use.</param>
+  /// <returns>The number of decimal places of the given double value</returns>
   public static int GetPrecision(this double value, string? decimalSeparator = null)
   {
     string valueString = value.ToString() ?? string.Empty;
@@ -164,11 +164,11 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Generates a continuous range of numbers between start and end parameters (inclusive)
-    /// </summary>
-    /// <param name="start">Number to start range with (inclusive)</param>
-    /// <param name="end">Number to end range with (inclusive)</param>
-    /// <returns>An IEnumerable containing a continuous range of numbers between start and end parameters (inclusive)</returns>
+  /// Generates a continuous range of numbers between start and end parameters (inclusive)
+  /// </summary>
+  /// <param name="start">Number to start range with (inclusive)</param>
+  /// <param name="end">Number to end range with (inclusive)</param>
+  /// <returns>An IEnumerable containing a continuous range of numbers between start and end parameters (inclusive)</returns>
   public static IEnumerable<int> GenerateRange(int start, int end)
   {
     if (start > end)
@@ -179,12 +179,12 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
-    /// </summary>
-    /// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
-    /// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
-    /// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
-    /// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
+  /// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
+  /// </summary>
+  /// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
+  /// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
+  /// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
+  /// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
   public static void GreatestCommonDenominator(ref long numerator, ref long denominator, out long greatestCommonDenominator)
   {
     // Fast Euclidean algorithm for GCD calculation
@@ -206,12 +206,12 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
-    /// </summary>
-    /// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
-    /// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
-    /// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
-    /// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
+  /// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
+  /// </summary>
+  /// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
+  /// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
+  /// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
+  /// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
   public static void GreatestCommonDenominator(ref int numerator, ref int denominator, out int greatestCommonDenominator)
   {
     // Fast Euclidean algorithm for GCD calculation
@@ -233,12 +233,12 @@ public static class MathHelpers
   }
 
   /// <summary>
-    /// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
-    /// </summary>
-    /// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
-    /// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
-    /// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
-    /// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
+  /// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
+  /// </summary>
+  /// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
+  /// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
+  /// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
+  /// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
   public static void GreatestCommonDenominator(ref decimal numerator, ref decimal denominator, out decimal greatestCommonDenominator)
   {
     // Fast Euclidean algorithm for GCD calculation

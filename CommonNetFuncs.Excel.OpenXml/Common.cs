@@ -19,22 +19,22 @@ public static partial class Common
   private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
   /// <summary>
-    /// Populates SpreadsheetDocument with all components needed for a new Excel file including a single new sheet
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument to add components to</param>
-    /// <param name="sheetName">Optional name for the new sheet that will be created</param>
-    /// <returns>Id of the sheet that was created during initialization</returns>
+  /// Populates SpreadsheetDocument with all components needed for a new Excel file including a single new sheet
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument to add components to</param>
+  /// <param name="sheetName">Optional name for the new sheet that will be created</param>
+  /// <returns>Id of the sheet that was created during initialization</returns>
   public static uint InitializeExcelFile(this SpreadsheetDocument document, string? sheetName = null)
   {
     return document.CreateNewSheet(sheetName);
   }
 
   /// <summary>
-    /// Adds a new sheet to a SpreadsheetDocument named according to the value passed into sheetName or "Sheet #"
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument to add sheet to</param>
-    /// <param name="sheetName">Optional name for the new sheet that will be created. Default is "Sheet #"</param>
-    /// <returns>Id of the sheet that was created</returns>
+  /// Adds a new sheet to a SpreadsheetDocument named according to the value passed into sheetName or "Sheet #"
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument to add sheet to</param>
+  /// <param name="sheetName">Optional name for the new sheet that will be created. Default is "Sheet #"</param>
+  /// <returns>Id of the sheet that was created</returns>
   public static uint CreateNewSheet(this SpreadsheetDocument document, string? sheetName = null)
   {
     WorkbookPart? workbookPart = document.WorkbookPart;
@@ -69,11 +69,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Worksheet by its name from a SpreadsheetDocument.
-    /// </summary>
-    /// <param name="document">The SpreadsheetDocument containing the worksheet</param>
-    /// <param name="sheetName">The name of the worksheet to retrieve</param>
-    /// <returns>The Worksheet corresponding to the given name, or null if not found</returns>
+  /// Gets a Worksheet by its name from a SpreadsheetDocument.
+  /// </summary>
+  /// <param name="document">The SpreadsheetDocument containing the worksheet</param>
+  /// <param name="sheetName">The name of the worksheet to retrieve</param>
+  /// <returns>The Worksheet corresponding to the given name, or null if not found</returns>
   public static Worksheet? GetWorksheetByName(this SpreadsheetDocument document, string sheetName, bool createIfMissing = true)
   {
     WorkbookPart? workbookPart = document.WorkbookPart;
@@ -105,11 +105,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Worksheet by its ID from a SpreadsheetDocument
-    /// </summary>
-    /// <param name="document">The SpreadsheetDocument containing the worksheet</param>
-    /// <param name="sheetId">The ID of the worksheet to retrieve</param>
-    /// <returns>The Worksheet corresponding to the given ID, or null if not found</returns>
+  /// Gets a Worksheet by its ID from a SpreadsheetDocument
+  /// </summary>
+  /// <param name="document">The SpreadsheetDocument containing the worksheet</param>
+  /// <param name="sheetId">The ID of the worksheet to retrieve</param>
+  /// <returns>The Worksheet corresponding to the given ID, or null if not found</returns>
   public static Worksheet? GetWorksheetById(this SpreadsheetDocument document, uint sheetId)
   {
     WorkbookPart? workbookPart = document.WorkbookPart ?? throw new ArgumentException("The document does not contain a WorkbookPart.");
@@ -125,20 +125,20 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Worksheet from a Cell object
-    /// </summary>
-    /// <param name="cell">The Cell object to get the Worksheet from</param>
-    /// <returns>The Worksheet containing the Cell, or null if not found</returns>
+  /// Gets a Worksheet from a Cell object
+  /// </summary>
+  /// <param name="cell">The Cell object to get the Worksheet from</param>
+  /// <returns>The Worksheet containing the Cell, or null if not found</returns>
   public static Worksheet GetWorksheetFromCell(this Cell cell)
   {
     return cell.Ancestors<Worksheet>().FirstOrDefault() ?? throw new InvalidOperationException("Cell is not part of a worksheet.");
   }
 
   /// <summary>
-    /// Gets a Workbook from a Cell object
-    /// </summary>
-    /// <param name="cell">The Cell object to get the Workbook from</param>
-    /// <returns>The Workbook containing the Cell, or null if not found</returns>
+  /// Gets a Workbook from a Cell object
+  /// </summary>
+  /// <param name="cell">The Cell object to get the Workbook from</param>
+  /// <returns>The Workbook containing the Cell, or null if not found</returns>
   public static Workbook GetWorkbookFromCell(this Cell cell)
   {
     // Get the parent worksheet
@@ -152,11 +152,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Workbook from a Worksheet object
-    /// </summary>
-    /// <param name="worksheet">The Worksheet object to get the Workbook from</param>
-    /// <returns>The Workbook containing the Worksheet, or null if not found</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+  /// Gets a Workbook from a Worksheet object
+  /// </summary>
+  /// <param name="worksheet">The Worksheet object to get the Workbook from</param>
+  /// <returns>The Workbook containing the Worksheet, or null if not found</returns>
+  /// <exception cref="InvalidOperationException"></exception>
   public static Workbook GetWorkbookFromWorksheet(this Worksheet worksheet)
   {
     // Get the workbook part
@@ -167,11 +167,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Workbook from a WorksheetPart object
-    /// </summary>
-    /// <param name="worksheetPart">The WorksheetPart object to get the Workbook from</param>
-    /// <returns>The Workbook containing the WorksheetPart, or null if not found</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+  /// Gets a Workbook from a WorksheetPart object
+  /// </summary>
+  /// <param name="worksheetPart">The WorksheetPart object to get the Workbook from</param>
+  /// <returns>The Workbook containing the WorksheetPart, or null if not found</returns>
+  /// <exception cref="InvalidOperationException"></exception>
   public static Workbook GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
   {
     // Get the workbook part
@@ -182,22 +182,22 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a WorkbookPart from a CellReference object
-    /// </summary>
-    /// <param name="workbookPart">The WorkbookPart object that contains the WorksheetPart and CellReference</param>
-    /// <param name="cellReference">The CellReference object to get the worksheet WorksheetPart from</param>
-    /// <returns>The WorksheetPart containing the CellReference, or null if not found</returns>
+  /// Gets a WorkbookPart from a CellReference object
+  /// </summary>
+  /// <param name="workbookPart">The WorkbookPart object that contains the WorksheetPart and CellReference</param>
+  /// <param name="cellReference">The CellReference object to get the worksheet WorksheetPart from</param>
+  /// <returns>The WorksheetPart containing the CellReference, or null if not found</returns>
   public static WorksheetPart? GetWorksheetPartByCellReference(WorkbookPart workbookPart, CellReference cellReference)
   {
     return workbookPart.WorksheetParts.FirstOrDefault(wp => wp.Worksheet.Descendants<Cell>().Any(c => c.CellReference == cellReference.ToString()));
   }
 
   /// <summary>
-    /// Gets a Sheet by name from a SpreadsheetDocument
-    /// </summary>
-    /// <param name="document">The SpreadsheetDocument to search in</param>
-    /// <param name="sheetName">The name of the sheet to find. If null, returns the first sheet.</param>
-    /// <returns>The Sheet object, or null if not found.</returns>
+  /// Gets a Sheet by name from a SpreadsheetDocument
+  /// </summary>
+  /// <param name="document">The SpreadsheetDocument to search in</param>
+  /// <param name="sheetName">The name of the sheet to find. If null, returns the first sheet.</param>
+  /// <returns>The Sheet object, or null if not found.</returns>
   public static Sheet? GetSheetByName(this SpreadsheetDocument document, string? sheetName = null)
   {
     WorkbookPart? workbookPart = document.WorkbookPart;
@@ -205,11 +205,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the SheetData from a SpreadsheetDocument for a specific sheet
-    /// </summary>
-    /// <param name="document">The SpreadsheetDocument to get the SheetData from</param>
-    /// <param name="sheetName">The name of the sheet. If null, uses the first sheet.</param>
-    /// <returns>The SheetData object for the specified sheet</returns>
+  /// Gets the SheetData from a SpreadsheetDocument for a specific sheet
+  /// </summary>
+  /// <param name="document">The SpreadsheetDocument to get the SheetData from</param>
+  /// <param name="sheetName">The name of the sheet. If null, uses the first sheet.</param>
+  /// <returns>The SheetData object for the specified sheet</returns>
   public static SheetData GetSheetDataFromDocument(this SpreadsheetDocument document, string? sheetName)
   {
     SheetData sheetData = new();
@@ -226,23 +226,23 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Checks if a Cell is empty
-    /// </summary>
-    /// <param name="cell">The Cell to check</param>
-    /// <returns><see langword="true"/> if the Cell is empty, false otherwise</returns>
+  /// Checks if a Cell is empty
+  /// </summary>
+  /// <param name="cell">The Cell to check</param>
+  /// <returns><see langword="true"/> if the Cell is empty, false otherwise</returns>
   public static bool IsCellEmpty(this Cell? cell)
   {
     return (cell == null) || string.IsNullOrWhiteSpace(cell.InnerText);
   }
 
   /// <summary>
-    /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
-    /// </summary>
-    /// <param name="ws">The Worksheet containing the cell</param>
-    /// <param name="cellReference">The cell reference to the cell to get</param>
-    /// <param name="colOffset">Optional: Column offset from cellReference column</param>
-    /// <param name="rowOffset">Optional: Row offset from cellReference row</param>
-    /// <returns>The Cell object, or null if not found</returns>
+  /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
+  /// </summary>
+  /// <param name="ws">The Worksheet containing the cell</param>
+  /// <param name="cellReference">The cell reference to the cell to get</param>
+  /// <param name="colOffset">Optional: Column offset from cellReference column</param>
+  /// <param name="rowOffset">Optional: Row offset from cellReference row</param>
+  /// <returns>The Cell object, or null if not found</returns>
   public static Cell? GetCellFromReference(this Worksheet ws, CellReference cellReference, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -269,13 +269,13 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
-    /// </summary>
-    /// <param name="ws">The Worksheet containing the cell</param>
-    /// <param name="cellReference">The cell reference (e.g., "A1").</param>
-    /// <param name="colOffset">Optional: Column offset from cellReference column</param>
-    /// <param name="rowOffset">Optional: Row offset from cellReference row</param>
-    /// <returns>The Cell object, or null if not found</returns>
+  /// Gets a Cell from a Worksheet using a cell reference, creating a new cell if it doesn't already exist
+  /// </summary>
+  /// <param name="ws">The Worksheet containing the cell</param>
+  /// <param name="cellReference">The cell reference (e.g., "A1").</param>
+  /// <param name="colOffset">Optional: Column offset from cellReference column</param>
+  /// <param name="rowOffset">Optional: Row offset from cellReference row</param>
+  /// <returns>The Cell object, or null if not found</returns>
   public static Cell? GetCellFromReference(this Worksheet ws, string cellReference, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -291,12 +291,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Cell offset from a given starting Cell
-    /// </summary>
-    /// <param name="startCell">The starting Cell</param>
-    /// <param name="colOffset">Column offset</param>
-    /// <param name="rowOffset">Row offset</param>
-    /// <returns>The offset Cell, or null if not found</returns>
+  /// Gets a Cell offset from a given starting Cell
+  /// </summary>
+  /// <param name="startCell">The starting Cell</param>
+  /// <param name="colOffset">Column offset</param>
+  /// <param name="rowOffset">Row offset</param>
+  /// <returns>The offset Cell, or null if not found</returns>
   public static Cell? GetCellOffset(this Cell startCell, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -316,14 +316,14 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Cell from a Worksheet using coordinates
-    /// </summary>
-    /// <param name="ws">The Worksheet containing the cell</param>
-    /// <param name="x">The column index of the cell</param>
-    /// <param name="y">The row index of the cell</param>
-    /// <param name="colOffset">Optional: Column offset to add to x</param>
-    /// <param name="rowOffset">Optional: Row offset to add to y</param>
-    /// <returns>The Cell object, or null if not found</returns>
+  /// Gets a Cell from a Worksheet using coordinates
+  /// </summary>
+  /// <param name="ws">The Worksheet containing the cell</param>
+  /// <param name="x">The column index of the cell</param>
+  /// <param name="y">The row index of the cell</param>
+  /// <param name="colOffset">Optional: Column offset to add to x</param>
+  /// <param name="rowOffset">Optional: Row offset to add to y</param>
+  /// <returns>The Cell object, or null if not found</returns>
   public static Cell? GetCellFromCoordinates(this Worksheet ws, int x, int y, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -350,13 +350,13 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Cell from a SpreadsheetDocument using a named cell
-    /// </summary>
-    /// <param name="document">The SpreadsheetDocument containing the cell</param>
-    /// <param name="cellName">The named reference of the cell</param>
-    /// <param name="colOffset">Optional: Column offset from the named cell</param>
-    /// <param name="rowOffset">Optional: Row offset from the named cell</param>
-    /// <returns>The Cell object, or null if not found</returns>
+  /// Gets a Cell from a SpreadsheetDocument using a named cell
+  /// </summary>
+  /// <param name="document">The SpreadsheetDocument containing the cell</param>
+  /// <param name="cellName">The named reference of the cell</param>
+  /// <param name="colOffset">Optional: Column offset from the named cell</param>
+  /// <param name="rowOffset">Optional: Row offset from the named cell</param>
+  /// <returns>The Cell object, or null if not found</returns>
   public static Cell? GetCellFromName(this SpreadsheetDocument document, string cellName, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -372,13 +372,13 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a Cell from a WorkbookPart using a named cell
-    /// </summary>
-    /// <param name="workbookPart">The WorkbookPart containing the cell</param>
-    /// <param name="cellName">The named reference of the cell</param>
-    /// <param name="colOffset">Optional: Column offset from the named cell</param>
-    /// <param name="rowOffset">Optional: Row offset from the named cell</param>
-    /// <returns>The Cell object, or null if not found</returns>
+  /// Gets a Cell from a WorkbookPart using a named cell
+  /// </summary>
+  /// <param name="workbookPart">The WorkbookPart containing the cell</param>
+  /// <param name="cellName">The named reference of the cell</param>
+  /// <param name="colOffset">Optional: Column offset from the named cell</param>
+  /// <param name="rowOffset">Optional: Row offset from the named cell</param>
+  /// <returns>The Cell object, or null if not found</returns>
   public static Cell? GetCellFromName(this WorkbookPart workbookPart, string cellName, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -405,13 +405,13 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets CellReference of named cell
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument containing the named cell</param>
-    /// <param name="cellName">The name of the cell</param>
-    /// <param name="colOffset">Optional: Column offset from the named cell</param>
-    /// <param name="rowOffset">Optional: Row offset from the named cell</param>
-    /// <returns>The CellReference for the named cell, null if not found</returns>
+  /// Gets CellReference of named cell
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument containing the named cell</param>
+  /// <param name="cellName">The name of the cell</param>
+  /// <param name="colOffset">Optional: Column offset from the named cell</param>
+  /// <param name="rowOffset">Optional: Row offset from the named cell</param>
+  /// <returns>The CellReference for the named cell, null if not found</returns>
   public static CellReference? GetCellReferenceFromName(this SpreadsheetDocument document, string cellName, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -427,13 +427,13 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets CellReference of named cell
-    /// </summary>
-    /// <param name="workbookPart">WorkbookPart containing the named cell</param>
-    /// <param name="cellName">The name of the cell</param>
-    /// <param name="colOffset">Optional: Column offset from the named cell</param>
-    /// <param name="rowOffset">Optional: Row offset from the named cell</param>
-    /// <returns>The CellReference for the named cell, null if not found</returns>
+  /// Gets CellReference of named cell
+  /// </summary>
+  /// <param name="workbookPart">WorkbookPart containing the named cell</param>
+  /// <param name="cellName">The name of the cell</param>
+  /// <param name="colOffset">Optional: Column offset from the named cell</param>
+  /// <param name="rowOffset">Optional: Row offset from the named cell</param>
+  /// <returns>The CellReference for the named cell, null if not found</returns>
   public static CellReference? GetCellReferenceFromName(this WorkbookPart workbookPart, string cellName, int colOffset = 0, int rowOffset = 0)
   {
     try
@@ -463,17 +463,17 @@ public static partial class Common
   private static ConcurrentDictionary<string, Dictionary<string, uint>> WorkbookStandardFormatCache = [];
 
   /// <summary>
-    /// Clears all cached standard formats for all workbooks
-    /// </summary>
+  /// Clears all cached standard formats for all workbooks
+  /// </summary>
   public static void ClearStandardFormatCache()
   {
     WorkbookStandardFormatCache = [];
   }
 
   /// <summary>
-    /// Clears standard format cache for specific workbook
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument to clear in memory style references for</param>
+  /// Clears standard format cache for specific workbook
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument to clear in memory style references for</param>
   public static void ClearStandardFormatCacheForWorkbook(SpreadsheetDocument document)
   {
     if (document?.WorkbookPart != null)
@@ -485,17 +485,17 @@ public static partial class Common
   private static ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCustomFormatCaches = new();
 
   /// <summary>
-    /// Clears all cached custom formats for all workbooks
-    /// </summary>
+  /// Clears all cached custom formats for all workbooks
+  /// </summary>
   public static void ClearCustomFormatCache()
   {
     WorkbookCustomFormatCaches = [];
   }
 
   /// <summary>
-    /// Clears custom format cache for specific workbook
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument to clear in memory style references for</param>
+  /// Clears custom format cache for specific workbook
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument to clear in memory style references for</param>
   public static void ClearCustomFormatCacheForWorkbook(SpreadsheetDocument document)
   {
     if (document?.WorkbookPart != null)
@@ -510,11 +510,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the Stylesheet from a SpreadsheetDocument
-    /// </summary>
-    /// <param name="document">The SpreadsheetDocument to get the Stylesheet from</param>
-    /// <param name="createIfMissing">If <see langword="true"/>, creates Stylesheet (and parent elements if necessary) if missing.</param>
-    /// <returns>The Stylesheet from the document or null if not found and createIfMissing is false</returns>
+  /// Gets the Stylesheet from a SpreadsheetDocument
+  /// </summary>
+  /// <param name="document">The SpreadsheetDocument to get the Stylesheet from</param>
+  /// <param name="createIfMissing">If <see langword="true"/>, creates Stylesheet (and parent elements if necessary) if missing.</param>
+  /// <returns>The Stylesheet from the document or null if not found and createIfMissing is false</returns>
   public static Stylesheet? GetStylesheet(this SpreadsheetDocument document, bool createIfMissing = true)
   {
     WorkbookPart? workbookPart = document.WorkbookPart;
@@ -540,11 +540,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the Borders from a Stylesheet
-    /// </summary>
-    /// <param name="stylesheet">The Stylesheet to get the Borders from</param>
-    /// <param name="createIfMissing">If <see langword="true"/>, creates Borders if missing</param>
-    /// <returns>The Borders object, or null if not found and createIfMissing is false</returns>
+  /// Gets the Borders from a Stylesheet
+  /// </summary>
+  /// <param name="stylesheet">The Stylesheet to get the Borders from</param>
+  /// <param name="createIfMissing">If <see langword="true"/>, creates Borders if missing</param>
+  /// <returns>The Borders object, or null if not found and createIfMissing is false</returns>
   public static Borders? GetBorders(this Stylesheet stylesheet, bool createIfMissing = true)
   {
     Borders? borders = stylesheet.Elements<Borders>().FirstOrDefault();
@@ -560,11 +560,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the Fills from a Stylesheet
-    /// </summary>
-    /// <param name="stylesheet">The Stylesheet to get the Fills from</param>
-    /// <param name="createIfMissing">If <see langword="true"/>, creates Fills if missing</param>
-    /// <returns>The Fills object, or null if not found and createIfMissing is false</returns>
+  /// Gets the Fills from a Stylesheet
+  /// </summary>
+  /// <param name="stylesheet">The Stylesheet to get the Fills from</param>
+  /// <param name="createIfMissing">If <see langword="true"/>, creates Fills if missing</param>
+  /// <returns>The Fills object, or null if not found and createIfMissing is false</returns>
   public static Fills? GetFills(this Stylesheet stylesheet, bool createIfMissing = true)
   {
     Fills? fills = stylesheet.Elements<Fills>().FirstOrDefault();
@@ -596,11 +596,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the Fonts from a Stylesheet
-    /// </summary>
-    /// <param name="stylesheet">The Stylesheet to get the Fonts from</param>
-    /// <param name="createIfMissing">If <see langword="true"/>, creates Fonts if not found</param>
-    /// <returns>The Fonts object, or null if not found and createIfMissing is false</returns>
+  /// Gets the Fonts from a Stylesheet
+  /// </summary>
+  /// <param name="stylesheet">The Stylesheet to get the Fonts from</param>
+  /// <param name="createIfMissing">If <see langword="true"/>, creates Fonts if not found</param>
+  /// <returns>The Fonts object, or null if not found and createIfMissing is false</returns>
   public static Fonts? GetFonts(this Stylesheet stylesheet, bool createIfMissing = true)
   {
     Fonts? fonts = stylesheet.Elements<Fonts>().FirstOrDefault();
@@ -623,11 +623,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the CellFormats from a Stylesheet.
-    /// </summary>
-    /// <param name="stylesheet">The Stylesheet to get the CellFormats from.</param>
-    /// <param name="createIfMissing">If <see langword="true"/>, creates CellFormats if not found.</param>
-    /// <returns>The CellFormats object, or null if not found and not created.</returns>
+  /// Gets the CellFormats from a Stylesheet.
+  /// </summary>
+  /// <param name="stylesheet">The Stylesheet to get the CellFormats from.</param>
+  /// <param name="createIfMissing">If <see langword="true"/>, creates CellFormats if not found.</param>
+  /// <returns>The CellFormats object, or null if not found and not created.</returns>
   public static CellFormats? GetCellFormats(this Stylesheet stylesheet, bool createIfMissing = true)
   {
     CellFormats? cellFormats = stylesheet.Elements<CellFormats>().FirstOrDefault();
@@ -649,12 +649,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates the style corresponding to the style enum passed in and returns the ID for the style that was created
-    /// </summary>
-    /// <param name="document">Document to add the standard cell style to</param>
-    /// <param name="style">Enum value indicating which style to create</param>
-    /// <param name="cellLocked">Whether or not the cells with this style should be locked or not</param>
-    /// <returns>The ID of the style that was created</returns>
+  /// Creates the style corresponding to the style enum passed in and returns the ID for the style that was created
+  /// </summary>
+  /// <param name="document">Document to add the standard cell style to</param>
+  /// <param name="style">Enum value indicating which style to create</param>
+  /// <param name="cellLocked">Whether or not the cells with this style should be locked or not</param>
+  /// <returns>The ID of the style that was created</returns>
   public static uint GetStandardCellStyle(this SpreadsheetDocument document, EStyle style, bool cellLocked = false, bool wrapText = false)
   {
     Stylesheet stylesheet = document.GetStylesheet()!;
@@ -858,11 +858,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get font styling based on EFonts option
-    /// </summary>
-    /// <param name="fontType">Enum for preset fonts</param>
-    /// <param name="fonts">Workbook the font will be used in</param>
-    /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
+  /// Get font styling based on EFonts option
+  /// </summary>
+  /// <param name="fontType">Enum for preset fonts</param>
+  /// <param name="fonts">Workbook the font will be used in</param>
+  /// <returns>IXLFont object containing all of the styling associated with the input EFonts option</returns>
   public static uint GetFontId(EFont fontType, Fonts fonts)
   {
     Font font = new();
@@ -891,11 +891,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Check to see if two CellFormat objects are the same based on Fill, Font, Border, Alignment, and Protection
-    /// </summary>
-    /// <param name="format1">First CellFormat to compare</param>
-    /// <param name="format2">Second CellFormat to compare</param>
-    /// <returns><see langword="true"/> if both CellFormats share the same Fill, Font, Border, Alignment, and Protection values, otherwise false</returns>
+  /// Check to see if two CellFormat objects are the same based on Fill, Font, Border, Alignment, and Protection
+  /// </summary>
+  /// <param name="format1">First CellFormat to compare</param>
+  /// <param name="format2">Second CellFormat to compare</param>
+  /// <returns><see langword="true"/> if both CellFormats share the same Fill, Font, Border, Alignment, and Protection values, otherwise false</returns>
   public static bool CellFormatsAreEqual(CellFormat format1, CellFormat format2)
   {
     // Compare relevant properties of the CellFormat objects
@@ -910,11 +910,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Check to see if two Alignment objects are identical
-    /// </summary>
-    /// <param name="alignment1">First Alignment to compare</param>
-    /// <param name="alignment2">Second Alignment to compare</param>
-    /// <returns><see langword="true"/> if both Alignment objects are the same</returns>
+  /// Check to see if two Alignment objects are identical
+  /// </summary>
+  /// <param name="alignment1">First Alignment to compare</param>
+  /// <param name="alignment2">Second Alignment to compare</param>
+  /// <returns><see langword="true"/> if both Alignment objects are the same</returns>
   public static bool FormatAlignmentsAreEqual(Alignment? alignment1, Alignment? alignment2)
   {
     if ((alignment1 == null) && (alignment2 == null))
@@ -931,11 +931,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Check to see if two Protection objects are identical
-    /// </summary>
-    /// <param name="protection1">First Protection to compare</param>
-    /// <param name="protection2">Second Protection to compare</param>
-    /// <returns><see langword="true"/> if both Protection objects are the same</returns>
+  /// Check to see if two Protection objects are identical
+  /// </summary>
+  /// <param name="protection1">First Protection to compare</param>
+  /// <param name="protection2">Second Protection to compare</param>
+  /// <returns><see langword="true"/> if both Protection objects are the same</returns>
   public static bool FormatProtectionsAreEqual(Protection? protection1, Protection? protection2)
   {
     if ((protection1 == null) && (protection2 == null))
@@ -963,15 +963,15 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Create a custom style to apply in a SpreadsheetDocument
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument to create the custom CellFormat in</param>
-    /// <param name="cellLocked">Sets protection value of CellFormat</param>
-    /// <param name="font">Sets Font value of CellFormat, creates if no identical font exists yet</param>
-    /// <param name="alignment">Sets Alignment value of CellFormat</param>
-    /// <param name="fill">Sets Fill value of CellFormat, creates if no identical fill exists yet</param>
-    /// <param name="border">Sets Border value of CellFormat, creates if no identical border exists yet</param>
-    /// <returns>ID of the new CellFormat</returns>
+  /// Create a custom style to apply in a SpreadsheetDocument
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument to create the custom CellFormat in</param>
+  /// <param name="cellLocked">Sets protection value of CellFormat</param>
+  /// <param name="font">Sets Font value of CellFormat, creates if no identical font exists yet</param>
+  /// <param name="alignment">Sets Alignment value of CellFormat</param>
+  /// <param name="fill">Sets Fill value of CellFormat, creates if no identical fill exists yet</param>
+  /// <param name="border">Sets Border value of CellFormat, creates if no identical border exists yet</param>
+  /// <returns>ID of the new CellFormat</returns>
   public static uint? GetCustomStyle(this SpreadsheetDocument document, bool cellLocked = false, Font? font = null,
         HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null, bool wrapText = false)
   {
@@ -1044,12 +1044,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a new Font if font does not already exist, otherwise retrieves existing font
-    /// </summary>
-    /// <param name="stylesheet">Stylesheet containing the font to retrieve</param>
-    /// <param name="cache">Cache containing existing styles</param>
-    /// <param name="font">Font to get or create</param>
-    /// <returns>ID of the new or retrieved Font</returns>
+  /// Creates a new Font if font does not already exist, otherwise retrieves existing font
+  /// </summary>
+  /// <param name="stylesheet">Stylesheet containing the font to retrieve</param>
+  /// <param name="cache">Cache containing existing styles</param>
+  /// <param name="font">Font to get or create</param>
+  /// <returns>ID of the new or retrieved Font</returns>
   public static uint GetOrAddFont(this Stylesheet stylesheet, WorkbookStyleCache cache, Font? font)
   {
     if (font == null)
@@ -1076,12 +1076,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a new Fill if fill does not already exist, otherwise retrieves existing fill
-    /// </summary>
-    /// <param name="stylesheet">Stylesheet containing the fill to retrieve</param>
-    /// <param name="cache">Cache containing existing styles</param>
-    /// <param name="fill">Fill to get or create</param>
-    /// <returns>ID of the new or retrieved Fill</returns>
+  /// Creates a new Fill if fill does not already exist, otherwise retrieves existing fill
+  /// </summary>
+  /// <param name="stylesheet">Stylesheet containing the fill to retrieve</param>
+  /// <param name="cache">Cache containing existing styles</param>
+  /// <param name="fill">Fill to get or create</param>
+  /// <returns>ID of the new or retrieved Fill</returns>
   public static uint GetOrAddFill(this Stylesheet stylesheet, WorkbookStyleCache cache, Fill? fill)
   {
     if (fill == null)
@@ -1109,12 +1109,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a new Border if border does not already exist, otherwise retrieves existing border
-    /// </summary>
-    /// <param name="stylesheet">Stylesheet containing the border to retrieve</param>
-    /// <param name="cache">Cache containing existing styles</param>
-    /// <param name="border">Border to get or create</param>
-    /// <returns>ID of the new or retrieved Border</returns>
+  /// Creates a new Border if border does not already exist, otherwise retrieves existing border
+  /// </summary>
+  /// <param name="stylesheet">Stylesheet containing the border to retrieve</param>
+  /// <param name="cache">Cache containing existing styles</param>
+  /// <param name="border">Border to get or create</param>
+  /// <returns>ID of the new or retrieved Border</returns>
   public static uint GetOrAddBorder(this Stylesheet stylesheet, WorkbookStyleCache cache, Border? border)
   {
     if (border == null)
@@ -1142,20 +1142,20 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets hash of an OpenXmlElement
-    /// </summary>
-    /// <param name="element">Element to get hash of</param>
-    /// <returns>Hash for the passed in OpenXmlElement</returns>
+  /// Gets hash of an OpenXmlElement
+  /// </summary>
+  /// <param name="element">Element to get hash of</param>
+  /// <returns>Hash for the passed in OpenXmlElement</returns>
   public static int GetHashCode(this OpenXmlElement element)
   {
     return element.OuterXml.GetHashCode();
   }
 
   /// <summary>
-    /// Gets a unique identifier for the current SpreadsheetDocument
-    /// </summary>
-    /// <param name="document">The SpreadsheetDocument to get a unique identifier for</param>
-    /// <returns>The unique identifier for SpreadsheetDocument</returns>
+  /// Gets a unique identifier for the current SpreadsheetDocument
+  /// </summary>
+  /// <param name="document">The SpreadsheetDocument to get a unique identifier for</param>
+  /// <returns>The unique identifier for SpreadsheetDocument</returns>
   public static string GetWorkbookId(SpreadsheetDocument document)
   {
     // Use a combination of the file path (if available) and creation time
@@ -1165,12 +1165,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a cell in the provided worksheet, creating a row to contain it if necessary
-    /// </summary>
-    /// <param name="worksheet">Worksheet to add cell to</param>
-    /// <param name="columnIndex">Column index for the cell to create</param>
-    /// <param name="rowIndex">Row index for the cell to create</param>
-    /// <returns>Cell object that was created or null if worksheet sheetData element is null</returns>
+  /// Creates a cell in the provided worksheet, creating a row to contain it if necessary
+  /// </summary>
+  /// <param name="worksheet">Worksheet to add cell to</param>
+  /// <param name="columnIndex">Column index for the cell to create</param>
+  /// <param name="rowIndex">Row index for the cell to create</param>
+  /// <returns>Cell object that was created or null if worksheet sheetData element is null</returns>
   public static Cell? InsertCell(this Worksheet worksheet, uint columnIndex, uint rowIndex)
   {
     SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
@@ -1178,12 +1178,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a cell in the provided sheetData, creating a row to contain it if necessary
-    /// </summary>
-    /// <param name="sheetData">SheetData to add cell to</param>
-    /// <param name="columnIndex">Column index for the cell to create</param>
-    /// <param name="rowIndex">Row index for the cell to create</param>
-    /// <returns>Cell object that was created or null if sheetData is null</returns>
+  /// Creates a cell in the provided sheetData, creating a row to contain it if necessary
+  /// </summary>
+  /// <param name="sheetData">SheetData to add cell to</param>
+  /// <param name="columnIndex">Column index for the cell to create</param>
+  /// <param name="rowIndex">Row index for the cell to create</param>
+  /// <returns>Cell object that was created or null if sheetData is null</returns>
   [return: NotNullIfNotNull(nameof(sheetData))]
   public static Cell? InsertCell(this SheetData? sheetData, uint columnIndex, uint rowIndex, uint? styleIndex = null)
   {
@@ -1235,14 +1235,14 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
-    /// </summary>
-    /// <param name="worksheet">Worksheet to insert the cell and value into</param>
-    /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
-    /// <param name="rowIndex">Y coordinate of the cell to be created and value inserted</param>
-    /// <param name="cellValue">The value to insert into the indicated cell</param>
-    /// <param name="cellType">Optional: The type to assign to the cell that determines how it is displayed, defaults to SharedString</param>
-    /// <param name="styleIndex">Optional: Index of the style to apply to the cell</param>
+  /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
+  /// </summary>
+  /// <param name="worksheet">Worksheet to insert the cell and value into</param>
+  /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
+  /// <param name="rowIndex">Y coordinate of the cell to be created and value inserted</param>
+  /// <param name="cellValue">The value to insert into the indicated cell</param>
+  /// <param name="cellType">Optional: The type to assign to the cell that determines how it is displayed, defaults to SharedString</param>
+  /// <param name="styleIndex">Optional: Index of the style to apply to the cell</param>
   public static void InsertCellValue(this Worksheet worksheet, uint columnIndex, uint rowIndex, CellValue cellValue, CellValues? cellType = null, uint? styleIndex = null)
   {
     SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
@@ -1250,14 +1250,14 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
-    /// </summary>
-    /// <param name="sheetData">SheetData to insert the cell and value into</param>
-    /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
-    /// <param name="rowIndex">Y coordinate of the cell to be created and value inserted</param>
-    /// <param name="cellValue">The value to insert into the indicated cell</param>
-    /// <param name="cellType">Optional: The type to assign to the cell that determines how it is displayed, defaults to SharedString</param>
-    /// <param name="styleIndex">Optional: Index of the style to apply to the cell</param>
+  /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a value into that cell
+  /// </summary>
+  /// <param name="sheetData">SheetData to insert the cell and value into</param>
+  /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
+  /// <param name="rowIndex">Y coordinate of the cell to be created and value inserted</param>
+  /// <param name="cellValue">The value to insert into the indicated cell</param>
+  /// <param name="cellType">Optional: The type to assign to the cell that determines how it is displayed, defaults to SharedString</param>
+  /// <param name="styleIndex">Optional: Index of the style to apply to the cell</param>
   public static void InsertCellValue(this SheetData? sheetData, uint columnIndex, uint rowIndex, CellValue cellValue, CellValues? cellType = null, uint? styleIndex = null)
   {
     cellType ??= CellValues.SharedString; //Default to shared string since it is the most compact option
@@ -1280,14 +1280,14 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
-    /// </summary>
-    /// <param name="worksheet">Worksheet to insert the cell and value into</param>
-    /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
-    /// <param name="rowIndex">Y coordinate of the cell to be created and value inserted</param>
-    /// <param name="formulaString">String representation of the formula to insert into the cell</param>
-    /// <param name="cellType">Optional: The type to assign to the cell that determines how it is displayed, defaults to String</param>
-    /// <param name="styleIndex">Optional: Index of the style to apply to the cell</param>
+  /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
+  /// </summary>
+  /// <param name="worksheet">Worksheet to insert the cell and value into</param>
+  /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
+  /// <param name="rowIndex">Y coordinate of the cell to be created and value inserted</param>
+  /// <param name="formulaString">String representation of the formula to insert into the cell</param>
+  /// <param name="cellType">Optional: The type to assign to the cell that determines how it is displayed, defaults to String</param>
+  /// <param name="styleIndex">Optional: Index of the style to apply to the cell</param>
   public static void InsertCellFormula(this Worksheet worksheet, uint columnIndex, uint rowIndex, string formulaString, CellValues? cellType = null, uint? styleIndex = null)
   {
     SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
@@ -1295,14 +1295,14 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
-    /// </summary>
-    /// <param name="sheetData">SheetData to insert the cell and value into</param>
-    /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
-    /// <param name="rowIndex">Y coordinate of the cell to be created and value inserted</param>
-    /// <param name="formulaString">String representation of the formula to insert into the cell</param>
-    /// <param name="cellType">Optional: The type to assign to the cell that determines how it is displayed, defaults to String</param>
-    /// <param name="styleIndex">Optional: Index of the style to apply to the cell</param>
+  /// Creates a cell at the indicated column and row index if it doesn't exist, and then inserts a formula into that cell
+  /// </summary>
+  /// <param name="sheetData">SheetData to insert the cell and value into</param>
+  /// <param name="columnIndex">X coordinate of the cell to be created and value inserted</param>
+  /// <param name="rowIndex">Y coordinate of the cell to be created and value inserted</param>
+  /// <param name="formulaString">String representation of the formula to insert into the cell</param>
+  /// <param name="cellType">Optional: The type to assign to the cell that determines how it is displayed, defaults to String</param>
+  /// <param name="styleIndex">Optional: Index of the style to apply to the cell</param>
   public static void InsertCellFormula(this SheetData? sheetData, uint columnIndex, uint rowIndex, string formulaString, CellValues? cellType = null, uint? styleIndex = null)
   {
     cellType ??= CellValues.String;
@@ -1323,12 +1323,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Creates a SharedStringItem with the specified text and inserts it into the SharedStringTablePart. If the item already exists, returns its index.
-    /// </summary>
-    /// <param name="workbook">Workbook to insert the SharedString into</param>
-    /// <param name="text">Text of the SharedString to be created</param>
-    /// <returns>Index of the SharedString item</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+  /// Creates a SharedStringItem with the specified text and inserts it into the SharedStringTablePart. If the item already exists, returns its index.
+  /// </summary>
+  /// <param name="workbook">Workbook to insert the SharedString into</param>
+  /// <param name="text">Text of the SharedString to be created</param>
+  /// <returns>Index of the SharedString item</returns>
+  /// <exception cref="InvalidOperationException"></exception>
   public static int InsertSharedStringItem(this Workbook workbook, string text)
   {
     // If the part does not contain a SharedStringTable, create one.
@@ -1356,17 +1356,17 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Create a table for the specified sheet in worksheet
-    /// </summary>
-    /// <param name="worksheet">Worksheet to add table to</param>
-    /// <param name="startRow">One based index of the first row of the table.</param>
-    /// <param name="startCol">One based index of the first column of the table.</param>
-    /// <param name="endRow">One based index of the last row of the table.</param>
-    /// <param name="endColumn">One based index of the last column of the table.</param>
-    /// <param name="tableName">Name of the table to add</param>
-    /// <param name="styleName">Optional: Style to use for table, defaults to TableStyleMedium1</param>
-    /// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
-    /// <param name="showColStripes">Optional: Styles the table to show column stripes or not</param>
+  /// Create a table for the specified sheet in worksheet
+  /// </summary>
+  /// <param name="worksheet">Worksheet to add table to</param>
+  /// <param name="startRow">One based index of the first row of the table.</param>
+  /// <param name="startCol">One based index of the first column of the table.</param>
+  /// <param name="endRow">One based index of the last row of the table.</param>
+  /// <param name="endColumn">One based index of the last column of the table.</param>
+  /// <param name="tableName">Name of the table to add</param>
+  /// <param name="styleName">Optional: Style to use for table, defaults to TableStyleMedium1</param>
+  /// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
+  /// <param name="showColStripes">Optional: Styles the table to show column stripes or not</param>
   public static void CreateTable(this Worksheet worksheet, uint startRow, uint startCol, uint endRow, uint endColumn, string tableName, ETableStyle styleName = ETableStyle.TableStyleMedium1,
         bool showRowStripes = true, bool showColStripes = false)
   {
@@ -1422,35 +1422,35 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Adds auto filter to a range of cells in the worksheet
-    /// </summary>
-    /// <param name="worksheet">Worksheet to add auto filter to</param>
-    /// <param name="startRow">First row of auto filtered range (usually headers)</param>
-    /// <param name="startColumn">First column of auto filtered range</param>
-    /// <param name="endRow">Last row of auto filtered range</param>
-    /// <param name="endColumn">Last column of auto filtered range</param>
+  /// Adds auto filter to a range of cells in the worksheet
+  /// </summary>
+  /// <param name="worksheet">Worksheet to add auto filter to</param>
+  /// <param name="startRow">First row of auto filtered range (usually headers)</param>
+  /// <param name="startColumn">First column of auto filtered range</param>
+  /// <param name="endRow">Last row of auto filtered range</param>
+  /// <param name="endColumn">Last column of auto filtered range</param>
   public static void SetAutoFilter(this Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn)
   {
     worksheet.Append(new AutoFilter() { Reference = $"{new CellReference(startColumn, startRow)}:{new CellReference(endColumn, endRow)}" });
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument to insert images into</param>
-    /// <param name="imageData">Image byte array</param>
-    /// <param name="cellName">Named range to insert image at</param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument to insert images into</param>
+  /// <param name="imageData">Image byte array</param>
+  /// <param name="cellName">Named range to insert image at</param>
   public static void AddImage(this SpreadsheetDocument document, byte[] imageData, string cellName)
   {
     document.AddImages([ imageData ], [ cellName ]);
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument to insert images into</param>
-    /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
-    /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument to insert images into</param>
+  /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
+  /// <param name="cellNames">List of named ranges to insert images at. Must be equal in length to imageData parameter</param>
   public static void AddImages(this SpreadsheetDocument document, List<byte[]> imageData, List<string> cellNames)
   {
     WorkbookPart? workbookPart = document.WorkbookPart;
@@ -1487,24 +1487,24 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument to insert images into</param>
-    /// <param name="imageData">Image byte array</param>
-    /// <param name="mergedCellArea">Tuple defining the first (top left) and last (bottom right) cell of the range to insert the image into</param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument to insert images into</param>
+  /// <param name="imageData">Image byte array</param>
+  /// <param name="mergedCellArea">Tuple defining the first (top left) and last (bottom right) cell of the range to insert the image into</param>
   public static void AddImage(this SpreadsheetDocument document, byte[] imageData, (CellReference FirstCell, CellReference LastCell) mergedCellArea)
   {
     document.AddImages([ imageData ], [ mergedCellArea ]);
   }
 
   /// <summary>
-    /// Adds images into a workbook at the designated named ranges
-    /// </summary>
-    /// <param name="document">SpreadsheetDocument to insert images into</param>
-    /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
-    /// <param name="mergedCellAreas">
-    /// List of tuples defining the first (top left) and last (bottom right) cell of the range to insert the images into. Must be equal in length to imageData parameter
-    /// </param>
+  /// Adds images into a workbook at the designated named ranges
+  /// </summary>
+  /// <param name="document">SpreadsheetDocument to insert images into</param>
+  /// <param name="imageData">List of image byte arrays. Must be equal in length to cellNames parameter</param>
+  /// <param name="mergedCellAreas">
+  /// List of tuples defining the first (top left) and last (bottom right) cell of the range to insert the images into. Must be equal in length to imageData parameter
+  /// </param>
   public static void AddImages(this SpreadsheetDocument document, List<byte[]> imageData, List<(CellReference FirstCell, CellReference LastCell)> mergedCellAreas)
   {
     WorkbookPart? workbookPart = document.WorkbookPart;
@@ -1576,10 +1576,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get existing DrawingsPart from WorksheetPart, or create it if it doesn't exist
-    /// </summary>
-    /// <param name="worksheetPart">WorksheetPart to get or create DrawingsPart in</param>
-    /// <returns>The DrawingsPart that was retrieved or created</returns>
+  /// Get existing DrawingsPart from WorksheetPart, or create it if it doesn't exist
+  /// </summary>
+  /// <param name="worksheetPart">WorksheetPart to get or create DrawingsPart in</param>
+  /// <returns>The DrawingsPart that was retrieved or created</returns>
   public static DrawingsPart? GetOrCreateDrawingsPart(WorksheetPart worksheetPart)
   {
     if (worksheetPart.DrawingsPart == null)
@@ -1595,11 +1595,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get the first and last CellReference of a merged cell area
-    /// </summary>
-    /// <param name="worksheetPart">WorksheetPart containing the merged cell area</param>
-    /// <param name="cellReference">Cell reference for the merged cell area</param>
-    /// <returns>Cell references for the first (top left) and last (bottom right) cell</returns>
+  /// Get the first and last CellReference of a merged cell area
+  /// </summary>
+  /// <param name="worksheetPart">WorksheetPart containing the merged cell area</param>
+  /// <param name="cellReference">Cell reference for the merged cell area</param>
+  /// <returns>Cell references for the first (top left) and last (bottom right) cell</returns>
   public static (CellReference FirstCell, CellReference LastCell) GetMergedCellArea(this WorksheetPart worksheetPart, CellReference cellReference)
   {
     MergeCells? mergedCells = worksheetPart.Worksheet.Elements<MergeCells>().FirstOrDefault();
@@ -1625,11 +1625,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get the width of a range in pixels
-    /// </summary>
-    /// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
-    /// <param name="range">The range being measured</param>
-    /// <returns>The width of the specified range in EMU</returns>
+  /// Get the width of a range in pixels
+  /// </summary>
+  /// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
+  /// <param name="range">The range being measured</param>
+  /// <returns>The width of the specified range in EMU</returns>
   public static int GetRangeWidthInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
   {
     Worksheet worksheet = worksheetPart.Worksheet;
@@ -1647,11 +1647,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get the height of a range in pixels
-    /// </summary>
-    /// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
-    /// <param name="range">The range being measured</param>
-    /// <returns>The height of the specified range in EMU</returns>
+  /// Get the height of a range in pixels
+  /// </summary>
+  /// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
+  /// <param name="range">The range being measured</param>
+  /// <returns>The height of the specified range in EMU</returns>
   public static int GetRangeHeightInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
   {
     Worksheet worksheet = worksheetPart.Worksheet;
@@ -1674,16 +1674,16 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Inserts image into the DrawingsPart of an Excel file
-    /// </summary>
-    /// <param name="drawingsPart">DrawingsPart of the Excel file to insert an image into</param>
-    /// <param name="relationshipId">The relationship ID for the image</param>
-    /// <param name="fromCell">CellReference for top left corner of range</param>
-    /// <param name="toCell">CellReference for bottom right corner of range</param>
-    /// <param name="xMargin">Margin at the right and left of the image</param>
-    /// <param name="yMargin">Margin at the top and bottom of the image</param>
-    /// <param name="width">Width of the image</param>
-    /// <param name="height">Height of the image</param>
+  /// Inserts image into the DrawingsPart of an Excel file
+  /// </summary>
+  /// <param name="drawingsPart">DrawingsPart of the Excel file to insert an image into</param>
+  /// <param name="relationshipId">The relationship ID for the image</param>
+  /// <param name="fromCell">CellReference for top left corner of range</param>
+  /// <param name="toCell">CellReference for bottom right corner of range</param>
+  /// <param name="xMargin">Margin at the right and left of the image</param>
+  /// <param name="yMargin">Margin at the top and bottom of the image</param>
+  /// <param name="width">Width of the image</param>
+  /// <param name="height">Height of the image</param>
   public static void AddImageToWorksheet(DrawingsPart drawingsPart, string relationshipId, CellReference fromCell, CellReference toCell, int xMargin, int yMargin, int width, int height)
   {
     Xdr.WorksheetDrawing worksheetDrawing = drawingsPart.WorksheetDrawing;
@@ -1737,11 +1737,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets a range of Cells from a Worksheet
-    /// </summary>
-    /// <param name="sheet">The Worksheet to get the range from</param>
-    /// <param name="range">The range in A1:B2 format</param>
-    /// <returns>An IEnumerable of Cells in the specified range</returns>
+  /// Gets a range of Cells from a Worksheet
+  /// </summary>
+  /// <param name="sheet">The Worksheet to get the range from</param>
+  /// <param name="range">The range in A1:B2 format</param>
+  /// <returns>An IEnumerable of Cells in the specified range</returns>
   public static IEnumerable<Cell?> GetRange(this Worksheet sheet, string range)
   {
     string[] addresses = range.Split(':');
@@ -1758,17 +1758,17 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Reads tabular data from an unformatted excel sheet to a DataTable object using OpenXML
-    /// </summary>
-    /// <param name="fileStream">Stream of Excel file being read</param>
-    /// <param name="hasHeaders">
-    /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0', 'Column1'... if true. If no headers specified, first row of data must have a value for
-    /// all columns in order to read all columns correctly.
-    /// </param>
-    /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
-    /// <param name="startCellReference">Top left corner containing data to read. Will use A1 if not specified.</param>
-    /// <param name="endCellReference">Bottom right cell containing data to read. Will read to first full empty row if not specified.</param>
-    /// <returns><see cref="DataTable"/> representation of the data read from the excel file</returns>
+  /// Reads tabular data from an unformatted excel sheet to a DataTable object using OpenXML
+  /// </summary>
+  /// <param name="fileStream">Stream of Excel file being read</param>
+  /// <param name="hasHeaders">
+  /// Does the data being read have headers. Will be used for data table column names instead of default 'Column0', 'Column1'... if true. If no headers specified, first row of data must have a value for
+  /// all columns in order to read all columns correctly.
+  /// </param>
+  /// <param name="sheetName">Name of sheet to read data from. Will use lowest index sheet if not specified.</param>
+  /// <param name="startCellReference">Top left corner containing data to read. Will use A1 if not specified.</param>
+  /// <param name="endCellReference">Bottom right cell containing data to read. Will read to first full empty row if not specified.</param>
+  /// <returns><see cref="DataTable"/> representation of the data read from the excel file</returns>
   public static DataTable ReadExcelFileToDataTable(this Stream fileStream, bool hasHeaders = true, string? sheetName = null, string? startCellReference = null, string? endCellReference = null)
   {
     DataTable dataTable = new();
@@ -1835,10 +1835,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the last populated cell from SheetData
-    /// </summary>
-    /// <param name="sheetData">SheetData to get last populated cell from</param>
-    /// <returns>Cell reference of the last populated cell</returns>
+  /// Gets the last populated cell from SheetData
+  /// </summary>
+  /// <param name="sheetData">SheetData to get last populated cell from</param>
+  /// <returns>Cell reference of the last populated cell</returns>
   public static CellReference GetLastPopulatedCell(this SheetData sheetData)
   {
     uint maxRow = sheetData.Elements<Row>().Max(x => x.RowIndex?.Value ?? 0);
@@ -1847,12 +1847,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the string value of a cell
-    /// </summary>
-    /// <param name="sheetData">SheetData containing cell value to be read</param>
-    /// <param name="row">Row index of cell to get value of</param>
-    /// <param name="col">Column index of cell to get value of</param>
-    /// <returns>String value of the indicated cell</returns>
+  /// Gets the string value of a cell
+  /// </summary>
+  /// <param name="sheetData">SheetData containing cell value to be read</param>
+  /// <param name="row">Row index of cell to get value of</param>
+  /// <param name="col">Column index of cell to get value of</param>
+  /// <returns>String value of the indicated cell</returns>
   public static string GetCellValue(this SheetData sheetData, uint row, uint col)
   {
     CellReference cellRef = new(col, row);
@@ -1863,22 +1863,22 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the string value of a cell
-    /// </summary>
-    /// <param name="sheetData">SheetData containing cell value to be read</param>
-    /// <param name="cellReference">CellReference of cell to get value of</param>
-    /// <returns>String value of the indicated cell</returns>
+  /// Gets the string value of a cell
+  /// </summary>
+  /// <param name="sheetData">SheetData containing cell value to be read</param>
+  /// <param name="cellReference">CellReference of cell to get value of</param>
+  /// <returns>String value of the indicated cell</returns>
   public static string GetCellValue(this SheetData sheetData, CellReference cellReference)
   {
     return sheetData.GetCellValue(cellReference.RowIndex, cellReference.ColumnIndex);
   }
 
   /// <summary>
-    /// Gets the string value of a cell
-    /// </summary>
-    /// <param name="worksheet">Worksheet that contains the cell to get value of</param>
-    /// <param name="cellReference">CellReference to read string value from</param>
-    /// <returns>String value of the cell</returns>
+  /// Gets the string value of a cell
+  /// </summary>
+  /// <param name="worksheet">Worksheet that contains the cell to get value of</param>
+  /// <param name="cellReference">CellReference to read string value from</param>
+  /// <returns>String value of the cell</returns>
   public static string GetCellValue(this Worksheet worksheet, CellReference cellReference)
   {
     Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
@@ -1886,10 +1886,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the string value of a cell
-    /// </summary>
-    /// <param name="cell">Cell to read string value from</param>
-    /// <returns>String value of the cell</returns>
+  /// Gets the string value of a cell
+  /// </summary>
+  /// <param name="cell">Cell to read string value from</param>
+  /// <returns>String value of the cell</returns>
   public static string GetCellValue(this Cell? cell)
   {
     if (cell?.CellValue == null)
@@ -1913,11 +1913,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the stylized string value of a cell
-    /// </summary>
-    /// <param name="worksheet">Worksheet that contains the cell to get value of</param>
-    /// <param name="cellReference">CellReference to read stylized string value from</param>
-    /// <returns>Stylized string value of a cell</returns>
+  /// Gets the stylized string value of a cell
+  /// </summary>
+  /// <param name="worksheet">Worksheet that contains the cell to get value of</param>
+  /// <param name="cellReference">CellReference to read stylized string value from</param>
+  /// <returns>Stylized string value of a cell</returns>
   public static string? GetStringValue(this Worksheet worksheet, CellReference cellReference)
   {
     Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
@@ -1925,10 +1925,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the stylized string value of a cell
-    /// </summary>
-    /// <param name="cell">Cell to read stylized string value from</param>
-    /// <returns>Stylized string value of a cell</returns>
+  /// Gets the stylized string value of a cell
+  /// </summary>
+  /// <param name="cell">Cell to read stylized string value from</param>
+  /// <returns>Stylized string value of a cell</returns>
   public static string? GetStringValue(this Cell? cell)
   {
     if (cell == null)
@@ -1967,11 +1967,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Reads an Excel table into a DataTable object using OpenXML
-    /// </summary>
-    /// <param name="fileStream">Stream of Excel file being read</param>
-    /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
-    /// <returns><see cref="DataTable"/> object containing the data read from Excel stream</returns>
+  /// Reads an Excel table into a DataTable object using OpenXML
+  /// </summary>
+  /// <param name="fileStream">Stream of Excel file being read</param>
+  /// <param name="tableName">Name of table to read. If not specified, this function will read the first table it finds in the workbook</param>
+  /// <returns><see cref="DataTable"/> object containing the data read from Excel stream</returns>
   public static DataTable ReadExcelTableToDataTable(this Stream fileStream, string? tableName = null, CancellationToken cancellationToken = default)
   {
     DataTable dataTable = new();
@@ -2063,11 +2063,11 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Get table by table name
-    /// </summary>
-    /// <param name="workbookPart">WorkbookPart containing table.</param>
-    /// <param name="tableName">Name of table to retrieve</param>
-    /// <returns>Table indicated by tableName, null if not found</returns>
+  /// Get table by table name
+  /// </summary>
+  /// <param name="workbookPart">WorkbookPart containing table.</param>
+  /// <param name="tableName">Name of table to retrieve</param>
+  /// <returns>Table indicated by tableName, null if not found</returns>
   public static Table? FindTable(this WorkbookPart workbookPart, string? tableName)
   {
     foreach (WorksheetPart worksheetPart in workbookPart.WorksheetParts)
@@ -2087,22 +2087,22 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets specified row from worksheet
-    /// </summary>
-    /// <param name="worksheet">Worksheet to retrieve the row from</param>
-    /// <param name="rowIndex">Index of the row to retrieve</param>
-    /// <returns>Row from worksheet specified by rowIndex</returns>
+  /// Gets specified row from worksheet
+  /// </summary>
+  /// <param name="worksheet">Worksheet to retrieve the row from</param>
+  /// <param name="rowIndex">Index of the row to retrieve</param>
+  /// <returns>Row from worksheet specified by rowIndex</returns>
   public static Row? GetRow(this Worksheet worksheet, uint rowIndex)
   {
     return worksheet.GetFirstChild<SheetData>()?.Elements<Row>().FirstOrDefault(r => (r.RowIndex != null) && (r.RowIndex == rowIndex));
   }
 
   /// <summary>
-    /// Gets cell at a particular column index from a row
-    /// </summary>
-    /// <param name="row">Row to get cell from</param>
-    /// <param name="columnIndex">Column index of cell in the row</param>
-    /// <returns>Cell specified from the row and column index</returns>
+  /// Gets cell at a particular column index from a row
+  /// </summary>
+  /// <param name="row">Row to get cell from</param>
+  /// <param name="columnIndex">Column index of cell in the row</param>
+  /// <returns>Cell specified from the row and column index</returns>
   public static Cell? GetCell(this Row row, uint columnIndex)
   {
     if (row.RowIndex == null)
@@ -2115,10 +2115,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Automatically adjusts column widths to fit the content in each column
-    /// </summary>
-    /// <param name="worksheet">The worksheet to adjust columns in</param>
-    /// <param name="maxWidth">Optional maximum width limit for columns</param>
+  /// Automatically adjusts column widths to fit the content in each column
+  /// </summary>
+  /// <param name="worksheet">The worksheet to adjust columns in</param>
+  /// <param name="maxWidth">Optional maximum width limit for columns</param>
   public static void AutoFitColumns(this Worksheet worksheet, double maxWidth = 100)
   {
     SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
@@ -2174,10 +2174,10 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets the Columns object from the worksheet, creating it if it does not exist yet
-    /// </summary>
-    /// <param name="worksheet">Worksheet to get columns from</param>
-    /// <returns>The Columns object from the worksheet</returns>
+  /// Gets the Columns object from the worksheet, creating it if it does not exist yet
+  /// </summary>
+  /// <param name="worksheet">Worksheet to get columns from</param>
+  /// <returns>The Columns object from the worksheet</returns>
   public static Columns GetColumns(this Worksheet worksheet)
   {
     Columns? columns = worksheet.GetFirstChild<Columns>();
@@ -2190,12 +2190,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Fits a single column to the size indicated by columnWidth
-    /// </summary>
-    /// <param name="worksheet">Worksheet containing the column to size</param>
-    /// <param name="colIndex">1 based column Index to fit</param>
-    /// <param name="columnWidth">Width to set for the specified column</param>
-    /// <param name="columns">Optional: Worksheet Columns object to prevent re-getting it on every call</param>
+  /// Fits a single column to the size indicated by columnWidth
+  /// </summary>
+  /// <param name="worksheet">Worksheet containing the column to size</param>
+  /// <param name="colIndex">1 based column Index to fit</param>
+  /// <param name="columnWidth">Width to set for the specified column</param>
+  /// <param name="columns">Optional: Worksheet Columns object to prevent re-getting it on every call</param>
   public static void SizeColumn(this Worksheet worksheet, uint colIndex, double columnWidth, Columns? columns = null)
   {
     columns ??= worksheet.GetColumns();
@@ -2214,12 +2214,12 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Gets or creates a single column
-    /// </summary>
-    /// <param name="worksheet">Worksheet containing the column to size</param>
-    /// <param name="colIndex">1 based column Index to fit</param>
-    /// <param name="columnWidth">Optional: Width to set for the specified column</param>
-    /// <param name="columns">Optional: Worksheet Columns object to prevent re-getting it on every call</param>
+  /// Gets or creates a single column
+  /// </summary>
+  /// <param name="worksheet">Worksheet containing the column to size</param>
+  /// <param name="colIndex">1 based column Index to fit</param>
+  /// <param name="columnWidth">Optional: Width to set for the specified column</param>
+  /// <param name="columns">Optional: Worksheet Columns object to prevent re-getting it on every call</param>
   public static Column? GetOrCreateColumn(this Worksheet worksheet, uint colIndex, double? columnWidth = null, Columns? columns = null)
   {
     columns ??= worksheet.GetColumns();
@@ -2257,21 +2257,21 @@ public static partial class Common
   }
 
   /// <summary>
-    /// Calculate the width of a cell based on the provided text
-    /// </summary>
-    /// <param name="cell">Cell to calculate the width of</param>
-    /// <returns>Fitted width of the cell</returns>
+  /// Calculate the width of a cell based on the provided text
+  /// </summary>
+  /// <param name="cell">Cell to calculate the width of</param>
+  /// <returns>Fitted width of the cell</returns>
   public static double CalculateWidth(this Cell cell)
   {
     return CalculateWidth(cell.GetCellValue(), cell.StyleIndex?.Value);
   }
 
   /// <summary>
-    /// Calculate the width of a cell based on the provided text
-    /// </summary>
-    /// <param name="text">The text value of the cell</param>
-    /// <param name="styleIndex">Style index value associated with the cell</param>
-    /// <returns>Fitted width of the cell</returns>
+  /// Calculate the width of a cell based on the provided text
+  /// </summary>
+  /// <param name="text">The text value of the cell</param>
+  /// <param name="styleIndex">Style index value associated with the cell</param>
+  /// <returns>Fitted width of the cell</returns>
   public static double CalculateWidth(string text, uint? styleIndex = null)
   {
     if (string.IsNullOrEmpty(text))
@@ -2362,11 +2362,11 @@ public static partial class Common
       return $"{NumberToColumnName(ColumnIndex)}{RowIndex}";
     }
 
-    /// <summary>
-        /// Get the 1 based column number for the column name provided (1 = A)
-        /// </summary>
-        /// <param name="columnName">The column name to get the 1 based (1 = A) column index of</param>
-        /// <returns>The 1 based column index (1 = A) corresponding to the value of columnName</returns>
+  /// <summary>
+      /// Get the 1 based column number for the column name provided (1 = A)
+      /// </summary>
+      /// <param name="columnName">The column name to get the 1 based (1 = A) column index of</param>
+      /// <returns>The 1 based column index (1 = A) corresponding to the value of columnName</returns>
     public static uint ColumnNameToNumber(string columnName)
     {
       uint number = 0;
@@ -2378,11 +2378,11 @@ public static partial class Common
       return number;// - 1;
     }
 
-    /// <summary>
-        /// Get the column name corresponding to the provided 1 based column number (A = 1)
-        /// </summary>
-        /// <param name="columnNumber">1 based column number (A = 1) to get name of</param>
-        /// <returns>Column name corresponding to the value of columnNumber</returns>
+  /// <summary>
+      /// Get the column name corresponding to the provided 1 based column number (A = 1)
+      /// </summary>
+      /// <param name="columnNumber">1 based column number (A = 1) to get name of</param>
+      /// <returns>Column name corresponding to the value of columnNumber</returns>
     public static string NumberToColumnName(uint columnNumber)
     {
       int number = ((int)columnNumber) - 1; //Make this 1 based to avoid confusion

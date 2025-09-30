@@ -38,18 +38,18 @@ public sealed class MailAttachment(string? AttachmentName = null, Stream? Attach
 public sealed class SendEmailConfig(SmtpSettings? smtpSettings = null, EmailAddresses? emailAddresses = null, EmailContent? emailContent = null, bool readReceipt = false, string? readReceiptEmail = null)
 {
   /// <summary>
-    /// Gets or sets the values to use for the SMTP server conncetion.
-    /// </summary>
+  /// Gets or sets the values to use for the SMTP server conncetion.
+  /// </summary>
   public SmtpSettings SmtpSettings { get; set; } = smtpSettings ?? new();
 
   /// <summary>
-    /// Gets or sets the email addresses used in the email, including From, To, CC, and BCC.
-    /// </summary>
+  /// Gets or sets the email addresses used in the email, including From, To, CC, and BCC.
+  /// </summary>
   public EmailAddresses EmailAddresses { get; set; } = emailAddresses ?? new();
 
   /// <summary>
-    /// Gets or sets a value indicating whether a read receipt request should be added to the email. ReadReceiptEmail must have a value for the read receipt to work.
-    /// </summary>
+  /// Gets or sets a value indicating whether a read receipt request should be added to the email. ReadReceiptEmail must have a value for the read receipt to work.
+  /// </summary>
   public bool ReadReceipt { get; set; } = readReceipt;
 
   /// <summary>
@@ -66,82 +66,82 @@ public sealed class SendEmailConfig(SmtpSettings? smtpSettings = null, EmailAddr
 public sealed class SmtpSettings(string? smtpServer = null, int smtpPort = default, string? smtpUser = null, string? smtpPassword = null)
 {
   /// <summary>
-    /// Gets or sets the SMTP server address used for sending emails.
-    /// </summary>
+  /// Gets or sets the SMTP server address used for sending emails.
+  /// </summary>
   public string? SmtpServer { get; set; } = smtpServer;
 
   /// <summary>
-    /// Gets or sets the port number used for the SMTP server connection.
-    /// </summary>
-    /// <remarks>The port number must match the configuration of the SMTP server being used. Incorrect values may result in connection failures.</remarks>
+  /// Gets or sets the port number used for the SMTP server connection.
+  /// </summary>
+  /// <remarks>The port number must match the configuration of the SMTP server being used. Incorrect values may result in connection failures.</remarks>
   public int SmtpPort { get; set; } = smtpPort;
 
   /// <summary>
-    /// Gets or sets the username used for authenticating with the SMTP server.
-    /// </summary>
+  /// Gets or sets the username used for authenticating with the SMTP server.
+  /// </summary>
   public string? SmtpUser { get; set; } = smtpUser;
 
   /// <summary>
-    /// Gets or sets the password for the SMTP server, if required.
-    /// </summary>
+  /// Gets or sets the password for the SMTP server, if required.
+  /// </summary>
   public string? SmtpPassword { get; set; } = smtpPassword;
 }
 
 public sealed class  EmailAddresses(MailAddress? fromAddress = null, IEnumerable<MailAddress>? toAddresses = null, IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null)
 {
   /// <summary>
-    /// Gets or sets the sender's email address for the outgoing mail message.
-    /// </summary>
+  /// Gets or sets the sender's email address for the outgoing mail message.
+  /// </summary>
   public MailAddress FromAddress { get; set; } = fromAddress ?? new();
 
   /// <summary>
-    /// Gets or sets the collection of recipient email addresses for the message.
-    /// </summary>
+  /// Gets or sets the collection of recipient email addresses for the message.
+  /// </summary>
   public IEnumerable<MailAddress> ToAddresses { get; set; } = toAddresses ?? [];
 
   /// <summary>
-    /// Gets or sets the collection of email addresses to be included as CC (carbon copy) recipients.
-    /// </summary>
+  /// Gets or sets the collection of email addresses to be included as CC (carbon copy) recipients.
+  /// </summary>
   public IEnumerable<MailAddress> CcAddresses { get; set; } = ccAddresses ?? [];
 
   /// <summary>
-    /// Gets or sets the collection of email addresses to be included as blind carbon copy (BCC) recipients.
-    /// </summary>
+  /// Gets or sets the collection of email addresses to be included as blind carbon copy (BCC) recipients.
+  /// </summary>
   public IEnumerable<MailAddress> BccAddresses { get; set; } = bccAddresses ?? [];
 }
 
 public sealed class EmailContent(string? subject = null, string? body = null, bool bodyIsHtml = false, IEnumerable<MailAttachment>? attachments = null, bool autoDisposeAttachments = true, bool zipAttachments = false)
 {
   /// <summary>
-    /// Gets or sets the subject of the message.
-    /// </summary>
+  /// Gets or sets the subject of the message.
+  /// </summary>
   public string? Subject { get; set; } = subject;
 
   /// <summary>
-    /// Gets or sets the body content of the message.
-    /// </summary>
+  /// Gets or sets the body content of the message.
+  /// </summary>
   public string? Body { get; set; } = body;
 
   /// <summary>
-    /// Gets or sets a value indicating whether the body of the message is formatted as HTML.
-    /// </summary>
+  /// Gets or sets a value indicating whether the body of the message is formatted as HTML.
+  /// </summary>
   public bool BodyIsHtml { get; set; } = bodyIsHtml;
 
   /// <summary>
-    /// Gets or sets the collection of attachments associated with the mail message.
-    /// </summary>
+  /// Gets or sets the collection of attachments associated with the mail message.
+  /// </summary>
   public IEnumerable<MailAttachment>? Attachments { get; set; } = attachments;
 
   /// <summary>
-    /// Gets or sets a value indicating whether attachments should be automatically disposed when they are no longer needed.
-    /// </summary>
-    /// <remarks>When this property is set to <see langword="true"/>, any attachments associated with the object will be disposed of automatically to free up resources.
-    /// Set this property to <see langword="false"/> if you want to manage the disposal of attachments manually.</remarks>
+  /// Gets or sets a value indicating whether attachments should be automatically disposed when they are no longer needed.
+  /// </summary>
+  /// <remarks>When this property is set to <see langword="true"/>, any attachments associated with the object will be disposed of automatically to free up resources.
+  /// Set this property to <see langword="false"/> if you want to manage the disposal of attachments manually.</remarks>
   public bool AutoDisposeAttachments { get; set; } = autoDisposeAttachments;
 
   /// <summary>
-    /// Gets or sets a value indicating whether email attachments should be compressed into a ZIP archive.
-    /// </summary>
+  /// Gets or sets a value indicating whether email attachments should be compressed into a ZIP archive.
+  /// </summary>
   public bool ZipAttachments { get; set; } = zipAttachments;
 }
 
@@ -150,11 +150,11 @@ public static class Email
   private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
   /// <summary>
-    /// Sends an email using the SMTP server specified in the parameters.
-    /// </summary>
-    /// <param name="sendEmailConfig">Configuration options for sending the email.</param>
-    /// <param name="cancellationToken">Cancellation token for this operation.</param>
-    /// <returns><see langword="true"/> if email was sent successfully, otherwise <see langword="false"/></returns>
+  /// Sends an email using the SMTP server specified in the parameters.
+  /// </summary>
+  /// <param name="sendEmailConfig">Configuration options for sending the email.</param>
+  /// <param name="cancellationToken">Cancellation token for this operation.</param>
+  /// <returns><see langword="true"/> if email was sent successfully, otherwise <see langword="false"/></returns>
   public static async Task<bool> SendEmail(SendEmailConfig sendEmailConfig, CancellationToken cancellationToken = default)
   {
     bool success = true;
@@ -291,10 +291,10 @@ public static class Email
   }
 
   /// <summary>
-    /// Checks email string with simple regex to confirm that it is a properly formatted address
-    /// </summary>
-    /// <param name="email">Email address to validate</param>
-    /// <returns><see langword="true"/> if email is valid</returns>
+  /// Checks email string with simple regex to confirm that it is a properly formatted address
+  /// </summary>
+  /// <param name="email">Email address to validate</param>
+  /// <returns><see langword="true"/> if email is valid</returns>
   public static bool IsValidEmail(this string? email)
   {
     bool isValid = false;
@@ -310,11 +310,11 @@ public static class Email
   }
 
   /// <summary>
-    /// Adds attachments to email
-    /// </summary>
-    /// <param name="attachments">Attachments to add to the email</param>
-    /// <param name="bodyBuilder">Builder for the email to add attachments to</param>
-    /// <param name="zipAttachments">If <see langword="true"/>, will perform zip compression on the attachment files before adding them to the email</param>
+  /// Adds attachments to email
+  /// </summary>
+  /// <param name="attachments">Attachments to add to the email</param>
+  /// <param name="bodyBuilder">Builder for the email to add attachments to</param>
+  /// <param name="zipAttachments">If <see langword="true"/>, will perform zip compression on the attachment files before adding them to the email</param>
   public static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments, CancellationToken cancellationToken = default)
   {
     try

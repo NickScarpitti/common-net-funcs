@@ -26,17 +26,17 @@ public sealed class FilteredEfCoreLoggerFactory(ILoggerFactory innerFactory, IRe
   }
 
   /// <summary>
-    /// Adds a provider to the inner <see cref="ILoggerFactory"/>.
-    /// </summary>
-    /// <param name="provider">The <see cref="ILoggerProvider"/> to add.</param>
+  /// Adds a provider to the inner <see cref="ILoggerFactory"/>.
+  /// </summary>
+  /// <param name="provider">The <see cref="ILoggerProvider"/> to add.</param>
   public void AddProvider(ILoggerProvider provider)
   {
     _innerFactory.AddProvider(provider);
   }
 
   /// <summary>
-    /// Disposes the <see cref="FilteredEfCoreLoggerFactory"/> and its inner factory.
-    /// </summary>
+  /// Disposes the <see cref="FilteredEfCoreLoggerFactory"/> and its inner factory.
+  /// </summary>
   public void Dispose()
   {
     Dispose(true);
@@ -46,9 +46,9 @@ public sealed class FilteredEfCoreLoggerFactory(ILoggerFactory innerFactory, IRe
   bool disposed;
 
   /// <summary>
-    /// Disposes the <see cref="FilteredEfCoreLoggerFactory"/> and its inner factory.
-    /// </summary>
-    /// <param name="disposing">If <see langword="true"/>, the method is called from Dispose, otherwise from the finalizer.</param>
+  /// Disposes the <see cref="FilteredEfCoreLoggerFactory"/> and its inner factory.
+  /// </summary>
+  /// <param name="disposing">If <see langword="true"/>, the method is called from Dispose, otherwise from the finalizer.</param>
   private void Dispose(bool disposing)
   {
     if (!disposed)

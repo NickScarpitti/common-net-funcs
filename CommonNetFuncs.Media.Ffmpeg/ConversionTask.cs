@@ -25,28 +25,28 @@ public static class ConversionTask
   private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
   /// <summary>
-    /// Run basic ffmpeg conversion via Xabe.FFmpeg settings. Requires Xabe to have the executables path set.
-    /// </summary>
-    /// <param name="fileToConvert">Full file path and file name of the file to be converted</param>
-    /// <param name="outputFileName">Name of the output file</param>
-    /// <param name="codec">Codec to convert to</param>
-    /// <param name="outputFormat">Format to convert to</param>
-    /// <param name="conversionPreset">Ffmpeg encoding preset to use</param>
-    /// <param name="workingPath">Directory for conversion to put temporary files</param>
-    /// <param name="conversionIndex">Optional: Index of this task. Used to distinguish between multiple tasks. Defaults to 0 if null</param>
-    /// <param name="fpsDict">Optional: Dictionary used to display total conversion FPS. Can be used to sum total FPS between multiple simultaneous conversion tasks. If null, will only show FPS for current conversion</param>
-    /// <param name="mediaInfo">Optional: MediaInfo object for the file being converted. Used when MediaInfo has already been retrieved to prevent extra processing. Will be populated if left null.</param>
-    /// <param name="numberOfThreads">Optional: Number of threads to use in conversion task</param>
-    /// <param name="cancelIfLarger">Optional: Cancel the conversion task if the output becomes larger than the original file</param>
-    /// <param name="taskDescription">Optional: Description to use in logging</param>
-    /// <param name="strict">Optional: Use strict flag for conversion</param>
-    /// <param name="overwriteOutput">Optional: Allows for overwriting a file with the same name as the conversion output</param>
-    /// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
-    /// <param name="hardwareAccelerationValues">Optional: Parameters for hardware acceleration</param>
-    /// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
-    /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
-    /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
-    /// <returns><see langword="true"/> if conversion successfully completed</returns>
+  /// Run basic ffmpeg conversion via Xabe.FFmpeg settings. Requires Xabe to have the executables path set.
+  /// </summary>
+  /// <param name="fileToConvert">Full file path and file name of the file to be converted</param>
+  /// <param name="outputFileName">Name of the output file</param>
+  /// <param name="codec">Codec to convert to</param>
+  /// <param name="outputFormat">Format to convert to</param>
+  /// <param name="conversionPreset">Ffmpeg encoding preset to use</param>
+  /// <param name="workingPath">Directory for conversion to put temporary files</param>
+  /// <param name="conversionIndex">Optional: Index of this task. Used to distinguish between multiple tasks. Defaults to 0 if null</param>
+  /// <param name="fpsDict">Optional: Dictionary used to display total conversion FPS. Can be used to sum total FPS between multiple simultaneous conversion tasks. If null, will only show FPS for current conversion</param>
+  /// <param name="mediaInfo">Optional: MediaInfo object for the file being converted. Used when MediaInfo has already been retrieved to prevent extra processing. Will be populated if left null.</param>
+  /// <param name="numberOfThreads">Optional: Number of threads to use in conversion task</param>
+  /// <param name="cancelIfLarger">Optional: Cancel the conversion task if the output becomes larger than the original file</param>
+  /// <param name="taskDescription">Optional: Description to use in logging</param>
+  /// <param name="strict">Optional: Use strict flag for conversion</param>
+  /// <param name="overwriteOutput">Optional: Allows for overwriting a file with the same name as the conversion output</param>
+  /// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
+  /// <param name="hardwareAccelerationValues">Optional: Parameters for hardware acceleration</param>
+  /// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
+  /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
+  /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
+  /// <returns><see langword="true"/> if conversion successfully completed</returns>
   public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, VideoCodec codec, Format outputFormat = Format.mp4, ConversionPreset conversionPreset = ConversionPreset.Slower,
         string? workingPath = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true,
         string? taskDescription = null, bool strict = true, bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal,
@@ -58,26 +58,26 @@ public static class ConversionTask
   }
 
   /// <summary>
-    /// Run ffmpeg conversion via ffmpeg command. Requires Xabe to have the executables path set.
-    /// </summary>
-    /// <param name="fileToConvert">Full file path and file name of the file to be converted</param>
-    /// <param name="outputFileName">Name of the output file</param>
-    /// <param name="ffmpegCommand">Command to execute in ffmpeg. Input parameter should not be included in this command.</param>
-    /// <param name="workingPath">Directory for conversion to put temporary files</param>
-    /// <param name="conversionIndex">Optional: Index of this task. Used to distinguish between multiple tasks. Defaults to 0 if null</param>
-    /// <param name="fpsDict">Optional: Dictionary used to display total conversion FPS. Can be used to sum total FPS between multiple simultaneous conversion tasks. If null, will only show FPS for current conversion</param>
-    /// <param name="mediaInfo">Optional: MediaInfo object for the file being converted. Used when MediaInfo has already been retrieved to prevent extra processing. Will be populated if left null.</param>
-    /// <param name="numberOfThreads">Optional: Number of threads to use in conversion task</param>
-    /// <param name="cancelIfLarger">Optional: Cancel the conversion task if the output becomes larger than the original file</param>
-    /// <param name="taskDescription">Optional: Description to use in logging</param>
-    /// <param name="strict">Optional: Use strict flag for conversion</param>
-    /// <param name="overwriteOutput">Optional: Allows for overwriting a file with the same name as the conversion output</param>
-    /// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
-    /// <param name="hardwareAccelerationValues">Optional: Parameters for hardware acceleration</param>
-    /// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
-    /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
-    /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
-    /// <returns><see langword="true"/> if conversion successfully completed</returns>
+  /// Run ffmpeg conversion via ffmpeg command. Requires Xabe to have the executables path set.
+  /// </summary>
+  /// <param name="fileToConvert">Full file path and file name of the file to be converted</param>
+  /// <param name="outputFileName">Name of the output file</param>
+  /// <param name="ffmpegCommand">Command to execute in ffmpeg. Input parameter should not be included in this command.</param>
+  /// <param name="workingPath">Directory for conversion to put temporary files</param>
+  /// <param name="conversionIndex">Optional: Index of this task. Used to distinguish between multiple tasks. Defaults to 0 if null</param>
+  /// <param name="fpsDict">Optional: Dictionary used to display total conversion FPS. Can be used to sum total FPS between multiple simultaneous conversion tasks. If null, will only show FPS for current conversion</param>
+  /// <param name="mediaInfo">Optional: MediaInfo object for the file being converted. Used when MediaInfo has already been retrieved to prevent extra processing. Will be populated if left null.</param>
+  /// <param name="numberOfThreads">Optional: Number of threads to use in conversion task</param>
+  /// <param name="cancelIfLarger">Optional: Cancel the conversion task if the output becomes larger than the original file</param>
+  /// <param name="taskDescription">Optional: Description to use in logging</param>
+  /// <param name="strict">Optional: Use strict flag for conversion</param>
+  /// <param name="overwriteOutput">Optional: Allows for overwriting a file with the same name as the conversion output</param>
+  /// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
+  /// <param name="hardwareAccelerationValues">Optional: Parameters for hardware acceleration</param>
+  /// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
+  /// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
+  /// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
+  /// <returns><see langword="true"/> if conversion successfully completed</returns>
   public static Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string? ffmpegCommand, string? workingPath = null, int conversionIndex = 0,
         ConcurrentDictionary<int, decimal>? fpsDict = null, IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true,
         bool overwriteOutput = true, ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, HardwareAccelerationValues? hardwareAccelerationValues = null,

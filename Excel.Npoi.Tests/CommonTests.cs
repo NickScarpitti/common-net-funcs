@@ -1102,7 +1102,7 @@ public sealed class CommonTests : IDisposable
     // Arrange
     byte[] imageData = File.ReadAllBytes("TestData/test.png");
     CellRangeAddress area = new(1, 2, 1, 2); // B2:C3
-    IDrawing drawing = _sheet.CreateDrawingPatriarch();
+    IDrawing<IShape> drawing = _sheet.CreateDrawingPatriarch();
 
     // Act
     _xlsxWorkbook.AddPicture(_sheet, area, imageData, drawing);

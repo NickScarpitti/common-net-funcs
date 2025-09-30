@@ -21,15 +21,15 @@ public static class PdfConversion
   private static readonly SemaphoreSlim semaphore = new(1);
 
   /// <summary>
-    /// Converts an office formatted document into a PDF (Requires LibreOffice to be installed on the host machine)
-    /// </summary>
-    /// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable.</param>
-    /// <param name="fileName">File name including full file path to the file to convert to a PDF</param>
-    /// <param name="outputPath">Optional: Path to output file to, defaults to the same path as fileName if null</param>
-    /// <param name="conversionTimeout">Optional: Time limit for how long the conversion can take before being canceled</param>
-    /// <exception cref="LibreOfficeFailedException"></exception>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="FileNotFoundException"></exception>
+  /// Converts an office formatted document into a PDF (Requires LibreOffice to be installed on the host machine)
+  /// </summary>
+  /// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable.</param>
+  /// <param name="fileName">File name including full file path to the file to convert to a PDF</param>
+  /// <param name="outputPath">Optional: Path to output file to, defaults to the same path as fileName if null</param>
+  /// <param name="conversionTimeout">Optional: Time limit for how long the conversion can take before being canceled</param>
+  /// <exception cref="LibreOfficeFailedException"></exception>
+  /// <exception cref="ArgumentException"></exception>
+  /// <exception cref="FileNotFoundException"></exception>
   public static void ConvertToPdf(string libreOfficeExecutable, string fileName, string? outputPath = null, TimeSpan? conversionTimeout = null, int maxRetries = 3)
   {
     if (!File.Exists(fileName))
@@ -100,15 +100,15 @@ public static class PdfConversion
   }
 
   /// <summary>
-    /// Converts an office formatted document into a PDF (Requires LibreOffice to be installed on the host machine)
-    /// </summary>
-    /// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable.</param>
-    /// <param name="fileName">File name including full file path to the file to convert to a PDF</param>
-    /// <param name="outputPath">Optional: Path to output file to, defaults to the same path as fileName if null</param>
-    /// <param name="cancellationToken">Optional: Cancellation token for asynchronous conversion operation</param>
-    /// <exception cref="LibreOfficeFailedException"></exception>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="FileNotFoundException"></exception>
+  /// Converts an office formatted document into a PDF (Requires LibreOffice to be installed on the host machine)
+  /// </summary>
+  /// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable.</param>
+  /// <param name="fileName">File name including full file path to the file to convert to a PDF</param>
+  /// <param name="outputPath">Optional: Path to output file to, defaults to the same path as fileName if null</param>
+  /// <param name="cancellationToken">Optional: Cancellation token for asynchronous conversion operation</param>
+  /// <exception cref="LibreOfficeFailedException"></exception>
+  /// <exception cref="ArgumentException"></exception>
+  /// <exception cref="FileNotFoundException"></exception>
   public static async Task ConvertToPdfAsync(string libreOfficeExecutable, string fileName, string? outputPath = null, CancellationToken? cancellationToken = null, int maxRetries = 3)
   {
     if (!File.Exists(fileName))

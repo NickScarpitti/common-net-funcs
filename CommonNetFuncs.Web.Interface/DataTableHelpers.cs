@@ -17,10 +17,10 @@ public static class DataTableHelpers
   private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
   /// <summary>
-    /// Parse the DataTables HttpRequest object into the DataTableRequest class
-    /// </summary>
-    /// <param name="request">HTTP request sent by DataTables</param>
-    /// <returns><see cref="DataTable"/>Request object containing the parsed request values</returns>
+  /// Parse the DataTables HttpRequest object into the DataTableRequest class
+  /// </summary>
+  /// <param name="request">HTTP request sent by DataTables</param>
+  /// <returns><see cref="DataTable"/>Request object containing the parsed request values</returns>
   public static DataTableRequest GetDataTableRequest(this HttpRequest request)
   {
     DataTableRequest dataTableRequest = new();
@@ -84,10 +84,10 @@ public static class DataTableHelpers
   }
 
   /// <summary>
-    /// Transform DataTableRequest into an object that can be used to limit the results sent back from a query why using paging or applying a sort
-    /// </summary>
-    /// <param name="request">DataTableRequest to get SortAndLimitPostModel object for</param>
-    /// <returns>SortAndLimitPostModel object created from the parameters in DataTableRequest</returns>
+  /// Transform DataTableRequest into an object that can be used to limit the results sent back from a query why using paging or applying a sort
+  /// </summary>
+  /// <param name="request">DataTableRequest to get SortAndLimitPostModel object for</param>
+  /// <returns>SortAndLimitPostModel object created from the parameters in DataTableRequest</returns>
   public static SortAndLimitPostModel GetSortAndLimitPostModel(DataTableRequest request)
   {
     return new()

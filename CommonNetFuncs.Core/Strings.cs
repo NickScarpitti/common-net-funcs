@@ -108,11 +108,11 @@ public static partial class Strings
   private static partial Regex TitleCaseWordRegex();
 
   /// <summary>
-    /// Clone of VBA Left() function that gets n characters from the left side of the string
-    /// </summary>
-    /// <param name="s">String to get left substring from</param>
-    /// <param name="numChars">Number of characters to take from the right side of the string</param>
-    /// <returns>String of the length indicated from the left side of the source string</returns>
+  /// Clone of VBA Left() function that gets n characters from the left side of the string
+  /// </summary>
+  /// <param name="s">String to get left substring from</param>
+  /// <param name="numChars">Number of characters to take from the right side of the string</param>
+  /// <returns>String of the length indicated from the left side of the source string</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static string? Left(this string? s, int numChars)
   {
@@ -135,11 +135,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Clone of VBA Left() function that gets n characters from the left side of the string
-    /// </summary>
-    /// <param name="s">String to get left substring from</param>
-    /// <param name="numChars">Number of characters to take from the right side of the string</param>
-    /// <returns>String of the length indicated from the left side of the source string</returns>
+  /// Clone of VBA Left() function that gets n characters from the left side of the string
+  /// </summary>
+  /// <param name="s">String to get left substring from</param>
+  /// <param name="numChars">Number of characters to take from the right side of the string</param>
+  /// <returns>String of the length indicated from the left side of the source string</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static ReadOnlySpan<char> Left(this ReadOnlySpan<char> s, int numChars)
   {
@@ -158,11 +158,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Clone of VBA Right() function that gets n characters from the right side of the string
-    /// </summary>
-    /// <param name="s">String to extract right substring from</param>
-    /// <param name="numChars">Number of characters to take from the right side of the string</param>
-    /// <returns>String of the length indicated from the right side of the source string</returns>
+  /// Clone of VBA Right() function that gets n characters from the right side of the string
+  /// </summary>
+  /// <param name="s">String to extract right substring from</param>
+  /// <param name="numChars">Number of characters to take from the right side of the string</param>
+  /// <returns>String of the length indicated from the right side of the source string</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static string? Right(this string? s, int numChars)
   {
@@ -185,11 +185,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Clone of VBA Right() function that gets n characters from the right side of the string
-    /// </summary>
-    /// <param name="s">String to extract right substring from</param>
-    /// <param name="numChars">Number of characters to take from the right side of the string</param>
-    /// <returns>String of the length indicated from the right side of the source string</returns>
+  /// Clone of VBA Right() function that gets n characters from the right side of the string
+  /// </summary>
+  /// <param name="s">String to extract right substring from</param>
+  /// <param name="numChars">Number of characters to take from the right side of the string</param>
+  /// <returns>String of the length indicated from the right side of the source string</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static ReadOnlySpan<char> Right(this ReadOnlySpan<char> s, int numChars)
   {
@@ -208,12 +208,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Extract the string between two string values
-    /// </summary>
-    /// <param name="s">String value to extract value from</param>
-    /// <param name="sStart">Text that ends immediately before the end of the string you wish to extract</param>
-    /// <param name="sEnd">Text that starts immediately after the end of the string you wish to extract</param>
-    /// <returns>Extracted string found between the two given string values</returns>
+  /// Extract the string between two string values
+  /// </summary>
+  /// <param name="s">String value to extract value from</param>
+  /// <param name="sStart">Text that ends immediately before the end of the string you wish to extract</param>
+  /// <param name="sEnd">Text that starts immediately after the end of the string you wish to extract</param>
+  /// <returns>Extracted string found between the two given string values</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static string? ExtractBetween(this string? s, string sStart, string sEnd)
   {
@@ -234,12 +234,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Extract the string between two string values
-    /// </summary>
-    /// <param name="s">String value to extract value from</param>
-    /// <param name="sStart">Text that ends immediately before the end of the string you wish to extract</param>
-    /// <param name="sEnd">Text that starts immediately after the end of the string you wish to extract</param>
-    /// <returns>Extracted string found between the two given string values</returns>
+  /// Extract the string between two string values
+  /// </summary>
+  /// <param name="s">String value to extract value from</param>
+  /// <param name="sStart">Text that ends immediately before the end of the string you wish to extract</param>
+  /// <param name="sEnd">Text that starts immediately after the end of the string you wish to extract</param>
+  /// <returns>Extracted string found between the two given string values</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static ReadOnlySpan<char> ExtractBetween(this ReadOnlySpan<char> s, string sStart, string sEnd)
   {
@@ -259,20 +259,20 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Makes a string with the word "null" into a null value
-    /// </summary>
-    /// <param name="s">String to change to null if it contains the word "null"</param>
-    /// <returns>Null if the string passed in is null or is the word null with no other text characters other than whitespace</returns>
+  /// Makes a string with the word "null" into a null value
+  /// </summary>
+  /// <param name="s">String to change to null if it contains the word "null"</param>
+  /// <returns>Null if the string passed in is null or is the word null with no other text characters other than whitespace</returns>
   public static string? MakeNullNull(this string? s)
   {
     return !s.IsNullOrWhiteSpace() && (s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0 || s.Trim().StrEq("Null")) ? null : s;
   }
 
   /// <summary>
-    /// Parses a string that is using pascal casing (works with camel case as well) so that each word is separated by a space
-    /// </summary>
-    /// <param name="s">String to parse</param>
-    /// <returns>Original string with spaces between all words starting with a capital letter</returns>
+  /// Parses a string that is using pascal casing (works with camel case as well) so that each word is separated by a space
+  /// </summary>
+  /// <param name="s">String to parse</param>
+  /// <returns>Original string with spaces between all words starting with a capital letter</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static string? ParsePascalCase(this string? s)
   {
@@ -299,10 +299,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Parses a string that is using pascal casing (works with camel case as well) so that each word is separated by a space
-    /// </summary>
-    /// <param name="s">String to parse</param>
-    /// <returns>Original string with spaces between all words starting with a capital letter</returns>
+  /// Parses a string that is using pascal casing (works with camel case as well) so that each word is separated by a space
+  /// </summary>
+  /// <param name="s">String to parse</param>
+  /// <returns>Original string with spaces between all words starting with a capital letter</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static ReadOnlySpan<char> ParsePascalCase(this ReadOnlySpan<char> s)
   {
@@ -329,12 +329,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts a string to title case with options for handling uppercase words.
-    /// </summary>
-    /// <param name="input">The input string to convert.</param>
-    /// <param name="uppercaseHandling">How to handle uppercase words.</param>
-    /// <param name="minLengthToConvert">Minimum length of uppercase words to convert (used only with UppercaseHandling.ConvertByLength).</param>
-    /// <returns>The title-cased string.</returns>
+  /// Converts a string to title case with options for handling uppercase words.
+  /// </summary>
+  /// <param name="input">The input string to convert.</param>
+  /// <param name="uppercaseHandling">How to handle uppercase words.</param>
+  /// <param name="minLengthToConvert">Minimum length of uppercase words to convert (used only with UppercaseHandling.ConvertByLength).</param>
+  /// <returns>The title-cased string.</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static string? ToTitleCase(this string? input, string cultureString = "en-US", TitleCaseUppercaseWordHandling uppercaseHandling = TitleCaseUppercaseWordHandling.IgnoreUppercase, int minLengthToConvert = 0, CancellationToken cancellationToken = default)
   {
@@ -402,10 +402,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Trims a string removing all extra leading and trailing spaces as well as reducing multiple consecutive spaces to only 1 space
-    /// </summary>
-    /// <param name="s">String to remove extra spaces from</param>
-    /// <returns>String without leading, trailing or multiple consecutive spaces</returns>
+  /// Trims a string removing all extra leading and trailing spaces as well as reducing multiple consecutive spaces to only 1 space
+  /// </summary>
+  /// <param name="s">String to remove extra spaces from</param>
+  /// <returns>String without leading, trailing or multiple consecutive spaces</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static string? TrimFull(this string? s)
   {
@@ -417,74 +417,74 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Indicates whether a specified string is null, a zero length string, or consists only of white-space characters
-    /// </summary>
-    /// <param name="s">The string to test</param>
-    /// <returns><see langword="true"/> if s is null, a zero length string, or consists only of white-space characters</returns>
+  /// Indicates whether a specified string is null, a zero length string, or consists only of white-space characters
+  /// </summary>
+  /// <param name="s">The string to test</param>
+  /// <returns><see langword="true"/> if s is null, a zero length string, or consists only of white-space characters</returns>
   public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? s)
   {
     return string.IsNullOrWhiteSpace(s);
   }
 
   /// <summary>
-    /// Indicates whether a specified string is null or a zero length string
-    /// </summary>
-    /// <param name="s">The string to test</param>
-    /// <returns><see langword="true"/> if s is null or a zero length string</returns>
+  /// Indicates whether a specified string is null or a zero length string
+  /// </summary>
+  /// <param name="s">The string to test</param>
+  /// <returns><see langword="true"/> if s is null or a zero length string</returns>
   public static bool IsNullOrEmpty([NotNullWhen(false)] this string? s)
   {
     return string.IsNullOrEmpty(s);
   }
 
   /// <summary>
-    /// Indicates whether a specified string is null or a zero length string
-    /// </summary>
-    /// <param name="enumerable">Collection to check if it's null or has no elements</param>
-    /// <returns><see langword="true"/> if s is null or a zero length string</returns>
+  /// Indicates whether a specified string is null or a zero length string
+  /// </summary>
+  /// <param name="enumerable">Collection to check if it's null or has no elements</param>
+  /// <returns><see langword="true"/> if s is null or a zero length string</returns>
   public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this IEnumerable<T>? enumerable)
   {
     return enumerable?.Any() != true;
   }
 
   /// <summary>
-    /// Checks if the given string contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+  /// Checks if the given string contains a specific string regardless of culture or case
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="textToFind">String to find in s</param>
+  /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
   public static bool ContainsInvariant(this string? s, string? textToFind)
   {
     return textToFind != null && (s?.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
   }
 
   /// <summary>
-    /// Checks if the given string contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+  /// Checks if the given string contains a specific string regardless of culture or case
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="textToFind">String to find in s</param>
+  /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
   public static bool ContainsInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
   {
     return !s.IsEmpty && !textToFind.IsEmpty && s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) >= 0;
   }
 
   /// <summary>
-    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+  /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="textToFind">String to find in s</param>
+  /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
   public static bool ContainsInvariant(this IEnumerable<string?>? s, string? textToFind)
   {
     return s?.Contains(textToFind, StringComparer.InvariantCultureIgnoreCase) ?? false;
   }
 
   /// <summary>
-    /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+  /// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="textToFind">String to find in s</param>
+  /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
   public static bool ContainsInvariant(this IEnumerable<string?>? s, ReadOnlySpan<char> textToFind)
   {
     if (s == null || textToFind.IsEmpty)
@@ -503,17 +503,17 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks if the given string contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textsToFind">Strings to find in s</param>
-    /// <param name="useOrComparison">
-    /// <para>If <see langword="true"/>, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
-    /// </param>
-    /// <returns>
-    /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
-    /// False</para>
-    /// </returns>
+  /// Checks if the given string contains a specific string regardless of culture or case
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="textsToFind">Strings to find in s</param>
+  /// <param name="useOrComparison">
+  /// <para>If <see langword="true"/>, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
+  /// </param>
+  /// <returns>
+  /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
+  /// False</para>
+  /// </returns>
   public static bool ContainsInvariant(this string? s, IEnumerable<string> textsToFind, bool useOrComparison = true)
   {
     if (s.IsNullOrWhiteSpace())
@@ -546,17 +546,17 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks if the given string contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textsToFind">Strings to find in s</param>
-    /// <param name="useOrComparison">
-    /// <para>If <see langword="true"/>, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
-    /// </param>
-    /// <returns>
-    /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
-    /// False</para>
-    /// </returns>
+  /// Checks if the given string contains a specific string regardless of culture or case
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="textsToFind">Strings to find in s</param>
+  /// <param name="useOrComparison">
+  /// <para>If <see langword="true"/>, will check if any of the textsToFind values are in s. (OR configuration)</para> <para>If false, will check if all of the textsToFind values are in s. (AND configuration)</para>
+  /// </param>
+  /// <returns>
+  /// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
+  /// False</para>
+  /// </returns>
   public static bool ContainsInvariant(this ReadOnlySpan<char> s, IEnumerable<string> textsToFind, bool useOrComparison = true)
   {
     if (s.IsEmpty)
@@ -589,106 +589,106 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks if the given string begins with a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+  /// Checks if the given string begins with a specific string regardless of culture or case
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="textToFind">String to find in s</param>
+  /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
   public static bool StartsWithInvariant(this string? s, string? textToFind)
   {
     return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
   }
 
   /// <summary>
-    /// Checks if the given string begins with a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+  /// Checks if the given string begins with a specific string regardless of culture or case
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="textToFind">String to find in s</param>
+  /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
   public static bool StartsWithInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
   {
     return !textToFind.IsEmpty && s.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase);
   }
 
   /// <summary>
-    /// Checks if the given string contains a specific string regardless of culture or case
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="textToFind">String to find in s</param>
-    /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
+  /// Checks if the given string contains a specific string regardless of culture or case
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="textToFind">String to find in s</param>
+  /// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
   public static bool EndsWithInvariant(this string? s, string? textToFind)
   {
     return textToFind != null && (s?.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
   }
 
   /// <summary>
-    /// Checks if the given <see cref="ReadOnlySpan{T}"/> contains a specific <see cref="ReadOnlySpan{T}"/> regardless of culture or case.
-    /// </summary>
-    /// <param name="s"><see cref="ReadOnlySpan{T}"/> to search.</param>
-    /// <param name="textToFind"><see cref="ReadOnlySpan{T}"/> to find in s.</param>
-    /// <returns><see langword="true"/> if <paramref name="s"/> contains <paramref name="textToFind"/> in any form, otherwise <see langword="false">.</returns>
+  /// Checks if the given <see cref="ReadOnlySpan{T}"/> contains a specific <see cref="ReadOnlySpan{T}"/> regardless of culture or case.
+  /// </summary>
+  /// <param name="s"><see cref="ReadOnlySpan{T}"/> to search.</param>
+  /// <param name="textToFind"><see cref="ReadOnlySpan{T}"/> to find in s.</param>
+  /// <returns><see langword="true"/> if <paramref name="s"/> contains <paramref name="textToFind"/> in any form, otherwise <see langword="false">.</returns>
   public static bool EndsWithInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
   {
     return !textToFind.IsEmpty && s.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase);
   }
 
   /// <summary>
-    /// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
-    /// </summary>
-    /// <param name="s">String to search.</param>
-    /// <param name="textToFind">String to find in s.</param>
-    /// <returns>The zero-based index of first occurrence of <paramref name="textToFind"/> if <paramref name="s"/> contains <paramref name="textToFind"/> in any form or -1 if <paramref name="s"/> is <see langword="null"/> or <paramref name="textToFind"/> is not found.</returns>
+  /// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
+  /// </summary>
+  /// <param name="s">String to search.</param>
+  /// <param name="textToFind">String to find in s.</param>
+  /// <returns>The zero-based index of first occurrence of <paramref name="textToFind"/> if <paramref name="s"/> contains <paramref name="textToFind"/> in any form or -1 if <paramref name="s"/> is <see langword="null"/> or <paramref name="textToFind"/> is not found.</returns>
   public static int IndexOfInvariant(this string? s, string? textToFind)
   {
     return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? -1 : -1;
   }
 
   /// <summary>
-    /// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
-    /// </summary>
-    /// <param name="s">String to search.</param>
-    /// <param name="charToFind">Char to find in s.</param>
-    /// <returns>The zero-based index of first occurrence of <paramref name="charToFind"/> if <paramref name="s"/> contains <paramref name="charToFind"/> in any form or -1 if <paramref name="s"/> is <see langword="null"/> or <paramref name="textToFind"/> is not found.</returns>
+  /// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
+  /// </summary>
+  /// <param name="s">String to search.</param>
+  /// <param name="charToFind">Char to find in s.</param>
+  /// <returns>The zero-based index of first occurrence of <paramref name="charToFind"/> if <paramref name="s"/> contains <paramref name="charToFind"/> in any form or -1 if <paramref name="s"/> is <see langword="null"/> or <paramref name="textToFind"/> is not found.</returns>
   public static int IndexOfInvariant(this string? s, char? charToFind)
   {
     return charToFind != null ? s?.IndexOf((char)charToFind, StringComparison.InvariantCultureIgnoreCase) ?? -1 : -1;
   }
 
   /// <summary>
-    /// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
-    /// </summary>
-    /// <param name="s"><see cref="ReadOnlySpan{T}"/> to search.</param>
-    /// <param name="textToFind"><see cref="ReadOnlySpan{T}"/> to find in s.</param>
-    /// <returns>The zero-based index of first occurrence of <paramref name="textToFind"/> if <paramref name="s"/> contains <paramref name="textToFind"/> in any form or -1 if <paramref name="s"/> is empty or <paramref name="textToFind"/> is not found.</returns>
+  /// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
+  /// </summary>
+  /// <param name="s"><see cref="ReadOnlySpan{T}"/> to search.</param>
+  /// <param name="textToFind"><see cref="ReadOnlySpan{T}"/> to find in s.</param>
+  /// <returns>The zero-based index of first occurrence of <paramref name="textToFind"/> if <paramref name="s"/> contains <paramref name="textToFind"/> in any form or -1 if <paramref name="s"/> is empty or <paramref name="textToFind"/> is not found.</returns>
   public static int IndexOfInvariant(this ReadOnlySpan<char> s, ReadOnlySpan<char> textToFind)
   {
     return !textToFind.IsEmpty ? s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) : -1;
   }
 
   /// <summary>
-    /// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
-    /// </summary>
-    /// <param name="s">String to search.</param>
-    /// <param name="charToFind">Character to find in s.</param>
-    /// <returns>The zero-based index of first occurrence of <paramref name="charToFind"/> if <paramref name="s"/> contains <paramref name="charToFind"/> in any form or -1 if <paramref name="s"/> is empty or <paramref name="charToFind"/> is not found.</returns>
+  /// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
+  /// </summary>
+  /// <param name="s">String to search.</param>
+  /// <param name="charToFind">Character to find in s.</param>
+  /// <returns>The zero-based index of first occurrence of <paramref name="charToFind"/> if <paramref name="s"/> contains <paramref name="charToFind"/> in any form or -1 if <paramref name="s"/> is empty or <paramref name="charToFind"/> is not found.</returns>
   public static int IndexOfInvariant(this ReadOnlySpan<char> s, char? charToFind)
   {
     return charToFind != null ? s.IndexOf((char)charToFind) : -1;
   }
 
   /// <summary>
-    /// Checks if the given string contains at least one or all of the strings in a collection of strings, regardless of culture or case.
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="stringsToFind">Strings to find in s</param>
-    /// <param name="useOrComparison">
-    /// <para>If <see langword="true"/>, will check if any of the stringsToFind values are in s. (OR configuration)</para>
-    /// <para>If false, will check if all of the stringsToFind values are in s. (AND configuration)</para>
-    /// </param>
-    /// <returns>
-    /// <para>True if s contains any of the strings in stringsToFind in any form when useOrComparison = True</para>
-    /// <para>True if s contains all of the strings in stringsToFind when useOrComparison = False</para>
-    /// </returns>
+  /// Checks if the given string contains at least one or all of the strings in a collection of strings, regardless of culture or case.
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="stringsToFind">Strings to find in s</param>
+  /// <param name="useOrComparison">
+  /// <para>If <see langword="true"/>, will check if any of the stringsToFind values are in s. (OR configuration)</para>
+  /// <para>If false, will check if all of the stringsToFind values are in s. (AND configuration)</para>
+  /// </param>
+  /// <returns>
+  /// <para>True if s contains any of the strings in stringsToFind in any form when useOrComparison = True</para>
+  /// <para>True if s contains all of the strings in stringsToFind when useOrComparison = False</para>
+  /// </returns>
   public static bool Contains(this string? s, IEnumerable<string> stringsToFind, bool useOrComparison = true)
   {
     if (s.IsNullOrWhiteSpace())
@@ -721,18 +721,18 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks if the given string contains at least one or all of the strings in a collection of strings, regardless of culture or case.
-    /// </summary>
-    /// <param name="s">String to search</param>
-    /// <param name="stringsToFind">Strings to find in s</param>
-    /// <param name="useOrComparison">
-    /// <para>If <see langword="true"/>, will check if any of the stringsToFind values are in s. (OR configuration)</para>
-    /// <para>If false, will check if all of the stringsToFind values are in s. (AND configuration)</para>
-    /// </param>
-    /// <returns>
-    /// <para>True if s contains any of the strings in stringsToFind in any form when useOrComparison = True</para>
-    /// <para>True if s contains all of the strings in stringsToFind when useOrComparison = False</para>
-    /// </returns>
+  /// Checks if the given string contains at least one or all of the strings in a collection of strings, regardless of culture or case.
+  /// </summary>
+  /// <param name="s">String to search</param>
+  /// <param name="stringsToFind">Strings to find in s</param>
+  /// <param name="useOrComparison">
+  /// <para>If <see langword="true"/>, will check if any of the stringsToFind values are in s. (OR configuration)</para>
+  /// <para>If false, will check if all of the stringsToFind values are in s. (AND configuration)</para>
+  /// </param>
+  /// <returns>
+  /// <para>True if s contains any of the strings in stringsToFind in any form when useOrComparison = True</para>
+  /// <para>True if s contains all of the strings in stringsToFind when useOrComparison = False</para>
+  /// </returns>
   public static bool Contains(this ReadOnlySpan<char> s, IEnumerable<string> stringsToFind, bool useOrComparison = true, StringComparison stringComparison = StringComparison.Ordinal)
   {
     if (s.IsEmpty)
@@ -765,12 +765,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Replace a substring with another string, ignoring the case and culture when finding the substring to replace
-    /// </summary>
-    /// <param name="s">String to search for substring to replace</param>
-    /// <param name="oldValue">Substring to search for in string s, ignoring culture and case</param>
-    /// <param name="newValue">String to replace any substrings matching oldValue with</param>
-    /// <returns></returns>
+  /// Replace a substring with another string, ignoring the case and culture when finding the substring to replace
+  /// </summary>
+  /// <param name="s">String to search for substring to replace</param>
+  /// <param name="oldValue">Substring to search for in string s, ignoring culture and case</param>
+  /// <param name="newValue">String to replace any substrings matching oldValue with</param>
+  /// <returns></returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static string? ReplaceInvariant(this string? s, string oldValue, string newValue, bool replaceAllInstances = true, CancellationToken cancellationToken = default)
   {
@@ -778,12 +778,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Replace multiple substrings with another string, ignoring the case and culture when finding the substrings to replace.
-    /// </summary>
-    /// <param name="s">String to search for substrings to replace.</param>
-    /// <param name="oldValues">Collection of substrings to search for in string s, ignoring culture and case.</param>
-    /// <param name="newValue">String to replace any substrings matching any value in oldValues with.</param>
-    /// <returns>String with all occurrences of substrings in oldValues replaced by newValue.</returns>
+  /// Replace multiple substrings with another string, ignoring the case and culture when finding the substrings to replace.
+  /// </summary>
+  /// <param name="s">String to search for substrings to replace.</param>
+  /// <param name="oldValues">Collection of substrings to search for in string s, ignoring culture and case.</param>
+  /// <param name="newValue">String to replace any substrings matching any value in oldValues with.</param>
+  /// <returns>String with all occurrences of substrings in oldValues replaced by newValue.</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static string? ReplaceInvariant(this string? s, IEnumerable<string> oldValues, string newValue, bool replaceAllInstances = true, CancellationToken cancellationToken = default)
   {
@@ -824,110 +824,110 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Compare two strings ignoring culture and case
-    /// </summary>
-    /// <param name="s1">First string to compare</param>
-    /// <param name="s2">Second string to compare</param>
-    /// <returns><see langword="true"/> if the strings are equal when ignoring culture and case</returns>
+  /// Compare two strings ignoring culture and case
+  /// </summary>
+  /// <param name="s1">First string to compare</param>
+  /// <param name="s2">Second string to compare</param>
+  /// <returns><see langword="true"/> if the strings are equal when ignoring culture and case</returns>
   public static bool StrEq(this string? s1, string? s2)
   {
     return string.Equals(s1?.Trim() ?? string.Empty, s2?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
   }
 
   /// <summary>
-    /// Compare two strings for string equality
-    /// </summary>
-    /// <param name="s1">First string to compare</param>
-    /// <param name="s2">Second string to compare</param>
-    /// <returns><see langword="true"/> if the strings are equal</returns>
+  /// Compare two strings for string equality
+  /// </summary>
+  /// <param name="s1">First string to compare</param>
+  /// <param name="s2">Second string to compare</param>
+  /// <returns><see langword="true"/> if the strings are equal</returns>
   public static bool StrComp(this string? s1, string? s2)
   {
     return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty);
   }
 
   /// <summary>
-    /// Compare two strings with optional stringComparison parameter
-    /// </summary>
-    /// <param name="s1">First string to compare</param>
-    /// <param name="s2">Second string to compare</param>
-    /// <returns><see langword="true"/> if the strings are equal based on the stringComparison value</returns>
+  /// Compare two strings with optional stringComparison parameter
+  /// </summary>
+  /// <param name="s1">First string to compare</param>
+  /// <param name="s2">Second string to compare</param>
+  /// <returns><see langword="true"/> if the strings are equal based on the stringComparison value</returns>
   public static bool StrComp(this string? s1, string? s2, StringComparison stringComparison)
   {
     return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison);
   }
 
   /// <summary>
-    /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
-    /// </summary>
-    /// <param name="testString">String to check if it only contains alphanumeric characters</param>
-    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
-    /// <returns><see langword="true"/> if testString contains only letters and numbers and optionally spaces</returns>
+  /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
+  /// </summary>
+  /// <param name="testString">String to check if it only contains alphanumeric characters</param>
+  /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+  /// <returns><see langword="true"/> if testString contains only letters and numbers and optionally spaces</returns>
   public static bool IsAlphanumeric(this string? testString, bool allowSpaces = false)
   {
     return testString != null && (!allowSpaces ? AlphanumericRegex().IsMatch(testString) : AlphanumericWithSpacesRegex().IsMatch(testString));
   }
 
   /// <summary>
-    /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
-    /// </summary>
-    /// <param name="testString">String to check if it only contains alphanumeric characters</param>
-    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
-    /// <returns><see langword="true"/> if testString contains only letters and numbers and optionally spaces</returns>
+  /// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
+  /// </summary>
+  /// <param name="testString">String to check if it only contains alphanumeric characters</param>
+  /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+  /// <returns><see langword="true"/> if testString contains only letters and numbers and optionally spaces</returns>
   public static bool IsAlphanumeric(this ReadOnlySpan<char> testString, bool allowSpaces = false)
   {
     return !testString.IsEmpty && (!allowSpaces ? AlphanumericRegex().IsMatch(testString) : AlphanumericWithSpacesRegex().IsMatch(testString));
   }
 
   /// <summary>
-    /// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
-    /// </summary>
-    /// <param name="testString">String to check if it only contains alphabetical characters</param>
-    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
-    /// <returns><see langword="true"/> if testString only contains letters and optionally spaces</returns>
+  /// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
+  /// </summary>
+  /// <param name="testString">String to check if it only contains alphabetical characters</param>
+  /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+  /// <returns><see langword="true"/> if testString only contains letters and optionally spaces</returns>
   public static bool IsAlphaOnly(this string? testString, bool allowSpaces = false)
   {
     return testString != null && (!allowSpaces ? AlphaOnlyRegex().IsMatch(testString) : AlphaOnlyWithSpacesRegex().IsMatch(testString));
   }
 
   /// <summary>
-    /// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
-    /// </summary>
-    /// <param name="testString">String to check if it only contains alphabetical characters</param>
-    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
-    /// <returns><see langword="true"/> if testString only contains letters and optionally spaces</returns>
+  /// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
+  /// </summary>
+  /// <param name="testString">String to check if it only contains alphabetical characters</param>
+  /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+  /// <returns><see langword="true"/> if testString only contains letters and optionally spaces</returns>
   public static bool IsAlphaOnly(this ReadOnlySpan<char> testString, bool allowSpaces = false)
   {
     return !testString.IsEmpty && (!allowSpaces ? AlphaOnlyRegex().IsMatch(testString) : AlphaOnlyWithSpacesRegex().IsMatch(testString));
   }
 
   /// <summary>
-    /// Check string to see if a string only contains numbers (0-9). Null returns false.
-    /// </summary>
-    /// <param name="testString">String to check if it only contains numeric characters</param>
-    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
-    /// <returns><see langword="true"/> if testString only contains numbers and optionally spaces</returns>
+  /// Check string to see if a string only contains numbers (0-9). Null returns false.
+  /// </summary>
+  /// <param name="testString">String to check if it only contains numeric characters</param>
+  /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+  /// <returns><see langword="true"/> if testString only contains numbers and optionally spaces</returns>
   public static bool IsNumericOnly(this string? testString, bool allowSpaces = false)
   {
     return !testString.IsNullOrWhiteSpace() && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
   }
 
   /// <summary>
-    /// Check string to see if a string only contains numbers (0-9). Null returns false.
-    /// </summary>
-    /// <param name="testString">String to check if it only contains numeric characters</param>
-    /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
-    /// <returns><see langword="true"/> if testString only contains numbers and optionally spaces</returns>
+  /// Check string to see if a string only contains numbers (0-9). Null returns false.
+  /// </summary>
+  /// <param name="testString">String to check if it only contains numeric characters</param>
+  /// <param name="allowSpaces">Will count spaces as a valid character when testing the string</param>
+  /// <returns><see langword="true"/> if testString only contains numbers and optionally spaces</returns>
   public static bool IsNumericOnly(this ReadOnlySpan<char> testString, bool allowSpaces = false)
   {
     return !testString.IsEmpty && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
   }
 
   /// <summary>
-    /// Gets string up until before the last instance of a character (exclusive)
-    /// </summary>
-    /// <param name="s">String to extract from</param>
-    /// <param name="charToFind">Character to find last instance of</param>
-    /// <returns>String up until the last instance of charToFind (exclusive)</returns>
+  /// Gets string up until before the last instance of a character (exclusive)
+  /// </summary>
+  /// <param name="s">String to extract from</param>
+  /// <param name="charToFind">Character to find last instance of</param>
+  /// <returns>String up until the last instance of charToFind (exclusive)</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static string? ExtractToLastInstance(this string? s, char charToFind)
   {
@@ -940,11 +940,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Gets string up until before the last instance of a character (exclusive)
-    /// </summary>
-    /// <param name="s">String to extract from</param>
-    /// <param name="charToFind">Character to find last instance of</param>
-    /// <returns>String up until the last instance of charToFind (exclusive)</returns>
+  /// Gets string up until before the last instance of a character (exclusive)
+  /// </summary>
+  /// <param name="s">String to extract from</param>
+  /// <param name="charToFind">Character to find last instance of</param>
+  /// <returns>String up until the last instance of charToFind (exclusive)</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static ReadOnlySpan<char> ExtractToLastInstance(this ReadOnlySpan<char> s, char charToFind)
   {
@@ -957,11 +957,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Gets string remaining after the last instance of a character (exclusive)
-    /// </summary>
-    /// <param name="s">String to extract from</param>
-    /// <param name="charToFind">Character to find last instance of</param>
-    /// <returns>Remaining string after the last instance of charToFind (exclusive)</returns>
+  /// Gets string remaining after the last instance of a character (exclusive)
+  /// </summary>
+  /// <param name="s">String to extract from</param>
+  /// <param name="charToFind">Character to find last instance of</param>
+  /// <returns>Remaining string after the last instance of charToFind (exclusive)</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static string? ExtractFromLastInstance(this string? s, char charToFind)
   {
@@ -974,11 +974,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Gets string remaining after the last instance of a character (exclusive)
-    /// </summary>
-    /// <param name="s">String to extract from</param>
-    /// <param name="charToFind">Character to find last instance of</param>
-    /// <returns>Remaining string after the last instance of charToFind (exclusive)</returns>
+  /// Gets string remaining after the last instance of a character (exclusive)
+  /// </summary>
+  /// <param name="s">String to extract from</param>
+  /// <param name="charToFind">Character to find last instance of</param>
+  /// <returns>Remaining string after the last instance of charToFind (exclusive)</returns>
   [return: NotNullIfNotNull(nameof(s))]
   public static ReadOnlySpan<char> ExtractFromLastInstance(this ReadOnlySpan<char> s, char charToFind)
   {
@@ -991,10 +991,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Removes excess spaces in string properties inside of an object
-    /// </summary>
-    /// <typeparam name="T">Type of object to trim strings in</typeparam>
-    /// <param name="obj">Object containing string properties to be trimmed</param>
+  /// Removes excess spaces in string properties inside of an object
+  /// </summary>
+  /// <typeparam name="T">Type of object to trim strings in</typeparam>
+  /// <param name="obj">Object containing string properties to be trimmed</param>
   [return: NotNullIfNotNull(nameof(obj))]
   [Obsolete("Please use TrimObjectStrings instead")]
   public static T? TrimObjectStringsR<T>(this T? obj)
@@ -1020,11 +1020,11 @@ public static partial class Strings
   private static readonly ConcurrentDictionary<(Type, bool), Delegate> trimObjectStringsCache = new();
 
   /// <summary>
-    /// Removes excess spaces in string properties inside of an object
-    /// </summary>
-    /// <typeparam name="T">Type of object to trim strings in</typeparam>
-    /// <param name="obj">Object containing string properties to be trimmed</param>
-    /// <param name="recursive">If <see langword="true"/>, will recursively apply string trimming to nested object</param>
+  /// Removes excess spaces in string properties inside of an object
+  /// </summary>
+  /// <typeparam name="T">Type of object to trim strings in</typeparam>
+  /// <param name="obj">Object containing string properties to be trimmed</param>
+  /// <param name="recursive">If <see langword="true"/>, will recursively apply string trimming to nested object</param>
   [return: NotNullIfNotNull(nameof(obj))]
   public static T? TrimObjectStrings<T>(this T? obj, bool recursive = false)
   {
@@ -1107,10 +1107,10 @@ public static partial class Strings
   public static ICacheManagerApi<(Type, bool, NormalizationForm, bool), Delegate> CacheManager => NormalizeObjectStringsCache;
 
   /// <summary>
-    /// Gets or adds a function from the deep copy cache based on the source and destination types.
-    /// </summary>
-    /// <param name="key">Cache key</param>
-    /// <returns>Function for executing deep copy</returns>
+  /// Gets or adds a function from the deep copy cache based on the source and destination types.
+  /// </summary>
+  /// <param name="key">Cache key</param>
+  /// <returns>Function for executing deep copy</returns>
   private static Delegate GetOrAddNormalizeObjectStringsCache<T>((Type, bool, NormalizationForm, bool) key, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false)
   {
     bool isLimitedCache = CacheManager.IsUsingLimitedCache();
@@ -1135,13 +1135,13 @@ public static partial class Strings
   #endregion
 
   /// <summary>
-    /// Removes excess spaces in string properties inside of an object with the option to also trim them
-    /// </summary>
-    /// <typeparam name="T">Type of object to normalize strings in</typeparam>
-    /// <param name="obj">Object containing string properties to be normalized</param>
-    /// <param name="enableTrim">If <see langword="true"/>, will trim all object strings</param>
-    /// <param name="normalizationForm">String normalization setting</param>
-    /// <param name="recursive">If <see langword="true"/>, will recursively apply string normalization to nested object</param>
+  /// Removes excess spaces in string properties inside of an object with the option to also trim them
+  /// </summary>
+  /// <typeparam name="T">Type of object to normalize strings in</typeparam>
+  /// <param name="obj">Object containing string properties to be normalized</param>
+  /// <param name="enableTrim">If <see langword="true"/>, will trim all object strings</param>
+  /// <param name="normalizationForm">String normalization setting</param>
+  /// <param name="recursive">If <see langword="true"/>, will recursively apply string normalization to nested object</param>
   [return: NotNullIfNotNull(nameof(obj))]
   public static T? NormalizeObjectStrings<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false, bool useCache = true)
   {
@@ -1161,14 +1161,14 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Creates an <see cref="Expression{TDelegate}"/> for normalizing <see cref="string"/> properties in an object.
-    /// </summary>
-    /// <typeparam name="T">Type of the object.</typeparam>
-    /// <param name="enableTrim">If <see langword="true"/>, will trim all object strings.</param>
-    /// <param name="normalizationForm">String normalization setting</param>
-    /// <param name="recursive">If <see langword="true"/>, will recursively apply string normalization to nested object.</param>
-    /// <param name="useCache">If <see langword="true"/>, will use cache for the expression.</param>
-    /// <returns><see cref="Expression{TDelegate}"/> for normalizing <see cref="string"/> properties.</returns>
+  /// Creates an <see cref="Expression{TDelegate}"/> for normalizing <see cref="string"/> properties in an object.
+  /// </summary>
+  /// <typeparam name="T">Type of the object.</typeparam>
+  /// <param name="enableTrim">If <see langword="true"/>, will trim all object strings.</param>
+  /// <param name="normalizationForm">String normalization setting</param>
+  /// <param name="recursive">If <see langword="true"/>, will recursively apply string normalization to nested object.</param>
+  /// <param name="useCache">If <see langword="true"/>, will use cache for the expression.</param>
+  /// <returns><see cref="Expression{TDelegate}"/> for normalizing <see cref="string"/> properties.</returns>
   private static Expression<Action<T>> CreateNormalizeObjectStringsExpression<T>(bool enableTrim, NormalizationForm normalizationForm, bool recursive, bool useCache)
   {
     ParameterExpression objParam = Expression.Parameter(typeof(T), "obj");
@@ -1228,10 +1228,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Makes string properties in an object with the word "null" into a null value
-    /// </summary>
-    /// <param name="obj">Object containing string properties to be set to null if null</param>
-    /// <returns>Objects with properties set to null if the string property is null or is the word "null" with no other text characters other than whitespace</returns>
+  /// Makes string properties in an object with the word "null" into a null value
+  /// </summary>
+  /// <param name="obj">Object containing string properties to be set to null if null</param>
+  /// <returns>Objects with properties set to null if the string property is null or is the word "null" with no other text characters other than whitespace</returns>
   [return: NotNullIfNotNull(nameof(obj))]
   public static T? MakeObjectNullNullR<T>(this T? obj)
   {
@@ -1253,11 +1253,11 @@ public static partial class Strings
   private static readonly ConcurrentDictionary<(Type, bool), Delegate> makeObjectNullNullCache = new();
 
   /// <summary>
-    /// Makes string properties in an object with the word "null" into a null value
-    /// </summary>
-    /// <param name="obj">Object containing string properties to be set to null if null</param>
-    /// <param name="recursive">If <see langword="true"/>, will recursively apply nullification to nested objects</param>
-    /// <returns>Objects with properties set to null if the string property is null or is the word "null" with no other text characters other than whitespace</returns>
+  /// Makes string properties in an object with the word "null" into a null value
+  /// </summary>
+  /// <param name="obj">Object containing string properties to be set to null if null</param>
+  /// <param name="recursive">If <see langword="true"/>, will recursively apply nullification to nested objects</param>
+  /// <returns>Objects with properties set to null if the string property is null or is the word "null" with no other text characters other than whitespace</returns>
   [return: NotNullIfNotNull(nameof(obj))]
   public static T? MakeObjectNullNull<T>(this T? obj, bool recursive = false)
   {
@@ -1304,11 +1304,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts Nullable DateTime to string using the passed in formatting
-    /// </summary>
-    /// <param name="value">DateTime to convert to string</param>
-    /// <param name="format">Date time format</param>
-    /// <returns>Formatted string representation of the passed in nullable DateTime</returns>
+  /// Converts Nullable DateTime to string using the passed in formatting
+  /// </summary>
+  /// <param name="value">DateTime to convert to string</param>
+  /// <param name="format">Date time format</param>
+  /// <returns>Formatted string representation of the passed in nullable DateTime</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? ToNString(this DateTime? value, string? format = null)
   {
@@ -1322,11 +1322,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts Nullable DateTime to string using the passed in formatting
-    /// </summary>
-    /// <param name="value">DateOnly to convert to string</param>
-    /// <param name="format">Date format</param>
-    /// <returns>Formatted string representation of the passed in nullable DateOnly</returns>
+  /// Converts Nullable DateTime to string using the passed in formatting
+  /// </summary>
+  /// <param name="value">DateOnly to convert to string</param>
+  /// <param name="format">Date format</param>
+  /// <returns>Formatted string representation of the passed in nullable DateOnly</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? ToNString(this DateOnly? value, string? format = null)
   {
@@ -1340,11 +1340,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts Nullable DateTime to string using the passed in formatting
-    /// </summary>
-    /// <param name="value">Timespan to convert to string</param>
-    /// <param name="format">Timespan format</param>
-    /// <returns>Formatted string representation of the passed in nullable Timespan</returns>
+  /// Converts Nullable DateTime to string using the passed in formatting
+  /// </summary>
+  /// <param name="value">Timespan to convert to string</param>
+  /// <param name="format">Timespan format</param>
+  /// <returns>Formatted string representation of the passed in nullable Timespan</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? ToNString(this TimeSpan? value, string? format = null)
   {
@@ -1358,10 +1358,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts nullable int to string
-    /// </summary>
-    /// <param name="value">Integer to convert to string</param>
-    /// <returns>String representation of the passed in nullable int</returns>
+  /// Converts nullable int to string
+  /// </summary>
+  /// <param name="value">Integer to convert to string</param>
+  /// <returns>String representation of the passed in nullable int</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? ToNString(this int? value)
   {
@@ -1369,10 +1369,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts nullable long to string
-    /// </summary>
-    /// <param name="value">Long to convert to string</param>
-    /// <returns>String representation of the passed in nullable long</returns>
+  /// Converts nullable long to string
+  /// </summary>
+  /// <param name="value">Long to convert to string</param>
+  /// <returns>String representation of the passed in nullable long</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? ToNString(this long? value)
   {
@@ -1380,10 +1380,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts nullable double to string
-    /// </summary>
-    /// <param name="value">Double to convert to string</param>
-    /// <returns>String representation of the passed in nullable double</returns>
+  /// Converts nullable double to string
+  /// </summary>
+  /// <param name="value">Double to convert to string</param>
+  /// <returns>String representation of the passed in nullable double</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? ToNString(this double? value)
   {
@@ -1391,10 +1391,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts nullable decimal to string
-    /// </summary>
-    /// <param name="value">Decimal to convert to string</param>
-    /// <returns>String representation of the passed in nullable decimal</returns>
+  /// Converts nullable decimal to string
+  /// </summary>
+  /// <param name="value">Decimal to convert to string</param>
+  /// <returns>String representation of the passed in nullable decimal</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? ToNString(this decimal? value)
   {
@@ -1402,10 +1402,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts nullable object to string
-    /// </summary>
-    /// <param name="value">Boolean to turn into a string</param>
-    /// <returns>String representation of the passed in nullable object</returns>
+  /// Converts nullable object to string
+  /// </summary>
+  /// <param name="value">Boolean to turn into a string</param>
+  /// <returns>String representation of the passed in nullable object</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? ToNString(this bool? value)
   {
@@ -1413,10 +1413,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts nullable object to string
-    /// </summary>
-    /// <param name="value">Object to turn into a string</param>
-    /// <returns>String representation of the passed in nullable object</returns>
+  /// Converts nullable object to string
+  /// </summary>
+  /// <param name="value">Object to turn into a string</param>
+  /// <returns>String representation of the passed in nullable object</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? ToNString(this object? value)
   {
@@ -1424,90 +1424,90 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts list of string representations of integers into list of integers
-    /// </summary>
-    /// <param name="values">Collection of strings to be converted to integers</param>
-    /// <returns><see cref="List{T}"/> of integers where the strings could be parsed to integers and not null</returns>
+  /// Converts list of string representations of integers into list of integers
+  /// </summary>
+  /// <param name="values">Collection of strings to be converted to integers</param>
+  /// <returns><see cref="List{T}"/> of integers where the strings could be parsed to integers and not null</returns>
   public static IEnumerable<int> ToListInt(this IEnumerable<string> values)
   {
     return values.Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value);
   }
 
   /// <summary>
-    /// Converts list of string representations of integers into list of integers
-    /// </summary>
-    /// <param name="values">Collection of strings to be converted to integers</param>
-    /// <returns><see cref="List{T}"/> of integers where the strings could be parsed to integers and not null</returns>
+  /// Converts list of string representations of integers into list of integers
+  /// </summary>
+  /// <param name="values">Collection of strings to be converted to integers</param>
+  /// <returns><see cref="List{T}"/> of integers where the strings could be parsed to integers and not null</returns>
   public static List<int> ToListInt(this IList<string> values)
   {
     return values.Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value).ToList();
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable integers
-    /// </summary>
-    /// <param name="value">String value to be converted to nullable int</param>
-    /// <returns>Nullable int parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable integers
+  /// </summary>
+  /// <param name="value">String value to be converted to nullable int</param>
+  /// <returns>Nullable int parsed from a string</returns>
   public static int? ToNInt(this string? value)
   {
     return !string.IsNullOrWhiteSpace(value) && int.TryParse(value, out int i) ? i : null;
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable integers
-    /// </summary>
-    /// <param name="value">String value to be converted to nullable int</param>
-    /// <returns>Nullable int parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable integers
+  /// </summary>
+  /// <param name="value">String value to be converted to nullable int</param>
+  /// <returns>Nullable int parsed from a string</returns>
   public static int? ToNInt(this ReadOnlySpan<char> value)
   {
     return !value.IsEmpty && int.TryParse(value, out int i) ? i : null;
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable doubles
-    /// </summary>
-    /// <param name="value">String value to be converted to nullable double</param>
-    /// <returns>Nullable double parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable doubles
+  /// </summary>
+  /// <param name="value">String value to be converted to nullable double</param>
+  /// <returns>Nullable double parsed from a string</returns>
   public static double? ToNDouble(this string? value)
   {
     return !string.IsNullOrWhiteSpace(value) && double.TryParse(value, out double i) ? i : null;
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable doubles
-    /// </summary>
-    /// <param name="value">String value to be converted to nullable double</param>
-    /// <returns>Nullable double parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable doubles
+  /// </summary>
+  /// <param name="value">String value to be converted to nullable double</param>
+  /// <returns>Nullable double parsed from a string</returns>
   public static double? ToNDouble(this ReadOnlySpan<char> value)
   {
     return !value.IsEmpty && double.TryParse(value, out double i) ? i : null;
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable decimals
-    /// </summary>
-    /// <param name="value">String value to be converted to nullable decimal</param>
-    /// <returns>Nullable decimal parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable decimals
+  /// </summary>
+  /// <param name="value">String value to be converted to nullable decimal</param>
+  /// <returns>Nullable decimal parsed from a string</returns>
   public static decimal? ToNDecimal(this string? value)
   {
     return !string.IsNullOrWhiteSpace(value) && decimal.TryParse(value, out decimal i) ? i : null;
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable decimals
-    /// </summary>
-    /// <param name="value">String value to be converted to nullable decimal</param>
-    /// <returns>Nullable decimal parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable decimals
+  /// </summary>
+  /// <param name="value">String value to be converted to nullable decimal</param>
+  /// <returns>Nullable decimal parsed from a string</returns>
   public static decimal? ToNDecimal(this ReadOnlySpan<char> value)
   {
     return !value.IsEmpty && decimal.TryParse(value, out decimal i) ? i : null;
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
-    /// </summary>
-    /// <param name="value">String to parse into a DateTime</param>
-    /// <returns>Nullable DateTime parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
+  /// </summary>
+  /// <param name="value">String to parse into a DateTime</param>
+  /// <returns>Nullable DateTime parsed from a string</returns>
   public static DateTime? ToNDateTime(this string? value)
   {
     DateTime? dtn = null;
@@ -1523,10 +1523,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
-    /// </summary>
-    /// <param name="value">String to parse into a DateTime</param>
-    /// <returns>Nullable DateTime parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable DateTimes
+  /// </summary>
+  /// <param name="value">String to parse into a DateTime</param>
+  /// <returns>Nullable DateTime parsed from a string</returns>
   public static DateTime? ToNDateTime(this ReadOnlySpan<char> value)
   {
     DateTime? dtn = null;
@@ -1542,10 +1542,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
-    /// </summary>
-    /// <param name="value">String to parse into a DateOnly</param>
-    /// <returns>Nullable DateOnly parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
+  /// </summary>
+  /// <param name="value">String to parse into a DateOnly</param>
+  /// <returns>Nullable DateOnly parsed from a string</returns>
   public static DateOnly? ToNDateOnly(this string? value)
   {
     DateOnly? dtn = null;
@@ -1561,10 +1561,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
-    /// </summary>
-    /// <param name="value">String to parse into a DateOnly</param>
-    /// <returns>Nullable DateOnly parsed from a string</returns>
+  /// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
+  /// </summary>
+  /// <param name="value">String to parse into a DateOnly</param>
+  /// <returns>Nullable DateOnly parsed from a string</returns>
   public static DateOnly? ToNDateOnly(this ReadOnlySpan<char> value)
   {
     DateOnly? dtn = null;
@@ -1580,92 +1580,92 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Convert string "Yes"/"No" value into bool
-    /// </summary>
-    /// <param name="value">"Yes"/"No" string to convert into a boolean</param>
-    /// <returns>Bool representation of string value passed in</returns>
+  /// Convert string "Yes"/"No" value into bool
+  /// </summary>
+  /// <param name="value">"Yes"/"No" string to convert into a boolean</param>
+  /// <returns>Bool representation of string value passed in</returns>
   public static bool YesNoToBool(this string? value)
   {
     return string.Equals(value?.Trim() ?? string.Empty, nameof(EYesNo.Yes), StringComparison.InvariantCultureIgnoreCase);
   }
 
   /// <summary>
-    /// Convert string "Y"/"N" value into bool
-    /// </summary>
-    /// <param name="value">"Y"/"N" string to convert into a boolean</param>
-    /// <returns>Bool representation of string value passed in</returns>
+  /// Convert string "Y"/"N" value into bool
+  /// </summary>
+  /// <param name="value">"Y"/"N" string to convert into a boolean</param>
+  /// <returns>Bool representation of string value passed in</returns>
   public static bool YNToBool(this string? value)
   {
     return string.Equals(value?.Trim() ?? string.Empty, "Y", StringComparison.InvariantCultureIgnoreCase);
   }
 
   /// <summary>
-    /// Convert bool to "Yes" or "No"
-    /// </summary>
-    /// <param name="value">Boolean to convert to "Yes" or "No"</param>
-    /// <returns>"Yes" if true, "No" if false</returns>
+  /// Convert bool to "Yes" or "No"
+  /// </summary>
+  /// <param name="value">Boolean to convert to "Yes" or "No"</param>
+  /// <returns>"Yes" if true, "No" if false</returns>
   public static string BoolToYesNo(this bool value)
   {
     return value ? nameof(EYesNo.Yes) : nameof(EYesNo.No);
   }
 
   /// <summary>
-    /// Convert bool to "Y" or "N"
-    /// </summary>
-    /// <param name="value">Boolean to convert to "Yes" or "No"</param>
-    /// <returns>"Y" if true, "N" if false</returns>
+  /// Convert bool to "Y" or "N"
+  /// </summary>
+  /// <param name="value">Boolean to convert to "Yes" or "No"</param>
+  /// <returns>"Y" if true, "N" if false</returns>
   public static string BoolToYN(this bool value)
   {
     return value ? "Y" : "N";
   }
 
   /// <summary>
-    /// Convert bool to 1 or 0
-    /// </summary>
-    /// <param name="value">Integer to convert to "Yes" or "No"</param>
-    /// <returns>"Yes" if true, "No" if false</returns>
+  /// Convert bool to 1 or 0
+  /// </summary>
+  /// <param name="value">Integer to convert to "Yes" or "No"</param>
+  /// <returns>"Yes" if true, "No" if false</returns>
   public static int BoolToInt(this bool value)
   {
     return ToInt32(value);
   }
 
   /// <summary>
-    /// Get file name safe date in the chosen format
-    /// </summary>
-    /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
-    /// <returns>File name safe formatted date</returns>
+  /// Get file name safe date in the chosen format
+  /// </summary>
+  /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
+  /// <returns>File name safe formatted date</returns>
   public static string GetSafeDate(string dateFormat)
   {
     return DateTime.Today.ToString(dateFormat).Replace("/", "-");
   }
 
   /// <summary>
-    /// Get file name safe date in the chosen format
-    /// </summary>
-    /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
-    /// <returns>File name safe formatted date</returns>
+  /// Get file name safe date in the chosen format
+  /// </summary>
+  /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
+  /// <returns>File name safe formatted date</returns>
   public static string GetSafeDate(this DateTime? date, string dateFormat)
   {
     return (date ?? DateTime.Today).ToString(dateFormat).Replace("/", "-");
   }
 
   /// <summary>
-    /// Get file name safe date in the chosen format
-    /// </summary>
-    /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
-    /// <returns>File name safe formatted date</returns>
+  /// Get file name safe date in the chosen format
+  /// </summary>
+  /// <param name="dateFormat">Base format to get date in before doing text replacement</param>
+  /// <returns>File name safe formatted date</returns>
   public static string GetSafeDate(this DateOnly? date, string dateFormat)
   {
     return (date ?? DateOnly.FromDateTime(DateTime.Today)).ToString(dateFormat).Replace("/", "-");
   }
 
   /// <summary>
-    /// Adds number in () at the end of a file name if it would create a duplicate in the savePath
-    /// </summary>
-    /// <param name="savePath">Path to get unique name for without trailing slash</param>
-    /// <param name="fileName">File name to make unique (including extension)</param>
-    /// <param name="extension">Optional: File extension (without '.'), otherwise will infer extension from fileName</param>
-    /// <returns>Unique file name string</returns>
+  /// Adds number in () at the end of a file name if it would create a duplicate in the savePath
+  /// </summary>
+  /// <param name="savePath">Path to get unique name for without trailing slash</param>
+  /// <param name="fileName">File name to make unique (including extension)</param>
+  /// <param name="extension">Optional: File extension (without '.'), otherwise will infer extension from fileName</param>
+  /// <returns>Unique file name string</returns>
   public static string MakeExportNameUnique(string savePath, string fileName, string? extension = null)
   {
     extension ??= Path.GetExtension(fileName)[1..];
@@ -1680,10 +1680,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Remove unnecessary characters and components of a timespan to make it more readable
-    /// </summary>
-    /// <param name="t">Timespan to convert to shortened string</param>
-    /// <returns>Shortened string representation of the timespan</returns>
+  /// Remove unnecessary characters and components of a timespan to make it more readable
+  /// </summary>
+  /// <param name="t">Timespan to convert to shortened string</param>
+  /// <returns>Shortened string representation of the timespan</returns>
   public static string TimespanToShortForm(this TimeSpan? t)
   {
     string shortForm = string.Empty;
@@ -1695,10 +1695,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Remove unnecessary characters and components of a timespan to make it more readable
-    /// </summary>
-    /// <param name="t">Timespan to convert to shortened string</param>
-    /// <returns>Shortened string representation of the timespan</returns>
+  /// Remove unnecessary characters and components of a timespan to make it more readable
+  /// </summary>
+  /// <param name="t">Timespan to convert to shortened string</param>
+  /// <returns>Shortened string representation of the timespan</returns>
   public static string TimespanToShortForm(this in TimeSpan t)
   {
     string stringForm = t.ToString();
@@ -1735,11 +1735,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Takes in a string and returns the hashed value of it using the passed in hashing algorithm
-    /// </summary>
-    /// <param name="originalString">String to be hashed</param>
-    /// <param name="algorithm">Which algorithm to use for the hash operation</param>
-    /// <returns>Hash string</returns>
+  /// Takes in a string and returns the hashed value of it using the passed in hashing algorithm
+  /// </summary>
+  /// <param name="originalString">String to be hashed</param>
+  /// <param name="algorithm">Which algorithm to use for the hash operation</param>
+  /// <returns>Hash string</returns>
   public static string GetHash(this string originalString, EHashAlgorithm algorithm)
   {
     ReadOnlySpan<byte> bytes = algorithm switch
@@ -1759,10 +1759,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Remove extra whitespace from a string preserving inner whitespace as a single space
-    /// </summary>
-    /// <param name="input">String to have whitespace normalized for</param>
-    /// <returns>String without excess whitespace</returns>
+  /// Remove extra whitespace from a string preserving inner whitespace as a single space
+  /// </summary>
+  /// <param name="input">String to have whitespace normalized for</param>
+  /// <returns>String without excess whitespace</returns>
   public static string NormalizeWhiteSpace(this string? input)
   {
     if (input == null)
@@ -1829,12 +1829,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Take any format of a date time string and convert it to a different format
-    /// </summary>
-    /// <param name="dateString">Input date string to be converted</param>
-    /// <param name="sourceFormat">Format of dateString string</param>
-    /// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
-    /// <returns>Date formatted as a string following the output format</returns>
+  /// Take any format of a date time string and convert it to a different format
+  /// </summary>
+  /// <param name="dateString">Input date string to be converted</param>
+  /// <param name="sourceFormat">Format of dateString string</param>
+  /// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
+  /// <returns>Date formatted as a string following the output format</returns>
   [return: NotNullIfNotNull(nameof(dateString))]
   public static string? FormatDateString(this string? dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
   {
@@ -1842,12 +1842,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Take any format of a date time string and convert it to a different format
-    /// </summary>
-    /// <param name="dateString">Input date string to be converted</param>
-    /// <param name="sourceFormat">Format of dateString string</param>
-    /// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
-    /// <returns>Date formatted as a string following the output format</returns>
+  /// Take any format of a date time string and convert it to a different format
+  /// </summary>
+  /// <param name="dateString">Input date string to be converted</param>
+  /// <param name="sourceFormat">Format of dateString string</param>
+  /// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
+  /// <returns>Date formatted as a string following the output format</returns>
   [return: NotNullIfNotNull(nameof(dateString))]
   public static ReadOnlySpan<char> FormatDateString(this ReadOnlySpan<char> dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
   {
@@ -1855,13 +1855,13 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Replaces any characters that don't match the provided regexPattern with specified replacement string.
-    /// </summary>
-    /// <param name="input">String to apply regex / replacement to</param>
-    /// <param name="regexPattern">Regex pattern used to white list characters in input</param>
-    /// <param name="replacement">String to replace any characters that aren't matched by the regex pattern</param>
-    /// <param name="matchFirstOnly">If <see langword="true"/>, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
-    /// <returns>String with any non-matching characters replaced by the replacement string</returns>
+  /// Replaces any characters that don't match the provided regexPattern with specified replacement string.
+  /// </summary>
+  /// <param name="input">String to apply regex / replacement to</param>
+  /// <param name="regexPattern">Regex pattern used to white list characters in input</param>
+  /// <param name="replacement">String to replace any characters that aren't matched by the regex pattern</param>
+  /// <param name="matchFirstOnly">If <see langword="true"/>, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
+  /// <returns>String with any non-matching characters replaced by the replacement string</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static string? ReplaceInverse(this string? input, string regexPattern, string? replacement = "", bool matchFirstOnly = false)
   {
@@ -1875,13 +1875,13 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Replaces any characters that don't match the provided regexPattern with specified replacement string.
-    /// </summary>
-    /// <param name="regex">Regex used to white list characters in input</param>
-    /// <param name="input">String to apply regex / replacement to</param>
-    /// <param name="replacement">String to replace any characters that aren't matched by the regex pattern</param>
-    /// <param name="matchFirstOnly">If <see langword="true"/>, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
-    /// <returns>String with any non-matching characters replaced by the replacement string</returns>
+  /// Replaces any characters that don't match the provided regexPattern with specified replacement string.
+  /// </summary>
+  /// <param name="regex">Regex used to white list characters in input</param>
+  /// <param name="input">String to apply regex / replacement to</param>
+  /// <param name="replacement">String to replace any characters that aren't matched by the regex pattern</param>
+  /// <param name="matchFirstOnly">If <see langword="true"/>, will only white list the first match of the regex pattern. If false, all matches with the regex pattern are white listed</param>
+  /// <returns>String with any non-matching characters replaced by the replacement string</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static string? ReplaceInverse(this Regex regex, string? input, string? replacement = "", bool matchFirstOnly = false)
   {
@@ -1927,18 +1927,18 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// URL Encodes a string but then replaces specific escape sequences with their decoded character. This method is mainly for logging user defined values in a safe manner.
-    /// </summary>
-    /// <param name="input">Input string to be URL encoded</param>
-    /// <param name="replaceEscapeSequences">
-    /// <para>List of key value pairs where the key is the escape sequence to replace and the value is the value to replace the escape sequence with.</para> <para>If null or empty, will use default escape
-    /// sequence replacements "%20" -> " ", "%2F" -> "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
-    /// </param>
-    /// <param name="appendDefaultEscapeSequences">
-    /// <para>If <see langword="true"/>, will append the default escape sequence replacements to any passed in through replaceEscapeSequences</para> <para>The default escape sequence replacements are "%20" -> " ", "%2F" ->
-    /// "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
-    /// </param>
-    /// <returns>URL encoded string with the specified escape sequences replaced with their given values</returns>
+  /// URL Encodes a string but then replaces specific escape sequences with their decoded character. This method is mainly for logging user defined values in a safe manner.
+  /// </summary>
+  /// <param name="input">Input string to be URL encoded</param>
+  /// <param name="replaceEscapeSequences">
+  /// <para>List of key value pairs where the key is the escape sequence to replace and the value is the value to replace the escape sequence with.</para> <para>If null or empty, will use default escape
+  /// sequence replacements "%20" -> " ", "%2F" -> "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
+  /// </param>
+  /// <param name="appendDefaultEscapeSequences">
+  /// <para>If <see langword="true"/>, will append the default escape sequence replacements to any passed in through replaceEscapeSequences</para> <para>The default escape sequence replacements are "%20" -> " ", "%2F" ->
+  /// "/", "%5C" -> @"\", "%7C" -> "|", "%28" -> "(", "%29" -> "(", and "%2A" -> "*"</para>
+  /// </param>
+  /// <returns>URL encoded string with the specified escape sequences replaced with their given values</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static string? UrlEncodeReadable(this string? input, List<KeyValuePair<string, string>>? replaceEscapeSequences = null, bool appendDefaultEscapeSequences = true, CancellationToken cancellationToken = default)
   {
@@ -1967,12 +1967,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Formats a string as a phone number
-    /// </summary>
-    /// <param name="input">String to be formatted as phone number</param>
-    /// <param name="separator">Character to be used to separate segments of the phone number (country code excluded)</param>
-    /// <param name="addParenToAreaCode">If <see langword="true"/>, will add parentheses around the area code, eg. +1 (123)-456-7890 instead of +1 123-456-7890</param>
-    /// <returns>String formatted as a phone number</returns>
+  /// Formats a string as a phone number
+  /// </summary>
+  /// <param name="input">String to be formatted as phone number</param>
+  /// <param name="separator">Character to be used to separate segments of the phone number (country code excluded)</param>
+  /// <param name="addParenToAreaCode">If <see langword="true"/>, will add parentheses around the area code, eg. +1 (123)-456-7890 instead of +1 123-456-7890</param>
+  /// <returns>String formatted as a phone number</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static string? FormatPhoneNumber(this string? input, string separator = "-", bool addParenToAreaCode = false)
   {
@@ -2026,11 +2026,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Splits a string into lines based on line breaks, yielding each line as an individual string.
-    /// </summary>
-    /// <param name="input">The input string to split into lines.</param>
-    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
-    /// <returns>An enumerable collection of strings, each representing a line from the input.</returns>
+  /// Splits a string into lines based on line breaks, yielding each line as an individual string.
+  /// </summary>
+  /// <param name="input">The input string to split into lines.</param>
+  /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+  /// <returns>An enumerable collection of strings, each representing a line from the input.</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static IEnumerable<string> SplitLines(this string? input, CancellationToken cancellationToken = default)
   {
@@ -2048,11 +2048,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts a nullable numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
-    /// </summary>
-    /// <param name="number">The nullable value to convert.</param>
-    /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
-    /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4"). Null if number is null.</returns>
+  /// Converts a nullable numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
+  /// </summary>
+  /// <param name="number">The nullable value to convert.</param>
+  /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
+  /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4"). Null if number is null.</returns>
   [return: NotNullIfNotNull(nameof(number))]
   public static string? ToFractionString(this decimal? number, int maxNumberOfDecimalsToConsider)
   {
@@ -2070,11 +2070,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts a numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
-    /// </summary>
-    /// <param name="number">The value to convert.</param>
-    /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
-    /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4")</returns>
+  /// Converts a numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
+  /// </summary>
+  /// <param name="number">The value to convert.</param>
+  /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
+  /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4")</returns>
   [return: NotNullIfNotNull(nameof(number))]
   public static string? ToFractionString(this decimal number, int maxNumberOfDecimalsToConsider)
   {
@@ -2087,11 +2087,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts a nullable numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
-    /// </summary>
-    /// <param name="number">The nullable value to convert.</param>
-    /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
-    /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4"). Null if number is null.</returns>
+  /// Converts a nullable numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
+  /// </summary>
+  /// <param name="number">The nullable value to convert.</param>
+  /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
+  /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4"). Null if number is null.</returns>
   [return: NotNullIfNotNull(nameof(number))]
   public static string? ToFractionString(this double? number, int maxNumberOfDecimalsToConsider)
   {
@@ -2109,11 +2109,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts a numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
-    /// </summary>
-    /// <param name="number">The value to convert.</param>
-    /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
-    /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4")</returns>
+  /// Converts a numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
+  /// </summary>
+  /// <param name="number">The value to convert.</param>
+  /// <param name="maxNumberOfDecimalsToConsider">The maximum number of decimal places to consider when calculating the fractional representation. Must be a positive integer.</param>
+  /// <returns>A string representing the fractional format of the number. The format includes the whole number part followed by the fractional part (e.g. 3.25 -> "3 1/4")</returns>
   [return: NotNullIfNotNull(nameof(number))]
   public static string? ToFractionString(this double number, int maxNumberOfDecimalsToConsider)
   {
@@ -2126,17 +2126,17 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts a string representation of a fraction or decimal value into a decimal value.
-    /// </summary>
-    /// <remarks>The method supports the following formats: <list type="bullet"> <item> <description>A decimal
-    /// value, e.g. "3.14".</description> </item> <item> <description>A fraction in the format "numerator/denominator",
-    /// e.g. "1/2".</description> </item> <item> <description>A mixed fraction in the format "whole
-    /// numerator/denominator", e.g. "1 1/2".</description> </item> </list> If the input string is null, the method returns null. If the input string is invalid, a FormatException is thrown.
-    /// </remarks>
-    /// <param name="fractionString">A string containing a decimal value or a fraction in the format "numerator/denominator" or  "whole
-    /// numerator/denominator". Can also include a space between the whole number and the fraction.</param>
-    /// <returns>A decimal representation of the input string if it is a valid fraction or decimal, otherwise null</returns>
-    /// <exception cref="FormatException">Thrown if fractionString is not a valid decimal or fraction format.</exception>
+  /// Converts a string representation of a fraction or decimal value into a decimal value.
+  /// </summary>
+  /// <remarks>The method supports the following formats: <list type="bullet"> <item> <description>A decimal
+  /// value, e.g. "3.14".</description> </item> <item> <description>A fraction in the format "numerator/denominator",
+  /// e.g. "1/2".</description> </item> <item> <description>A mixed fraction in the format "whole
+  /// numerator/denominator", e.g. "1 1/2".</description> </item> </list> If the input string is null, the method returns null. If the input string is invalid, a FormatException is thrown.
+  /// </remarks>
+  /// <param name="fractionString">A string containing a decimal value or a fraction in the format "numerator/denominator" or  "whole
+  /// numerator/denominator". Can also include a space between the whole number and the fraction.</param>
+  /// <returns>A decimal representation of the input string if it is a valid fraction or decimal, otherwise null</returns>
+  /// <exception cref="FormatException">Thrown if fractionString is not a valid decimal or fraction format.</exception>
   [return: NotNullIfNotNull(nameof(fractionString))]
   public static decimal? FractionToDecimal(this string? fractionString)
   {
@@ -2172,11 +2172,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Attempts to convert a fraction represented as a string into its decimal equivalent.
-    /// </summary>
-    /// <param name="fractionString">The input string containing the fraction to be converted.</param>
-    /// <param name="result">Contains the decimal equivalent of the fraction if the conversion was successful, otherwise null.</param>
-    /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
+  /// Attempts to convert a fraction represented as a string into its decimal equivalent.
+  /// </summary>
+  /// <param name="fractionString">The input string containing the fraction to be converted.</param>
+  /// <param name="result">Contains the decimal equivalent of the fraction if the conversion was successful, otherwise null.</param>
+  /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
   public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal? result)
   {
     result = null;
@@ -2198,11 +2198,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Attempts to convert a fraction represented as a string into its decimal equivalent.
-    /// </summary>
-    /// <param name="fractionString">The input string containing the fraction to be converted.</param>
-    /// <param name="result">Contains the decimal equivalent of the fraction if the conversion was successful, otherwise 0</param>
-    /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
+  /// Attempts to convert a fraction represented as a string into its decimal equivalent.
+  /// </summary>
+  /// <param name="fractionString">The input string containing the fraction to be converted.</param>
+  /// <param name="result">Contains the decimal equivalent of the fraction if the conversion was successful, otherwise 0</param>
+  /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
   public static bool TryFractionToDecimal(this string? fractionString, [NotNullWhen(true)] out decimal result)
   {
     result = default;
@@ -2224,11 +2224,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Attempts to convert the specified string to a decimal value.
-    /// </summary>
-    /// <param name="inputString">The input string to parse.</param>
-    /// <param name="result">When this method returns true, contains the parsed decimal value. When this method returns false, contains null.</param>
-    /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
+  /// Attempts to convert the specified string to a decimal value.
+  /// </summary>
+  /// <param name="inputString">The input string to parse.</param>
+  /// <param name="result">When this method returns true, contains the parsed decimal value. When this method returns false, contains null.</param>
+  /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
   public static bool TryStringToDecimal(this string? inputString, [NotNullWhen(true)] out decimal? result)
   {
     result = null;
@@ -2255,11 +2255,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Attempts to convert the specified string to a decimal value.
-    /// </summary>
-    /// <param name="inputString">The input string to parse.</param>
-    /// <param name="result">When this method returns true, contains the parsed decimal value. When this method returns false, contains 0.</param>
-    /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
+  /// Attempts to convert the specified string to a decimal value.
+  /// </summary>
+  /// <param name="inputString">The input string to parse.</param>
+  /// <param name="result">When this method returns true, contains the parsed decimal value. When this method returns false, contains 0.</param>
+  /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
   public static bool TryStringToDecimal(this string? inputString, [NotNullWhen(true)] out decimal result)
   {
     result = default;
@@ -2286,17 +2286,17 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Converts a string representation of a fraction or decimal value into a double value.
-    /// </summary>
-    /// <remarks>The method supports the following formats: <list type="bullet"> <item> <description>A decimal
-    /// value, e.g. "3.14".</description> </item> <item> <description>A fraction in the format "numerator/denominator",
-    /// e.g. "1/2".</description> </item> <item> <description>A mixed fraction in the format "whole
-    /// numerator/denominator", e.g. "1 1/2".</description> </item> </list> If the input string is null, the method returns null. If the input string is invalid, a FormatException is thrown.
-    /// </remarks>
-    /// <param name="fractionString">A string containing a decimal value or a fraction in the format "numerator/denominator" or  "whole
-    /// numerator/denominator". Can also include a space between the whole number and the fraction.</param>
-    /// <returns>A double representation of the input string if it is a valid fraction or decimal, otherwise null</returns>
-    /// <exception cref="FormatException">Thrown if fractionString is not a valid decimal or fraction format.</exception>
+  /// Converts a string representation of a fraction or decimal value into a double value.
+  /// </summary>
+  /// <remarks>The method supports the following formats: <list type="bullet"> <item> <description>A decimal
+  /// value, e.g. "3.14".</description> </item> <item> <description>A fraction in the format "numerator/denominator",
+  /// e.g. "1/2".</description> </item> <item> <description>A mixed fraction in the format "whole
+  /// numerator/denominator", e.g. "1 1/2".</description> </item> </list> If the input string is null, the method returns null. If the input string is invalid, a FormatException is thrown.
+  /// </remarks>
+  /// <param name="fractionString">A string containing a decimal value or a fraction in the format "numerator/denominator" or  "whole
+  /// numerator/denominator". Can also include a space between the whole number and the fraction.</param>
+  /// <returns>A double representation of the input string if it is a valid fraction or decimal, otherwise null</returns>
+  /// <exception cref="FormatException">Thrown if fractionString is not a valid decimal or fraction format.</exception>
   [return: NotNullIfNotNull(nameof(fractionString))]
   public static double? FractionToDouble(this string? fractionString)
   {
@@ -2332,13 +2332,13 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Attempts to convert a fraction represented as a string into its double equivalent.
-    /// </summary>
-    /// <param name="fractionString">The input string containing the fraction to be converted.</param>
-    /// <param name="result">Contains the double equivalent of the fraction if the conversion was successful, otherwise null.</param>
-    /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
-    /// Attempts to convert a fraction represented as a string into its double equivalent.
-    /// </summary>>
+  /// Attempts to convert a fraction represented as a string into its double equivalent.
+  /// </summary>
+  /// <param name="fractionString">The input string containing the fraction to be converted.</param>
+  /// <param name="result">Contains the double equivalent of the fraction if the conversion was successful, otherwise null.</param>
+  /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
+  /// Attempts to convert a fraction represented as a string into its double equivalent.
+  /// </summary>>
   public static bool TryFractionToDouble(this string? fractionString, [NotNullWhen(true)] out double? result)
   {
     result = null;
@@ -2360,11 +2360,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Attempts to convert a fraction represented as a string into its double equivalent.
-    /// </summary>
-    /// <param name="fractionString">The input string containing the fraction to be converted.</param>
-    /// <param name="result">Contains the double equivalent of the fraction if the conversion was successful, otherwise 0</param>
-    /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
+  /// Attempts to convert a fraction represented as a string into its double equivalent.
+  /// </summary>
+  /// <param name="fractionString">The input string containing the fraction to be converted.</param>
+  /// <param name="result">Contains the double equivalent of the fraction if the conversion was successful, otherwise 0</param>
+  /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
   public static bool TryFractionToDouble(this string? fractionString, [NotNullWhen(true)] out double result)
   {
     result = default;
@@ -2386,11 +2386,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Attempts to convert the specified string to a double value.
-    /// </summary>
-    /// <param name="inputString">The input string to parse.</param>
-    /// <param name="result">When this method returns true, contains the parsed double value. When this method returns false, contains null.</param>
-    /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
+  /// Attempts to convert the specified string to a double value.
+  /// </summary>
+  /// <param name="inputString">The input string to parse.</param>
+  /// <param name="result">When this method returns true, contains the parsed double value. When this method returns false, contains null.</param>
+  /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
   public static bool TryStringToDouble(this string? inputString, [NotNullWhen(true)] out double? result)
   {
     result = null;
@@ -2417,11 +2417,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Attempts to convert the specified string to a double value.
-    /// </summary>
-    /// <param name="inputString">The input string to parse.</param>
-    /// <param name="result">When this method returns true, contains the parsed double value. When this method returns false, contains 0.</param>
-    /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
+  /// Attempts to convert the specified string to a double value.
+  /// </summary>
+  /// <param name="inputString">The input string to parse.</param>
+  /// <param name="result">When this method returns true, contains the parsed double value. When this method returns false, contains 0.</param>
+  /// <returns><see langword="true"/> if the conversion was successful, otherwise false.</returns>
   public static bool TryStringToDouble(this string? inputString, [NotNullWhen(true)] out double result)
   {
     result = default;
@@ -2448,10 +2448,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Remove all letters from <paramref name="value"/>.
-    /// </summary>
-    /// <param name="value">String to remove letters from</param>
-    /// <returns><paramref name="value"/> with all letters removed</returns>
+  /// Remove all letters from <paramref name="value"/>.
+  /// </summary>
+  /// <param name="value">String to remove letters from</param>
+  /// <returns><paramref name="value"/> with all letters removed</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? RemoveLetters(this string? value)
   {
@@ -2464,10 +2464,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Removes all numbers from a string, leaving only letters and other non-numeric characters.
-    /// </summary>
-    /// <param name="value">String to remove all numbers from</param>
-    /// <returns>Returns a string containing only the numbers from value, or null if the input is null, empty, or whitespace</returns>
+  /// Removes all numbers from a string, leaving only letters and other non-numeric characters.
+  /// </summary>
+  /// <param name="value">String to remove all numbers from</param>
+  /// <returns>Returns a string containing only the numbers from value, or null if the input is null, empty, or whitespace</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? RemoveNumbers(this string? value)
   {
@@ -2480,10 +2480,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Gets only the letters and spaces from a string, removing all numbers and other non-letter characters.
-    /// </summary>
-    /// <param name="value">String to get only letters from</param>
-    /// <returns>Returns a string containing only the letters and spaces from value, or null if the input is null, empty, or whitespace</returns>
+  /// Gets only the letters and spaces from a string, removing all numbers and other non-letter characters.
+  /// </summary>
+  /// <param name="value">String to get only letters from</param>
+  /// <returns>Returns a string containing only the letters and spaces from value, or null if the input is null, empty, or whitespace</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? GetOnlyLetters(this string? value)
   {
@@ -2495,11 +2495,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Gets only the numbers from a string, removing all letters and other non-numeric characters.
-    /// </summary>
-    /// <param name="value">String to get only numbers from</param>
-    /// <param name="allowFractions">Specifies whether to allow fractions in the numeric output</param>
-    /// <returns>Returns a string containing only the numbers from value, or null if the input is null, empty, or whitespace</returns>
+  /// Gets only the numbers from a string, removing all letters and other non-numeric characters.
+  /// </summary>
+  /// <param name="value">String to get only numbers from</param>
+  /// <param name="allowFractions">Specifies whether to allow fractions in the numeric output</param>
+  /// <returns>Returns a string containing only the numbers from value, or null if the input is null, empty, or whitespace</returns>
   [return: NotNullIfNotNull(nameof(value))]
   public static string? GetOnlyNumbers(this string? value, bool allowFractions = false)
   {
@@ -2512,10 +2512,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
-    /// </summary>
-    /// <param name="input">The input string to process.</param>
-    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+  /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+  /// </summary>
+  /// <param name="input">The input string to process.</param>
+  /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static string? RemoveLeadingNonAlphanumeric(this string? input)
   {
@@ -2535,10 +2535,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
-    /// </summary>
-    /// <param name="input">The input string to process.</param>
-    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+  /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+  /// </summary>
+  /// <param name="input">The input string to process.</param>
+  /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static ReadOnlySpan<char> RemoveLeadingNonAlphanumeric(this ReadOnlySpan<char> input)
   {
@@ -2557,10 +2557,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
-    /// </summary>
-    /// <param name="input">The input string to process.</param>
-    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+  /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+  /// </summary>
+  /// <param name="input">The input string to process.</param>
+  /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static string? RemoveTrailingNonAlphanumeric(this string? input)
   {
@@ -2580,10 +2580,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
-    /// </summary>
-    /// <param name="input">The input string to process.</param>
-    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+  /// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
+  /// </summary>
+  /// <param name="input">The input string to process.</param>
+  /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static ReadOnlySpan<char> RemoveTrailingNonAlphanumeric(this ReadOnlySpan<char> input)
   {
@@ -2602,10 +2602,10 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Removes all non-alphanumeric characters from the beginning and ending of a string until the first alphanumeric character is reached.
-    /// </summary>
-    /// <param name="input">The input string to process.</param>
-    /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
+  /// Removes all non-alphanumeric characters from the beginning and ending of a string until the first alphanumeric character is reached.
+  /// </summary>
+  /// <param name="input">The input string to process.</param>
+  /// <returns>The processed string with leading non-alphanumeric characters removed.</returns>
   [return: NotNullIfNotNull(nameof(input))]
   public static string? TrimOuterNonAlphanumeric(this string? input)
   {
@@ -2613,11 +2613,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Counts the occurrences of a specific character in the given string.
-    /// </summary>
-    /// <param name="input">The string to search within. Can be null or empty.</param>
-    /// <param name="charToFind">The character to count occurrences of.</param>
-    /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
+  /// Counts the occurrences of a specific character in the given string.
+  /// </summary>
+  /// <param name="input">The string to search within. Can be null or empty.</param>
+  /// <param name="charToFind">The character to count occurrences of.</param>
+  /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
   public static int CountChars(this ReadOnlySpan<char> input, char charToFind)
   {
     if (input.Length == 0)
@@ -2637,11 +2637,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Counts the occurrences of a specific character in the given string.
-    /// </summary>
-    /// <param name="input">The string to search within. Can be null or empty.</param>
-    /// <param name="charToFind">The character to count occurrences of.</param>
-    /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
+  /// Counts the occurrences of a specific character in the given string.
+  /// </summary>
+  /// <param name="input">The string to search within. Can be null or empty.</param>
+  /// <param name="charToFind">The character to count occurrences of.</param>
+  /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
   public static int CountChars(this string? input, char charToFind)
   {
     if (input.IsNullOrEmpty())
@@ -2653,11 +2653,11 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Counts the occurrences of a specific character in the given string.
-    /// </summary>
-    /// <param name="input">The string to search within. Can be null or empty.</param>
-    /// <param name="charToFind">The character to count occurrences of.</param>
-    /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
+  /// Counts the occurrences of a specific character in the given string.
+  /// </summary>
+  /// <param name="input">The string to search within. Can be null or empty.</param>
+  /// <param name="charToFind">The character to count occurrences of.</param>
+  /// <returns>The number of times the specified character appears in the string. Returns 0 if the input string is null or empty.</returns>
   public static int CountChars(this string? input, string charToFind)
   {
     if (charToFind.Length > 1)
@@ -2668,12 +2668,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
-    /// </summary>
-    /// <param name="input">The string to search within. Can be null or empty.</param>
-    /// <param name="charToFind">The character to count occurrences of.</param>
-    /// <param name="maxNumberOfChars">Max count of a specific character in input required to return true</param>
-    /// <returns><see langword="true"/> if the maximum threshold maxNumberOfChars is not exceeded, otherwise false</returns>
+  /// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
+  /// </summary>
+  /// <param name="input">The string to search within. Can be null or empty.</param>
+  /// <param name="charToFind">The character to count occurrences of.</param>
+  /// <param name="maxNumberOfChars">Max count of a specific character in input required to return true</param>
+  /// <returns><see langword="true"/> if the maximum threshold maxNumberOfChars is not exceeded, otherwise false</returns>
   public static bool HasNoMoreThanNumberOfChars(this ReadOnlySpan<char> input, char charToFind, int maxNumberOfChars)
   {
     if (maxNumberOfChars < 0)
@@ -2702,12 +2702,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
-    /// </summary>
-    /// <param name="input">The string to search within. Can be null or empty.</param>
-    /// <param name="charToFind">The character to count occurrences of.</param>
-    /// <param name="maxNumberOfChars">Max count of a specific character in input required to return true</param>
-    /// <returns><see langword="true"/> if the maximum threshold maxNumberOfChars is not exceeded, otherwise false</returns>
+  /// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
+  /// </summary>
+  /// <param name="input">The string to search within. Can be null or empty.</param>
+  /// <param name="charToFind">The character to count occurrences of.</param>
+  /// <param name="maxNumberOfChars">Max count of a specific character in input required to return true</param>
+  /// <returns><see langword="true"/> if the maximum threshold maxNumberOfChars is not exceeded, otherwise false</returns>
   public static bool HasNoMoreThanNumberOfChars(this string? input, char charToFind, int maxNumberOfChars)
   {
     if (maxNumberOfChars < 0)
@@ -2722,12 +2722,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
-    /// </summary>
-    /// <param name="input">The string to search within. Can be null or empty.</param>
-    /// <param name="charToFind">The character to count occurrences of.</param>
-    /// <param name="maxNumberOfChars">Max count of a specific character in input required to return true</param>
-    /// <returns><see langword="true"/> if the maximum threshold maxNumberOfChars is not exceeded, otherwise false</returns>
+  /// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
+  /// </summary>
+  /// <param name="input">The string to search within. Can be null or empty.</param>
+  /// <param name="charToFind">The character to count occurrences of.</param>
+  /// <param name="maxNumberOfChars">Max count of a specific character in input required to return true</param>
+  /// <returns><see langword="true"/> if the maximum threshold maxNumberOfChars is not exceeded, otherwise false</returns>
   public static bool HasNoMoreThanNumberOfChars(this string? input, string charToFind, int maxNumberOfChars)
   {
     if (charToFind.Length > 1)
@@ -2742,12 +2742,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
-    /// </summary>
-    /// <param name="input">The string to search within. Can be null or empty.</param>
-    /// <param name="charToFind">The character to count occurrences of.</param>
-    /// <param name="minNumberOfChars">Minimum count of a specific character in input required to return true</param>
-    /// <returns><see langword="true"/> if the minimum threshold minNumberOfChars is met or exceeded, otherwise false</returns>
+  /// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
+  /// </summary>
+  /// <param name="input">The string to search within. Can be null or empty.</param>
+  /// <param name="charToFind">The character to count occurrences of.</param>
+  /// <param name="minNumberOfChars">Minimum count of a specific character in input required to return true</param>
+  /// <returns><see langword="true"/> if the minimum threshold minNumberOfChars is met or exceeded, otherwise false</returns>
   public static bool HasNoLessThanNumberOfChars(this ReadOnlySpan<char> input, char charToFind, int minNumberOfChars)
   {
     if (minNumberOfChars < 0)
@@ -2781,12 +2781,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
-    /// </summary>
-    /// <param name="input">The string to search within. Can be null or empty.</param>
-    /// <param name="charToFind">The character to count occurrences of.</param>
-    /// <param name="minNumberOfChars">Minimum count of a specific character in input required to return true</param>
-    /// <returns><see langword="true"/> if the minimum threshold minNumberOfChars is met or exceeded, otherwise false</returns>
+  /// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
+  /// </summary>
+  /// <param name="input">The string to search within. Can be null or empty.</param>
+  /// <param name="charToFind">The character to count occurrences of.</param>
+  /// <param name="minNumberOfChars">Minimum count of a specific character in input required to return true</param>
+  /// <returns><see langword="true"/> if the minimum threshold minNumberOfChars is met or exceeded, otherwise false</returns>
   public static bool HasNoLessThanNumberOfChars(this string? input, char charToFind, int minNumberOfChars)
   {
     if (minNumberOfChars < 0)
@@ -2803,12 +2803,12 @@ public static partial class Strings
   }
 
   /// <summary>
-    /// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
-    /// </summary>
-    /// <param name="input">The string to search within. Can be null or empty.</param>
-    /// <param name="charToFind">The character to count occurrences of.</param>
-    /// <param name="minNumberOfChars">Minimum count of a specific character in input required to return true</param>
-    /// <returns><see langword="true"/> if the minimum threshold minNumberOfChars is met or exceeded, otherwise false</returns>
+  /// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
+  /// </summary>
+  /// <param name="input">The string to search within. Can be null or empty.</param>
+  /// <param name="charToFind">The character to count occurrences of.</param>
+  /// <param name="minNumberOfChars">Minimum count of a specific character in input required to return true</param>
+  /// <returns><see langword="true"/> if the minimum threshold minNumberOfChars is met or exceeded, otherwise false</returns>
   public static bool HasNoLessThanNumberOfChars(this string? input, string charToFind, int minNumberOfChars)
   {
     if (charToFind.Length > 1)

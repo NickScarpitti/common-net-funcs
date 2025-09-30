@@ -9,9 +9,9 @@ namespace CommonNetFuncs.Web.Requests;
 public static class JsonPatchFormatter
 {
   /// <summary>
-    /// <para>Use as InputFormatter in startup.cs ConfigureServices method</para>
-    /// <para>Eg. options.InputFormatters.Insert(0, JsonPatchFormatter.JsonPatchInputFormatter());</para>
-    /// </summary>
+  /// <para>Use as InputFormatter in startup.cs ConfigureServices method</para>
+  /// <para>Eg. options.InputFormatters.Insert(0, JsonPatchFormatter.JsonPatchInputFormatter());</para>
+  /// </summary>
   public static NewtonsoftJsonPatchInputFormatter JsonPatchInputFormatter()
   {
     ServiceProvider builder = new ServiceCollection()

@@ -20,10 +20,10 @@ public static class Copy
   public static ICacheManagerApi<(Type SourceType, Type DestType), Dictionary<string, (Delegate Set, Delegate Get)>> CopyCacheManager => CopyCache;
 
   /// <summary>
-    /// Gets or adds a function from the deep copy cache based on the source and destination types.
-    /// </summary>
-    /// <param name="key">Cache key</param>
-    /// <returns>Function for executing deep copy</returns>
+  /// Gets or adds a function from the deep copy cache based on the source and destination types.
+  /// </summary>
+  /// <param name="key">Cache key</param>
+  /// <returns>Function for executing deep copy</returns>
   private static Func<object, object?, int, int, object?> GetOrAddFunctionFromDeepCopyCache((Type sourceType, Type destType) key)
   {
     if (DeepCopyCacheManager.IsUsingLimitedCache() ? DeepCopyCacheManager.GetLimitedCache().TryGetValue(key, out Func<object, object?, int, int, object?>? function) :
@@ -46,9 +46,9 @@ public static class Copy
   }
 
   /// <summary>
-    /// Gets or adds a function from the shallow copy cache based on the source and destination types.
-    /// </summary>
-    /// <returns>Function for executing shallow copy</returns>
+  /// Gets or adds a function from the shallow copy cache based on the source and destination types.
+  /// </summary>
+  /// <returns>Function for executing shallow copy</returns>
   private static Dictionary<string, (Delegate Set, Delegate Get)> GetOrAddFunctionFromCopyCache<TSource, TDest>()
   {
     (Type, Type) key = (typeof(TSource), typeof(TDest));
@@ -69,13 +69,13 @@ public static class Copy
   #endregion
 
   /// <summary>
-    /// Copy properties of the same name from one object to another
-    /// </summary>
-    /// <typeparam name="T">Type of source object</typeparam>
-    /// <typeparam name="UT">Type of destination object</typeparam>
-    /// <param name="source">Object to copy common properties from</param>
-    /// <param name="dest">Object to copy common properties to</param>
-    /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
+  /// Copy properties of the same name from one object to another
+  /// </summary>
+  /// <typeparam name="T">Type of source object</typeparam>
+  /// <typeparam name="UT">Type of destination object</typeparam>
+  /// <param name="source">Object to copy common properties from</param>
+  /// <param name="dest">Object to copy common properties to</param>
+  /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
   public static void CopyPropertiesTo<T, UT>(this T source, UT dest, bool useCache = true)
   {
     if (source == null)
@@ -111,12 +111,12 @@ public static class Copy
   }
 
   /// <summary>
-    /// Copy properties of the same name from one object to another
-    /// </summary>
-    /// <typeparam name="T">Type of object being copied</typeparam>
-    /// <param name="source">Object to copy common properties from</param>
-    /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
-    /// <returns>A new instance of T with properties copied from <paramref name="source"/></returns>
+  /// Copy properties of the same name from one object to another
+  /// </summary>
+  /// <typeparam name="T">Type of object being copied</typeparam>
+  /// <param name="source">Object to copy common properties from</param>
+  /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
+  /// <returns>A new instance of T with properties copied from <paramref name="source"/></returns>
   public static T CopyPropertiesToNew<T>(this T source, bool useCache = true) where T : new()
   {
     if (source == null)
@@ -143,12 +143,12 @@ public static class Copy
   }
 
   /// <summary>
-    /// Copy properties of the same name from one object to another
-    /// </summary>
-    /// <typeparam name="T">Type of object being copied</typeparam>
-    /// <param name="source">Object to copy common properties from</param>
-    /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
-    /// <returns>A new instance of UT with properties copied from <paramref name="source"/></returns>
+  /// Copy properties of the same name from one object to another
+  /// </summary>
+  /// <typeparam name="T">Type of object being copied</typeparam>
+  /// <param name="source">Object to copy common properties from</param>
+  /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
+  /// <returns>A new instance of UT with properties copied from <paramref name="source"/></returns>
   public static UT CopyPropertiesToNew<T, UT>(this T source, bool useCache = true) where UT : new()
   {
     IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead);
@@ -177,14 +177,14 @@ public static class Copy
 
   // Can handle collections
   /// <summary>
-    /// Copies properties of one class to a new instance of a <see langword="class"/> using reflection based on property name matching
-    /// </summary>
-    /// <typeparam name="T">Type to copy values from</typeparam>
-    /// <typeparam name="UT">Type to copy values to</typeparam>
-    /// <param name="source">Object to copy values into new object from</param>
-    /// <param name="maxDepth">Optional: How deep to recursively traverse. Default = -1 which is unlimited recursion.</param>
-    /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
-    /// <returns>A new instance of UT with properties of the same name from source populated.</returns>
+  /// Copies properties of one class to a new instance of a <see langword="class"/> using reflection based on property name matching
+  /// </summary>
+  /// <typeparam name="T">Type to copy values from</typeparam>
+  /// <typeparam name="UT">Type to copy values to</typeparam>
+  /// <param name="source">Object to copy values into new object from</param>
+  /// <param name="maxDepth">Optional: How deep to recursively traverse. Default = -1 which is unlimited recursion.</param>
+  /// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
+  /// <returns>A new instance of UT with properties of the same name from source populated.</returns>
   [return: NotNullIfNotNull(nameof(source))]
   public static UT? CopyPropertiesToNewRecursive<T, UT>(this T source, int maxDepth = -1, bool useCache = true) where UT : new()
   {
@@ -209,14 +209,14 @@ public static class Copy
   }
 
   /// <summary>
-    /// <para>Merge the field values from one instance into another of the same object</para>
-    /// <para>Only default values will be overridden by mergeFromObjects</para>
-    /// </summary>
-    /// <typeparam name="T">Object type to merge instances of.</typeparam>
-    /// <param name="mergeIntoObject">Object to merge properties into.</param>
-    /// <param name="mergeFromObjects">Objects to merge properties from.</param>
-    /// <param name="cancellationToken">Cancellation token for this operation.</param>
-    /// <returns>The merged object.</returns>
+  /// <para>Merge the field values from one instance into another of the same object</para>
+  /// <para>Only default values will be overridden by mergeFromObjects</para>
+  /// </summary>
+  /// <typeparam name="T">Object type to merge instances of.</typeparam>
+  /// <param name="mergeIntoObject">Object to merge properties into.</param>
+  /// <param name="mergeFromObjects">Objects to merge properties from.</param>
+  /// <param name="cancellationToken">Cancellation token for this operation.</param>
+  /// <returns>The merged object.</returns>
   public static T MergeInstances<T>(this T mergeIntoObject, IEnumerable<T> mergeFromObjects, CancellationToken cancellationToken = default) where T : class
   {
     foreach (T instance in mergeFromObjects)
@@ -228,14 +228,14 @@ public static class Copy
   }
 
   /// <summary>
-    /// <para>Merge the field values from one instance into another of the same object</para>
-    /// <para>Only default values will be overridden by mergeFromObject</para>
-    /// </summary>
-    /// <typeparam name="T">Object type to merge instances of.</typeparam>
-    /// <param name="mergeIntoObject">Object to merge properties into.</param>
-    /// <param name="mergeFromObject">Object to merge properties from.</param>
-    /// <param name="cancellationToken">Cancellation token for this operation.</param>
-    /// <returns>The merged object.</returns>
+  /// <para>Merge the field values from one instance into another of the same object</para>
+  /// <para>Only default values will be overridden by mergeFromObject</para>
+  /// </summary>
+  /// <typeparam name="T">Object type to merge instances of.</typeparam>
+  /// <param name="mergeIntoObject">Object to merge properties into.</param>
+  /// <param name="mergeFromObject">Object to merge properties from.</param>
+  /// <param name="cancellationToken">Cancellation token for this operation.</param>
+  /// <returns>The merged object.</returns>
   public static T MergeInstances<T>(this T mergeIntoObject, T mergeFromObject, CancellationToken cancellationToken = default) where T : class
   {
     foreach (PropertyInfo property in GetOrAddPropertiesFromReflectionCache(typeof(T)))
@@ -258,13 +258,13 @@ public static class Copy
   #region Reflection Deep Copy Helpers
 
   /// <summary>
-    /// Copies an object of one type to another type using reflection based on property name matching
-    /// </summary>
-    /// <param name="source">The source object to copy from.</param>
-    /// <param name="destType">The destination type to copy to.</param>
-    /// <param name="depth">The current depth of the copy operation.</param>
-    /// <param name="maxDepth">The maximum depth of the copy operation. If -1, then there will be no limit on recursion depth.</param>
-    /// <returns>A new instance of the destination type with properties copied from the source.</returns>
+  /// Copies an object of one type to another type using reflection based on property name matching
+  /// </summary>
+  /// <param name="source">The source object to copy from.</param>
+  /// <param name="destType">The destination type to copy to.</param>
+  /// <param name="depth">The current depth of the copy operation.</param>
+  /// <param name="maxDepth">The maximum depth of the copy operation. If -1, then there will be no limit on recursion depth.</param>
+  /// <returns>A new instance of the destination type with properties copied from the source.</returns>
   private static object? CopyObject(object source, Type destType, int depth, int maxDepth)
   {
     if (source == null)
@@ -327,17 +327,17 @@ public static class Copy
   }
 
   /// <summary>
-    /// Creates a deep copy of a collection, converting it to the specified destination type.
-    /// </summary>
-    /// <remarks>
-    /// This method supports copying both simple collections (e.g. lists, arrays) and dictionaries.
-    /// For dictionaries, both keys and values are copied. If the source or destination collection contains complex objects, they are recursively copied up to the specified <paramref name="maxDepth"/>.
-    /// </remarks>
-    /// <param name="source">The source collection to copy. Must implement <see cref="IEnumerable"/>.</param>
-    /// <param name="destType">The type of the destination collection. Must be a collection type such as a list, array, or dictionary.</param>
-    /// <param name="maxDepth">The maximum depth for recursive copying of nested objects. A value of 0 indicates no recursion, while higher values allow deeper copying of nested structures.</param>
-    /// <param name="cancellationToken">Cancellation token for this operation.</param>
-    /// <returns>A new collection of the specified type containing deep copies of the elements in the source collection. Returns <see langword="null"/> if <paramref name="source"/> is <see langword="null"/>.</returns>
+  /// Creates a deep copy of a collection, converting it to the specified destination type.
+  /// </summary>
+  /// <remarks>
+  /// This method supports copying both simple collections (e.g. lists, arrays) and dictionaries.
+  /// For dictionaries, both keys and values are copied. If the source or destination collection contains complex objects, they are recursively copied up to the specified <paramref name="maxDepth"/>.
+  /// </remarks>
+  /// <param name="source">The source collection to copy. Must implement <see cref="IEnumerable"/>.</param>
+  /// <param name="destType">The type of the destination collection. Must be a collection type such as a list, array, or dictionary.</param>
+  /// <param name="maxDepth">The maximum depth for recursive copying of nested objects. A value of 0 indicates no recursion, while higher values allow deeper copying of nested structures.</param>
+  /// <param name="cancellationToken">Cancellation token for this operation.</param>
+  /// <returns>A new collection of the specified type containing deep copies of the elements in the source collection. Returns <see langword="null"/> if <paramref name="source"/> is <see langword="null"/>.</returns>
   private static object? CopyCollection(object source, Type destType, int maxDepth, CancellationToken cancellationToken = default)
   {
     if (source == null)
@@ -431,33 +431,33 @@ public static class Copy
   #region Expression Trees for Shallow Copying
 
   /// <summary>
-    /// Creates or retrieves a dictionary of property mappings between the source and destination types.
-    /// </summary>
-    /// <remarks>
-    /// This method is useful for scenarios where shallow copying of properties between objects of different types is required.
-    /// The returned dictionary can be used to efficiently map and transfer property values.
-    /// </remarks>
-    /// <typeparam name="TSource">The type of the source object.</typeparam>
-    /// <typeparam name="TDest">The type of the destination object.</typeparam>
-    /// <returns>A dictionary where each key is the name of a property, and the value is a tuple containing an <see cref="Action{TDest, Object}"/> to set the property value on the destination object,
-    /// and a <see cref="Func{TSource, Object}"/> to get the property value from the source object.</returns>
+  /// Creates or retrieves a dictionary of property mappings between the source and destination types.
+  /// </summary>
+  /// <remarks>
+  /// This method is useful for scenarios where shallow copying of properties between objects of different types is required.
+  /// The returned dictionary can be used to efficiently map and transfer property values.
+  /// </remarks>
+  /// <typeparam name="TSource">The type of the source object.</typeparam>
+  /// <typeparam name="TDest">The type of the destination object.</typeparam>
+  /// <returns>A dictionary where each key is the name of a property, and the value is a tuple containing an <see cref="Action{TDest, Object}"/> to set the property value on the destination object,
+  /// and a <see cref="Func{TSource, Object}"/> to get the property value from the source object.</returns>
   public static Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> GetOrCreatePropertyMaps<TSource, TDest>()
   {
     return GetOrAddFunctionFromCopyCache<TSource, TDest>().ToDictionary(kvp => kvp.Key, kvp => ((Action<TDest, object?>)kvp.Value.Set, (Func<TSource, object?>)kvp.Value.Get));
   }
 
   /// <summary>
-    /// Creates a dictionary of property mappings between a source type and a destination type for caching purposes.
-    /// </summary>
-    /// <remarks>
-    /// This method identifies properties with matching names and types in the source and destination types.
-    /// It generates delegates for getting the value of the source property and setting the value of the destination property.
-    /// Only properties that are readable in the source type and writable in the destination type are included in the mapping.
-    /// </remarks>
-    /// <typeparam name="TSource">The source type containing the properties to map from.</typeparam>
-    /// <typeparam name="TDest">The destination type containing the properties to map to.</typeparam>
-    /// <returns>A dictionary where each key is the name of a property shared by both the source and destination types, and the
-    /// value is a tuple containing a setter delegate for the destination property and a getter delegate for the source property.</returns>
+  /// Creates a dictionary of property mappings between a source type and a destination type for caching purposes.
+  /// </summary>
+  /// <remarks>
+  /// This method identifies properties with matching names and types in the source and destination types.
+  /// It generates delegates for getting the value of the source property and setting the value of the destination property.
+  /// Only properties that are readable in the source type and writable in the destination type are included in the mapping.
+  /// </remarks>
+  /// <typeparam name="TSource">The source type containing the properties to map from.</typeparam>
+  /// <typeparam name="TDest">The destination type containing the properties to map to.</typeparam>
+  /// <returns>A dictionary where each key is the name of a property shared by both the source and destination types, and the
+  /// value is a tuple containing a setter delegate for the destination property and a getter delegate for the source property.</returns>
   private static Dictionary<string, (Delegate Set, Delegate Get)> CreatePropertyMappingsForCache<TSource, TDest>()
   {
     Dictionary<string, (Delegate Set, Delegate Get)> cacheableMaps = new();
@@ -505,11 +505,11 @@ public static class Copy
   #region Property Mapping For Recursive Copy
 
   /// <summary>
-    /// Creates a robust recursive copy function using expression trees.
-    /// </summary>
-    /// <param name="source">Source object to copy from.</param>
-    /// <param name="maxDepth">Optional: The maximum depth of recursion. Default is -1, which means unlimited recursion.</param>
-    /// <returns>A new instance of the destination type with copied properties.</returns>
+  /// Creates a robust recursive copy function using expression trees.
+  /// </summary>
+  /// <param name="source">Source object to copy from.</param>
+  /// <param name="maxDepth">Optional: The maximum depth of recursion. Default is -1, which means unlimited recursion.</param>
+  /// <returns>A new instance of the destination type with copied properties.</returns>
   private static UT? CopyPropertiesToNewRecursiveExpressionTrees<T, UT>(this T source, int maxDepth = -1) where UT : new()
   {
     if (source == null)
@@ -522,22 +522,22 @@ public static class Copy
   }
 
   /// <summary>
-    /// Gets or creates a compiled copy function for the given source and destination types
-    /// </summary>
-    /// <param name="sourceType">The type to copy properties from.</param>
-    /// <param name="destType"> The type to copy properties to.</param>
-    /// <returns>A compiled function that takes a source object, a destination object (can be null), current depth, and max depth, and returns the copied object.</returns>
+  /// Gets or creates a compiled copy function for the given source and destination types
+  /// </summary>
+  /// <param name="sourceType">The type to copy properties from.</param>
+  /// <param name="destType"> The type to copy properties to.</param>
+  /// <returns>A compiled function that takes a source object, a destination object (can be null), current depth, and max depth, and returns the copied object.</returns>
   private static Func<object, object?, int, int, object?> GetOrCreateCopyFunction(Type sourceType, Type destType)
   {
     return GetOrAddFunctionFromDeepCopyCache((sourceType, destType));
   }
 
   /// <summary>
-    /// Creates a compiled expression tree function for copying between two types
-    /// </summary>
-    /// <param name="sourceType">The type to copy properties from.</param>
-    /// <param name="destType"> The type to copy properties to.</param>
-    /// <returns>A compiled function that takes a source object, a destination object (can be null), current depth, and max depth, and returns the copied object.</returns>
+  /// Creates a compiled expression tree function for copying between two types
+  /// </summary>
+  /// <param name="sourceType">The type to copy properties from.</param>
+  /// <param name="destType"> The type to copy properties to.</param>
+  /// <returns>A compiled function that takes a source object, a destination object (can be null), current depth, and max depth, and returns the copied object.</returns>
   private static Func<object, object?, int, int, object?> CreateCopyFunction(Type sourceType, Type destType)
   {
     ParameterExpression sourceParam = Expression.Parameter(typeof(object), "source");
@@ -638,10 +638,10 @@ public static class Copy
   }
 
   /// <summary>
-    /// Creates an expression for instantiating a type
-    /// </summary>
-    /// <param name="type">The type to instantiate.</param>
-    /// <returns>An expression that creates a new instance of the specified type.</returns>
+  /// Creates an expression for instantiating a type
+  /// </summary>
+  /// <param name="type">The type to instantiate.</param>
+  /// <returns>An expression that creates a new instance of the specified type.</returns>
   private static Expression CreateInstanceExpression(Type type)
   {
     // Check if type has parameterless constructor
@@ -657,11 +657,11 @@ public static class Copy
   }
 
   /// <summary>
-    /// Checks if two types can be converted between each other
-    /// </summary>
-    /// <param name="sourceType">The source type.</param>
-    /// <param name="destType">The destination type.</param>
-    /// <returns> <see langword="true"/> if <paramref name="sourceType"/> can be converted into <paramref name="destType"/>, otherwise <see langword="false"/>.</returns>
+  /// Checks if two types can be converted between each other
+  /// </summary>
+  /// <param name="sourceType">The source type.</param>
+  /// <param name="destType">The destination type.</param>
+  /// <returns> <see langword="true"/> if <paramref name="sourceType"/> can be converted into <paramref name="destType"/>, otherwise <see langword="false"/>.</returns>
   private static bool CanConvertTypes(Type sourceType, Type destType)
   {
     // Check for implicit/explicit conversions
@@ -677,15 +677,15 @@ public static class Copy
   }
 
   /// <summary>
-    /// Creates an expression for copying a value with type compatibility checks
-    /// </summary>
-    /// <param name="sourceValue">The source value expression.</param>
-    /// <param name="destProperty">The destination property expression.</param>
-    /// <param name="sourceType">The source type.</param>
-    /// <param name="destType">The destination type.</param>
-    /// <param name="depthParam">The current depth parameter.</param>
-    /// <param name="maxDepthParam">The maximum depth parameter.</param>
-    /// <returns>An expression that copies the value from the source to the destination property.</returns>
+  /// Creates an expression for copying a value with type compatibility checks
+  /// </summary>
+  /// <param name="sourceValue">The source value expression.</param>
+  /// <param name="destProperty">The destination property expression.</param>
+  /// <param name="sourceType">The source type.</param>
+  /// <param name="destType">The destination type.</param>
+  /// <param name="depthParam">The current depth parameter.</param>
+  /// <param name="maxDepthParam">The maximum depth parameter.</param>
+  /// <returns>An expression that copies the value from the source to the destination property.</returns>
   private static Expression? CreateValueCopyExpression(Expression sourceValue, Expression destProperty, Type sourceType, Type destType, ParameterExpression depthParam, ParameterExpression maxDepthParam)
   {
     // Direct assignment for same types or simple types
@@ -726,13 +726,13 @@ public static class Copy
   }
 
   /// <summary>
-    /// Runtime helper for copying collections.
-    /// </summary>
-    /// <param name="source">Source object to copy from.</param>
-    /// <param name="destType">Destination type to copy to.</param>
-    /// <param name="depth">Current depth of recursion.</param>
-    /// <param name="maxDepth">Maximum depth of recursion.</param>
-    /// <returns>A new instance of the destination type with copied properties or null if <paramref name="source"/> is null.</returns>
+  /// Runtime helper for copying collections.
+  /// </summary>
+  /// <param name="source">Source object to copy from.</param>
+  /// <param name="destType">Destination type to copy to.</param>
+  /// <param name="depth">Current depth of recursion.</param>
+  /// <param name="maxDepth">Maximum depth of recursion.</param>
+  /// <returns>A new instance of the destination type with copied properties or null if <paramref name="source"/> is null.</returns>
   private static object? CopyCollectionRuntime(object source, Type destType, int depth, int maxDepth)
   {
     if (source == null)
@@ -823,13 +823,13 @@ public static class Copy
   }
 
   /// <summary>
-    /// Runtime helper for copying individual items
-    /// </summary>
-    /// <param name="item">The item to copy.</param>
-    /// <param name="destType">The destination type to copy to.</param>
-    /// <param name="depth">Current depth of recursion.</param>
-    /// <param name="maxDepth">Maximum depth of recursion.</param>
-    /// <returns>A copied item of the specified destination type, or <see cref="null"/> if <paramref name="item"/> <see cref="null"/>.</returns>
+  /// Runtime helper for copying individual items
+  /// </summary>
+  /// <param name="item">The item to copy.</param>
+  /// <param name="destType">The destination type to copy to.</param>
+  /// <param name="depth">Current depth of recursion.</param>
+  /// <param name="maxDepth">Maximum depth of recursion.</param>
+  /// <returns>A copied item of the specified destination type, or <see cref="null"/> if <paramref name="item"/> <see cref="null"/>.</returns>
   private static object? CopyItemRuntime(object? item, Type destType, int depth, int maxDepth)
   {
     if (item == null)
@@ -848,13 +848,13 @@ public static class Copy
   }
 
   /// <summary>
-    /// Runtime helper for copying objects
-    /// </summary>
-    /// <param name="source">Source object to copy from.</param>
-    /// <param name="destType">Destination type to copy to.</param>
-    /// <param name="depth">Current depth of recursion.</param>
-    /// <param name="maxDepth">Maximum depth of recursion.</param>
-    /// <returns>A new instance of the destination type with copied properties or <see cref="null"/> if <paramref name="source"/> is <see cref="null"/>.</returns>
+  /// Runtime helper for copying objects
+  /// </summary>
+  /// <param name="source">Source object to copy from.</param>
+  /// <param name="destType">Destination type to copy to.</param>
+  /// <param name="depth">Current depth of recursion.</param>
+  /// <param name="maxDepth">Maximum depth of recursion.</param>
+  /// <returns>A new instance of the destination type with copied properties or <see cref="null"/> if <paramref name="source"/> is <see cref="null"/>.</returns>
   private static object? CopyObjectRuntime(object source, Type destType, int depth, int maxDepth)
   {
     if (source == null)

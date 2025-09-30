@@ -25,10 +25,10 @@ public static class Streams
   }
 
   /// <summary>
-    /// Copy local MemoryStream to passed in Stream
-    /// </summary>
-    /// <param name="targetStream">Stream to copy from</param>
-    /// <param name="sourceStream">MemoryStream to copy to</param>
+  /// Copy local MemoryStream to passed in Stream
+  /// </summary>
+  /// <param name="targetStream">Stream to copy from</param>
+  /// <param name="sourceStream">MemoryStream to copy to</param>
   public static async Task WriteStreamToStream(this Stream targetStream, MemoryStream sourceStream, CancellationToken cancellationToken = default)
   {
     if (!sourceStream.CanRead || !sourceStream.CanSeek)
@@ -51,10 +51,10 @@ public static class Streams
   }
 
   /// <summary>
-    /// Copy local Stream to passed in Stream
-    /// </summary>
-    /// <param name="targetStream">Stream to copy from</param>
-    /// <param name="sourceStream">Stream to copy to</param>
+  /// Copy local Stream to passed in Stream
+  /// </summary>
+  /// <param name="targetStream">Stream to copy from</param>
+  /// <param name="sourceStream">Stream to copy to</param>
   public static async Task WriteStreamToStream(this Stream targetStream, Stream sourceStream, CancellationToken cancellationToken = default)
   {
     if (!sourceStream.CanRead || !sourceStream.CanSeek)

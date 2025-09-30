@@ -19,15 +19,15 @@ public static class Export
   public const int MaxCellWidthInExcelUnits = 65280;
 
   /// <summary>
-    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
-    /// data
-    /// </summary>
-    /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
-    /// <param name="dataList">Data to export as a table.</param>
-    /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
-    /// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
+  /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
+  /// data
+  /// </summary>
+  /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
+  /// <param name="dataList">Data to export as a table.</param>
+  /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
+  /// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
+  /// <param name="skipColumnNames">List of columns to not include in export</param>
+  /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
   public static async Task<MemoryStream?> GenericExcelExport<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, bool createTable = false,
         string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
   {
@@ -80,14 +80,14 @@ public static class Export
   }
 
   /// <summary>
-    /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
-    /// data
-    /// </summary>
-    /// <param name="datatable">Data to export as a table.</param>
-    /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
-    /// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
+  /// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
+  /// data
+  /// </summary>
+  /// <param name="datatable">Data to export as a table.</param>
+  /// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
+  /// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
+  /// <param name="skipColumnNames">List of columns to not include in export</param>
+  /// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
   public static async Task<MemoryStream?> GenericExcelExport(this DataTable datatable, MemoryStream? memoryStream = null, bool createTable = false,
         string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
   {
@@ -140,46 +140,46 @@ public static class Export
   }
 
   /// <summary>
-    /// Add data to a new sheet in a workbook
-    /// </summary>
-    /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
-    /// <param name="wb">Workbook to add table to</param>
-    /// <param name="data">Data to insert into workbook</param>
-    /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
-    /// <param name="tableName">Name of the table in Excel</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
+  /// Add data to a new sheet in a workbook
+  /// </summary>
+  /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
+  /// <param name="wb">Workbook to add table to</param>
+  /// <param name="data">Data to insert into workbook</param>
+  /// <param name="sheetName">Name of sheet to add data into</param>
+  /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
+  /// <param name="tableName">Name of the table in Excel</param>
+  /// <param name="skipColumnNames">List of columns to not include in export</param>
+  /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
   public static bool AddGenericTable<T>(this SXSSFWorkbook wb, IEnumerable<T> data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
   {
     return wb.AddGenericTableInternal<T>(data, typeof(IEnumerable<T>), sheetName, createTable, tableName, skipColumnNames, wrapText);
   }
 
   /// <summary>
-    /// Add data to a new sheet in a workbook
-    /// </summary>
-    /// <param name="wb">Workbook to add table to</param>
-    /// <param name="data">Data to insert into workbook</param>
-    /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
-    /// <param name="tableName">Name of the table in Excel</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
+  /// Add data to a new sheet in a workbook
+  /// </summary>
+  /// <param name="wb">Workbook to add table to</param>
+  /// <param name="data">Data to insert into workbook</param>
+  /// <param name="sheetName">Name of sheet to add data into</param>
+  /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
+  /// <param name="tableName">Name of the table in Excel</param>
+  /// <param name="skipColumnNames">List of columns to not include in export</param>
+  /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
   public static bool AddGenericTable(this SXSSFWorkbook wb, DataTable data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
   {
     return wb.AddGenericTableInternal<char>(data, typeof(DataTable), sheetName, createTable, tableName, skipColumnNames, wrapText);
   }
 
   /// <summary>
-    /// Add data to a new sheet in a workbook
-    /// </summary>
-    /// <param name="wb">Workbook to add table to</param>
-    /// <param name="data">Data to insert into workbook</param>
-    /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
-    /// <param name="tableName">Name of the table in Excel</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
+  /// Add data to a new sheet in a workbook
+  /// </summary>
+  /// <param name="wb">Workbook to add table to</param>
+  /// <param name="data">Data to insert into workbook</param>
+  /// <param name="sheetName">Name of sheet to add data into</param>
+  /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
+  /// <param name="tableName">Name of the table in Excel</param>
+  /// <param name="skipColumnNames">List of columns to not include in export</param>
+  /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
   public static bool AddGenericTable(this XSSFWorkbook wb, DataTable data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
   {
     using SXSSFWorkbook workbook = new(wb);
@@ -187,16 +187,16 @@ public static class Export
   }
 
   /// <summary>
-    /// Add data to a new sheet in a workbook
-    /// </summary>
-    /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
-    /// <param name="wb">Workbook to add table to</param>
-    /// <param name="data">Data to insert into workbook</param>
-    /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
-    /// <param name="tableName">Name of the table in Excel</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
+  /// Add data to a new sheet in a workbook
+  /// </summary>
+  /// <typeparam name="T">Type of data inside of list to be exported</typeparam>
+  /// <param name="wb">Workbook to add table to</param>
+  /// <param name="data">Data to insert into workbook</param>
+  /// <param name="sheetName">Name of sheet to add data into</param>
+  /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
+  /// <param name="tableName">Name of the table in Excel</param>
+  /// <param name="skipColumnNames">List of columns to not include in export</param>
+  /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
   public static bool AddGenericTable<T>(this XSSFWorkbook wb, IEnumerable<T> data, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
   {
     using SXSSFWorkbook workbook = new(wb);
@@ -204,17 +204,17 @@ public static class Export
   }
 
   /// <summary>
-    /// Add data to a new sheet in a workbook
-    /// </summary>
-    /// <typeparam name="T">The type that contains the data for the exported table. Supported types are IEnumerable and DataTable</typeparam>
-    /// <param name="wb">Workbook to add sheet table to</param>
-    /// <param name="data">Data to populate table with (only accepts IEnumerable and DataTable)</param>
-    /// <param name="dataType">Type of the data parameter</param>
-    /// <param name="sheetName">Name of sheet to add data into</param>
-    /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
-    /// <param name="tableName">Name of the table in Excel</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
+  /// Add data to a new sheet in a workbook
+  /// </summary>
+  /// <typeparam name="T">The type that contains the data for the exported table. Supported types are IEnumerable and DataTable</typeparam>
+  /// <param name="wb">Workbook to add sheet table to</param>
+  /// <param name="data">Data to populate table with (only accepts IEnumerable and DataTable)</param>
+  /// <param name="dataType">Type of the data parameter</param>
+  /// <param name="sheetName">Name of sheet to add data into</param>
+  /// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
+  /// <param name="tableName">Name of the table in Excel</param>
+  /// <param name="skipColumnNames">List of columns to not include in export</param>
+  /// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
   private static bool AddGenericTableInternal<T>(this SXSSFWorkbook wb, object? data, Type dataType, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
   {
     bool success = false;
@@ -277,16 +277,16 @@ public static class Export
   }
 
   /// <summary>
-    /// Generates a simple excel file containing the passed in data in a tabular format
-    /// </summary>
-    /// <typeparam name="T">Type of data inside of list to be inserted into the workbook</typeparam>
-    /// <param name="data">Data to be inserted into the workbook</param>
-    /// <param name="wb">Workbook to insert the data into</param>
-    /// <param name="ws">Worksheet to insert the data into</param>
-    /// <param name="createTable">Turn the output into an Excel table.</param>
-    /// <param name="tableName">Name of the table when createTable is true</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns><see langword="true"/> if excel file was created successfully</returns>
+  /// Generates a simple excel file containing the passed in data in a tabular format
+  /// </summary>
+  /// <typeparam name="T">Type of data inside of list to be inserted into the workbook</typeparam>
+  /// <param name="data">Data to be inserted into the workbook</param>
+  /// <param name="wb">Workbook to insert the data into</param>
+  /// <param name="ws">Worksheet to insert the data into</param>
+  /// <param name="createTable">Turn the output into an Excel table.</param>
+  /// <param name="tableName">Name of the table when createTable is true</param>
+  /// <param name="skipColumnNames">List of columns to not include in export</param>
+  /// <returns><see langword="true"/> if excel file was created successfully</returns>
   public static bool ExcelExport<T>(this IEnumerable<T> data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
   {
     skipColumnNames ??= [];
@@ -401,15 +401,15 @@ public static class Export
   }
 
   /// <summary>
-    /// Generates a simple excel file containing the passed in data in a tabular format
-    /// </summary>
-    /// <param name="data">Data as DataTable to be inserted into the workbook</param>
-    /// <param name="wb">Workbook to insert the data into</param>
-    /// <param name="ws">Worksheet to insert the data into</param>
-    /// <param name="createTable">Turn the output into an Excel table.</param>
-    /// <param name="tableName">Name of the table when createTable is true</param>
-    /// <param name="skipColumnNames">List of columns to not include in export</param>
-    /// <returns><see langword="true"/> if excel file was created successfully</returns>
+  /// Generates a simple excel file containing the passed in data in a tabular format
+  /// </summary>
+  /// <param name="data">Data as DataTable to be inserted into the workbook</param>
+  /// <param name="wb">Workbook to insert the data into</param>
+  /// <param name="ws">Worksheet to insert the data into</param>
+  /// <param name="createTable">Turn the output into an Excel table.</param>
+  /// <param name="tableName">Name of the table when createTable is true</param>
+  /// <param name="skipColumnNames">List of columns to not include in export</param>
+  /// <returns><see langword="true"/> if excel file was created successfully</returns>
   public static bool ExcelExport(this DataTable data, SXSSFWorkbook wb, ISheet ws, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
   {
     skipColumnNames ??= [];

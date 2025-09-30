@@ -26,8 +26,8 @@ public static class ExpressionTrees
   public static ICacheManagerApi<Type, Func<object, Dictionary<object, object>, object>> CacheManager => DeepCloneCache;
 
   /// <summary>
-    /// Clears LimitedCompiledFunctionsCache cache and sets the size to the specified value.
-    /// </summary>
+  /// Clears LimitedCompiledFunctionsCache cache and sets the size to the specified value.
+  /// </summary>
   private static Func<object, Dictionary<object, object>, object> GetOrAddPropertiesFromCompiledFunctionsCache(Type key)
   {
     bool isLimitedCache = CacheManager.IsUsingLimitedCache();
@@ -52,13 +52,13 @@ public static class ExpressionTrees
   #endregion
 
   /// <summary>
-    /// Deep clone a non-delegate type <see langword="class"/> (cloned object doesn't retain memory references) using Expression Trees (fastest)
-    /// </summary>
-    /// <typeparam name="T">Object type.</typeparam>
-    /// <param name="original">Object to copy.</param>
-    /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
-    /// <param name="useCache">Indicates whether or not to cache the compiled expression tree functions to be re-used.</param>
-    /// <returns>An exact copy of the original object that is distinct from the original object.</returns>
+  /// Deep clone a non-delegate type <see langword="class"/> (cloned object doesn't retain memory references) using Expression Trees (fastest)
+  /// </summary>
+  /// <typeparam name="T">Object type.</typeparam>
+  /// <param name="original">Object to copy.</param>
+  /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
+  /// <param name="useCache">Indicates whether or not to cache the compiled expression tree functions to be re-used.</param>
+  /// <returns>An exact copy of the original object that is distinct from the original object.</returns>
   [return: NotNullIfNotNull(nameof(original))]
   public static T? DeepClone<T>(this T original, Dictionary<object, object>? copiedReferencesDict = null, bool useCache = true)
   {
@@ -66,14 +66,14 @@ public static class ExpressionTrees
   }
 
   /// <summary>
-    /// Deep clone a non-delegate type <see langword="class"/> (cloned object doesn't retain memory references) using Expression Trees (fastest)
-    /// </summary>
-    /// <param name="original">Object to copy.</param>
-    /// <param name="forceDeepCopy">Indicates whether to force deep copy even for non-cloneable types.</param>
-    /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
-    /// <param name="useCache">Indicates whether or not to cache the compiled expression tree functions to be re-used</param>
-    /// <returns>An exact copy of the original object that is completely distinct from the original object.</returns>
-    /// <exception cref="ArgumentException">Throws if the original object is a delegate type.</exception>
+  /// Deep clone a non-delegate type <see langword="class"/> (cloned object doesn't retain memory references) using Expression Trees (fastest)
+  /// </summary>
+  /// <param name="original">Object to copy.</param>
+  /// <param name="forceDeepCopy">Indicates whether to force deep copy even for non-cloneable types.</param>
+  /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
+  /// <param name="useCache">Indicates whether or not to cache the compiled expression tree functions to be re-used</param>
+  /// <returns>An exact copy of the original object that is completely distinct from the original object.</returns>
+  /// <exception cref="ArgumentException">Throws if the original object is a delegate type.</exception>
   private static object? DeepCopyByExpressionTreeObj(object? original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict, bool useCache)
   {
     if (original == null)
@@ -111,11 +111,11 @@ public static class ExpressionTrees
   }
 
   /// <summary>
-    /// Creates a compiled <see cref="Expression"/> that performs a deep copy of the specified type.
-    /// </summary>
-    /// <param name="type">Type to copy</param>
-    /// <param name="useCache">Indicates whether or not to cache the compiled expression tree functions to be re-used in recursed properties.</param>
-    /// <returns>A compiled <see cref="Expression"/></returns>
+  /// Creates a compiled <see cref="Expression"/> that performs a deep copy of the specified type.
+  /// </summary>
+  /// <param name="type">Type to copy</param>
+  /// <param name="useCache">Indicates whether or not to cache the compiled expression tree functions to be re-used in recursed properties.</param>
+  /// <returns>A compiled <see cref="Expression"/></returns>
   internal static Expression<Func<object, Dictionary<object, object>, object>> CreateCompiledLambdaCopyFunctionForType(Type type, bool useCache)
   {
     ///// INITIALIZATION OF EXPRESSIONS AND VARIABLES

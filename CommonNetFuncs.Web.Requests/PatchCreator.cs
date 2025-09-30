@@ -14,13 +14,13 @@ public static class PatchCreator
   private static readonly JsonSerializer serializer = JsonSerializer.Create(settings);
 
   /// <summary>
-    /// Converts two like models to JObjects and passes them into the FillPatchForObject method to create a JSON patch document
-    /// From Source2
-    /// </summary>
-    /// <param name="originalObject">Object state being changed FROM</param>
-    /// <param name="modifiedObject">Object state being changed TO</param>
-    /// <param name="jsonSerializer">Custom Newtonsoft serializer to override default</param>
-    /// <returns>JsonPatchDocument document of changes from originalObject to modifiedObject</returns>
+  /// Converts two like models to JObjects and passes them into the FillPatchForObject method to create a JSON patch document
+  /// From Source2
+  /// </summary>
+  /// <param name="originalObject">Object state being changed FROM</param>
+  /// <param name="modifiedObject">Object state being changed TO</param>
+  /// <param name="jsonSerializer">Custom Newtonsoft serializer to override default</param>
+  /// <returns>JsonPatchDocument document of changes from originalObject to modifiedObject</returns>
   public static JsonPatchDocument CreatePatch(object originalObject, object modifiedObject, JsonSerializer? jsonSerializer = null)
   {
     JObject original = JObject.FromObject(originalObject, jsonSerializer ?? serializer);
@@ -33,13 +33,13 @@ public static class PatchCreator
   }
 
   /// <summary>
-    /// Compares two JObjects together and populates a JsonPatchDocument with the differences
-    /// From Source2
-    /// </summary>
-    /// <param name="originalObject">Original object to be compared to</param>
-    /// <param name="modObject">Modified version of the original object</param>
-    /// <param name="patch">The json patch document to write the patch instructions to</param>
-    /// <param name="path">Property path</param>
+  /// Compares two JObjects together and populates a JsonPatchDocument with the differences
+  /// From Source2
+  /// </summary>
+  /// <param name="originalObject">Original object to be compared to</param>
+  /// <param name="modObject">Modified version of the original object</param>
+  /// <param name="patch">The json patch document to write the patch instructions to</param>
+  /// <param name="path">Property path</param>
   private static void FillPatchForObject(JObject originalObject, JObject modObject, JsonPatchDocument patch, string path)
   {
     Dictionary<string, JProperty> origProps = originalObject.Properties().ToDictionary(x => x.Name, x => x);

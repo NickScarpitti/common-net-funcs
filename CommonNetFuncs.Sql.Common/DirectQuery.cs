@@ -17,26 +17,26 @@ public static class DirectQuery
   private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
   /// <summary>
-    /// Returns a DataTable using the SQL and data connection passed to the function
-    /// </summary>
-    /// <param name="conn">Database connection to use</param>
-    /// <param name="cmd">Command to use with parameters</param>
-    /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
-    /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
+  /// Returns a DataTable using the SQL and data connection passed to the function
+  /// </summary>
+  /// <param name="conn">Database connection to use</param>
+  /// <param name="cmd">Command to use with parameters</param>
+  /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+  /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
+  /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
   public static Task<DataTable> GetDataTable(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
   {
     return GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
   }
 
   /// <summary>
-    /// Reads data using into a DataTable object using the provided database connection and command
-    /// </summary>
-    /// <param name="conn">Database connection to use</param>
-    /// <param name="cmd">Command to use with parameters</param>
-    /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
-    /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
+  /// Reads data using into a DataTable object using the provided database connection and command
+  /// </summary>
+  /// <param name="conn">Database connection to use</param>
+  /// <param name="cmd">Command to use with parameters</param>
+  /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+  /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
+  /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
   internal static async Task<DataTable> GetDataTableInternal(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
   {
     using DataTable dt = new();
@@ -69,26 +69,26 @@ public static class DirectQuery
   }
 
   /// <summary>
-    /// Returns a DataTable using the SQL and data connection passed to the function
-    /// </summary>
-    /// <param name="conn">Database connection to use</param>
-    /// <param name="cmd">Command to use with parameters</param>
-    /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
-    /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
+  /// Returns a DataTable using the SQL and data connection passed to the function
+  /// </summary>
+  /// <param name="conn">Database connection to use</param>
+  /// <param name="cmd">Command to use with parameters</param>
+  /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+  /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
+  /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
   public static DataTable GetDataTableSynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
   {
     return GetDataTableInternalSynchronous(conn, cmd, commandTimeoutSeconds, maxRetry);
   }
 
   /// <summary>
-    /// Reads data using into a DataTable object using the provided database connection and command
-    /// </summary>
-    /// <param name="conn">Database connection to use</param>
-    /// <param name="cmd">Command to use with parameters</param>
-    /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
-    /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
+  /// Reads data using into a DataTable object using the provided database connection and command
+  /// </summary>
+  /// <param name="conn">Database connection to use</param>
+  /// <param name="cmd">Command to use with parameters</param>
+  /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+  /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
+  /// <returns><see cref="DataTable"/> containing the results of the database command</returns>
   internal static DataTable GetDataTableInternalSynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
   {
     using DataTable dt = new();
@@ -121,26 +121,26 @@ public static class DirectQuery
   }
 
   /// <summary>
-    /// Execute an update query asynchronously
-    /// </summary>
-    /// <param name="conn">Database connection to use</param>
-    /// <param name="cmd">Command to use with parameters</param>
-    /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
-    /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
+  /// Execute an update query asynchronously
+  /// </summary>
+  /// <param name="conn">Database connection to use</param>
+  /// <param name="cmd">Command to use with parameters</param>
+  /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+  /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
+  /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
   public static Task<UpdateResult> RunUpdateQuery(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
   {
     return RunUpdateQueryInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
   }
 
   /// <summary>
-    /// Execute an update query asynchronously
-    /// </summary>
-    /// <param name="conn">Database connection to use</param>
-    /// <param name="cmd">Command to use with parameters</param>
-    /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
-    /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
+  /// Execute an update query asynchronously
+  /// </summary>
+  /// <param name="conn">Database connection to use</param>
+  /// <param name="cmd">Command to use with parameters</param>
+  /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+  /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
+  /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
   internal static async Task<UpdateResult> RunUpdateQueryInternal(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
   {
     for (int i = 0; i < maxRetry; i++)
@@ -171,26 +171,26 @@ public static class DirectQuery
   }
 
   /// <summary>
-    /// Execute an update query synchronously
-    /// </summary>
-    /// <param name="conn">Database connection to use</param>
-    /// <param name="cmd">Command to use with parameters</param>
-    /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
-    /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
+  /// Execute an update query synchronously
+  /// </summary>
+  /// <param name="conn">Database connection to use</param>
+  /// <param name="cmd">Command to use with parameters</param>
+  /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+  /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
+  /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
   public static UpdateResult RunUpdateQuerySynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
   {
     return RunUpdateQueryInternalSynchronous(conn, cmd, commandTimeoutSeconds, maxRetry);
   }
 
   /// <summary>
-    /// Execute an update query synchronously
-    /// </summary>
-    /// <param name="conn">Database connection to use</param>
-    /// <param name="cmd">Command to use with parameters</param>
-    /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
-    /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
-    /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
+  /// Execute an update query synchronously
+  /// </summary>
+  /// <param name="conn">Database connection to use</param>
+  /// <param name="cmd">Command to use with parameters</param>
+  /// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
+  /// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
+  /// <returns>UpdateResult containing the number of records altered and whether the query executed successfully</returns>
   internal static UpdateResult RunUpdateQueryInternalSynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
   {
     for (int i = 0; i < maxRetry; i++)
@@ -229,8 +229,8 @@ public static class DirectQuery
   public static ICacheManagerApi<Type, Delegate> CacheManager => MappingCache;
 
   /// <summary>
-    /// Clears LimitedMappingCache cache and sets the size to the specified value.
-    /// </summary>
+  /// Clears LimitedMappingCache cache and sets the size to the specified value.
+  /// </summary>
   private static Delegate GetOrAddPropertiesFromMappingCache<T>(Type key) where T : class, new()
   {
     bool isLimitedCache = CacheManager.IsUsingLimitedCache();
@@ -320,13 +320,13 @@ public static class DirectQuery
   }
 
   /// <summary>
-    /// Get a stream of data from the database using the provided connection and command
-    /// </summary>
-    /// <param name="conn">Database connection to execute the command on</param>
-    /// <param name="cmd">Database command to execute</param>
-    /// <param name="commandTimeoutSeconds">Optional: Command execution timeout in seconds</param>
-    /// <param name="cancellationToken">Optional: Token to monitor for cancellation requests</param>
-    /// <returns></returns>
+  /// Get a stream of data from the database using the provided connection and command
+  /// </summary>
+  /// <param name="conn">Database connection to execute the command on</param>
+  /// <param name="cmd">Database command to execute</param>
+  /// <param name="commandTimeoutSeconds">Optional: Command execution timeout in seconds</param>
+  /// <param name="cancellationToken">Optional: Token to monitor for cancellation requests</param>
+  /// <returns></returns>
   public static IEnumerable<T> GetDataStreamSynchronous<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, bool useCache = true, CancellationToken cancellationToken = default) where T : class, new()
   {
     DbDataReader? reader = null;

@@ -183,8 +183,6 @@ public sealed class CellFont : IFont
 
   public short Index { get; }
 
-  public short Boldweight { get; set; }
-
   public bool IsBold { get; set; }
 
   public void CloneStyleFrom(IFont src)
@@ -209,9 +207,6 @@ public sealed class CellFont : IFont
     dest.TypeOffset = TypeOffset;
     dest.Underline = Underline;
     dest.Charset = Charset;
-    #pragma warning disable CS0618 // Type or member is obsolete
-    dest.Boldweight = Boldweight;
-    #pragma warning restore CS0618 // Type or member is obsolete
     dest.IsBold = IsBold;
   }
 }
@@ -1200,7 +1195,7 @@ public static partial class Common
     {
       ISheet? ws;
       ICreationHelper helper = wb.GetCreationHelper();
-      Dictionary<string, IDrawing> worksheetDrawings = [];
+      Dictionary<string, IDrawing<IShape>> worksheetDrawings = [];
       for (int i = 0; i < imageData.Count; i++)
       {
         if ((imageData[i].Length > 0) && (wb != null) && (cellNames[i] != null))
@@ -1211,7 +1206,7 @@ public static partial class Common
           ws = cell?.Sheet;
           if ((ws != null) && (area != null))
           {
-            if (!worksheetDrawings.TryGetValue(ws.SheetName, out IDrawing? drawing))
+            if (!worksheetDrawings.TryGetValue(ws.SheetName, out IDrawing<IShape>? drawing))
             {
               drawing = ws.CreateDrawingPatriarch();
               worksheetDrawings.Add(ws.SheetName, drawing);
@@ -1267,7 +1262,7 @@ public static partial class Common
     if ((wb != null) && (imageData.Count > 0) && (ranges.Count > 0) && (imageData.Count == ranges.Count))
     {
       ICreationHelper helper = wb.GetCreationHelper();
-      IDrawing? drawing = ws.CreateDrawingPatriarch();
+      IDrawing<IShape>? drawing = ws.CreateDrawingPatriarch();
       ICellStyle cellStyle = wb.GetStandardCellStyle(EStyle.ImageBackground);
       for (int i = 0; i < imageData.Count; i++)
       {
@@ -1294,7 +1289,7 @@ public static partial class Common
     /// Optional: Cell style to use in cells where pasting image. Using the image background font is strongly
     /// recommended as it ensures proper measurements when sizing the picture
     /// </param>
-  public static void AddPicture(this IWorkbook wb, ISheet ws, CellRangeAddress area, byte[] imageData, IDrawing drawing, AnchorType anchorType = AnchorType.MoveAndResize, ICreationHelper? helper = null, ICellStyle? cellStyle = null)
+  public static void AddPicture(this IWorkbook wb, ISheet ws, CellRangeAddress area, byte[] imageData, IDrawing<IShape> drawing, AnchorType anchorType = AnchorType.MoveAndResize, ICreationHelper? helper = null, ICellStyle? cellStyle = null)
   {
     ICell? cell = ws.GetCellFromCoordinates(area.FirstColumn, area.FirstRow);
     if (cell != null)
@@ -1746,7 +1741,8 @@ public static partial class Common
   public static bool IsXlsx(this Stream fileStream)
   {
     fileStream.Position = 0;
-    return DocumentFactoryHelper.HasOOXMLHeader(fileStream);
+    return FileMagicContainer.ValueOf(fileStream) == FileMagic.OOXML;
+    //return DocumentFactoryHelper.HasOOXMLHeader(fileStream); // Deprecated method
   }
 
   /// <summary>

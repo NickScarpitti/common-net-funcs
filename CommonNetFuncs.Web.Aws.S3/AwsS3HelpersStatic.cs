@@ -97,7 +97,21 @@ public static class AwsS3HelpersStatic
           await uploadStream.CopyToAsync(lengthStream, cancellationToken).ConfigureAwait(false);
           request.Headers["Content-Length"] = lengthStream.Length.ToString();
 
+          Stopwatch? sw = null;
+          if (logLevel != null && logLevel <= LogLevel.Debug)
+          {
+            logger.Info("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
+            sw = Stopwatch.StartNew();
+          }
+
           PutObjectResponse? response = await s3Client.PutObjectAsync(request, cancellationToken).ConfigureAwait(false);
+
+          if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+          {
+            sw.Stop();
+            logger.Info("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+          }
+
           success = response?.HttpStatusCode == HttpStatusCode.OK;
 
           if (!success && logLevel != null && logLevel <= LogLevel.Info)
@@ -107,7 +121,20 @@ public static class AwsS3HelpersStatic
         }
         else
         {
+          Stopwatch? sw = null;
+          if (logLevel != null && logLevel <= LogLevel.Debug)
+          {
+            logger.Info("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
+            sw = Stopwatch.StartNew();
+          }
+
           success = await s3Client.UploadMultipartAsync(bucketName, fileName, fileData, logLevel, cancellationToken).ConfigureAwait(false);
+
+          if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+          {
+            sw.Stop();
+            logger.Info("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+          }
         }
       }
     }
@@ -177,7 +204,21 @@ public static class AwsS3HelpersStatic
 
           request.Headers["Content-Length"] = request.InputStream.Length.ToString();
 
+          Stopwatch? sw = null;
+          if (logLevel != null && logLevel <= LogLevel.Debug)
+          {
+            logger.Info("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
+            sw = Stopwatch.StartNew();
+          }
+
           PutObjectResponse? response = await s3Client.PutObjectAsync(request, cancellationToken).ConfigureAwait(false);
+
+          if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+          {
+            sw.Stop();
+            logger.Info("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+          }
+
           success = response?.HttpStatusCode == HttpStatusCode.OK;
           if (!success && logLevel != null && logLevel <= LogLevel.Info)
           {
@@ -186,7 +227,20 @@ public static class AwsS3HelpersStatic
         }
         else
         {
+          Stopwatch? sw = null;
+          if (logLevel != null && logLevel <= LogLevel.Debug)
+          {
+            logger.Info("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
+            sw = Stopwatch.StartNew();
+          }
+
           success = await s3Client.UploadMultipartAsync(bucketName, fileName, fileData, logLevel, cancellationToken).ConfigureAwait(false);
+
+          if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+          {
+            sw.Stop();
+            logger.Info("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+          }
         }
 
         fileData.Close();
@@ -260,11 +314,18 @@ public static class AwsS3HelpersStatic
       // Create semaphore to limit concurrent uploads (adjust based on your needs)
       using SemaphoreSlim semaphore = new(Environment.ProcessorCount * 2, Environment.ProcessorCount * 2);
 
+      Stopwatch? sw = null;
+      if (logLevel != null && logLevel <= LogLevel.Debug)
+      {
+        logger.Info("Starting multi-part upload of {fileName} to bucket {bucketName}", fileName, bucketName);
+        sw = Stopwatch.StartNew();
+      }
+
       // Upload parts in parallel
       Task<PartETag?>[] uploadTasks = new Task<PartETag?>[totalParts];
       for (int i = 1; i <= totalParts; i++)
       {
-        uploadTasks[i - 1] = s3Client.UploadPartAsync(bucketName, fileName, uploadId, stream, i, chunkSize, totalSize, semaphore, cancellationToken);
+        uploadTasks[i - 1] = s3Client.UploadPartAsync(bucketName, fileName, uploadId, stream, i, chunkSize, totalSize, semaphore, logLevel, cancellationToken);
       }
 
       // Wait for all uploads to complete
@@ -289,10 +350,17 @@ public static class AwsS3HelpersStatic
 
       CompleteMultipartUploadResponse completeResponse = await s3Client.CompleteMultipartUploadAsync(completeRequest, cancellationToken).ConfigureAwait(false);
 
+      if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+      {
+        sw.Stop();
+        logger.Info("Finished multi-part upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+      }
+
       if (logLevel == LogLevel.Info)
       {
         logger.Info("Multipart upload completed successfully for {fileName}", fileName);
       }
+
       return completeResponse.HttpStatusCode == HttpStatusCode.OK;
     }
     catch (Exception ex)
@@ -325,7 +393,7 @@ public static class AwsS3HelpersStatic
   private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Shared;
 
   internal static async Task<PartETag?> UploadPartAsync(this IAmazonS3 s3Client, string bucketName, string fileName, string uploadId, Stream sourceStream, int partNumber, long chunkSize,
-        long totalSize, SemaphoreSlim semaphore, CancellationToken cancellationToken)
+        long totalSize, SemaphoreSlim semaphore, LogLevel? logLevel = null, CancellationToken cancellationToken = default)
   {
     await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -370,7 +438,21 @@ public static class AwsS3HelpersStatic
             //IsLastPart = isLastPart,
           };
 
+        Stopwatch? sw = null;
+        if (logLevel != null && logLevel <= LogLevel.Debug)
+        {
+          logger.Info("Starting upload of part #{partNumber} ({actualChunkSize} bytes) {fileName} to bucket {bucketName}", partNumber, actualChunkSize, fileName, bucketName);
+          sw = Stopwatch.StartNew();
+        }
+
         UploadPartResponse response = await s3Client.UploadPartAsync(uploadPartRequest, cancellationToken).ConfigureAwait(false);
+
+        if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+        {
+          sw.Stop();
+          logger.Info("Finished upload of part #{partNumber} ({actualChunkSize} bytes) {fileName} to bucket {bucketName} in {time}ms", partNumber, actualChunkSize, fileName, bucketName, sw.ElapsedMilliseconds);
+        }
+
         if (response.HttpStatusCode == HttpStatusCode.OK)
         {
           logger.Debug("Successfully uploaded part {partNumber} ({actualChunkSize} bytes)", partNumber, actualChunkSize);

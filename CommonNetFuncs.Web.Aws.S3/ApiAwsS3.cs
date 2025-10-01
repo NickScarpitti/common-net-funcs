@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Amazon.S3;
 using Amazon.S3.Model;
+using NLog;
 using static CommonNetFuncs.Compression.Streams;
 
 namespace CommonNetFuncs.Web.Aws.S3;
@@ -27,7 +28,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   public Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null,
         long thresholdForMultiPartUpload = MultipartThreshold, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip, CancellationToken cancellationToken = default)
   {
-    return s3Client.UploadS3File(bucketName, fileName, fileData, validatedBuckets, thresholdForMultiPartUpload, compressSteam, compressionType, EnableInfoLogging, cancellationToken);
+    return s3Client.UploadS3File(bucketName, fileName, fileData, validatedBuckets, thresholdForMultiPartUpload, compressSteam, compressionType, LogLevel.Info, cancellationToken);
   }
 
   /// <summary>
@@ -42,7 +43,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   public Task<bool> UploadS3File(string bucketName, string fileName, string filePath, ConcurrentDictionary<string, bool>? validatedBuckets = null,
         long thresholdForMultiPartUpload = MultipartThreshold, CancellationToken cancellationToken = default)
   {
-    return s3Client.UploadS3File(bucketName, fileName, filePath, validatedBuckets, thresholdForMultiPartUpload, EnableInfoLogging, cancellationToken);
+    return s3Client.UploadS3File(bucketName, fileName, filePath, validatedBuckets, thresholdForMultiPartUpload, LogLevel.Info, cancellationToken);
   }
 
   /// <summary>
@@ -56,7 +57,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   /// <exception cref="InvalidOperationException">Thrown when the upload fails.</exception>
   public Task<bool> UploadMultipartAsync(string bucketName, string fileName, Stream stream, CancellationToken cancellationToken)
   {
-    return s3Client.UploadMultipartAsync(bucketName, fileName, stream, EnableInfoLogging, cancellationToken);
+    return s3Client.UploadMultipartAsync(bucketName, fileName, stream, LogLevel.Info, cancellationToken);
   }
 
   internal Task<PartETag?> UploadPartAsync(string bucketName, string fileName, string uploadId, Stream sourceStream, int partNumber, long chunkSize, long totalSize, SemaphoreSlim semaphore, CancellationToken cancellationToken)
@@ -73,7 +74,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status.</param>
   public Task GetS3File(string bucketName, string? fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null, bool decompressGzipData = true, CancellationToken cancellationToken = default)
   {
-    return s3Client.GetS3File(bucketName, fileName, fileData, validatedBuckets, decompressGzipData, cancellationToken);
+    return s3Client.GetS3File(bucketName, fileName, fileData, validatedBuckets, decompressGzipData, null, cancellationToken);
   }
 
   /// <summary>
@@ -85,7 +86,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   /// <param name="validatedBuckets">Optional: Dictionary containing bucket names and their validation status.</param>
   public Task GetS3File(string bucketName, string? fileName, string filePath, ConcurrentDictionary<string, bool>? validatedBuckets = null, CancellationToken cancellationToken = default)
   {
-    return s3Client.GetS3File(bucketName, fileName, filePath, validatedBuckets, cancellationToken);
+    return s3Client.GetS3File(bucketName, fileName, filePath, validatedBuckets, null, cancellationToken);
   }
 
   /// <summary>
@@ -97,7 +98,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   /// <returns><see langword="true"/> if file was deleted successfully.</returns>
   public Task<bool> DeleteS3File(string bucketName, string fileName, ConcurrentDictionary<string, bool>? validatedBuckets = null, CancellationToken cancellationToken = default)
   {
-    return s3Client.DeleteS3File(bucketName, fileName, validatedBuckets, cancellationToken);
+    return s3Client.DeleteS3File(bucketName, fileName, validatedBuckets, null, cancellationToken);
   }
 
   /// <summary>
@@ -109,7 +110,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   /// <returns><see langword="true"/> if the file exists within the given S3 bucket.</returns>
   public Task<bool> S3FileExists(string bucketName, string fileName, string? versionId = null, CancellationToken cancellationToken = default)
   {
-    return s3Client.S3FileExists(bucketName, fileName, versionId, cancellationToken);
+    return s3Client.S3FileExists(bucketName, fileName, versionId, null, cancellationToken);
   }
 
   /// <summary>
@@ -120,7 +121,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   /// <returns><see cref="List{T}"/> containing the names of every file within the given S3 bucket.</returns>
   public Task<List<string>?> GetAllS3BucketFiles(string bucketName, int maxKeysPerQuery = 1000, CancellationToken cancellationToken = default)
   {
-    return s3Client.GetAllS3BucketFiles(bucketName, maxKeysPerQuery, cancellationToken);
+    return s3Client.GetAllS3BucketFiles(bucketName, maxKeysPerQuery, null, cancellationToken);
   }
 
   /// <summary>

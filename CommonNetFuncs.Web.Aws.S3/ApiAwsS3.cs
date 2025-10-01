@@ -62,7 +62,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
 
   internal Task<PartETag?> UploadPartAsync(string bucketName, string fileName, string uploadId, Stream sourceStream, int partNumber, long chunkSize, long totalSize, SemaphoreSlim semaphore, LogLevel? logLevel = null, CancellationToken cancellationToken = default)
   {
-    return s3Client.UploadPartAsync(bucketName, fileName, uploadId, sourceStream, partNumber, chunkSize, totalSize, semaphore, cancellationToken);
+    return s3Client.UploadPartAsync(bucketName, fileName, uploadId, sourceStream, partNumber, chunkSize, totalSize, semaphore, logLevel, cancellationToken);
   }
 
   /// <summary>

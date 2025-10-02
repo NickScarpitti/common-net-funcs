@@ -45,16 +45,29 @@ public static class AwsS3HelpersStatic
       throw new NotSupportedException($"Compression type {compressionType} is not valid for this method.\n\tSupported types are:\n\t\t{ECompressionType.Gzip},\n\t\t{ECompressionType.Deflate}");
     }
 
+    bool logTrace = logLevel != null && logLevel < LogLevel.Trace;
+    bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
+    Stopwatch? sw = null;
+    if (logTrace)
+    {
+      sw = Stopwatch.StartNew();
+      logger.Warn("Starting UploadS3File method for {fileName} from bucket {bucketName}", fileName, bucketName);
+    }
+
     bool success = false;
     try
     {
       validatedBuckets ??= new(ValidatedBuckets);
-      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false))
+      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets, logLevel).ConfigureAwait(false))
       {
-        if (await s3Client.S3FileExists(bucketName, fileName, cancellationToken: cancellationToken).ConfigureAwait(false))
+        if (logTrace)
         {
-          await s3Client.DeleteS3File(bucketName, fileName, cancellationToken: cancellationToken).ConfigureAwait(false);
+          sw!.Stop();
+          logger.Warn("Finished bucket validation in UploadS3File method for {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName);
         }
+
+        await CheckForExistingFile(s3Client, bucketName, fileName, logLevel, cancellationToken).ConfigureAwait(false);
 
         ECompressionType currentCompression = await fileData.DetectCompressionType().ConfigureAwait(false);
         Stream? decompressedStream = fileData;
@@ -97,8 +110,7 @@ public static class AwsS3HelpersStatic
           await uploadStream.CopyToAsync(lengthStream, cancellationToken).ConfigureAwait(false);
           request.Headers["Content-Length"] = lengthStream.Length.ToString();
 
-          Stopwatch? sw = null;
-          if (logLevel != null && logLevel <= LogLevel.Debug)
+          if (logDebug)
           {
             logger.Info("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
             sw = Stopwatch.StartNew();
@@ -106,9 +118,9 @@ public static class AwsS3HelpersStatic
 
           PutObjectResponse? response = await s3Client.PutObjectAsync(request, cancellationToken).ConfigureAwait(false);
 
-          if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+          if (logDebug)
           {
-            sw.Stop();
+            sw!.Stop();
             logger.Info("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
           }
 
@@ -121,8 +133,7 @@ public static class AwsS3HelpersStatic
         }
         else
         {
-          Stopwatch? sw = null;
-          if (logLevel != null && logLevel <= LogLevel.Debug)
+          if (logDebug)
           {
             logger.Info("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
             sw = Stopwatch.StartNew();
@@ -130,9 +141,9 @@ public static class AwsS3HelpersStatic
 
           success = await s3Client.UploadMultipartAsync(bucketName, fileName, fileData, logLevel, cancellationToken).ConfigureAwait(false);
 
-          if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+          if (logDebug)
           {
-            sw.Stop();
+            sw!.Stop();
             logger.Info("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
           }
         }
@@ -178,16 +189,29 @@ public static class AwsS3HelpersStatic
       throw new FileNotFoundException($"File not found at path: {filePath}", filePath);
     }
 
+    bool logTrace = logLevel != null && logLevel < LogLevel.Trace;
+    bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
+    Stopwatch? sw = null;
+    if (logTrace)
+    {
+      sw = Stopwatch.StartNew();
+      logger.Warn("Starting UploadS3File method for {fileName} from bucket {bucketName}", fileName, bucketName);
+    }
+
     bool success = false;
     try
     {
       validatedBuckets ??= new(ValidatedBuckets);
-      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false))
+      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets, logLevel).ConfigureAwait(false))
       {
-        if (await s3Client.S3FileExists(bucketName, fileName, cancellationToken: cancellationToken).ConfigureAwait(false))
+        if (logTrace)
         {
-          await s3Client.DeleteS3File(bucketName, fileName, cancellationToken: cancellationToken).ConfigureAwait(false);
+          sw!.Stop();
+          logger.Warn("Finished bucket validation in UploadS3File method for {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName);
         }
+
+        await CheckForExistingFile(s3Client, bucketName, fileName, logLevel, cancellationToken).ConfigureAwait(false);
 
         await using FileStream fileData = new(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
@@ -204,8 +228,7 @@ public static class AwsS3HelpersStatic
 
           request.Headers["Content-Length"] = request.InputStream.Length.ToString();
 
-          Stopwatch? sw = null;
-          if (logLevel != null && logLevel <= LogLevel.Debug)
+          if (logDebug)
           {
             logger.Info("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
             sw = Stopwatch.StartNew();
@@ -213,9 +236,9 @@ public static class AwsS3HelpersStatic
 
           PutObjectResponse? response = await s3Client.PutObjectAsync(request, cancellationToken).ConfigureAwait(false);
 
-          if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+          if (logDebug)
           {
-            sw.Stop();
+            sw!.Stop();
             logger.Info("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
           }
 
@@ -227,8 +250,7 @@ public static class AwsS3HelpersStatic
         }
         else
         {
-          Stopwatch? sw = null;
-          if (logLevel != null && logLevel <= LogLevel.Debug)
+          if (logDebug)
           {
             logger.Info("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
             sw = Stopwatch.StartNew();
@@ -236,9 +258,9 @@ public static class AwsS3HelpersStatic
 
           success = await s3Client.UploadMultipartAsync(bucketName, fileName, fileData, logLevel, cancellationToken).ConfigureAwait(false);
 
-          if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+          if (logDebug)
           {
-            sw.Stop();
+            sw!.Stop();
             logger.Info("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
           }
         }
@@ -255,6 +277,43 @@ public static class AwsS3HelpersStatic
       logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
     }
     return success;
+  }
+
+  private static async Task CheckForExistingFile(IAmazonS3 s3Client, string bucketName, string fileName, LogLevel? logLevel = null, CancellationToken cancellationToken = default)
+  {
+    Stopwatch? sw = null;
+    Stopwatch? delteSw = null;
+
+    bool logTrace = logLevel != null && logLevel < LogLevel.Trace;
+
+    if (logTrace)
+    {
+      sw = Stopwatch.StartNew();
+      logger.Warn("Starting check for existing file in CheckForExistingFile method for {fileName} from bucket {bucketName}", fileName, bucketName);
+    }
+
+    if (await s3Client.S3FileExists(bucketName, fileName, logLevel: logLevel, cancellationToken: cancellationToken).ConfigureAwait(false))
+    {
+      if (logTrace)
+      {
+        delteSw = Stopwatch.StartNew();
+        logger.Warn("Starting delete of existing file in CheckForExistingFile method for {fileName} from bucket {bucketName}", fileName, bucketName);
+      }
+
+      await s3Client.DeleteS3File(bucketName, fileName, logLevel: logLevel, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+      if (logTrace)
+      {
+        delteSw!.Stop();
+        logger.Warn("Finished delete of existing file in CheckForExistingFile method for {fileName} from bucket {bucketName} in {time}ms", delteSw.ElapsedMilliseconds, fileName, bucketName);
+      }
+    }
+
+    if (logTrace)
+    {
+      sw!.Stop();
+      logger.Warn("Finished check for existing file in CheckForExistingFile method for {fileName} from bucket {bucketName} in {time}ms", sw.ElapsedMilliseconds, fileName, bucketName);
+    }
   }
 
   /// <summary>
@@ -276,6 +335,8 @@ public static class AwsS3HelpersStatic
   {
     string? uploadId = null;
     List<PartETag> partETags = new();
+
+    bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
 
     try
     {
@@ -315,10 +376,10 @@ public static class AwsS3HelpersStatic
       using SemaphoreSlim semaphore = new(Environment.ProcessorCount * 2, Environment.ProcessorCount * 2);
 
       Stopwatch? sw = null;
-      if (logLevel != null && logLevel <= LogLevel.Debug)
+      if (logDebug)
       {
-        logger.Info("Starting multi-part upload of {fileName} to bucket {bucketName}", fileName, bucketName);
         sw = Stopwatch.StartNew();
+        logger.Info("Starting multi-part upload of {fileName} to bucket {bucketName}", fileName, bucketName);
       }
 
       // Upload parts in parallel
@@ -350,9 +411,9 @@ public static class AwsS3HelpersStatic
 
       CompleteMultipartUploadResponse completeResponse = await s3Client.CompleteMultipartUploadAsync(completeRequest, cancellationToken).ConfigureAwait(false);
 
-      if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+      if (logDebug)
       {
-        sw.Stop();
+        sw!.Stop();
         logger.Info("Finished multi-part upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
       }
 
@@ -397,6 +458,8 @@ public static class AwsS3HelpersStatic
   {
     await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
+    bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
     try
     {
       long startPosition = (partNumber - 1) * chunkSize;
@@ -439,17 +502,17 @@ public static class AwsS3HelpersStatic
           };
 
         Stopwatch? sw = null;
-        if (logLevel != null && logLevel <= LogLevel.Debug)
+        if (logDebug)
         {
-          logger.Info("Starting upload of part #{partNumber} ({actualChunkSize} bytes) {fileName} to bucket {bucketName}", partNumber, actualChunkSize, fileName, bucketName);
           sw = Stopwatch.StartNew();
+          logger.Info("Starting upload of part #{partNumber} ({actualChunkSize} bytes) {fileName} to bucket {bucketName}", partNumber, actualChunkSize, fileName, bucketName);
         }
 
         UploadPartResponse response = await s3Client.UploadPartAsync(uploadPartRequest, cancellationToken).ConfigureAwait(false);
 
-        if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+        if (logDebug)
         {
-          sw.Stop();
+          sw!.Stop();
           logger.Info("Finished upload of part #{partNumber} ({actualChunkSize} bytes) {fileName} to bucket {bucketName} in {time}ms", partNumber, actualChunkSize, fileName, bucketName, sw.ElapsedMilliseconds);
         }
 
@@ -498,29 +561,44 @@ public static class AwsS3HelpersStatic
   public static async Task GetS3File(this IAmazonS3 s3Client, string bucketName, string? fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null,
       bool decompressGzipData = true, LogLevel? logLevel = null, CancellationToken cancellationToken = default)
   {
+    Stopwatch? sw = null;
+    bool logTrace = logLevel != null && logLevel < LogLevel.Trace;
+    bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
     try
     {
-      validatedBuckets ??= new(ValidatedBuckets);
-      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false))
+      if (logTrace)
       {
+        sw = Stopwatch.StartNew();
+        logger.Warn("Starting GetS3File method for {fileName} from bucket {bucketName}", fileName, bucketName);
+      }
+
+      validatedBuckets ??= new(ValidatedBuckets);
+      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets, logLevel).ConfigureAwait(false))
+      {
+        if (logTrace)
+        {
+          sw!.Stop();
+          logger.Warn("Finished validating bucket in GetS3File method for {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+        }
+
         GetObjectRequest request = new()
           {
             BucketName = bucketName,
             Key = fileName
           };
 
-        Stopwatch? sw = null;
-        if (logLevel != null && logLevel <= LogLevel.Debug)
+        if (logDebug)
         {
-          logger.Info("Starting download of {fileName} from bucket {bucketName}", fileName, bucketName);
           sw = Stopwatch.StartNew();
+          logger.Info("Starting download of {fileName} from bucket {bucketName}", fileName, bucketName);
         }
 
         using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cancellationToken).ConfigureAwait(false);
 
-        if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+        if (logDebug)
         {
-          sw.Stop();
+          sw!.Stop();
           logger.Info("Finished download of {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
         }
 
@@ -587,28 +665,49 @@ public static class AwsS3HelpersStatic
   {
     try
     {
-      await using FileStream fileStream = new(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
-      validatedBuckets ??= new(ValidatedBuckets);
-      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false))
+      Stopwatch? sw = null;
+      bool logTrace = logLevel != null && logLevel < LogLevel.Trace;
+      bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
+      if (logTrace)
       {
+        logger.Warn("Opening FileStream in GetS3File method for {fileName} from bucket {bucketName}", fileName, bucketName);
+      }
+
+      await using FileStream fileStream = new(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+
+      if (logTrace)
+      {
+        sw = Stopwatch.StartNew();
+        logger.Warn("Starting GetS3File method for {fileName} from bucket {bucketName}", fileName, bucketName);
+      }
+
+      validatedBuckets ??= new(ValidatedBuckets);
+      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets, logLevel).ConfigureAwait(false))
+      {
+        if (logTrace)
+        {
+          sw!.Stop();
+          logger.Warn("Finished validating bucket in GetS3File method for {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+        }
+
         GetObjectRequest request = new()
           {
             BucketName = bucketName,
             Key = fileName
           };
 
-        Stopwatch? sw = null;
         if (logLevel <= LogLevel.Debug)
         {
-          logger.Info("Starting download of {fileName} from bucket {bucketName}", fileName, bucketName);
           sw = Stopwatch.StartNew();
+          logger.Info("Starting download of {fileName} from bucket {bucketName}", fileName, bucketName);
         }
 
         using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cancellationToken).ConfigureAwait(false);
 
-        if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+        if (logDebug)
         {
-          sw.Stop();
+          sw!.Stop();
           logger.Info("Finished download of {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
         }
 
@@ -663,24 +762,41 @@ public static class AwsS3HelpersStatic
     LogLevel? logLevel = null, CancellationToken cancellationToken = default)
   {
     bool success = false;
+
+    bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
     try
     {
-      validatedBuckets ??= new(ValidatedBuckets);
-      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false) &&
-          await s3Client.S3FileExists(bucketName, fileName, cancellationToken: cancellationToken).ConfigureAwait(false))
+      Stopwatch? sw = null;
+      bool logTrace = logLevel != null && logLevel < LogLevel.Trace;
+
+      if (logTrace)
       {
-        Stopwatch? sw = null;
-        if (logLevel != null && logLevel <= LogLevel.Debug)
+        sw = Stopwatch.StartNew();
+        logger.Warn("Starting DeleteS3File method for {fileName} from bucket {bucketName}", fileName, bucketName);
+      }
+
+      validatedBuckets ??= new(ValidatedBuckets);
+      if (!fileName.IsNullOrWhiteSpace() && await s3Client.IsBucketValid(bucketName, validatedBuckets, logLevel).ConfigureAwait(false) &&
+          await s3Client.S3FileExists(bucketName, fileName, logLevel: logLevel, cancellationToken: cancellationToken).ConfigureAwait(false))
+      {
+        if (logTrace)
         {
-          logger.Info("Starting deletion of {fileName} from bucket {bucketName}", fileName, bucketName);
+          sw!.Stop();
+          logger.Warn("Finished validating bucket in DeleteS3File method for {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+        }
+
+        if (logDebug)
+        {
           sw = Stopwatch.StartNew();
+          logger.Info("Starting deletion of {fileName} from bucket {bucketName}", fileName, bucketName);
         }
 
         await s3Client.DeleteObjectAsync(bucketName, fileName, cancellationToken).ConfigureAwait(false);
 
-        if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+        if (logDebug)
         {
-          sw.Stop();
+          sw!.Stop();
           logger.Info("Finished deletion of {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
         }
 
@@ -722,6 +838,9 @@ public static class AwsS3HelpersStatic
   public static async Task<bool> S3FileExists(this IAmazonS3 s3Client, string bucketName, string fileName, string? versionId = null, LogLevel? logLevel = null, CancellationToken cancellationToken = default)
   {
     bool success = false;
+
+    bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
     try
     {
       if (!fileName.IsNullOrWhiteSpace())
@@ -734,7 +853,7 @@ public static class AwsS3HelpersStatic
           };
 
         Stopwatch? sw = null;
-        if (logLevel != null && logLevel <= LogLevel.Debug)
+        if (logDebug)
         {
           logger.Info("Starting file exists check for {fileName} in bucket {bucketName}", fileName, bucketName);
           sw = Stopwatch.StartNew();
@@ -742,9 +861,9 @@ public static class AwsS3HelpersStatic
 
         GetObjectMetadataResponse? response = await s3Client.GetObjectMetadataAsync(request, cancellationToken).ConfigureAwait(false);
 
-        if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+        if (logDebug)
         {
-          sw.Stop();
+          sw!.Stop();
           logger.Info("Finished file exists check for {fileName} in bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
         }
 
@@ -781,6 +900,9 @@ public static class AwsS3HelpersStatic
   public static async Task<List<string>?> GetAllS3BucketFiles(this IAmazonS3 s3Client, string bucketName, int maxKeysPerQuery = 1000, LogLevel? logLevel = null, CancellationToken cancellationToken = default)
   {
     List<string> fileNames = [];
+
+    bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
     try
     {
       if (!bucketName.IsNullOrWhiteSpace())
@@ -793,7 +915,7 @@ public static class AwsS3HelpersStatic
           };
 
         Stopwatch? sw = null;
-        if (logLevel != null && logLevel <= LogLevel.Debug)
+        if (logDebug)
         {
           logger.Info("Starting file list download from bucket {bucketName}", bucketName);
           sw = Stopwatch.StartNew();
@@ -806,9 +928,9 @@ public static class AwsS3HelpersStatic
           request.ContinuationToken = response?.NextContinuationToken;
         } while (response?.IsTruncated ?? false);
 
-        if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+        if (logDebug)
         {
-          sw.Stop();
+          sw!.Stop();
           logger.Info("Finished downloading file list from bucket {bucketName} in {time}ms", bucketName, sw.ElapsedMilliseconds);
         }
       }
@@ -845,9 +967,25 @@ public static class AwsS3HelpersStatic
     string? url = null;
     try
     {
-      validatedBuckets ??= new(ValidatedBuckets);
-      if (await s3Client.IsBucketValid(bucketName, validatedBuckets).ConfigureAwait(false))
+      Stopwatch? sw = null;
+      bool logTrace = logLevel != null && logLevel < LogLevel.Trace;
+      bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
+      if (logTrace)
       {
+        sw = Stopwatch.StartNew();
+        logger.Warn("Starting GetS3Url method for {fileName} from bucket {bucketName}", fileName, bucketName);
+      }
+
+      validatedBuckets ??= new(ValidatedBuckets);
+      if (await s3Client.IsBucketValid(bucketName, validatedBuckets, logLevel).ConfigureAwait(false))
+      {
+        if (logTrace)
+        {
+          sw!.Stop();
+          logger.Warn("Finished validating bucket in GetS3Url method for {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+        }
+
         GetPreSignedUrlRequest request = new()
           {
             BucketName = bucketName,
@@ -855,8 +993,7 @@ public static class AwsS3HelpersStatic
             Expires = DateTime.UtcNow + TimeSpan.FromMinutes(1),
           };
 
-        Stopwatch? sw = null;
-        if (logLevel != null && logLevel <= LogLevel.Debug)
+        if (logDebug)
         {
           logger.Info("Starting URL generation for {fileName} from bucket {bucketName}", fileName, bucketName);
           sw = Stopwatch.StartNew();
@@ -864,9 +1001,9 @@ public static class AwsS3HelpersStatic
 
         url = s3Client.GetPreSignedURL(request);
 
-        if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+        if (logDebug)
         {
-          sw.Stop();
+          sw!.Stop();
           logger.Info("Finished URL generation for {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
         }
       }
@@ -904,8 +1041,18 @@ public static class AwsS3HelpersStatic
   public static async Task<bool> IsBucketValid(this IAmazonS3 s3Client, string bucketName, ConcurrentDictionary<string, bool>? validatedBuckets = null, LogLevel? logLevel = null)
   {
     bool isValid = false;
+
+    Stopwatch? sw = null;
+    bool logTrace = logLevel != null && logLevel < LogLevel.Trace;
+    bool logDebug = logLevel != null && logLevel <= LogLevel.Debug;
+
     try
     {
+      if (logTrace)
+      {
+        logger.Info("Starting IsBucketValid method for bucket {bucketName}", bucketName);
+      }
+
       validatedBuckets ??= new(ValidatedBuckets);
       if (validatedBuckets != null)
       {
@@ -915,8 +1062,7 @@ public static class AwsS3HelpersStatic
         }
         else
         {
-          Stopwatch? sw = null;
-          if (logLevel != null && logLevel <= LogLevel.Debug)
+          if (logDebug)
           {
             logger.Info("Starting bucket validation of {bucketName}", bucketName);
             sw = Stopwatch.StartNew();
@@ -924,9 +1070,9 @@ public static class AwsS3HelpersStatic
 
           isValid = await DoesS3BucketExistV2Async(s3Client, bucketName).ConfigureAwait(false);
 
-          if (logLevel != null && logLevel <= LogLevel.Debug && sw != null)
+          if (logDebug)
           {
-            sw.Stop();
+            sw!.Stop();
             logger.Info("Finished bucket validation of {bucketName} in {time}ms", bucketName, sw.ElapsedMilliseconds);
           }
 
@@ -936,7 +1082,20 @@ public static class AwsS3HelpersStatic
 
       if (!isValid) //Retry in case of intermittent outage
       {
+        if (logDebug)
+        {
+          sw = Stopwatch.StartNew();
+          logger.Info("Starting re-try for bucket validation of {bucketName}", bucketName);
+        }
+
         isValid = await DoesS3BucketExistV2Async(s3Client, bucketName).ConfigureAwait(false);
+
+        if (logDebug)
+        {
+          sw!.Stop();
+          logger.Info("Finished re-try for bucket validation of {bucketName} in {time}ms", bucketName, sw.ElapsedMilliseconds);
+        }
+
         if (validatedBuckets != null)
         {
           validatedBuckets[bucketName] = isValid;

@@ -484,7 +484,7 @@ public sealed class ApiAwsS3Tests
             .Returns(completeResponse);
 
     // Act
-    bool result = await _sut.UploadMultipartAsync(bucketName, fileName, stream, null, CancellationToken.None);
+    bool result = await _sut.UploadMultipartAsync(bucketName, fileName, stream, CancellationToken.None);
 
     // Assert
     result.ShouldBeTrue();
@@ -518,7 +518,7 @@ public sealed class ApiAwsS3Tests
             .Returns(new AbortMultipartUploadResponse());
 
     // Act
-    bool result = await _sut.UploadMultipartAsync(bucketName, fileName, stream, null, CancellationToken.None);
+    bool result = await _sut.UploadMultipartAsync(bucketName, fileName, stream, CancellationToken.None);
 
     // Assert
     result.ShouldBeFalse();
@@ -550,7 +550,7 @@ public sealed class ApiAwsS3Tests
             .Returns(new AbortMultipartUploadResponse());
 
     // Act
-    bool result = await _sut.UploadMultipartAsync(bucketName, fileName, stream, null, CancellationToken.None);
+    bool result = await _sut.UploadMultipartAsync(bucketName, fileName, stream, CancellationToken.None);
 
     // Assert
     result.ShouldBeFalse();
@@ -576,7 +576,7 @@ public sealed class ApiAwsS3Tests
             .Returns(uploadPartResponse);
 
     // Act
-    PartETag? result = await _sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, null, CancellationToken.None);
+    PartETag? result = await _sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, CancellationToken.None);
 
     // Assert
     result.ShouldNotBeNull();
@@ -603,7 +603,7 @@ public sealed class ApiAwsS3Tests
             .Returns(uploadPartResponse);
 
     // Act
-    PartETag? result = await _sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, null, CancellationToken.None);
+    PartETag? result = await _sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, CancellationToken.None);
 
     // Assert
     result.ShouldBeNull();
@@ -624,7 +624,7 @@ public sealed class ApiAwsS3Tests
     await using MemoryStream stream = new(new byte[1024]);
 
     // Act
-    PartETag? result = await _sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, null, CancellationToken.None);
+    PartETag? result = await _sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, CancellationToken.None);
 
     // Assert
     result.ShouldBeNull();
@@ -648,7 +648,7 @@ public sealed class ApiAwsS3Tests
             .Throws(new Exception("fail"));
 
     // Act
-    PartETag? result = await _sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, null, CancellationToken.None);
+    PartETag? result = await _sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, CancellationToken.None);
 
     // Assert
     result.ShouldBeNull();

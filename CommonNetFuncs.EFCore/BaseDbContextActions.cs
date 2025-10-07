@@ -74,7 +74,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     T? model = null;
     try
     {
-      model = await context.Set<T>().FindAsync(new object?[] { primaryKey }, cancellationToken: cancellationToken).ConfigureAwait(false);
+      model = await context.Set<T>().FindAsync(new object?[] { primaryKey }, cancellationToken: cancellationToken).ConfigureAwait(true);
     }
     catch (Exception ex)
     {
@@ -112,14 +112,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         model = fullQueryOptions.SplitQueryOverride switch
         {
           null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
-                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+            context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+            context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
           true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+            context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+            context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
           _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+            context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+            context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
         };
       }
     }
@@ -238,14 +238,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         model = fullQueryOptions.SplitQueryOverride switch
         {
           null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
-                        context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+            context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+            context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
           true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
-                        context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+            context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+            context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
           _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
-                        context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
+            context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().GetObjectByPartial(model, cancellationToken: cancellationToken) :
+            context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(model, cancellationToken: cancellationToken),
         };
       }
     }
@@ -330,11 +330,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/>.</returns>
   public async Task<List<T>?> GetAll(TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default)
   {
-    IQueryable<T> query = GetQueryAll(queryTimeout, trackEntities);
     List<T>? model = null;
     try
     {
-      model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+      model = await GetQueryAll(queryTimeout, trackEntities).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -353,11 +352,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/>.</returns>
   public async IAsyncEnumerable<T>? GetAllStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
-    IQueryable<T> query = GetQueryAll(queryTimeout, trackEntities);
     IAsyncEnumerable<T>? enumeratedReader = null;
     try
     {
-      enumeratedReader = query.AsAsyncEnumerable();
+      enumeratedReader = GetQueryAll(queryTimeout, trackEntities).AsAsyncEnumerable();
     }
     catch (Exception ex)
     {
@@ -402,11 +400,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/>.</returns>
   public async Task<List<T>?> GetAllFull(TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
-    IQueryable<T> query = GetQueryAllFull(queryTimeout, false, trackEntities, fullQueryOptions);
     List<T>? model = null;
     try
     {
-      model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+      model = await GetQueryAllFull(queryTimeout, false, trackEntities, fullQueryOptions).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (InvalidOperationException ioEx)
     {
@@ -414,8 +411,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          query = GetQueryAllFull(queryTimeout, true, fullQueryOptions: fullQueryOptions);
-          model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+          model = await GetQueryAllFull(queryTimeout, true, fullQueryOptions: fullQueryOptions).ToListAsync(cancellationToken).ConfigureAwait(false);
           logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
           circularReferencingEntities.TryAdd(typeof(T), true);
         }
@@ -448,11 +444,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/>.</returns>
   public async IAsyncEnumerable<T>? GetAllFullStreaming(TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
-    IQueryable<T> query = GetQueryAllFull(queryTimeout, false, trackEntities, fullQueryOptions);
     IAsyncEnumerable<T>? enumeratedReader = null;
     try
     {
-      enumeratedReader = query.AsAsyncEnumerable();
+      enumeratedReader = GetQueryAllFull(queryTimeout, false, trackEntities, fullQueryOptions).AsAsyncEnumerable();
     }
     catch (InvalidOperationException ioEx)
     {
@@ -460,8 +455,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          query = GetQueryAllFull(queryTimeout, true, fullQueryOptions: fullQueryOptions);
-          enumeratedReader = query.AsAsyncEnumerable();
+          enumeratedReader = GetQueryAllFull(queryTimeout, true, fullQueryOptions: fullQueryOptions).AsAsyncEnumerable();
           logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
           circularReferencingEntities.TryAdd(typeof(T), true);
         }
@@ -513,14 +507,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       return fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking() :
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions),
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking() :
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking() :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions),
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking() :
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking() :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions)
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking() :
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions)
       };
     }
     else
@@ -549,10 +543,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/>.</returns>
   public Task<List<T2>?> GetAll<T2>(bool full, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetAll(selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetAllFull(selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetAllFull(selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -566,10 +560,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/>.</returns>
   public IAsyncEnumerable<T2>? GetAllStreaming<T2>(bool full, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetAllStreaming(selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetAllFullStreaming(selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetAllFullStreaming(selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -584,11 +578,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/>.</returns>
   public async Task<List<T2>?> GetAll<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default)
   {
-    IQueryable<T2> query = GetQueryAll(selectExpression, queryTimeout, trackEntities);
     List<T2>? model = null;
     try
     {
-      model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+      model = await GetQueryAll(selectExpression, queryTimeout, trackEntities).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -609,11 +602,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/>.</returns>
   public async IAsyncEnumerable<T2>? GetAllStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
-    IQueryable<T2> query = GetQueryAll(selectExpression, queryTimeout, trackEntities);
     IAsyncEnumerable<T2>? enumeratedReader = null;
     try
     {
-      enumeratedReader = query.AsAsyncEnumerable();
+      enumeratedReader = GetQueryAll(selectExpression, queryTimeout, trackEntities).AsAsyncEnumerable();
     }
     catch (Exception ex)
     {
@@ -661,13 +653,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/>.</returns>
   public async Task<List<T2>?> GetAllFull<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
-    IQueryable<T2> query = GetQueryAllFull(selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     List<T2>? model = null;
     try
     {
-      model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+      model = await GetQueryAllFull(selectExpression, queryTimeout, false, trackEntities, fullQueryOptions).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (InvalidOperationException ioEx)
     {
@@ -675,8 +666,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          query = GetQueryAllFull(selectExpression, queryTimeout, true);
-          model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+          model = await GetQueryAllFull(selectExpression, queryTimeout, true).ToListAsync(cancellationToken).ConfigureAwait(false);
           logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
           circularReferencingEntities.TryAdd(typeof(T), true);
         }
@@ -710,7 +700,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/>.</returns>
   public async IAsyncEnumerable<T2>? GetAllFullStreaming<T2>(Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
     IQueryable<T2> query = GetQueryAllFull(selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     IAsyncEnumerable<T2>? enumeratedReader = null;
@@ -780,14 +770,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       return fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression),
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().Select(selectExpression) :
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression),
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().Select(selectExpression) :
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression)
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().Select(selectExpression) :
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Select(selectExpression)
       };
     }
     else
@@ -817,10 +807,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression.</returns>
   public Task<List<T>?> GetWithFilter(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
-    return !full ? GetWithFilter(whereExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetWithFilterFull(whereExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+    return !full ? GetWithFilter(whereExpression, queryTimeout, trackEntities, cancellationToken) :
+      GetWithFilterFull(whereExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -835,11 +825,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression.</returns>
   public IAsyncEnumerable<T>? GetWithFilterStreaming(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetWithFilterStreaming(whereExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetWithFilterFullStreaming(whereExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetWithFilterFullStreaming(whereExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
+
+  private static readonly ConcurrentDictionary<string, Func<DbContext, Expression<Func<T, bool>>, IEnumerable<T>>> _compiledQueryCache = new();
 
   /// <summary>
   /// Gets all records from the corresponding table that satisfy the conditions of the linq query expression and transforms them <typeparamref name="T2"/>.
@@ -852,11 +844,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression.</returns>
   public async Task<List<T>?> GetWithFilter(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default)
   {
-    IQueryable<T> query = GetQueryWithFilter(whereExpression, queryTimeout, trackEntities);
     List<T>? model = null;
     try
     {
-      model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+      model = await GetQueryWithFilter(whereExpression, queryTimeout, trackEntities).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -876,11 +867,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression.</returns>
   public async IAsyncEnumerable<T>? GetWithFilterStreaming(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
-    IQueryable<T> query = GetQueryWithFilter(whereExpression, queryTimeout, trackEntities);
     IAsyncEnumerable<T>? enumeratedReader = null;
     try
     {
-      enumeratedReader = query.AsAsyncEnumerable();
+      enumeratedReader = GetQueryWithFilter(whereExpression, queryTimeout, trackEntities).AsAsyncEnumerable();
     }
     catch (Exception ex)
     {
@@ -926,13 +916,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression.</returns>
   public async Task<List<T>?> GetWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
-    IQueryable<T> query = GetQueryWithFilterFull(whereExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     List<T>? model = null;
     try
     {
-      model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+      model = await GetQueryWithFilterFull(whereExpression, queryTimeout, false, trackEntities, fullQueryOptions).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (InvalidOperationException ioEx)
     {
@@ -940,8 +929,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          query = GetQueryWithFilterFull(whereExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-          model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+          model = await GetQueryWithFilterFull(whereExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
           logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
           circularReferencingEntities.TryAdd(typeof(T), true);
         }
@@ -974,13 +963,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression.</returns>
   public async IAsyncEnumerable<T>? GetWithFilterFullStreaming(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
-    IQueryable<T> query = GetQueryWithFilterFull(whereExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     IAsyncEnumerable<T>? enumeratedReader = null;
     try
     {
-      enumeratedReader = query.AsAsyncEnumerable();
+      enumeratedReader = GetQueryWithFilterFull(whereExpression, queryTimeout, false, trackEntities, fullQueryOptions).AsAsyncEnumerable();
     }
     catch (InvalidOperationException ioEx)
     {
@@ -988,8 +976,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          query = GetQueryWithFilterFull(whereExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-          enumeratedReader = query.AsAsyncEnumerable();
+          enumeratedReader = GetQueryWithFilterFull(whereExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions).AsAsyncEnumerable();
           logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
           circularReferencingEntities.TryAdd(typeof(T), true);
         }
@@ -1029,7 +1016,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="fullQueryOptions">Optional: Used only when running "Full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression.</returns>
   public IQueryable<T> GetQueryWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool handlingCircularRefException = false,
-        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null)
+    bool trackEntities = false, FullQueryOptions? fullQueryOptions = null)
   {
     fullQueryOptions ??= new FullQueryOptions();
     using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -1043,14 +1030,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       return fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking() :
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression),
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking() :
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking() :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression),
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking() :
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking() :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression)
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking() :
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression)
       };
     }
     else
@@ -1081,10 +1068,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T2"/> class with the select expression.</returns>
   public Task<List<T2>?> GetWithFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -1100,10 +1087,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T2"/> class with the select expression.</returns>
   public IAsyncEnumerable<T2>? GetWithFilterStreaming<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetWithFilterStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -1119,11 +1106,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression.</returns>
   public async Task<List<T2>?> GetWithFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default)
   {
-    IQueryable<T2> query = GetQueryWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities);
     List<T2>? model = null;
     try
     {
-      model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+      model = await GetQueryWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -1144,13 +1130,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression.</returns>
   public async IAsyncEnumerable<T2>? GetWithFilterStreaming<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    bool trackEntities = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
-    IQueryable<T2> query = GetQueryWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities);
     IAsyncEnumerable<T2>? enumeratedReader = null;
     try
     {
-      enumeratedReader = query.AsAsyncEnumerable();
+      enumeratedReader = GetQueryWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities).AsAsyncEnumerable();
     }
     catch (Exception ex)
     {
@@ -1185,7 +1170,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     }
 
     return !trackEntities ? context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-            context.Set<T>().Where(whereExpression).Select(selectExpression).Distinct();
+      context.Set<T>().Where(whereExpression).Select(selectExpression).Distinct();
   }
 
   /// <summary>
@@ -1201,14 +1186,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T2"/> class with the select expression.</returns>
   public async Task<List<T2>?> GetWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
-    IQueryable<T2> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     List<T2>? model = null;
-
     try
     {
-      model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+      model = await GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions)
+        .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (InvalidOperationException ioEx)
     {
@@ -1216,8 +1200,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-          model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+          model = await GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
           logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
           circularReferencingEntities.TryAdd(typeof(T), true);
         }
@@ -1252,14 +1236,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T2"/> class with the select expression.</returns>
   public async IAsyncEnumerable<T2>? GetWithFilterFullStreaming<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
   {
-    IQueryable<T2> query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     IAsyncEnumerable<T2>? enumeratedReader = null;
 
     try
     {
-      enumeratedReader = query.AsAsyncEnumerable();
+      enumeratedReader = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions).AsAsyncEnumerable();
     }
     catch (InvalidOperationException ioEx)
     {
@@ -1267,8 +1250,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          query = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-          enumeratedReader = query.AsAsyncEnumerable();
+          enumeratedReader = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions).AsAsyncEnumerable();
           logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
           circularReferencingEntities.TryAdd(typeof(T), true);
         }
@@ -1310,7 +1292,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T2"/> class with the select expression.</returns>
   public IQueryable<T2> GetQueryWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null,
-        bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null)
+    bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null)
   {
     fullQueryOptions ??= new FullQueryOptions();
     using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -1324,14 +1306,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       return fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct()
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).Distinct() :
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct()
       };
     }
     else
@@ -1361,10 +1343,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="fullQueryOptions">Optional: Used only when running "Full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T"/> class with the select expression.</returns>
   public Task<List<T>?> GetNavigationWithFilter<T2>(bool full, Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
+    bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
   {
     return !full ? GetNavigationWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -1380,10 +1362,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T"/> with the select expression.</returns>
   public IAsyncEnumerable<T>? GetNavigationWithFilterStreaming<T2>(bool full, Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
+    bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
   {
     return !full ? GetNavigationWithFilterStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetNavigationWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetNavigationWithFilterFullStreaming(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -1399,13 +1381,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T"/> with the select expression.</returns>
   public async Task<List<T>?> GetNavigationWithFilter<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
+    bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
   {
-    IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     List<T>? model = null;
     try
     {
-      model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+      model = await GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (InvalidOperationException ioEx)
     {
@@ -1413,8 +1394,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-          model = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+          model = await GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
           logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
           circularReferencingEntities.TryAdd(typeof(T2), true);
         }
@@ -1449,13 +1430,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T"/> with the select expression.</returns>
   public async IAsyncEnumerable<T>? GetNavigationWithFilterStreaming<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T2 : class
+    bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T2 : class
   {
-    IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     IAsyncEnumerable<T>? enumeratedReader = null;
     try
     {
-      enumeratedReader = query.AsAsyncEnumerable();
+      enumeratedReader = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions).AsAsyncEnumerable();
     }
     catch (InvalidOperationException ioEx)
     {
@@ -1463,8 +1443,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-          enumeratedReader = query.AsAsyncEnumerable();
+          enumeratedReader = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions).AsAsyncEnumerable();
           logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
           circularReferencingEntities.TryAdd(typeof(T2), true);
         }
@@ -1506,35 +1485,33 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T"/> with the select expression.</returns>
   public async Task<List<T>?> GetNavigationWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
+    bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
   {
     fullQueryOptions ??= new FullQueryOptions();
-    IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     List<T>? model = null;
     try
     {
-      //model = await query.ToListAsync();
+      IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
       await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
       model = fullQueryOptions.SplitQueryOverride switch
       {
         //Need to add in navigation properties of the output type since they are not kept in the original query
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
-                    await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
+          await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+          await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
-                    await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
+          await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+          await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
-                    await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false)
+          await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+          await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false)
       };
     }
     catch (InvalidOperationException ioEx)
     {
       if (ioEx.HResult == -2146233079)
       {
-        query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-        //model = await query.ToListAsync();
+        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
         logger.Warn("{msg}", $"Adding {typeof(T2).Name} to circularReferencingEntities");
         circularReferencingEntities.TryAdd(typeof(T2), true);
         try
@@ -1544,14 +1521,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
           {
             //Need to add in navigation properties of the output type since they are not kept in the original query
             null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
-                            await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
+              await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+              await query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
             true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
-                            await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
+              await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+              await query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false),
             _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
-                            await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false)
+              await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false) :
+              await query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().ToListAsync(cancellationToken).ConfigureAwait(false)
           };
         }
         catch (InvalidOperationException ioEx2) //Error could be caused by navigation properties of the output type, so need to try that as well
@@ -1611,32 +1588,30 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
         bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T2 : class
   {
     fullQueryOptions ??= new FullQueryOptions();
-    IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
     IAsyncEnumerable<T>? enumeratedReader = null;
     try
     {
-      //model = await query.ToListAsync();
+      IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, false, trackEntities, fullQueryOptions);
       await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
       enumeratedReader = fullQueryOptions.SplitQueryOverride switch
       {
         //Need to add in navigation properties of the output type since they are not kept in the original query
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                    query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
+          query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+          query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                    query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
+          query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+          query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                    query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable()
+          query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+          query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable()
       };
     }
     catch (InvalidOperationException ioEx)
     {
       if (ioEx.HResult == -2146233079)
       {
-        query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-        //model = await query.ToListAsync();
+        IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
         logger.Warn("{msg}", $"Adding {typeof(T2).Name} to circularReferencingEntities");
         circularReferencingEntities.TryAdd(typeof(T2), true);
         try
@@ -1646,14 +1621,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
           {
             //Need to add in navigation properties of the output type since they are not kept in the original query
             null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                            query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
+              query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+              query.IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
             true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                            query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
+              query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+              query.AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable(),
             _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                            query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
-                            query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable()
+              query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsNoTracking().AsAsyncEnumerable() :
+              query.AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Distinct().AsAsyncEnumerable()
           };
         }
         catch (InvalidOperationException ioEx2) //Error could be caused by navigation properties of the output type, so need to try that as well
@@ -1717,7 +1692,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
   /// <returns>All records from the table corresponding to class <typeparamref name="T2"/> that also satisfy the conditions of linq query expression and have been transformed in to the <typeparamref name="T"/> with the select expression.</returns>
   public IQueryable<T> GetQueryNavigationWithFilterFull<T2>(Expression<Func<T2, bool>> whereExpression, Expression<Func<T2, T>> selectExpression, TimeSpan? queryTimeout = null,
-        bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
+    bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
   {
     fullQueryOptions ??= new FullQueryOptions();
     using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -1731,14 +1706,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       return fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
-                    context.Set<T2>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
-                    context.Set<T2>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
+          context.Set<T2>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
+          context.Set<T2>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
-                    context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
-                    context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
+          context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
+          context.Set<T2>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct(),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T2), out _) ?
-                    context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
-                    context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct()
+          context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct().AsNoTracking() :
+          context.Set<T2>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).Distinct()
       };
     }
     else
@@ -1772,10 +1747,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
   public Task<GenericPagingModel<T2>> GetWithPagingFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, string? orderByString = null, int skip = 0,
-        int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
+    int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
   {
     return !full ? GetWithPagingFilter(whereExpression, selectExpression, orderByString, skip, pageSize, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetWithPagingFilterFull(whereExpression, selectExpression, orderByString, skip, pageSize, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetWithPagingFilterFull(whereExpression, selectExpression, orderByString, skip, pageSize, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -1793,7 +1768,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
   public async Task<GenericPagingModel<T2>> GetWithPagingFilter<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
+    string? orderByString = null, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
   {
     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
     if (queryTimeout != null)
@@ -1805,15 +1780,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     try
     {
       IQueryable<T2> qModel = !trackEntities ? context.Set<T>().Where(whereExpression).AsNoTracking().Select(selectExpression) : context.Set<T>().Where(whereExpression).Select(selectExpression);
-
-      //var results = await qModel.OrderBy(orderByString ?? string.Empty).Select(x => new { Entities = x, TotalCount = qModel.Count() })
-            //    .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
-
-      //model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
-            //model.Entities = results.ConvertAll(x => x.Entities);
-
-      model.TotalRecords = await qModel.CountAsync(cancellationToken).ConfigureAwait(false); //results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
-      model.Entities = await qModel.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false); //results.ConvertAll(x => x.Entities);
+      model.TotalRecords = await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
+      model.Entities = await qModel.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -1838,16 +1806,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
   public async Task<GenericPagingModel<T2>> GetWithPagingFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, string? orderByString = null, int skip = 0,
-        int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
+    int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
   {
-    IQueryable<T2> qModel;
     GenericPagingModel<T2> model = new();
     try
     {
-      qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, false, trackEntities, fullQueryOptions);
-
-      //var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
-
+      IQueryable<T2> qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, false, trackEntities, fullQueryOptions);
       model.TotalRecords = await qModel.CountAsync(cancellationToken).ConfigureAwait(false); //results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
       model.Entities = await qModel.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);//results.ConvertAll(x => x.Entities);
     }
@@ -1857,7 +1821,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, true, fullQueryOptions: fullQueryOptions);
+          IQueryable<T2> qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, orderByString, queryTimeout, true, fullQueryOptions: fullQueryOptions);
           var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
           model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
@@ -1897,7 +1861,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
   /// <returns>The query to get the records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
   public IQueryable<T2> GetQueryPagingWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, string? orderByString,
-        TimeSpan? queryTimeout = null, bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
+    TimeSpan? queryTimeout = null, bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
   {
     fullQueryOptions ??= new FullQueryOptions();
     using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -1911,14 +1875,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       return fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression)
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).AsNoTracking().Select(selectExpression) :
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(orderByString ?? string.Empty).Select(selectExpression)
       };
     }
     else
@@ -1953,11 +1917,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
   public Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
+    Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false,
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
   {
     return !full ? GetWithPagingFilter(whereExpression, selectExpression, ascendingOrderEpression, skip, pageSize, queryTimeout, trackEntities, cancellationToken) :
-            GetWithPagingFilterFull(whereExpression, selectExpression, ascendingOrderEpression, skip, pageSize, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetWithPagingFilterFull(whereExpression, selectExpression, ascendingOrderEpression, skip, pageSize, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -1976,7 +1940,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
   public async Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
+    Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
   {
     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
     if (queryTimeout != null)
@@ -1988,10 +1952,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     try
     {
       IQueryable<T2> qModel = !trackEntities ? context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-                context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression);
+        context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression);
 
       var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() })
-                .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
+        .Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
       model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
       model.Entities = results.ConvertAll(x => x.Entities);
@@ -2020,14 +1984,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
   public async Task<GenericPagingModel<T2>> GetWithPagingFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-        Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null,
-        CancellationToken cancellationToken = default) where T2 : class
+    Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null,
+    CancellationToken cancellationToken = default) where T2 : class
   {
-    IQueryable<T2> qModel;
     GenericPagingModel<T2> model = new();
     try
     {
-      qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, false, trackEntities, fullQueryOptions);
+      IQueryable<T2> qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, false, trackEntities, fullQueryOptions);
 
       var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
@@ -2040,7 +2003,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       {
         try
         {
-          qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
+          IQueryable<T2> qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
           var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
           model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
@@ -2081,7 +2044,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
   /// <returns>The query to get the records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
   public IQueryable<T2> GetQueryPagingWithFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderEpression,
-        TimeSpan? queryTimeout = null, bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
+    TimeSpan? queryTimeout = null, bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
   {
     fullQueryOptions ??= new FullQueryOptions();
     using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -2095,14 +2058,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       return fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
+          context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
+          context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-                    context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression)
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
+          context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression)
       };
     }
     else
@@ -2131,10 +2094,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>First record from the table corresponding to class <typeparamref name="T"/> with or without navigation properties that also satisfies the conditions of the linq query expression.</returns>
   public Task<T?> GetOneWithFilter(bool full, Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetOneWithFilter(whereExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetOneWithFilterFull(whereExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetOneWithFilterFull(whereExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -2157,7 +2120,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     try
     {
       model = trackEntities ? await context.Set<T>().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
-                await context.Set<T>().AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false);
+        await context.Set<T>().AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -2177,7 +2140,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>First record from the table corresponding to class <typeparamref name="T"/> with its navigation properties that also satisfies the conditions of the linq query expression.</returns>
   public async Task<T?> GetOneWithFilterFull(Expression<Func<T, bool>> whereExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     fullQueryOptions ??= new FullQueryOptions();
     using DbContext context = serviceProvider.GetRequiredService<UT>();
@@ -2192,14 +2155,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       model = fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).AsNoTracking().FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
       };
     }
     catch (InvalidOperationException ioEx)
@@ -2251,10 +2214,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>First record from the table corresponding to class <typeparamref name="T"/> with or without navigation properties that also satisfies the conditions of the linq query expression and has been transformed into the <typeparamref name="T2"/> class.</returns>
   public Task<T2?> GetOneWithFilter<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetOneWithFilter(whereExpression, selectExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetOneWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetOneWithFilterFull(whereExpression, selectExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -2279,7 +2242,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     try
     {
       model = trackEntities ? await context.Set<T>().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        await context.Set<T>().AsNoTracking().Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -2301,7 +2264,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>First record from the table corresponding to class <typeparamref name="T"/> with its navigation properties that also satisfies the conditions of the linq query expression and has been transformed into the <typeparamref name="T2"/> class.</returns>
   public async Task<T2?> GetOneWithFilterFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     fullQueryOptions ??= new FullQueryOptions();
     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -2316,14 +2279,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       model = fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
       };
     }
     catch (InvalidOperationException ioEx)
@@ -2375,10 +2338,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The record that contains the maximum value according to the ascending order expression with or without navigation properties.</returns>
   public Task<T?> GetMaxByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetMaxByOrder(whereExpression, descendingOrderEpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetMaxByOrderFull(whereExpression, descendingOrderEpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetMaxByOrderFull(whereExpression, descendingOrderEpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -2402,7 +2365,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     try
     {
       model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        await context.Set<T>().AsNoTracking().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -2424,7 +2387,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The record that contains the maximum value according to the ascending order expression with it's navigation properties</returns>
   public async Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     fullQueryOptions ??= new FullQueryOptions();
     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -2439,14 +2402,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       model = fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
       };
     }
     catch (InvalidOperationException ioEx)
@@ -2498,10 +2461,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The record that contains the minimum value according to the ascending order expression with or without navigation properties.</returns>
   public Task<T?> GetMinByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetMinByOrder(whereExpression, ascendingOrderEpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetMinByOrderFull(whereExpression, ascendingOrderEpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetMinByOrderFull(whereExpression, ascendingOrderEpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -2526,7 +2489,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     try
     {
       model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        await context.Set<T>().AsNoTracking().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -2548,7 +2511,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The record that contains the minimum value according to the ascending order expression with it's navigation properties.</returns>
   public async Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     fullQueryOptions ??= new FullQueryOptions();
     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -2563,14 +2526,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       model = fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
       };
     }
     catch (InvalidOperationException ioEx)
@@ -2622,10 +2585,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The maximum object specified by the max expression with or without navigation properties.</returns>
   public Task<T2?> GetMax<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetMax(whereExpression, maxExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetMaxFull(whereExpression, maxExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetMaxFull(whereExpression, maxExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -2670,7 +2633,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The maximum object specified by the min expression.</returns>
   public async Task<T2?> GetMaxFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> maxExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     fullQueryOptions ??= new FullQueryOptions();
     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -2685,14 +2648,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       model = fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
       };
     }
     catch (InvalidOperationException ioEx)
@@ -2744,10 +2707,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The minimum object specified by the min expression with or without navigation properties</returns>
   public Task<T2?> GetMin<T2>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     return !full ? GetMin(whereExpression, minExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-            GetMinFull(whereExpression, minExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+      GetMinFull(whereExpression, minExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
   }
 
   /// <summary>
@@ -2772,7 +2735,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     try
     {
       model = trackEntities ? await context.Set<T>().Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
-                await context.Set<T>().AsNoTracking().Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false);
+        await context.Set<T>().AsNoTracking().Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
@@ -2793,7 +2756,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
   /// <returns>The minimum object specified by the min expression.</returns>
   public async Task<T2?> GetMinFull<T2>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> minExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
-        FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
+    FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
   {
     fullQueryOptions ??= new FullQueryOptions();
     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -2808,14 +2771,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       model = fullQueryOptions.SplitQueryOverride switch
       {
         null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
         true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
         _ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
-                    await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).AsNoTracking().MinAsync(minExpression, cancellationToken).ConfigureAwait(false) :
+          await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
       };
     }
     catch (InvalidOperationException ioEx)
@@ -2967,14 +2930,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   {
     await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
     DbSet<T> table = context.Set<T>();
-    bool success = false;
     try
     {
       T? deleteItem = await table.FindAsync(key).ConfigureAwait(false);
       if (deleteItem != null)
       {
         table.Remove(deleteItem);
-        success = true;
+        return true;
       }
       //changes = await table.DeleteByKeyAsync(key); //EF Core +, Does not require save changes, Does not work with PostgreSQL
     }
@@ -2982,7 +2944,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     {
       logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tKey: {JsonSerializer.Serialize(key)}");
     }
-    return success;
+    return false;
   }
 
   /// <summary>
@@ -3074,7 +3036,6 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
   public bool UpdateMany(List<T> models, bool removeNavigationProps = false) //Send in modified objects
   {
-    bool result = true;
     try
     {
       using DbContext context = serviceProvider.GetRequiredService<UT>()!;
@@ -3084,18 +3045,17 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
       }
       //await context.BulkUpdateAsync(models); EF Core Extensions (Paid)
       context.UpdateRange(models);
+      return true;
     }
     catch (DbUpdateException duex)
     {
-      result = false;
       logger.Error(duex, "{msg}", $"{duex.GetLocationOfException()} DBUpdate Error\n\tModels: {JsonSerializer.Serialize(models)}");
     }
     catch (Exception ex)
     {
-      result = false;
       logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModels: {JsonSerializer.Serialize(models)}");
     }
-    return result;
+    return false;
   }
 
   /// <summary>
@@ -3104,11 +3064,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
   /// <returns>Boolean indicating success.</returns>
   public async Task<bool> SaveChanges()
   {
-    bool result = false;
     try
     {
       await using DbContext context = serviceProvider.GetRequiredService<UT>()!;
-      result = await context.SaveChangesAsync().ConfigureAwait(false) > 0;
+      return await context.SaveChangesAsync().ConfigureAwait(false) > 0;
     }
     catch (DbUpdateException duex)
     {
@@ -3118,7 +3077,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
     {
       logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
     }
-    return result;
+    return false;
   }
 
   #endregion Write

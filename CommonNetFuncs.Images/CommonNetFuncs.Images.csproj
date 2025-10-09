@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.7.17</Version>
+    <Version>3.8.4</Version>
     <MinVerTagPrefix>images-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -81,7 +81,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.4" PrivateAssets="all" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.5" PrivateAssets="all" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" PrivateAssets="all" />
   </ItemGroup>
 

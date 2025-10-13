@@ -29,13 +29,13 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.8.4</Version>
+    <Version>3.8.5</Version>
     <MinVerTagPrefix>web.aws.s3-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.8.1</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.8.4</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
@@ -76,7 +76,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="4.0.7.7" PrivateAssets="all" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.7.9" PrivateAssets="all" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

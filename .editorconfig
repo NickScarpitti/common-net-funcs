@@ -5,7 +5,7 @@
 root = true
 # All files
 [*]
-indent_style = space
+indent_style = tab
 guidelines = 175 1.5px dotted cc30b0d4, 190 1.5px dashed ccbf9000, 205 1.5px solid cccc0000
 
 # XML project files
@@ -296,6 +296,18 @@ dotnet_diagnostic.RCS1124.severity = silent
 
 # IDE0230: Use UTF-8 string literal
 dotnet_diagnostic.IDE0230.severity = silent
+csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
+csharp_style_prefer_implicitly_typed_lambda_expression = true:suggestion
+csharp_style_prefer_utf8_string_literals = true:suggestion
+csharp_prefer_static_anonymous_function = true:suggestion
+csharp_style_prefer_readonly_struct = true:suggestion
+csharp_style_prefer_readonly_struct_member = true:suggestion
+csharp_style_allow_blank_line_after_token_in_conditional_expression_experimental = true:silent
+csharp_style_allow_blank_line_after_token_in_arrow_expression_clause_experimental = true:silent
+csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_prefer_pattern_matching = true:silent
+csharp_style_prefer_not_pattern = true:suggestion
+csharp_style_prefer_extended_property_pattern = true:suggestion
 
 [*.vb]
 # Modifier preferences

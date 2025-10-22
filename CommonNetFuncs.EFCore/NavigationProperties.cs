@@ -121,14 +121,12 @@ public static class NavigationProperties
 	/// <param name="navigationPropertiesOptions">Options for configuring navigation properties retrieval.</param>
 	private static HashSet<string> GetOrAddPropertiesFromEntityNavigationsCache<T>(NavigationProperiesCacheKey key, DbContext context, NavigationPropertiesOptions navigationPropertiesOptions) where T : class
 	{
-		if (NavigationCacheManager.IsUsingLimitedCache() ?
-						NavigationCacheManager.GetLimitedCache().TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out NavigationProperiesCacheValue cachedValue) :
-						NavigationCacheManager.GetCache().TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out cachedValue))
+		if ((NavigationCacheManager.IsUsingLimitedCache() ?
+					NavigationCacheManager.GetLimitedCache().TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out NavigationProperiesCacheValue cachedValue) :
+					NavigationCacheManager.GetCache().TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out cachedValue)) &&
+				(cachedValue.MaxDepth < 0 || cachedValue.MaxDepth >= navigationPropertiesOptions.MaxNavigationDepth))
 		{
-			if (cachedValue.MaxDepth < 0 || cachedValue.MaxDepth >= navigationPropertiesOptions.MaxNavigationDepth) //Cached value to requested depth exists
-			{
-				return cachedValue.GetNavigationsToDepth(navigationPropertiesOptions.MaxNavigationDepth);
-			}
+			return cachedValue.GetNavigationsToDepth(navigationPropertiesOptions.MaxNavigationDepth);
 		}
 
 		HashSet<string> navigations = GetNewNavigations<T>(context, navigationPropertiesOptions);

@@ -353,3 +353,4 @@ healthchecksdb
 # Custom
 *- Backup*.csproj
 *.csproj.Backup.tmp
+.directory

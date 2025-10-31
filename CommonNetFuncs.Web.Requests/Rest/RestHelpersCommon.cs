@@ -1,10 +1,30 @@
 ﻿using System.Text.Json;
+using CommonNetFuncs.Web.Common;
 
 namespace CommonNetFuncs.Web.Requests.Rest;
 
 public sealed class RequestOptions<T>
 {
   public string Url { get; set; } = null!;
+
+  public string RedactedUrl
+  {
+    get
+    {
+      if (string.IsNullOrWhiteSpace(Url))
+      {
+        return Url;
+      }
+      try
+      {
+        return Url.GetRedactedUri();
+      }
+      catch
+      {
+        return "<Error Redacting URL>";
+      }
+    }
+  }
 
   public HttpMethod HttpMethod { get; set; } = HttpMethod.Get;
 
@@ -20,9 +40,13 @@ public sealed class RequestOptions<T>
 
   public bool ExpectTaskCancellation { get; set; }
 
+  public bool LogRequest { get; set; }
+
   public bool LogQuery { get; set; }
 
   public bool LogBody { get; set; }
+
+  public bool LogResponse { get; set; }
 
   public MsgPackOptions? MsgPackOptions { get; set; }
 

@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
+
 using static CommonNetFuncs.Compression.Files;
 using static CommonNetFuncs.Email.EmailConstants;
 
@@ -63,31 +64,44 @@ public sealed class SendEmailConfig(SmtpSettings? smtpSettings = null, EmailAddr
   public EmailContent EmailContent { get; set; } = emailContent ?? new();
 }
 
-public sealed class SmtpSettings(string? smtpServer = null, int smtpPort = default, string? smtpUser = null, string? smtpPassword = null)
+public sealed class SmtpSettings
 {
+  public SmtpSettings()
+  {
+  }
+
+  public SmtpSettings(string? smtpServer, int smtpPort, string? smtpUser = null, string? smtpPassword = null)
+  {
+    SmtpServer = smtpServer;
+    SmtpPort = smtpPort;
+    SmtpUser = smtpUser;
+    SmtpPassword = smtpPassword;
+  }
+
+
   /// <summary>
   /// Gets or sets the SMTP server address used for sending emails.
   /// </summary>
-  public string? SmtpServer { get; set; } = smtpServer;
+  public string? SmtpServer { get; set; }
 
   /// <summary>
   /// Gets or sets the port number used for the SMTP server connection.
   /// </summary>
   /// <remarks>The port number must match the configuration of the SMTP server being used. Incorrect values may result in connection failures.</remarks>
-  public int SmtpPort { get; set; } = smtpPort;
+  public int SmtpPort { get; set; }
 
   /// <summary>
   /// Gets or sets the username used for authenticating with the SMTP server.
   /// </summary>
-  public string? SmtpUser { get; set; } = smtpUser;
+  public string? SmtpUser { get; set; }
 
   /// <summary>
   /// Gets or sets the password for the SMTP server, if required.
   /// </summary>
-  public string? SmtpPassword { get; set; } = smtpPassword;
+  public string? SmtpPassword { get; set; }
 }
 
-public sealed class  EmailAddresses(MailAddress? fromAddress = null, IEnumerable<MailAddress>? toAddresses = null, IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null)
+public sealed class EmailAddresses(MailAddress? fromAddress = null, IEnumerable<MailAddress>? toAddresses = null, IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null)
 {
   /// <summary>
   /// Gets or sets the sender's email address for the outgoing mail message.
@@ -346,16 +360,16 @@ public static class Email
           //foreach (MailAttachment attachment in attachments)
           //{
           //    //await attachment.AttachmentStream.AddZipToArchive(archive, attachment.AttachmentName, CompressionLevel.SmallestSize);
-                    //    if (attachment.AttachmentStream != null)
-                    //    {
-                    //        attachment.AttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
-                    //        ZipArchiveEntry entry = archive.CreateEntry(attachment.AttachmentName ?? $"File {archive.Entries.Count}", CompressionLevel.SmallestSize);
-                    //        await using Stream entryStream = entry.Open();
-                    //        await attachment.AttachmentStream.CopyToAsync(entryStream);
-                    //        await entryStream.FlushAsync();
-                    //    }
-                    //}
-                    archive.Dispose();
+          //    if (attachment.AttachmentStream != null)
+          //    {
+          //        attachment.AttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
+          //        ZipArchiveEntry entry = archive.CreateEntry(attachment.AttachmentName ?? $"File {archive.Entries.Count}", CompressionLevel.SmallestSize);
+          //        await using Stream entryStream = entry.Open();
+          //        await attachment.AttachmentStream.CopyToAsync(entryStream);
+          //        await entryStream.FlushAsync();
+          //    }
+          //}
+          archive.Dispose();
           memoryStream.Position = 0;
           await bodyBuilder.Attachments.AddAsync("Files.zip", memoryStream, cancellationToken).ConfigureAwait(false);
         }

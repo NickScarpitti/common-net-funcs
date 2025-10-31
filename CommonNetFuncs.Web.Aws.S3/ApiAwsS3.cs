@@ -27,7 +27,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   public Task<bool> UploadS3File(string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null,
         long thresholdForMultiPartUpload = MultipartThreshold, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip, CancellationToken cancellationToken = default)
   {
-    return s3Client.UploadS3File(bucketName, fileName, fileData, validatedBuckets, thresholdForMultiPartUpload, compressSteam, compressionType, EnableInfoLogging, cancellationToken);
+    return s3Client.UploadS3File(bucketName, fileName, fileData, validatedBuckets, thresholdForMultiPartUpload, compressSteam, compressionType, cancellationToken);
   }
 
   /// <summary>
@@ -42,7 +42,7 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   public Task<bool> UploadS3File(string bucketName, string fileName, string filePath, ConcurrentDictionary<string, bool>? validatedBuckets = null,
         long thresholdForMultiPartUpload = MultipartThreshold, CancellationToken cancellationToken = default)
   {
-    return s3Client.UploadS3File(bucketName, fileName, filePath, validatedBuckets, thresholdForMultiPartUpload, EnableInfoLogging, cancellationToken);
+    return s3Client.UploadS3File(bucketName, fileName, filePath, validatedBuckets, thresholdForMultiPartUpload, cancellationToken);
   }
 
   /// <summary>
@@ -54,12 +54,12 @@ public sealed class ApiAwsS3(IAmazonS3 s3Client) : IAwsS3
   /// <param name="cancellationToken">The cancellation token for this operation.</param>
   /// <returns><see langword="true"/> if the upload was successful.</returns>
   /// <exception cref="InvalidOperationException">Thrown when the upload fails.</exception>
-  public Task<bool> UploadMultipartAsync(string bucketName, string fileName, Stream stream, CancellationToken cancellationToken)
+  public Task<bool> UploadMultipartAsync(string bucketName, string fileName, Stream stream, CancellationToken cancellationToken = default)
   {
-    return s3Client.UploadMultipartAsync(bucketName, fileName, stream, EnableInfoLogging, cancellationToken);
+    return s3Client.UploadMultipartAsync(bucketName, fileName, stream, cancellationToken);
   }
 
-  internal Task<PartETag?> UploadPartAsync(string bucketName, string fileName, string uploadId, Stream sourceStream, int partNumber, long chunkSize, long totalSize, SemaphoreSlim semaphore, CancellationToken cancellationToken)
+  internal Task<PartETag?> UploadPartAsync(string bucketName, string fileName, string uploadId, Stream sourceStream, int partNumber, long chunkSize, long totalSize, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
   {
     return s3Client.UploadPartAsync(bucketName, fileName, uploadId, sourceStream, partNumber, chunkSize, totalSize, semaphore, cancellationToken);
   }

@@ -781,13 +781,13 @@ public static partial class Collections
 		IEnumerable<string> propertyNames = properties.Select(x => x.Name);
 		DataColumn[] columns = new DataColumn[dataTable.Columns.Count];
 		dataTable.Columns.CopyTo(columns, 0);
-		foreach (DataColumn col in columns.Where(x => propertyNames.Contains(x.ColumnName)))
+		foreach (DataColumn? col in columns.Where(x => !propertyNames.Contains(x.ColumnName)))
 		{
 			dataTable.Columns.Remove(col.ColumnName);
 		}
 
 		// Create columns
-		foreach (PropertyInfo prop in properties.Where(x => dataTable.Columns.Contains(x.Name)))
+		foreach (PropertyInfo? prop in properties.Where(x => !dataTable.Columns.Contains(x.Name)))
 		{
 			dataTable.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
 		}
@@ -795,7 +795,7 @@ public static partial class Collections
 		// Add rows
 		if (!useParallel)
 		{
-			foreach (T item in data.Where(x => !EqualityComparer<T?>.Default.Equals(x, default)))
+			foreach (T item in data.Where(x => x != null))
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 				DataRow row = dataTable.NewRow();
@@ -826,13 +826,13 @@ public static partial class Collections
 				localRows.Add(rowValues);
 				return localRows;
 			},
-						localRows =>
-						{
-							lock (lockObj)
-							{
-								rows.AddRange(localRows);
-							}
-						});
+				localRows =>
+				{
+					lock (lockObj)
+					{
+						rows.AddRange(localRows);
+					}
+				});
 
 			// Add all rows to the table
 			foreach (object[] rowValues in rows)

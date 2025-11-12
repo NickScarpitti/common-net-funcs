@@ -1,37 +1,39 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace CommonNetFuncs.Web.Api.OpenApiTransformers;
 
 public sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvider authenticationSchemeProvider, IOptions<BearerSecuritySchemeOptions> options) : IOpenApiDocumentTransformer
 {
-	private readonly IAuthenticationSchemeProvider authenticationSchemeProvider = authenticationSchemeProvider;
-	private readonly string authenticationSchemeName = options.Value.AuthenticationSchemeName;
+	private readonly IAuthenticationSchemeProvider _authenticationSchemeProvider = authenticationSchemeProvider;
+	private readonly string? _authenticationSchemeName = options.Value.AuthenticationSchemeName;
 
 	public async Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
 	{
-		IEnumerable<AuthenticationScheme> authenticationSchemes = await authenticationSchemeProvider.GetAllSchemesAsync().ConfigureAwait(false);
+		IEnumerable<AuthenticationScheme> authenticationSchemes = await _authenticationSchemeProvider.GetAllSchemesAsync().ConfigureAwait(false);
 
-		if (authenticationSchemeName == null || authenticationSchemes.Any(authScheme => authScheme.Name == authenticationSchemeName))
+		if (_authenticationSchemeName == null || authenticationSchemes.Any(authScheme => authScheme.Name == _authenticationSchemeName))
 		{
 			document.Components ??= new OpenApiComponents();
+			document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
 
 			const string securitySchemeId = "Bearer";
 
-			document.Components.SecuritySchemes.Add(securitySchemeId, new OpenApiSecurityScheme
+			document.Components.SecuritySchemes[securitySchemeId] = new OpenApiSecurityScheme
 			{
 				Type = SecuritySchemeType.Http,
 				Scheme = "bearer",
+				BearerFormat = "JWT",
 				In = ParameterLocation.Header,
-				BearerFormat = "Json Web Token"
-			});
+				Description = "JWT Authorization header using the Bearer scheme."
+			};
 
-			// Add "Bearer" scheme as a requirement for the API as a whole
-			document.SecurityRequirements.Add(new OpenApiSecurityRequirement
+			document.Security ??= new List<OpenApiSecurityRequirement>();
+			document.Security.Add(new OpenApiSecurityRequirement
 			{
-				[new OpenApiSecurityScheme { Reference = new OpenApiReference { Id = securitySchemeId, Type = ReferenceType.SecurityScheme } }] = Array.Empty<string>()
+				{ new OpenApiSecuritySchemeReference(securitySchemeId), new List<string>() }
 			});
 		}
 	}

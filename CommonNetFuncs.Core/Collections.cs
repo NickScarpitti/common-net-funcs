@@ -327,7 +327,7 @@ public static partial class Collections
 	/// <returns>A <see cref="List{T}"/> containing the single item or an empty <see cref="List{T}"> if the item is <see langword="null"/>.</returns>
 	public static List<T> SingleToList<T>(this T? obj)
 	{
-		return !EqualityComparer<T?>.Default.Equals(obj, default) ? [obj] : [];
+		return !EqualityComparer<T?>.Default.Equals(obj, default) ? [obj!] : [];
 	}
 
 	/// <summary>

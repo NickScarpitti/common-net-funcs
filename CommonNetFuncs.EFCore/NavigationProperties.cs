@@ -55,7 +55,7 @@ public static class NavigationProperties
 
 		public override int GetHashCode()
 		{
-			return SourceType.GetHashCode() + NavigationPropertyTypesToIgnore?.GetHashCode() ?? 0;
+			return (SourceType.GetHashCode() + NavigationPropertyTypesToIgnore?.GetHashCode()) ?? 0;
 		}
 
 		public static bool operator ==(NavigationProperiesCacheKey left, NavigationProperiesCacheKey right)
@@ -212,8 +212,10 @@ public static class NavigationProperties
 	{
 		HashSet<NavigationNode> visitedNode = [];
 		HashSet<string> paths = [];
+		StringBuilder stringBuilder = new();
+		Stack<string> currentPath = new();
 
-		void TraverseNavigations(Type entityType, Stack<string> currentPath, int depth)
+		void TraverseNavigations(Type entityType, int depth)
 		{
 			if (depth > navigationPropertiesOptions.MaxNavigationDepth)
 			{
@@ -226,10 +228,22 @@ public static class NavigationProperties
 				return;
 			}
 
+			PropertyInfo[] propertyCache = GetOrAddPropertiesFromReflectionCache(entityType);
+
 			foreach (INavigation navigation in entityTypeInfo.GetNavigations())
 			{
 				// Skip if property has JsonIgnore attribute
-				PropertyInfo? propertyInfo = GetOrAddPropertiesFromReflectionCache(entityType).First(x => x.Name.StrComp(navigation.Name)); //entityType.GetProperty(navigation.Name);
+				//GetOrAddPropertiesFromReflectionCache(entityType).First(x => x.Name.StrComp(navigation.Name)); //entityType.GetProperty(navigation.Name);
+				PropertyInfo? propertyInfo = null;
+				for (int i = 0; i < propertyCache.Length; i++)
+				{
+					if (propertyCache[i].Name.StrComp(navigation.Name))
+					{
+						propertyInfo = propertyCache[i];
+						break;
+					}
+				}
+
 				if (navigationPropertiesOptions.NavPropAttributesToIgnore != null)
 				{
 					bool skipProperty = false;
@@ -263,23 +277,28 @@ public static class NavigationProperties
 				}
 
 				currentPath.Push(navigation.Name);
-				StringBuilder stringBuilder = new();
+				stringBuilder.Clear();
 
+				bool firstLoop = true;
 				foreach (string pathSegment in currentPath.Reverse()) //Reverse order since Stack is LIFO
 				{
-					stringBuilder.Append(pathSegment).Append('.');
+					if (!firstLoop)
+					{
+						stringBuilder.Append('.');
+					}
+					stringBuilder.Append(pathSegment);
+					firstLoop = false;
 				}
-				stringBuilder.Length--; // Remove the last '.'
 				paths.Add(stringBuilder.ToString());
 
-				TraverseNavigations(targetType, currentPath, depth + 1);
+				TraverseNavigations(targetType, depth + 1);
 
 				currentPath.Pop();
 				visitedNode.Remove(node);
 			}
 		}
 
-		TraverseNavigations(typeof(T), new(), 0);
+		TraverseNavigations(typeof(T), 0);
 
 		return paths;
 	}

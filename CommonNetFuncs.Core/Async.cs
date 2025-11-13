@@ -6,6 +6,7 @@ using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
 
+#pragma warning disable S3998 // Threads should not lock on objects with weak identity
 public static class Async
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -28,10 +29,6 @@ public static class Async
 					{
 						resultObject?.CopyPropertiesTo(obj);
 					}
-				}
-				else
-				{
-					obj = resultObject;
 				}
 			}
 		}
@@ -124,10 +121,6 @@ public static class Async
 					{
 						resultObject?.CopyPropertiesTo(obj);
 					}
-				}
-				else
-				{
-					obj = resultObject;
 				}
 			}
 		}
@@ -539,14 +532,7 @@ public static class Async
 			IEnumerable<T>? resultObject = await task;
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -573,14 +559,7 @@ public static class Async
 			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
@@ -605,14 +584,7 @@ public static class Async
 			ConcurrentBag<T>? resultObject = await task;
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -663,14 +635,7 @@ public static class Async
 			ConcurrentBag<T>? resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
@@ -695,14 +660,7 @@ public static class Async
 			List<T>? resultObject = await task;
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -729,14 +687,7 @@ public static class Async
 			List<T>? resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
@@ -1178,3 +1129,4 @@ public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore
 		Tasks.Clear();
 	}
 }
+#pragma warning restore S3998 // Threads should not lock on objects with weak identity

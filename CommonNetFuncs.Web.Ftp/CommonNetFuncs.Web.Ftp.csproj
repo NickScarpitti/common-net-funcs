@@ -87,6 +87,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Csv\CommonNetFuncs.Csv.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.Excel.OpenXml\CommonNetFuncs.Excel.OpenXml.csproj" />
   </ItemGroup>
 
   <ItemGroup>

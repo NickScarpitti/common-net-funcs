@@ -563,7 +563,7 @@ public static class RestHelpersStatic
 
         await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false))
         {
-          if (item != null)
+          if (!EqualityComparer<T?>.Default.Equals(item, default))
           {
             yield return item;
           }
@@ -696,8 +696,8 @@ public static class RestHelpersStatic
 
     if (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod))
     {
-      string body = requestOptions.BodyObject != null
-          ? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions)
+      string body = !EqualityComparer<T?>.Default.Equals(requestOptions.BodyObject, default)
+					? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions)
           : requestOptions.PatchDocument != null
               ? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
               : string.Empty;

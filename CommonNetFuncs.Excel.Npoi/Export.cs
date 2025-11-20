@@ -333,7 +333,7 @@ public static class Export
 
         foreach (T item in data)
         {
-          if (item == null)
+          if (EqualityComparer<T?>.Default.Equals(item, default))
           {
             continue;
           }

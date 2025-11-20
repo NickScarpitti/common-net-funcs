@@ -205,7 +205,7 @@ public static class Export
         y++;
 
         // Write data
-        foreach (T item in data.Where(x => x != null))
+        foreach (T item in data.Where(x => !EqualityComparer<T?>.Default.Equals(x, default)))
         {
           cancellationToken.ThrowIfCancellationRequested();
           foreach (PropertyInfo prop in properties)

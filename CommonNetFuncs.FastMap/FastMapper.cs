@@ -85,7 +85,7 @@ public static class FastMapper
   [return: NotNullIfNotNull(nameof(source))]
   public static UT? FastMap<T, UT>(this T source, bool useCache = true)
   {
-    if (source == null)
+    if (EqualityComparer<T?>.Default.Equals(source, default))
     {
       return default;
     }

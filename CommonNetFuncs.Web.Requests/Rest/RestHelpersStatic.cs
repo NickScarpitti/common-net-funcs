@@ -321,6 +321,7 @@ public static class RestHelpersStatic
 	{
 		IAsyncEnumerator<T?>? enumeratedReader = null;
 		Stream? responseStream = null;
+		Stream? decompressedStream = null;
 		try
 		{
 			try
@@ -328,12 +329,28 @@ public static class RestHelpersStatic
 				string? contentType = response.Content.Headers.ContentType?.ToString();
 				string? contentEncoding = response.Content.Headers.ContentEncoding?.ToString();
 
-				response.Content.ReadFromJsonAsAsyncEnumerable<T>(cancellationToken: cancellationToken);
+				//response.Content.ReadFromJsonAsAsyncEnumerable<T>(cancellationToken: cancellationToken);
 
 				responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
 				if (response.IsSuccessStatusCode)
 				{
-					enumeratedReader = responseStream.ReadResponseStreamAsync<T?>(contentType, contentEncoding, requestOptions.JsonSerializerOptions, cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
+					//enumeratedReader = responseStream.ReadResponseStreamAsync<T?>(contentType, contentEncoding, requestOptions.JsonSerializerOptions, cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
+
+					// Apply decompression if needed
+					Stream streamToRead = responseStream;
+					if (contentEncoding.StrEq(GZip))
+					{
+						decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+						streamToRead = decompressedStream;
+					}
+					else if (contentEncoding.StrEq(Brotli))
+					{
+						decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+						streamToRead = decompressedStream;
+					}
+
+					enumeratedReader = System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(streamToRead, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken)
+						.GetAsyncEnumerator(cancellationToken);
 				}
 				else
 				{
@@ -382,6 +399,7 @@ public static class RestHelpersStatic
 		}
 		finally
 		{
+			await (decompressedStream?.DisposeAsync() ?? ValueTask.CompletedTask);
 			await (responseStream?.DisposeAsync() ?? ValueTask.CompletedTask);
 			await (enumeratedReader?.DisposeAsync() ?? ValueTask.CompletedTask);
 		}

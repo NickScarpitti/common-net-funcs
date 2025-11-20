@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace CommonNetFuncs.EFCore;
 
-public static partial class Collections
+public static class Collections
 {
 	/// <summary>
 	/// Select object from an <see cref="IQueryable{T}"/> by matching all non-null fields to an object of the same type comprising the collection.
@@ -53,15 +53,8 @@ public static partial class Collections
 			{
 				partialValue = NormalizeDateTimeForDatabase(dateTimeValue, property, entityTypeMetadata, context);
 			}
-			else if (partialValue is DateTimeOffset dateTimeOffsetValue)
-			{
-				partialValue = DateTime.SpecifyKind(dateTimeOffsetValue.UtcDateTime, DateTimeKind.Utc);
-			}
 
-			BinaryExpression condition = Expression.Equal(
-					Expression.Property(parameter, property),
-					Expression.Constant(partialValue, property.PropertyType)
-			);
+			BinaryExpression condition = Expression.Equal(Expression.Property(parameter, property), Expression.Constant(partialValue, property.PropertyType));
 
 			conditions = conditions == null ? condition : Expression.AndAlso(conditions, condition);
 		}
@@ -93,15 +86,34 @@ public static partial class Collections
 			return dateTimeValue.ToUniversalTime();
 		}
 
-		string? storeType = efProperty.GetColumnType()?.ToLowerInvariant();
+		// Check which database provider we're using
+		string? providerName = context.Database.ProviderName?.ToLowerInvariant();
+
+		// For non-relational providers (e.g., in-memory), convert Local to UTC for comparison
+		// In-memory database stores DateTime values but Local times need UTC conversion
+		if (providerName?.Contains("inmemory") == true)
+		{
+			return dateTimeValue.Kind == DateTimeKind.Local
+				? dateTimeValue.ToUniversalTime()
+				: dateTimeValue;
+		}
+
+		// GetColumnType() only works for relational providers
+		string? storeType;
+		try
+		{
+			storeType = efProperty.GetColumnType()?.ToLowerInvariant();
+		}
+		catch (InvalidCastException)
+		{
+			// If we can't get column type (non-relational provider), default to UTC
+			return dateTimeValue.ToUniversalTime();
+		}
 
 		if (string.IsNullOrEmpty(storeType))
 		{
 			return dateTimeValue.ToUniversalTime();
 		}
-
-		// Check which database provider we're using
-		string? providerName = context.Database.ProviderName?.ToLowerInvariant();
 
 		if (providerName?.Contains("postgres") == true || providerName?.Contains("npgsql") == true)
 		{

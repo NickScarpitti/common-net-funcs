@@ -300,7 +300,7 @@ public static class Inspect
   /// <returns>Hash string representing the object's value</returns>
   public static string GetHashForObject<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
   {
-    if (obj == null)
+    if (EqualityComparer<T?>.Default.Equals(obj, default))
     {
       return "null";
     }
@@ -338,7 +338,7 @@ public static class Inspect
   /// <returns>Hash string representing the object's value</returns>
   public static async Task<string> GetHashForObjectAsync<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
   {
-    if (obj == null)
+    if (EqualityComparer<T?>.Default.Equals(obj, default))
     {
       return "null";
     }

@@ -432,17 +432,20 @@ public static class RestHelpersStatic
 				{
 					if (contentEncoding.StrEq(GZip))
 					{
-						MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-						try
-						{
-							await responseStream.Decompress(ECompressionType.Gzip).CopyToAsync(outputStream, cancellationToken).ConfigureAwait(false);
-							//result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
-							result = await MemoryPackSerializer.DeserializeAsync<T>(outputStream, cancellationToken: cancellationToken).ConfigureAwait(false);
-						}
-						finally
-						{
-							await outputStream.DisposeAsync().ConfigureAwait(false);
-						}
+						//MemoryStream outputStream = new(); //Decompressed data will be written to this stream
+						//try
+						//{
+						//	await responseStream.Decompress(ECompressionType.Gzip).CopyToAsync(outputStream, cancellationToken).ConfigureAwait(false);
+						//	//result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
+						//	outputStream.Position = 0;
+						//	result = await MemoryPackSerializer.DeserializeAsync<T>(outputStream, cancellationToken: cancellationToken).ConfigureAwait(false);
+						//}
+						//finally
+						//{
+						//	await outputStream.DisposeAsync().ConfigureAwait(false);
+						//}
+						await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+						result = await MemoryPackSerializer.DeserializeAsync<T>(decompressedStream, cancellationToken: cancellationToken).ConfigureAwait(false);
 					}
 					else if (contentEncoding.StrEq(Brotli))
 					{

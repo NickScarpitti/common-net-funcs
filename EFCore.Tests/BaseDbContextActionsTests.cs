@@ -7,8 +7,6 @@ using NSubstitute;
 
 namespace EFCore.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class BaseDbContextActionsTests
 {
 	private readonly IServiceProvider _serviceProvider;
@@ -2125,7 +2123,7 @@ public sealed class BaseDbContextActionsTests
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
 
 		// Act
-		List<TestEntity> result = await testContext.GetNavigationWithFilterFull(where, select, fullQueryOptions: options);
+		List<TestEntity>? result = await testContext.GetNavigationWithFilterFull(where, select, fullQueryOptions: options);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -2258,4 +2256,3 @@ public class TestEntityDetail
 	[JsonIgnore]
 	public TestEntity? TestEntity { get; set; }
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

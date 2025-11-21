@@ -1394,6 +1394,7 @@ public sealed class BaseDbContextActionsTests
 		await _context.SaveChangesAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = true };
 
 		// Act
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(
@@ -1401,7 +1402,8 @@ public sealed class BaseDbContextActionsTests
 				selectExpression: x => x,
 				orderByString: nameof(TestEntity.Id),
 				skip: 1,
-				pageSize: 2);
+				pageSize: 2,
+				fullQueryOptions: options);
 
 		// Assert
 		result.Entities.Count.ShouldBe(2);
@@ -1417,6 +1419,7 @@ public sealed class BaseDbContextActionsTests
 		await _context.SaveChangesAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = true };
 
 		// Act
 		GenericPagingModel<string> result = await testContext.GetWithPagingFilterFull(
@@ -1424,7 +1427,8 @@ public sealed class BaseDbContextActionsTests
 				selectExpression: x => x.Name,
 				orderByString: nameof(TestEntity.Id),
 				skip: 1,
-				pageSize: 2);
+				pageSize: 2,
+				fullQueryOptions: options);
 
 		// Assert
 		result.Entities.Count.ShouldBe(2);
@@ -1441,6 +1445,7 @@ public sealed class BaseDbContextActionsTests
 		await _context.SaveChangesAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = true };
 
 		// Act
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(
@@ -1448,7 +1453,8 @@ public sealed class BaseDbContextActionsTests
 				selectExpression: x => x,
 				ascendingOrderEpression: x => x.Id,
 				skip: 1,
-				pageSize: 2);
+				pageSize: 2,
+				fullQueryOptions: options);
 
 		// Assert
 		result.Entities.Count.ShouldBe(2);
@@ -1922,7 +1928,307 @@ public sealed class BaseDbContextActionsTests
 		intModel.Entities.Count.ShouldBe(3);
 		intModel.TotalRecords.ShouldBe(3);
 	}
+
+	#region FullQueryOptions SplitQueryOverride Tests
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task GetByKeyFull_WithSplitQueryOverride_ShouldHandleCorrectly(bool? splitQueryOverride)
+	{
+		// Arrange
+		TestEntity entity = _fixture.Create<TestEntity>();
+		await _context.TestEntities.AddAsync(entity);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		TestEntity? result = await testContext.GetByKeyFull(entity.Id, fullQueryOptions: options);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task GetAllFull_WithSplitQueryOverride_ShouldHandleCorrectly(bool? splitQueryOverride)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		List<TestEntity>? result = await testContext.GetAllFull(fullQueryOptions: options);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(entities.Count);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task GetWithFilterFull_WithSplitQueryOverride_ShouldHandleCorrectly(bool? splitQueryOverride)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+		string targetName = entities[0].Name;
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		List<TestEntity>? result = await testContext.GetWithFilterFull(x => x.Name == targetName, fullQueryOptions: options);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(1);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task GetOneWithFilterFull_WithSplitQueryOverride_ShouldHandleCorrectly(bool? splitQueryOverride)
+	{
+		// Arrange
+		TestEntity entity = _fixture.Create<TestEntity>();
+		await _context.TestEntities.AddAsync(entity);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		TestEntity? result = await testContext.GetOneWithFilterFull(x => x.Id == entity.Id, fullQueryOptions: options);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task GetMaxByOrderFull_WithSplitQueryOverride_ShouldHandleCorrectly(bool? splitQueryOverride)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		TestEntity? result = await testContext.GetMaxByOrderFull(_ => true, x => x.Id, fullQueryOptions: options);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entities.Max(x => x.Id));
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task GetMinByOrderFull_WithSplitQueryOverride_ShouldHandleCorrectly(bool? splitQueryOverride)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		TestEntity? result = await testContext.GetMinByOrderFull(_ => true, x => x.Id, fullQueryOptions: options);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entities.Min(x => x.Id));
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task GetMaxFull_WithSplitQueryOverride_ShouldHandleCorrectly(bool? splitQueryOverride)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		int result = await testContext.GetMaxFull(_ => true, x => x.Id, fullQueryOptions: options);
+
+		// Assert
+		result.ShouldBe(entities.Max(x => x.Id));
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task GetMinFull_WithSplitQueryOverride_ShouldHandleCorrectly(bool? splitQueryOverride)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		int result = await testContext.GetMinFull(_ => true, x => x.Id, fullQueryOptions: options);
+
+		// Assert
+		result.ShouldBe(entities.Min(x => x.Id));
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task GetNavigationWithFilterFull_WithSplitQueryOverride_ShouldHandleCorrectly(bool? splitQueryOverride)
+	{
+		// Arrange
+		TestEntityDetail related = new() { Id = 1, Description = "desc", TestEntityId = 1 };
+		TestEntity entity = new() { Id = 1, Name = "A", Details = new List<TestEntityDetail> { related } };
+		await _context.TestEntities.AddAsync(entity);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
+		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
+
+		// Act
+		List<TestEntity> result = await testContext.GetNavigationWithFilterFull(where, select, fullQueryOptions: options);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(1);
+		result[0].Id.ShouldBe(1);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public void GetQueryAllFull_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryAllFull(fullQueryOptions: options);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public void GetQueryWithFilterFull_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryWithFilterFull(_ => true, fullQueryOptions: options);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public void GetQueryNavigationWithFilterFull_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
+		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryNavigationWithFilterFull(where, select, fullQueryOptions: options);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public void GetQueryPagingWithFilterFull_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(_ => true, x => x, nameof(TestEntity.Id), fullQueryOptions: options);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public void GetQueryPagingWithFilterFull_TKey_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(_ => true, x => x, x => x.Id, fullQueryOptions: options);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	#endregion
 }
+
 
 // Test types
 public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)

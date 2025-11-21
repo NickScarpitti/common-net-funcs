@@ -545,4 +545,228 @@ public sealed class NavigationPropertiesTests : IDisposable
 		options.NavPropAttributesToIgnore.ShouldNotBeNull();
 		options.NavPropAttributesToIgnore.ShouldBeEmpty();
 	}
+
+	#region NavigationProperiesCacheKey and CacheValue Tests
+
+	[Fact]
+	public void NavigationProperiesCacheKey_Equality_WorksCorrectly()
+	{
+		// Arrange
+		NavigationProperties.NavigationProperiesCacheKey key1 = new(typeof(TestEntity), "attr1");
+		NavigationProperties.NavigationProperiesCacheKey key2 = new(typeof(TestEntity), "attr1");
+		NavigationProperties.NavigationProperiesCacheKey key3 = new(typeof(TestRelatedEntity), "attr1");
+		NavigationProperties.NavigationProperiesCacheKey key4 = new(typeof(TestEntity), "attr2");
+
+		// Act & Assert
+		key1.Equals(key2).ShouldBeTrue();
+		key1.Equals(key3).ShouldBeFalse();
+		key1.Equals(key4).ShouldBeFalse();
+		(key1 == key2).ShouldBeTrue();
+		(key1 != key3).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void NavigationProperiesCacheKey_GetHashCode_ReturnsConsistentValue()
+	{
+		// Arrange
+		NavigationProperties.NavigationProperiesCacheKey key1 = new(typeof(TestEntity), "attr1");
+		NavigationProperties.NavigationProperiesCacheKey key2 = new(typeof(TestEntity), "attr1");
+
+		// Act
+		int hash1 = key1.GetHashCode();
+		int hash2 = key2.GetHashCode();
+
+		// Assert
+		hash1.ShouldBe(hash2);
+	}
+
+	[Fact]
+	public void NavigationProperiesCacheKey_EqualsObject_WorksCorrectly()
+	{
+		// Arrange
+		NavigationProperties.NavigationProperiesCacheKey key1 = new(typeof(TestEntity), "attr1");
+		object key2 = new NavigationProperties.NavigationProperiesCacheKey(typeof(TestEntity), "attr1");
+		object notKey = "not a key";
+
+		// Act & Assert
+		key1.Equals(key2).ShouldBeTrue();
+		key1.Equals(notKey).ShouldBeFalse();
+	}
+
+	[Fact]
+	public void NavigationProperiesCacheValue_Equality_WorksCorrectly()
+	{
+		// Arrange
+		HashSet<string> navs1 = ["prop1", "prop2"];
+		HashSet<string> navs2 = ["prop1", "prop2"];
+		HashSet<string> navs3 = ["prop1", "prop3"];
+
+		NavigationProperties.NavigationProperiesCacheValue value1 = new(navs1, 5);
+		NavigationProperties.NavigationProperiesCacheValue value2 = new(navs2, 5);
+		NavigationProperties.NavigationProperiesCacheValue value3 = new(navs3, 5);
+		NavigationProperties.NavigationProperiesCacheValue value4 = new(navs1, 10);
+
+		// Act & Assert
+		value1.Equals(value2).ShouldBeTrue();
+		value1.Equals(value3).ShouldBeFalse();
+		value1.Equals(value4).ShouldBeFalse();
+		(value1 == value2).ShouldBeTrue();
+		(value1 != value3).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void NavigationProperiesCacheValue_GetHashCode_ReturnsConsistentValue()
+	{
+		// Arrange
+		HashSet<string> navs1 = ["prop1", "prop2"];
+		HashSet<string> navs2 = ["prop1", "prop2"];
+
+		NavigationProperties.NavigationProperiesCacheValue value1 = new(navs1, 5);
+		NavigationProperties.NavigationProperiesCacheValue value2 = new(navs2, 5);
+
+		// Act
+		int hash1 = value1.GetHashCode();
+		int hash2 = value2.GetHashCode();
+
+		// Assert
+		hash1.ShouldBe(hash2);
+	}
+
+	[Fact]
+	public void NavigationProperiesCacheValue_EqualsObject_WorksCorrectly()
+	{
+		// Arrange
+		HashSet<string> navs = ["prop1", "prop2"];
+		NavigationProperties.NavigationProperiesCacheValue value1 = new(navs, 5);
+		object value2 = new NavigationProperties.NavigationProperiesCacheValue(new HashSet<string>(navs), 5);
+		object notValue = "not a value";
+
+		// Act & Assert
+		value1.Equals(value2).ShouldBeTrue();
+		value1.Equals(notValue).ShouldBeFalse();
+	}
+
+	[Fact]
+	public void NavigationProperiesCacheValue_GetNavigationsToDepth_ReturnsCorrectSubset()
+	{
+		// Arrange
+		HashSet<string> navs = ["prop1", "prop1.prop2", "prop1.prop2.prop3", "prop4"];
+		NavigationProperties.NavigationProperiesCacheValue value = new(navs, 10);
+
+		// Act
+		HashSet<string> depth0 = value.GetNavigationsToDepth(0);
+		HashSet<string> depth1 = value.GetNavigationsToDepth(1);
+		HashSet<string> depth2 = value.GetNavigationsToDepth(2);
+		HashSet<string> depthNegative = value.GetNavigationsToDepth(-1);
+
+		// Assert
+		depth0.Count.ShouldBe(2); // prop1, prop4
+		depth1.Count.ShouldBe(3); // prop1, prop1.prop2, prop4
+		depth2.Count.ShouldBe(4); // All
+		depthNegative.Count.ShouldBe(4); // All when depth is negative
+	}
+
+	#endregion
+
+	#region RemoveNavigationProperties Tests
+
+	[Fact]
+	public void RemoveNavigationProperties_WithNullObject_DoesNotThrow()
+	{
+		// Arrange
+		TestEntity? entity = null;
+
+		// Act & Assert
+		Should.NotThrow(() => entity.RemoveNavigationProperties(_context));
+	}
+
+	[Fact]
+	public void RemoveNavigationProperties_WithNoWritableNavigations_HandlesCorrectly()
+	{
+		// Arrange
+		TestEntityWithReadOnlyNav entity = new() { Id = 1 };
+
+		// Act
+		entity.RemoveNavigationProperties(_context);
+
+		// Assert - should not throw
+		entity.Id.ShouldBe(1);
+	}
+
+	#endregion
+
+	#region GetNavigations Non-Caching Tests
+
+	[Fact]
+	public void GetNavigations_WithoutCaching_ReturnsNavigations()
+	{
+		// Arrange
+		NavigationPropertiesOptions options = new(useCaching: false);
+
+		// Act
+		HashSet<string> result1 = NavigationProperties.GetNavigations<TestEntity>(_context, options);
+		HashSet<string> result2 = NavigationProperties.GetNavigations<TestEntity>(_context, options);
+
+		// Assert
+		result1.ShouldNotBeEmpty();
+		result2.ShouldNotBeEmpty();
+		// Results should be equivalent but not the same instance
+		result1.ShouldBeEquivalentTo(result2);
+	}
+
+	[Fact]
+	public void GetTopLevelNavigations_WithoutCaching_ReturnsNavigations()
+	{
+		// Arrange & Act
+		List<string> result1 = NavigationProperties.GetTopLevelNavigations<TestEntity>(_context, useCaching: false);
+		List<string> result2 = NavigationProperties.GetTopLevelNavigations<TestEntity>(_context, useCaching: false);
+
+		// Assert
+		result1.ShouldNotBeEmpty();
+		result2.ShouldNotBeEmpty();
+		result1.ShouldBeEquivalentTo(result2);
+	}
+
+	#endregion
+
+	#region IncludeNavigationProperties Tests
+
+	[Fact]
+	public void IncludeNavigationProperties_WithDefaultOptions_AddsIncludes()
+	{
+		// Arrange
+		IQueryable<TestEntity> query = _context.TestEntities;
+
+		// Act
+		IQueryable<TestEntity> result = query.IncludeNavigationProperties(_context);
+
+		// Assert
+		result.Expression.ToString().ShouldContain("Include");
+	}
+
+	[Fact]
+	public void IncludeNavigationProperties_WithCustomOptions_AddsIncludes()
+	{
+		// Arrange
+		IQueryable<TestEntity> query = _context.TestEntities;
+		NavigationPropertiesOptions options = new(maxNavigationDepth: 1, useCaching: false);
+
+		// Act
+		IQueryable<TestEntity> result = query.IncludeNavigationProperties(_context, options);
+
+		// Assert
+		result.Expression.ToString().ShouldContain("Include");
+	}
+
+	#endregion
+
+	#region Entity with ReadOnly Navigation for Testing
+
+	private sealed class TestEntityWithReadOnlyNav
+	{
+		public int Id { get; set; }
+		public TestRelatedEntity? ReadOnlyNav { get; init; } // Init-only property
+	}
+
+	#endregion
 }

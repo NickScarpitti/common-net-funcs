@@ -8,21 +8,14 @@ public sealed class StreamsTests
 {
 	private readonly Fixture _fixture;
 
-	private readonly byte[] _smallData = new byte[100];
-	private readonly byte[] _largeData = new byte[(1024 * 1024) + 177];
+	private readonly byte[] _smallData;
+	private readonly byte[] _largeData;
 
 	public StreamsTests()
 	{
 		_fixture = new Fixture();
 		_smallData = _fixture.CreateMany<byte>(100).ToArray();
-		List<byte> largeByteChunk = _fixture.CreateMany<byte>((1024 * 1024) + 100).ToList();
-		List<byte> largeByteList = new();
-
-		for (int i = 0; i < 16; i++)
-		{
-			largeByteList.AddRange(largeByteChunk);
-		}
-		_largeData = largeByteList.ToArray();
+		_largeData = _fixture.CreateMany<byte>((1024 * 1024) + 177).ToArray();
 	}
 
 	[Theory]
@@ -33,7 +26,7 @@ public sealed class StreamsTests
 	public async Task CompressStream_Should_Compress_Data(ECompressionType compressionType)
 	{
 		// Arrange
-		byte[] uncompressedData = _fixture.CreateMany<byte>(100).ToArray();
+		byte[] uncompressedData = _smallData;
 		await using MemoryStream uncompressedStream = new(uncompressedData);
 		await using MemoryStream compressedStream = new();
 
@@ -237,7 +230,7 @@ public sealed class StreamsTests
 	public async Task Decompress_Should_Decompress_Byte_Array(ECompressionType compressionType, bool largeData)
 	{
 		// Arrange
-		byte[] originalData = largeData ? _largeData : _smallData; //_fixture.CreateMany<byte>(arraySize).ToArray();
+		byte[] originalData = largeData ? _largeData : _smallData;
 		byte[] compressedData = await originalData.Compress(compressionType);
 
 		// Act

@@ -29,10 +29,6 @@ public static class Async
 						resultObject?.CopyPropertiesTo(obj);
 					}
 				}
-				else
-				{
-					obj = resultObject;
-				}
 			}
 		}
 		catch (Exception ex)
@@ -124,10 +120,6 @@ public static class Async
 					{
 						resultObject?.CopyPropertiesTo(obj);
 					}
-				}
-				else
-				{
-					obj = resultObject;
 				}
 			}
 		}
@@ -539,14 +531,7 @@ public static class Async
 			IEnumerable<T>? resultObject = await task;
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -573,14 +558,7 @@ public static class Async
 			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
@@ -605,14 +583,7 @@ public static class Async
 			ConcurrentBag<T>? resultObject = await task;
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -663,14 +634,7 @@ public static class Async
 			ConcurrentBag<T>? resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
@@ -695,14 +659,7 @@ public static class Async
 			List<T>? resultObject = await task;
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -729,14 +686,7 @@ public static class Async
 			List<T>? resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj?.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
@@ -1059,6 +1009,30 @@ public static class Async
 		{
 			semaphore.Release();
 		}
+	}
+
+	public static async Task<T?> RunAsyncWithSemaphore<T>(this Task<T?> task, SemaphoreSlim semaphore, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false, string? errorText = null)
+	{
+		cancellationTokenSource ??= new();
+		CancellationToken token = cancellationTokenSource.Token;
+		try
+		{
+			await semaphore.WaitAsync(token).ConfigureAwait(false);
+			return await task;
+		}
+		catch (Exception ex)
+		{
+			if (breakOnError)
+			{
+				await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
+			}
+			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error{(errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}")}");
+		}
+		finally
+		{
+			semaphore.Release();
+		}
+		return default;
 	}
 }
 

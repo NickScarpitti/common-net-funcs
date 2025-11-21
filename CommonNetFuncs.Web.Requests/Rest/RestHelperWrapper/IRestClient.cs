@@ -1,6 +1,4 @@
-﻿using CommonNetFuncs.Web.Requests.Rest.Options;
-
-namespace CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
+﻿namespace CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
 /// <summary>
 /// Interface for REST client operations, enabling testability by wrapping static extension methods.

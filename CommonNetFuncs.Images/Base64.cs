@@ -47,7 +47,7 @@ public static partial class Base64
       {
         if (!ms.CanRead)
         {
-          throw new NotSupportedException("Memory stream must be readable to conver to base 64");
+          throw new NotSupportedException("Memory stream must be readable to convert to base 64");
         }
 
         if (ms.CanSeek && ms.Position != 0)

@@ -1414,13 +1414,13 @@ public static partial class Common
 			(endRow, startRow) = (startRow, endRow); //Swap values with tuple assignment
 		}
 
-		float totaHeight = 0;
+		float totalHeight = 0;
 		for (int i = startRow; i < endRow + 1; i++)
 		{
-			totaHeight += ws.GetRow(i)?.HeightInPoints ?? 0;
+			totalHeight += ws.GetRow(i)?.HeightInPoints ?? 0;
 		}
 
-		return (int)Round(totaHeight * Units.EMU_PER_POINT / Units.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
+		return (int)Round(totalHeight * Units.EMU_PER_POINT / Units.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
 	}
 
 	/// <summary>
@@ -1828,11 +1828,11 @@ public static partial class Common
 
 	private static double ColorDistance(ReadOnlySpan<byte> rgb1, ReadOnlySpan<byte> rgb2)
 	{
-		double rmean = (rgb1[0] + rgb2[0]) / 2.0;
+		double rMean = (rgb1[0] + rgb2[0]) / 2.0;
 		double r = rgb1[0] - rgb2[0];
 		double g = rgb1[1] - rgb2[1];
 		double b = rgb1[2] - rgb2[2];
-		return Sqrt(((2 + (rmean / 256)) * r * r) + (4 * g * g) + ((2 + ((255 - rmean) / 256)) * b * b));
+		return Sqrt(((2 + (rMean / 256)) * r * r) + (4 * g * g) + ((2 + ((255 - rMean) / 256)) * b * b));
 	}
 
 	/// <summary>

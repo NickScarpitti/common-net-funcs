@@ -616,7 +616,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
+	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
 	/// <param name="s">String to search.</param>
 	/// <param name="textToFind">String to find in s.</param>
@@ -627,7 +627,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
+	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
 	/// <param name="s">String to search.</param>
 	/// <param name="charToFind">Char to find in s.</param>
@@ -638,7 +638,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
+	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
 	/// <param name="s"><see cref="ReadOnlySpan{T}"/> to search.</param>
 	/// <param name="textToFind"><see cref="ReadOnlySpan{T}"/> to find in s.</param>
@@ -649,7 +649,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
+	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
 	/// <param name="s">String to search.</param>
 	/// <param name="charToFind">Character to find in s.</param>
@@ -1506,7 +1506,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
+	/// Used to reduce boilerplate code for parsing strings into nullable DateOnly
 	/// </summary>
 	/// <param name="value">String to parse into a DateOnly</param>
 	/// <returns>Nullable DateOnly parsed from a string</returns>
@@ -1525,7 +1525,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
+	/// Used to reduce boilerplate code for parsing strings into nullable DateOnly
 	/// </summary>
 	/// <param name="value">String to parse into a DateOnly</param>
 	/// <returns>Nullable DateOnly parsed from a string</returns>

@@ -196,8 +196,8 @@ public static partial class RawConversionTask
 		}
 	}
 
-	[GeneratedRegex(@"time=(\d{2}):(\d{2}):(\d{2})\.(\d{2}).*?fps=\s*(\d+(?:\.\d+)?)")]
-	private static partial Regex ProgressRegex();
+	// [GeneratedRegex(@"time=(\d{2}):(\d{2}):(\d{2})\.(\d{2}).*?fps=\s*(\d+(?:\.\d+)?)")]
+	// private static partial Regex ProgressRegex();
 }
 
 // Extension method for WaitHandle

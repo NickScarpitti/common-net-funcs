@@ -1,11 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Xabe.FFmpeg;
 
 namespace CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
 
-public static partial class RawConversionTask
+public static class RawConversionTask
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

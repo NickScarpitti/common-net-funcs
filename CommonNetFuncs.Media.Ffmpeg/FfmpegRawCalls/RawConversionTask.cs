@@ -4,7 +4,7 @@ using Xabe.FFmpeg;
 
 namespace CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
 
-public static class RawConversionTask
+public static partial class RawConversionTask
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -126,7 +126,7 @@ public static class RawConversionTask
 			// Set up progress tracking
 			DateTime lastProgressUpdate = DateTime.Now.AddSeconds(-5);
 			DateTime lastSummaryUpdate = DateTime.Now.AddSeconds(-5);
-			_ = ProgressRegex();
+			// _ = ProgressRegex();
 
 			RawMediaInfo mediaInfo = await Helpers.GetMediaInfoAsync(fileToConvert.FullName).ConfigureAwait(false);
 

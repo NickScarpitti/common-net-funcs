@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Xabe.FFmpeg;
 
 namespace CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
@@ -127,7 +126,7 @@ public static partial class RawConversionTask
 			// Set up progress tracking
 			DateTime lastProgressUpdate = DateTime.Now.AddSeconds(-5);
 			DateTime lastSummaryUpdate = DateTime.Now.AddSeconds(-5);
-			_ = ProgressRegex();
+			// _ = ProgressRegex();
 
 			RawMediaInfo mediaInfo = await Helpers.GetMediaInfoAsync(fileToConvert.FullName).ConfigureAwait(false);
 
@@ -196,8 +195,8 @@ public static partial class RawConversionTask
 		}
 	}
 
-	[GeneratedRegex(@"time=(\d{2}):(\d{2}):(\d{2})\.(\d{2}).*?fps=\s*(\d+(?:\.\d+)?)")]
-	private static partial Regex ProgressRegex();
+	// [GeneratedRegex(@"time=(\d{2}):(\d{2}):(\d{2})\.(\d{2}).*?fps=\s*(\d+(?:\.\d+)?)")]
+	// private static partial Regex ProgressRegex();
 }
 
 // Extension method for WaitHandle

@@ -315,7 +315,7 @@ public static partial class Collections
 	[return: NotNullIfNotNull(nameof(items))]
 	public static IEnumerable<T>? SelectNonNull<T>(this IEnumerable<T?>? items)
 	{
-		return items?.Where(x => !EqualityComparer<T?>.Default.Equals(x, default)).Select(x => x!);
+		return items?.Where(x => x != null!).Select(x => x!);
 	}
 
 	/// <summary>
@@ -327,19 +327,19 @@ public static partial class Collections
 	/// <returns>A <see cref="List{T}"/> containing the single item or an empty <see cref="List{T}"> if the item is <see langword="null"/>.</returns>
 	public static List<T> SingleToList<T>(this T? obj)
 	{
-		return !EqualityComparer<T?>.Default.Equals(obj, default) ? [obj] : [];
+		return obj != null! ? [obj!] : [];
 	}
 
 	/// <summary>
 	/// Create a single item <see cref="List{T}"/> from an object.
 	/// </summary>
-	/// <remarks>Null safe, returns an empty list if <paramref name="obj"/> is <see langword="null"/>.</remarks>
-	/// <param name="obj">Object to turn into a single item list.</param>
-	/// <param name="allowEmptyStrings">Optional: If <see langword="true"/>, allows empty strings in the list, otherwise they are excluded. Default is <see langword="false"/>.</param>
+	/// <remarks>Null safe, returns an empty list if <paramref name="s"/> is <see langword="null"/>.</remarks>
+	/// <param name="s">Object to turn into a single item list.</param>
+	/// <param name="allowEmptyValues">Optional: If <see langword="true"/>, allows empty strings in the list, otherwise they are excluded. Default is <see langword="false"/>.</param>
 	/// <returns>A <see cref="List{T}"/> containing the single item or an empty <see cref="List{T}"> if the item is <see langword="null"/>.</returns>
-	public static List<string> SingleToList(this string? obj, bool allowEmptyStrings = false)
+	public static List<string> SingleToList(this string? s, bool allowEmptyValues = false)
 	{
-		return !allowEmptyStrings ? (!obj.IsNullOrWhiteSpace()) ? [obj] : [] : obj != null ? [obj] : [];
+		return !allowEmptyValues ? (!s.IsNullOrWhiteSpace()) ? [s] : [] : s != null ? [s] : [];
 	}
 
 	/// <summary>
@@ -754,96 +754,96 @@ public static partial class Collections
 		return data.ToDataTableExpressionTrees(dataTable, useParallel, approximateCount, degreeOfParallelism, cancellationToken);
 	}
 
-	/// <summary>
-	/// Convert an <see cref="IEnumerable{T}"/> into equivalent <see cref="DataTable"/> object using expression trees.
-	/// </summary>
-	/// <typeparam name="T">Class to use in table creation.</typeparam>
-	/// <param name="data">Collection to convert into a DataTable.</param>
-	/// <param name="dataTable">DataTable to optionally insert data into.</param>
-	/// <param name="useParallel">Optional: Parallelizes the conversion. Default is <see langword="false"/>.</param>
-	/// <param name="approximateCount">Optional: Used for pre-allocating variable size when using parallelization, default is data.Count().</param>
-	/// <param name="degreeOfParallelism">Optional: Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine).</param>
-	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
-	/// <returns>A <see cref="DataTable"/> representation of <paramref name="data"/>.</returns>
-	[Obsolete("Please use ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) instead", false)]
-	[return: NotNullIfNotNull(nameof(data))]
-	public static DataTable? ToDataTableReflection<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
-	{
-		if (data == null)
-		{
-			return null;
-		}
+	///// <summary>
+	///// Convert an <see cref="IEnumerable{T}"/> into equivalent <see cref="DataTable"/> object using expression trees.
+	///// </summary>
+	///// <typeparam name="T">Class to use in table creation.</typeparam>
+	///// <param name="data">Collection to convert into a DataTable.</param>
+	///// <param name="dataTable">DataTable to optionally insert data into.</param>
+	///// <param name="useParallel">Optional: Parallelizes the conversion. Default is <see langword="false"/>.</param>
+	///// <param name="approximateCount">Optional: Used for pre-allocating variable size when using parallelization, default is data.Count().</param>
+	///// <param name="degreeOfParallelism">Optional: Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine).</param>
+	///// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+	///// <returns>A <see cref="DataTable"/> representation of <paramref name="data"/>.</returns>
+	//[Obsolete("Please use ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) instead", false)]
+	//[return: NotNullIfNotNull(nameof(data))]
+	//public static DataTable? ToDataTableReflection<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
+	//{
+	//	if (data == null)
+	//	{
+	//		return null;
+	//	}
 
-		dataTable ??= new();
-		PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
+	//	dataTable ??= new();
+	//	PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
 
-		// Remove invalid columns
-		IEnumerable<string> propertyNames = properties.Select(x => x.Name);
-		DataColumn[] columns = new DataColumn[dataTable.Columns.Count];
-		dataTable.Columns.CopyTo(columns, 0);
-		foreach (DataColumn? col in columns.Where(x => !propertyNames.Contains(x.ColumnName)))
-		{
-			dataTable.Columns.Remove(col.ColumnName);
-		}
+	//	// Remove invalid columns
+	//	IEnumerable<string> propertyNames = properties.Select(x => x.Name);
+	//	DataColumn[] columns = new DataColumn[dataTable.Columns.Count];
+	//	dataTable.Columns.CopyTo(columns, 0);
+	//	foreach (DataColumn? col in columns.Where(x => !propertyNames.Contains(x.ColumnName)))
+	//	{
+	//		dataTable.Columns.Remove(col.ColumnName);
+	//	}
 
-		// Create columns
-		foreach (PropertyInfo? prop in properties.Where(x => !dataTable.Columns.Contains(x.Name)))
-		{
-			dataTable.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
-		}
+	//	// Create columns
+	//	foreach (PropertyInfo? prop in properties.Where(x => !dataTable.Columns.Contains(x.Name)))
+	//	{
+	//		dataTable.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+	//	}
 
-		// Add rows
-		if (!useParallel)
-		{
-			foreach (T item in data.Where(x => x != null))
-			{
-				cancellationToken.ThrowIfCancellationRequested();
-				DataRow row = dataTable.NewRow();
-				foreach (PropertyInfo prop in properties)
-				{
-					row[prop.Name] = prop.GetValue(item) ?? System.DBNull.Value;
-				}
-				dataTable.Rows.Add(row);
-			}
-		}
-		else
-		{
-			// Process items in parallel and collect results
-			int columnCount = dataTable.Columns.Count;
-			List<object[]> rows = new(approximateCount ?? data.Count());
-			object lockObj = new();
+	//	// Add rows
+	//	if (!useParallel)
+	//	{
+	//		foreach (T item in data.Where(x => x != null))
+	//		{
+	//			cancellationToken.ThrowIfCancellationRequested();
+	//			DataRow row = dataTable.NewRow();
+	//			foreach (PropertyInfo prop in properties)
+	//			{
+	//				row[prop.Name] = prop.GetValue(item) ?? System.DBNull.Value;
+	//			}
+	//			dataTable.Rows.Add(row);
+	//		}
+	//	}
+	//	else
+	//	{
+	//		// Process items in parallel and collect results
+	//		int columnCount = dataTable.Columns.Count;
+	//		List<object[]> rows = new(approximateCount ?? data.Count());
+	//		object lockObj = new();
 
-			ParallelOptions options = new() { MaxDegreeOfParallelism = (degreeOfParallelism == -1) ? Environment.ProcessorCount : degreeOfParallelism };
-			Parallel.ForEach(data, options, () => new List<object[]>(), (item, _, localRows) =>
-			{
-				cancellationToken.ThrowIfCancellationRequested();
-				object[] rowValues = new object[columnCount];
-				for (int i = 0; i < columnCount; i++)
-				{
-					rowValues[i] = properties[i].GetValue(item) ?? System.DBNull.Value;
-				}
+	//		ParallelOptions options = new() { MaxDegreeOfParallelism = (degreeOfParallelism == -1) ? Environment.ProcessorCount : degreeOfParallelism };
+	//		Parallel.ForEach(data, options, () => new List<object[]>(), (item, _, localRows) =>
+	//		{
+	//			cancellationToken.ThrowIfCancellationRequested();
+	//			object[] rowValues = new object[columnCount];
+	//			for (int i = 0; i < columnCount; i++)
+	//			{
+	//				rowValues[i] = properties[i].GetValue(item) ?? System.DBNull.Value;
+	//			}
 
-				localRows.Add(rowValues);
-				return localRows;
-			},
-				localRows =>
-				{
-					lock (lockObj)
-					{
-						rows.AddRange(localRows);
-					}
-				});
+	//			localRows.Add(rowValues);
+	//			return localRows;
+	//		},
+	//			localRows =>
+	//			{
+	//				lock (lockObj)
+	//				{
+	//					rows.AddRange(localRows);
+	//				}
+	//			});
 
-			// Add all rows to the table
-			foreach (object[] rowValues in rows)
-			{
-				cancellationToken.ThrowIfCancellationRequested();
-				dataTable.Rows.Add(rowValues);
-			}
-		}
+	//		// Add all rows to the table
+	//		foreach (object[] rowValues in rows)
+	//		{
+	//			cancellationToken.ThrowIfCancellationRequested();
+	//			dataTable.Rows.Add(rowValues);
+	//		}
+	//	}
 
-		return dataTable;
-	}
+	//	return dataTable;
+	//}
 
 	private static readonly ConcurrentDictionary<Type, TypeAccessor> TypeAccessorCache = new();
 

@@ -3,7 +3,6 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class FileHelpersTests : IDisposable
 {
     private readonly string _tempDir;
@@ -278,4 +277,3 @@ public sealed class FileHelpersTests : IDisposable
         safeName.ShouldEndWith(".txt");
     }
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -5,8 +5,6 @@ using Moq;
 
 namespace Web.Middleware.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class UseResponseSizeLoggingMiddlewareTests
 {
     private readonly ILogger<UseResponseSizeLoggingMiddleware> _logger;
@@ -126,5 +124,3 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
             A<Func<It.IsAnyType, Exception?, string>>.Ignored));
     }
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -454,8 +454,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
     {
       try
       {
-        #pragma warning disable IDE0037 // Use inferred member name
-        return Results.Ok(
+				return Results.Ok(
                 new
                 {
                     Hits = metrics.CacheHits(),
@@ -475,9 +474,8 @@ public static class MemoryCacheEvictionMiddlewareExtensions
                         ManuallyRemoved = metrics.EvictedDueToRemoved()
                     }
                 });
-        #pragma warning restore IDE0037 // Use inferred member name
-      }
-      catch (Exception ex)
+			}
+			catch (Exception ex)
       {
         return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving cache metrics");
       }

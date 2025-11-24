@@ -9,7 +9,7 @@ namespace CommonNetFuncs.EFCore;
 /// <typeparam name="T">Entity <see langword="class"/> to be used with these methods.</typeparam>
 /// <typeparam name="UT">DB Context for the database you with to run these actions against.</typeparam>
 #pragma warning disable S2326 // Unused type parameters should be removed
-public interface IBaseDbContextActions<T, UT> where T : class where UT : DbContext
+public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbContext
 #pragma warning restore S2326 // Unused type parameters should be removed
 {
 	#region Read

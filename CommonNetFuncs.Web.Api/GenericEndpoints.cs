@@ -23,7 +23,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="models">Entities to create</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<T>>> CreateMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class where UT : DbContext
+	public async Task<ActionResult<List<T>>> CreateMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class?, new() where UT : DbContext
 	{
 		try
 		{
@@ -48,7 +48,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="model">Entity to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class where UT : DbContext
+	public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class?, new() where UT : DbContext
 	{
 		try
 		{
@@ -73,7 +73,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class where UT : DbContext
+	public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class?, new() where UT : DbContext
 	{
 		try
 		{
@@ -97,7 +97,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<T>>> DeleteManyByKeys<T, UT>(IEnumerable<object> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+	public async Task<ActionResult<List<T>>> DeleteManyByKeys<T, UT>(IEnumerable<object> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class?, new() where UT : DbContext
 	{
 		try
 		{
@@ -122,7 +122,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+	public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class?, new() where UT : DbContext
 	{
 		T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
 		return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
@@ -137,7 +137,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+	public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class?, new() where UT : DbContext
 	{
 		T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
 		return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
@@ -152,7 +152,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="patch"></param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	private async Task<ActionResult<T>> PatchInternal<T, UT>(T? dbModel, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class where UT : DbContext
+	private async Task<ActionResult<T>> PatchInternal<T, UT>(T? dbModel, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class?, new() where UT : DbContext
 	{
 		try
 		{

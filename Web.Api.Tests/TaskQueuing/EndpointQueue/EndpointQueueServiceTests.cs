@@ -4,8 +4,6 @@ using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 
 namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public class EndpointQueueServiceTests
 {
 	[Fact]
@@ -62,5 +60,3 @@ public class EndpointQueueServiceTests
 
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

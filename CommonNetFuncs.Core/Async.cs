@@ -15,7 +15,7 @@ public static class Async
 	/// </summary>
 	/// <param name="obj">Object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this T obj, Task<T> task)
+	public static async Task ObjectFill<T>(this T obj, Task<T> task) where T : class?
 	{
 		try
 		{
@@ -28,10 +28,6 @@ public static class Async
 					{
 						resultObject?.CopyPropertiesTo(obj);
 					}
-				}
-				else
-				{
-					obj = resultObject;
 				}
 			}
 		}
@@ -107,7 +103,7 @@ public static class Async
 	/// <param name="obj">Object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	public static async Task ObjectFill<T>(this T obj, Func<Task<T>> task, SemaphoreSlim? semaphore)
+	public static async Task ObjectFill<T>(this T obj, Func<Task<T>> task, SemaphoreSlim? semaphore) where T : class
 	{
 		try
 		{
@@ -124,10 +120,6 @@ public static class Async
 					{
 						resultObject?.CopyPropertiesTo(obj);
 					}
-				}
-				else
-				{
-					obj = resultObject;
 				}
 			}
 		}
@@ -537,16 +529,9 @@ public static class Async
 		try
 		{
 			IEnumerable<T>? resultObject = await task;
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -571,16 +556,9 @@ public static class Async
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
 			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
@@ -603,16 +581,9 @@ public static class Async
 		try
 		{
 			ConcurrentBag<T>? resultObject = await task;
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -661,16 +632,9 @@ public static class Async
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
 			ConcurrentBag<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
@@ -693,16 +657,9 @@ public static class Async
 		try
 		{
 			List<T>? resultObject = await task;
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -727,16 +684,9 @@ public static class Async
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
 			List<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				if (obj != null)
-				{
-					obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-				}
-				else
-				{
-					obj = new(resultObject);
-				}
+				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
@@ -819,10 +769,12 @@ public static class Async
 		try
 		{
 			await using MemoryStream resultObject = await task;
+#pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{
 				resultObject?.WriteTo(ms);
 			}
+#pragma warning restore S3998 // Threads should not lock on objects with weak identity
 		}
 		catch (Exception ex)
 		{
@@ -846,10 +798,12 @@ public static class Async
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
 			await using MemoryStream resultObject = await task().ConfigureAwait(false);
+#pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{
 				resultObject?.WriteTo(ms);
 			}
+#pragma warning restore S3998 // Threads should not lock on objects with weak identity
 		}
 		catch (Exception ex)
 		{

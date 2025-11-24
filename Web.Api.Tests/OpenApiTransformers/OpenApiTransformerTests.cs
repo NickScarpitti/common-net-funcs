@@ -7,7 +7,6 @@ using Microsoft.OpenApi.Models;
 
 namespace Web.Api.Tests.OpenApiTransformers;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class OpenApiTransformerTests
 {
 	[Theory]
@@ -141,4 +140,3 @@ public sealed class OpenApiTransformerTests
 		document.SecurityRequirements.ShouldBeEmpty();
 	}
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

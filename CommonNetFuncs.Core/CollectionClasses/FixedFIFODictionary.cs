@@ -10,20 +10,20 @@ namespace CommonNetFuncs.Core.CollectionClasses;
 /// This implementation is thread-safe and uses a <see cref="ReaderWriterLockSlim"/> to synchronize access.</remarks>
 /// <typeparam name="TKey">The type of the keys in the dictionary. Keys must be non-null.</typeparam>
 /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
-public class FixedFIFODictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
+public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
 {
   private readonly ReaderWriterLockSlim readWriteLock = new();
   private readonly int capacity;
   private readonly OrderedDictionary<TKey, TValue?> dictionary;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="FixedFIFODictionary{TKey,TValue}"/> class with the specified capacity and an optional source dictionary.
+  /// Initializes a new instance of the <see cref="FixedFifoDictionary{TKey,TValue}"/> class with the specified capacity and an optional source dictionary.
   /// </summary>
   /// <param name="capacity">The maximum number of items the dictionary can hold.</param>
   /// <param name="sourceDictionary">Optional: A dictionary to initialize the contents of the new dictionary.</param>
   /// <exception cref="ArgumentOutOfRangeException">Thrown when the capacity is less than or equal to zero.</exception>
   /// <exception cref="ArgumentException">Thrown when the source dictionary exceeds the specified capacity.</exception>
-  public FixedFIFODictionary(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
+  public FixedFifoDictionary(int capacity, IDictionary<TKey, TValue?>? sourceDictionary = null)
   {
     if (capacity <= 0)
     {

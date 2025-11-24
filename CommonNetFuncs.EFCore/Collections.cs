@@ -18,7 +18,7 @@ public static partial class Collections
 	/// <param name="ignoreDefaultValues">Optional: Ignore default values in retrieval when true. Default is <see langword="false"/>.</param>
 	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
 	/// <returns>First object that matches all non-null fields in <paramref name="partialObject"/></returns>
-	public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, DbContext context, T partialObject, bool ignoreDefaultValues = true, CancellationToken cancellationToken = default) where T : class
+	public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, DbContext context, T partialObject, bool ignoreDefaultValues = true, CancellationToken cancellationToken = default)
 	{
 		Type entityType = typeof(T);
 		PropertyInfo[] properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -66,7 +66,7 @@ public static partial class Collections
 			conditions = conditions == null ? condition : Expression.AndAlso(conditions, condition);
 		}
 
-		T? model = null;
+		T? model = default;
 		if (conditions != null)
 		{
 			// Build the final lambda expression and execute the query

@@ -7,8 +7,6 @@ using Microsoft.Extensions.Primitives;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class MemoryCacheMiddlewareTests
 {
     private readonly IFixture _fixture;
@@ -160,5 +158,3 @@ public sealed class MemoryCacheMiddlewareTests
         A.CallTo(() => _cache.CreateEntry(A<object>._)).MustHaveHappened();
     }
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

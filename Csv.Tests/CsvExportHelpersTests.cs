@@ -4,7 +4,6 @@ using CommonNetFuncs.Csv;
 
 namespace Csv.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class CsvExportHelpersTests
 {
     private readonly Fixture _fixture;
@@ -144,5 +143,3 @@ public sealed class CsvExportHelpersTests
         lines[1].ShouldBe($"\"{valueWithComma}\"");
     }
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -3,7 +3,6 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class StreamsTests
 {
     private readonly Fixture _fixture = new();
@@ -493,4 +492,3 @@ public sealed class StreamsTests
         Should.Throw<ObjectDisposedException>(() => counting.SetLength(10));
     }
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

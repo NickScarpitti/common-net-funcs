@@ -4,8 +4,6 @@ using Moq;
 
 namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class PrioritizedEndpointQueueServiceTests
 {
 	//[Theory]
@@ -89,5 +87,3 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		Should.NotThrow(service.Dispose); // Should be idempotent
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

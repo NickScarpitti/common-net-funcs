@@ -14,8 +14,6 @@ using static CommonNetFuncs.Compression.Streams;
 
 namespace Web.Aws.S3.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class ApiAwsS3Tests
 {
   private readonly IFixture _fixture;
@@ -852,5 +850,3 @@ public sealed class ApiAwsS3Tests
     }
   }
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

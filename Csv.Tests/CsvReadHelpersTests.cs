@@ -4,8 +4,6 @@ using CommonNetFuncs.Csv;
 
 namespace Csv.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class CsvReadHelpersTests
 {
     private readonly Fixture _fixture;
@@ -623,4 +621,3 @@ public sealed class CsvReadHelpersTests
         return writer.ToString();
     }
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

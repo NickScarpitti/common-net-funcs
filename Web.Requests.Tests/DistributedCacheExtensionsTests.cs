@@ -5,8 +5,6 @@ using static CommonNetFuncs.Web.Requests.DistributedCacheExtensions;
 
 namespace Web.Requests.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public class DistributedCacheExtensionsTests
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
@@ -120,5 +118,3 @@ public class DistributedCacheExtensionsTests
         result.ShouldBe(default);
     }
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

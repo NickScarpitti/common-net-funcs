@@ -608,7 +608,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 			headerPool.Return(headers);
 		}
 
-		return result == null ? default : result.Result;
+		return result?.Result;
 	}
 
 	/// <summary>
@@ -674,7 +674,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		{
 			headerPool.Return(headers);
 		}
-		return result == null ? default : result.Result;
+		return result?.Result;
 	}
 
 	/// <summary>
@@ -740,7 +740,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 			headerPool.Return(headers);
 		}
 
-		return result == null ? default : result.Result;
+		return result?.Result;
 	}
 
 	#endregion

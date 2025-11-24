@@ -4,8 +4,6 @@ using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 
 namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public class SequentialTaskProcessorTests
 {
 	//[Fact]
@@ -64,5 +62,3 @@ public class SequentialTaskProcessorTests
 		Should.NotThrow(processor.Dispose); // Should be idempotent
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

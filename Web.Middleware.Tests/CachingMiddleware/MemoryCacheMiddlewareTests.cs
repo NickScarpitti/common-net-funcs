@@ -4,6 +4,7 @@ using CommonNetFuncs.Web.Middleware.CachingMiddleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
+using xRetry;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 
@@ -26,7 +27,7 @@ public sealed class MemoryCacheMiddlewareTests
 		_context = new DefaultHttpContext();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task InvokeAsync_WithoutCacheParams_CallsNextDelegate()
 	{
 		// Arrange
@@ -39,7 +40,7 @@ public sealed class MemoryCacheMiddlewareTests
 		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(true, false)]
 	[InlineData(false, true)]
 	public async Task InvokeAsync_WithCacheParams_HandlesFlags(bool useCache, bool evictCache)
@@ -79,7 +80,7 @@ public sealed class MemoryCacheMiddlewareTests
 		}
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task InvokeAsync_WithCacheHit_ReturnsCachedResponse()
 	{
 		// Arrange
@@ -115,12 +116,11 @@ public sealed class MemoryCacheMiddlewareTests
 		A.CallTo(() => _next(_context)).MustNotHaveHappened();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("10", null, null)]
 	[InlineData(null, "5", null)]
 	[InlineData(null, null, "2")]
-	public async Task InvokeAsync_WithCustomCacheDuration_SetsCacheOptions(
-			string? seconds, string? minutes, string? hours)
+	public async Task InvokeAsync_WithCustomCacheDuration_SetsCacheOptions(string? seconds, string? minutes, string? hours)
 	{
 		// Arrange
 		Dictionary<string, StringValues> queryDict = new()

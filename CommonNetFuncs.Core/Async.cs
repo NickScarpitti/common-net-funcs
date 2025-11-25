@@ -1014,6 +1014,30 @@ public static class Async
 			semaphore.Release();
 		}
 	}
+
+	public static async Task<T?> RunAsyncWithSemaphore<T>(this Task<T?> task, SemaphoreSlim semaphore, CancellationTokenSource? cancellationTokenSource = null, bool breakOnError = false, string? errorText = null)
+	{
+		cancellationTokenSource ??= new();
+		CancellationToken token = cancellationTokenSource.Token;
+		try
+		{
+			await semaphore.WaitAsync(token).ConfigureAwait(false);
+			return await task;
+		}
+		catch (Exception ex)
+		{
+			if (breakOnError)
+			{
+				await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
+			}
+			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error{(errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}")}");
+		}
+		finally
+		{
+			semaphore.Release();
+		}
+		return default;
+	}
 }
 
 public class AsyncIntString

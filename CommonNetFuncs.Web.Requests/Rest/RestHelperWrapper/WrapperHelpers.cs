@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Core;
+﻿using System.Net;
+using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Requests.Rest.Options;
 using NLog;
 using static System.Net.HttpStatusCode;
@@ -179,9 +180,55 @@ internal static class WrapperHelpers
 				return false;
 			}
 
-			return options.ShouldRetryByStatusFunc != null && response != null && options.ShouldRetryByStatusFunc(response.StatusCode);
-		}
-	}
+      // If custom retry function is provided, use it
+      if (options.ShouldRetryByStatusFunc != null && response != null)
+      {
+        return options.ShouldRetryByStatusFunc(response.StatusCode);
+      }
+
+      // Default retry behavior when no custom function is provided
+      if (response != null)
+      {
+        return ShouldRetryBasedOnStatusCode(response.StatusCode);
+      }
+
+      return false;
+    }
+  }
+
+  private static bool ShouldRetryBasedOnStatusCode(HttpStatusCode statusCode)
+  {
+    return statusCode switch
+    {
+      // Auth errors - retry for token refresh
+      Unauthorized => true,
+      Forbidden => true,
+
+      // 5xx server errors - should retry
+      InternalServerError => true,
+      BadGateway => true,
+      ServiceUnavailable => true,
+      GatewayTimeout => true,
+      InsufficientStorage => true,
+      NetworkAuthenticationRequired => true,
+
+      // 4xx client errors that might be transient
+      RequestTimeout => true,
+      TooManyRequests => true,
+
+      // Don't retry these 4xx errors
+      BadRequest => false,
+      NotFound => false,
+      MethodNotAllowed => false,
+      NotAcceptable => false,
+      Conflict => false,
+      Gone => false,
+      UnprocessableEntity => false,
+
+      // For any other status codes, don't retry by default
+      _ => false
+    };
+  }
 
 	internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, HttpClient client, Dictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
 	{

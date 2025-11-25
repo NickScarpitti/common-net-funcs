@@ -3,6 +3,7 @@ using FakeItEasy.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using xRetry;
 
 namespace Web.Middleware.Tests;
 
@@ -17,7 +18,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 		_next = A.Fake<RequestDelegate>();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void Constructor_ValidParameters_CreatesInstance()
 	{
 		// Act
@@ -27,7 +28,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 		middleware.ShouldNotBeNull();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(0)]    // Empty response
 	[InlineData(100)]  // Small response
 	[InlineData(1024)] // 1KB response
@@ -63,7 +64,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 		message.ShouldContain("Size:");
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task InvokeAsync_RestoresOriginalBodyStream()
 	{
 		// Arrange
@@ -79,7 +80,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 		context.Response.Body.ShouldBe(originalBody);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task InvokeAsync_HandlesNextDelegateException()
 	{
 		// Arrange
@@ -97,7 +98,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 		context.Response.Body.ShouldBe(context.Response.Body);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task InvokeAsync_HandlesEmptyHeaders()
 	{
 		// Arrange

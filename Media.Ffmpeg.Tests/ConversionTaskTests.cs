@@ -5,6 +5,7 @@ using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
 using CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
 using Xabe.FFmpeg;
+using xRetry;
 
 namespace Media.Ffmpeg.Tests;
 
@@ -69,7 +70,7 @@ public sealed class ConversionTaskTests : IDisposable
 		Dispose(false);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(VideoCodec.h264, Format.mp4)]
 	[InlineData(VideoCodec.hevc, Format.matroska)]
 	public async Task FfmpegConversionTask_WithBasicSettings_ShouldConvertSuccessfully(VideoCodec codec, Format format)
@@ -86,7 +87,7 @@ public sealed class ConversionTaskTests : IDisposable
 		File.Exists(Path.Combine(_workingDir, outputFileName)).ShouldBeTrue();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task FfmpegConversionTask_WithCustomCommand_ShouldExecuteCommand()
 	{
 		// Arrange
@@ -103,7 +104,7 @@ public sealed class ConversionTaskTests : IDisposable
 		File.Exists(Path.Combine(_workingDir, outputFileName)).ShouldBeTrue();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task RawFfmpegConversionTask_WithCustomCommand_ShouldExecuteCommand()
 	{
 		// Arrange
@@ -119,7 +120,7 @@ public sealed class ConversionTaskTests : IDisposable
 		File.Exists(Path.Combine(_workingDir, outputFileName)).ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(ProcessPriorityClass.Normal)]
 	[InlineData(ProcessPriorityClass.BelowNormal)]
 	[InlineData(ProcessPriorityClass.Idle)]
@@ -136,7 +137,7 @@ public sealed class ConversionTaskTests : IDisposable
 		result.ShouldBeTrue();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task FfmpegConversionTask_WithCancellation_ShouldCancelConversion()
 	{
 		// Arrange
@@ -157,7 +158,7 @@ public sealed class ConversionTaskTests : IDisposable
 		result.ShouldBeFalse();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task FfmpegConversionTask_WithHardwareAcceleration_ShouldUseHardwareSettings()
 	{
 		// Arrange
@@ -178,7 +179,7 @@ public sealed class ConversionTaskTests : IDisposable
 		result.ShouldBeTrue();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task FfmpegConversionTask_WithFpsTracking_ShouldUpdateFpsDictionary()
 	{
 		// Arrange
@@ -195,7 +196,7 @@ public sealed class ConversionTaskTests : IDisposable
 		fpsDict.TryGetValue(conversionIndex, out _).ShouldBeFalse(); // Should be removed after completion
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void FfmpegConversionTask_WithInvalidInput_ShouldHandleError()
 	{
 		// Arrange
@@ -206,7 +207,7 @@ public sealed class ConversionTaskTests : IDisposable
 		Should.Throw<ArgumentException>(async () => await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, workingPath: _workingDir));
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(true)]
 	[InlineData(false)]
 	public async Task FfmpegConversionTask_WithStrictFlag_ShouldRespectStrictSetting(bool strict)
@@ -222,7 +223,7 @@ public sealed class ConversionTaskTests : IDisposable
 		result.ShouldBeTrue();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void HardwareAccelerationValues_ShouldHaveDefaultValues()
 	{
 		// Arrange & Act

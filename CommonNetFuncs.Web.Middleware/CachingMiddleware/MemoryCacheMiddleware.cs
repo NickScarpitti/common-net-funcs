@@ -212,7 +212,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 									cache.Remove(keyToEvict);
 									if (!cacheOptions.SuppressLogs)
 									{
-										logger.Info("Manually evicting {keyToEvict} because it had tag {tag}", keyToEvict, tag.UrlEncodeReadable());
+										logger.Info("Manually evicting {keyToEvict} because it had tag {tag}", keyToEvict, tag.SanitizeForLog());
 									}
 								}
 							}
@@ -241,7 +241,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 					cache.Remove(cacheKey);
 					if (!cacheOptions.SuppressLogs)
 					{
-						logger.Info("Manually evicting {cacheKey}", cacheKey);
+						logger.Info("Manually evicting {cacheKey}", cacheKey.SanitizeForLog());
 					}
 					RemoveCacheTags(cacheKey, entry?.Tags ?? []);
 				}
@@ -266,7 +266,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 		RemoveCacheTags(key.ToString() ?? string.Empty, entry.Tags);
 		if (!cacheOptions.SuppressLogs)
 		{
-			logger.Info("Automatically evicting {key} for reason: {reason}", key, reason);
+			logger.Info("Automatically evicting {key} for reason: {reason}", key.ToString()!.SanitizeForLog(), reason);
 		}
 	}
 
@@ -330,7 +330,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 					cacheTracker?.RemoveEntry(entry.Key);
 					if (!cacheOptions.SuppressLogs)
 					{
-						logger.Info("Automatically evicting {key} because due to there not being enough space in cache for new value of size {size}", entry.Key, entry.Value.Size.BytesToKb());
+						logger.Info("Automatically evicting {key} because due to there not being enough space in cache for new value of size {size}", entry.Key.SanitizeForLog(), entry.Value.Size.BytesToKb());
 					}
 
 					freedSpace += entry.Value.Size;
@@ -454,6 +454,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 		{
 			try
 			{
+#pragma warning disable IDE0037 // Use inferred member name
 				return Results.Ok(
 								new
 								{
@@ -474,6 +475,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 										ManuallyRemoved = metrics.EvictedDueToRemoved()
 									}
 								});
+#pragma warning restore IDE0037 // Use inferred member name
 			}
 			catch (Exception ex)
 			{
@@ -521,15 +523,15 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 						}
 					}
 
-					logger.Info("Cache entry evicted for key: {key}", key);
+					logger.Info("Cache entry evicted for key: {key}", key.SanitizeForLog());
 					return Results.Ok(1);
 				}
-				logger.Info("No cache entry found for key: {key}", key);
+				logger.Info("No cache entry found for key: {key}", key.SanitizeForLog());
 				return Results.Ok(0);
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "Error evicting cache entry by key");
+				logger.Error(ex, "Error evicting cache entry by key: {key}", key.SanitizeForLog());
 				return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error evicting cache entry");
 			}
 		})
@@ -580,7 +582,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 						}
 					}
 
-					logger.Info("Evicted {count} cache entries with tag: {tag}", evictedCount, tag);
+					logger.Info("Evicted {count} cache entries with tag: {tag}", evictedCount, tag.SanitizeForLog());
 					return Results.Ok(evictedCount);
 				}
 

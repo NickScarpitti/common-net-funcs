@@ -10,7 +10,7 @@ using static Newtonsoft.Json.JsonConvert;
 
 namespace CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
-public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
+public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 {
 	//private readonly ILogger<RestHelpersWrapper> logger = logger;
 	private readonly Logger logger = LogManager.GetCurrentClassLogger();
@@ -33,7 +33,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		string? bearerToken = null;
 
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName); // HttpClientFactory manages the lifetime of the clients it creates
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -50,12 +50,12 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 
 				if (options.UseBearerToken)
 				{
-					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-				}
+			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+		}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client, headers, HttpMethod.Get, bearerToken);
+		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
 
-				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+		result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -101,7 +101,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -118,12 +118,12 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 
 				if (options.UseBearerToken)
 				{
-					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-				}
+			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+		}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client, headers, HttpMethod.Get, bearerToken);
+		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
 
-				result = await client.StreamingRestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+		result = await client.StreamingRestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -183,7 +183,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -203,7 +203,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -252,7 +252,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -272,7 +272,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.StreamingRestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -330,7 +330,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -347,12 +347,12 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 
 				if (options.UseBearerToken)
 				{
-					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-				}
+			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+		}
 
-				RequestOptions<UT> baseRequestOptions = GetRequestOptions(options, client, headers, HttpMethod.Post, bearerToken, postObject);
+		RequestOptions<UT> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
-				result = await client.RestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+		result = await client.RestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -400,7 +400,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -417,12 +417,12 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 
 				if (options.UseBearerToken)
 				{
-					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-				}
+			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+		}
 
-				RequestOptions<UT> baseRequestOptions = GetRequestOptions<UT>(options, client, headers, HttpMethod.Post, bearerToken, postObject);
+		RequestOptions<UT> baseRequestOptions = GetRequestOptions<UT>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
-				result = await client.StreamingRestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+		result = await client.StreamingRestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -477,7 +477,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -497,7 +497,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.RestObjectRequest<string?, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -557,7 +557,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -574,13 +574,13 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 
 				if (options.UseBearerToken)
 				{
-					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-				}
+			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+		}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client, headers, HttpMethod.Patch, bearerToken,
-										patchDocument: new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json)); //new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json)); // System.Text.Json has issues producing JsonPatchDocument in the correct format
+		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Patch, bearerToken, default,
+						patchDocument: new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json)); //new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json)); // System.Text.Json has issues producing JsonPatchDocument in the correct format
 
-				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+		result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -625,7 +625,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -642,12 +642,12 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 
 				if (options.UseBearerToken)
 				{
-					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-				}
+			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+		}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client, headers, HttpMethod.Put, bearerToken, replacementModel);
+		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Put, bearerToken, replacementModel);
 
-				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+		result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -690,7 +690,7 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
-		HttpClient client = httpClientFactory.CreateClient(options.ApiName);
+		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
 		Dictionary<string, string> headers = headerPool.Get();
@@ -707,12 +707,12 @@ public sealed class RestHelpersWrapper(IHttpClientFactory httpClientFactory)
 
 				if (options.UseBearerToken)
 				{
-					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-				}
+			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+		}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client, headers, HttpMethod.Put, bearerToken);
+		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Delete, bearerToken, default);
 
-				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+		result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{

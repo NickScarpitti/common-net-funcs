@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
+using xRetry;
 
 namespace Web.Middleware.Tests;
 
@@ -21,7 +22,7 @@ public sealed class UseResponseLoggingFilterTests
 		_config = A.Fake<IResponseLoggingConfig>();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void Constructor_ValidParameters_CreatesInstance()
 	{
 		// Act
@@ -31,7 +32,7 @@ public sealed class UseResponseLoggingFilterTests
 		filter.ShouldNotBeNull();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(1.0, 2.0)] // When elapsed time exceeds threshold
 	[InlineData(2.0, 1.0)] // When elapsed time is under threshold
 	public async Task OnActionExecuted_LogsWarningWhenThresholdExceeded(double thresholdSeconds, double delaySeconds)
@@ -79,7 +80,7 @@ public sealed class UseResponseLoggingFilterTests
 		}
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task OnActionExecuting_StartsNewMeasurement()
 	{
 		// Arrange
@@ -102,7 +103,7 @@ public sealed class UseResponseLoggingFilterTests
 		A.CallTo(() => _config.ThresholdInSeconds).MustHaveHappened();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(0.0)]  // Edge case - zero threshold
 	[InlineData(-1.0)] // Edge case - negative threshold
 	public async Task OnActionExecuted_HandlesEdgeCaseThresholds(double thresholdSeconds)

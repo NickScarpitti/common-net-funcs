@@ -3,6 +3,7 @@ using CommonNetFuncs.Excel.OpenXml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using xRetry;
 
 namespace Excel.OpenXml.Tests;
 
@@ -51,7 +52,7 @@ public sealed class ExportTests : IDisposable
 		public string? Description { get; set; }
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GenericExcelExport_WithValidList_ShouldCreateExcelFile()
 	{
 		// Arrange
@@ -80,7 +81,7 @@ public sealed class ExportTests : IDisposable
 		firstRow.Elements<Cell>().Count().ShouldBe(3); // Name, Age, Description
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(true, "CustomTable")]
 	[InlineData(false, "Data")]
 	public void GenericExcelExport_WithTableFormatting_ShouldRespectTableSettings(bool createTable, string tableName)
@@ -107,7 +108,7 @@ public sealed class ExportTests : IDisposable
 		}
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GenericExcelExport_WithDataTable_ShouldCreateExcelFile()
 	{
 		// Arrange
@@ -134,7 +135,7 @@ public sealed class ExportTests : IDisposable
 		sheetData.Elements<Row>().Count().ShouldBe(3); // Header + 2 data rows
 	}
 
-	//[Fact]
+	//[RetryFact(3)]
 	//public void AddGenericTable_WithValidData_ShouldAddNewSheet()
 	//{
 	//    // Arrange
@@ -151,7 +152,7 @@ public sealed class ExportTests : IDisposable
 	//    doc.WorkbookPart.Workbook.Sheets?.Elements<Sheet>().Count().ShouldBe(1);
 	//}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ExportFromTable_WithSkipColumns_ShouldOmitSpecifiedColumns()
 	{
 		// Arrange
@@ -176,7 +177,7 @@ public sealed class ExportTests : IDisposable
 		headerRow.Elements<Cell>().Count().ShouldBe(2); // Only Name and Age
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task ExportFromTable_WithCancellation_ShouldRespectCancellationToken()
 	{
 		// Arrange

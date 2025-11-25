@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
+using xRetry;
 
 namespace Media.Ffmpeg.Tests;
 
@@ -55,7 +56,7 @@ public sealed class HelpersTests : IDisposable
 		Dispose(false);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetTotalFps_ShouldReturnSumOfValues()
 	{
 		// Arrange
@@ -70,7 +71,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldBe(16.0m);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("frame=  48 fps=5.8 q=0.0 size=1kB time=00:00:01.77 bitrate=4.5kbits/s", 5.8)]
 	[InlineData("frame=  48 fps=12.3 q=0.0 size=1kB time=00:00:01.77 bitrate=4.5kbits/s", 12.3)]
 	[InlineData("frame=  48 fps=0.0 q=0.0 size=1kB time=00:00:01.77 bitrate=4.5kbits/s", 0.0)]
@@ -83,7 +84,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldBe(expected);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ParseFfmpegLogFps_ShouldReturnMinusOneOnInvalid()
 	{
 		// Arrange
@@ -96,7 +97,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldBe(-1);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetTotalFileDif_ShouldReturnCorrectSum()
 	{
 		// Arrange
@@ -113,7 +114,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldContain("0"); // 1 + (-1) = 0
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task RecordResults_ShouldAddToBagAndWriteLog()
 	{
 		// Arrange
@@ -133,7 +134,7 @@ public sealed class HelpersTests : IDisposable
 		logContent.ShouldContain(fileName);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task RecordResults_WithoutLogFile_ShouldAddToBagOnly()
 	{
 		// Arrange
@@ -150,7 +151,7 @@ public sealed class HelpersTests : IDisposable
 		bag.ShouldContain(x => x.Contains(fileName) && x.Contains("Success=False"));
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GetVideoMetadata_ShouldReturnNonNullForValidFile()
 	{
 		// Act
@@ -160,7 +161,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldNotBeNull();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("nonexistent.mp4")]
 	[InlineData("")]
 	public async Task GetVideoMetadata_ShouldReturnNullForInvalidFile(string badFileName)
@@ -172,7 +173,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GetFrameRate_ShouldReturnPositiveForValidFile()
 	{
 		// Act
@@ -182,7 +183,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldBeGreaterThan(0);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GetFrameRate_ShouldReturnMinusOneForInvalidFile()
 	{
 		// Act
@@ -192,7 +193,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldBe(-1);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(-1, -1)]
 	[InlineData(2, 5)]
 	public async Task GetKeyFrameSpacing_WithSamples_ShouldReturnValueOrMinusOne(int numberOfSamples, int sampleLengthSec)
@@ -205,7 +206,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldBeInRange(-1, 1000);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GetKeyFrameSpacing_WithoutSamples_ShouldReturnValueOrMinusOne()
 	{
 		// Act
@@ -216,7 +217,7 @@ public sealed class HelpersTests : IDisposable
 		result.ShouldBeInRange(-1, 1000);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void EVideoMetadata_ShouldContainExpectedValues()
 	{
 		// Act

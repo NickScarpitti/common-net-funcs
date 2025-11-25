@@ -1191,7 +1191,7 @@ public static partial class Common
 	/// <param name="range">Range to insert image at</param>
 	public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, string range, AnchorType anchorType = AnchorType.MoveAndResize)
 	{
-		CellRangeAddress? cellRangeAddress = ws.GetCellFromReference(range).GetRangeOfMergedCells() ?? throw new ArgumentException($"Cell at {range} is not in a merged range");
+		CellRangeAddress? cellRangeAddress = ws.GetCellFromReference(range).GetRangeOfMergedCells() ?? throw new ArgumentException($"Unable to get range from reference {range}", nameof(range));
 		wb.AddImages(ws, [imageData], cellRangeAddress != null ? [cellRangeAddress] : [], anchorType);
 	}
 
@@ -1214,7 +1214,7 @@ public static partial class Common
 	/// <param name="cell">Cell in range to insert image at</param>
 	public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, ICell cell, AnchorType anchorType = AnchorType.MoveAndResize)
 	{
-		CellRangeAddress? cellRangeAddress = cell.GetRangeOfMergedCells() ?? throw new ArgumentException($"Cell at {cell.Address.FormatAsString()} is not in a merged range");
+		CellRangeAddress? cellRangeAddress = cell.GetRangeOfMergedCells() ?? throw new ArgumentException($"Unable to get range from cell at {cell.Address.FormatAsString()}", nameof(cell));
 		wb.AddImages(ws, [imageData], [cellRangeAddress], anchorType);
 	}
 
@@ -1323,7 +1323,7 @@ public static partial class Common
 			int rangeHeight = ws.GetRangeHeightInPx(area.FirstRow, area.LastRow);
 			decimal rangeAspect = ((decimal)rangeWidth) / rangeHeight;
 
-			decimal scale = (rangeAspect < imgAspect) ? ((rangeWidth - 3m) / imgWidth) : ((rangeHeight - 3m) / imgHeight);
+			decimal scale = (rangeAspect < imgAspect) ? ((rangeWidth - 3m) / imgWidth) : (rangeHeight - 3m) / imgHeight;
 
 			int resizeWidth = (int)Round(imgWidth * scale, 0, MidpointRounding.ToZero);
 			int resizeHeight = (int)Round(imgHeight * scale, 0, MidpointRounding.ToZero);

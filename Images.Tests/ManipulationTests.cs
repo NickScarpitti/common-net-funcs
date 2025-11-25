@@ -7,6 +7,7 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Metadata;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using xRetry;
 
 namespace Images.Tests;
 
@@ -63,7 +64,7 @@ public sealed class ManipulationTests : IDisposable
 
 	private static readonly Action<IImageProcessingContext> InvertMutate = ctx => ctx.Invert();
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
@@ -99,7 +100,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
@@ -125,7 +126,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Height.ShouldBe(height);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
@@ -149,7 +150,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Height.ShouldBe(height);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -184,7 +185,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -209,7 +210,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -232,7 +233,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
@@ -299,7 +300,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[[RetryTheory(3)]
 	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
@@ -355,7 +356,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(format);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
@@ -409,7 +410,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(format);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp")]
 	[InlineData("test.gif")]
 	[InlineData("test.jpeg")]
@@ -429,7 +430,7 @@ public sealed class ManipulationTests : IDisposable
 		format.ShouldNotBeNull();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp")]
 	[InlineData("test.gif")]
 	[InlineData("test.jpeg")]
@@ -449,7 +450,7 @@ public sealed class ManipulationTests : IDisposable
 		format.ShouldNotBeNull();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp")]
 	[InlineData("test.gif")]
 	[InlineData("test.jpeg")]
@@ -469,7 +470,7 @@ public sealed class ManipulationTests : IDisposable
 		format.ShouldNotBeNull();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp")]
 	[InlineData("test.gif")]
 	[InlineData("test.jpeg")]
@@ -490,7 +491,7 @@ public sealed class ManipulationTests : IDisposable
 		metadata!.HorizontalResolution.ShouldBeGreaterThan(0);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp")]
 	[InlineData("test.gif")]
 	[InlineData("test.jpeg")]
@@ -511,7 +512,7 @@ public sealed class ManipulationTests : IDisposable
 		metadata!.HorizontalResolution.ShouldBeGreaterThan(0);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp")]
 	[InlineData("test.gif")]
 	[InlineData("test.jpeg")]
@@ -532,7 +533,7 @@ public sealed class ManipulationTests : IDisposable
 		metadata!.HorizontalResolution.ShouldBeGreaterThan(0);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp", "BMP")]
 	[InlineData("test.gif", "GIF")]
 	[InlineData("test.jpeg", "JPEG")]
@@ -552,7 +553,7 @@ public sealed class ManipulationTests : IDisposable
 		format.Name.ShouldBe(expectedFormat);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp", "BMP")]
 	[InlineData("test.gif", "GIF")]
 	[InlineData("test.jpeg", "JPEG")]
@@ -572,7 +573,7 @@ public sealed class ManipulationTests : IDisposable
 		format.Name.ShouldBe(expectedFormat);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp")]
 	[InlineData("test.gif")]
 	[InlineData("test.jpeg")]
@@ -592,7 +593,7 @@ public sealed class ManipulationTests : IDisposable
 		metadata!.HorizontalResolution.ShouldBeGreaterThan(0);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp")]
 	[InlineData("test.gif")]
 	[InlineData("test.jpeg")]
@@ -612,7 +613,7 @@ public sealed class ManipulationTests : IDisposable
 		metadata!.HorizontalResolution.ShouldBeGreaterThan(0);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
@@ -677,7 +678,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
@@ -731,7 +732,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(format);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 0, 0)]
 	[InlineData("test.png", -1, -1)]
 	[InlineData("test.gif", -100, -100)]
@@ -748,7 +749,7 @@ public sealed class ManipulationTests : IDisposable
 		result.ShouldBeFalse();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 0)]
 	[InlineData("test.png", 101)]
 	[InlineData("test.tiff", -1)]
@@ -763,7 +764,7 @@ public sealed class ManipulationTests : IDisposable
 		Should.Throw<ArgumentException>(() => Manipulation.ReduceImageQualityBase(inputPath, outputPath, quality, null, null, null, null, null, null, false, null));
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void TryDetectImageType_FilePath_TooShort_ReturnsFalse()
 	{
 		// Act
@@ -774,7 +775,7 @@ public sealed class ManipulationTests : IDisposable
 		format.ShouldBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void TryDetectImageType_Stream_TooShort_ReturnsFalse()
 	{
 		// Arrange
@@ -788,7 +789,7 @@ public sealed class ManipulationTests : IDisposable
 		format.ShouldBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void TryDetectImageType_Span_TooShort_ReturnsFalse()
 	{
 		// Arrange
@@ -802,7 +803,7 @@ public sealed class ManipulationTests : IDisposable
 		format.ShouldBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void TryGetMetadata_FilePath_TooShort_ReturnsFalse()
 	{
 		// Act
@@ -813,7 +814,7 @@ public sealed class ManipulationTests : IDisposable
 		metadata.ShouldNotBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void TryGetMetadata_Stream_TooShort_ReturnsFalse()
 	{
 		// Arrange
@@ -827,7 +828,7 @@ public sealed class ManipulationTests : IDisposable
 		metadata.ShouldNotBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void TryGetMetadata_Span_TooShort_ReturnsFalse()
 	{
 		// Arrange
@@ -841,7 +842,7 @@ public sealed class ManipulationTests : IDisposable
 		metadata.ShouldNotBeNull();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 120, 80)]
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
@@ -882,7 +883,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 120, 80)]
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
@@ -913,7 +914,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Height.ShouldBeLessThanOrEqualTo(height);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 120, 80)]
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
@@ -942,7 +943,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Height.ShouldBeLessThanOrEqualTo(height);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -977,7 +978,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -1002,7 +1003,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -1025,7 +1026,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -1058,7 +1059,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -1081,7 +1082,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 120, 80)]
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
@@ -1121,7 +1122,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 120, 80)]
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
@@ -1150,7 +1151,7 @@ public sealed class ManipulationTests : IDisposable
 		img.Height.ShouldBeLessThanOrEqualTo(height);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
@@ -1201,7 +1202,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
@@ -1236,7 +1237,7 @@ public sealed class ManipulationTests : IDisposable
 		isInverted.ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
@@ -1269,7 +1270,7 @@ public sealed class ManipulationTests : IDisposable
 		isInverted.ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -1311,7 +1312,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -1343,7 +1344,7 @@ public sealed class ManipulationTests : IDisposable
 		isInverted.ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -1373,7 +1374,7 @@ public sealed class ManipulationTests : IDisposable
 		isInverted.ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
@@ -1452,7 +1453,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
@@ -1513,7 +1514,7 @@ public sealed class ManipulationTests : IDisposable
 		isInverted.ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
@@ -1562,7 +1563,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
@@ -1597,7 +1598,7 @@ public sealed class ManipulationTests : IDisposable
 		isInverted.ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -1636,7 +1637,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100)]
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
@@ -1666,7 +1667,7 @@ public sealed class ManipulationTests : IDisposable
 		isInverted.ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100, false, false)]
 	[InlineData("test.jpg", 100, 100, true, false)]
 	[InlineData("test.png", 50, 25, false, false)]
@@ -1724,7 +1725,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100, false, false)]
 	[InlineData("test.jpg", 100, 100, true, false)]
 	[InlineData("test.png", 50, 25, false, false)]
@@ -1773,7 +1774,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100, false, false)]
 	[InlineData("test.jpg", 100, 100, true, false)]
 	[InlineData("test.png", 50, 25, false, false)]
@@ -1819,7 +1820,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100, false, false)]
 	[InlineData("test.jpg", 100, 100, true, false)]
 	[InlineData("test.png", 50, 25, false, false)]

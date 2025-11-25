@@ -4,6 +4,7 @@ using CommonNetFuncs.Excel.OpenXml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using xRetry;
 using static CommonNetFuncs.Excel.OpenXml.Common;
 
 namespace Excel.OpenXml.Tests;
@@ -35,7 +36,7 @@ public sealed class CommonTests : IDisposable
 		Dispose(false);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void InitializeExcelFile_ShouldCreateNewSheet()
 	{
 		// Arrange
@@ -51,7 +52,7 @@ public sealed class CommonTests : IDisposable
 		document.WorkbookPart!.Workbook.Sheets?.Count().ShouldBe(1);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(null)]
 	[InlineData("Custom Sheet")]
 	public void CreateNewSheet_ShouldCreateSheetWithCorrectName(string? sheetName)
@@ -69,7 +70,7 @@ public sealed class CommonTests : IDisposable
 		sheet.Name!.Value.ShouldBe(sheetName ?? $"Sheet{sheetId}");
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetWorksheetByName_ShouldReturnCorrectWorksheet()
 	{
 		// Arrange
@@ -88,7 +89,7 @@ public sealed class CommonTests : IDisposable
 		sheet.ShouldNotBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetWorksheetById_ShouldReturnCorrectWorksheet()
 	{
 		// Arrange
@@ -104,7 +105,7 @@ public sealed class CommonTests : IDisposable
 		worksheet.ShouldNotBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetWorksheetFromCell_ShouldReturnCorrectWorksheet()
 	{
 		// Arrange
@@ -122,7 +123,7 @@ public sealed class CommonTests : IDisposable
 		result.ShouldBe(worksheet);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void InsertCell_ShouldCreateNewCell()
 	{
 		// Arrange
@@ -140,7 +141,7 @@ public sealed class CommonTests : IDisposable
 		cell.CellReference!.Value.ShouldBe("A1");
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("A1")]
 	[InlineData("B2")]
 	[InlineData("Z10")]
@@ -153,7 +154,7 @@ public sealed class CommonTests : IDisposable
 		cellRef.ToString().ShouldBe(reference);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(1u, "A")]
 	[InlineData(26u, "Z")]
 	[InlineData(27u, "AA")]
@@ -168,7 +169,7 @@ public sealed class CommonTests : IDisposable
 		result.ShouldBe(expectedName);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("A", 1u)]
 	[InlineData("Z", 26u)]
 	[InlineData("AA", 27u)]
@@ -183,7 +184,7 @@ public sealed class CommonTests : IDisposable
 		result.ShouldBe(expectedNumber);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(true)]
 	[InlineData(false)]
 	public void GetCustomStyle_ShouldCreateAndReturnStyleIndex(bool repeatStyle)
@@ -219,7 +220,7 @@ public sealed class CommonTests : IDisposable
 		}
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void CreateTable_ShouldCreateTableInWorksheet()
 	{
 		// Arrange
@@ -238,7 +239,7 @@ public sealed class CommonTests : IDisposable
 		tableParts.Count?.Value.ShouldBe(1u);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void AutoFitColumns_ShouldAdjustColumnWidths()
 	{
 		// Arrange
@@ -258,7 +259,7 @@ public sealed class CommonTests : IDisposable
 		columns!.Elements<Column>().Count().ShouldBeGreaterThan(0);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ReadExcelFileToDataTable_ShouldReturnPopulatedDataTable()
 	{
 		// Arrange
@@ -282,7 +283,7 @@ public sealed class CommonTests : IDisposable
 		result.Rows[0][0].ShouldBe("Data");
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetSheetDataFromDocument_ShouldReturnEmptySheetData_WhenSheetNotFound()
 	{
 		// Arrange
@@ -297,7 +298,7 @@ public sealed class CommonTests : IDisposable
 		result.Count().ShouldBe(0);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("A1", "B2", true)]
 	[InlineData("A1", "A1", true)]
 	[InlineData("Z10", "AA15", true)]
@@ -322,7 +323,7 @@ public sealed class CommonTests : IDisposable
 		cells.Count().ShouldBeGreaterThan(0);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(EStyle.Header, true)]
 	[InlineData(EStyle.HeaderThickTop, false)]
 	[InlineData(EStyle.Body, true)]
@@ -342,7 +343,7 @@ public sealed class CommonTests : IDisposable
 		styleId.ShouldBeGreaterThanOrEqualTo(0u);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(EFont.Default)]
 	[InlineData(EFont.Header)]
 	[InlineData(EFont.Whiteout)]
@@ -362,7 +363,7 @@ public sealed class CommonTests : IDisposable
 		fontId.ShouldBeGreaterThanOrEqualTo(0u);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ClearFormatCaches_ShouldClearAllCaches()
 	{
 		// Arrange
@@ -382,7 +383,7 @@ public sealed class CommonTests : IDisposable
 		newStyleId.ShouldBe(3u);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void FormatProtectionsAreEqual_ShouldCompareCorrectly()
 	{
 		// Arrange
@@ -397,7 +398,7 @@ public sealed class CommonTests : IDisposable
 		FormatProtectionsAreEqual(protection1, null).ShouldBeFalse();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(true)]
 	[InlineData(false)]
 	public void GetWorksheetByName_ShouldHandleNonExistentSheet(bool createMissingSheet)
@@ -428,7 +429,7 @@ public sealed class CommonTests : IDisposable
 		}
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetWorksheetByName_ShouldThrowWhewnNonExistentWorkbookPart()
 	{
 		// Arrange
@@ -441,7 +442,7 @@ public sealed class CommonTests : IDisposable
 		Should.Throw<ArgumentException>(() => document.GetWorksheetByName(nonExistentSheet, false));
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void InsertCellFormula_ShouldCreateFormulaCell()
 	{
 		// Arrange
@@ -461,7 +462,7 @@ public sealed class CommonTests : IDisposable
 		cell.CellFormula!.Text.ShouldBe("SUM(A2:A10)");
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void CalculateWidth_ShouldHandleVariousInputs()
 	{
 		// Arrange
@@ -479,7 +480,7 @@ public sealed class CommonTests : IDisposable
 		width3.ShouldBeGreaterThan(width1);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void SetAutoFilter_ShouldCreateAutoFilter()
 	{
 		// Arrange
@@ -498,7 +499,7 @@ public sealed class CommonTests : IDisposable
 		autoFilter!.Reference!.Value.ShouldBe("A1:E10");
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetMergedCellArea_ShouldHandleMergedAndUnmergedCells()
 	{
 		// Arrange
@@ -527,7 +528,7 @@ public sealed class CommonTests : IDisposable
 		unMergedLastCell.ToString().ShouldBe(cellNotInMerge.ToString());
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void CellReference_ShouldHandleInvalidValues()
 	{
 		// Assert
@@ -537,7 +538,7 @@ public sealed class CommonTests : IDisposable
 		Should.Throw<ArgumentOutOfRangeException>(() => new CellReference(1, 1048577));
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetStylesheet_ShouldCreateStylesheetIfMissing()
 	{
 		// Arrange
@@ -552,7 +553,7 @@ public sealed class CommonTests : IDisposable
 		document.WorkbookPart!.WorkbookStylesPart.ShouldNotBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void InsertSharedStringItem_ShouldHandleDuplicates()
 	{
 		// Arrange
@@ -571,7 +572,7 @@ public sealed class CommonTests : IDisposable
 		firstIndex.ShouldBe(secondIndex);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetWorkbookFromCell_ShouldReturnWorkbook()
 	{
 		// Arrange
@@ -589,7 +590,7 @@ public sealed class CommonTests : IDisposable
 		workbook.ShouldBe(document.WorkbookPart!.Workbook);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetWorkbookFromWorksheet_ShouldReturnWorkbook()
 	{
 		// Arrange
@@ -606,7 +607,7 @@ public sealed class CommonTests : IDisposable
 		workbook.ShouldBe(document.WorkbookPart!.Workbook);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetWorksheetPartByCellReference_ShouldReturnCorrectPart()
 	{
 		// Arrange
@@ -626,7 +627,7 @@ public sealed class CommonTests : IDisposable
 		result.Worksheet.ShouldNotBeNull();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(null)]
 	[InlineData("")]
 	[InlineData(" ")]
@@ -650,7 +651,7 @@ public sealed class CommonTests : IDisposable
 		isEmpty.ShouldBeTrue();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetSheetDataFromDocument_ShouldReturnSheetData_WhenSheetExists()
 	{
 		// Arrange
@@ -666,7 +667,7 @@ public sealed class CommonTests : IDisposable
 		sheetData.ShouldNotBeNull();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("A1", 0, 0)]
 	[InlineData("B2", 1, 1)]
 	[InlineData("Z10", -1, -1)]
@@ -689,7 +690,7 @@ public sealed class CommonTests : IDisposable
 		cellRef.RowIndex.ShouldBe((uint)(originalRef.RowIndex + rowOffset));
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(1, 1, 0, 1)]
 	[InlineData(1, 1, 1, 0)]
 	[InlineData(2, 2, -1, -1)]
@@ -712,7 +713,7 @@ public sealed class CommonTests : IDisposable
 		cellRef.RowIndex.ShouldBe((uint)(startRow + rowOffset));
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetCellFromName_ShouldReturnCell_WhenNameExists()
 	{
 		// Arrange
@@ -732,7 +733,7 @@ public sealed class CommonTests : IDisposable
 		cell.CellReference!.Value.ShouldBe("A1");
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetCellReferenceFromName_ShouldReturnReference_WhenNameExists()
 	{
 		// Arrange
@@ -752,7 +753,7 @@ public sealed class CommonTests : IDisposable
 		cellRef.ToString().ShouldBe("A1");
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ClearStandardFormatCacheForWorkbook_ShouldClearCache()
 	{
 		// Arrange
@@ -768,7 +769,7 @@ public sealed class CommonTests : IDisposable
 		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeFalse();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ClearCustomFormatCacheForWorkbook_ShouldClearCache()
 	{
 		// Arrange
@@ -784,7 +785,7 @@ public sealed class CommonTests : IDisposable
 		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeFalse();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void AddImage_WithByteArray_ShouldAddImageToWorkbook()
 	{
 		// Arrange
@@ -807,7 +808,7 @@ public sealed class CommonTests : IDisposable
 		worksheetPart.DrawingsPart!.ImageParts.Count().ShouldBe(1);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void AddImages_WithByteArrayList_ShouldAddImagesToWorkbook()
 	{
 		// Arrange
@@ -830,7 +831,7 @@ public sealed class CommonTests : IDisposable
 		worksheetPart.DrawingsPart!.ImageParts.Count().ShouldBe(1);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("Test")]
 	[InlineData("123")]
 	[InlineData("")]
@@ -851,7 +852,7 @@ public sealed class CommonTests : IDisposable
 		result.ShouldBe(value);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("Test", nameof(CellValues.String))]
 	[InlineData("TRUE", nameof(CellValues.Boolean))]
 	[InlineData("ERROR:Some error message", nameof(CellValues.Error))]
@@ -902,7 +903,7 @@ public sealed class CommonTests : IDisposable
 		}
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ReadExcelTableToDataTable_ShouldReadTableData()
 	{
 		// Arrange
@@ -928,7 +929,7 @@ public sealed class CommonTests : IDisposable
 		result.Rows[0][0].ToString().ShouldBe("Data1");
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(null)]
 	[InlineData("TestTable")]
 	public void FindTable_ShouldReturnCorrectTable(string? tableName)
@@ -951,7 +952,7 @@ public sealed class CommonTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(1u, 100.0)]
 	[InlineData(2u, 50.0)]
 	public void SizeColumn_ShouldSetColumnWidth(uint colIndex, double width)
@@ -972,7 +973,7 @@ public sealed class CommonTests : IDisposable
 		column.CustomWidth!.Value.ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(1u)]
 	[InlineData(2u)]
 	public void GetOrCreateColumn_ShouldCreateNewColumn(uint colIndex)

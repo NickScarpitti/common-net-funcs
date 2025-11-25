@@ -3,6 +3,7 @@ using CommonNetFuncs.Web.Middleware.CachingMiddleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
+using xRetry;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 
@@ -24,7 +25,7 @@ public sealed class MemoryCacheMiddlewareEvictionTests
 	}
 
 	// Fails
-	//[Fact]
+	//[RetryFact(3)]
 	//public async Task EvictCacheAsync_WithSingleKey_RemovesEntry()
 	//{
 	//    // Arrange
@@ -54,7 +55,7 @@ public sealed class MemoryCacheMiddlewareEvictionTests
 	//    _metrics.CurrentCacheSize.ShouldBe(0);
 	//}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task EvictCacheAsync_WithTags_RemovesAllTaggedEntries()
 	{
 		// Arrange

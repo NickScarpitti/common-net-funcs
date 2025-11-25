@@ -44,7 +44,6 @@ public static partial class Common
 
 		// Add a blank WorksheetPart
 		WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-
 		worksheetPart.Worksheet = new Worksheet(new SheetData());
 
 		Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>() ?? workbookPart.Workbook.AppendChild(new Sheets());

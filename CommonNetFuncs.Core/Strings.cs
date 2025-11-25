@@ -2133,7 +2133,7 @@ public static partial class Strings
 
 		string[] split = fractionString.Split(FractionSplitChars);
 
-		if ((split.Length == 2 || split.Length == 3) && int.TryParse(split[0], out int numeratorOrWhole) && int.TryParse(split[1], out int denominatorOrNumerator))
+		if (split.Length is 2 or 3 && int.TryParse(split[0], out int numeratorOrWhole) && int.TryParse(split[1], out int denominatorOrNumerator))
 		{
 			if (split.Length == 2)
 			{
@@ -2796,5 +2796,10 @@ public static partial class Strings
 			throw new ArgumentException("minNumberOfChars must be a number >= 0", nameof(minNumberOfChars));
 		}
 		return input.HasNoLessThanNumberOfChars(charToFind[0], minNumberOfChars);
+	}
+
+	public static string SanitizeForLog(this string input)
+	{
+		return input.Replace(Environment.NewLine, " ").Replace("\n", " ").Replace("\r", " ");
 	}
 }

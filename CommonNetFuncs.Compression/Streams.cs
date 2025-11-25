@@ -14,7 +14,7 @@ public static class Streams
 		None = 5
 	}
 
-	private const int ChunkThreshold = 16 * 1024 * 1024; // 16 MB
+	//private const int ChunkThreshold = 16 * 1024 * 1024; // 16 MB
 	private const int ChunkSize = 1024 * 1024; // 1 MB
 	private const int MaxCompressionRatio = 1000; // Detect compression bombs
 
@@ -49,7 +49,11 @@ public static class Streams
 			throw new NotSupportedException("Uncompressed stream does not support reading.");
 		}
 
-		await uncompressedStream.FlushAsync(cancellationToken).ConfigureAwait(false); //Ensure the stream is flushed before compressing
+		// Only flush if stream is writable (avoid exception on readonly streams)
+		if (uncompressedStream.CanWrite)
+		{
+			await uncompressedStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+		}
 
 		if (uncompressedStream.CanSeek)
 		{
@@ -111,7 +115,11 @@ public static class Streams
 			throw new NotSupportedException("Uncompressed stream does not support reading.");
 		}
 
-		uncompressedStream.Flush(); //Ensure the stream is flushed before compressing
+		// Only flush if stream is writable
+		if (uncompressedStream.CanWrite)
+		{
+			uncompressedStream.Flush();
+		}
 
 		if (uncompressedStream.CanSeek)
 		{
@@ -173,14 +181,21 @@ public static class Streams
 			throw new NotSupportedException("Uncompressed stream does not support reading.");
 		}
 
-		await compressedStream.FlushAsync(cancellationToken).ConfigureAwait(false); //Ensure the stream is flushed before compressing
+		// Only flush if stream is writable
+		if (compressedStream.CanWrite)
+		{
+			await compressedStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+		}
 
 		if (compressedStream.CanSeek)
 		{
 			compressedStream.Position = 0; //Reset the position of the uncompressed stream to the beginning
 		}
 
-		long maxDecompressedSize = compressedStream.Length * MaxCompressionRatio;
+		long maxDecompressedSize = compressedStream.CanSeek
+			? compressedStream.Length * MaxCompressionRatio
+			: long.MaxValue;
+
 		switch (compressionType)
 		{
 			case ECompressionType.Brotli:
@@ -236,13 +251,21 @@ public static class Streams
 			throw new NotSupportedException("Uncompressed stream does not support reading.");
 		}
 
-		compressedStream.Flush(); //Ensure the stream is flushed before compressing
+		// Only flush if stream is writable
+		if (compressedStream.CanWrite)
+		{
+			compressedStream.Flush();
+		}
+
 		if (compressedStream.CanSeek)
 		{
 			compressedStream.Position = 0; //Reset the position of the uncompressed stream to the beginning
 		}
 
-		long maxDecompressedSize = compressedStream.Length * MaxCompressionRatio;
+		long maxDecompressedSize = compressedStream.CanSeek
+			? compressedStream.Length * MaxCompressionRatio
+			: long.MaxValue;
+
 		switch (compressionType)
 		{
 			case ECompressionType.Brotli:
@@ -320,105 +343,38 @@ public static class Streams
 	public static async Task<byte[]> Decompress(this byte[] compressedData, ECompressionType compressionType, int maxCompressionRatio = MaxCompressionRatio, CancellationToken cancellationToken = default)
 	{
 		await using MemoryStream compressedStream = new(compressedData);
-		await using MemoryStream decompressedStream = new();
+		// Estimate initial capacity (compressed data typically expands 2-10x)
+		int estimatedSize = Math.Min((int)(compressedData.Length * 4L), int.MaxValue / 2);
+		await using MemoryStream decompressedStream = new(estimatedSize);
 
 		long maxDecompressedSize = compressedData.LongLength * maxCompressionRatio;
-		if (compressedData.LongLength < ChunkThreshold)
+
+		switch (compressionType)
 		{
-			// Small data: copy all at once
-			switch (compressionType)
-			{
-				case ECompressionType.Brotli:
-					await using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress, true))
-					{
-						await brotliStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
-					}
-					break;
-				case ECompressionType.Gzip:
-					await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress, true))
-					{
-						await gzipStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
-					}
-					break;
-				case ECompressionType.Deflate:
-					await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
-					{
-						await deflateStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
-					}
-					break;
-				case ECompressionType.ZLib:
-					await using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress, true))
-					{
-						await zlibStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
-					}
-					break;
-			}
-		}
-		else
-		{
-			// Large data: read in chunks
-			byte[] buffer = new byte[ChunkSize];
-			int bytesRead;
-			int totalBytesRead = 0;
-			switch (compressionType)
-			{
-				case ECompressionType.Brotli:
-					await using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress, true))
-					{
-						while ((bytesRead = await brotliStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
-						{
-							totalBytesRead += bytesRead;
-							if (totalBytesRead > maxDecompressedSize)
-							{
-								throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxDecompressedSize} bytes");
-							}
-							await decompressedStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-						}
-					}
-					break;
-				case ECompressionType.Gzip:
-					await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress, true))
-					{
-						while ((bytesRead = await gzipStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
-						{
-							totalBytesRead += bytesRead;
-							if (totalBytesRead > maxDecompressedSize)
-							{
-								throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxDecompressedSize} bytes");
-							}
-							await decompressedStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-						}
-					}
-					break;
-				case ECompressionType.Deflate:
-					await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
-					{
-						while ((bytesRead = await deflateStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
-						{
-							totalBytesRead += bytesRead;
-							if (totalBytesRead > maxDecompressedSize)
-							{
-								throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxDecompressedSize} bytes");
-							}
-							await decompressedStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-						}
-					}
-					break;
-				case ECompressionType.ZLib:
-					await using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress, true))
-					{
-						while ((bytesRead = await zlibStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
-						{
-							totalBytesRead += bytesRead;
-							if (totalBytesRead > maxDecompressedSize)
-							{
-								throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxDecompressedSize} bytes");
-							}
-							await decompressedStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-						}
-					}
-					break;
-			}
+			case ECompressionType.Brotli:
+				await using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Decompress, true))
+				{
+					await brotliStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
+				}
+				break;
+			case ECompressionType.Gzip:
+				await using (GZipStream gzipStream = new(compressedStream, CompressionMode.Decompress, true))
+				{
+					await gzipStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
+				}
+				break;
+			case ECompressionType.Deflate:
+				await using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
+				{
+					await deflateStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
+				}
+				break;
+			case ECompressionType.ZLib:
+				await using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Decompress, true))
+				{
+					await zlibStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
+				}
+				break;
 		}
 
 		return decompressedStream.ToArray();
@@ -462,84 +418,37 @@ public static class Streams
 	/// <returns>Byte array containing the compressed version of the original byte array.</returns>
 	public static async Task<byte[]> Compress(this byte[] data, ECompressionType compressionType, CancellationToken cancellationToken = default)
 	{
-		await using MemoryStream memoryStream = new();
-		if (data.Length < ChunkThreshold)
+		// Estimate initial capacity for compressed stream (typically 20-40% of original for random data)
+		int estimatedSize = Math.Max(1024, data.Length / 3);
+		await using MemoryStream memoryStream = new(estimatedSize);
+
+		// Write all data at once - compression streams handle internal buffering efficiently
+		switch (compressionType)
 		{
-			// Small data: write all at once
-			switch (compressionType)
-			{
-				case ECompressionType.Brotli:
-					await using (BrotliStream brotliStream = new(memoryStream, CompressionLevel.Optimal, true))
-					{
-						await brotliStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-					}
-					break;
-				case ECompressionType.Gzip:
-					await using (GZipStream gzipStream = new(memoryStream, CompressionLevel.Optimal, true))
-					{
-						await gzipStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-					}
-					break;
-				case ECompressionType.Deflate:
-					await using (DeflateStream deflateStream = new(memoryStream, CompressionLevel.Optimal, true))
-					{
-						await deflateStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-					}
-					break;
-				case ECompressionType.ZLib:
-					await using (ZLibStream zlibStream = new(memoryStream, CompressionLevel.Optimal, true))
-					{
-						await zlibStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-					}
-					break;
-			}
-		}
-		else
-		{
-			// Large data: write in chunks
-			switch (compressionType)
-			{
-				case ECompressionType.Brotli:
-					await using (BrotliStream brotliStream = new(memoryStream, CompressionLevel.Optimal, true))
-					{
-						for (int offset = 0; offset < data.Length; offset += ChunkSize)
-						{
-							int count = Math.Min(ChunkSize, data.Length - offset);
-							await brotliStream.WriteAsync(data.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
-						}
-					}
-					break;
-				case ECompressionType.Gzip:
-					await using (GZipStream gzipStream = new(memoryStream, CompressionLevel.Optimal, true))
-					{
-						for (int offset = 0; offset < data.Length; offset += ChunkSize)
-						{
-							int count = Math.Min(ChunkSize, data.Length - offset);
-							await gzipStream.WriteAsync(data.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
-						}
-					}
-					break;
-				case ECompressionType.Deflate:
-					await using (DeflateStream deflateStream = new(memoryStream, CompressionLevel.Optimal, true))
-					{
-						for (int offset = 0; offset < data.Length; offset += ChunkSize)
-						{
-							int count = Math.Min(ChunkSize, data.Length - offset);
-							await deflateStream.WriteAsync(data.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
-						}
-					}
-					break;
-				case ECompressionType.ZLib:
-					await using (ZLibStream zlibStream = new(memoryStream, CompressionLevel.Optimal, true))
-					{
-						for (int offset = 0; offset < data.Length; offset += ChunkSize)
-						{
-							int count = Math.Min(ChunkSize, data.Length - offset);
-							await zlibStream.WriteAsync(data.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
-						}
-					}
-					break;
-			}
+			case ECompressionType.Brotli:
+				await using (BrotliStream brotliStream = new(memoryStream, CompressionLevel.Optimal, true))
+				{
+					await brotliStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
+				}
+				break;
+			case ECompressionType.Gzip:
+				await using (GZipStream gzipStream = new(memoryStream, CompressionLevel.Optimal, true))
+				{
+					await gzipStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
+				}
+				break;
+			case ECompressionType.Deflate:
+				await using (DeflateStream deflateStream = new(memoryStream, CompressionLevel.Optimal, true))
+				{
+					await deflateStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
+				}
+				break;
+			case ECompressionType.ZLib:
+				await using (ZLibStream zlibStream = new(memoryStream, CompressionLevel.Optimal, true))
+				{
+					await zlibStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
+				}
+				break;
 		}
 		return memoryStream.ToArray();
 	}
@@ -571,14 +480,14 @@ public static class Streams
 	internal static async Task<ECompressionType> DetectCompressionTypeSeekable(Stream stream)
 	{
 		long originalPosition = stream.Position;
-		byte[] header = new byte[4];
-		int bytesRead;
+		byte[]? header = null;
 
 		try
 		{
 			// Read up to 4 bytes for header detection
-			//bytesRead = await stream.ReadAsync(header, 0, 4);
-			bytesRead = await stream.ReadAsync(header.AsMemory(0, 4)).ConfigureAwait(false);
+			header = ArrayPool<byte>.Shared.Rent(4);
+			int bytesRead = await stream.ReadAsync(header.AsMemory(0, 4)).ConfigureAwait(false);
+
 			if (bytesRead < 2)
 			{
 				return ECompressionType.None;
@@ -594,22 +503,36 @@ public static class Streams
 			// Reset position first
 			stream.Position = originalPosition;
 
-			// Read a larger sample for deflate detection
-			byte[] sample = new byte[1024];
-			//int sampleBytesRead = await stream.ReadAsync(sample, 0, sample.Length);
-			int sampleBytesRead = await stream.ReadAsync(sample).ConfigureAwait(false);
-
-			if (sampleBytesRead > 0 && await IsDeflateCompressed(sample.Take(sampleBytesRead).ToArray()).ConfigureAwait(false))
+			// Reuse the header buffer if it's large enough, otherwise rent a larger one
+			byte[]? sample = null;
+			try
 			{
-				return ECompressionType.Deflate;
-			}
+				// Read a larger sample for deflate detection
+				sample = ArrayPool<byte>.Shared.Rent(1024);
+				int sampleBytesRead = await stream.ReadAsync(sample.AsMemory(0, 1024)).ConfigureAwait(false);
 
-			return ECompressionType.None;
+				if (sampleBytesRead > 0 && await IsDeflateCompressed(sample.AsMemory(0, sampleBytesRead)).ConfigureAwait(false))
+				{
+					return ECompressionType.Deflate;
+				}
+
+				return ECompressionType.None;
+			}
+			finally
+			{
+				if (sample != null)
+				{
+					ArrayPool<byte>.Shared.Return(sample);
+				}
+			}
 		}
 		finally
 		{
-			// Reset stream position
 			stream.Position = originalPosition;
+			if (header != null)
+			{
+				ArrayPool<byte>.Shared.Return(header);
+			}
 		}
 	}
 
@@ -618,23 +541,27 @@ public static class Streams
 		// For non-seekable streams, we need to buffer the data
 		await using BufferedStream bufferedStream = new(stream, 4096);
 
-		// Try to peek at the first few bytes
-		byte[] header = new byte[4];
-		//int bytesRead = await bufferedStream.ReadAsync(header, 0, 4);
-		int bytesRead = await bufferedStream.ReadAsync(header.AsMemory(0, 4)).ConfigureAwait(false);
-
-		if (bytesRead < 2)
+		byte[]? header = null;
+		try
 		{
-			return ECompressionType.None;
-		}
+			header = ArrayPool<byte>.Shared.Rent(4);
+			int bytesRead = await bufferedStream.ReadAsync(header.AsMemory(0, 4)).ConfigureAwait(false);
 
-		ECompressionType result = AnalyzeHeader(header, bytesRead);
-		if (result != ECompressionType.None)
-		{
+			if (bytesRead < 2)
+			{
+				return ECompressionType.None;
+			}
+
+			ECompressionType result = AnalyzeHeader(header, bytesRead);
 			return result;
 		}
-
-		return ECompressionType.None;
+		finally
+		{
+			if (header != null)
+			{
+				ArrayPool<byte>.Shared.Return(header);
+			}
+		}
 	}
 
 	internal static ECompressionType AnalyzeHeader(byte[] header, int bytesRead)
@@ -663,7 +590,7 @@ public static class Streams
 	/// <summary>
 	/// Checks a <see cref="byte"/> <see cref="Array"/> to determine if it has been compressed using the deflate compression algorithm.
 	/// </summary>
-	/// <param name="data">Byte array to check for defalte compression.</param>
+	/// <param name="data">Byte array to check for deflate compression.</param>
 	/// <returns><see langword="true"/> if byte array contains data that was compressed using the deflate compression algorithm.</returns>
 	public static async Task<bool> IsDeflateCompressed(byte[] data)
 	{
@@ -673,7 +600,28 @@ public static class Streams
 			await using DeflateStream deflateStream = new(memoryStream, CompressionMode.Decompress);
 
 			byte[] buffer = new byte[1];
-			//int bytesRead = await deflateStream.ReadAsync(buffer, 0, buffer.Length);
+			int bytesRead = await deflateStream.ReadAsync(buffer).ConfigureAwait(false);
+			return bytesRead > 0;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Checks a <see cref="Memory{byte}"/> to determine if it has been compressed using the deflate compression algorithm.
+	/// </summary>
+	/// <param name="data">Memory to check for deflate compression.</param>
+	/// <returns><see langword="true"/> if data was compressed using the deflate compression algorithm.</returns>
+	internal static async Task<bool> IsDeflateCompressed(Memory<byte> data)
+	{
+		try
+		{
+			await using MemoryStream memoryStream = new(data.ToArray());
+			await using DeflateStream deflateStream = new(memoryStream, CompressionMode.Decompress);
+
+			byte[] buffer = new byte[1];
 			int bytesRead = await deflateStream.ReadAsync(buffer).ConfigureAwait(false);
 			return bytesRead > 0;
 		}
@@ -698,13 +646,13 @@ public static class Streams
 	/// <exception cref="CompressionLimitExceededException">Thrown if the total number of bytes copied exceeds <paramref name="maxBytes"/>.</exception>
 	public static async Task CopyWithLimitAsync(this Stream source, Stream destination, long maxBytes, CancellationToken cancellationToken = default)
 	{
-		byte[] buffer = bufferPool.Rent(ChunkSize); //new byte[ChunkSize];
+		byte[] buffer = bufferPool.Rent(ChunkSize);
 		long totalBytes = 0;
 		int bytesRead;
 
 		try
 		{
-			while ((bytesRead = await source.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false)) > 0)
+			while ((bytesRead = await source.ReadAsync(buffer.AsMemory(0, ChunkSize), cancellationToken).ConfigureAwait(false)) > 0)
 			{
 				totalBytes += bytesRead;
 
@@ -740,10 +688,10 @@ public static class Streams
 		long totalBytes = 0;
 		int bytesRead;
 
-		byte[] buffer = bufferPool.Rent(ChunkSize); //new byte[ChunkSize];
+		byte[] buffer = bufferPool.Rent(ChunkSize);
 		try
 		{
-			while ((bytesRead = source.Read(buffer)) > 0)
+			while ((bytesRead = source.Read(buffer, 0, ChunkSize)) > 0)
 			{
 				totalBytes += bytesRead;
 
@@ -771,7 +719,6 @@ public static class Streams
 	public static async Task<(ECompressionType, Stream)> DetectCompressionTypeAndReset(Stream stream)
 	{
 		const int headerLength = 8; // Enough for all supported compression types
-		byte[] header = new byte[headerLength];
 
 		// Read header bytes (do not advance original stream if seekable)
 		if (stream.CanSeek)
@@ -783,12 +730,23 @@ public static class Streams
 		}
 		else
 		{
-			int bytesRead = await stream.ReadAsync(header.AsMemory(0, headerLength)).ConfigureAwait(false);
-			MemoryStream headerStream = new(header, 0, bytesRead, writable: false);
-			ECompressionType type = await DetectCompressionType(headerStream).ConfigureAwait(false);
-			headerStream.Position = 0;
-			ConcatenatedStream combinedStream = new(headerStream, stream);
-			return (type, combinedStream);
+			byte[] header = ArrayPool<byte>.Shared.Rent(headerLength);
+			try
+			{
+				int bytesRead = await stream.ReadAsync(header.AsMemory(0, headerLength)).ConfigureAwait(false);
+				byte[] headerCopy = new byte[bytesRead];
+				Array.Copy(header, headerCopy, bytesRead);
+
+				MemoryStream headerStream = new(headerCopy, 0, bytesRead, writable: false);
+				ECompressionType type = await DetectCompressionType(headerStream).ConfigureAwait(false);
+				headerStream.Position = 0;
+				ConcatenatedStream combinedStream = new(headerStream, stream);
+				return (type, combinedStream);
+			}
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(header);
+			}
 		}
 	}
 }

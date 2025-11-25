@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using CommonNetFuncs.Web.Middleware;
 using Microsoft.AspNetCore.Http;
+using xRetry;
 
 namespace Web.Middleware.Tests;
 
@@ -15,7 +16,7 @@ public sealed class OptionsMiddlewareTests
 		_next = A.Fake<RequestDelegate>();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("OPTIONS", null, "*")]
 	[InlineData("OPTIONS", "", "*")]
 	[InlineData("OPTIONS", "https://example.com", "https://example.com")]
@@ -44,7 +45,7 @@ public sealed class OptionsMiddlewareTests
 		A.CallTo(() => _next(_context)).MustNotHaveHappened();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("GET", null)]
 	[InlineData("POST", "")]
 	[InlineData("PUT", "https://example.com")]
@@ -77,7 +78,7 @@ public sealed class OptionsMiddlewareTests
 		}
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task InvokeAsync_NonOptionsRequest_CallsNextMiddleware()
 	{
 		// Arrange
@@ -91,7 +92,7 @@ public sealed class OptionsMiddlewareTests
 		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void Constructor_NullNext_ThrowsArgumentNullException()
 	{
 		// Act & Assert

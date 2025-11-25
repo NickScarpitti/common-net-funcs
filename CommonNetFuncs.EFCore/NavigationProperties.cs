@@ -86,7 +86,14 @@ public static class NavigationProperties
 
 		public override int GetHashCode()
 		{
-			return NavigationProperties.GetHashCode() + MaxDepth.GetHashCode();
+			// Compute hash code based on content of the HashSet, not its identity
+			HashCode hash = new();
+			hash.Add(MaxDepth);
+			foreach (string nav in NavigationProperties.Order())
+			{
+				hash.Add(nav);
+			}
+			return hash.ToHashCode();
 		}
 
 		public HashSet<string> GetNavigationsToDepth(int depth)

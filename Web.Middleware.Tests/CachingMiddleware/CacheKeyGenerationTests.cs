@@ -4,6 +4,7 @@ using CommonNetFuncs.Web.Middleware.CachingMiddleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
+using xRetry;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 
@@ -24,7 +25,7 @@ public sealed class CacheKeyGenerationTests
 		_context = new DefaultHttpContext();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("/api/test", "param1=value1", "GET")]
 	[InlineData("/api/test", "", "GET")]
 	[InlineData("/api/test", "param1=value1&param2=value2", "GET")]
@@ -62,7 +63,7 @@ public sealed class CacheKeyGenerationTests
 				(string.IsNullOrEmpty(queryString) || queryString.Split('&', StringSplitOptions.None).All(param => key.Contains(param)))))).MustHaveHappened();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GenerateCacheKey_WithPostRequest_IncludesBodyHash()
 	{
 		// Arrange

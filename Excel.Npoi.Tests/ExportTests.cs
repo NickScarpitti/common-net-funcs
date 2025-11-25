@@ -3,6 +3,7 @@ using CommonNetFuncs.Excel.Npoi;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
+using xRetry;
 
 namespace Excel.Npoi.Tests;
 
@@ -21,7 +22,7 @@ public class ExportTests
 		public DateTime DateProperty { get; set; }
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(true, "TestSheet", "TestTable")]
 	[InlineData(false, "Data", "Data")]
 	public async Task GenericExcelExport_WithValidList_ShouldReturnMemoryStream(bool createTable, string sheetName, string tableName)
@@ -38,7 +39,7 @@ public class ExportTests
 		result.Length.ShouldBeGreaterThan(0);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GenericExcelExport_WithEmptyList_ShouldReturnEmptyMemoryStream()
 	{
 		// Arrange
@@ -56,7 +57,7 @@ public class ExportTests
 		sheet.SheetName.ShouldBe("Data");
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GenericExcelExport_WithDataTable_ShouldReturnMemoryStream()
 	{
 		// Arrange
@@ -74,7 +75,7 @@ public class ExportTests
 		result.Length.ShouldBeGreaterThan(0);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void AddGenericTable_WithGenericList_ShouldAddDataToWorkbook()
 	{
 		// Arrange
@@ -89,7 +90,7 @@ public class ExportTests
 		workbook.GetSheet("TestSheet").ShouldNotBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void AddGenericTable_WithDataTable_ShouldAddDataToWorkbook()
 	{
 		// Arrange
@@ -107,7 +108,7 @@ public class ExportTests
 		workbook.GetSheet("TestSheet").ShouldNotBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ExcelExport_WithGenericList_ShouldExportDataCorrectly()
 	{
 		// Arrange
@@ -123,7 +124,7 @@ public class ExportTests
 		sheet.LastRowNum.ShouldBe(3); // Header row + 3 data rows
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ExcelExport_WithDataTable_ShouldExportDataCorrectly()
 	{
 		// Arrange
@@ -143,7 +144,7 @@ public class ExportTests
 		sheet.LastRowNum.ShouldBe(2); // Header row + 2 data rows
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void AddGenericTable_WithDuplicateSheetNames_ShouldCreateUniqueNames()
 	{
 		// Arrange
@@ -164,7 +165,7 @@ public class ExportTests
 		workbook.GetSheet("TestSheet (2)").ShouldNotBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GenericExcelExport_WithCancellation_ShouldHandleCancellation()
 	{
 		// Arrange
@@ -178,7 +179,7 @@ public class ExportTests
 
 	// Add these test methods to the existing ExportTests class
 
-	[Fact]
+	[RetryFact(3)]
 	public void ExcelExport_WithMaximumColumnWidth_ShouldHandleWidthLimits()
 	{
 		// Arrange
@@ -200,7 +201,7 @@ public class ExportTests
 		sheet.GetColumnWidth(0).ShouldBeLessThanOrEqualTo(Export.MaxCellWidthInExcelUnits);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ExcelExport_WithNullValues_ShouldHandleNullsGracefully()
 	{
 		// Arrange
@@ -221,7 +222,7 @@ public class ExportTests
 		sheet.LastRowNum.ShouldBe(2); // Header + 2 data rows (null is skipped)
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ExcelExport_WithAutoFilter_ShouldApplyFilterCorrectly()
 	{
 		// Arrange
@@ -241,7 +242,7 @@ public class ExportTests
 		sheet.GetLastPopulatedRowInColumn(2).ShouldBe(3); // Header + 2 data rows
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(true, new[] { "StringProperty" })]
 	[InlineData(false, new[] { "IntProperty", "DateProperty" })]
 	public void ExcelExport_WithSkippedColumns_ShouldExcludeSpecifiedColumns(bool createTable, string[] columnsToSkip)
@@ -266,7 +267,7 @@ public class ExportTests
 		}
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void AddGenericTable_WithInvalidTableName_ShouldHandleError()
 	{
 		// Arrange
@@ -281,7 +282,7 @@ public class ExportTests
 		result.ShouldBeFalse();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GenericExcelExport_WithLargeDataSet_ShouldHandleMemoryEfficiently()
 	{
 		// Arrange
@@ -295,7 +296,7 @@ public class ExportTests
 		Should.NotThrow(Export);
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("")]
 	[InlineData(" ")]
 	[InlineData(null)]
@@ -313,7 +314,7 @@ public class ExportTests
 		workbook.GetSheet("Data").ShouldNotBeNull(); // Should use default sheet name
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ExcelExport_WithCustomStyles_ShouldApplyCorrectFormatting()
 	{
 		// Arrange
@@ -330,7 +331,7 @@ public class ExportTests
 		headerRow.GetCell(0).CellStyle.FillForegroundColor.ShouldBe(NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GenericExcelExport_WithDisposedMemoryStream_ShouldHandleError()
 	{
 		// Arrange

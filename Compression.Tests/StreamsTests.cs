@@ -25,7 +25,7 @@ public sealed class StreamsTests
 	public async Task CompressStream_Should_Compress_Data(ECompressionType compressionType)
 	{
 		// Arrange
-		byte[] uncompressedData = _fixture.CreateMany<byte>(100).ToArray();
+		byte[] uncompressedData = _smallData;
 		await using MemoryStream uncompressedStream = new(uncompressedData);
 		await using MemoryStream compressedStream = new();
 
@@ -229,7 +229,7 @@ public sealed class StreamsTests
 	public async Task Decompress_Should_Decompress_Byte_Array(ECompressionType compressionType, bool largeData)
 	{
 		// Arrange
-		byte[] originalData = largeData ? _largeData : _smallData; //_fixture.CreateMany<byte>(arraySize).ToArray();
+		byte[] originalData = largeData ? _largeData : _smallData;
 		byte[] compressedData = await originalData.Compress(compressionType);
 
 		// Act

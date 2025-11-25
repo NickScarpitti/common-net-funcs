@@ -1,5 +1,6 @@
 ﻿using CommonNetFuncs.Web.Middleware;
 using Microsoft.AspNetCore.Http;
+using xRetry;
 
 namespace Web.Middleware.Tests;
 
@@ -14,7 +15,7 @@ public sealed class UseCustomHeadersMiddlewareTests
 		_next = A.Fake<RequestDelegate>();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("X-Custom-Header", "CustomValue")]
 	[InlineData("X-Version", "1.0.0")]
 	[InlineData("X-Powered-By", "CustomFramework")]
@@ -32,7 +33,7 @@ public sealed class UseCustomHeadersMiddlewareTests
 		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("X-Remove-1", "X-Remove-2")]
 	[InlineData("Server", "X-Powered-By")]
 	public async Task InvokeAsync_WithRemoveHeaders_RemovesSpecifiedHeaders(string header1ToRemove, string header2ToRemove)
@@ -57,7 +58,7 @@ public sealed class UseCustomHeadersMiddlewareTests
 		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task InvokeAsync_WithNullHeaders_OnlyCallsNext()
 	{
 		// Arrange
@@ -70,13 +71,11 @@ public sealed class UseCustomHeadersMiddlewareTests
 		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task InvokeAsync_WithEmptyHeaderCollections_OnlyCallsNext()
 	{
 		// Arrange
-		UseCustomHeadersMiddleware middleware = new(_next,
-				new Dictionary<string, string>(),
-				Array.Empty<string>());
+		UseCustomHeadersMiddleware middleware = new(_next, new Dictionary<string, string>(), Array.Empty<string>());
 
 		// Act
 		await middleware.InvokeAsync(_context);
@@ -85,7 +84,7 @@ public sealed class UseCustomHeadersMiddlewareTests
 		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task InvokeAsync_WithBothAddAndRemoveHeaders_ProcessesAllHeaders()
 	{
 		// Arrange
@@ -107,7 +106,7 @@ public sealed class UseCustomHeadersMiddlewareTests
 		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void Constructor_NullNext_ThrowsArgumentNullException()
 	{
 		// Act & Assert

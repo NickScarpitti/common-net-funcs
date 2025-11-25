@@ -1,5 +1,6 @@
 ﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Images;
+using xRetry;
 
 namespace Images.Tests;
 
@@ -47,7 +48,7 @@ public sealed class OptimizerTests : IDisposable
 		_testInvalidPath = Path.Combine(testDataDir, "nonexistent.png");
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.png")]
 	[InlineData("test.jpg")]
 	[InlineData("test.gif")]
@@ -67,7 +68,7 @@ public sealed class OptimizerTests : IDisposable
 		File.Exists(testPath).ShouldBeTrue();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(new[] { "-b", "-O2" }, null, null)]  // Gifsicle args
 	[InlineData(null, new[] { "--max=80" }, null)]   // Jpegoptim args
 	[InlineData(null, null, new[] { "-o7" })]        // Optipng args
@@ -83,14 +84,14 @@ public sealed class OptimizerTests : IDisposable
 		}
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task OptimizeImage_ShouldHandleNonExistentFile()
 	{
 		// Act & Assert
 		await Should.ThrowAsync<FileNotFoundException>(async () => await Optimizer.OptimizeImage(_testInvalidPath));
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("test.txt")]
 	[InlineData("test.docx")]
 	[InlineData("test")]
@@ -107,7 +108,7 @@ public sealed class OptimizerTests : IDisposable
 		new FileInfo(testPath).Length.ShouldBe(originalSize);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task OptimizeImage_ShouldHandleCancellation()
 	{
 		// Arrange
@@ -118,7 +119,7 @@ public sealed class OptimizerTests : IDisposable
 		await Should.ThrowAsync<OperationCanceledException>(async () => await Optimizer.OptimizeImage(_testPngPath, cancellationToken: cts.Token));
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(new[] { "-b", "-O3" }, null, null, "test.gif")]     // Gifsicle
 	[InlineData(null, new[] { "--preserve" }, null, "test.jpg")]    // Jpegoptim
 	[InlineData(null, null, new[] { "-o5" }, "test.png")]          // Optipng

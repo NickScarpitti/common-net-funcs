@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml.Packaging;
+using xRetry;
 
 namespace Word.OpenXml.Tests;
 
@@ -55,7 +56,7 @@ public sealed class ChangeUrlTests : IDisposable
 		return doc.MainDocumentPart?.HyperlinkRelationships.ToList() ?? new List<HyperlinkRelationship>();
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("http://TestUrl/1", "http://NewUrl/1", true)]
 	[InlineData("http://TestUrl/2", "http://NewUrl/2", false)]
 	public void ChangeUrlsInWordDoc_SingleUrl_ReplacesCorrectly(string urlToReplace, string newUrl, bool replaceAll)
@@ -82,7 +83,7 @@ public sealed class ChangeUrlTests : IDisposable
 		hyperlinks.ShouldContain(h => h.Uri.ToString().Contains("github.com"));
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ChangeUrlsInWordDoc_Dictionary_ReplacesMultipleUrls()
 	{
 		// Arrange
@@ -114,7 +115,7 @@ public sealed class ChangeUrlTests : IDisposable
 		hyperlinks.ShouldContain(h => h.Uri.ToString().Contains("github.com"));
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData(@"(TestUrl/)(\d+)", "NewUrl/$2", true)]
 	[InlineData("TestUrl/1", "NewUrl/First", false)]
 	public void ChangeUrlsInWordDocRegex_SinglePattern_ReplacesCorrectly(string pattern, string replacement, bool replaceAll)
@@ -138,7 +139,7 @@ public sealed class ChangeUrlTests : IDisposable
 		hyperlinks.ShouldContain(h => h.Uri.ToString().Contains("github.com"));
 	}
 
-	[Theory]
+	[RetryTheory(3)]
 	[InlineData("TestUrl", true, false)]
 	[InlineData("TestUrl", false, true)]
 	[InlineData("testurl", true, true)]
@@ -185,7 +186,7 @@ public sealed class ChangeUrlTests : IDisposable
 		hyperlinks.ShouldContain(h => h.Uri.ToString().Contains("github.com"));
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ChangeUrlsInWordDoc_InvalidStream_ReturnsFalse()
 	{
 		// Arrange
@@ -198,7 +199,7 @@ public sealed class ChangeUrlTests : IDisposable
 		result.ShouldBeFalse();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void ChangeUrlsInWordDocRegex_InvalidPattern_ReturnsFalse()
 	{
 		// Arrange

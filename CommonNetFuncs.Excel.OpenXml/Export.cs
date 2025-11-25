@@ -158,7 +158,7 @@ public static class Export
 				}
 				else
 				{
-					throw new("Invalid type for data parameter. Parameter must be either an IEnumerable or DataTable class");
+					throw new ArgumentException("Invalid type for data parameter. Parameter must be either an IEnumerable or DataTable class", nameof(data));
 				}
 			}
 		}

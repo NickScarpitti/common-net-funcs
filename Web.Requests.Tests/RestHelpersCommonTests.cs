@@ -11,7 +11,9 @@ public sealed class RestHelpersCommonTests
 		public HttpResponseMessage? Response { get; set; }
 
 #pragma warning disable S3459 // Unassigned members should be removed
+#pragma warning disable S1144 // Unused private types or members should be removed
 		public Exception? ThrowOnSend { get; set; }
+#pragma warning restore S1144 // Unused private types or members should be removed
 #pragma warning restore S3459 // Unassigned members should be removed
 
 		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

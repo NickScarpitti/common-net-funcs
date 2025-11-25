@@ -16,7 +16,7 @@ public interface IPrioritizedEndpointQueueService
 	Task<bool> CancelTasksAsync(string endpointKey, TaskPriority priority);
 }
 
-public class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueService, IDisposable
+public sealed class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueService, IDisposable
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

@@ -510,10 +510,8 @@ public sealed class CommonTests : IDisposable
 
 		// Create a merged cell range
 		MergeCells mergeCells = new();
-#pragma warning disable CA1806 // Do not ignore method results
-		worksheet.Append(element: mergeCells);
-		mergeCells.Append(element: new MergeCell { Reference = "A1:B2" });
-#pragma warning restore CA1806 // Do not ignore method results
+		worksheet.Append(mergeCells);
+		mergeCells.Append(new MergeCell { Reference = "A1:B2" });
 
 		CellReference cellInMerge = new("A1");
 		CellReference cellNotInMerge = new("C3");

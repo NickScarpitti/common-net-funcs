@@ -165,7 +165,7 @@ public sealed class CommonTests
         await using MemoryStream memoryStream = new();
         using CancellationTokenSource cts = new();
         workbook.AddWorksheet("Sheet1");
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Act & Assert
         await Should.ThrowAsync<OperationCanceledException>(async () => await memoryStream.WriteFileToMemoryStreamAsync(workbook, cts.Token));

@@ -31,8 +31,8 @@ public static partial class HtmlEmailBuilder
 	/// Creates an HTML body for an email using the inputs provided
 	/// </summary>
 	/// <param name="body">Main text body of the email that goes before a table if there is one</param>
-	/// <param name="footer">Any text to be displayed under the table or after the body</param>
 	/// <param name="tableData">Data to be formatted into an HTML table.</param>
+	/// <param name="footer">Any text to be displayed under the table or after the body</param>
 	/// <returns>HTML Body of an email</returns>
 	public static string BuildHtmlEmail(string body, DataTable? tableData, string? footer = null, CancellationToken cancellationToken = default)
 	{
@@ -51,8 +51,8 @@ public static partial class HtmlEmailBuilder
 	/// Creates an HTML body for an email using the inputs provided
 	/// </summary>
 	/// <param name="body">Main text body of the email that goes before a table if there is one</param>
-	/// <param name="footer">Any text to be displayed under the table or after the body</param>
 	/// <param name="tableData">Data to be formatted into a table. First item should be the header data</param>
+	/// <param name="footer">Any text to be displayed under the table or after the body</param>
 	/// <returns>HTML Body of an email</returns>
 	public static string BuildHtmlEmail(string body, List<List<string>>? tableData, string? footer = null, CancellationToken cancellationToken = default)
 	{
@@ -93,9 +93,9 @@ public static partial class HtmlEmailBuilder
 	public static string FormatAllUrlsToHtml(this string text, string? linkText = null)
 	{
 		StringBuilder textToFormat = new(text);
-		foreach (Match url in UrlRegex().Matches(text))
+		foreach (string url in UrlRegex().Matches(text).Select(x => x.Value))
 		{
-			textToFormat.Replace(url.Value, url.Value.CreateHtmlLink(linkText ?? "Click Here"));
+			textToFormat.Replace(url, url.CreateHtmlLink(linkText ?? "Click Here"));
 		}
 		return textToFormat.ToString();
 	}

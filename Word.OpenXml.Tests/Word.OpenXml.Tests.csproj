@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <RunSettingsFilePath>C:\Users\vn034157\source\repos\common-net-funcs\Word.OpenXml.Tests\bin\Debug\net9.0\fine-code-coverage\coverage-tool-output\Word.OpenXml.Tests-fcc-mscodecoverage-generated.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,7 +31,7 @@
     </PackageReference>
     <PackageReference Include="FakeItEasy" Version="8.3.0" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.6" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" />
   </ItemGroup>
 
   <ItemGroup>

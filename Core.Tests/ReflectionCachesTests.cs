@@ -3,7 +3,7 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
-public class ReflectionCachesTests : IDisposable
+public sealed class ReflectionCachesTests : IDisposable
 {
 	private readonly Type _testType = typeof(TestClass);
 

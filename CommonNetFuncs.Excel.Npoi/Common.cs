@@ -1323,7 +1323,7 @@ public static partial class Common
 			int rangeHeight = ws.GetRangeHeightInPx(area.FirstRow, area.LastRow);
 			decimal rangeAspect = ((decimal)rangeWidth) / rangeHeight;
 
-			decimal scale = (rangeAspect < imgAspect) ? ((rangeWidth - 3m) / imgWidth) : (scale = (rangeHeight - 3m) / imgHeight);
+			decimal scale = (rangeAspect < imgAspect) ? ((rangeWidth - 3m) / imgWidth) : ((rangeHeight - 3m) / imgHeight);
 
 			int resizeWidth = (int)Round(imgWidth * scale, 0, MidpointRounding.ToZero);
 			int resizeHeight = (int)Round(imgHeight * scale, 0, MidpointRounding.ToZero);
@@ -1390,7 +1390,7 @@ public static partial class Common
 		for (int i = startCol; i < endCol + 1; i++)
 		{
 			double columnWidth = ws.GetColumnWidthInPixels(i);
-			if (columnWidth == 0.0)
+			if (columnWidth.Equals(0))
 			{
 				logger.Warn("{msg}", $"Width of Column {i} is 0! Check referenced excel sheet: {ws.SheetName}");
 			}

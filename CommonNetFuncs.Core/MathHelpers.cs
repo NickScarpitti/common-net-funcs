@@ -18,12 +18,12 @@ public static class MathHelpers
 	{
 		double val = value ?? 0;
 
-		if (significance == 0)
+		if (significance.Equals(0))
 		{
 			return Math.Ceiling(val);
 		}
 
-		if (val % significance != 0)
+		if ((val % significance).NotEquals(0))
 		{
 			return Math.Ceiling(val / significance) * significance;
 			//return ((int)(value / significance) * significance) + (value > 0 ? significance : 0);
@@ -66,12 +66,12 @@ public static class MathHelpers
 	{
 		double val = value ?? 0;
 
-		if (significance == 0)
+		if (significance.Equals(0))
 		{
 			return Math.Floor(val);
 		}
 
-		if (val % significance != 0)
+		if ((val % significance).NotEquals(0))
 		{
 			return Math.Floor(val / significance) * significance;
 			//return (int)(value / significance) * significance - (value > 0 ? 0 : significance);

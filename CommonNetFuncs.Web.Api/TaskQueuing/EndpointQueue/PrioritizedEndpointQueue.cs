@@ -15,7 +15,7 @@ public class PrioritizedEndpointQueue : IDisposable
 	private readonly Dictionary<TaskPriority, List<TimeSpan>> processingTimesByPriority = new();
 	private readonly Lock statsLock = new();
 	private readonly ManualResetEventSlim newTaskEvent = new(false);
-	private readonly int processTimeWindow = 1000;
+	private readonly int processTimeWindow;
 
 	public string EndpointKey { get; }
 
@@ -107,7 +107,7 @@ public class PrioritizedEndpointQueue : IDisposable
 			// Cancel the tasks
 			foreach (PrioritizedQueuedTask task in tasksToCancel)
 			{
-				task.CancellationTokenSource.Cancel();
+				await task.CancellationTokenSource.CancelAsync();
 				task.CompletionSource.SetCanceled();
 				cancelledCount++;
 			}
@@ -217,12 +217,11 @@ public class PrioritizedEndpointQueue : IDisposable
 					}
 				}
 
-				logger.Debug("Completed task {TaskId} with priority {Priority} for endpoint {EndpointKey} in {Duration}ms",
-										currentTask.Id, currentTask.Priority, EndpointKey, stopwatch.ElapsedMilliseconds);
+				logger.Debug("Completed task {TaskId} with priority {Priority} for endpoint {EndpointKey} in {Duration}ms", currentTask.Id, currentTask.Priority, EndpointKey, stopwatch.ElapsedMilliseconds);
 			}
-			catch (OperationCanceledException) when (currentTask.IsCancelled)
+			catch (OperationCanceledException ocex) when (currentTask.IsCancelled)
 			{
-				logger.Debug("Task {TaskId} was cancelled for endpoint {EndpointKey}", currentTask.Id, EndpointKey);
+				logger.Debug(ocex, "Task {TaskId} was cancelled for endpoint {EndpointKey}", currentTask.Id, EndpointKey);
 				// Task was already marked as cancelled, no need to update stats
 			}
 			catch (Exception ex)

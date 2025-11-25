@@ -496,7 +496,9 @@ public sealed class CollectionsTests
 		int[] array = Array.Empty<int>();
 
 		// Act & Assert (should not throw)
+#pragma warning disable S1854 // Unused assignments should be removed
 		Should.NotThrow(() => array.SetValue((arr, indices) => arr = indices));
+#pragma warning restore S1854 // Unused assignments should be removed
 	}
 
 	#endregion
@@ -799,7 +801,9 @@ public sealed class CollectionsTests
 		result[1]!.Id.ShouldBe(2);
 		result[1]!.Name.ShouldBe("test2");
 		result[1]!.IsActive.ShouldBeFalse();
+#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
+#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
 	}
 
@@ -835,7 +839,9 @@ public sealed class CollectionsTests
 			result[1]!.Id.ShouldBe(2);
 			result[1]!.Name.ShouldBe("test2");
 			result[1]!.IsActive.ShouldBeFalse();
+#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 			result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
+#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 			result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
 		}
 		else
@@ -1968,7 +1974,9 @@ public sealed class CollectionsTests
 
 		// Assert
 		dict.Count.ShouldBe(capacity);
+#pragma warning disable S1125 // Boolean literals should not be redundant
 		dict.ContainsKey(0).ShouldBe(capacity != 1 && false); // 0 is always evicted
+#pragma warning restore S1125 // Boolean literals should not be redundant
 		dict.ContainsKey(capacity).ShouldBeTrue();
 	}
 

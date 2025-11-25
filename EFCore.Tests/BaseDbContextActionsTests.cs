@@ -736,7 +736,7 @@ public sealed class BaseDbContextActionsTests
     {
         BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
         using CancellationTokenSource cts = new();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         TestEntity? result = await testContext.GetByKey(1, cancellationToken: cts.Token);
         result.ShouldBeNull();
@@ -1701,7 +1701,7 @@ public sealed class BaseDbContextActionsTests
     {
         BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
         using CancellationTokenSource cts = new();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         List<TestEntity>? result = await testContext.GetAll(cancellationToken: cts.Token);
 
@@ -1713,7 +1713,7 @@ public sealed class BaseDbContextActionsTests
     {
         BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
         using CancellationTokenSource cts = new();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         List<TestEntity>? result = await testContext.GetAllFull(cancellationToken: cts.Token);
 
@@ -1725,7 +1725,7 @@ public sealed class BaseDbContextActionsTests
     {
         BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
         using CancellationTokenSource cts = new();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         List<TestEntity>? result = await testContext.GetWithFilter(_ => true, cancellationToken: cts.Token);
 

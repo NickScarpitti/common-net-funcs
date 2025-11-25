@@ -238,7 +238,7 @@ public sealed class HtmlEmailBuilderTests
 						new() { "Data1" },
 						new() { "Data2" }
 				};
-		cts.Cancel();
+		await cts.CancelAsync();
 
 		// Act & Assert
 		await Should.ThrowAsync<OperationCanceledException>(() =>

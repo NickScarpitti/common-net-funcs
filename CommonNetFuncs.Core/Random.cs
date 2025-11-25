@@ -393,22 +393,32 @@ public static class Random
 			IEnumerable<int> whiteListCharVals = Enumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound);
 			if (whiteListCharVals.Intersect(blackListCharVals).Count() == whiteListCharVals.Count())
 			{
-				throw new Exception("Black list contains all available values");
+				throw new ArgumentException("Black list contains all available values", nameof(blacklistedCharacters));
 			}
 
-			// Generate the first part of the string with a for loop for speed
+			// Build a whitelist of allowed characters for efficiency and S127 compliance
+			char[] allowedChars = new char[upperAsciiBound - lowerAsciiBound + 1 - blackListCharVals.Count];
+			int allowedIndex = 0;
+			for (int i = lowerAsciiBound; i <= upperAsciiBound; i++)
+			{
+				if (blackListCharVals.Contains(i))
+				{
+					continue;
+				}
+				allowedChars[allowedIndex] = (char)i;
+				allowedIndex++;
+			}
+
+			if (allowedChars.Length == 0)
+			{
+				throw new ArgumentException("No available characters to use after applying blacklist.", nameof(blacklistedCharacters));
+			}
+
 			for (int i = 0; i < length; i++)
 			{
 				cancellationToken.ThrowIfCancellationRequested();
-				int randomInt = GetRandomInt(lowerAsciiBound, upperAsciiBound + 1);
-				if (!blackListCharVals.Contains(randomInt))
-				{
-					result.Append((char)randomInt);
-				}
-				else
-				{
-					i--; // If the character is blacklisted, decrement i to try again
-				}
+				int randomIndex = GetRandomInt(0, allowedChars.Length);
+				result.Append(allowedChars[randomIndex]);
 			}
 		}
 

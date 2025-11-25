@@ -911,28 +911,28 @@ public sealed class StringsTests
 		result.ShouldBe(expected);
 	}
 
-	private class TestTrimObj
-	{
-		public string? Name { get; set; }
+	//private class TestTrimObj
+	//{
+	//	public string? Name { get; set; }
 
-		public string? Desc { get; set; }
-	}
+	//	public string? Desc { get; set; }
+	//}
 
-	[Fact]
-	public void TrimObjectStringsR_TrimsStrings()
-	{
-		// Arrange
-		TestTrimObj obj = new() { Name = "  test  ", Desc = "  desc  " };
+	//	[Fact]
+	//	public void TrimObjectStringsR_TrimsStrings()
+	//	{
+	//		// Arrange
+	//		TestTrimObj obj = new() { Name = "  test  ", Desc = "  desc  " };
 
-		// Act
-#pragma warning disable CS0618 // Type or member is obsolete
-		TestTrimObj result = obj.TrimObjectStringsR();
-#pragma warning restore CS0618 // Type or member is obsolete
+	//		// Act
+	//#pragma warning disable CS0618 // Type or member is obsolete
+	//		TestTrimObj result = obj.TrimObjectStringsR();
+	//#pragma warning restore CS0618 // Type or member is obsolete
 
-		// Assert
-		result!.Name.ShouldBe("test");
-		result.Desc.ShouldBe("desc");
-	}
+	//		// Assert
+	//		result!.Name.ShouldBe("test");
+	//		result.Desc.ShouldBe("desc");
+	//	}
 
 	private class TestNormObj
 	{

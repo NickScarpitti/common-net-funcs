@@ -99,11 +99,11 @@ public class DirectQuery(Func<string, SqlConnection>? connectionFactory = null) 
       }
       catch (DbException ex)
       {
-        logger.Error($"DB Error: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
+        logger.Error(ex, "DB Error @ {ErrorLocation}", ex.GetLocationOfException());
       }
       catch (Exception ex)
       {
-        logger.Error($"Error getting datatable: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
+        logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
       }
     }
 
@@ -143,11 +143,11 @@ public class DirectQuery(Func<string, SqlConnection>? connectionFactory = null) 
       }
       catch (DbException ex)
       {
-        logger.Error($"DB Error: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
+        logger.Error(ex, "DB Error @ {ErrorLocation}", ex.GetLocationOfException());
       }
       catch (Exception ex)
       {
-        logger.Error($"Error getting datatable: {ex}", "{msg}", $"{ex.GetLocationOfException()} Error");
+        logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
       }
     }
 

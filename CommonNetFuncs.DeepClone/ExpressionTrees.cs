@@ -177,7 +177,9 @@ public static class ExpressionTrees
 	{
 		///// Intended code:
 		///// var output = (<type>)input.MemberwiseClone();
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 		MethodInfo memberwiseCloneMethod = ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance)!;
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 		BinaryExpression memberwiseCloneInputExpression = Expression.Assign(outputVariable, Expression.Convert(Expression.Call(inputParameter, memberwiseCloneMethod), type));
 		expressions.Add(memberwiseCloneInputExpression);
 	}
@@ -271,7 +273,7 @@ public static class ExpressionTrees
 	{
 		MethodInfo? getLengthMethod = typeof(Array).GetMethod("GetLength", BindingFlags.Public | BindingFlags.Instance);
 		ConstantExpression dimensionConstant = Expression.Constant(i);
-		return Expression.Assign(lengthVariable, Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, new[] { dimensionConstant }));
+		return Expression.Assign(lengthVariable, Expression.Call(Expression.Convert(inputParameter, typeof(Array)), getLengthMethod!, dimensionConstant));
 	}
 
 	private static void FieldsCopyExpressions(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable,
@@ -327,8 +329,10 @@ public static class ExpressionTrees
 		Type? typeCache = type;
 		while (typeCache != null)
 		{
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			fieldsList.AddRange(typeCache.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy)
-										.Where(field => forceAllFields || field.FieldType.IsTypeToDeepCopy()));
+				.Where(field => forceAllFields || field.FieldType.IsTypeToDeepCopy()));
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			typeCache = typeCache.BaseType;
 		}
 		return fieldsList.ToArray();
@@ -354,7 +358,9 @@ public static class ExpressionTrees
 	}
 
 	private static readonly Type ThisType = typeof(ExpressionTrees);
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 	private static readonly MethodInfo? DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod(nameof(DeepCopyByExpressionTreeObj), BindingFlags.NonPublic | BindingFlags.Static);
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 
 	private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions, bool useCache)
 	{
@@ -420,20 +426,10 @@ public static class ExpressionTrees
 		// That is why we do not modify the old dictionary instance but
 		// we replace it with a new instance every time.
 
-		if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out bool isStructTypeToDeepCopy))
+		if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out bool isStructTypeToDeepCopy) && !IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out isStructTypeToDeepCopy))
 		{
-			//lock (IsStructTypeToDeepCopyDictionaryLocker)
-			//{
-			if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out isStructTypeToDeepCopy))
-			{
-				isStructTypeToDeepCopy = type!.IsStructWhichNeedsDeepCopy_NoDictionaryUsed();
-				//Dictionary<Type, bool> newDictionary = IsStructTypeToDeepCopyDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
-				//newDictionary[type!] = isStructTypeToDeepCopy;
-				//IsStructTypeToDeepCopyDictionary = newDictionary;
-
-				IsStructTypeToDeepCopyDictionary.TryAdd(type!, isStructTypeToDeepCopy);
-			}
-			//}
+			isStructTypeToDeepCopy = type!.IsStructWhichNeedsDeepCopy_NoDictionaryUsed();
+			IsStructTypeToDeepCopyDictionary.TryAdd(type!, isStructTypeToDeepCopy);
 		}
 
 		return isStructTypeToDeepCopy;
@@ -464,14 +460,6 @@ public static class ExpressionTrees
 		}
 
 		IEnumerable<Type> notBasicStructsTypes = allFieldTypes.Where(x => x.IsStructOtherThanBasicValueTypes()).ToList();
-		foreach (Type typeToCheck in (IEnumerable<Type>)notBasicStructsTypes.Where(t => !alreadyCheckedTypes.Contains(t)).ToList())
-		{
-			if (typeToCheck.HasInItsHierarchyFieldsWithClasses(alreadyCheckedTypes))
-			{
-				return true;
-			}
-		}
-
-		return false;
+		return notBasicStructsTypes.Any(typeToCheck => !alreadyCheckedTypes.Contains(typeToCheck) && typeToCheck.HasInItsHierarchyFieldsWithClasses(alreadyCheckedTypes));
 	}
 }

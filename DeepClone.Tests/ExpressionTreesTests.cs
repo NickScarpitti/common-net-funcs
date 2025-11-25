@@ -49,7 +49,9 @@ public sealed class ExpressionTreesTests : IDisposable
 
 #pragma warning disable RCS1213 // Remove unused member declaration
 #pragma warning disable CS0414 // Remove unused member declaration
+#pragma warning disable S1144 // Unused private types or members should be removed
 		private readonly int _privateReadOnlyField = 42;
+#pragma warning restore S1144 // Unused private types or members should be removed
 #pragma warning restore CS0414 // Remove unused member declaration
 #pragma warning restore RCS1213 // Remove unused member declaration
 	}

@@ -973,32 +973,32 @@ public static partial class Strings
 		return lastIndex != -1 ? s[(lastIndex + 1)..] : s;
 	}
 
-	/// <summary>
-	/// Removes excess spaces in string properties inside of an object
-	/// </summary>
-	/// <typeparam name="T">Type of object to trim strings in</typeparam>
-	/// <param name="obj">Object containing string properties to be trimmed</param>
-	[return: NotNullIfNotNull(nameof(obj))]
-	[Obsolete("Please use TrimObjectStrings instead")]
-	public static T? TrimObjectStringsR<T>(this T? obj) where T : class
-	{
-		if (obj != null)
-		{
-			IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
-			if (props.Any())
-			{
-				foreach (PropertyInfo prop in props)
-				{
-					string? value = (string?)prop.GetValue(obj);
-					if (!value.IsNullOrEmpty())
-					{
-						prop.SetValue(obj, value.TrimFull());
-					}
-				}
-			}
-		}
-		return obj;
-	}
+	///// <summary>
+	///// Removes excess spaces in string properties inside of an object
+	///// </summary>
+	///// <typeparam name="T">Type of object to trim strings in</typeparam>
+	///// <param name="obj">Object containing string properties to be trimmed</param>
+	//[return: NotNullIfNotNull(nameof(obj))]
+	//[Obsolete("Please use TrimObjectStrings instead")]
+	//public static T? TrimObjectStringsR<T>(this T? obj) where T : class
+	//{
+	//	if (obj != null)
+	//	{
+	//		IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
+	//		if (props.Any())
+	//		{
+	//			foreach (PropertyInfo prop in props)
+	//			{
+	//				string? value = (string?)prop.GetValue(obj);
+	//				if (!value.IsNullOrEmpty())
+	//				{
+	//					prop.SetValue(obj, value.TrimFull());
+	//				}
+	//			}
+	//		}
+	//	}
+	//	return obj;
+	//}
 
 	private static readonly ConcurrentDictionary<(Type, bool), Delegate> trimObjectStringsCache = new();
 

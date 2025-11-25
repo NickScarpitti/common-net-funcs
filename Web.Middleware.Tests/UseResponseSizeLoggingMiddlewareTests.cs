@@ -1,4 +1,5 @@
-﻿﻿using CommonNetFuncs.Web.Middleware;
+﻿using CommonNetFuncs.Web.Middleware;
+using FakeItEasy.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -7,120 +8,118 @@ namespace Web.Middleware.Tests;
 
 public sealed class UseResponseSizeLoggingMiddlewareTests
 {
-    private readonly ILogger<UseResponseSizeLoggingMiddleware> _logger;
-    private readonly RequestDelegate _next;
-    private readonly IFixture _fixture;
+	private readonly ILogger<UseResponseSizeLoggingMiddleware> _logger;
+	private readonly RequestDelegate _next;
 
-    public UseResponseSizeLoggingMiddlewareTests()
-    {
-        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
-        _logger = A.Fake<ILogger<UseResponseSizeLoggingMiddleware>>();
-        _next = A.Fake<RequestDelegate>();
-    }
+	public UseResponseSizeLoggingMiddlewareTests()
+	{
+		_logger = A.Fake<ILogger<UseResponseSizeLoggingMiddleware>>();
+		_next = A.Fake<RequestDelegate>();
+	}
 
-    [Fact]
-    public void Constructor_ValidParameters_CreatesInstance()
-    {
-        // Act
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
+	[Fact]
+	public void Constructor_ValidParameters_CreatesInstance()
+	{
+		// Act
+		UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
 
-        // Assert
-        middleware.ShouldNotBeNull();
-    }
+		// Assert
+		middleware.ShouldNotBeNull();
+	}
 
-    [Theory]
-    [InlineData(0)]    // Empty response
-    [InlineData(100)]  // Small response
-    [InlineData(1024)] // 1KB response
-    public async Task InvokeAsync_LogsResponseSize_ForVariousContentSizes(int contentSize)
-    {
-        // Arrange
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
-        DefaultHttpContext context = new();
-        await using MemoryStream responseBody = new();
-        context.Response.Body = responseBody;
+	[Theory]
+	[InlineData(0)]    // Empty response
+	[InlineData(100)]  // Small response
+	[InlineData(1024)] // 1KB response
+	public async Task InvokeAsync_LogsResponseSize_ForVariousContentSizes(int contentSize)
+	{
+		// Arrange
+		UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, -1);
+		DefaultHttpContext context = new();
+		await using MemoryStream responseBody = new();
+		context.Response.Body = responseBody;
 
-        byte[] content = new byte[contentSize];
-        A.CallTo(() => _next(context))
-            .Returns(Task.Run(() => context.Response.Body.WriteAsync(content, 0, content.Length)));
+		byte[] content = new byte[contentSize];
+		A.CallTo(() => _next(context)).Returns(Task.Run(() => context.Response.Body.WriteAsync(content, 0, content.Length)));
 
-        // Set up request headers
-        context.Request.Method = "GET";
-        context.Request.Path = "/test-path";
-        context.Request.Headers.Accept = "application/json";
-        context.Request.Headers.AcceptEncoding = "gzip";
+		// Set up request headers
+		context.Request.Method = "GET";
+		context.Request.Path = "/test-path";
+		context.Request.Headers.Accept = "application/json";
+		context.Request.Headers.AcceptEncoding = "gzip";
 
-        // Act
-        await middleware.InvokeAsync(context);
+		// Act
+		await middleware.InvokeAsync(context);
 
-        // Assert
-        A.CallTo(() => _logger.Log(
-            LogLevel.Warning,
-            A<EventId>.Ignored,
-            A<It.IsAnyType>.That.Matches(o => o.ToString()!.Contains("Response to") &&
-                o.ToString()!.Contains("/test-path") &&
-                o.ToString()!.Contains("[GET]") &&
-                o.ToString()!.Contains("Size:")),
-            null,
-            A<Func<It.IsAnyType, Exception?, string>>.Ignored));
-    }
+		// Assert - Get the actual call and verify the formatted message
+		IFakeObjectCall call = Fake.GetCalls(_logger).Single();
+		call.Arguments[0].ShouldBe(LogLevel.Warning);
 
-    [Fact]
-    public async Task InvokeAsync_RestoresOriginalBodyStream()
-    {
-        // Arrange
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
-        DefaultHttpContext context = new();
-        await using MemoryStream originalBody = new();
-        context.Response.Body = originalBody;
+		object? state = call.Arguments[2];
+		string message = state?.ToString() ?? string.Empty;
+		message.ShouldContain("Response to");
+		message.ShouldContain("/test-path");
+		message.ShouldContain("[GET]");
+		message.ShouldContain("Size:");
+	}
 
-        // Act
-        await middleware.InvokeAsync(context);
+	[Fact]
+	public async Task InvokeAsync_RestoresOriginalBodyStream()
+	{
+		// Arrange
+		UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
+		DefaultHttpContext context = new();
+		await using MemoryStream originalBody = new();
+		context.Response.Body = originalBody;
 
-        // Assert
-        context.Response.Body.ShouldBe(originalBody);
-    }
+		// Act
+		await middleware.InvokeAsync(context);
 
-    [Fact]
-    public async Task InvokeAsync_HandlesNextDelegateException()
-    {
-        // Arrange
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
-        DefaultHttpContext context = new();
-        Exception exception = new("Test exception");
+		// Assert
+		context.Response.Body.ShouldBe(originalBody);
+	}
 
-        A.CallTo(() => _next(context)).ThrowsAsync(exception);
+	[Fact]
+	public async Task InvokeAsync_HandlesNextDelegateException()
+	{
+		// Arrange
+		UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
+		DefaultHttpContext context = new();
+		Exception exception = new("Test exception");
 
-        // Act & Assert
-        Exception thrownException = await Should.ThrowAsync<Exception>(
-            async () => await middleware.InvokeAsync(context));
+		A.CallTo(() => _next(context)).ThrowsAsync(exception);
 
-        thrownException.ShouldBe(exception);
-        context.Response.Body.ShouldBe(context.Response.Body);
-    }
+		// Act & Assert
+		Exception thrownException = await Should.ThrowAsync<Exception>(
+				async () => await middleware.InvokeAsync(context));
 
-    [Fact]
-    public async Task InvokeAsync_HandlesEmptyHeaders()
-    {
-        // Arrange
-        UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, 1024 * 100);
-        DefaultHttpContext context = new();
-        context.Response.Body = new MemoryStream();
+		thrownException.ShouldBe(exception);
+		context.Response.Body.ShouldBe(context.Response.Body);
+	}
 
-        // Don't set any headers to test null handling
-        context.Request.Headers.Accept = string.Empty;
-        context.Request.Headers.AcceptEncoding = string.Empty;
+	[Fact]
+	public async Task InvokeAsync_HandlesEmptyHeaders()
+	{
+		// Arrange
+		UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, -1);
+		DefaultHttpContext context = new();
+		context.Response.Body = new MemoryStream();
 
-        // Act
-        await middleware.InvokeAsync(context);
+		// Don't set any headers to test null handling
+		context.Request.Headers.Accept = string.Empty;
+		context.Request.Headers.AcceptEncoding = string.Empty;
 
-        // Assert
-        A.CallTo(() => _logger.Log(
-            LogLevel.Warning,
-            A<EventId>.Ignored,
-            A<It.IsAnyType>.That.Matches(o => o.ToString()!.Contains("Response to") &&
-                !o.ToString()!.Contains('+')),
-            null,
-            A<Func<It.IsAnyType, Exception?, string>>.Ignored));
-    }
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert - Get the actual call and verify the formatted message
+		IFakeObjectCall call = Fake.GetCalls(_logger).Single();
+		call.Arguments[0].ShouldBe(LogLevel.Warning);
+
+		object? state = call.Arguments[2];
+		string message = state?.ToString() ?? string.Empty;
+		message.ShouldContain("Response to");
+		message.ShouldNotContain("+");
+	}
 }
+

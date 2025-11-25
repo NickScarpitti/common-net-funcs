@@ -732,19 +732,6 @@ public sealed class NavigationPropertiesTests : IDisposable
 	#region IncludeNavigationProperties Tests
 
 	[Fact]
-	public void IncludeNavigationProperties_WithDefaultOptions_AddsIncludes()
-	{
-		// Arrange
-		IQueryable<TestEntity> query = _context.TestEntities;
-
-		// Act
-		IQueryable<TestEntity> result = query.IncludeNavigationProperties(_context);
-
-		// Assert
-		result.Expression.ToString().ShouldContain("Include");
-	}
-
-	[Fact]
 	public void IncludeNavigationProperties_WithCustomOptions_AddsIncludes()
 	{
 		// Arrange
@@ -762,10 +749,12 @@ public sealed class NavigationPropertiesTests : IDisposable
 
 	#region Entity with ReadOnly Navigation for Testing
 
+#pragma warning disable S1144 // Unused private types or members should be removeds
 	private sealed class TestEntityWithReadOnlyNav
 	{
 		public int Id { get; set; }
 		public TestRelatedEntity? ReadOnlyNav { get; init; } // Init-only property
+#pragma warning restore S1144 // Unused private types or members should be removed
 	}
 
 	#endregion

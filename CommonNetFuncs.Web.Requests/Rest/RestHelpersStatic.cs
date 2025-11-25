@@ -478,75 +478,86 @@ public static class RestHelpersStatic
 				else if (contentType.ContainsInvariant("json"))//Assume JSON
 				{
 					//Deserialize as stream - More memory efficient than string deserialization
-					Stream? outputStream = null; //Decompressed data will be written to this stream
-					bool usedDecompression = false;
+					//Stream streamToRead = responseStream;
+					//Stream? decompressedStream = null;
 
-					try
+					//try
+					//{
+					if (contentEncoding.StrEq(GZip))
 					{
-						if (contentEncoding.StrEq(GZip))
-						{
-							usedDecompression = true;
-							outputStream = responseStream.Decompress(ECompressionType.Gzip);
-							//await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
-						}
-						else if (contentEncoding.StrEq(Brotli))
-						{
-							usedDecompression = true;
-							outputStream = responseStream.Decompress(ECompressionType.Brotli);
-							//await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
-						}
+						//decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+						//streamToRead = decompressedStream;
+						await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+						result = useNewtonsoftDeserializer
+							? await DeserializeWithNewtonsoft<T>(decompressedStream)
+							: await System.Text.Json.JsonSerializer.DeserializeAsync<T>(decompressedStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+					}
+					else if (contentEncoding.StrEq(Brotli))
+					{
+						//decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+						//streamToRead = decompressedStream;
 
-						outputStream ??= new MemoryStream();
-						if (useNewtonsoftDeserializer)
-						{
-							//using StreamReader streamReader = new(outputStream.Length > 1 ? outputStream : responseStream);
-							using StreamReader streamReader = new(usedDecompression ? outputStream : responseStream);
-							await using JsonTextReader jsonReader = new(streamReader); //Newtonsoft
-							Newtonsoft.Json.JsonSerializer serializer = new(); //Newtonsoft
-							result = serializer.Deserialize<T>(jsonReader); //using static Newtonsoft.Json.JsonSerializer;
-						}
-						else
-						{
-							result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(usedDecompression ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-						}
+						await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+						result = useNewtonsoftDeserializer
+							? await DeserializeWithNewtonsoft<T>(decompressedStream)
+							: await System.Text.Json.JsonSerializer.DeserializeAsync<T>(decompressedStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
 					}
-					finally
+					else if (!useNewtonsoftDeserializer)
 					{
-						if (outputStream != null)
-						{
-							await outputStream.DisposeAsync().ConfigureAwait(false);
-						}
+						result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
 					}
+					else
+					{
+						result = await DeserializeWithNewtonsoft<T>(responseStream);
+					}
+
+					//if (useNewtonsoftDeserializer)
+					//{
+					//	using StreamReader streamReader = new(streamToRead);
+					//	await using JsonTextReader jsonReader = new(streamReader);
+					//	Newtonsoft.Json.JsonSerializer serializer = new();
+					//	result = serializer.Deserialize<T>(jsonReader);
+					//}
+					//else
+					//{
+					//	result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+					//}
+					//}
+					//finally
+					//{
+					//	if (decompressedStream != null)
+					//	{
+					//		await decompressedStream.DisposeAsync().ConfigureAwait(false);
+					//	}
+					//}
 				}
 				else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
 				{
-					Stream? outputStream = null; //Decompressed data will be written to this stream
-					bool usedDecompression = false;
+					Stream streamToRead = responseStream;
+					Stream? decompressedStream = null;
 
 					try
 					{
 						if (contentEncoding.StrEq(GZip))
 						{
-							usedDecompression = true;
-							outputStream = responseStream.Decompress(ECompressionType.Gzip);
+							decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+							streamToRead = decompressedStream;
 						}
 						else if (contentEncoding.StrEq(Brotli))
 						{
-							usedDecompression = true;
-							outputStream = responseStream.Decompress(ECompressionType.Brotli);
+							decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+							streamToRead = decompressedStream;
 						}
 
-						outputStream ??= new MemoryStream();
-						string stringResult;
-						using StreamReader reader = new(usedDecompression ? outputStream : responseStream, Encoding.UTF8);
-						stringResult = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+						using StreamReader reader = new(streamToRead, Encoding.UTF8);
+						string stringResult = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
 						result = (T)(object)stringResult;
 					}
 					finally
 					{
-						if (outputStream != null)
+						if (decompressedStream != null)
 						{
-							await outputStream.DisposeAsync().ConfigureAwait(false);
+							await decompressedStream.DisposeAsync().ConfigureAwait(false);
 						}
 					}
 				}
@@ -557,6 +568,14 @@ public static class RestHelpersStatic
 			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
 		}
 		return result;
+	}
+
+	private static async Task<T?> DeserializeWithNewtonsoft<T>(Stream decompressedStream)
+	{
+		using StreamReader streamReader = new(decompressedStream);
+		await using JsonTextReader jsonReader = new(streamReader);
+		Newtonsoft.Json.JsonSerializer serializer = new();
+		return serializer.Deserialize<T>(jsonReader);
 	}
 
 	/// <summary>
@@ -620,12 +639,15 @@ public static class RestHelpersStatic
 	{
 		if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
 		{
-			if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(MemPack)) ?? false)
+			string? contentTypeValue = null;
+			bool hasContentType = httpHeaders?.TryGetValue("Content-Type", out contentTypeValue) == true;
+
+			if (hasContentType && contentTypeValue.StrEq(MemPack))
 			{
 				httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
 				httpRequestMessage.Content.Headers.ContentType = new(MemPack);
 			}
-			else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(MsgPack)) ?? false)
+			else if (hasContentType && contentTypeValue!.StrEq(MsgPack))
 			{
 				httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
 				httpRequestMessage.Content.Headers.ContentType = new(MsgPack);
@@ -651,30 +673,40 @@ public static class RestHelpersStatic
 	internal static void AttachHeaders(this HttpRequestMessage httpRequestMessage, string? bearerToken, Dictionary<string, string>? httpHeaders)
 	{
 		//Changed this from inline if due to setting .Authorization to null if bearerToken is empty/null resulting in an exception during the post request: "A task was canceled"
-		if (bearerToken != null || (bearerToken?.Length == 0 && !(httpHeaders?.Any(x => x.Key.StrEq("Authorization")) ?? false)))
+		//if (bearerToken != null || (bearerToken?.Length == 0 && !(httpHeaders?.Any(x => x.Key.StrEq("Authorization")) ?? false)))
+		//{
+		//	try
+		//	{
+		//		httpRequestMessage.Headers.Authorization = new("Bearer", bearerToken);
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		logger.Warn(ex, "{msg}", $"Failed to add bearer token.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
+		//	}
+		//}
+
+		if (!bearerToken.IsNullOrEmpty())
 		{
-			try
-			{
-				httpRequestMessage.Headers.Authorization = new("Bearer", bearerToken);
-			}
-			catch (Exception ex)
-			{
-				logger.Warn(ex, "{msg}", $"Failed to add bearer token.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
-			}
+			httpRequestMessage.Headers.TryAddWithoutValidation("Authorization", $"Bearer {bearerToken}");
 		}
 
 		if (httpHeaders.AnyFast())
 		{
+			//foreach (KeyValuePair<string, string> header in httpHeaders!)
+			//{
+			//	try
+			//	{
+			//		httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
+			//	}
+			//	catch (Exception ex)
+			//	{
+			//		logger.Warn(ex, "{msg}", $"Failed to add header {header.Key} with value {header.Value}.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
+			//	}
+			//}
+
 			foreach (KeyValuePair<string, string> header in httpHeaders!)
 			{
-				try
-				{
-					httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
-				}
-				catch (Exception ex)
-				{
-					logger.Warn(ex, "{msg}", $"Failed to add header {header.Key} with value {header.Value}.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
-				}
+				httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
 			}
 		}
 	}
@@ -753,14 +785,14 @@ public static class RestHelpersStatic
 				resultJson = Encoding.UTF8.GetString(outputStream.ToArray());
 			}
 
-			string logText = string.Empty;
 			if (includeHeader)
 			{
-				logText += $"HTTP Response for {requestOptions.HttpMethod.Method} @ {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}:\n";
+				logger.Info($"HTTP Response for {requestOptions.HttpMethod.Method} @ {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}:\n{resultJson ?? "Empty Result"}");
 			}
-
-			logText += resultJson ?? "Empty Result";
-			logger.Info(logText);
+			else
+			{
+				logger.Info(resultJson ?? "Empty Result");
+			}
 		}
 	}
 }

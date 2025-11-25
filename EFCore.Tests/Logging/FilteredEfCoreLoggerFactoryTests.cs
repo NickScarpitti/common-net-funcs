@@ -66,7 +66,7 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		// Assert
 		logger.ShouldNotBeNull();
 		logger.ShouldBeOfType<FilteredEfCoreLogger>();
-		
+
 		// Verify it uses the first matching filter (Database -> Warning)
 		logger.IsEnabled(LogLevel.Warning).ShouldBeTrue();
 		logger.IsEnabled(LogLevel.Information).ShouldBeFalse();
@@ -202,10 +202,7 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	{
 		// Arrange
 		List<string> logMessages = [];
-		ILoggerFactory innerFactory = LoggerFactory.Create(builder =>
-		{
-			builder.AddProvider(new TestLoggerProvider(logMessages));
-		});
+		ILoggerFactory innerFactory = LoggerFactory.Create(builder => builder.AddProvider(new TestLoggerProvider(logMessages)));
 		FilteredEfCoreLoggerFactory factory = new(innerFactory, _stringFilters);
 
 		// Act
@@ -213,7 +210,7 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 
 		// Assert - inner factory should be disposed
 		// We can verify this by checking that the factory doesn't throw when disposed again
-		Should.NotThrow(() => innerFactory.Dispose());
+		Should.NotThrow(innerFactory.Dispose);
 	}
 
 	[Fact]

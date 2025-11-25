@@ -300,7 +300,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 	}
 
-	[[RetryTheory(3)]
+	[RetryTheory(3)]
 	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]

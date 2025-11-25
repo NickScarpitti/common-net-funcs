@@ -180,61 +180,61 @@ internal static class WrapperHelpers
 				return false;
 			}
 
-      // If custom retry function is provided, use it
-      if (options.ShouldRetryByStatusFunc != null && response != null)
-      {
-        return options.ShouldRetryByStatusFunc(response.StatusCode);
-      }
+			// If custom retry function is provided, use it
+			if (options.ShouldRetryByStatusFunc != null && response != null)
+			{
+				return options.ShouldRetryByStatusFunc(response.StatusCode);
+			}
 
-      // Default retry behavior when no custom function is provided
-      if (response != null)
-      {
-        return ShouldRetryBasedOnStatusCode(response.StatusCode);
-      }
+			// Default retry behavior when no custom function is provided
+			if (response != null)
+			{
+				return ShouldRetryBasedOnStatusCode(response.StatusCode);
+			}
 
-      return false;
-    }
-  }
+			return false;
+		}
+	}
 
-  private static bool ShouldRetryBasedOnStatusCode(HttpStatusCode statusCode)
-  {
-    return statusCode switch
-    {
-      // Auth errors - retry for token refresh
-      Unauthorized => true,
-      Forbidden => true,
+	private static bool ShouldRetryBasedOnStatusCode(HttpStatusCode statusCode)
+	{
+		return statusCode switch
+		{
+			// Auth errors - retry for token refresh
+			Unauthorized => true,
+			Forbidden => true,
 
-      // 5xx server errors - should retry
-      InternalServerError => true,
-      BadGateway => true,
-      ServiceUnavailable => true,
-      GatewayTimeout => true,
-      InsufficientStorage => true,
-      NetworkAuthenticationRequired => true,
+			// 5xx server errors - should retry
+			InternalServerError => true,
+			BadGateway => true,
+			ServiceUnavailable => true,
+			GatewayTimeout => true,
+			InsufficientStorage => true,
+			NetworkAuthenticationRequired => true,
 
-      // 4xx client errors that might be transient
-      RequestTimeout => true,
-      TooManyRequests => true,
+			// 4xx client errors that might be transient
+			RequestTimeout => true,
+			TooManyRequests => true,
 
-      // Don't retry these 4xx errors
-      BadRequest => false,
-      NotFound => false,
-      MethodNotAllowed => false,
-      NotAcceptable => false,
-      Conflict => false,
-      Gone => false,
-      UnprocessableEntity => false,
+			// Don't retry these 4xx errors
+			BadRequest => false,
+			NotFound => false,
+			MethodNotAllowed => false,
+			NotAcceptable => false,
+			Conflict => false,
+			Gone => false,
+			UnprocessableEntity => false,
 
-      // For any other status codes, don't retry by default
-      _ => false
-    };
-  }
+			// For any other status codes, don't retry by default
+			_ => false
+		};
+	}
 
-	internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, HttpClient client, Dictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
+	internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, Uri? baseAddress, Dictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
 	{
 		RequestOptions<T> baseRequestOptions = new()
 		{
-			Url = $"{client.BaseAddress}{options.Url}", //new Uri(client.BaseAddress ?? new(string.Empty), options.Url).ToString(), ,
+			Url = $"{baseAddress}{options.Url}",
 			HttpMethod = httpMethod,
 			BearerToken = bearerToken,
 			Timeout = options.ResilienceOptions?.TimeoutValue?.TotalSeconds,

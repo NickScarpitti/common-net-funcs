@@ -2,6 +2,7 @@
 using System.Xml.Serialization;
 using CommonNetFuncs.EFCore;
 using Microsoft.EntityFrameworkCore;
+
 namespace EFCore.Tests;
 
 public sealed class NavigationPropertiesTests : IDisposable

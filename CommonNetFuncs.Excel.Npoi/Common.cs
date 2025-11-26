@@ -229,6 +229,8 @@ public static partial class Common
 		return StyleCacheTable.GetOrCreateValue(wb);
 	}
 
+	private const string ErrorLocationFormat = "{Class}.{Method} Error";
+
 	private static ICellStyle GetOrCreateStyle(this IWorkbook wb, CellStyle style, int cachedColorLimit = 100)
 	{
 		Dictionary<string, ICellStyle> cache = GetStyleCache(wb);
@@ -418,7 +420,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromReference)} Error");
+			logger.Error(ex, ErrorLocationFormat, nameof(Common), nameof(GetCellFromReference));
 			return null;
 		}
 	}
@@ -440,7 +442,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellOffset)} Error");
+			logger.Error(ex, ErrorLocationFormat, nameof(Common), nameof(GetCellOffset));
 			return null;
 		}
 	}
@@ -463,7 +465,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromCoordinates)} Error");
+			logger.Error(ex, ErrorLocationFormat, nameof(Common), nameof(GetCellFromCoordinates));
 			return null;
 		}
 	}
@@ -529,7 +531,7 @@ public static partial class Common
 			}
 			else
 			{
-				logger.Warn("{msg}", $"Unable to locate cell with name {cellName}");
+				logger.Warn("Unable to locate cell with name {cellName}", cellName);
 				return null;
 			}
 
@@ -564,7 +566,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromName)} Error");
+			logger.Error(ex, ErrorLocationFormat, $"{nameof(Common)}.{nameof(GetCellFromName)}");
 			return null;
 		}
 	}
@@ -586,8 +588,7 @@ public static partial class Common
 			}
 			catch (Exception ex)
 			{
-				logger.Warn("{msg}", $"Unable to locate cell with name {cellName}");
-				logger.Warn(ex);
+				logger.Warn(ex, "Unable to locate cell with name {cellName}", cellName);
 				return;
 			}
 			ISheet ws = wb.GetSheet(crs[0].SheetName);
@@ -612,7 +613,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(ClearAllFromName)} Error");
+			logger.Error(ex, ErrorLocationFormat, $"{nameof(Common)}.{nameof(ClearAllFromName)}");
 		}
 	}
 
@@ -646,7 +647,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(WriteExcelFile)} Error");
+			logger.Error(ex, ErrorLocationFormat, $"{nameof(Common)}.{nameof(WriteExcelFile)}");
 			return false;
 		}
 	}
@@ -670,7 +671,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(WriteExcelFile)} Error");
+			logger.Error(ex, ErrorLocationFormat, $"{nameof(Common)}.{nameof(WriteExcelFile)}");
 			return false;
 		}
 	}
@@ -1392,7 +1393,7 @@ public static partial class Common
 			double columnWidth = ws.GetColumnWidthInPixels(i);
 			if (columnWidth.Equals(0))
 			{
-				logger.Warn("{msg}", $"Width of Column {i} is 0! Check referenced excel sheet: {ws.SheetName}");
+				logger.Warn("Width of Column {Column} is 0! Check referenced excel sheet: {SheetName}", i, ws.SheetName);
 			}
 			totalWidth += columnWidth;
 		}
@@ -1413,13 +1414,13 @@ public static partial class Common
 			(endRow, startRow) = (startRow, endRow); //Swap values with tuple assignment
 		}
 
-		float totaHeight = 0;
+		float totalHeight = 0;
 		for (int i = startRow; i < endRow + 1; i++)
 		{
-			totaHeight += ws.GetRow(i)?.HeightInPoints ?? 0;
+			totalHeight += ws.GetRow(i)?.HeightInPoints ?? 0;
 		}
 
-		return (int)Round(totaHeight * Units.EMU_PER_POINT / Units.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
+		return (int)Round(totalHeight * Units.EMU_PER_POINT / Units.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
 	}
 
 	/// <summary>
@@ -1645,7 +1646,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Unable to read excel data. Location: {nameof(Common)}.{nameof(ReadExcelFileToDataTable)}");
+			logger.Error(ex, "Unable to read excel data. Location: {Class}.{Method}", nameof(Common), nameof(ReadExcelFileToDataTable));
 		}
 
 		return dataTable;
@@ -1730,7 +1731,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Unable to read excel table data. Location {nameof(Common)}.{nameof(ReadExcelTableToDataTable)}");
+			logger.Error(ex, "Unable to read excel table data. Location: {Class}.{Method}", nameof(Common), nameof(ReadExcelTableToDataTable));
 		}
 
 		return dataTable;
@@ -1827,11 +1828,11 @@ public static partial class Common
 
 	private static double ColorDistance(ReadOnlySpan<byte> rgb1, ReadOnlySpan<byte> rgb2)
 	{
-		double rmean = (rgb1[0] + rgb2[0]) / 2.0;
+		double rMean = (rgb1[0] + rgb2[0]) / 2.0;
 		double r = rgb1[0] - rgb2[0];
 		double g = rgb1[1] - rgb2[1];
 		double b = rgb1[2] - rgb2[2];
-		return Sqrt(((2 + (rmean / 256)) * r * r) + (4 * g * g) + ((2 + ((255 - rmean) / 256)) * b * b));
+		return Sqrt(((2 + (rMean / 256)) * r * r) + (4 * g * g) + ((2 + ((255 - rMean) / 256)) * b * b));
 	}
 
 	/// <summary>

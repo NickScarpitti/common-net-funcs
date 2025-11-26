@@ -1,7 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using CommonNetFuncs.Core;
 using SixLabors.ImageSharp;
+
 using static System.Convert;
+using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.Images;
 
@@ -47,7 +50,7 @@ public static partial class Base64
 			{
 				if (!ms.CanRead)
 				{
-					throw new NotSupportedException("Memory stream must be readable to conver to base 64");
+					throw new NotSupportedException("Memory stream must be readable to convert to base 64");
 				}
 
 				if (ms.CanSeek && ms.Position != 0)
@@ -65,7 +68,7 @@ public static partial class Base64
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(ConvertImageFileToBase64)} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 
 		return null;
@@ -84,7 +87,7 @@ public static partial class Base64
 			{
 				if (!ms.CanRead)
 				{
-					throw new NotSupportedException("Memory stream must be readable to conver to base 64");
+					throw new NotSupportedException("Memory stream must be readable to convert to base 64");
 				}
 
 				if (ms.CanSeek && ms.Position != 0)
@@ -102,7 +105,7 @@ public static partial class Base64
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(ConvertImageFileToBase64)} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 
 		return null;
@@ -217,7 +220,7 @@ public static partial class Base64
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(ImageSaveToFile)} Error\nSave Path: {savePath}");
+			logger.Error(ex, "{ErrorLocation} Error\nSave Path: {savePath}", ex.GetLocationOfException(), savePath);
 			return false;
 		}
 	}
@@ -244,7 +247,7 @@ public static partial class Base64
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(ImageSaveToFile)} Error\nSave Path: {savePath}");
+			logger.Error(ex, "{ErrorLocation} Error\nSave Path: {savePath}", ex.GetLocationOfException(), savePath);
 			return false;
 		}
 	}
@@ -269,7 +272,7 @@ public static partial class Base64
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Base64)}.{nameof(IsValidBase64Image)} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			return false;
 		}
 	}

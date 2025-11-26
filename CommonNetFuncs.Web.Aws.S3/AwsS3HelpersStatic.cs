@@ -5,6 +5,7 @@ using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
 using NLog;
+
 using static Amazon.S3.Util.AmazonS3Util;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -17,6 +18,10 @@ public static class AwsS3HelpersStatic
 	private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 	private static readonly ConcurrentDictionary<string, bool> ValidatedBuckets = [];
 	internal const long MultipartThreshold = 10 * 1024 * 1024; // 10MB
+	private const string BeginUploadTemplate = "Starting upload of {fileName} to bucket { bucketName }";
+	private const string CompleteUploadTemplate = "Finished upload of {fileName} to bucket {bucketName} in {time}ms";
+	private const string AwsErrorLocationTemplate = "{ErrorLocation} AWS S3 Error";
+	private const string UnableToGetFileTemplate = "Unable to get file {FileName} from {BucketName} bucket in {ErrorLocation}";
 
 	/// <summary>
 	/// Upload a file to S3 bucket.
@@ -109,7 +114,7 @@ public static class AwsS3HelpersStatic
 
 					if (logDebug)
 					{
-						logger.Debug("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
+						logger.Debug(BeginUploadTemplate, fileName, bucketName);
 						sw = Stopwatch.StartNew();
 					}
 
@@ -118,21 +123,21 @@ public static class AwsS3HelpersStatic
 					if (logDebug)
 					{
 						sw!.Stop();
-						logger.Debug("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+						logger.Debug(CompleteUploadTemplate, fileName, bucketName, sw.ElapsedMilliseconds);
 					}
 
 					success = response?.HttpStatusCode == HttpStatusCode.OK;
 
 					if (!success && logInfo)
 					{
-						logger.Info("{msg}", response?.HttpStatusCode.ToString());
+						logger.Info("{StatusCode}", response?.HttpStatusCode.ToString());
 					}
 				}
 				else
 				{
 					if (logDebug)
 					{
-						logger.Debug("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
+						logger.Debug(BeginUploadTemplate, fileName, bucketName);
 						sw = Stopwatch.StartNew();
 					}
 
@@ -141,18 +146,19 @@ public static class AwsS3HelpersStatic
 					if (logDebug)
 					{
 						sw!.Stop();
-						logger.Debug("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+						logger.Debug(CompleteUploadTemplate, fileName, bucketName, sw.ElapsedMilliseconds);
 					}
 				}
 			}
 		}
 		catch (AmazonS3Exception awsEx)
 		{
-			logger.Error(awsEx, "{msg}", $"{awsEx.GetLocationOfException()} AWS S3 Error");
+			logger.Error(awsEx, AwsErrorLocationTemplate, awsEx.GetLocationOfException());
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return success;
 	}
@@ -223,7 +229,7 @@ public static class AwsS3HelpersStatic
 
 					if (logDebug)
 					{
-						logger.Debug("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
+						logger.Debug(BeginUploadTemplate, fileName, bucketName);
 						sw = Stopwatch.StartNew();
 					}
 
@@ -232,7 +238,7 @@ public static class AwsS3HelpersStatic
 					if (logDebug)
 					{
 						sw!.Stop();
-						logger.Debug("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+						logger.Debug(CompleteUploadTemplate, fileName, bucketName, sw.ElapsedMilliseconds);
 					}
 
 					success = response?.HttpStatusCode == HttpStatusCode.OK;
@@ -245,7 +251,7 @@ public static class AwsS3HelpersStatic
 				{
 					if (logDebug)
 					{
-						logger.Debug("Starting upload of {fileName} to bucket {bucketName}", fileName, bucketName);
+						logger.Debug(BeginUploadTemplate, fileName, bucketName);
 						sw = Stopwatch.StartNew();
 					}
 
@@ -254,7 +260,7 @@ public static class AwsS3HelpersStatic
 					if (logDebug)
 					{
 						sw!.Stop();
-						logger.Debug("Finished upload of {fileName} to bucket {bucketName} in {time}ms", fileName, bucketName, sw.ElapsedMilliseconds);
+						logger.Debug(CompleteUploadTemplate, fileName, bucketName, sw.ElapsedMilliseconds);
 					}
 				}
 
@@ -263,11 +269,12 @@ public static class AwsS3HelpersStatic
 		}
 		catch (AmazonS3Exception awsEx)
 		{
-			logger.Error(awsEx, "{msg}", $"{awsEx.GetLocationOfException()} AWS S3 Error");
+			logger.Error(awsEx, AwsErrorLocationTemplate, awsEx.GetLocationOfException());
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return success;
 	}
@@ -275,7 +282,7 @@ public static class AwsS3HelpersStatic
 	private static async Task CheckForExistingFile(IAmazonS3 s3Client, string bucketName, string fileName, CancellationToken cancellationToken = default)
 	{
 		Stopwatch? sw = null;
-		Stopwatch? delteSw = null;
+		Stopwatch? deleteSw = null;
 
 		bool logTrace = logger.IsTraceEnabled;
 
@@ -289,7 +296,7 @@ public static class AwsS3HelpersStatic
 		{
 			if (logTrace)
 			{
-				delteSw = Stopwatch.StartNew();
+				deleteSw = Stopwatch.StartNew();
 				logger.Trace("Starting delete of existing file in CheckForExistingFile method for {fileName} from bucket {bucketName}", fileName, bucketName);
 			}
 
@@ -297,8 +304,8 @@ public static class AwsS3HelpersStatic
 
 			if (logTrace)
 			{
-				delteSw!.Stop();
-				logger.Trace("Finished delete of existing file in CheckForExistingFile method for {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, delteSw.ElapsedMilliseconds);
+				deleteSw!.Stop();
+				logger.Trace("Finished delete of existing file in CheckForExistingFile method for {fileName} from bucket {bucketName} in {time}ms", fileName, bucketName, deleteSw.ElapsedMilliseconds);
 			}
 		}
 
@@ -619,17 +626,21 @@ public static class AwsS3HelpersStatic
 		{
 			if (awsEx.StatusCode != HttpStatusCode.NotFound)
 			{
-				logger.Error(awsEx, "{msg}", $"{awsEx.GetLocationOfException()} AWS S3 Error");
+				logger.Error(awsEx, AwsErrorLocationTemplate, awsEx.GetLocationOfException());
 			}
 			else
 			{
-				logger.Debug(awsEx, "{msg}", $"Unable to get file {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket in {awsEx.GetLocationOfException()}");
-				logger.Warn("{msg}", $"Unable to get file {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket in {awsEx.GetLocationOfException()}");
+				logger.Debug(awsEx, UnableToGetFileTemplate, fileName.UrlEncodeReadable(cancellationToken: cancellationToken),
+					bucketName.UrlEncodeReadable(cancellationToken: cancellationToken), awsEx.GetLocationOfException());
+
+				logger.Warn(UnableToGetFileTemplate, fileName.UrlEncodeReadable(cancellationToken: cancellationToken),
+					bucketName.UrlEncodeReadable(cancellationToken: cancellationToken), awsEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 	}
 
@@ -712,17 +723,21 @@ public static class AwsS3HelpersStatic
 		{
 			if (awsEx.StatusCode != HttpStatusCode.NotFound)
 			{
-				logger.Error(awsEx, "{msg}", $"{awsEx.GetLocationOfException()} AWS S3 Error");
+				logger.Error(awsEx, AwsErrorLocationTemplate, awsEx.GetLocationOfException());
 			}
 			else
 			{
-				logger.Debug(awsEx, "{msg}", $"Unable to get file {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket in {awsEx.GetLocationOfException()}");
-				logger.Warn("{msg}", $"Unable to get file {fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} from {bucketName.UrlEncodeReadable(cancellationToken: cancellationToken)} bucket in {awsEx.GetLocationOfException()}");
+				logger.Debug(awsEx, UnableToGetFileTemplate, fileName.UrlEncodeReadable(cancellationToken: cancellationToken),
+					bucketName.UrlEncodeReadable(cancellationToken: cancellationToken), awsEx.GetLocationOfException());
+
+				logger.Warn(UnableToGetFileTemplate, fileName.UrlEncodeReadable(cancellationToken: cancellationToken),
+					bucketName.UrlEncodeReadable(cancellationToken: cancellationToken), awsEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 	}
 
@@ -784,16 +799,17 @@ public static class AwsS3HelpersStatic
 		{
 			if (awsEx.StatusCode == HttpStatusCode.NotFound)
 			{
-				logger.Warn("{msg}", $"{fileName.UrlEncodeReadable(cancellationToken: cancellationToken)} not found for deletion");
+				logger.Warn("{FileName} not found for deletion", fileName.UrlEncodeReadable(cancellationToken: cancellationToken));
 			}
 			else
 			{
-				logger.Error(awsEx, "{msg}", $"{awsEx.GetLocationOfException()} AWS S3 Error");
+				logger.Error(awsEx, AwsErrorLocationTemplate, awsEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return success;
 	}
@@ -846,12 +862,13 @@ public static class AwsS3HelpersStatic
 		{
 			if (awsEx.StatusCode != HttpStatusCode.NotFound)
 			{
-				logger.Error(awsEx, "{msg}", $"{awsEx.GetLocationOfException()} AWS S3 Error");
+				logger.Error(awsEx, AwsErrorLocationTemplate, awsEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return success;
 	}
@@ -906,12 +923,13 @@ public static class AwsS3HelpersStatic
 		{
 			if (awsEx.StatusCode != HttpStatusCode.NotFound)
 			{
-				logger.Error(awsEx, "{msg}", $"{awsEx.GetLocationOfException()} AWS S3 Error");
+				logger.Error(awsEx, AwsErrorLocationTemplate, awsEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return fileNames;
 	}
@@ -974,17 +992,18 @@ public static class AwsS3HelpersStatic
 		{
 			if (awsEx.StatusCode != HttpStatusCode.NotFound)
 			{
-				logger.Error(awsEx, "{msg}", $"{awsEx.GetLocationOfException()} AWS S3 Error");
+				logger.Error(awsEx, AwsErrorLocationTemplate, awsEx.GetLocationOfException());
 			}
 			else
 			{
-				logger.Debug(awsEx, "{msg}", $"Unable to get URL for {fileName.UrlEncodeReadable()} from {bucketName.UrlEncodeReadable()}");
-				logger.Warn("{msg}", $"Unable to get URL for {fileName.UrlEncodeReadable()} from {bucketName.UrlEncodeReadable()}");
+				logger.Debug(awsEx, "Unable to get URL for {FileName} from {BucketName}", fileName.UrlEncodeReadable(), bucketName.UrlEncodeReadable());
+				logger.Warn("Unable to get URL for {FileName} from {BucketName}", fileName.UrlEncodeReadable(), bucketName.UrlEncodeReadable());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return url;
 	}
@@ -1059,7 +1078,8 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return isValid;
 	}

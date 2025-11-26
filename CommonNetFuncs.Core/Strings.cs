@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using FastExpressionCompiler;
+
 using static System.Convert;
 using static System.Web.HttpUtility;
 using static CommonNetFuncs.Core.MathHelpers;
@@ -626,7 +627,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
+	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
 	/// <param name="s">String to search.</param>
 	/// <param name="textToFind">String to find in s.</param>
@@ -637,7 +638,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
+	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
 	/// <param name="s">String to search.</param>
 	/// <param name="charToFind">Char to find in s.</param>
@@ -648,7 +649,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invarient of culture or case and returns its index if found.
+	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
 	/// <param name="s"><see cref="ReadOnlySpan{T}"/> to search.</param>
 	/// <param name="textToFind"><see cref="ReadOnlySpan{T}"/> to find in s.</param>
@@ -659,7 +660,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invarient of culture or case and returns its index if found.
+	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
 	/// <param name="s">String to search.</param>
 	/// <param name="charToFind">Character to find in s.</param>
@@ -1525,7 +1526,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
+	/// Used to reduce boilerplate code for parsing strings into nullable DateOnly
 	/// </summary>
 	/// <param name="value">String to parse into a DateOnly</param>
 	/// <returns>Nullable DateOnly parsed from a string</returns>
@@ -1544,7 +1545,7 @@ public static partial class Strings
 	}
 
 	/// <summary>
-	/// Used to reduce boilerplate code for parsing strings into nullable DateOnlys
+	/// Used to reduce boilerplate code for parsing strings into nullable DateOnly
 	/// </summary>
 	/// <param name="value">String to parse into a DateOnly</param>
 	/// <returns>Nullable DateOnly parsed from a string</returns>
@@ -1811,6 +1812,8 @@ public static partial class Strings
 		return new(sourceCharArray, 0, index);
 	}
 
+	private const string DefaultDateFormat = "MM/dd/yyyy";
+
 	/// <summary>
 	/// Take any format of a date time string and convert it to a different format
 	/// </summary>
@@ -1819,9 +1822,9 @@ public static partial class Strings
 	/// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
 	/// <returns>Date formatted as a string following the output format</returns>
 	[return: NotNullIfNotNull(nameof(dateString))]
-	public static string? FormatDateString(this string? dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
+	public static string? FormatDateString(this string? dateString, string sourceFormat, string outputFormat = DefaultDateFormat)
 	{
-		return dateString == null ? null : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? "MM/dd/yyyy" : outputFormat);
+		return dateString == null ? null : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? DefaultDateFormat : outputFormat);
 	}
 
 	/// <summary>
@@ -1832,9 +1835,9 @@ public static partial class Strings
 	/// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
 	/// <returns>Date formatted as a string following the output format</returns>
 	[return: NotNullIfNotNull(nameof(dateString))]
-	public static ReadOnlySpan<char> FormatDateString(this ReadOnlySpan<char> dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
+	public static ReadOnlySpan<char> FormatDateString(this ReadOnlySpan<char> dateString, string sourceFormat, string outputFormat = DefaultDateFormat)
 	{
-		return dateString.IsEmpty ? ReadOnlySpan<char>.Empty : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? "MM/dd/yyyy" : outputFormat);
+		return dateString.IsEmpty ? ReadOnlySpan<char>.Empty : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? DefaultDateFormat : outputFormat);
 	}
 
 	/// <summary>

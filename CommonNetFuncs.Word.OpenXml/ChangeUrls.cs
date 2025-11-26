@@ -1,10 +1,11 @@
 ﻿using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml.Packaging;
-
 namespace CommonNetFuncs.Word.OpenXml;
 
 public static class ChangeUrls
 {
+	private const string ErrorLocationFormat = "Error in {Class}.{Method}";
+
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 	/// <summary>
@@ -42,7 +43,7 @@ public static class ChangeUrls
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(ChangeUrls)}.{nameof(ChangeUrlsInWordDoc)}");
+			logger.Error(ex, ErrorLocationFormat, nameof(ChangeUrls), nameof(ChangeUrlsInWordDoc));
 		}
 		finally
 		{
@@ -82,7 +83,7 @@ public static class ChangeUrls
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(ChangeUrls)}.{nameof(ChangeUrlsInWordDoc)}");
+			logger.Error(ex, ErrorLocationFormat, nameof(ChangeUrls), nameof(ChangeUrlsInWordDoc));
 		}
 		finally
 		{
@@ -131,7 +132,7 @@ public static class ChangeUrls
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(ChangeUrls)}.{nameof(ChangeUrlsInWordDocRegex)}");
+			logger.Error(ex, ErrorLocationFormat, nameof(ChangeUrls), nameof(ChangeUrlsInWordDocRegex));
 		}
 		finally
 		{
@@ -182,7 +183,7 @@ public static class ChangeUrls
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(ChangeUrls)}.{nameof(ChangeUrlsInWordDocRegex)}");
+			logger.Error(ex, ErrorLocationFormat, nameof(ChangeUrls), nameof(ChangeUrlsInWordDocRegex));
 		}
 		finally
 		{

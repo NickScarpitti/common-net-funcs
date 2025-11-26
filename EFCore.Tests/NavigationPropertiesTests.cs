@@ -2,7 +2,6 @@
 using System.Xml.Serialization;
 using CommonNetFuncs.EFCore;
 using Microsoft.EntityFrameworkCore;
-
 namespace EFCore.Tests;
 
 public sealed class NavigationPropertiesTests : IDisposable
@@ -309,7 +308,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		navigationPaths.All(path => path.Split('.').Length <= maxDepth + 1).ShouldBeTrue();
 
 		// Check cache is populated
-		IReadOnlyDictionary<NavigationProperties.NavigationProperiesCacheKey, NavigationProperties.NavigationProperiesCacheValue> cache = useLimitedCache
+		IReadOnlyDictionary<NavigationProperties.NavigationPropertiesCacheKey, NavigationProperties.NavigationPropertiesCacheValue> cache = useLimitedCache
 				? NavigationProperties.NavigationCacheManager.GetLimitedCache()
 				: NavigationProperties.NavigationCacheManager.GetCache();
 		cache.Count.ShouldBeGreaterThan(0);
@@ -382,7 +381,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		_ = NavigationProperties.GetNavigations<TestEntity>(_context, options2);
 
 		// Assert
-		IReadOnlyDictionary<NavigationProperties.NavigationProperiesCacheKey, NavigationProperties.NavigationProperiesCacheValue> limitedCache = NavigationProperties.NavigationCacheManager.GetLimitedCache();
+		IReadOnlyDictionary<NavigationProperties.NavigationPropertiesCacheKey, NavigationProperties.NavigationPropertiesCacheValue> limitedCache = NavigationProperties.NavigationCacheManager.GetLimitedCache();
 		limitedCache.Count.ShouldBe(1); // Should not exceed limit
 
 		// Add another and check eviction
@@ -546,16 +545,16 @@ public sealed class NavigationPropertiesTests : IDisposable
 		options.NavPropAttributesToIgnore.ShouldBeEmpty();
 	}
 
-	#region NavigationProperiesCacheKey and CacheValue Tests
+	#region NavigationPropertiesCacheKey and CacheValue Tests
 
 	[Fact]
-	public void NavigationProperiesCacheKey_Equality_WorksCorrectly()
+	public void NavigationPropertiesCacheKey_Equality_WorksCorrectly()
 	{
 		// Arrange
-		NavigationProperties.NavigationProperiesCacheKey key1 = new(typeof(TestEntity), "attr1");
-		NavigationProperties.NavigationProperiesCacheKey key2 = new(typeof(TestEntity), "attr1");
-		NavigationProperties.NavigationProperiesCacheKey key3 = new(typeof(TestRelatedEntity), "attr1");
-		NavigationProperties.NavigationProperiesCacheKey key4 = new(typeof(TestEntity), "attr2");
+		NavigationProperties.NavigationPropertiesCacheKey key1 = new(typeof(TestEntity), "attr1");
+		NavigationProperties.NavigationPropertiesCacheKey key2 = new(typeof(TestEntity), "attr1");
+		NavigationProperties.NavigationPropertiesCacheKey key3 = new(typeof(TestRelatedEntity), "attr1");
+		NavigationProperties.NavigationPropertiesCacheKey key4 = new(typeof(TestEntity), "attr2");
 
 		// Act & Assert
 		key1.Equals(key2).ShouldBeTrue();
@@ -566,11 +565,11 @@ public sealed class NavigationPropertiesTests : IDisposable
 	}
 
 	[Fact]
-	public void NavigationProperiesCacheKey_GetHashCode_ReturnsConsistentValue()
+	public void NavigationPropertiesCacheKey_GetHashCode_ReturnsConsistentValue()
 	{
 		// Arrange
-		NavigationProperties.NavigationProperiesCacheKey key1 = new(typeof(TestEntity), "attr1");
-		NavigationProperties.NavigationProperiesCacheKey key2 = new(typeof(TestEntity), "attr1");
+		NavigationProperties.NavigationPropertiesCacheKey key1 = new(typeof(TestEntity), "attr1");
+		NavigationProperties.NavigationPropertiesCacheKey key2 = new(typeof(TestEntity), "attr1");
 
 		// Act
 		int hash1 = key1.GetHashCode();
@@ -581,11 +580,11 @@ public sealed class NavigationPropertiesTests : IDisposable
 	}
 
 	[Fact]
-	public void NavigationProperiesCacheKey_EqualsObject_WorksCorrectly()
+	public void NavigationPropertiesCacheKey_EqualsObject_WorksCorrectly()
 	{
 		// Arrange
-		NavigationProperties.NavigationProperiesCacheKey key1 = new(typeof(TestEntity), "attr1");
-		object key2 = new NavigationProperties.NavigationProperiesCacheKey(typeof(TestEntity), "attr1");
+		NavigationProperties.NavigationPropertiesCacheKey key1 = new(typeof(TestEntity), "attr1");
+		object key2 = new NavigationProperties.NavigationPropertiesCacheKey(typeof(TestEntity), "attr1");
 		object notKey = "not a key";
 
 		// Act & Assert
@@ -594,17 +593,17 @@ public sealed class NavigationPropertiesTests : IDisposable
 	}
 
 	[Fact]
-	public void NavigationProperiesCacheValue_Equality_WorksCorrectly()
+	public void NavigationPropertiesCacheValue_Equality_WorksCorrectly()
 	{
 		// Arrange
 		HashSet<string> navs1 = ["prop1", "prop2"];
 		HashSet<string> navs2 = ["prop1", "prop2"];
 		HashSet<string> navs3 = ["prop1", "prop3"];
 
-		NavigationProperties.NavigationProperiesCacheValue value1 = new(navs1, 5);
-		NavigationProperties.NavigationProperiesCacheValue value2 = new(navs2, 5);
-		NavigationProperties.NavigationProperiesCacheValue value3 = new(navs3, 5);
-		NavigationProperties.NavigationProperiesCacheValue value4 = new(navs1, 10);
+		NavigationProperties.NavigationPropertiesCacheValue value1 = new(navs1, 5);
+		NavigationProperties.NavigationPropertiesCacheValue value2 = new(navs2, 5);
+		NavigationProperties.NavigationPropertiesCacheValue value3 = new(navs3, 5);
+		NavigationProperties.NavigationPropertiesCacheValue value4 = new(navs1, 10);
 
 		// Act & Assert
 		value1.Equals(value2).ShouldBeTrue();
@@ -615,14 +614,14 @@ public sealed class NavigationPropertiesTests : IDisposable
 	}
 
 	[Fact]
-	public void NavigationProperiesCacheValue_GetHashCode_ReturnsConsistentValue()
+	public void NavigationPropertiesCacheValue_GetHashCode_ReturnsConsistentValue()
 	{
 		// Arrange
 		HashSet<string> navs1 = ["prop1", "prop2"];
 		HashSet<string> navs2 = ["prop1", "prop2"];
 
-		NavigationProperties.NavigationProperiesCacheValue value1 = new(navs1, 5);
-		NavigationProperties.NavigationProperiesCacheValue value2 = new(navs2, 5);
+		NavigationProperties.NavigationPropertiesCacheValue value1 = new(navs1, 5);
+		NavigationProperties.NavigationPropertiesCacheValue value2 = new(navs2, 5);
 
 		// Act
 		int hash1 = value1.GetHashCode();
@@ -633,12 +632,12 @@ public sealed class NavigationPropertiesTests : IDisposable
 	}
 
 	[Fact]
-	public void NavigationProperiesCacheValue_EqualsObject_WorksCorrectly()
+	public void NavigationPropertiesCacheValue_EqualsObject_WorksCorrectly()
 	{
 		// Arrange
 		HashSet<string> navs = ["prop1", "prop2"];
-		NavigationProperties.NavigationProperiesCacheValue value1 = new(navs, 5);
-		object value2 = new NavigationProperties.NavigationProperiesCacheValue(new HashSet<string>(navs), 5);
+		NavigationProperties.NavigationPropertiesCacheValue value1 = new(navs, 5);
+		object value2 = new NavigationProperties.NavigationPropertiesCacheValue(new HashSet<string>(navs), 5);
 		object notValue = "not a value";
 
 		// Act & Assert
@@ -647,11 +646,11 @@ public sealed class NavigationPropertiesTests : IDisposable
 	}
 
 	[Fact]
-	public void NavigationProperiesCacheValue_GetNavigationsToDepth_ReturnsCorrectSubset()
+	public void NavigationPropertiesCacheValue_GetNavigationsToDepth_ReturnsCorrectSubset()
 	{
 		// Arrange
 		HashSet<string> navs = ["prop1", "prop1.prop2", "prop1.prop2.prop3", "prop4"];
-		NavigationProperties.NavigationProperiesCacheValue value = new(navs, 10);
+		NavigationProperties.NavigationPropertiesCacheValue value = new(navs, 10);
 
 		// Act
 		HashSet<string> depth0 = value.GetNavigationsToDepth(0);
@@ -749,7 +748,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 
 	#region Entity with ReadOnly Navigation for Testing
 
-#pragma warning disable S1144 // Unused private types or members should be removeds
+#pragma warning disable S1144 // Unused private types or members should be removed
 	private sealed class TestEntityWithReadOnlyNav
 	{
 		public int Id { get; set; }

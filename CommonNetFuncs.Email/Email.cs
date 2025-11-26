@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
-
 using static CommonNetFuncs.Compression.Files;
 using static CommonNetFuncs.Email.EmailConstants;
 
@@ -39,7 +38,7 @@ public sealed class MailAttachment(string? AttachmentName = null, Stream? Attach
 public sealed class SendEmailConfig(SmtpSettings? smtpSettings = null, EmailAddresses? emailAddresses = null, EmailContent? emailContent = null, bool readReceipt = false, string? readReceiptEmail = null)
 {
 	/// <summary>
-	/// Gets or sets the values to use for the SMTP server conncetion.
+	/// Gets or sets the values to use for the SMTP server connection.
 	/// </summary>
 	public SmtpSettings SmtpSettings { get; set; } = smtpSettings ?? new();
 
@@ -242,10 +241,10 @@ public static class Email
 					}
 					catch (Exception ex)
 					{
-						logger.Warn(ex, "{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error");
+						logger.Warn(ex, "{Class}.{Method} Error", nameof(Email), nameof(SendEmail));
 						if (i == 7)
 						{
-							logger.Error("{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {sendEmailConfig.SmtpSettings.SmtpServer} | SMTP Port: {sendEmailConfig.SmtpSettings.SmtpPort} | SMTP User: {sendEmailConfig.SmtpSettings.SmtpUser}");
+							logger.Error("{Class}.{Method} Error\nFailed to send email.\nSMTP Server: {SmtpServer} | SMTP Port: {SmtpPort} | SMTP User: {SmtpUser}", nameof(Email), nameof(SendEmail), sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, sendEmailConfig.SmtpSettings.SmtpUser);
 							success = false; //Sets success to false when the email send fails on the last attempt
 						}
 					}
@@ -255,7 +254,7 @@ public static class Email
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {sendEmailConfig.SmtpSettings.SmtpServer} | SMTP Port: {sendEmailConfig.SmtpSettings.SmtpPort} | SMTP User: {sendEmailConfig.SmtpSettings.SmtpUser}");
+			logger.Error(ex, "{Class}.{Method} Error\nFailed to send email.\nSMTP Server: {SmtpServer} | SMTP Port: {SmtpPort} | SMTP User: {SmtpUser}", nameof(Email), nameof(SendEmail), sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, sendEmailConfig.SmtpSettings.SmtpUser);
 			success = false;
 		}
 
@@ -284,7 +283,7 @@ public static class Email
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Email)}.{nameof(IsValidEmail)} Error");
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Email), nameof(IsValidEmail));
 		}
 		return isValid;
 	}
@@ -343,7 +342,7 @@ public static class Email
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Email)}.{nameof(AddAttachments)} Error");
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Email), nameof(AddAttachments));
 		}
 	}
 }

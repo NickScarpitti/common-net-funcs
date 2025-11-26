@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
-
+using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
@@ -33,7 +33,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -54,7 +54,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -72,7 +72,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -93,7 +93,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -125,7 +125,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -156,7 +156,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -187,7 +187,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -221,7 +221,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -249,7 +249,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -273,7 +273,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -297,7 +297,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -327,7 +327,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -361,7 +361,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -395,7 +395,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -423,7 +423,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -447,7 +447,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -477,7 +477,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -511,7 +511,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -536,7 +536,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -563,7 +563,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -588,7 +588,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -612,7 +612,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -639,7 +639,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -664,7 +664,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -691,7 +691,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -720,7 +720,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -751,7 +751,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -778,7 +778,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -807,7 +807,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -846,7 +846,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -889,7 +889,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -932,7 +932,7 @@ public static class Async
 				{
 					await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 				}
-				logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			}
 			finally
 			{
@@ -975,7 +975,7 @@ public static class Async
 				{
 					await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 				}
-				logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			}
 			finally
 			{
@@ -1007,7 +1007,7 @@ public static class Async
 			{
 				await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 			}
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error{(errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}")}");
+			logger.Error(ex, "{ExceptionLocation} Error{ErrorText}", ex.GetLocationOfException(), errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}");
 		}
 		finally
 		{
@@ -1030,7 +1030,7 @@ public static class Async
 			{
 				await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 			}
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error{(errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}")}");
+			logger.Error(ex, "{ExceptionLocation} Error{ErrorText}", ex.GetLocationOfException(), errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}");
 		}
 		finally
 		{

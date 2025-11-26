@@ -28,8 +28,8 @@ public sealed class UseResponseSizeLoggingMiddleware(RequestDelegate next, ILogg
 
 			if (countingStream.BytesWritten > logThreshold)
 			{
-				logger.LogWarning("{msg}", $"Response to {HtmlEncode(context.Request.Path)} [{HtmlEncode(context.Request.Method)}] of type [{HtmlEncode(context.Request.Headers.Accept)}{(string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + {HtmlEncode(context.Request.Headers.AcceptEncoding)}")}] " +
-					$"with Size: {countingStream.BytesWritten.GetFileSizeFromBytesWithUnits(2)}");
+				logger.LogWarning("Response to {RequestPath} [{RequestMethod}] of type [{RequestHeadersAccept}{AcceptEncoding}] with Size: {ResponseSize}",
+					context.Request.Path, context.Request.Method, context.Request.Headers.Accept, string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + {HtmlEncode(context.Request.Headers.AcceptEncoding)}", countingStream.BytesWritten.GetFileSizeFromBytesWithUnits(2));
 			}
 		}
 		finally

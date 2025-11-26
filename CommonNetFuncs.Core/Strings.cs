@@ -88,7 +88,7 @@ public static partial class Strings
 	private static partial Regex TwelveDigitPhoneNumberRegex();
 
 	[GeneratedRegex("[A-Za-z]")]
-	private static partial Regex RemoveLettersRegex();
+	internal static partial Regex RemoveLettersRegex();
 
 	[GeneratedRegex("[0-9]")]
 	private static partial Regex RemoveNumbersRegex();

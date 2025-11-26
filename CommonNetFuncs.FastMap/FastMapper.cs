@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using CommonNetFuncs.Core;
 using FastExpressionCompiler;
+
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.FastMap;
@@ -478,7 +479,8 @@ internal static class MethodInfoCache
 	public static readonly MethodInfo ToArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!;
 	public static readonly MethodInfo ToHashSet = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1);
 	public static readonly MethodInfo FastMap = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!;
-	public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!;
+	// public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!;
+	public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse), BindingFlags.Static | BindingFlags.Public, null, [typeof(IEnumerable<>).MakeGenericType(typeof(object))], null)!;
 	public static readonly MethodInfo Select = typeof(Enumerable).GetMethods().First(x => string.Equals(x.Name, nameof(Enumerable.Select)) && x.GetParameters().Length == 2)!;
 	public static readonly MethodInfo ToDictionary = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)!;
 }

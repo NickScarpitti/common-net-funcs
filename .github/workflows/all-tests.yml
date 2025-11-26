@@ -1,5 +1,5 @@
-# # This workflow will build a .NET project
-# # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
 # name: All Tests
 # permissions:
@@ -35,7 +35,7 @@
 #       - name: Setup .NET
 #         uses: actions/setup-dotnet@v4
 #         with:
-#           dotnet-version: 9.x.x
+#           dotnet-version: 10.x.x
 
 #       - name: Add Fonts
 #         run: apt-get update && apt-get install -y fonts-dejavu fonts-liberation fonts-ubuntu

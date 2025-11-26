@@ -455,32 +455,82 @@ public static class FastMapper
 
 	private static Type GetElementType(Type collectionType)
 	{
-		if (collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == typeof(List<>))
-		{
-			return collectionType.GetGenericArguments()[0];
-		}
-		else if (collectionType.IsArray)
-		{
-			return collectionType.GetElementType()!;
-		}
-		else
-		{
-			return collectionType.GetInterfaces()
-								.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-								.Select(i => i.GetGenericArguments()[0])
-								.FirstOrDefault() ?? typeof(object);
-		}
+		return collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == typeof(List<>)
+			? collectionType.GetGenericArguments()[0]
+			: collectionType.IsArray
+				? collectionType.GetElementType()!
+				: collectionType.GetInterfaces()
+					.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+					.Select(i => i.GetGenericArguments()[0])
+					.FirstOrDefault() ?? typeof(object);
 	}
-}
 
-internal static class MethodInfoCache
-{
-	public static readonly MethodInfo ToList = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))!;
-	public static readonly MethodInfo ToArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!;
-	public static readonly MethodInfo ToHashSet = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1);
-	public static readonly MethodInfo FastMap = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!;
-	// public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!;
-	public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse), BindingFlags.Static | BindingFlags.Public, null, [typeof(IEnumerable<>).MakeGenericType(typeof(object))], null)!;
-	public static readonly MethodInfo Select = typeof(Enumerable).GetMethods().First(x => string.Equals(x.Name, nameof(Enumerable.Select)) && x.GetParameters().Length == 2)!;
-	public static readonly MethodInfo ToDictionary = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)!;
-}
+	// internal static class MethodInfoCache
+	// {
+	// 	public static readonly MethodInfo ToList = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))!;
+	// 	public static readonly MethodInfo ToArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!;
+	// 	public static readonly MethodInfo ToHashSet = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1);
+	// 	public static readonly MethodInfo FastMap = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!;
+	// 	public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!;
+	// 	public static readonly MethodInfo Select = typeof(Enumerable).GetMethods().First(x => string.Equals(x.Name, nameof(Enumerable.Select)) && x.GetParameters().Length == 2)!;
+	// 	public static readonly MethodInfo ToDictionary = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)!;
+	// }
+
+	internal static class MethodInfoCache
+	{
+		public static readonly MethodInfo ToList = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))!;
+		public static readonly MethodInfo ToArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!;
+		public static readonly MethodInfo ToHashSet = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1);
+		public static readonly MethodInfo FastMap = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!;
+		public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!;
+		public static readonly MethodInfo Select = typeof(Enumerable).GetMethods().First(x => string.Equals(x.Name, nameof(Enumerable.Select)) && x.GetParameters().Length == 2)!;
+		public static readonly MethodInfo ToDictionary = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)!;
+	}
+
+// 	internal static class MethodInfoCache
+// 	{
+// 		public static readonly MethodInfo ToList =
+// 			typeof(Enumerable).GetMethods()
+// 				.First(m => m.Name == nameof(Enumerable.ToList)
+// 					&& m.IsGenericMethodDefinition
+// 					&& m.GetParameters().Length == 1
+// 					&& m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+// 		public static readonly MethodInfo ToArray =
+// 			typeof(Enumerable).GetMethods()
+// 				.First(m => m.Name == nameof(Enumerable.ToArray)
+// 					&& m.IsGenericMethodDefinition
+// 					&& m.GetParameters().Length == 1
+// 					&& m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+// 		public static readonly MethodInfo ToHashSet =
+// 			typeof(Enumerable).GetMethods()
+// 				.First(m => m.Name == nameof(Enumerable.ToHashSet)
+// 					&& m.IsGenericMethodDefinition
+// 					&& m.GetParameters().Length == 1
+// 					&& m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+// 		public static readonly MethodInfo FastMap =
+// 			typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!;
+
+// 		public static readonly MethodInfo Reverse =
+// 			typeof(Enumerable).GetMethods()
+// 				.First(m => m.Name == nameof(Enumerable.Reverse)
+// 					&& m.IsGenericMethodDefinition
+// 					&& m.GetParameters().Length == 1
+// 					&& m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+// 		public static readonly MethodInfo Select =
+// 			typeof(Enumerable).GetMethods()
+// 				.First(m => m.Name == nameof(Enumerable.Select)
+// 					&& m.IsGenericMethodDefinition
+// 					&& m.GetParameters().Length == 2);
+
+// 		public static readonly MethodInfo ToDictionary =
+// 			typeof(Enumerable).GetMethods()
+// 				.First(m => m.Name == nameof(Enumerable.ToDictionary)
+// 					&& m.IsGenericMethodDefinition
+// 					&& m.GetGenericArguments().Length == 3
+// 					&& m.GetParameters().Length == 3);
+// 	}
+// }

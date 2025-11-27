@@ -57,7 +57,7 @@ public static partial class FileHelpers
 			if (!startFromZero)
 			{
 				// Start at number present
-				Match match = incrementedFileNameRegex().Match(fileNameWithoutExt);
+				Match match = IncrementedFileNameRegex().Match(fileNameWithoutExt);
 				if (match.Success && int.TryParse(match.Groups[1].Value, out int startNumber))
 				{
 					i = startNumber;
@@ -344,5 +344,5 @@ public static partial class FileHelpers
 	}
 
 	[GeneratedRegex(@"\(([^)]*)\)$")]
-	private static partial Regex incrementedFileNameRegex();
+	private static partial Regex IncrementedFileNameRegex();
 }

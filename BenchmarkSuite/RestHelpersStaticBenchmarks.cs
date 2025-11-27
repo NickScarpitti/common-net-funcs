@@ -1,5 +1,16 @@
 ﻿#nullable enable
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Jobs;
+using MemoryPack;
+using MessagePack;
 
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelpersStatic;
@@ -22,7 +33,7 @@ public class RestHelpersStaticBenchmarks
 	private Dictionary<string, string> _headers = null!;
 	private Dictionary<string, string> _headersWithContentType = null!;
 
-	private const string dummyUrl = dummyUrl;
+	private const string DummyUrl = "http://";
 
 	[GlobalSetup]
 	public void Setup()
@@ -32,7 +43,7 @@ public class RestHelpersStaticBenchmarks
 		_jsonData = Encoding.UTF8.GetBytes(jsonString);
 
 		// Create a large list for more realistic testing
-		List<TestModel> _largeTestModelList = new List<TestModel>();
+		List<TestModel> _largeTestModelList = new();
 		for (int i = 0; i < 1000; i++)
 		{
 			_largeTestModelList.Add(new TestModel
@@ -154,7 +165,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AddContent_Json()
 	{
-		HttpRequestMessage request = new(HttpMethod.Post, dummyUrl);
+		HttpRequestMessage request = new(HttpMethod.Post, DummyUrl);
 		request.AddContent(HttpMethod.Post, null, _testModel, null);
 		request.Dispose();
 	}
@@ -162,7 +173,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AddContent_Json_WithHeaders()
 	{
-		HttpRequestMessage request = new(HttpMethod.Post, dummyUrl);
+		HttpRequestMessage request = new(HttpMethod.Post, DummyUrl);
 		request.AddContent(HttpMethod.Post, _headersWithContentType, _testModel, null);
 		request.Dispose();
 	}
@@ -170,7 +181,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AddContent_MemoryPack()
 	{
-		HttpRequestMessage request = new(HttpMethod.Post, dummyUrl);
+		HttpRequestMessage request = new(HttpMethod.Post, DummyUrl);
 		Dictionary<string, string> headers = new()
 		{ { "Content-Type", "application/x-memorypack" } };
 		request.AddContent(HttpMethod.Post, headers, _testModel, null);
@@ -180,7 +191,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AddContent_MessagePack()
 	{
-		HttpRequestMessage request = new(HttpMethod.Post, dummyUrl);
+		HttpRequestMessage request = new(HttpMethod.Post, DummyUrl);
 		Dictionary<string, string> headers = new()
 		{ { "Content-Type", "application/x-msgpack" } };
 		request.AddContent(HttpMethod.Post, headers, _testModel, null);
@@ -190,7 +201,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AttachHeaders_WithBearer()
 	{
-		HttpRequestMessage request = new(HttpMethod.Get, dummyUrl);
+		HttpRequestMessage request = new(HttpMethod.Get, DummyUrl);
 		request.AttachHeaders("test-bearer-token-12345", _headers);
 		request.Dispose();
 	}
@@ -198,7 +209,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AttachHeaders_WithoutBearer()
 	{
-		HttpRequestMessage request = new(HttpMethod.Get, dummyUrl);
+		HttpRequestMessage request = new(HttpMethod.Get, DummyUrl);
 		request.AttachHeaders(null, _headers);
 		request.Dispose();
 	}
@@ -206,7 +217,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AttachHeaders_MultipleHeaders()
 	{
-		HttpRequestMessage request = new(HttpMethod.Get, dummyUrl);
+		HttpRequestMessage request = new(HttpMethod.Get, DummyUrl);
 		Dictionary<string, string> manyHeaders = new()
 		{
 			{ "Accept", Json },

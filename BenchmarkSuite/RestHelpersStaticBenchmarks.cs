@@ -1,20 +1,9 @@
 ﻿#nullable enable
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Diagnosers;
-using BenchmarkDotNet.Jobs;
-using CommonNetFuncs.Web.Requests.Rest;
-using MemoryPack;
-using MessagePack;
-using static CommonNetFuncs.Web.Requests.Rest.RestHelpersStatic;
 
-namespace BenchmarkSuite1;
+using static CommonNetFuncs.Web.Common.ContentTypes;
+using static CommonNetFuncs.Web.Requests.Rest.RestHelpersStatic;
+namespace BenchmarkSuite;
 
 [MediumRunJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
@@ -30,9 +19,10 @@ public class RestHelpersStaticBenchmarks
 	private byte[] _largeJsonData = null!;
 	private byte[] _compressedLargeJsonDataGzip = null!;
 	private TestModel _testModel = null!;
-	private List<TestModel> _largeTestModelList = null!;
 	private Dictionary<string, string> _headers = null!;
 	private Dictionary<string, string> _headersWithContentType = null!;
+
+	private const string dummyUrl = dummyUrl;
 
 	[GlobalSetup]
 	public void Setup()
@@ -42,13 +32,13 @@ public class RestHelpersStaticBenchmarks
 		_jsonData = Encoding.UTF8.GetBytes(jsonString);
 
 		// Create a large list for more realistic testing
-		_largeTestModelList = new List<TestModel>();
+		List<TestModel> _largeTestModelList = new List<TestModel>();
 		for (int i = 0; i < 1000; i++)
 		{
-			_largeTestModelList.Add(new TestModel 
-			{ 
-				Name = $"Test User {i}", 
-				Value = i, 
+			_largeTestModelList.Add(new TestModel
+			{
+				Name = $"Test User {i}",
+				Value = i,
 				Description = $"This is test description number {i} with some additional content to make it more realistic and test performance with larger payloads"
 			});
 		}
@@ -61,14 +51,14 @@ public class RestHelpersStaticBenchmarks
 		// Setup headers
 		_headers = new Dictionary<string, string>
 		{
-			{ "Accept", "application/json" },
+			{ "Accept", Json },
 			{ "User-Agent", "TestAgent/1.0" },
 			{ "X-Custom-Header", "CustomValue" }
 		};
 
 		_headersWithContentType = new Dictionary<string, string>(_headers)
 		{
-			{ "Content-Type", "application/json" }
+			{ "Content-Type",Json }
 		};
 
 		// Create GZip compressed JSON
@@ -116,35 +106,35 @@ public class RestHelpersStaticBenchmarks
 	public async Task<TestModel?> ReadResponseStream_Json_NoCompression()
 	{
 		await using MemoryStream stream = new(_jsonData);
-		return await stream.ReadResponseStream<TestModel>("application/json", null, false);
+		return await stream.ReadResponseStream<TestModel>(Json, null, false);
 	}
 
 	[Benchmark]
 	public async Task<TestModel?> ReadResponseStream_Json_GZip()
 	{
 		await using MemoryStream stream = new(_compressedJsonDataGzip);
-		return await stream.ReadResponseStream<TestModel>("application/json", "gzip", false);
+		return await stream.ReadResponseStream<TestModel>(Json, "gzip", false);
 	}
 
 	[Benchmark]
 	public async Task<TestModel?> ReadResponseStream_Json_Brotli()
 	{
 		await using MemoryStream stream = new(_compressedJsonDataBrotli);
-		return await stream.ReadResponseStream<TestModel>("application/json", "br", false);
+		return await stream.ReadResponseStream<TestModel>(Json, "br", false);
 	}
 
 	[Benchmark]
 	public async Task<List<TestModel>?> ReadResponseStream_LargeJson_NoCompression()
 	{
 		await using MemoryStream stream = new(_largeJsonData);
-		return await stream.ReadResponseStream<List<TestModel>>("application/json", null, false);
+		return await stream.ReadResponseStream<List<TestModel>>(Json, null, false);
 	}
 
 	[Benchmark]
 	public async Task<List<TestModel>?> ReadResponseStream_LargeJson_GZip()
 	{
 		await using MemoryStream stream = new(_compressedLargeJsonDataGzip);
-		return await stream.ReadResponseStream<List<TestModel>>("application/json", "gzip", false);
+		return await stream.ReadResponseStream<List<TestModel>>(Json, "gzip", false);
 	}
 
 	[Benchmark]
@@ -164,7 +154,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AddContent_Json()
 	{
-		HttpRequestMessage request = new(HttpMethod.Post, "http://test");
+		HttpRequestMessage request = new(HttpMethod.Post, dummyUrl);
 		request.AddContent(HttpMethod.Post, null, _testModel, null);
 		request.Dispose();
 	}
@@ -172,7 +162,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AddContent_Json_WithHeaders()
 	{
-		HttpRequestMessage request = new(HttpMethod.Post, "http://test");
+		HttpRequestMessage request = new(HttpMethod.Post, dummyUrl);
 		request.AddContent(HttpMethod.Post, _headersWithContentType, _testModel, null);
 		request.Dispose();
 	}
@@ -180,7 +170,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AddContent_MemoryPack()
 	{
-		HttpRequestMessage request = new(HttpMethod.Post, "http://test");
+		HttpRequestMessage request = new(HttpMethod.Post, dummyUrl);
 		Dictionary<string, string> headers = new()
 		{ { "Content-Type", "application/x-memorypack" } };
 		request.AddContent(HttpMethod.Post, headers, _testModel, null);
@@ -190,7 +180,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AddContent_MessagePack()
 	{
-		HttpRequestMessage request = new(HttpMethod.Post, "http://test");
+		HttpRequestMessage request = new(HttpMethod.Post, dummyUrl);
 		Dictionary<string, string> headers = new()
 		{ { "Content-Type", "application/x-msgpack" } };
 		request.AddContent(HttpMethod.Post, headers, _testModel, null);
@@ -200,7 +190,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AttachHeaders_WithBearer()
 	{
-		HttpRequestMessage request = new(HttpMethod.Get, "http://test");
+		HttpRequestMessage request = new(HttpMethod.Get, dummyUrl);
 		request.AttachHeaders("test-bearer-token-12345", _headers);
 		request.Dispose();
 	}
@@ -208,7 +198,7 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AttachHeaders_WithoutBearer()
 	{
-		HttpRequestMessage request = new(HttpMethod.Get, "http://test");
+		HttpRequestMessage request = new(HttpMethod.Get, dummyUrl);
 		request.AttachHeaders(null, _headers);
 		request.Dispose();
 	}
@@ -216,10 +206,10 @@ public class RestHelpersStaticBenchmarks
 	[Benchmark]
 	public void AttachHeaders_MultipleHeaders()
 	{
-		HttpRequestMessage request = new(HttpMethod.Get, "http://test");
+		HttpRequestMessage request = new(HttpMethod.Get, dummyUrl);
 		Dictionary<string, string> manyHeaders = new()
 		{
-			{ "Accept", "application/json" },
+			{ "Accept", Json },
 			{ "User-Agent", "TestAgent/1.0" },
 			{ "X-Custom-Header-1", "Value1" },
 			{ "X-Custom-Header-2", "Value2" },

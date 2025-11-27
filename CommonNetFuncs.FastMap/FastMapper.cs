@@ -141,7 +141,7 @@ public static class FastMapper
 					if (genericTypeDef == typeof(HashSet<>))
 					{
 						// For HashSet, convert the temporary list to a HashSet
-						bindings.Add(Expression.Assign(destinationVariable, Expression.Call(null, MethodInfoCache.ToHashSetMethodInfo.MakeGenericMethod(elementType), tempList)));
+						bindings.Add(Expression.Assign(destinationVariable, Expression.Call(null, MethodInfoCache.ToHashSet.MakeGenericMethod(elementType), tempList)));
 					}
 					else if (genericTypeDef == typeof(Stack<>) || genericTypeDef == typeof(Queue<>))
 					{
@@ -213,7 +213,7 @@ public static class FastMapper
 					}
 					else if (!sourceProp.PropertyType.IsValueType && !destProp.PropertyType.IsValueType)
 					{
-						MethodInfo nestedMapMethod = MethodInfoCache.FastMapMethodInfo.MakeGenericMethod(sourceProp.PropertyType, destProp.PropertyType);
+						MethodInfo nestedMapMethod = MethodInfoCache.FastMap.MakeGenericMethod(sourceProp.PropertyType, destProp.PropertyType);
 
 						assignExpression = Expression.Assign(destAccess,
 														Expression.Condition(
@@ -265,8 +265,8 @@ public static class FastMapper
 			Expression sourceCollection;
 			if (sourceType.IsGenericType && sourceType.GetGenericTypeDefinition() == typeof(ReadOnlyCollection<>))
 			{
-				_ = MethodInfoCache.ToListMethodInfo.MakeGenericMethod(sourceElementType);
-				sourceCollection = Expression.Call(null, MethodInfoCache.ToListMethodInfo!.MakeGenericMethod(sourceElementType), sourceAccess);
+				_ = MethodInfoCache.ToList.MakeGenericMethod(sourceElementType);
+				sourceCollection = Expression.Call(null, MethodInfoCache.ToList!.MakeGenericMethod(sourceElementType), sourceAccess);
 			}
 			else
 			{
@@ -275,13 +275,13 @@ public static class FastMapper
 
 			if (destType.IsArray)
 			{
-				MethodInfo toArrayMethod = MethodInfoCache.ToArrayMethodInfo.MakeGenericMethod(sourceElementType);
+				MethodInfo toArrayMethod = MethodInfoCache.ToArray.MakeGenericMethod(sourceElementType);
 				return Expression.Assign(destAccess, Expression.Call(null, toArrayMethod, sourceCollection));
 			}
 			else if (destType.IsReadOnlyCollectionType())
 			{
 				Type elementType = GetElementType(destType);
-				MethodInfo toListMethod = MethodInfoCache.ToListMethodInfo.MakeGenericMethod(elementType);
+				MethodInfo toListMethod = MethodInfoCache.ToList.MakeGenericMethod(elementType);
 				Expression intermediateList = Expression.Call(null, toListMethod, sourceCollection);
 
 				if (destType.IsInterface || (destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(ReadOnlyCollection<>)))
@@ -295,7 +295,7 @@ public static class FastMapper
 					Type genericTypeDef = destType.GetGenericTypeDefinition();
 					if (genericTypeDef == typeof(HashSet<>))
 					{
-						MethodInfo toHashSetMethod = MethodInfoCache.ToHashSetMethodInfo.MakeGenericMethod(elementType);
+						MethodInfo toHashSetMethod = MethodInfoCache.ToHashSet.MakeGenericMethod(elementType);
 						return Expression.Assign(destAccess, Expression.Call(null, toHashSetMethod, sourceCollection));
 					}
 					else if (genericTypeDef == typeof(Stack<>) || genericTypeDef == typeof(Queue<>))
@@ -309,7 +309,7 @@ public static class FastMapper
 				}
 
 				// For any other type, convert to appropriate collection type
-				MethodInfo toCollectionMethod = MethodInfoCache.ToListMethodInfo.MakeGenericMethod(elementType);
+				MethodInfo toCollectionMethod = MethodInfoCache.ToList.MakeGenericMethod(elementType);
 				return Expression.Assign(destAccess, Expression.Call(null, toCollectionMethod, sourceCollection));
 			}
 			else if (destType.IsGenericType)
@@ -317,38 +317,38 @@ public static class FastMapper
 				Type genericTypeDef = destType.GetGenericTypeDefinition();
 				if (genericTypeDef == typeof(List<>))
 				{
-					MethodInfo toListMethod = MethodInfoCache.ToListMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo toListMethod = MethodInfoCache.ToList.MakeGenericMethod(destElementType);
 					return Expression.Assign(destAccess, Expression.Call(null, toListMethod, sourceCollection));
 				}
 				else if (genericTypeDef == typeof(HashSet<>))
 				{
-					MethodInfo toHashSetMethod = MethodInfoCache.ToHashSetMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo toHashSetMethod = MethodInfoCache.ToHashSet.MakeGenericMethod(destElementType);
 					return Expression.Assign(destAccess, Expression.Call(null, toHashSetMethod, sourceCollection));
 				}
 				else if (genericTypeDef == typeof(Stack<>))
 				{
 					//Must reverse order before inserting values into Stack to preserve original order
-					MethodInfo reverseMethod = MethodInfoCache.ReverseMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo reverseMethod = MethodInfoCache.Reverse.MakeGenericMethod(destElementType);
 					MethodCallExpression reverseCall = Expression.Call(null, reverseMethod, sourceAccess);
-					MethodInfo toArrayMethod = MethodInfoCache.ToArrayMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo toArrayMethod = MethodInfoCache.ToArray.MakeGenericMethod(destElementType);
 					MethodCallExpression toArrayCall = Expression.Call(null, toArrayMethod, reverseCall);
 					return Expression.Assign(destAccess, Expression.New(destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(destElementType)])!, toArrayCall));
 				}
 				else if (genericTypeDef == typeof(Queue<>))
 				{
-					MethodInfo toArrayMethod = MethodInfoCache.ToArrayMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo toArrayMethod = MethodInfoCache.ToArray.MakeGenericMethod(destElementType);
 					MethodCallExpression toArrayCall = Expression.Call(null, toArrayMethod, sourceAccess);
 					return Expression.Assign(destAccess, Expression.New(destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(destElementType)])!, toArrayCall));
 				}
 				else // List<> or other IEnumerable<> types
 				{
-					MethodInfo toListMethod = MethodInfoCache.ToListMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo toListMethod = MethodInfoCache.ToList.MakeGenericMethod(destElementType);
 					return Expression.Assign(destAccess, Expression.Call(null, toListMethod, sourceAccess));
 				}
 			}
 			else
 			{
-				MethodInfo toListMethod = MethodInfoCache.ToListMethodInfo.MakeGenericMethod(sourceElementType);
+				MethodInfo toListMethod = MethodInfoCache.ToList.MakeGenericMethod(sourceElementType);
 				return Expression.Assign(destAccess, Expression.Call(null, toListMethod, sourceAccess));
 			}
 		}
@@ -379,15 +379,15 @@ public static class FastMapper
 			Expression keyAccess = Expression.Property(kvpParam, keyProp);
 			Expression valueAccess = Expression.Property(kvpParam, valueProp);
 
-			MethodInfo mapMethod = MethodInfoCache.FastMapMethodInfo.MakeGenericMethod(sourceValueType, destValueType);
+			MethodInfo mapMethod = MethodInfoCache.FastMap.MakeGenericMethod(sourceValueType, destValueType);
 			Expression mappedValue = Expression.Call(null, mapMethod, valueAccess, Expression.Constant(useCache, typeof(bool)));
 
 			NewExpression newKvp = Expression.New(destKvpType.GetConstructor([destKeyType, destValueType])!, keyAccess, mappedValue);
 			LambdaExpression selectLambda = Expression.Lambda(newKvp, kvpParam);
 
-			MethodInfo selectMethod = MethodInfoCache.SelectMethodInfo.MakeGenericMethod(kvpType, destKvpType);
+			MethodInfo selectMethod = MethodInfoCache.Select.MakeGenericMethod(kvpType, destKvpType);
 
-			MethodInfo toDictionaryMethod = MethodInfoCache.ToDictionaryMethodInfo.MakeGenericMethod(destKvpType, destKeyType, destValueType);
+			MethodInfo toDictionaryMethod = MethodInfoCache.ToDictionary.MakeGenericMethod(destKvpType, destKeyType, destValueType);
 
 			ParameterExpression destKvpParam = Expression.Parameter(destKvpType, "destKvp");
 			LambdaExpression keySelector = Expression.Lambda(Expression.Property(destKvpParam, "Key"), destKvpParam);
@@ -400,8 +400,8 @@ public static class FastMapper
 		}
 		else
 		{
-			MethodInfo mapMethod = MethodInfoCache.FastMapMethodInfo.MakeGenericMethod(sourceElementType, destElementType);
-			MethodInfo selectMethod = MethodInfoCache.SelectMethodInfo.MakeGenericMethod(sourceElementType, destElementType);
+			MethodInfo mapMethod = MethodInfoCache.FastMap.MakeGenericMethod(sourceElementType, destElementType);
+			MethodInfo selectMethod = MethodInfoCache.Select.MakeGenericMethod(sourceElementType, destElementType);
 
 			ParameterExpression itemParam = Expression.Parameter(sourceElementType, "item");
 			MethodCallExpression mapCall = Expression.Call(null, mapMethod, itemParam, Expression.Constant(useCache, typeof(bool)));
@@ -415,33 +415,33 @@ public static class FastMapper
 				Type genericTypeDef = destType.GetGenericTypeDefinition();
 				if (genericTypeDef == typeof(HashSet<>))
 				{
-					MethodInfo toHashSetMethod = MethodInfoCache.ToHashSetMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo toHashSetMethod = MethodInfoCache.ToHashSet.MakeGenericMethod(destElementType);
 					finalExpression = Expression.Call(null, toHashSetMethod, selectCall);
 				}
 				else if (genericTypeDef == typeof(Stack<>))
 				{
 					//Must reverse order before inserting values into Stack to preserve original order
-					MethodInfo reverseMethod = MethodInfoCache.ReverseMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo reverseMethod = MethodInfoCache.Reverse.MakeGenericMethod(destElementType);
 					MethodCallExpression reverseCall = Expression.Call(null, reverseMethod, selectCall);
-					MethodInfo toArrayMethod = MethodInfoCache.ToArrayMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo toArrayMethod = MethodInfoCache.ToArray.MakeGenericMethod(destElementType);
 					MethodCallExpression toArrayCall = Expression.Call(null, toArrayMethod, reverseCall);
 					finalExpression = Expression.New(destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(destElementType)])!, toArrayCall);
 				}
 				else if (genericTypeDef == typeof(Queue<>))
 				{
-					MethodInfo toArrayMethod = MethodInfoCache.ToArrayMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo toArrayMethod = MethodInfoCache.ToArray.MakeGenericMethod(destElementType);
 					MethodCallExpression toArrayCall = Expression.Call(null, toArrayMethod, selectCall);
 					finalExpression = Expression.New(destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(destElementType)])!, toArrayCall);
 				}
 				else // Assume List<> or other IEnumerable<> types
 				{
-					MethodInfo toListMethod = MethodInfoCache.ToListMethodInfo.MakeGenericMethod(destElementType);
+					MethodInfo toListMethod = MethodInfoCache.ToList.MakeGenericMethod(destElementType);
 					finalExpression = Expression.Call(null, toListMethod, selectCall);
 				}
 			}
 			else if (destType.IsArray)
 			{
-				MethodInfo toArrayMethod = MethodInfoCache.ToArrayMethodInfo.MakeGenericMethod(destElementType);
+				MethodInfo toArrayMethod = MethodInfoCache.ToArray.MakeGenericMethod(destElementType);
 				finalExpression = Expression.Call(null, toArrayMethod, selectCall);
 			}
 			else
@@ -455,39 +455,36 @@ public static class FastMapper
 
 	private static Type GetElementType(Type collectionType)
 	{
-		return collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == typeof(List<>)
-			? collectionType.GetGenericArguments()[0]
-			: collectionType.IsArray
-				? collectionType.GetElementType()!
-				: collectionType.GetInterfaces()
-					.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-					.Select(i => i.GetGenericArguments()[0])
-					.FirstOrDefault() ?? typeof(object);
-	}
-
-	// internal static class MethodInfoCache
-	// {
-	// 	public static readonly MethodInfo ToList = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))!;
-	// 	public static readonly MethodInfo ToArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!;
-	// 	public static readonly MethodInfo ToHashSet = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1);
-	// 	public static readonly MethodInfo FastMap = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!;
-	// 	public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!;
-	// 	public static readonly MethodInfo Select = typeof(Enumerable).GetMethods().First(x => string.Equals(x.Name, nameof(Enumerable.Select)) && x.GetParameters().Length == 2)!;
-	// 	public static readonly MethodInfo ToDictionary = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)!;
-	// }
-
-	internal static class MethodInfoCache
-	{
-		public static readonly MethodInfo ToListMethodInfo = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))!;
-		public static readonly MethodInfo ToArrayMethodInfo = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!;
-		public static readonly MethodInfo ToHashSetMethodInfo = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1);
-		public static readonly MethodInfo FastMapMethodInfo = typeof(FastMapper).GetMethod(nameof(FastMapMethodInfo), BindingFlags.Public | BindingFlags.Static)!;
-		// public static readonly MethodInfo ReverseMethodInfo = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!;
-		public static readonly MethodInfo ReverseMethodInfo = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse), BindingFlags.Static | BindingFlags.Public, null, [typeof(IEnumerable<>).MakeGenericType(typeof(object))], null)!;
-		public static readonly MethodInfo SelectMethodInfo = typeof(Enumerable).GetMethods().First(x => string.Equals(x.Name, nameof(Enumerable.Select)) && x.GetParameters().Length == 2)!;
-		public static readonly MethodInfo ToDictionaryMethodInfo = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)!;
+		if (collectionType.IsGenericType && collectionType.GetGenericTypeDefinition() == typeof(List<>))
+		{
+			return collectionType.GetGenericArguments()[0];
+		}
+		else if (collectionType.IsArray)
+		{
+			return collectionType.GetElementType()!;
+		}
+		else
+		{
+			return collectionType.GetInterfaces()
+								.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+								.Select(i => i.GetGenericArguments()[0])
+								.FirstOrDefault() ?? typeof(object);
+		}
 	}
 }
+
+internal static class MethodInfoCache
+{
+	public static readonly MethodInfo ToList = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList))!;
+	public static readonly MethodInfo ToArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!;
+	public static readonly MethodInfo ToHashSet = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToHashSet)) && m.GetParameters().Length == 1);
+	public static readonly MethodInfo FastMap = typeof(FastMapper).GetMethod(nameof(FastMap), BindingFlags.Public | BindingFlags.Static)!;
+	// public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse))!;
+	public static readonly MethodInfo Reverse = typeof(Enumerable).GetMethod(nameof(Enumerable.Reverse), BindingFlags.Static | BindingFlags.Public, null, [typeof(IEnumerable<>).MakeGenericType(typeof(object))], null)!;
+	public static readonly MethodInfo Select = typeof(Enumerable).GetMethods().First(x => string.Equals(x.Name, nameof(Enumerable.Select)) && x.GetParameters().Length == 2)!;
+	public static readonly MethodInfo ToDictionary = typeof(Enumerable).GetMethods().First(m => string.Equals(m.Name, nameof(Enumerable.ToDictionary)) && m.GetGenericArguments().Length == 3 && m.GetParameters().Length == 3 && m.GetGenericArguments().Select(x => x.Name).Intersect(["TSource", "TKey", "TElement"]).Count() == 3)!;
+}
+
 // 	internal static class MethodInfoCache
 // 	{
 // 		public static readonly MethodInfo ToList =

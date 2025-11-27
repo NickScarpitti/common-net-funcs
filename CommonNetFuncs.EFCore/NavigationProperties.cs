@@ -364,62 +364,46 @@ public static class NavigationProperties
 			return;
 		}
 
+		// Get navigation property names
 		Action<T> setter = NavigationSetterCache.GetOrAdd(typeof(T), type =>
 		{
 			// Get navigation property names
 			List<string> navigations = GetTopLevelNavigations<T>(context);
-			Action<T> setter = NavigationSetterCache.GetOrAdd(typeof(T), type =>
+
+			// Parameter for the entity instance
+			ParameterExpression parameter = Expression.Parameter(typeof(object), "entity");
+			UnaryExpression convertedParameter = Expression.Convert(parameter, type);
+
+			// Create assignments for each navigation property
+			List<BinaryExpression> assignments = [];
+			foreach (string navProp in navigations)
 			{
-				// Get navigation property names
-				List<string> navigations = GetTopLevelNavigations<T>(context);
-
-				// Parameter for the entity instance
-				ParameterExpression parameter = Expression.Parameter(typeof(object), "entity");
-				UnaryExpression convertedParameter = Expression.Convert(parameter, type);
-				// Parameter for the entity instance
-				ParameterExpression parameter = Expression.Parameter(typeof(object), "entity");
-				UnaryExpression convertedParameter = Expression.Convert(parameter, type);
-
-				// Create assignments for each navigation property
-				List<BinaryExpression> assignments = [];
-				foreach (string navProp in navigations)
+				PropertyInfo? property = type.GetProperty(navProp);
+				if (property?.CanWrite == true)
 				{
-					PropertyInfo? property = type.GetProperty(navProp);
-					if (property?.CanWrite == true)
-					{
-						assignments.Add(Expression.Assign(Expression.Property(convertedParameter, property), Expression.Constant(null, property.PropertyType)));
-					}
+					assignments.Add(Expression.Assign(Expression.Property(convertedParameter, property), Expression.Constant(null, property.PropertyType)));
 				}
-				// Create assignments for each navigation property
-				List<BinaryExpression> assignments = [];
-				foreach (string navProp in navigations)
-				{
-					PropertyInfo? property = type.GetProperty(navProp);
-					if (property?.CanWrite == true)
-					{
-						assignments.Add(Expression.Assign(Expression.Property(convertedParameter, property), Expression.Constant(null, property.PropertyType)));
-					}
-				}
+			}
 
-				// If no valid assignments, return empty action
-				if (!assignments.AnyFast())
-				{
-					return new Action<object>(_ => { });
-				}
-				// If no valid assignments, return empty action
-				if (!assignments.AnyFast())
-				{
-					return new Action<object>(_ => { });
-				}
+			// If no valid assignments, return empty action
+			if (!assignments.AnyFast())
+			{
+				return new Action<object>(_ => { });
+			}
+			// If no valid assignments, return empty action
+			if (!assignments.AnyFast())
+			{
+				return new Action<object>(_ => { });
+			}
 
-				// Create a block with all assignments
-				BlockExpression block = Expression.Block(assignments);
+			// Create a block with all assignments
+			BlockExpression block = Expression.Block(assignments);
 
-				// Compile the expression tree into a delegate
-				return Expression.Lambda<Action<object>>(block, parameter).CompileFast();
-			});
+			// Compile the expression tree into a delegate
+			return Expression.Lambda<Action<object>>(block, parameter).CompileFast();
+		});
 
-			// Execute the cached setter
-			setter(obj);
-		}
+		// Execute the cached setter
+		setter(obj);
+	}
 }

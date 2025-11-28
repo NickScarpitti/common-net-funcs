@@ -55,9 +55,9 @@ public sealed class ConversionTaskTests : IDisposable
 					{
 						Directory.Delete(_workingDir, true);
 					}
-					catch
+					catch (IOException ioex)
 					{
-
+						Console.WriteLine(ioex);
 					}
 				}
 			}
@@ -150,7 +150,7 @@ public sealed class ConversionTaskTests : IDisposable
 
 		// Cancel after a brief delay
 		await Task.Delay(100);
-		cts.Cancel();
+		await cts.CancelAsync();
 
 		bool result = await conversionTask;
 

@@ -5,8 +5,6 @@ using xRetry;
 
 namespace Media.Ffmpeg.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class HelpersTests : IDisposable
 {
 	private readonly Fixture _fixture;
@@ -33,7 +31,10 @@ public sealed class HelpersTests : IDisposable
 			{
 				File.Delete(_tempLogFile);
 			}
-			catch { }
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+			}
 		}
 		GC.SuppressFinalize(this);
 	}
@@ -228,5 +229,3 @@ public sealed class HelpersTests : IDisposable
 		values.ShouldContain("Bit_Rate");
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

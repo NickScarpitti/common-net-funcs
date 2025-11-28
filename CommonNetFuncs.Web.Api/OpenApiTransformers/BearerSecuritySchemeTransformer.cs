@@ -20,14 +20,14 @@ public sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvide
 
 			const string securitySchemeId = "Bearer";
 
-			var securityScheme = new OpenApiSecurityScheme
+			OpenApiSecurityScheme securityScheme = new()
 			{
 				Type = SecuritySchemeType.Http,
 				Scheme = "bearer",
 				BearerFormat = "Json Web Token"
 			};
 
-			var requirements = new Dictionary<string, IOpenApiSecurityScheme>
+			Dictionary<string, IOpenApiSecurityScheme> requirements = new()
 			{
 				[securitySchemeId] = securityScheme
 			};

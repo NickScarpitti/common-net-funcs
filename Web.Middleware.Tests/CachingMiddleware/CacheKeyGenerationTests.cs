@@ -8,11 +8,8 @@ using xRetry;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class CacheKeyGenerationTests
 {
-	private readonly IFixture _fixture;
 	private readonly IMemoryCache _cache;
 	private readonly CacheOptions _options;
 	private readonly CacheMetrics _metrics;
@@ -21,7 +18,6 @@ public sealed class CacheKeyGenerationTests
 
 	public CacheKeyGenerationTests()
 	{
-		_fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
 		_cache = A.Fake<IMemoryCache>();
 		_options = new CacheOptions();
 		_metrics = new CacheMetrics();
@@ -41,9 +37,9 @@ public sealed class CacheKeyGenerationTests
 
 		// Combine all query parameters
 		Dictionary<string, StringValues> queryParams = new()
-				{
-						{ _options.UseCacheQueryParam, "true" }
-				};
+			{
+				{ _options.UseCacheQueryParam, "true" }
+			};
 
 		if (!string.IsNullOrEmpty(queryString))
 		{
@@ -94,5 +90,3 @@ public sealed class CacheKeyGenerationTests
 		_context.Request.Body.Position.ShouldBe(0); // Verify body position is reset
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

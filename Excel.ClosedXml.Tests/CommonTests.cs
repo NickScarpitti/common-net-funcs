@@ -5,8 +5,6 @@ using NSubstitute;
 
 namespace Excel.ClosedXml.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class CommonTests
 {
     [Theory]
@@ -167,11 +165,9 @@ public sealed class CommonTests
         await using MemoryStream memoryStream = new();
         using CancellationTokenSource cts = new();
         workbook.AddWorksheet("Sheet1");
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Act & Assert
         await Should.ThrowAsync<OperationCanceledException>(async () => await memoryStream.WriteFileToMemoryStreamAsync(workbook, cts.Token));
     }
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

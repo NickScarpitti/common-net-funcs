@@ -7,11 +7,8 @@ using xRetry;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class MemoryCacheMiddlewareEvictionTests
 {
-	private readonly IFixture _fixture;
 	private readonly IMemoryCache _cache;
 	private readonly CacheOptions _options;
 	private readonly CacheMetrics _metrics;
@@ -20,7 +17,6 @@ public sealed class MemoryCacheMiddlewareEvictionTests
 
 	public MemoryCacheMiddlewareEvictionTests()
 	{
-		_fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
 		_cache = A.Fake<IMemoryCache>();
 		_options = new CacheOptions();
 		_metrics = new CacheMetrics();
@@ -94,5 +90,3 @@ public sealed class MemoryCacheMiddlewareEvictionTests
 		_tracker.CacheTags.ContainsKey(tag).ShouldBeFalse();
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -11,8 +11,6 @@ namespace CommonNetFuncs.Core;
 
 public static class Inspect
 {
-  private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
   /// <summary>
   /// Gets the default value of the provided type
   /// </summary>
@@ -59,77 +57,77 @@ public static class Inspect
     return hasAttribute;
   }
 
-  /// <summary>
-  /// Compares two like objects against each other to check to see if they contain the same values
-  /// </summary>
-  /// <param name="obj1">First object to compare for value equality</param>
-  /// <param name="obj2">Second object to compare for value equality</param>
-  /// <returns><see langword="true"/> if the two objects have the same value for all elements, otherwise false</returns>
-  [Obsolete("Please use IsEqual method instead")]
-  public static bool IsEqualR(this object? obj1, object? obj2)
-  {
-    return obj1.IsEqualR(obj2, null);
-  }
+  ///// <summary>
+  ///// Compares two like objects against each other to check to see if they contain the same values
+  ///// </summary>
+  ///// <param name="obj1">First object to compare for value equality</param>
+  ///// <param name="obj2">Second object to compare for value equality</param>
+  ///// <returns><see langword="true"/> if the two objects have the same value for all elements, otherwise false</returns>
+  //[Obsolete("Please use IsEqual method instead")]
+  //public static bool IsEqualR(this object? obj1, object? obj2)
+  //{
+  //	return obj1.IsEqualR(obj2, null);
+  //}
 
-  /// <summary>
-  /// Compare two class objects for value equality
-  /// </summary>
-  /// <param name="obj1">First object to compare for value equality</param>
-  /// <param name="obj2">Second object to compare for value equality</param>
-  /// <param name="exemptProps">Names of properties to not include in the matching check</param>
-  /// <returns><see langword="true"/> if both objects contain identical values for all properties except for the ones identified by exemptProps, otherwise false</returns>
-  [Obsolete("Please use IsEqual method instead")]
-  public static bool IsEqualR(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
-  {
-    // They're both null.
-    if ((obj1 == null) && (obj2 == null))
-    {
-      return true;
-    }
+  ///// <summary>
+  ///// Compare two class objects for value equality
+  ///// </summary>
+  ///// <param name="obj1">First object to compare for value equality</param>
+  ///// <param name="obj2">Second object to compare for value equality</param>
+  ///// <param name="exemptProps">Names of properties to not include in the matching check</param>
+  ///// <returns><see langword="true"/> if both objects contain identical values for all properties except for the ones identified by exemptProps, otherwise false</returns>
+  //[Obsolete("Please use IsEqual method instead")]
+  //public static bool IsEqualR(this object? obj1, object? obj2, IEnumerable<string>? exemptProps = null)
+  //{
+  //	// They're both null.
+  //	if ((obj1 == null) && (obj2 == null))
+  //	{
+  //		return true;
+  //	}
 
-    // One is null, so they can't be the same.
-    if ((obj1 == null) || (obj2 == null))
-    {
-      return false;
-    }
+  //	// One is null, so they can't be the same.
+  //	if ((obj1 == null) || (obj2 == null))
+  //	{
+  //		return false;
+  //	}
 
-    // How can they be the same if they're different types?
-    if (obj1.GetType() != obj1.GetType())
-    {
-      return false;
-    }
+  //	// How can they be the same if they're different types?
+  //	if (obj1.GetType() != obj1.GetType())
+  //	{
+  //		return false;
+  //	}
 
-    IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(obj1.GetType());
-    if (exemptProps?.Any() == true)
-    {
-      props = props.Where(x => exemptProps?.Contains(x.Name) != true);
-    }
+  //	IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(obj1.GetType());
+  //	if (exemptProps?.Any() == true)
+  //	{
+  //		props = props.Where(x => exemptProps?.Contains(x.Name) != true);
+  //	}
 
-    foreach (PropertyInfo prop in props)
-    {
-      object aPropValue = prop.GetValue(obj1) ?? string.Empty;
-      object bPropValue = prop.GetValue(obj2) ?? string.Empty;
+  //	foreach (PropertyInfo prop in props)
+  //	{
+  //		object aPropValue = prop.GetValue(obj1) ?? string.Empty;
+  //		object bPropValue = prop.GetValue(obj2) ?? string.Empty;
 
-      bool aIsNumeric = aPropValue.IsNumeric();
-      bool bIsNumeric = bPropValue.IsNumeric();
+  //		bool aIsNumeric = aPropValue.IsNumeric();
+  //		bool bIsNumeric = bPropValue.IsNumeric();
 
-      try
-      {
-        // This will prevent issues with numbers with varying decimal places from being counted as a difference
-        if ((aIsNumeric && bIsNumeric && (decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!))) ||
-                    (!(aIsNumeric && bIsNumeric) && !aPropValue.ToString().StrComp(bPropValue.ToString())))
-        {
-          return false;
-        }
-      }
-      catch (Exception ex)
-      {
-        logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
-        return false;
-      }
-    }
-    return true;
-  }
+  //		try
+  //		{
+  //			// This will prevent issues with numbers with varying decimal places from being counted as a difference
+  //			if ((aIsNumeric && bIsNumeric && (decimal.Parse(aPropValue.ToString()!) != decimal.Parse(bPropValue.ToString()!))) ||
+  //									(!(aIsNumeric && bIsNumeric) && !aPropValue.ToString().StrComp(bPropValue.ToString())))
+  //			{
+  //				return false;
+  //			}
+  //		}
+  //		catch (Exception ex)
+  //		{
+  //			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+  //			return false;
+  //		}
+  //	}
+  //	return true;
+  //}
 
   // This class is used to track object pairs being compared
   private sealed class ComparisonContext
@@ -242,7 +240,7 @@ public static class Inspect
 
     foreach (PropertyInfo prop in properties)
     {
-      MethodCallExpression propExemptCheck = Expression.Call(typeof(Enumerable), nameof(Enumerable.Contains), [ typeof(string) ], exemptPropsParam, Expression.Constant(prop.Name));
+      MethodCallExpression propExemptCheck = Expression.Call(typeof(Enumerable), nameof(Enumerable.Contains), [typeof(string)], exemptPropsParam, Expression.Constant(prop.Name));
 
       MemberExpression value1 = Expression.Property(typedObj1, prop);
       MemberExpression value2 = Expression.Property(typedObj2, prop);
@@ -253,12 +251,12 @@ public static class Inspect
       {
         if (ignoreStringCase)
         {
-          MethodInfo? equalsMethod = typeof(string).GetMethod(nameof(string.Equals), [ typeof(string), typeof(string), typeof(StringComparison) ])!;
+          MethodInfo? equalsMethod = typeof(string).GetMethod(nameof(string.Equals), [typeof(string), typeof(string), typeof(StringComparison)])!;
           comparison = Expression.Call(equalsMethod, value1, value2, Expression.Constant(StringComparison.OrdinalIgnoreCase));
         }
         else
         {
-          MethodInfo? equalsMethod = typeof(string).GetMethod(nameof(string.Equals), [ typeof(string), typeof(string) ])!;
+          MethodInfo? equalsMethod = typeof(string).GetMethod(nameof(string.Equals), [typeof(string), typeof(string)])!;
           comparison = Expression.Call(equalsMethod, value1, value2);
         }
       }
@@ -272,7 +270,7 @@ public static class Inspect
       }
       else if (recursive && !prop.PropertyType.IsValueType && (prop.PropertyType != typeof(string)))
       {
-        MethodInfo? isEqualMethod = typeof(Inspect).GetMethod(nameof(IsEqual), [ typeof(object), typeof(object), typeof(IEnumerable<string>), typeof(bool), typeof(bool) ])!;
+        MethodInfo? isEqualMethod = typeof(Inspect).GetMethod(nameof(IsEqual), [typeof(object), typeof(object), typeof(IEnumerable<string>), typeof(bool), typeof(bool)])!;
         comparison = Expression.Call(isEqualMethod, value1, value2, Expression.Constant(null, typeof(IEnumerable<string>)), Expression.Constant(ignoreStringCase), Expression.Constant(recursive));
       }
       else
@@ -298,9 +296,9 @@ public static class Inspect
   /// <param name="obj">Object to get hash value from</param>
   /// <param name="hashAlgorithm">Optional: Hash algorithm to use. Default is MD5.</param>
   /// <returns>Hash string representing the object's value</returns>
-  public static string GetHashForObject<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
+  public static string GetHashForObject<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5) where T : class?
   {
-    if (EqualityComparer<T?>.Default.Equals(obj, default))
+    if (obj == null)
     {
       return "null";
     }
@@ -336,9 +334,9 @@ public static class Inspect
   /// <param name="obj">Object to get hash value from</param>
   /// <param name="hashAlgorithm">Optional: Hash algorithm to use. Default is MD5.</param>
   /// <returns>Hash string representing the object's value</returns>
-  public static async Task<string> GetHashForObjectAsync<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5)
+  public static async Task<string> GetHashForObjectAsync<T>(this T obj, EHashAlgorithm hashAlgorithm = EHashAlgorithm.MD5) where T : class
   {
-    if (EqualityComparer<T?>.Default.Equals(obj, default))
+    if (obj == null)
     {
       return "null";
     }
@@ -385,7 +383,7 @@ public static class Inspect
     Type type = value.GetType();
 
     // Handle collections
-    if ((value is IEnumerable enumerable) && (value is not string))
+    if (value is IEnumerable enumerable and not string)
     {
       // Convert collection to list of sorted hashes
       List<string> itemHashes = [];
@@ -448,7 +446,7 @@ public static class Inspect
     Type type = value.GetType();
 
     // Handle collections
-    if ((value is IEnumerable enumerable) && (value is not string))
+    if (value is IEnumerable enumerable and not string)
     {
       // Convert collection to list of sorted hashes
       List<string> itemHashes = [];

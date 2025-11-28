@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using static CommonNetFuncs.Core.UnitConversion;
 using static System.Web.HttpUtility;
+using static CommonNetFuncs.Core.UnitConversion;
 
 namespace CommonNetFuncs.Web.Middleware;
 
@@ -13,32 +13,32 @@ namespace CommonNetFuncs.Web.Middleware;
 /// </summary>
 public sealed class UseResponseSizeLoggingMiddleware(RequestDelegate next, ILogger<UseResponseSizeLoggingMiddleware> logger, long logThreshold)
 {
-  private readonly RequestDelegate next = next;
-  private readonly ILogger<UseResponseSizeLoggingMiddleware> logger = logger;
+	private readonly RequestDelegate next = next;
+	private readonly ILogger<UseResponseSizeLoggingMiddleware> logger = logger;
 
-  public async Task InvokeAsync(HttpContext context)
-  {
-    Stream originalBodyStream = context.Response.Body;
-    CountingStream countingStream = new(originalBodyStream);
-    context.Response.Body = countingStream;
+	public async Task InvokeAsync(HttpContext context)
+	{
+		Stream originalBodyStream = context.Response.Body;
+		CountingStream countingStream = new(originalBodyStream);
+		context.Response.Body = countingStream;
 
-    try
-    {
-      await next(context).ConfigureAwait(false);
+		try
+		{
+			await next(context).ConfigureAwait(false);
 
-      if (countingStream.BytesWritten > logThreshold)
-      {
-        logger.LogWarning("{msg}", $"Response to {HtmlEncode(context.Request.Path)} [{HtmlEncode(context.Request.Method)}] of type [{HtmlEncode(context.Request.Headers.Accept)}{(string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + {HtmlEncode(context.Request.Headers.AcceptEncoding)}")}] " +
-                    $"with Size: {countingStream.BytesWritten.GetFileSizeFromBytesWithUnits(2)}");
-      }
-    }
-    finally
-    {
-      context.Response.Body = originalBodyStream;
-      await countingStream.DisposeAsync().ConfigureAwait(false);
-      await originalBodyStream.DisposeAsync().ConfigureAwait(false);
-    }
-  }
+			if (countingStream.BytesWritten > logThreshold)
+			{
+				logger.LogWarning("Response to {RequestPath} [{RequestMethod}] of type [{RequestHeadersAccept}{AcceptEncoding}] with Size: {ResponseSize}",
+					context.Request.Path, context.Request.Method, context.Request.Headers.Accept, string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + {HtmlEncode(context.Request.Headers.AcceptEncoding)}", countingStream.BytesWritten.GetFileSizeFromBytesWithUnits(2));
+			}
+		}
+		finally
+		{
+			context.Response.Body = originalBodyStream;
+			await countingStream.DisposeAsync().ConfigureAwait(false);
+			await originalBodyStream.DisposeAsync().ConfigureAwait(false);
+		}
+	}
 }
 
 /// <summary>
@@ -46,8 +46,8 @@ public sealed class UseResponseSizeLoggingMiddleware(RequestDelegate next, ILogg
 /// </summary>
 public static class ResponseSizeLoggingMiddlewareExtension
 {
-  public static IApplicationBuilder UseResponseSizeLogging(this IApplicationBuilder builder, long logThreshold = -1)
-  {
-    return builder.UseMiddleware<UseResponseSizeLoggingMiddleware>(logThreshold);
-  }
+	public static IApplicationBuilder UseResponseSizeLogging(this IApplicationBuilder builder, long logThreshold = -1)
+	{
+		return builder.UseMiddleware<UseResponseSizeLoggingMiddleware>(logThreshold);
+	}
 }

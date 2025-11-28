@@ -454,28 +454,26 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 		{
 			try
 			{
-#pragma warning disable IDE0037 // Use inferred member name
 				return Results.Ok(
-								new
-								{
-									Hits = metrics.CacheHits(),
-									Misses = metrics.CacheMisses(),
-									HitRatio = $"{Math.Round(metrics.CacheHits() + metrics.CacheMisses() == 0
-												? 0
-												: (double)metrics.CacheHits() / (metrics.CacheHits() + metrics.CacheMisses()), 3) * 100}%",
-									SkippedDueToSize = metrics.SkippedDueToSize(),
-									CurrentSizeBytes = $"{metrics.CurrentCacheSize()}B",
-									CurrentSize = metrics.CurrentCacheSize().GetFileSizeFromBytesWithUnits(2),
-									CacheEntries = metrics.CurrentCacheEntryCount(),
-									EntriesCountByTag = metrics.CacheTags.Count,
-									Tags = metrics.CacheTags.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count),
-									EvictionReason = new
-									{
-										Capacity = metrics.EvictedDueToCapacity(),
-										ManuallyRemoved = metrics.EvictedDueToRemoved()
-									}
-								});
-#pragma warning restore IDE0037 // Use inferred member name
+					new
+					{
+						Hits = metrics.CacheHits(),
+						Misses = metrics.CacheMisses(),
+						HitRatio = $"{Math.Round(metrics.CacheHits() + metrics.CacheMisses() == 0
+							? 0
+							: (double)metrics.CacheHits() / (metrics.CacheHits() + metrics.CacheMisses()), 3) * 100}%",
+						SkippedDueToSize = metrics.SkippedDueToSize(),
+						CurrentSizeBytes = $"{metrics.CurrentCacheSize()}B",
+						CurrentSize = metrics.CurrentCacheSize().GetFileSizeFromBytesWithUnits(2),
+						CacheEntries = metrics.CurrentCacheEntryCount(),
+						EntriesCountByTag = metrics.CacheTags.Count,
+						Tags = metrics.CacheTags.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count),
+						EvictionReason = new
+						{
+							Capacity = metrics.EvictedDueToCapacity(),
+							ManuallyRemoved = metrics.EvictedDueToRemoved()
+						}
+					});
 			}
 			catch (Exception ex)
 			{
@@ -586,7 +584,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 					return Results.Ok(evictedCount);
 				}
 
-				logger.Info("No cache entries found with tag: {tag}", tag.SanitizeForLog());
+				logger.Info("No cache entries found with tag: {tag}", tag);
 				return Results.Ok(0);
 			}
 			catch (Exception ex)

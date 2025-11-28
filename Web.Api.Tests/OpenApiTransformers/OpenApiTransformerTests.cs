@@ -6,7 +6,6 @@ using Microsoft.OpenApi;
 
 namespace Web.Api.Tests.OpenApiTransformers;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class OpenApiTransformerTests
 {
 	[Theory]
@@ -19,6 +18,7 @@ public sealed class OpenApiTransformerTests
 		HeaderTransformer transformer = new();
 		OpenApiOperation operation = new()
 		{
+#pragma warning disable S3923
 			Parameters = initialParamCount switch
 			{
 				null => null,
@@ -26,6 +26,7 @@ public sealed class OpenApiTransformerTests
 				1 => null,
 				_ => null
 			}
+#pragma warning restore S3923
 		};
 		if (initialParamCount is 1)
 		{
@@ -40,7 +41,7 @@ public sealed class OpenApiTransformerTests
 		// Assert
 		operation.Parameters.ShouldNotBeNull();
 		operation.Parameters.ShouldContain(p => p.Name == "Accept" && p.In == ParameterLocation.Header);
-		var acceptParam = operation.Parameters.FirstOrDefault(p => p.Name == "Accept");
+		IOpenApiParameter? acceptParam = operation.Parameters.FirstOrDefault(p => p.Name == "Accept");
 		acceptParam.ShouldNotBeNull();
 		acceptParam!.Required.ShouldBeTrue();
 		acceptParam.Schema.ShouldNotBeNull();
@@ -79,7 +80,7 @@ public sealed class OpenApiTransformerTests
 		// Assert
 		document.Components.ShouldNotBeNull();
 		document.Components!.SecuritySchemes!.ShouldContainKey("Bearer");
-		var scheme = document.Components.SecuritySchemes!["Bearer"];
+		IOpenApiSecurityScheme scheme = document.Components.SecuritySchemes!["Bearer"];
 		scheme.Type.ShouldBe(SecuritySchemeType.Http);
 		scheme.Scheme.ShouldBe("bearer");
 		scheme.BearerFormat.ShouldBe("Json Web Token");
@@ -92,10 +93,10 @@ public sealed class OpenApiTransformerTests
 		// Arrange
 		IAuthenticationSchemeProvider fakeProvider = A.Fake<IAuthenticationSchemeProvider>();
 		List<AuthenticationScheme> schemes = new()
-				{
-						new AuthenticationScheme("Bearer", "Bearer", typeof(IAuthenticationHandler)),
-						new AuthenticationScheme("Other", "Other", typeof(IAuthenticationHandler))
-				};
+			{
+				new AuthenticationScheme("Bearer", "Bearer", typeof(IAuthenticationHandler)),
+				new AuthenticationScheme("Other", "Other", typeof(IAuthenticationHandler))
+			};
 		A.CallTo(() => fakeProvider.GetAllSchemesAsync()).Returns(Task.FromResult<IEnumerable<AuthenticationScheme>>(schemes));
 		IOptions<BearerSecuritySchemeOptions> options = Options.Create(new BearerSecuritySchemeOptions { AuthenticationSchemeName = schemeName });
 		BearerSecuritySchemeTransformer transformer = new(fakeProvider, options);
@@ -139,4 +140,3 @@ public sealed class OpenApiTransformerTests
 		document.Components.ShouldBeNull();
 	}
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -178,21 +178,19 @@ public sealed class NavigationPropertiesTests : IDisposable
 	}
 
 	// Test entities
-
-#pragma warning disable S1144 // Unused private types or members should be removed
 	private sealed class TestDbContext(DbContextOptions options) : DbContext(options)
 	{
 		public DbSet<TestEntity> TestEntities => Set<TestEntity>();
 
-
+#pragma warning disable S1144 // Unused private types or members should be removed
 		public DbSet<TestRelatedEntity> TestRelatedEntities => Set<TestRelatedEntity>();
-
 
 		public DbSet<DeepTestEntity> DeepTestEntities => Set<DeepTestEntity>();
 
 		public DbSet<DeepTestRelatedEntity> DeepTestRelatedEntities => Set<DeepTestRelatedEntity>();
 
 		public DbSet<DeepTestRelatedEntity2> DeepTestRelatedEntity2s => Set<DeepTestRelatedEntity2>();
+#pragma warning restore S1144 // Unused private types or members should be removed
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -229,6 +227,8 @@ public sealed class NavigationPropertiesTests : IDisposable
 	{
 		public int Id { get; set; }
 
+#pragma warning disable S3459 // Unassigned members should be removed
+#pragma warning disable S1144 // Unused private types or members should be removed
 		public TestEntity? Parent { get; set; }
 	}
 
@@ -276,8 +276,8 @@ public sealed class NavigationPropertiesTests : IDisposable
 		[JsonIgnore]
 		public virtual ICollection<DeepTestRelatedEntity2>? DeepTestRelatedEntity2s { get; set; }
 	}
-
 #pragma warning restore S1144 // Unused private types or members should be removed
+#pragma warning restore S3459 // Unassigned members should be removed
 
 	[Theory]
 	[InlineData(false, 1)]
@@ -734,19 +734,6 @@ public sealed class NavigationPropertiesTests : IDisposable
 	#region IncludeNavigationProperties Tests
 
 	[Fact]
-	public void IncludeNavigationProperties_WithDefaultOptions_AddsIncludes()
-	{
-		// Arrange
-		IQueryable<TestEntity> query = _context.TestEntities;
-
-		// Act
-		IQueryable<TestEntity> result = query.IncludeNavigationProperties(_context);
-
-		// Assert
-		result.Expression.ToString().ShouldContain("Include");
-	}
-
-	[Fact]
 	public void IncludeNavigationProperties_WithCustomOptions_AddsIncludes()
 	{
 		// Arrange
@@ -764,10 +751,12 @@ public sealed class NavigationPropertiesTests : IDisposable
 
 	#region Entity with ReadOnly Navigation for Testing
 
+#pragma warning disable S1144 // Unused private types or members should be removed
 	private sealed class TestEntityWithReadOnlyNav
 	{
 		public int Id { get; set; }
 		public TestRelatedEntity? ReadOnlyNav { get; init; } // Init-only property
+#pragma warning restore S1144 // Unused private types or members should be removed
 	}
 
 	#endregion

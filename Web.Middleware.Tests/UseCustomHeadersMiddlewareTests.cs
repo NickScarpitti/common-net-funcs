@@ -4,17 +4,13 @@ using xRetry;
 
 namespace Web.Middleware.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class UseCustomHeadersMiddlewareTests
 {
-	private readonly IFixture _fixture;
 	private readonly HttpContext _context;
 	private readonly RequestDelegate _next;
 
 	public UseCustomHeadersMiddlewareTests()
 	{
-		_fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
 		_context = new DefaultHttpContext();
 		_next = A.Fake<RequestDelegate>();
 	}
@@ -79,9 +75,7 @@ public sealed class UseCustomHeadersMiddlewareTests
 	public async Task InvokeAsync_WithEmptyHeaderCollections_OnlyCallsNext()
 	{
 		// Arrange
-		UseCustomHeadersMiddleware middleware = new(_next,
-				new Dictionary<string, string>(),
-				Array.Empty<string>());
+		UseCustomHeadersMiddleware middleware = new(_next, new Dictionary<string, string>(), Array.Empty<string>());
 
 		// Act
 		await middleware.InvokeAsync(_context);
@@ -119,5 +113,3 @@ public sealed class UseCustomHeadersMiddlewareTests
 		Should.Throw<ArgumentNullException>(() => new UseCustomHeadersMiddleware(null!));
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

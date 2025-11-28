@@ -78,7 +78,7 @@ public static class DataTableHelpers
     }
     catch (Exception ex)
     {
-      logger.Error(ex, "{msg}", $"{nameof(DataTableHelpers)}.{nameof(GetDataTableRequest)} Error");
+      logger.Error(ex, "{Class}.{Method} Error", $"{nameof(DataTableHelpers)}.{nameof(GetDataTableRequest)}");
     }
     return dataTableRequest;
   }

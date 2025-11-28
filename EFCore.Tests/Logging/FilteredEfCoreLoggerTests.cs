@@ -137,7 +137,7 @@ public sealed class FilteredEfCoreLoggerTests
 		EventId eventId = new(123, "TestEvent");
 
 		// Act
-		logger.Log(LogLevel.Information, eventId, "Test message", null, (state, ex) => state);
+		logger.Log(LogLevel.Information, eventId, "Test message", null, (state, _) => state);
 
 		// Assert
 		_logMessages.ShouldContain(m => m.Contains("Test message"));
@@ -204,7 +204,9 @@ public sealed class FilteredEfCoreLoggerTests
 		FilteredEfCoreLogger logger = new(_innerLogger, LogLevel.Information);
 
 		// Act & Assert
+#pragma warning disable CA2254 // Template should be a static expression
 		Should.NotThrow(() => logger.LogInformation(string.Empty));
+#pragma warning restore CA2254 // Template should be a static expression
 	}
 
 	[Fact]
@@ -214,7 +216,9 @@ public sealed class FilteredEfCoreLoggerTests
 		FilteredEfCoreLogger logger = new(_innerLogger, LogLevel.Information);
 
 		// Act & Assert
-		Should.NotThrow(() => logger.LogInformation(null!));
+#pragma warning disable CA2254 // Template should be a static expression
+		Should.NotThrow(() => logger.LogInformation(null));
+#pragma warning restore CA2254 // Template should be a static expression
 	}
 
 	#endregion
@@ -318,10 +322,10 @@ public sealed class FilteredEfCoreLoggerTests
 		FilteredEfCoreLogger logger = new(_innerLogger, LogLevel.Warning);
 
 		// Act - Simulate various EF Core log messages
-		logger.Log(LogLevel.Debug, new EventId(20100), "Executing SQL command", null, (state, ex) => state.ToString()!);
-		logger.Log(LogLevel.Information, new EventId(20101), "Executed SQL in 50ms", null, (state, ex) => state.ToString()!);
-		logger.Log(LogLevel.Warning, new EventId(20500), "Query took longer than expected: 2000ms", null, (state, ex) => state.ToString()!);
-		logger.Log(LogLevel.Error, new EventId(20102), "Database error occurred", new InvalidOperationException("Connection lost"), (state, ex) => state.ToString()!);
+		logger.Log(LogLevel.Debug, new EventId(20100), "Executing SQL command", null, (state, _) => state!);
+		logger.Log(LogLevel.Information, new EventId(20101), "Executed SQL in 50ms", null, (state, _) => state!);
+		logger.Log(LogLevel.Warning, new EventId(20500), "Query took longer than expected: 2000ms", null, (state, _) => state);
+		logger.Log(LogLevel.Error, new EventId(20102), "Database error occurred", new InvalidOperationException("Connection lost"), (state, _) => state!);
 
 		// Assert
 		_logMessages.ShouldNotContain(m => m.Contains("Executing SQL command"));
@@ -363,7 +367,7 @@ public sealed class FilteredEfCoreLoggerTests
 			new EventId(1),
 			customState,
 			null,
-			(state, ex) => $"Formatted: {state}"
+			(state, _) => $"Formatted: {state}"
 		);
 
 		// Assert
@@ -384,8 +388,8 @@ public sealed class FilteredEfCoreLoggerTests
 		// Act
 		for (int i = 0; i < messageCount; i++)
 		{
-			logger.LogInformation($"Info message {i}");
-			logger.LogWarning($"Warning message {i}");
+			logger.LogInformation("Info message {i}", i);
+			logger.LogWarning("Warning message {i}", i);
 		}
 
 		// Assert

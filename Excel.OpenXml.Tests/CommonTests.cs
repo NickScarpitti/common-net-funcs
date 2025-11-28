@@ -721,7 +721,9 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
+#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
 		document.WorkbookPart!.Workbook.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
+#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
 
 		// Act
 		Cell? cell = document.GetCellFromName(cellName);
@@ -739,7 +741,9 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
+#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
 		document.WorkbookPart!.Workbook.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
+#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
 
 		// Act
 		CellReference? cellRef = document.GetCellReferenceFromName(cellName);
@@ -789,7 +793,9 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
+#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
 		document.WorkbookPart!.Workbook.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
+#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
 
 		byte[] imageData = File.ReadAllBytes("TestData/test.png");
 
@@ -810,7 +816,9 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
+#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
 		document.WorkbookPart!.Workbook.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
+#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
 		List<byte[]> imageData = [File.ReadAllBytes("TestData/test.png")];
 		List<string> cellNames = [cellName];
 

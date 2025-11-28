@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using FastExpressionCompiler;
+
 using static System.Convert;
 using static System.Web.HttpUtility;
 using static CommonNetFuncs.Core.MathHelpers;
@@ -87,7 +88,7 @@ public static partial class Strings
 	private static partial Regex TwelveDigitPhoneNumberRegex();
 
 	[GeneratedRegex("[A-Za-z]")]
-	private static partial Regex RemoveLettersRegex();
+	internal static partial Regex RemoveLettersRegex();
 
 	[GeneratedRegex("[0-9]")]
 	private static partial Regex RemoveNumbersRegex();
@@ -485,7 +486,6 @@ public static partial class Strings
 	/// <param name="s">String to search</param>
 	/// <param name="textToFind">String to find in s</param>
 	/// <returns><see langword="true"/> if s contains the string textToFind in any form</returns>
-#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 	public static bool ContainsInvariant(this IEnumerable<string?>? s, ReadOnlySpan<char> textToFind)
 	{
 		if (s == null || textToFind.IsEmpty)
@@ -493,6 +493,8 @@ public static partial class Strings
 			return false;
 		}
 
+
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 		foreach (ReadOnlySpan<char> item in s)
 		{
 			if (item.ContainsInvariant(textToFind))
@@ -500,9 +502,9 @@ public static partial class Strings
 				return true;
 			}
 		}
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 		return false;
 	}
-#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 
 	/// <summary>
 	/// Checks if the given string contains a specific string regardless of culture or case
@@ -523,7 +525,14 @@ public static partial class Strings
 			return false;
 		}
 
-		return useOrComparison ? textsToFind.Any(s.ContainsInvariant) : textsToFind.All(s.ContainsInvariant);
+		if (useOrComparison)
+		{
+			return textsToFind.Any(s.ContainsInvariant);
+		}
+		else
+		{
+			return textsToFind.All(s.ContainsInvariant);
+		}
 	}
 
 	/// <summary>
@@ -538,7 +547,6 @@ public static partial class Strings
 	/// <para>True if s contains any of the strings in textsToFind in any form when useOrComparison = True</para> <para>True if s contains all of the strings in textsToFind when useOrComparison =
 	/// False</para>
 	/// </returns>
-#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 	public static bool ContainsInvariant(this ReadOnlySpan<char> s, IEnumerable<string> textsToFind, bool useOrComparison = true)
 	{
 		if (s.IsEmpty)
@@ -548,6 +556,7 @@ public static partial class Strings
 
 		if (useOrComparison)
 		{
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 			foreach (ReadOnlySpan<char> textToFind in textsToFind)
 			{
 				if (s.ContainsInvariant(textToFind))
@@ -555,10 +564,12 @@ public static partial class Strings
 					return true;
 				}
 			}
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 			return false;
 		}
 		else
 		{
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 			foreach (ReadOnlySpan<char> textToFind in textsToFind)
 			{
 				if (!s.ContainsInvariant(textToFind))
@@ -566,10 +577,10 @@ public static partial class Strings
 					return false;
 				}
 			}
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 			return true;
 		}
 	}
-#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 
 	/// <summary>
 	/// Checks if the given string begins with a specific string regardless of culture or case
@@ -679,7 +690,14 @@ public static partial class Strings
 			return false;
 		}
 
-		return useOrComparison ? stringsToFind.Any(s.Contains) : stringsToFind.All(s.Contains);
+		if (useOrComparison)
+		{
+			return stringsToFind.Any(s.Contains);
+		}
+		else
+		{
+			return stringsToFind.All(s.Contains);
+		}
 	}
 
 	/// <summary>
@@ -695,7 +713,6 @@ public static partial class Strings
 	/// <para>True if s contains any of the strings in stringsToFind in any form when useOrComparison = True</para>
 	/// <para>True if s contains all of the strings in stringsToFind when useOrComparison = False</para>
 	/// </returns>
-#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 	public static bool Contains(this ReadOnlySpan<char> s, IEnumerable<string> stringsToFind, bool useOrComparison = true, StringComparison stringComparison = StringComparison.Ordinal)
 	{
 		if (s.IsEmpty)
@@ -705,6 +722,7 @@ public static partial class Strings
 
 		if (useOrComparison)
 		{
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 			foreach (ReadOnlySpan<char> textToFind in stringsToFind)
 			{
 				if (s.Contains(textToFind, stringComparison))
@@ -712,10 +730,12 @@ public static partial class Strings
 					return true;
 				}
 			}
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 			return false;
 		}
 		else
 		{
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 			foreach (ReadOnlySpan<char> textToFind in stringsToFind)
 			{
 				if (!s.Contains(textToFind, stringComparison))
@@ -723,10 +743,10 @@ public static partial class Strings
 					return false;
 				}
 			}
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 			return true;
 		}
 	}
-#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 
 	/// <summary>
 	/// Replace a substring with another string, ignoring the case and culture when finding the substring to replace
@@ -954,32 +974,32 @@ public static partial class Strings
 		return lastIndex != -1 ? s[(lastIndex + 1)..] : s;
 	}
 
-	/// <summary>
-	/// Removes excess spaces in string properties inside of an object
-	/// </summary>
-	/// <typeparam name="T">Type of object to trim strings in</typeparam>
-	/// <param name="obj">Object containing string properties to be trimmed</param>
-	[return: NotNullIfNotNull(nameof(obj))]
-	[Obsolete("Please use TrimObjectStrings instead")]
-	public static T? TrimObjectStringsR<T>(this T? obj)
-	{
-		if (!EqualityComparer<T?>.Default.Equals(obj, default))
-		{
-			IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
-			if (props.Any())
-			{
-				foreach (PropertyInfo prop in props)
-				{
-					string? value = (string?)prop.GetValue(obj);
-					if (!value.IsNullOrEmpty())
-					{
-						prop.SetValue(obj, value.TrimFull());
-					}
-				}
-			}
-		}
-		return obj;
-	}
+	///// <summary>
+	///// Removes excess spaces in string properties inside of an object
+	///// </summary>
+	///// <typeparam name="T">Type of object to trim strings in</typeparam>
+	///// <param name="obj">Object containing string properties to be trimmed</param>
+	//[return: NotNullIfNotNull(nameof(obj))]
+	//[Obsolete("Please use TrimObjectStrings instead")]
+	//public static T? TrimObjectStringsR<T>(this T? obj) where T : class
+	//{
+	//	if (obj != null)
+	//	{
+	//		IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
+	//		if (props.Any())
+	//		{
+	//			foreach (PropertyInfo prop in props)
+	//			{
+	//				string? value = (string?)prop.GetValue(obj);
+	//				if (!value.IsNullOrEmpty())
+	//				{
+	//					prop.SetValue(obj, value.TrimFull());
+	//				}
+	//			}
+	//		}
+	//	}
+	//	return obj;
+	//}
 
 	private static readonly ConcurrentDictionary<(Type, bool), Delegate> trimObjectStringsCache = new();
 
@@ -990,9 +1010,9 @@ public static partial class Strings
 	/// <param name="obj">Object containing string properties to be trimmed</param>
 	/// <param name="recursive">If <see langword="true"/>, will recursively apply string trimming to nested object</param>
 	[return: NotNullIfNotNull(nameof(obj))]
-	public static T? TrimObjectStrings<T>(this T? obj, bool recursive = false)
+	public static T? TrimObjectStrings<T>(this T? obj, bool recursive = false) where T : class
 	{
-		if (EqualityComparer<T?>.Default.Equals(obj, default))
+		if (obj == null)
 		{
 			return obj;
 		}
@@ -1001,7 +1021,7 @@ public static partial class Strings
 		(Type type, bool recursive) key = (type, recursive);
 
 		Action<T> action = (Action<T>)trimObjectStringsCache.GetOrAdd(key, _ => CreateTrimObjectStringsExpression<T>(recursive).CompileFast());
-		action(obj!);
+		action(obj);
 
 		return obj;
 	}
@@ -1037,9 +1057,9 @@ public static partial class Strings
 		return Expression.Lambda<Action<T>>(body, objParam);
 	}
 
-	public static T? NormalizeObjectStringsR<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD)
+	public static T? NormalizeObjectStringsR<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD) where T : class
 	{
-		if (!EqualityComparer<T?>.Default.Equals(obj, default))
+		if (obj != null)
 		{
 			IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
 			if (props.Any())
@@ -1107,9 +1127,9 @@ public static partial class Strings
 	/// <param name="normalizationForm">String normalization setting</param>
 	/// <param name="recursive">If <see langword="true"/>, will recursively apply string normalization to nested object</param>
 	[return: NotNullIfNotNull(nameof(obj))]
-	public static T? NormalizeObjectStrings<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false, bool useCache = true)
+	public static T? NormalizeObjectStrings<T>(this T? obj, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false, bool useCache = true) where T : class
 	{
-		if (EqualityComparer<T?>.Default.Equals(obj, default))
+		if (obj == null)
 		{
 			return obj;
 		}
@@ -1119,7 +1139,7 @@ public static partial class Strings
 
 		Action<T> action = useCache ? (Action<T>)GetOrAddNormalizeObjectStringsCache<T>(key, enableTrim, normalizationForm, recursive) :
 						CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive, useCache).CompileFast();
-		action(obj!);
+		action(obj);
 
 		return obj;
 	}
@@ -1197,9 +1217,9 @@ public static partial class Strings
 	/// <param name="obj">Object containing string properties to be set to null if null</param>
 	/// <returns>Objects with properties set to null if the string property is null or is the word "null" with no other text characters other than whitespace</returns>
 	[return: NotNullIfNotNull(nameof(obj))]
-	public static T? MakeObjectNullNullR<T>(this T? obj)
+	public static T? MakeObjectNullNullR<T>(this T? obj) where T : class
 	{
-		if (!EqualityComparer<T?>.Default.Equals(obj, default))
+		if (obj != null)
 		{
 			IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
 			if (props.Any())
@@ -1223,9 +1243,9 @@ public static partial class Strings
 	/// <param name="recursive">If <see langword="true"/>, will recursively apply nullification to nested objects</param>
 	/// <returns>Objects with properties set to null if the string property is null or is the word "null" with no other text characters other than whitespace</returns>
 	[return: NotNullIfNotNull(nameof(obj))]
-	public static T? MakeObjectNullNull<T>(this T? obj, bool recursive = false)
+	public static T? MakeObjectNullNull<T>(this T? obj, bool recursive = false) where T : class
 	{
-		if (EqualityComparer<T?>.Default.Equals(obj, default))
+		if (obj == null)
 		{
 			return obj;
 		}
@@ -1234,7 +1254,7 @@ public static partial class Strings
 		(Type type, bool recursive) key = (type, recursive);
 
 		Action<T> action = (Action<T>)makeObjectNullNullCache.GetOrAdd(key, _ => CreateMakeObjectNullNullExpression<T>(recursive).CompileFast());
-		action(obj!);
+		action(obj);
 
 		return obj;
 	}
@@ -1472,10 +1492,10 @@ public static partial class Strings
 	/// </summary>
 	/// <param name="value">String to parse into a DateTime</param>
 	/// <returns>Nullable DateTime parsed from a string</returns>
-	public static DateTime? ToNDateTime(this string? value, IFormatProvider? provider = null)
+	public static DateTime? ToNDateTime(this string? value, IFormatProvider? formatProvider = null)
 	{
 		DateTime? dtn = null;
-		if (DateTime.TryParse(value, provider ?? CultureInfo.InvariantCulture, out DateTime dt))
+		if (DateTime.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateTime dt))
 		{
 			dtn = dt;
 		}
@@ -1491,10 +1511,10 @@ public static partial class Strings
 	/// </summary>
 	/// <param name="value">String to parse into a DateTime</param>
 	/// <returns>Nullable DateTime parsed from a string</returns>
-	public static DateTime? ToNDateTime(this ReadOnlySpan<char> value, IFormatProvider? provider = null)
+	public static DateTime? ToNDateTime(this ReadOnlySpan<char> value, IFormatProvider? formatProvider = null)
 	{
 		DateTime? dtn = null;
-		if (DateTime.TryParse(value, provider ?? CultureInfo.InvariantCulture, out DateTime dt))
+		if (DateTime.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateTime dt))
 		{
 			dtn = dt;
 		}
@@ -1510,10 +1530,10 @@ public static partial class Strings
 	/// </summary>
 	/// <param name="value">String to parse into a DateOnly</param>
 	/// <returns>Nullable DateOnly parsed from a string</returns>
-	public static DateOnly? ToNDateOnly(this string? value, IFormatProvider? provider = null)
+	public static DateOnly? ToNDateOnly(this string? value, IFormatProvider? formatProvider = null)
 	{
 		DateOnly? dtn = null;
-		if (DateOnly.TryParse(value, provider ?? CultureInfo.InvariantCulture, out DateOnly dt))
+		if (DateOnly.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateOnly dt))
 		{
 			dtn = dt;
 		}
@@ -1529,10 +1549,10 @@ public static partial class Strings
 	/// </summary>
 	/// <param name="value">String to parse into a DateOnly</param>
 	/// <returns>Nullable DateOnly parsed from a string</returns>
-	public static DateOnly? ToNDateOnly(this ReadOnlySpan<char> value, IFormatProvider? provider = null)
+	public static DateOnly? ToNDateOnly(this ReadOnlySpan<char> value, IFormatProvider? formatProvider = null)
 	{
 		DateOnly? dtn = null;
-		if (DateOnly.TryParse(value, provider ?? CultureInfo.InvariantCulture, out DateOnly dt))
+		if (DateOnly.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateOnly dt))
 		{
 			dtn = dt;
 		}
@@ -1792,6 +1812,8 @@ public static partial class Strings
 		return new(sourceCharArray, 0, index);
 	}
 
+	private const string DefaultDateFormat = "MM/dd/yyyy";
+
 	/// <summary>
 	/// Take any format of a date time string and convert it to a different format
 	/// </summary>
@@ -1800,9 +1822,9 @@ public static partial class Strings
 	/// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
 	/// <returns>Date formatted as a string following the output format</returns>
 	[return: NotNullIfNotNull(nameof(dateString))]
-	public static string? FormatDateString(this string? dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
+	public static string? FormatDateString(this string? dateString, string sourceFormat, string outputFormat = DefaultDateFormat)
 	{
-		return dateString == null ? null : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? "MM/dd/yyyy" : outputFormat);
+		return dateString == null ? null : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? DefaultDateFormat : outputFormat);
 	}
 
 	/// <summary>
@@ -1813,9 +1835,9 @@ public static partial class Strings
 	/// <param name="outputFormat">Format to convert to. Defaults to MM/dd/yyyy</param>
 	/// <returns>Date formatted as a string following the output format</returns>
 	[return: NotNullIfNotNull(nameof(dateString))]
-	public static ReadOnlySpan<char> FormatDateString(this ReadOnlySpan<char> dateString, string sourceFormat, string outputFormat = "MM/dd/yyyy")
+	public static ReadOnlySpan<char> FormatDateString(this ReadOnlySpan<char> dateString, string sourceFormat, string outputFormat = DefaultDateFormat)
 	{
-		return dateString.IsEmpty ? ReadOnlySpan<char>.Empty : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? "MM/dd/yyyy" : outputFormat);
+		return dateString.IsEmpty ? ReadOnlySpan<char>.Empty : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? DefaultDateFormat : outputFormat);
 	}
 
 	/// <summary>
@@ -2085,6 +2107,8 @@ public static partial class Strings
 		return $"{wholeNumberPart} {numerator}/{denominator}";
 	}
 
+	private static readonly char[] FractionSplitChars = new[] { ' ', '/' };
+
 	/// <summary>
 	/// Converts a string representation of a fraction or decimal value into a decimal value.
 	/// </summary>
@@ -2110,7 +2134,7 @@ public static partial class Strings
 			return result;
 		}
 
-		string[] split = fractionString.Split(' ', '/');
+		string[] split = fractionString.Split(FractionSplitChars);
 
 		if (split.Length is 2 or 3 && int.TryParse(split[0], out int numeratorOrWhole) && int.TryParse(split[1], out int denominatorOrNumerator))
 		{
@@ -2267,9 +2291,9 @@ public static partial class Strings
 			return result;
 		}
 
-		string[] split = fractionString.Split(' ', '/');
+		string[] split = fractionString.Split(FractionSplitChars);
 
-		if (split.Length is 2 or 3 && int.TryParse(split[0], out int a) && int.TryParse(split[1], out int b))
+		if ((split.Length == 2 || split.Length == 3) && int.TryParse(split[0], out int a) && int.TryParse(split[1], out int b))
 		{
 			if (split.Length == 2)
 			{
@@ -2392,7 +2416,7 @@ public static partial class Strings
 				double.TryParse(inputString.GetOnlyNumbers(), out double value) ? value :
 				default;
 
-			success = result != default;
+			success = result.NotEquals(default, 1e-10m);
 		}
 		catch (Exception)
 		{

@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Runtime.CompilerServices;
 using CommonNetFuncs.Web.Requests.Rest;
 using CommonNetFuncs.Web.Requests.Rest.Options;
@@ -6,7 +6,7 @@ using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
 namespace Web.Requests.Tests;
 
-public class RestHelpersWrapperTests : IDisposable
+public sealed class RestHelpersWrapperTests : IDisposable
 {
 	private readonly IRestClientFactory restClientFactory;
 	private readonly RestHelpersWrapper wrapper;

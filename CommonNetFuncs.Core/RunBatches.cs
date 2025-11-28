@@ -5,99 +5,99 @@
 /// </summary>
 public static class RunBatches
 {
-  //public delegate bool BatchedProcess<T>(IReadOnlyList<T> itemsToProcess);
-  //public delegate Task<bool> AsyncBatchedProcess<T>(IReadOnlyList<T> itemsToProcess);
-  //public delegate Task<bool> AsyncBatchedProcessList<T>(List<T> itemsToProcess);
+	//public delegate bool BatchedProcess<T>(IReadOnlyList<T> itemsToProcess);
+	//public delegate Task<bool> AsyncBatchedProcess<T>(IReadOnlyList<T> itemsToProcess);
+	//public delegate Task<bool> AsyncBatchedProcessList<T>(List<T> itemsToProcess);
 
-  private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-  /// <summary>
-  /// Takes a collection of items and processes them in batches using the provided async processor.
-  /// </summary>
-  public static async Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, Task<bool>> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
-  {
-    ArgumentNullException.ThrowIfNull(itemsToProcess);
-    ArgumentNullException.ThrowIfNull(processor);
-    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
+	/// <summary>
+	/// Takes a collection of items and processes them in batches using the provided async processor.
+	/// </summary>
+	public static async Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, Task<bool>> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(itemsToProcess);
+		ArgumentNullException.ThrowIfNull(processor);
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
 
-    // Materialize distinct items once
-    List<T> distinctItems = itemsToProcess.Distinct().ToList();
-    int totalBatches = (int)MathHelpers.Ceiling((decimal)distinctItems.Count / batchSize, 1);
-    bool success = true;
+		// Materialize distinct items once
+		List<T> distinctItems = itemsToProcess.Distinct().ToList();
+		int totalBatches = (int)MathHelpers.Ceiling((decimal)distinctItems.Count / batchSize, 1);
+		bool success = true;
 
-    for (int i = 0; i < totalBatches; i++)
-    {
-      cancellationToken.ThrowIfCancellationRequested();
-      int start = i * batchSize;
-      int count = Math.Min(batchSize, distinctItems.Count - start);
-      IReadOnlyList<T> batch = distinctItems.GetRange(start, count);
+		for (int i = 0; i < totalBatches; i++)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			int start = i * batchSize;
+			int count = Math.Min(batchSize, distinctItems.Count - start);
+			IReadOnlyList<T> batch = distinctItems.GetRange(start, count);
 
-      success &= await processor(batch).ConfigureAwait(false);
+			success &= await processor(batch).ConfigureAwait(false);
 
-      if (logProgress)
-      {
-        logger.Info("{msg}", $"Process {i + 1}/{totalBatches} complete");
-      }
+			if (logProgress)
+			{
+				logger.Info("Process {currentBatch}/{totalBatches} complete", i + 1, totalBatches);
+			}
 
-      if (!success && breakOnFail)
-      {
-        break;
-      }
-    }
+			if (!success && breakOnFail)
+			{
+				break;
+			}
+		}
 
-    return success;
-  }
+		return success;
+	}
 
-  /// <summary>
-  /// Takes a collection of items and processes them in batches using the provided sync processor.
-  /// </summary>
-  //public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, SyncBatchProcessor<T> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true)
-  public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, bool> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
-  {
-    ArgumentNullException.ThrowIfNull(itemsToProcess);
-    ArgumentNullException.ThrowIfNull(processor);
-    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
+	public static Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, Task<bool>> listProcessor, int batchSize = 10000, bool breakOnFail = true,
+			bool logProgress = true, CancellationToken cancellationToken = default)
+	{
+		// Adapt the List processor to work with IReadOnlyList
+		return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor(batch is List<T> l ? l : batch.ToList()).ConfigureAwait(false), batchSize, breakOnFail, logProgress, cancellationToken);
+	}
 
-    // Materialize distinct items once
-    List<T> distinctItems = itemsToProcess.Distinct().ToList();
-    int totalBatches = (int)MathHelpers.Ceiling((decimal)distinctItems.Count / batchSize, 1);
-    bool success = true;
+	/// <summary>
+	/// Takes a collection of items and processes them in batches using the provided sync processor.
+	/// </summary>
+	//public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, SyncBatchProcessor<T> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true)
+	public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, bool> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(itemsToProcess);
+		ArgumentNullException.ThrowIfNull(processor);
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
 
-    for (int i = 0; i < totalBatches; i++)
-    {
-      cancellationToken.ThrowIfCancellationRequested();
-      int start = i * batchSize;
-      int count = Math.Min(batchSize, distinctItems.Count - start);
-      IReadOnlyList<T> batch = distinctItems.GetRange(start, count);
+		// Materialize distinct items once
+		List<T> distinctItems = itemsToProcess.Distinct().ToList();
+		int totalBatches = (int)MathHelpers.Ceiling((decimal)distinctItems.Count / batchSize, 1);
+		bool success = true;
 
-      success &= processor(batch);
+		for (int i = 0; i < totalBatches; i++)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			int start = i * batchSize;
+			int count = Math.Min(batchSize, distinctItems.Count - start);
+			IReadOnlyList<T> batch = distinctItems.GetRange(start, count);
 
-      if (logProgress)
-      {
-        logger.Info("{msg}", $"Process {i + 1}/{totalBatches} complete");
-      }
+			success &= processor(batch);
 
-      if (!success && breakOnFail)
-      {
-        break;
-      }
-    }
+			if (logProgress)
+			{
+				logger.Info("Process {currentBatch}/{totalBatches} complete", i + 1, totalBatches);
+			}
 
-    return success;
-  }
+			if (!success && breakOnFail)
+			{
+				break;
+			}
+		}
 
-  // Extension methods for List-specific processors
-  public static Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, Task<bool>> listProcessor, int batchSize = 10000, bool breakOnFail = true,
-        bool logProgress = true, CancellationToken cancellationToken = default)
-  {
-    // Adapt the List processor to work with IReadOnlyList
-    return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor(batch is List<T> l ? l : batch.ToList()).ConfigureAwait(false), batchSize, breakOnFail, logProgress, cancellationToken);
-  }
+		return success;
+	}
 
-  public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, bool> listProcessor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true,
-        CancellationToken cancellationToken = default)
-  {
-    // Adapt the List processor to work with IReadOnlyList
-    return RunBatchedProcess(itemsToProcess, batch => listProcessor(batch is List<T> l ? l : batch.ToList()), batchSize, breakOnFail, logProgress, cancellationToken);
-  }
+	// Extension methods for List-specific processors
+	public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, bool> listProcessor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true,
+			CancellationToken cancellationToken = default)
+	{
+		// Adapt the List processor to work with IReadOnlyList
+		return RunBatchedProcess(itemsToProcess, batch => listProcessor(batch is List<T> l ? l : batch.ToList()), batchSize, breakOnFail, logProgress, cancellationToken);
+	}
 }

@@ -76,15 +76,15 @@ public static class Copy
 	/// <param name="source">Object to copy common properties from</param>
 	/// <param name="dest">Object to copy common properties to</param>
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
-	public static void CopyPropertiesTo<T, UT>(this T source, UT dest, bool useCache = true)
+	public static void CopyPropertiesTo<T, UT>(this T source, UT dest, bool useCache = true) where T : class? where UT : class?
 	{
-		if (EqualityComparer<T?>.Default.Equals(source, default))
+		if (source == null)
 		{
 			return;
 		}
 		if (useCache)
 		{
-			if (EqualityComparer<UT?>.Default.Equals(dest, default))
+			if (dest == null)
 			{
 				return;
 			}
@@ -117,9 +117,9 @@ public static class Copy
 	/// <param name="source">Object to copy common properties from</param>
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
 	/// <returns>A new instance of T with properties copied from <paramref name="source"/></returns>
-	public static T CopyPropertiesToNew<T>(this T source, bool useCache = true) where T : new()
+	public static T CopyPropertiesToNew<T>(this T source, bool useCache = true) where T : class?, new()
 	{
-		if (EqualityComparer<T?>.Default.Equals(source, default))
+		if (source == null)
 		{
 			return default!;
 		}
@@ -149,7 +149,7 @@ public static class Copy
 	/// <param name="source">Object to copy common properties from</param>
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
 	/// <returns>A new instance of UT with properties copied from <paramref name="source"/></returns>
-	public static UT CopyPropertiesToNew<T, UT>(this T source, bool useCache = true) where UT : new()
+	public static UT CopyPropertiesToNew<T, UT>(this T source, bool useCache = true) where T : class where UT : class, new()
 	{
 		IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead);
 		Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
@@ -186,9 +186,9 @@ public static class Copy
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
 	/// <returns>A new instance of UT with properties of the same name from source populated.</returns>
 	[return: NotNullIfNotNull(nameof(source))]
-	public static UT? CopyPropertiesToNewRecursive<T, UT>(this T source, int maxDepth = -1, bool useCache = true) where UT : new()
+	public static UT? CopyPropertiesToNewRecursive<T, UT>(this T source, int maxDepth = -1, bool useCache = true) where T : class where UT : class, new()
 	{
-		if (EqualityComparer<T?>.Default.Equals(source, default))
+		if (source == null)
 		{
 			return default;
 		}
@@ -201,10 +201,10 @@ public static class Copy
 		{
 			if (typeof(IEnumerable).IsAssignableFrom(typeof(T)) && typeof(IEnumerable).IsAssignableFrom(typeof(UT)) && (typeof(T) != typeof(string)) && (typeof(UT) != typeof(string)))
 			{
-				return (UT?)CopyCollection(source!, typeof(UT), maxDepth) ?? new();
+				return (UT?)CopyCollection(source, typeof(UT), maxDepth) ?? new();
 			}
 
-			return (UT?)CopyObject(source!, typeof(UT), 0, maxDepth) ?? new();
+			return (UT?)CopyObject(source, typeof(UT), 0, maxDepth) ?? new();
 		}
 	}
 
@@ -441,7 +441,7 @@ public static class Copy
 	/// <typeparam name="TDest">The type of the destination object.</typeparam>
 	/// <returns>A dictionary where each key is the name of a property, and the value is a tuple containing an <see cref="Action{TDest, Object}"/> to set the property value on the destination object,
 	/// and a <see cref="Func{TSource, Object}"/> to get the property value from the source object.</returns>
-	public static Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> GetOrCreatePropertyMaps<TSource, TDest>()
+	public static Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> GetOrCreatePropertyMaps<TSource, TDest>() where TSource : class? where TDest : class?
 	{
 		return GetOrAddFunctionFromCopyCache<TSource, TDest>().ToDictionary(kvp => kvp.Key, kvp => ((Action<TDest, object?>)kvp.Value.Set, (Func<TSource, object?>)kvp.Value.Get));
 	}
@@ -472,12 +472,12 @@ public static class Copy
 				// Getter: (TSource src) => (object?)src.Prop
 				ParameterExpression srcParam = Expression.Parameter(typeof(TSource), "src");
 				Expression<Func<TSource, object?>> getExpr = Expression.Lambda<Func<TSource, object?>>(
-										Expression.Convert(
-												Expression.Property(
-														typeof(TSource).IsInterface ? Expression.Convert(srcParam, sProp.DeclaringType!) : srcParam,
-														sProp),
-												typeof(object)),
-										srcParam);
+					Expression.Convert(
+							Expression.Property(
+									typeof(TSource).IsInterface ? Expression.Convert(srcParam, sProp.DeclaringType!) : srcParam,
+									sProp),
+							typeof(object)),
+					srcParam);
 				Func<TSource, object?> get = getExpr.CompileFast();
 
 				// Setter: (TDest dest, object? value) => dest.Prop = (TPropType)value
@@ -510,15 +510,15 @@ public static class Copy
 	/// <param name="source">Source object to copy from.</param>
 	/// <param name="maxDepth">Optional: The maximum depth of recursion. Default is -1, which means unlimited recursion.</param>
 	/// <returns>A new instance of the destination type with copied properties.</returns>
-	private static UT? CopyPropertiesToNewRecursiveExpressionTrees<T, UT>(this T source, int maxDepth = -1) where UT : new()
+	private static UT? CopyPropertiesToNewRecursiveExpressionTrees<T, UT>(this T source, int maxDepth = -1) where T : class where UT : class, new()
 	{
-		if (EqualityComparer<T?>.Default.Equals(source, default))
+		if (source == null)
 		{
 			return default;
 		}
 
 		Func<object, object?, int, int, object?> copyFunc = GetOrCreateCopyFunction(typeof(T), typeof(UT));
-		return (UT?)copyFunc(source!, null, 0, maxDepth);
+		return (UT?)copyFunc(source, null, 0, maxDepth);
 	}
 
 	/// <summary>
@@ -697,7 +697,9 @@ public static class Copy
 		// Handle collections
 		if (sourceType.IsEnumerable() && destType.IsEnumerable())
 		{
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			MethodInfo copyCollectionMethod = typeof(Copy).GetMethod(nameof(CopyCollectionRuntime), BindingFlags.NonPublic | BindingFlags.Static)!;
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			MethodCallExpression copyCall = Expression.Call(copyCollectionMethod, Expression.Convert(sourceValue, typeof(object)), Expression.Constant(destType), depthParam, maxDepthParam);
 			return Expression.Assign(destProperty, Expression.Convert(copyCall, destType));
 		}
@@ -710,7 +712,9 @@ public static class Copy
 			BinaryExpression setDefault = Expression.Assign(destProperty, Expression.Convert(Expression.Constant(null), destType));
 
 			// Recursive copy call
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			MethodInfo copyObjectMethod = typeof(Copy).GetMethod(nameof(CopyObjectRuntime), BindingFlags.NonPublic | BindingFlags.Static)!;
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			MethodCallExpression recursiveCopy = Expression.Call(copyObjectMethod, Expression.Convert(sourceValue, typeof(object)), Expression.Constant(destType), Expression.Add(depthParam, Expression.Constant(1)), maxDepthParam);
 			BinaryExpression assignCopy = Expression.Assign(destProperty, Expression.Convert(recursiveCopy, destType));
 			return Expression.IfThenElse(depthCheck, setDefault, assignCopy);
@@ -867,5 +871,4 @@ public static class Copy
 	}
 
 	#endregion
-
 }

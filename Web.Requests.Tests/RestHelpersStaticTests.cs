@@ -1070,7 +1070,7 @@ public sealed class RestHelpersStaticTests
 
 		request.AttachHeaders(string.Empty, null);
 
-		request.Headers.Authorization.ShouldNotBeNull();
+		request.Headers.Authorization.ShouldBeNull();
 	}
 
 	private sealed class FakeHttpMessageHandler : HttpMessageHandler

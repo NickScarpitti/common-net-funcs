@@ -30,13 +30,13 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>4.0.0</Version>
+    <Version>4.0.1</Version>
     <MinVerTagPrefix>compression-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.7.8</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>4.0.0</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 

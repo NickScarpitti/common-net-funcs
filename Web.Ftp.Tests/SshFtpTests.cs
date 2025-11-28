@@ -87,7 +87,7 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/path";
+		const string path = "/test/path";
 
 		// Act & Assert
 		Should.Throw<SshConnectionException>(() => client.DirectoryOrFileExists(path))
@@ -117,10 +117,10 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/path";
+		const string path = "/test/path";
 
 		// Act & Assert
-		var exception = await Should.ThrowAsync<SshConnectionException>(async () =>
+		SshConnectionException exception = await Should.ThrowAsync<SshConnectionException>(async () =>
 			await client.DirectoryOrFileExistsAsync(path));
 		exception.Message.ShouldBe("SFTP client is not connected.");
 	}
@@ -135,7 +135,7 @@ public class SshFtpTests
 		SftpClient? client = null;
 
 		// Act & Assert
-		var exception = await Should.ThrowAsync<SshConnectionException>(async () =>
+		SshConnectionException exception = await Should.ThrowAsync<SshConnectionException>(async () =>
 			await client.DirectoryOrFileExistsAsync(path));
 		exception.Message.ShouldBe("SFTP client is not connected.");
 	}
@@ -149,7 +149,7 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/path";
+		const string path = "/test/path";
 
 		// Act & Assert
 		Should.Throw<SshConnectionException>(() => client.GetFileList(path))
@@ -179,14 +179,16 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/path";
+		const string path = "/test/path";
 
 		// Act & Assert
 		await Should.ThrowAsync<SshConnectionException>(async () =>
 		{
-			await foreach (var _ in client.GetFileListAsync(path))
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (string _ in client.GetFileListAsync(path))
 			{
 			}
+#pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}
 
@@ -202,9 +204,11 @@ public class SshFtpTests
 		// Act & Assert
 		await Should.ThrowAsync<SshConnectionException>(async () =>
 		{
-			await foreach (var _ in client.GetFileListAsync(path, extension))
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (string _ in client.GetFileListAsync(path, extension))
 			{
 			}
+#pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}
 
@@ -217,7 +221,7 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/file.csv";
+		const string path = "/test/file.csv";
 
 		// Act & Assert
 		await Should.ThrowAsync<SshConnectionException>(async () =>
@@ -247,14 +251,16 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/file.csv";
+		const string path = "/test/file.csv";
 
 		// Act & Assert
 		await Should.ThrowAsync<SshConnectionException>(async () =>
 		{
-			await foreach (var _ in client.GetDataFromCsvAsyncEnumerable<TestCsvModel>(path))
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (TestCsvModel _ in client.GetDataFromCsvAsyncEnumerable<TestCsvModel>(path))
 			{
 			}
+#pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}
 
@@ -269,9 +275,11 @@ public class SshFtpTests
 		// Act & Assert
 		await Should.ThrowAsync<SshConnectionException>(async () =>
 		{
-			await foreach (var _ in client.GetDataFromCsvAsyncEnumerable<TestCsvModel>(path))
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (TestCsvModel _ in client.GetDataFromCsvAsyncEnumerable<TestCsvModel>(path))
 			{
 			}
+#pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}
 
@@ -284,14 +292,16 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/file.csv";
+		const string path = "/test/file.csv";
 
 		// Act & Assert
 		await Should.ThrowAsync<SshConnectionException>(async () =>
 		{
-			await foreach (var _ in client.GetDataFromCsvCopyAsyncEnumerable<TestCsvModel>(path))
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (TestCsvModel _ in client.GetDataFromCsvCopyAsyncEnumerable<TestCsvModel>(path))
 			{
 			}
+#pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}
 
@@ -306,9 +316,11 @@ public class SshFtpTests
 		// Act & Assert
 		await Should.ThrowAsync<SshConnectionException>(async () =>
 		{
-			await foreach (var _ in client.GetDataFromCsvCopyAsyncEnumerable<TestCsvModel>(path))
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (TestCsvModel _ in client.GetDataFromCsvCopyAsyncEnumerable<TestCsvModel>(path))
 			{
 			}
+#pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}
 
@@ -321,7 +333,7 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/file.csv";
+		const string path = "/test/file.csv";
 
 		// Act & Assert
 		Should.Throw<SshConnectionException>(() =>
@@ -350,7 +362,7 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/file.txt";
+		const string path = "/test/file.txt";
 
 		// Act & Assert
 		Should.Throw<SshConnectionException>(() => client.DeleteSftpFile(path))
@@ -380,10 +392,10 @@ public class SshFtpTests
 	{
 		// Arrange
 		SftpClient? client = null;
-		string path = "/test/file.txt";
+		const string path = "/test/file.txt";
 
 		// Act & Assert
-		var exception = await Should.ThrowAsync<SshConnectionException>(async () =>
+		SshConnectionException exception = await Should.ThrowAsync<SshConnectionException>(async () =>
 			await client.DeleteFileAsync(path));
 		exception.Message.ShouldBe("SFTP client is not connected.");
 	}
@@ -398,7 +410,7 @@ public class SshFtpTests
 		SftpClient? client = null;
 
 		// Act & Assert
-		var exception = await Should.ThrowAsync<SshConnectionException>(async () =>
+		SshConnectionException exception = await Should.ThrowAsync<SshConnectionException>(async () =>
 			await client.DeleteFileAsync(path));
 		exception.Message.ShouldBe("SFTP client is not connected.");
 	}
@@ -407,10 +419,12 @@ public class SshFtpTests
 
 	#region Test Models
 
+#pragma warning disable S1144 // Unused private types or members should be removed
 	private class TestCsvModel
 	{
 		public string Name { get; set; } = string.Empty;
 		public int Age { get; set; }
+#pragma warning restore S1144 // Unused private types or members should be removed
 	}
 
 	#endregion

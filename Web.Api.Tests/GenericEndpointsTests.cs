@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Web.Api.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class GenericEndpointsTests
 {
     private readonly IFixture _fixture;
@@ -225,5 +224,3 @@ public sealed class GenericEndpointsTests
         (result.Result as OkObjectResult)!.Value.ShouldBe(model);
     }
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

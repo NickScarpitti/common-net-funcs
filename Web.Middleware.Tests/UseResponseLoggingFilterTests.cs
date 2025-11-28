@@ -1,4 +1,5 @@
 ﻿using CommonNetFuncs.Web.Middleware;
+using FakeItEasy.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -34,7 +35,7 @@ public sealed class UseResponseLoggingFilterTests
 	[RetryTheory(3)]
 	[InlineData(1.0, 2.0)] // When elapsed time exceeds threshold
 	[InlineData(2.0, 1.0)] // When elapsed time is under threshold
-	public void OnActionExecuted_LogsWarningWhenThresholdExceeded(double thresholdSeconds, double delaySeconds)
+	public async Task OnActionExecuted_LogsWarningWhenThresholdExceeded(double thresholdSeconds, double delaySeconds)
 	{
 		// Arrange
 		A.CallTo(() => _config.ThresholdInSeconds).Returns(thresholdSeconds);
@@ -56,7 +57,7 @@ public sealed class UseResponseLoggingFilterTests
 		filter.OnActionExecuting(executingContext);
 
 		// Simulate delay
-		Thread.Sleep(TimeSpan.FromSeconds(delaySeconds));
+		await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
 
 		filter.OnActionExecuted(executedContext);
 
@@ -80,7 +81,7 @@ public sealed class UseResponseLoggingFilterTests
 	}
 
 	[RetryFact(3)]
-	public void OnActionExecuting_StartsNewMeasurement()
+	public async Task OnActionExecuting_StartsNewMeasurement()
 	{
 		// Arrange
 		UseResponseLoggingFilter filter = new(_logger, _config);
@@ -94,7 +95,7 @@ public sealed class UseResponseLoggingFilterTests
 
 		// Act
 		filter.OnActionExecuting(executingContext);
-		Thread.Sleep(100); // Small delay to ensure time is measured
+		await Task.Delay(100);
 		ActionExecutedContext executedContext = new(actionContext, filterMetadata, controller);
 		filter.OnActionExecuted(executedContext);
 
@@ -105,7 +106,7 @@ public sealed class UseResponseLoggingFilterTests
 	[RetryTheory(3)]
 	[InlineData(0.0)]  // Edge case - zero threshold
 	[InlineData(-1.0)] // Edge case - negative threshold
-	public void OnActionExecuted_HandlesEdgeCaseThresholds(double thresholdSeconds)
+	public async Task OnActionExecuted_HandlesEdgeCaseThresholds(double thresholdSeconds)
 	{
 		// Arrange
 		A.CallTo(() => _config.ThresholdInSeconds).Returns(thresholdSeconds);
@@ -126,18 +127,18 @@ public sealed class UseResponseLoggingFilterTests
 		ActionExecutingContext executingContext = new(actionContext, filterMetadata, actionArguments, controller);
 		filter.OnActionExecuting(executingContext);
 
-		Thread.Sleep(100); // Small delay to ensure time is measured
+		await Task.Delay(100);
 		filter.OnActionExecuted(executedContext);
 
 		// Assert - Should log warning for any elapsed time when threshold is zero or negative
-		A.CallTo(() => _logger.Log(
-				LogLevel.Warning,
-				A<EventId>.Ignored,
-				A<It.IsAnyType>.That.Matches(msg => msg.ToString()!.Contains("Method") &&
-						msg.ToString()!.Contains("took") &&
-						msg.ToString()!.Contains("to complete with result:") &&
-						msg.ToString()!.Contains(nameof(OkResult))),
-				null,
-				A<Func<It.IsAnyType, Exception?, string>>.Ignored));
+		IFakeObjectCall call = Fake.GetCalls(_logger).Single();
+		call.Arguments[0].ShouldBe(LogLevel.Warning);
+
+		object? state = call.Arguments[2];
+		string message = state?.ToString() ?? string.Empty;
+		message.ShouldContain("Method");
+		message.ShouldContain("took");
+		message.ShouldContain("to complete with result:");
+		message.ShouldContain(nameof(OkResult));
 	}
 }

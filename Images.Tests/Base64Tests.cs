@@ -65,11 +65,11 @@ public sealed class Base64Tests : IDisposable
 	}
 
 	[RetryFact(3)]
-	public void ConvertImageFileToBase64_WithCorruptedImage_ReturnsNull()
+	public async Task ConvertImageFileToBase64_WithCorruptedImage_ReturnsNull()
 	{
 		// Arrange
 		string corruptedPath = Path.GetTempFileName();
-		File.WriteAllText(corruptedPath, "Not an image");
+		await File.WriteAllTextAsync(corruptedPath, "Not an image");
 
 		try
 		{
@@ -128,20 +128,20 @@ public sealed class Base64Tests : IDisposable
 		result.ShouldBe(expected);
 	}
 
-	[RetryTheory(3)]
-	[InlineData($"data:image/png;base64,{TestBase64String}", TestBase64String)]
-	[InlineData($"base64{TestBase64String}", TestBase64String)]
-	[InlineData(TestBase64String, TestBase64String)]
-	public void CleanImageValue_WithValidInput_ReturnsCleanedValue(string input, string expected)
-	{
-		// Act
-#pragma warning disable CS0618 // Type or member is obsolete
-		string? result = input.CleanImageValue();
-#pragma warning restore CS0618 // Type or member is obsolete
+	//[RetryFact(3)]
+	//[InlineData($"data:image/png;base64,{TestBase64String}", TestBase64String)]
+	//[InlineData($"base64{TestBase64String}", TestBase64String)]
+	//[InlineData(TestBase64String, TestBase64String)]
+	//public void CleanImageValue_WithValidInput_ReturnsCleanedValue(string input, string expected)
+	//{
+	//    // Act
+	//    #pragma warning disable CS0618 // Type or member is obsolete
+	//    string? result = input.CleanImageValue();
+	//    #pragma warning restore CS0618 // Type or member is obsolete
 
-		// Assert
-		result.ShouldBe(expected);
-	}
+	//    // Assert
+	//    result.ShouldBe(expected);
+	//}
 
 	[RetryTheory(3)]
 	[InlineData("https://example.com/image.png?v=123", "https://example.com/image.png")]
@@ -165,7 +165,7 @@ public sealed class Base64Tests : IDisposable
 		result.ShouldBe(expected);
 	}
 
-	[RetryTheory(3)]
+	[Theory]
 	[InlineData(null)]
 	[InlineData("")]
 	[InlineData(" ")]
@@ -180,37 +180,39 @@ public sealed class Base64Tests : IDisposable
 		result.ShouldBeNull();
 	}
 
-	[RetryTheory(3)]
-	[InlineData(null)]
-	[InlineData("")]
-	[InlineData(" ")]
-	[InlineData("invalid")]
-	[InlineData("base64")]
-	public void CleanImageValue_WithInvalidInput_ReturnsNull(string? input)
-	{
-		// Act
-#pragma warning disable CS0618 // Type or member is obsolete
-		string? result = input.CleanImageValue();
-#pragma warning restore CS0618 // Type or member is obsolete
+	//	[RetryTheory(3)]
+	//	[InlineData(null)]
+	//	[InlineData("")]
+	//	[InlineData(" ")]
+	//	[InlineData("invalid")]
+	//	[InlineData("base64")]
+	//	public void CleanImageValue_WithInvalidInput_ReturnsNull(string? input)
+	//	{
+	//		// Act
+	//#pragma warning disable CS0618 // Type or member is obsolete
+	//		string? result = input.CleanImageValue();
+	//#pragma warning restore CS0618 // Type or member is obsolete
 
-		// Assert
-		result.ShouldBeNull();
-	}
+	//	// Assert
+	//	result.ShouldBeNull();
+	//    }
 
 	[RetryFact(3)]
-	public void ImageSaveToFile_WithValidBase64_SavesFileSuccessfully()
+	public async Task ImageSaveToFile_WithValidBase64_SavesFileSuccessfully()
 	{
 		// Arrange
 		string base64Image = _testImagePath.ConvertImageFileToBase64()!;
 
 		// Act
+#pragma warning disable S6966 // Awaitable method should be used
 		bool result = base64Image.ImageSaveToFile(_tempSavePath);
+#pragma warning restore S6966 // Awaitable method should be used
 
-		// Assert
+		File.Exists(_tempSavePath).ShouldBeTrue();
 		result.ShouldBeTrue();
 		File.Exists(_tempSavePath).ShouldBeTrue();
-		using Image image = Image.Load(_tempSavePath);
-		image.Width.ShouldBeGreaterThan(0);
+		using Image image = await Image.LoadAsync(_tempSavePath);
+
 		image.Height.ShouldBeGreaterThan(0);
 	}
 

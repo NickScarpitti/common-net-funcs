@@ -4,7 +4,7 @@ using xRetry;
 
 namespace Word.OpenXml.Tests;
 
-public class ChangeUrlTests : IDisposable
+public sealed class ChangeUrlTests : IDisposable
 {
 	private readonly string _testDocPath;
 	private readonly string _tempDocPath;

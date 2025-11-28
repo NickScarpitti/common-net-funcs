@@ -901,7 +901,7 @@ public sealed class BaseDbContextActionsTests
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
 
-		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, ascendingOrderEpression: x => x.Id, skip: 1, pageSize: 2);
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, ascendingOrderExpression: x => x.Id, skip: 1, pageSize: 2);
 
 		result.Entities.Count.ShouldBe(2);
 		result.TotalRecords.ShouldBe(5);
@@ -918,7 +918,7 @@ public sealed class BaseDbContextActionsTests
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
 
-		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(full, whereExpression: _ => true, selectExpression: x => x, ascendingOrderEpression: x => x.Id, skip: 1, pageSize: 2);
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(full, whereExpression: _ => true, selectExpression: x => x, ascendingOrderExpression: x => x.Id, skip: 1, pageSize: 2);
 
 		result.Entities.Count.ShouldBe(2);
 		result.TotalRecords.ShouldBe(5);
@@ -1449,7 +1449,7 @@ public sealed class BaseDbContextActionsTests
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(
 				whereExpression: _ => true,
 				selectExpression: x => x,
-				ascendingOrderEpression: x => x.Id,
+				ascendingOrderExpression: x => x.Id,
 				skip: 1,
 				pageSize: 2,
 				fullQueryOptions: options);

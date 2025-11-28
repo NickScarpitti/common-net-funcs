@@ -309,12 +309,28 @@ csharp_style_prefer_pattern_matching = true:silent
 csharp_style_prefer_not_pattern = true:suggestion
 csharp_style_prefer_extended_property_pattern = true:suggestion
 
+# IDE0200: Remove unnecessary lambda expression
+dotnet_diagnostic.IDE0200.severity = suggestion
+
+# IDE0058: Expression value is never used
+dotnet_diagnostic.IDE0058.severity = none
+
+# S1121: Assignments should not be made from within sub-expressions
+dotnet_diagnostic.S1121.severity = silent
+
 # S3220: Method calls should not resolve ambiguously to overloads with "params"
 dotnet_diagnostic.S3220.severity = silent
 
 # S3011: Reflection should not be used to increase accessibility of classes, methods, or fields
 dotnet_diagnostic.S3011.severity = silent
 
+# RCS1093: File contains no code
+dotnet_diagnostic.RCS1093.severity = silent
+
 [*.vb]
 # Modifier preferences
 visual_basic_preferred_modifier_order = Partial,Default,Private,Protected,Public,Friend,NotOverridable,Overridable,MustOverride,Overloads,Overrides,MustInherit,NotInheritable,Static,Shared,Shadows,ReadOnly,WriteOnly,Dim,Const,WithEvents,Widening,Narrowing,Custom,Async:suggestion
+
+[*.g.cs]
+dotnet_analyzer_diagnostic.severity = none
+dotnet_diagnostic.CS0436.severity = none

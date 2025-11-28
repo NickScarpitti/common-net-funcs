@@ -6,8 +6,6 @@ using xRetry;
 
 namespace Web.Middleware.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class UseXsrfTokenMiddlewareTests
 {
 	private readonly IFixture _fixture;
@@ -115,9 +113,6 @@ public sealed class UseXsrfTokenMiddlewareTests
 		await middleware.InvokeAsync(context);
 
 		// Assert
-		A.CallTo(() => antiforgery.GetAndStoreTokens(context))
-				.MustHaveHappenedOnceExactly();
+		A.CallTo(() => antiforgery.GetAndStoreTokens(context)).MustHaveHappenedOnceExactly();
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

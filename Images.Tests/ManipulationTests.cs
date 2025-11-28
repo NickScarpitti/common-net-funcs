@@ -11,9 +11,7 @@ using xRetry;
 
 namespace Images.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
-public class ManipulationTests : IDisposable
+public sealed class ManipulationTests : IDisposable
 {
 	private bool disposed;
 
@@ -73,7 +71,7 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25, 25)]
 	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public void ResizeImage_FilePath_Succeeds(string fileName, int width, int height)
+	public async Task ResizeImage_FilePath_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -82,12 +80,14 @@ public class ManipulationTests : IDisposable
 		try
 		{
 			// Act
+#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ResizeImage(inputPath, outputPath, width, height);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Width.ShouldBe(width);
 			img.Height.ShouldBe(height);
 		}
@@ -107,19 +107,21 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25, 25)]
 	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public void ResizeImage_Stream_Succeeds(string fileName, int width, int height)
+	public async Task ResizeImage_Stream_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
-		using Stream input = GetTestImageStream(fileName);
-		using MemoryStream output = new();
+		await using Stream input = GetTestImageStream(fileName);
+		await using MemoryStream output = new();
 
 		// Act
+#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ResizeImage(input, output, width, height, new JpegEncoder());
+#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 	}
@@ -131,11 +133,11 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25, 25)]
 	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public void ResizeImage_Span_Succeeds(string fileName, int width, int height)
+	public async Task ResizeImage_Span_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		using MemoryStream output = new();
+		await using MemoryStream output = new();
 
 		// Act
 		bool result = Manipulation.ResizeImage(bytes, output, width, height, new JpegEncoder());
@@ -143,7 +145,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 	}
@@ -155,7 +157,7 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25)]
 	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public void ReduceImageQuality_FilePath_Succeeds(string fileName, int quality)
+	public async Task ReduceImageQuality_FilePath_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -164,12 +166,14 @@ public class ManipulationTests : IDisposable
 		try
 		{
 			// Act
+#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, quality, null);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 		}
 		finally
@@ -188,19 +192,21 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25)]
 	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public void ReduceImageQuality_Stream_Succeeds(string fileName, int quality)
+	public async Task ReduceImageQuality_Stream_Succeeds(string fileName, int quality)
 	{
 		// Arrange
-		using Stream input = GetTestImageStream(fileName);
-		using MemoryStream output = new();
+		await using Stream input = GetTestImageStream(fileName);
+		await using MemoryStream output = new();
 
 		// Act
+#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ReduceImageQuality(input, output, quality, null);
+#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 	}
 
@@ -211,11 +217,11 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25)]
 	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public void ReduceImageQuality_Span_Succeeds(string fileName, int quality)
+	public async Task ReduceImageQuality_Span_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		using MemoryStream output = new();
+		await using MemoryStream output = new();
 
 		// Act
 		bool result = Manipulation.ReduceImageQuality(bytes, output, quality, null);
@@ -223,7 +229,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 	}
 
@@ -264,7 +270,7 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.tiff", ".jpg")]
 	[InlineData("test.tiff", ".png")]
 	[InlineData("test.tiff", ".tiff")]
-	public void ConvertImageFormat_FilePath_Succeeds(string fileName, string outExt)
+	public async Task ConvertImageFormat_FilePath_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -275,12 +281,14 @@ public class ManipulationTests : IDisposable
 			IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
 			// Act
+#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ConvertImageFormat(inputPath, outputPath, format);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Metadata.DecodedImageFormat.ShouldBe(format);
 		}
 		finally
@@ -329,20 +337,22 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.tiff", ".jpg")]
 	[InlineData("test.tiff", ".png")]
 	[InlineData("test.tiff", ".tiff")]
-	public void ConvertImageFormat_Stream_Succeeds(string fileName, string outExt)
+	public async Task ConvertImageFormat_Stream_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
-		using Stream input = GetTestImageStream(fileName);
-		using MemoryStream output = new();
+		await using Stream input = GetTestImageStream(fileName);
+		await using MemoryStream output = new();
 		IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
 		// Act
+#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ConvertImageFormat(input, output, format);
+#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(format);
 	}
 
@@ -383,11 +393,11 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.tiff", ".jpg")]
 	[InlineData("test.tiff", ".png")]
 	[InlineData("test.tiff", ".tiff")]
-	public void ConvertImageFormat_Span_Succeeds(string fileName, string outExt)
+	public async Task ConvertImageFormat_Span_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		using MemoryStream output = new();
+		await using MemoryStream output = new();
 		IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
 		// Act
@@ -396,7 +406,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(format);
 	}
 
@@ -656,7 +666,7 @@ public class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Metadata.DecodedImageFormat.ShouldBe(format);
 		}
 		finally
@@ -718,7 +728,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(format);
 	}
 
@@ -839,7 +849,7 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25, 13)]
 	[InlineData("test.tiff", 33, 15)]
 	[InlineData("test.bmp", 10, 5)]
-	public void ResizeImage_FilePath_WithResizeOptions_Succeeds(string fileName, int width, int height)
+	public async Task ResizeImage_FilePath_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -853,12 +863,14 @@ public class ManipulationTests : IDisposable
 		try
 		{
 			// Act
+#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ResizeImage(inputPath, outputPath, options);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Width.ShouldBeLessThanOrEqualTo(width);
 			img.Height.ShouldBeLessThanOrEqualTo(height);
 		}
@@ -878,11 +890,11 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25, 13)]
 	[InlineData("test.tiff", 33, 15)]
 	[InlineData("test.bmp", 10, 5)]
-	public void ResizeImage_Stream_WithResizeOptions_Succeeds(string fileName, int width, int height)
+	public async Task ResizeImage_Stream_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
-		using Stream input = GetTestImageStream(fileName);
-		using MemoryStream output = new();
+		await using Stream input = GetTestImageStream(fileName);
+		await using MemoryStream output = new();
 		ResizeOptions options = new()
 		{
 			Size = new Size(width, height),
@@ -890,12 +902,14 @@ public class ManipulationTests : IDisposable
 		};
 
 		// Act
+#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ResizeImage(input, output, options, new JpegEncoder());
+#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Width.ShouldBeLessThanOrEqualTo(width);
 		img.Height.ShouldBeLessThanOrEqualTo(height);
 	}
@@ -907,11 +921,11 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25, 13)]
 	[InlineData("test.tiff", 33, 15)]
 	[InlineData("test.bmp", 10, 5)]
-	public void ResizeImage_Span_WithResizeOptions_Succeeds(string fileName, int width, int height)
+	public async Task ResizeImage_Span_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		using MemoryStream output = new();
+		await using MemoryStream output = new();
 		ResizeOptions options = new()
 		{
 			Size = new Size(width, height),
@@ -924,7 +938,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Width.ShouldBeLessThanOrEqualTo(width);
 		img.Height.ShouldBeLessThanOrEqualTo(height);
 	}
@@ -936,7 +950,7 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25)]
 	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public void ReduceImageQuality_FilePath_ToPng_Succeeds(string fileName, int quality)
+	public async Task ReduceImageQuality_FilePath_ToPng_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -945,12 +959,14 @@ public class ManipulationTests : IDisposable
 		try
 		{
 			// Act
+#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, PngFormat.Instance, quality, null);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
 		}
 		finally
@@ -969,19 +985,21 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25)]
 	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public void ReduceImageQuality_Stream_ToPng_Succeeds(string fileName, int quality)
+	public async Task ReduceImageQuality_Stream_ToPng_Succeeds(string fileName, int quality)
 	{
 		// Arrange
-		using Stream input = GetTestImageStream(fileName);
-		using MemoryStream output = new();
+		await using Stream input = GetTestImageStream(fileName);
+		await using MemoryStream output = new();
 
 		// Act
+#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ReduceImageQuality(input, output, PngFormat.Instance, quality, null);
+#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
 	}
 
@@ -992,11 +1010,11 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25)]
 	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public void ReduceImageQuality_Span_ToPng_Succeeds(string fileName, int quality)
+	public async Task ReduceImageQuality_Span_ToPng_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		using MemoryStream output = new();
+		await using MemoryStream output = new();
 
 		// Act
 		bool result = Manipulation.ReduceImageQuality(bytes, output, PngFormat.Instance, quality, null);
@@ -1004,7 +1022,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
 	}
 
@@ -1029,7 +1047,7 @@ public class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
 		}
 		finally
@@ -1060,7 +1078,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
 	}
 
@@ -1091,7 +1109,7 @@ public class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Width.ShouldBeLessThanOrEqualTo(width);
 			img.Height.ShouldBeLessThanOrEqualTo(height);
 		}
@@ -1128,7 +1146,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Width.ShouldBeLessThanOrEqualTo(width);
 		img.Height.ShouldBeLessThanOrEqualTo(height);
 	}
@@ -1140,7 +1158,7 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25, 25)]
 	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public void ResizeImage_FilePath_Mutate_Succeeds(string fileName, int width, int height)
+	public async Task ResizeImage_FilePath_Mutate_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -1149,22 +1167,26 @@ public class ManipulationTests : IDisposable
 		try
 		{
 			// Act
+#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ResizeImage(inputPath, outputPath, width, height, mutate: InvertMutate);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Width.ShouldBe(width);
 			img.Height.ShouldBe(height);
 
 			File.Delete(outputPath);
 
 			// Now check if the image is inverted
+#pragma warning disable S6966 // Awaitable method should be used
 			Manipulation.ResizeImage(inputPath, outputPath, width, height);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Spot check: pixel [0,0] should be inverted from original
-			using Image<Rgb24> orig = Image.Load<Rgb24>(outputPath);
+			using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(outputPath);
 			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
 
 			bool isInverted = IsInvertedVersion(orig, imgClone);
@@ -1187,25 +1209,27 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25, 25)]
 	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public void ResizeImage_Stream_Mutate_Succeeds(string fileName, int width, int height)
+	public async Task ResizeImage_Stream_Mutate_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
-		using MemoryStream input = GetTestImageStream(fileName);
-		using MemoryStream output = new();
-		using MemoryStream nonInvertedOutput = new();
+		await using MemoryStream input = GetTestImageStream(fileName);
+		await using MemoryStream output = new();
+		await using MemoryStream nonInvertedOutput = new();
 
 		// Act
+#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ResizeImage(input, output, width, height, new JpegEncoder(), mutate: InvertMutate);
 		Manipulation.ResizeImage(input, nonInvertedOutput, width, height, new JpegEncoder());
+#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 
-		using Image<Rgb24> orig = Image.Load<Rgb24>(nonInvertedOutput);
+		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
 		using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
 
 		bool isInverted = IsInvertedVersion(orig, imgClone);
@@ -1220,12 +1244,12 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25, 25)]
 	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public void ResizeImage_Span_Mutate_Succeeds(string fileName, int width, int height)
+	public async Task ResizeImage_Span_Mutate_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		using MemoryStream output = new();
-		using MemoryStream nonInvertedOutput = new();
+		await using MemoryStream output = new();
+		await using MemoryStream nonInvertedOutput = new();
 
 		// Act
 		bool result = Manipulation.ResizeImage(bytes, output, width, height, new JpegEncoder(), mutate: InvertMutate);
@@ -1234,11 +1258,11 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 
-		using Image<Rgb24> orig = Image.Load<Rgb24>(nonInvertedOutput);
+		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
 		using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
 
 		bool isInverted = IsInvertedVersion(orig, imgClone);
@@ -1253,7 +1277,7 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25)]
 	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public void ReduceImageQuality_FilePath_Mutate_Succeeds(string fileName, int quality)
+	public async Task ReduceImageQuality_FilePath_Mutate_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -1262,15 +1286,17 @@ public class ManipulationTests : IDisposable
 		try
 		{
 			// Act
+#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, quality, null, mutate: InvertMutate);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
-			using Image orig = Image.Load(inputPath);
+			using Image orig = await Image.LoadAsync(inputPath);
 			using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 			using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
 
@@ -1293,22 +1319,24 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25)]
 	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public void ReduceImageQuality_Stream_Mutate_Succeeds(string fileName, int quality)
+	public async Task ReduceImageQuality_Stream_Mutate_Succeeds(string fileName, int quality)
 	{
 		// Arrange
-		using MemoryStream input = GetTestImageStream(fileName);
-		using MemoryStream output = new();
+		await using MemoryStream input = GetTestImageStream(fileName);
+		await using MemoryStream output = new();
 
 		// Act
+#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ReduceImageQuality(input, output, quality, null, mutate: InvertMutate);
+#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
-		using Image orig = Image.Load(input);
+		using Image orig = await Image.LoadAsync(input);
 		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
 
@@ -1323,11 +1351,11 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.gif", 25)]
 	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public void ReduceImageQuality_Span_Mutate_Succeeds(string fileName, int quality)
+	public async Task ReduceImageQuality_Span_Mutate_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		using MemoryStream output = new();
+		await using MemoryStream output = new();
 
 		// Act
 		bool result = Manipulation.ReduceImageQuality(bytes, output, quality, null, mutate: InvertMutate);
@@ -1335,7 +1363,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
 		using Image orig = Image.Load(bytes);
@@ -1400,7 +1428,7 @@ public class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(invertedOutputPath).ShouldBeTrue();
-			using Image img = Image.Load(invertedOutputPath);
+			using Image img = await Image.LoadAsync(invertedOutputPath);
 			img.Metadata.DecodedImageFormat.ShouldBe(format);
 
 			File.Delete(outputPath);
@@ -1409,7 +1437,7 @@ public class ManipulationTests : IDisposable
 			await Manipulation.ConvertImageFormatAsync(inputPath, outputPath, format);
 
 			// Spot check: pixel [0,0] should be inverted from original
-			using Image<Rgb24> orig = Image.Load<Rgb24>(outputPath);
+			using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(outputPath);
 			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
 
 			bool isInverted = IsInvertedVersion(orig, imgClone);
@@ -1475,10 +1503,10 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(format);
 
-		using Image orig = Image.Load(input);
+		using Image orig = await Image.LoadAsync(input);
 		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
 
@@ -1507,17 +1535,19 @@ public class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Width.ShouldBe(width);
 			img.Height.ShouldBe(height);
 
 			File.Delete(outputPath);
 
 			// Now check if the image is inverted
+#pragma warning disable S6966 // Awaitable method should be used
 			Manipulation.ResizeImage(inputPath, outputPath, width, height);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Spot check: pixel [0,0] should be inverted from original
-			using Image<Rgb24> orig = Image.Load<Rgb24>(outputPath);
+			using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(outputPath);
 			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
 
 			bool isInverted = IsInvertedVersion(orig, imgClone);
@@ -1549,16 +1579,18 @@ public class ManipulationTests : IDisposable
 
 		// Act
 		bool result = await Manipulation.ResizeImageAsync(input, output, width, height, new JpegEncoder(), mutate: InvertMutate);
+#pragma warning disable S6966 // Awaitable method should be used
 		Manipulation.ResizeImage(input, nonInvertedOutput, width, height, new JpegEncoder());
+#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 
-		using Image<Rgb24> orig = Image.Load<Rgb24>(nonInvertedOutput);
+		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
 		using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
 
 		bool isInverted = IsInvertedVersion(orig, imgClone);
@@ -1586,10 +1618,10 @@ public class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
-			using Image orig = Image.Load(inputPath);
+			using Image orig = await Image.LoadAsync(inputPath);
 			using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 			using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
 
@@ -1624,10 +1656,10 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
-		using Image orig = Image.Load(input);
+		using Image orig = await Image.LoadAsync(input);
 		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
 
@@ -1646,7 +1678,7 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.png", 50, 25, false, true)]
 	[InlineData("test.png", 50, 25, true, true)]
 	[InlineData("test.png", -1, -1, true, true)]
-	public void ResizeImage_FilePath_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+	public async Task ResizeImage_FilePath_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -1656,20 +1688,22 @@ public class ManipulationTests : IDisposable
 		{
 			if (width < 0 && height < 0)
 			{
-				using Image originalImg = Image.Load(inputPath);
+				using Image originalImg = await Image.LoadAsync(inputPath);
 				width = originalImg.Width;
 				height = originalImg.Height;
 				originalImg.Dispose();
 			}
 
 			// Act
+#pragma warning disable S6966 // Awaitable method should be used
 			bool result = !useResizeOptions ? Manipulation.ResizeImage(inputPath, outputPath, width, height, useDimsAsMax: useDimsAsMax)
 					: Manipulation.ResizeImage(inputPath, outputPath, new() { Size = new(width, height) }, useDimsAsMax: useDimsAsMax);
+#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 
 			if (useDimsAsMax)
 			{
@@ -1702,15 +1736,15 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.png", 50, 25, false, true)]
 	[InlineData("test.png", 50, 25, true, true)]
 	[InlineData("test.png", -1, -1, true, true)]
-	public void ResizeImage_Stream_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+	public async Task ResizeImage_Stream_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
 	{
 		// Arrange
-		using MemoryStream input = GetTestImageStream(fileName);
-		using MemoryStream output = new();
+		await using MemoryStream input = GetTestImageStream(fileName);
+		await using MemoryStream output = new();
 
 		if (width < 0 && height < 0)
 		{
-			using Image originalImg = Image.Load(input);
+			using Image originalImg = await Image.LoadAsync(input);
 			width = originalImg.Width;
 			height = originalImg.Height;
 			originalImg.Dispose();
@@ -1718,13 +1752,15 @@ public class ManipulationTests : IDisposable
 		}
 
 		// Act
+#pragma warning disable S6966 // Awaitable method should be used
 		bool result = !useResizeOptions ? Manipulation.ResizeImage(input, output, width, height, new JpegEncoder(), useDimsAsMax: useDimsAsMax) :
 				Manipulation.ResizeImage(input, output, new() { Size = new(width, height) }, new JpegEncoder(), useDimsAsMax: useDimsAsMax);
+#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 
 		if (useDimsAsMax)
 		{
@@ -1749,11 +1785,11 @@ public class ManipulationTests : IDisposable
 	[InlineData("test.png", 50, 25, false, true)]
 	[InlineData("test.png", 50, 25, true, true)]
 	[InlineData("test.png", -1, -1, true, true)]
-	public void ResizeImage_Span_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+	public async Task ResizeImage_Span_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		using MemoryStream output = new();
+		await using MemoryStream output = new();
 
 		if (width < 0 && height < 0)
 		{
@@ -1770,7 +1806,7 @@ public class ManipulationTests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		output.Position = 0;
-		using Image img = Image.Load(output);
+		using Image img = await Image.LoadAsync(output);
 
 		if (useDimsAsMax)
 		{
@@ -1805,7 +1841,7 @@ public class ManipulationTests : IDisposable
 		{
 			if (width < 0 && height < 0)
 			{
-				using Image originalImg = Image.Load(inputPath);
+				using Image originalImg = await Image.LoadAsync(inputPath);
 				width = originalImg.Width;
 				height = originalImg.Height;
 				originalImg.Dispose();
@@ -1818,7 +1854,7 @@ public class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = Image.Load(outputPath);
+			using Image img = await Image.LoadAsync(outputPath);
 
 			if (useDimsAsMax)
 			{
@@ -1895,4 +1931,3 @@ public class ManipulationTests : IDisposable
 		return isInverted;
 	}
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -12,7 +12,6 @@ using static CommonNetFuncs.Excel.Npoi.Common;
 
 namespace Excel.Npoi.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class CommonTests : IDisposable
 {
 	private readonly XSSFWorkbook _xlsxWorkbook;
@@ -1216,6 +1215,5 @@ public sealed class CommonTests : IDisposable
 		result.Columns[1].ColumnName.ShouldBe("Col2");
 	}
 
-	#endregion
+  #endregion
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

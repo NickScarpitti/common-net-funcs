@@ -5,17 +5,13 @@ using xRetry;
 
 namespace Web.Middleware.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class OptionsMiddlewareTests
 {
-	private readonly IFixture _fixture;
 	private readonly HttpContext _context;
 	private readonly RequestDelegate _next;
 
 	public OptionsMiddlewareTests()
 	{
-		_fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
 		_context = new DefaultHttpContext();
 		_next = A.Fake<RequestDelegate>();
 	}
@@ -103,5 +99,3 @@ public sealed class OptionsMiddlewareTests
 		Should.Throw<ArgumentNullException>(() => new OptionsMiddleware(null!, "*", [], [], true, 3600, HttpStatusCode.OK));
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

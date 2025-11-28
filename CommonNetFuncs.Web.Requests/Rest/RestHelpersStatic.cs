@@ -29,6 +29,8 @@ public static class RestHelpersStatic
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 	public static readonly JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles, PropertyNameCaseInsensitive = true };
 
+	private const string RestErrorLocationTemplate = "{ErrorLocation} Error URL: {Url}";
+
 	/// <summary>
 	/// Executes a REST request against the provided URL with the requestOptions.
 	/// </summary>
@@ -63,16 +65,16 @@ public static class RestHelpersStatic
 			string exceptionLocation = tcex.GetLocationOfException();
 			if (requestOptions.ExpectTaskCancellation)
 			{
-				logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+				logger.Info("Task was expectedly canceled for {HttpMethod} request to {Url}", requestOptions.HttpMethod.ToString().ToUpper(), requestOptions.Url);
 			}
 			else
 			{
-				logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+				logger.Error(tcex, RestErrorLocationTemplate, exceptionLocation, requestOptions.Url);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+			logger.Error(ex, RestErrorLocationTemplate, ex.GetLocationOfException(), requestOptions.Url);
 		}
 		return result;
 	}
@@ -123,16 +125,16 @@ public static class RestHelpersStatic
 				string exceptionLocation = tcex.GetLocationOfException();
 				if (requestOptions.ExpectTaskCancellation)
 				{
-					logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+					logger.Info("Task was expectedly canceled for {HttpMethod} request to {Url}", requestOptions.HttpMethod.ToString().ToUpper(), requestOptions.Url);
 				}
 				else
 				{
-					logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+					logger.Error(tcex, RestErrorLocationTemplate, exceptionLocation, requestOptions.Url);
 				}
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+				logger.Error(ex, RestErrorLocationTemplate, ex.GetLocationOfException(), requestOptions.Url);
 			}
 
 			if (enumeratedReader != null)
@@ -187,16 +189,16 @@ public static class RestHelpersStatic
 			string exceptionLocation = tcex.GetLocationOfException();
 			if (requestOptions.ExpectTaskCancellation)
 			{
-				logger.Warn("{msg}", $"Run once REST task was canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+				logger.Warn("Run once REST task was canceled for {HttpMethod} request to {Url}", requestOptions.HttpMethod.ToString().ToUpper(), requestOptions.Url);
 			}
 			else
 			{
-				logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+				logger.Error(tcex, RestErrorLocationTemplate, exceptionLocation, requestOptions.Url);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+			logger.Error(ex, RestErrorLocationTemplate, ex.GetLocationOfException(), requestOptions.Url);
 		}
 		return restObject;
 	}
@@ -244,16 +246,16 @@ public static class RestHelpersStatic
 			string exceptionLocation = tcex.GetLocationOfException();
 			if (requestOptions.ExpectTaskCancellation)
 			{
-				logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+				logger.Info("Task was expectedly canceled for {HttpMethod} request to {Url}", requestOptions.HttpMethod.ToString().ToUpper(), requestOptions.Url);
 			}
 			else
 			{
-				logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+				logger.Error(tcex, RestErrorLocationTemplate, exceptionLocation, requestOptions.Url);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+			logger.Error(ex, RestErrorLocationTemplate, ex.GetLocationOfException(), requestOptions.Url);
 		}
 
 		return restObject;
@@ -295,12 +297,15 @@ public static class RestHelpersStatic
 					errorMessage = await ReadResponseStream<string>(responseStream, Text, contentEncoding, requestOptions.UseNewtonsoftDeserializer,
 						requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, cancellationToken).ConfigureAwait(false);
 				}
-				logger.Warn("{msg}", $"{requestOptions.HttpMethod} request with URL {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.RedactedUrl)} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(requestOptions.HttpHeaders != null ? $"Headers: {string.Join(", ", requestOptions.HttpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
+				logger.Warn("{HttpMethod} request with URL {URL} failed with the following response:\n\t{StatusCode}: {ReasonPhrase}\n\tContent: {ErrorMessage}\n\t{Headers}",
+					requestOptions.HttpMethod, requestOptions.LogQuery ? requestOptions.Url : requestOptions.RedactedUrl, response.StatusCode, response.ReasonPhrase, errorMessage,
+					requestOptions.HttpHeaders != null ? $"Headers: {string.Join(", ", requestOptions.HttpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		await LogResponse(requestOptions, result, true, cancellationToken).ConfigureAwait(false);
@@ -364,12 +369,15 @@ public static class RestHelpersStatic
 					{
 						errorMessage = await ReadResponseStream<string>(responseStream, Text, contentEncoding, false, cancellationToken: cancellationToken).ConfigureAwait(false);
 					}
-					logger.Warn("{msg}", $"{requestOptions.HttpMethod} request with URL {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.RedactedUrl)} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(requestOptions.HttpHeaders != null ? $"Headers: {string.Join(", ", requestOptions.HttpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
+					logger.Warn("{HttpMethod} request with URL {URL} failed with the following response:\n\t{StatusCode}: {ReasonPhrase}\n\tContent: {ErrorMessage}\n\t{Headers}",
+						requestOptions.HttpMethod, requestOptions.LogQuery ? requestOptions.Url : requestOptions.RedactedUrl, response.StatusCode, response.ReasonPhrase, errorMessage,
+						requestOptions.HttpHeaders != null ? $"Headers: {string.Join(", ", requestOptions.HttpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null);
 				}
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 			}
 
 			if (requestOptions.LogResponse)
@@ -478,75 +486,86 @@ public static class RestHelpersStatic
 				else if (contentType.ContainsInvariant("json"))//Assume JSON
 				{
 					//Deserialize as stream - More memory efficient than string deserialization
-					Stream? outputStream = null; //Decompressed data will be written to this stream
-					bool usedDecompression = false;
+					//Stream streamToRead = responseStream;
+					//Stream? decompressedStream = null;
 
-					try
+					//try
+					//{
+					if (contentEncoding.StrEq(GZip))
 					{
-						if (contentEncoding.StrEq(GZip))
-						{
-							usedDecompression = true;
-							outputStream = responseStream.Decompress(ECompressionType.Gzip);
-							//await responseStream.DecompressStream(outputStream, ECompressionType.Gzip, cancellationToken: cancellationToken).ConfigureAwait(false);
-						}
-						else if (contentEncoding.StrEq(Brotli))
-						{
-							usedDecompression = true;
-							outputStream = responseStream.Decompress(ECompressionType.Brotli);
-							//await responseStream.DecompressStream(outputStream, ECompressionType.Brotli, cancellationToken: cancellationToken).ConfigureAwait(false);
-						}
+						//decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+						//streamToRead = decompressedStream;
+						await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+						result = useNewtonsoftDeserializer
+							? await DeserializeWithNewtonsoft<T>(decompressedStream)
+							: await System.Text.Json.JsonSerializer.DeserializeAsync<T>(decompressedStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+					}
+					else if (contentEncoding.StrEq(Brotli))
+					{
+						//decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+						//streamToRead = decompressedStream;
 
-						outputStream ??= new MemoryStream();
-						if (useNewtonsoftDeserializer)
-						{
-							//using StreamReader streamReader = new(outputStream.Length > 1 ? outputStream : responseStream);
-							using StreamReader streamReader = new(usedDecompression ? outputStream : responseStream);
-							await using JsonTextReader jsonReader = new(streamReader); //Newtonsoft
-							Newtonsoft.Json.JsonSerializer serializer = new(); //Newtonsoft
-							result = serializer.Deserialize<T>(jsonReader); //using static Newtonsoft.Json.JsonSerializer;
-						}
-						else
-						{
-							result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(usedDecompression ? outputStream : responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-						}
+						await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+						result = useNewtonsoftDeserializer
+							? await DeserializeWithNewtonsoft<T>(decompressedStream)
+							: await System.Text.Json.JsonSerializer.DeserializeAsync<T>(decompressedStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
 					}
-					finally
+					else if (!useNewtonsoftDeserializer)
 					{
-						if (outputStream != null)
-						{
-							await outputStream.DisposeAsync().ConfigureAwait(false);
-						}
+						result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
 					}
+					else
+					{
+						result = await DeserializeWithNewtonsoft<T>(responseStream);
+					}
+
+					//if (useNewtonsoftDeserializer)
+					//{
+					//	using StreamReader streamReader = new(streamToRead);
+					//	await using JsonTextReader jsonReader = new(streamReader);
+					//	Newtonsoft.Json.JsonSerializer serializer = new();
+					//	result = serializer.Deserialize<T>(jsonReader);
+					//}
+					//else
+					//{
+					//	result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+					//}
+					//}
+					//finally
+					//{
+					//	if (decompressedStream != null)
+					//	{
+					//		await decompressedStream.DisposeAsync().ConfigureAwait(false);
+					//	}
+					//}
 				}
 				else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
 				{
-					Stream? outputStream = null; //Decompressed data will be written to this stream
-					bool usedDecompression = false;
+					Stream streamToRead = responseStream;
+					Stream? decompressedStream = null;
 
 					try
 					{
 						if (contentEncoding.StrEq(GZip))
 						{
-							usedDecompression = true;
-							outputStream = responseStream.Decompress(ECompressionType.Gzip);
+							decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+							streamToRead = decompressedStream;
 						}
 						else if (contentEncoding.StrEq(Brotli))
 						{
-							usedDecompression = true;
-							outputStream = responseStream.Decompress(ECompressionType.Brotli);
+							decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+							streamToRead = decompressedStream;
 						}
 
-						outputStream ??= new MemoryStream();
-						string stringResult;
-						using StreamReader reader = new(usedDecompression ? outputStream : responseStream, Encoding.UTF8);
-						stringResult = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+						using StreamReader reader = new(streamToRead, Encoding.UTF8);
+						string stringResult = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
 						result = (T)(object)stringResult;
 					}
 					finally
 					{
-						if (outputStream != null)
+						if (decompressedStream != null)
 						{
-							await outputStream.DisposeAsync().ConfigureAwait(false);
+							await decompressedStream.DisposeAsync().ConfigureAwait(false);
 						}
 					}
 				}
@@ -554,9 +573,18 @@ public static class RestHelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return result;
+	}
+
+	private static async Task<T?> DeserializeWithNewtonsoft<T>(Stream decompressedStream)
+	{
+		using StreamReader streamReader = new(decompressedStream);
+		await using JsonTextReader jsonReader = new(streamReader);
+		Newtonsoft.Json.JsonSerializer serializer = new();
+		return serializer.Deserialize<T>(jsonReader);
 	}
 
 	/// <summary>
@@ -588,10 +616,12 @@ public static class RestHelpersStatic
 
 				await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false))
 				{
-					if (!EqualityComparer<T?>.Default.Equals(item, default))
+#pragma warning disable S2955 // Generic parameters not constrained to reference types should not be compared to "null"
+					if (item != null)
 					{
 						yield return item;
 					}
+#pragma warning restore S2955 // Generic parameters not constrained to reference types should not be compared to "null"
 				}
 			}
 			finally
@@ -618,12 +648,15 @@ public static class RestHelpersStatic
 	{
 		if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
 		{
-			if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(MemPack)) ?? false)
+			string? contentTypeValue = null;
+			bool hasContentType = httpHeaders?.TryGetValue("Content-Type", out contentTypeValue) == true;
+
+			if (hasContentType && contentTypeValue.StrEq(MemPack))
 			{
 				httpRequestMessage.Content = new ByteArrayContent(MemoryPackSerializer.Serialize(postObject));
 				httpRequestMessage.Content.Headers.ContentType = new(MemPack);
 			}
-			else if (httpHeaders?.Any(x => x.Key.StrEq("Content-Type") && x.Value.StrEq(MsgPack)) ?? false)
+			else if (hasContentType && contentTypeValue!.StrEq(MsgPack))
 			{
 				httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
 				httpRequestMessage.Content.Headers.ContentType = new(MsgPack);
@@ -648,31 +681,16 @@ public static class RestHelpersStatic
 	/// <param name="httpHeaders">Dictionary of headers</param>
 	internal static void AttachHeaders(this HttpRequestMessage httpRequestMessage, string? bearerToken, Dictionary<string, string>? httpHeaders)
 	{
-		//Changed this from inline if due to setting .Authorization to null if bearerToken is empty/null resulting in an exception during the post request: "A task was canceled"
-		if (bearerToken != null || (bearerToken?.Length == 0 && !(httpHeaders?.Any(x => x.Key.StrEq("Authorization")) ?? false)))
+		if (!bearerToken.IsNullOrEmpty())
 		{
-			try
-			{
-				httpRequestMessage.Headers.Authorization = new("Bearer", bearerToken);
-			}
-			catch (Exception ex)
-			{
-				logger.Warn(ex, "{msg}", $"Failed to add bearer token.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
-			}
+			httpRequestMessage.Headers.TryAddWithoutValidation("Authorization", $"Bearer {bearerToken}");
 		}
 
 		if (httpHeaders.AnyFast())
 		{
 			foreach (KeyValuePair<string, string> header in httpHeaders!)
 			{
-				try
-				{
-					httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
-				}
-				catch (Exception ex)
-				{
-					logger.Warn(ex, "{msg}", $"Failed to add header {header.Key} with value {header.Value}.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
-				}
+				httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
 			}
 		}
 	}
@@ -710,7 +728,7 @@ public static class RestHelpersStatic
 		return TimeSpan.FromSeconds(requestOptions.Timeout is null or <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout);
 	}
 
-	private static async Task LogRequest<T>(RequestOptions<T> requestOptions, CancellationToken cancellationToken)
+	private static async ValueTask LogRequest<T>(RequestOptions<T> requestOptions, CancellationToken cancellationToken)
 	{
 		if (requestOptions.LogRequest)
 		{
@@ -721,11 +739,13 @@ public static class RestHelpersStatic
 
 		if (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod))
 		{
-			string body = !EqualityComparer<T?>.Default.Equals(requestOptions.BodyObject, default)
-					? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions)
-					: requestOptions.PatchDocument != null
-							? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
-							: string.Empty;
+#pragma warning disable S2955 // Generic parameters not constrained to reference types should not be compared to "null"
+			string body = requestOptions.BodyObject != null
+				? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions)
+				: requestOptions.PatchDocument != null
+					? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
+					: string.Empty;
+#pragma warning restore S2955 // Generic parameters not constrained to reference types should not be compared to "null"
 			logger.Info("Request Body: {Body}", body);
 		}
 	}
@@ -749,14 +769,14 @@ public static class RestHelpersStatic
 				resultJson = Encoding.UTF8.GetString(outputStream.ToArray());
 			}
 
-			string logText = string.Empty;
 			if (includeHeader)
 			{
-				logText += $"HTTP Response for {requestOptions.HttpMethod.Method} @ {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}:\n";
+				logger.Info($"HTTP Response for {requestOptions.HttpMethod.Method} @ {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}:\n{resultJson ?? "Empty Result"}");
 			}
-
-			logText += resultJson ?? "Empty Result";
-			logger.Info(logText);
+			else
+			{
+				logger.Info(resultJson ?? "Empty Result");
+			}
 		}
 	}
 }

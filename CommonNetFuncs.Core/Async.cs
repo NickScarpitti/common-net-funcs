@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
-
+using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
@@ -15,7 +15,7 @@ public static class Async
 	/// </summary>
 	/// <param name="obj">Object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this T obj, Task<T> task)
+	public static async Task ObjectFill<T>(this T obj, Task<T> task) where T : class?
 	{
 		try
 		{
@@ -33,7 +33,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -54,7 +54,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -72,7 +72,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -93,7 +93,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -103,7 +103,7 @@ public static class Async
 	/// <param name="obj">Object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	public static async Task ObjectFill<T>(this T obj, Func<Task<T>> task, SemaphoreSlim? semaphore)
+	public static async Task ObjectFill<T>(this T obj, Func<Task<T>> task, SemaphoreSlim? semaphore) where T : class
 	{
 		try
 		{
@@ -125,7 +125,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -156,7 +156,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -187,7 +187,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -221,7 +221,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -249,7 +249,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -273,7 +273,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -297,7 +297,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -327,7 +327,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -361,7 +361,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -395,7 +395,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -423,7 +423,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -447,7 +447,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -477,7 +477,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -511,7 +511,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -529,14 +529,14 @@ public static class Async
 		try
 		{
 			IEnumerable<T>? resultObject = await task;
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				obj?.AddRangeParallel(resultObject);
+				obj.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -556,14 +556,14 @@ public static class Async
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
 			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				obj?.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
+				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -581,14 +581,14 @@ public static class Async
 		try
 		{
 			ConcurrentBag<T>? resultObject = await task;
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				obj?.AddRangeParallel(resultObject);
+				obj.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -612,7 +612,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -632,14 +632,14 @@ public static class Async
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
 			ConcurrentBag<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				obj?.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
+				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -657,14 +657,14 @@ public static class Async
 		try
 		{
 			List<T>? resultObject = await task;
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				obj?.AddRangeParallel(resultObject);
+				obj.AddRangeParallel(resultObject);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -684,14 +684,14 @@ public static class Async
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
 			List<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
+			if (resultObject != null && obj != null)
 			{
-				obj?.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
+				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -720,7 +720,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -751,7 +751,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -769,14 +769,16 @@ public static class Async
 		try
 		{
 			await using MemoryStream resultObject = await task;
+#pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{
 				resultObject?.WriteTo(ms);
 			}
+#pragma warning restore S3998 // Threads should not lock on objects with weak identity
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -796,14 +798,16 @@ public static class Async
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
 			await using MemoryStream resultObject = await task().ConfigureAwait(false);
+#pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{
 				resultObject?.WriteTo(ms);
 			}
+#pragma warning restore S3998 // Threads should not lock on objects with weak identity
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -842,7 +846,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 	}
 
@@ -885,7 +889,7 @@ public static class Async
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -928,7 +932,7 @@ public static class Async
 				{
 					await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 				}
-				logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			}
 			finally
 			{
@@ -971,7 +975,7 @@ public static class Async
 				{
 					await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 				}
-				logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			}
 			finally
 			{
@@ -1003,7 +1007,7 @@ public static class Async
 			{
 				await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 			}
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error{(errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}")}");
+			logger.Error(ex, "{ExceptionLocation} Error{ErrorText}", ex.GetLocationOfException(), errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}");
 		}
 		finally
 		{
@@ -1026,7 +1030,7 @@ public static class Async
 			{
 				await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
 			}
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error{(errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}")}");
+			logger.Error(ex, "{ExceptionLocation} Error{ErrorText}", ex.GetLocationOfException(), errorText.IsNullOrWhiteSpace() ? string.Empty : $"\n{errorText}");
 		}
 		finally
 		{

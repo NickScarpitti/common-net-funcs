@@ -178,7 +178,7 @@ public sealed class ExportTests : IDisposable
 	}
 
 	[RetryFact(3)]
-	public void ExportFromTable_WithCancellation_ShouldRespectCancellationToken()
+	public async Task ExportFromTable_WithCancellation_ShouldRespectCancellationToken()
 	{
 		// Arrange
 		List<TestModel> testData = _fixture.CreateMany<TestModel>(100).ToList();
@@ -190,7 +190,7 @@ public sealed class ExportTests : IDisposable
 		worksheet.ShouldNotBeNull();
 
 		// Act & Assert
-		cts.Cancel();
+		await cts.CancelAsync();
 		Should.Throw<OperationCanceledException>(() => Export.ExportFromTable(doc, worksheet, testData, cancellationToken: cts.Token));
 	}
 }

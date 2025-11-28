@@ -2,11 +2,13 @@
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Requests.Rest.Options;
 using NLog;
+using static System.Net.HttpStatusCode;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Random;
+using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelperConstants;
-using static System.Net.HttpStatusCode;
+
 
 namespace CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
@@ -19,14 +21,14 @@ internal static class WrapperHelpers
   }
 
   private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-  private static readonly Dictionary<string, string> MemPackHeadersWithGzip = new([ MemPackContentHeader, MemPackAcceptHeader, GzipEncodingHeader ]);
-  private static readonly Dictionary<string, string> MemPackHeadersWithBrotli = new([ MemPackContentHeader, MemPackAcceptHeader, BrotliEncodingHeader ]);
+  private static readonly Dictionary<string, string> MemPackHeadersWithGzip = new([MemPackContentHeader, MemPackAcceptHeader, GzipEncodingHeader]);
+  private static readonly Dictionary<string, string> MemPackHeadersWithBrotli = new([MemPackContentHeader, MemPackAcceptHeader, BrotliEncodingHeader]);
 
-  private static readonly Dictionary<string, string> MsgPackHeadersWithGzip = new([ MsgPackContentHeader, MsgPackAcceptHeader, GzipEncodingHeader ]);
-  private static readonly Dictionary<string, string> MsgPackHeadersWithBrotli = new([ MsgPackContentHeader, MsgPackAcceptHeader, BrotliEncodingHeader ]);
+  private static readonly Dictionary<string, string> MsgPackHeadersWithGzip = new([MsgPackContentHeader, MsgPackAcceptHeader, GzipEncodingHeader]);
+  private static readonly Dictionary<string, string> MsgPackHeadersWithBrotli = new([MsgPackContentHeader, MsgPackAcceptHeader, BrotliEncodingHeader]);
 
-  private static readonly Dictionary<string, string> JsonHeadersWithGzip = new([ JsonContentHeader, JsonAcceptHeader, GzipEncodingHeader ]);
-  private static readonly Dictionary<string, string> JsonHeadersWithBrotli = new([ JsonContentHeader, JsonAcceptHeader, BrotliEncodingHeader ]);
+  private static readonly Dictionary<string, string> JsonHeadersWithGzip = new([JsonContentHeader, JsonAcceptHeader, GzipEncodingHeader]);
+  private static readonly Dictionary<string, string> JsonHeadersWithBrotli = new([JsonContentHeader, JsonAcceptHeader, BrotliEncodingHeader]);
 
   internal static Dictionary<string, string> SetCompressionHttpHeaders(Dictionary<string, string>? httpHeaders, CompressionOptions? compressionOptions = null, bool isStreaming = false)
   {
@@ -109,19 +111,17 @@ internal static class WrapperHelpers
     }
     catch (Exception ex)
     {
-      logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+      logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
     }
 
     if (httpHeaders.AnyFast())
     {
-      foreach (KeyValuePair<string, string> header in compressionHeaders)
+      foreach (KeyValuePair<string, string> header in compressionHeaders.Where(header => !httpHeaders.ContainsKey(header.Key)))
       {
-        if (!httpHeaders.ContainsKey(header.Key))
-        {
-          httpHeaders.TryAdd(header.Key, header.Value);
-        }
-        //httpHeaders.AddOrUpdate(header.Key, header.Value, (_, __) => header.Value);
+        httpHeaders.TryAdd(header.Key, header.Value);
       }
+
       return httpHeaders ?? [];
     }
     return compressionHeaders;
@@ -233,11 +233,11 @@ internal static class WrapperHelpers
     };
   }
 
-	internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, Uri? baseAddress, Dictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
-	{
-		RequestOptions<T> baseRequestOptions = new()
-		{
-			Url = $"{baseAddress}{options.Url}", //new Uri(client.BaseAddress ?? new(string.Empty), options.Url).ToString(), ,
+  internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, Uri? baseAddress, Dictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
+  {
+    RequestOptions<T> baseRequestOptions = new()
+    {
+      Url = $"{baseAddress}{options.Url}",
       HttpMethod = httpMethod,
       BearerToken = bearerToken,
       Timeout = options.ResilienceOptions?.TimeoutValue?.TotalSeconds,

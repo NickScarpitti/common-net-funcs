@@ -8,11 +8,8 @@ using xRetry;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class MemoryCacheMiddlewareTests
 {
-	private readonly IFixture _fixture;
 	private readonly IMemoryCache _cache;
 	private readonly CacheOptions _options;
 	private readonly CacheMetrics _metrics;
@@ -22,7 +19,6 @@ public sealed class MemoryCacheMiddlewareTests
 
 	public MemoryCacheMiddlewareTests()
 	{
-		_fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
 		_cache = A.Fake<IMemoryCache>();
 		_options = new CacheOptions();
 		_metrics = new CacheMetrics();
@@ -124,8 +120,7 @@ public sealed class MemoryCacheMiddlewareTests
 	[InlineData("10", null, null)]
 	[InlineData(null, "5", null)]
 	[InlineData(null, null, "2")]
-	public async Task InvokeAsync_WithCustomCacheDuration_SetsCacheOptions(
-			string? seconds, string? minutes, string? hours)
+	public async Task InvokeAsync_WithCustomCacheDuration_SetsCacheOptions(string? seconds, string? minutes, string? hours)
 	{
 		// Arrange
 		Dictionary<string, StringValues> queryDict = new()
@@ -161,5 +156,3 @@ public sealed class MemoryCacheMiddlewareTests
 		A.CallTo(() => _cache.CreateEntry(A<object>._)).MustHaveHappened();
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

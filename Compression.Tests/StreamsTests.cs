@@ -3,7 +3,6 @@ using static CommonNetFuncs.Compression.Streams;
 
 namespace Compression.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
 public sealed class StreamsTests
 {
 	private readonly Fixture _fixture;
@@ -284,29 +283,28 @@ public sealed class StreamsTests
 	public static TheoryData<byte[], ECompressionType> GetCompressionTestData()
 	{
 		TheoryData<byte[], ECompressionType> data = new()
-				{
-            // Gzip header (1F 8B)
-            { new byte[] { 0x1F, 0x8B, 0x08, 0x00 }, ECompressionType.Gzip },
+			{
+				// Gzip header (1F 8B)
+				{ new byte[] { 0x1F, 0x8B, 0x08, 0x00 }, ECompressionType.Gzip },
 
-            // Zlib header (78 01, 78 9C, or 78 DA)
-            { new byte[] { 0x78, 0x01, 0x00, 0x00 }, ECompressionType.ZLib },
-						{ new byte[] { 0x78, 0x9C, 0x00, 0x00 }, ECompressionType.ZLib },
-						{ new byte[] { 0x78, 0xDA, 0x00, 0x00 }, ECompressionType.ZLib },
+				// Zlib header (78 01, 78 9C, or 78 DA)
+				{ new byte[] { 0x78, 0x01, 0x00, 0x00 }, ECompressionType.ZLib },
+				{ new byte[] { 0x78, 0x9C, 0x00, 0x00 }, ECompressionType.ZLib },
+				{ new byte[] { 0x78, 0xDA, 0x00, 0x00 }, ECompressionType.ZLib },
 
-            // Brotli header (CE B2 CF 81)
-            { new byte[] { 0xCE, 0xB2, 0xCF, 0x81 }, ECompressionType.Brotli },
+				// Brotli header (CE B2 CF 81)
+				{ new byte[] { 0xCE, 0xB2, 0xCF, 0x81 }, ECompressionType.Brotli },
 
-            // Invalid/Unknown header
-            { new byte[] { 0x00, 0x00, 0x00, 0x00 }, ECompressionType.None },
+				// Invalid/Unknown header
+				{ new byte[] { 0x00, 0x00, 0x00, 0x00 }, ECompressionType.None },
 
-            // Edge case - exactly 2 bytes
-            { new byte[] { 0x1F, 0x8B }, ECompressionType.Gzip },
+				// Edge case - exactly 2 bytes
+				{ new byte[] { 0x1F, 0x8B }, ECompressionType.Gzip },
 
-            // Edge case - 3 bytes
-            { new byte[] { 0x78, 0x01, 0x00 }, ECompressionType.ZLib }
-				};
+				// Edge case - 3 bytes
+				{ new byte[] { 0x78, 0x01, 0x00 }, ECompressionType.ZLib }
+			};
 
 		return data;
 	}
 }
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

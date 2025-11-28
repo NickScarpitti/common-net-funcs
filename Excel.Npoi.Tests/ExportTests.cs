@@ -7,8 +7,6 @@ using xRetry;
 
 namespace Excel.Npoi.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public class ExportTests
 {
 	private readonly IFixture _fixture;
@@ -173,7 +171,7 @@ public class ExportTests
 		// Arrange
 		List<TestData> testData = _fixture.CreateMany<TestData>(100).ToList();
 		using CancellationTokenSource cts = new();
-		cts.Cancel();
+		await cts.CancelAsync();
 
 		// Act & Assert
 		await Should.ThrowAsync<OperationCanceledException>(async () => await testData.GenericExcelExport(cancellationToken: cts.Token));
@@ -339,7 +337,7 @@ public class ExportTests
 		// Arrange
 		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
 		await using MemoryStream memoryStream = new();
-		memoryStream.Dispose();
+		await memoryStream.DisposeAsync();
 
 		// Act
 		await using MemoryStream? resultStream = await testData.GenericExcelExport(memoryStream: memoryStream);
@@ -349,5 +347,3 @@ public class ExportTests
 		resultStream.Length.ShouldBe(0); // Should return an empty stream since the original was disposed
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

@@ -50,12 +50,12 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 				if (options.UseBearerToken)
 				{
-			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-		}
+					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+				}
 
-		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
+				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
 
-		result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -118,12 +118,12 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 				if (options.UseBearerToken)
 				{
-			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-		}
+					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+				}
 
-		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
+				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
 
-		result = await client.StreamingRestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.StreamingRestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -347,12 +347,12 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 				if (options.UseBearerToken)
 				{
-			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-		}
+					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+				}
 
-		RequestOptions<UT> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<UT> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
-		result = await client.RestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -417,12 +417,12 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 				if (options.UseBearerToken)
 				{
-			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-		}
+					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+				}
 
-		RequestOptions<UT> baseRequestOptions = GetRequestOptions<UT>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<UT> baseRequestOptions = GetRequestOptions<UT>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
-		result = await client.StreamingRestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.StreamingRestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -574,13 +574,13 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 				if (options.UseBearerToken)
 				{
-			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-		}
+					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+				}
 
-		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Patch, bearerToken, default,
-						patchDocument: new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json)); //new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json)); // System.Text.Json has issues producing JsonPatchDocument in the correct format
+				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Patch, bearerToken, default,
+								patchDocument: new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json)); //new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json)); // System.Text.Json has issues producing JsonPatchDocument in the correct format
 
-		result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -642,12 +642,12 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 				if (options.UseBearerToken)
 				{
-			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-		}
+					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+				}
 
-		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Put, bearerToken, replacementModel);
+				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Put, bearerToken, replacementModel);
 
-		result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -707,12 +707,12 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 				if (options.UseBearerToken)
 				{
-			bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
-		}
+					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
+				}
 
-		RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Delete, bearerToken, default);
+				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Delete, bearerToken, default);
 
-		result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{

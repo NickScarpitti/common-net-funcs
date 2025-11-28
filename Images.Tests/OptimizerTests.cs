@@ -4,8 +4,6 @@ using xRetry;
 
 namespace Images.Tests;
 
-#pragma warning disable CRR0029 // ConfigureAwait(true) is called implicitly
-
 public sealed class OptimizerTests : IDisposable
 {
 	private bool disposed;
@@ -16,14 +14,15 @@ public sealed class OptimizerTests : IDisposable
 		GC.SuppressFinalize(this);
 	}
 
-	private void Dispose(bool disposing)
+#pragma warning disable S1172 // Unused method parameters should be removed
+	private void Dispose(bool _)
 	{
 		if (!disposed)
 		{
-			if (disposing) { }
 			disposed = true;
 		}
 	}
+#pragma warning restore S1172 // Unused method parameters should be removed
 
 	~OptimizerTests()
 	{
@@ -137,5 +136,3 @@ public sealed class OptimizerTests : IDisposable
 		await Should.NotThrowAsync(async () => await Optimizer.OptimizeImage(testPath, gifsicleArgs, jpegoptimArgs, optipngArgs));
 	}
 }
-
-#pragma warning restore CRR0029 // ConfigureAwait(true) is called implicitly

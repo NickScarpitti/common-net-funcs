@@ -193,7 +193,7 @@ public sealed class CellFont : IFont
 	public void CopyProperties(IFont dest)
 	{
 		dest.FontName = FontName;
-		if (FontHeight != default)
+		if (FontHeight.NotEquals(default))
 		{
 			dest.FontHeight = FontHeight;
 		}
@@ -228,6 +228,8 @@ public static partial class Common
 	{
 		return StyleCacheTable.GetOrCreateValue(wb);
 	}
+
+	private const string ErrorLocationFormat = "{Class}.{Method} Error";
 
 	private static ICellStyle GetOrCreateStyle(this IWorkbook wb, CellStyle style, int cachedColorLimit = 100)
 	{
@@ -418,7 +420,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromReference)} Error");
+			logger.Error(ex, ErrorLocationFormat, nameof(Common), nameof(GetCellFromReference));
 			return null;
 		}
 	}
@@ -440,7 +442,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellOffset)} Error");
+			logger.Error(ex, ErrorLocationFormat, nameof(Common), nameof(GetCellOffset));
 			return null;
 		}
 	}
@@ -463,7 +465,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromCoordinates)} Error");
+			logger.Error(ex, ErrorLocationFormat, nameof(Common), nameof(GetCellFromCoordinates));
 			return null;
 		}
 	}
@@ -529,7 +531,7 @@ public static partial class Common
 			}
 			else
 			{
-				logger.Warn("{msg}", $"Unable to locate cell with name {cellName}");
+				logger.Warn("Unable to locate cell with name {cellName}", cellName);
 				return null;
 			}
 
@@ -564,7 +566,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromName)} Error");
+			logger.Error(ex, ErrorLocationFormat, $"{nameof(Common)}.{nameof(GetCellFromName)}");
 			return null;
 		}
 	}
@@ -586,8 +588,7 @@ public static partial class Common
 			}
 			catch (Exception ex)
 			{
-				logger.Warn("{msg}", $"Unable to locate cell with name {cellName}");
-				logger.Warn(ex);
+				logger.Warn(ex, "Unable to locate cell with name {cellName}", cellName);
 				return;
 			}
 			ISheet ws = wb.GetSheet(crs[0].SheetName);
@@ -612,7 +613,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(ClearAllFromName)} Error");
+			logger.Error(ex, ErrorLocationFormat, $"{nameof(Common)}.{nameof(ClearAllFromName)}");
 		}
 	}
 
@@ -646,7 +647,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(WriteExcelFile)} Error");
+			logger.Error(ex, ErrorLocationFormat, $"{nameof(Common)}.{nameof(WriteExcelFile)}");
 			return false;
 		}
 	}
@@ -670,7 +671,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(WriteExcelFile)} Error");
+			logger.Error(ex, ErrorLocationFormat, $"{nameof(Common)}.{nameof(WriteExcelFile)}");
 			return false;
 		}
 	}
@@ -1183,7 +1184,6 @@ public static partial class Common
 		wb.AddImages([imageData], [cellName], anchorType);
 	}
 
-
 	/// <summary>
 	/// Adds images into a workbook at the designated named ranges
 	/// </summary>
@@ -1192,8 +1192,8 @@ public static partial class Common
 	/// <param name="range">Range to insert image at</param>
 	public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, string range, AnchorType anchorType = AnchorType.MoveAndResize)
 	{
-		CellRangeAddress? cellRange = ws.GetCellFromReference(range).GetRangeOfMergedCells() ?? throw new ArgumentException($"Unable to get range from reference {range}", nameof(range));
-		wb.AddImages(ws, [imageData], [cellRange], anchorType);
+		CellRangeAddress? cellRangeAddress = ws.GetCellFromReference(range).GetRangeOfMergedCells() ?? throw new ArgumentException($"Unable to get range from reference {range}", nameof(range));
+		wb.AddImages(ws, [imageData], cellRangeAddress != null ? [cellRangeAddress] : [], anchorType);
 	}
 
 	/// <summary>
@@ -1215,8 +1215,8 @@ public static partial class Common
 	/// <param name="cell">Cell in range to insert image at</param>
 	public static void AddImage(this IWorkbook wb, ISheet ws, byte[] imageData, ICell cell, AnchorType anchorType = AnchorType.MoveAndResize)
 	{
-		CellRangeAddress? cellRange = cell.GetRangeOfMergedCells() ?? throw new ArgumentException("Unable to get range from cell", nameof(cell));
-		wb.AddImages(ws, [imageData], [cellRange], anchorType);
+		CellRangeAddress? cellRangeAddress = cell.GetRangeOfMergedCells() ?? throw new ArgumentException($"Unable to get range from cell at {cell.Address.FormatAsString()}", nameof(cell));
+		wb.AddImages(ws, [imageData], [cellRangeAddress], anchorType);
 	}
 
 	/// <summary>
@@ -1391,9 +1391,9 @@ public static partial class Common
 		for (int i = startCol; i < endCol + 1; i++)
 		{
 			double columnWidth = ws.GetColumnWidthInPixels(i);
-			if (columnWidth == 0.0)
+			if (columnWidth.Equals(0))
 			{
-				logger.Warn("{msg}", $"Width of Column {i} is 0! Check referenced excel sheet: {ws.SheetName}");
+				logger.Warn("Width of Column {Column} is 0! Check referenced excel sheet: {SheetName}", i, ws.SheetName);
 			}
 			totalWidth += columnWidth;
 		}
@@ -1554,16 +1554,16 @@ public static partial class Common
 						}
 						else
 						{
-#pragma warning disable S1994 // "for" loop increment clauses should modify the loops' counters
 							string? currentCellVal = startCell.GetStringValue();
+#pragma warning disable S1994 // "for" loop increment clauses should modify the loops' counters
 							for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
 							{
 								endColIndex = colIndex - 1;
 								dataTable.Columns.Add(currentCellVal);
 								currentCellVal = startCell.GetCellOffset(colIndex, 0).GetStringValue();
 							}
-						}
 #pragma warning restore S1994 // "for" loop increment clauses should modify the loops' counters
+						}
 					}
 					else
 					{
@@ -1576,8 +1576,8 @@ public static partial class Common
 						}
 						else
 						{
-#pragma warning disable S1994 // "for" loop increment clauses should modify the loops' counters
 							string? currentCellVal = startCell.GetStringValue();
+#pragma warning disable S1994 // "for" loop increment clauses should modify the loops' counters
 							for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
 							{
 								endColIndex = colIndex - 1;
@@ -1646,7 +1646,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Unable to read excel data. Location: {nameof(Common)}.{nameof(ReadExcelFileToDataTable)}");
+			logger.Error(ex, "Unable to read excel data. Location: {Class}.{Method}", nameof(Common), nameof(ReadExcelFileToDataTable));
 		}
 
 		return dataTable;
@@ -1731,7 +1731,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Unable to read excel table data. Location {nameof(Common)}.{nameof(ReadExcelTableToDataTable)}");
+			logger.Error(ex, "Unable to read excel table data. Location: {Class}.{Method}", nameof(Common), nameof(ReadExcelTableToDataTable));
 		}
 
 		return dataTable;

@@ -1,12 +1,16 @@
 ﻿using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
+
 using static System.Web.HttpUtility;
 
 namespace CommonNetFuncs.Email;
 
 public static partial class HtmlEmailBuilder
 {
+	const string LineBreak = "<br><br>";
+	const string CloseTr = "</tr>";
+
 	[GeneratedRegex(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase, "en-US")]
 	private static partial Regex UrlRegex();
 
@@ -21,7 +25,7 @@ public static partial class HtmlEmailBuilder
 		StringBuilder emailTextBuilder = new("<html><body>");
 		emailTextBuilder.Append(body.StringToHtml());
 		emailTextBuilder.Append(body.StringToHtml());
-		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty);
+		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? LineBreak : string.Empty);
 		emailTextBuilder.Append(footer.StringToHtml());
 		emailTextBuilder.Append("</body></html>");
 		return emailTextBuilder.ToString().FormatAllUrlsToHtml();
@@ -31,17 +35,17 @@ public static partial class HtmlEmailBuilder
 	/// Creates an HTML body for an email using the inputs provided
 	/// </summary>
 	/// <param name="body">Main text body of the email that goes before a table if there is one</param>
-	/// <param name="footer">Any text to be displayed under the table or after the body</param>
 	/// <param name="tableData">Data to be formatted into an HTML table.</param>
+	/// <param name="footer">Any text to be displayed under the table or after the body</param>
 	/// <returns>HTML Body of an email</returns>
-	public static string BuildHtmlEmail(string body, string? footer = null, DataTable? tableData = null, CancellationToken cancellationToken = default)
+	public static string BuildHtmlEmail(string body, DataTable? tableData, string? footer = null, CancellationToken cancellationToken = default)
 	{
 		StringBuilder emailTextBuilder = new("<html><body>");
 		emailTextBuilder.Append(body.StringToHtml());
 		emailTextBuilder.Append(body.StringToHtml());
-		emailTextBuilder.Append(tableData == null || tableData.Rows.Count == 0 ? string.Empty : "<br><br>");
+		emailTextBuilder.Append(tableData == null || tableData.Rows.Count == 0 ? string.Empty : LineBreak);
 		emailTextBuilder.Append(tableData.CreateHtmlTable(cancellationToken: cancellationToken));
-		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty);
+		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? LineBreak : string.Empty);
 		emailTextBuilder.Append(footer.StringToHtml());
 		emailTextBuilder.Append("</body></html>");
 		return emailTextBuilder.ToString().FormatAllUrlsToHtml();
@@ -51,18 +55,18 @@ public static partial class HtmlEmailBuilder
 	/// Creates an HTML body for an email using the inputs provided
 	/// </summary>
 	/// <param name="body">Main text body of the email that goes before a table if there is one</param>
-	/// <param name="footer">Any text to be displayed under the table or after the body</param>
 	/// <param name="tableData">Data to be formatted into a table. First item should be the header data</param>
+	/// <param name="footer">Any text to be displayed under the table or after the body</param>
 	/// <returns>HTML Body of an email</returns>
-	public static string BuildHtmlEmail(string body, string? footer = null, List<List<string>>? tableData = null, CancellationToken cancellationToken = default)
+	public static string BuildHtmlEmail(string body, List<List<string>>? tableData, string? footer = null, CancellationToken cancellationToken = default)
 	{
 		tableData ??= [];
 
 		StringBuilder emailTextBuilder = new("<html><body>");
 		emailTextBuilder.Append(body.StringToHtml());
-		emailTextBuilder.Append(tableData.Count == 0 ? string.Empty : "<br><br>");
+		emailTextBuilder.Append(tableData.Count == 0 ? string.Empty : LineBreak);
 		emailTextBuilder.Append(tableData.CreateHtmlTable(cancellationToken: cancellationToken));
-		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty);
+		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? LineBreak : string.Empty);
 		emailTextBuilder.Append(footer.StringToHtml());
 		emailTextBuilder.Append("</body></html>");
 
@@ -93,9 +97,9 @@ public static partial class HtmlEmailBuilder
 	public static string FormatAllUrlsToHtml(this string text, string? linkText = null)
 	{
 		StringBuilder textToFormat = new(text);
-		foreach (Match url in UrlRegex().Matches(text))
+		foreach (string url in UrlRegex().Matches(text).Select(x => x.Value))
 		{
-			textToFormat.Replace(url.Value, url.Value.CreateHtmlLink(linkText ?? "Click Here"));
+			textToFormat.Replace(url, url.CreateHtmlLink(linkText ?? "Click Here"));
 		}
 		return textToFormat.ToString();
 	}
@@ -149,7 +153,7 @@ public static partial class HtmlEmailBuilder
 			{
 				tableHtmlBuilder.Append($"<th>{column.ColumnName}</th>");
 			}
-			tableHtmlBuilder.Append("</tr>");
+			tableHtmlBuilder.Append(CloseTr);
 
 			//Add data rows
 			foreach (DataRow rowData in tableData.Rows)
@@ -157,7 +161,7 @@ public static partial class HtmlEmailBuilder
 				cancellationToken.ThrowIfCancellationRequested();
 				tableHtmlBuilder.Append("<tr>");
 				tableHtmlBuilder.Append(string.Concat(rowData.ItemArray.Select(x => $"<td>{x?.ToString()}</td>")));
-				tableHtmlBuilder.Append("</tr>");
+				tableHtmlBuilder.Append(CloseTr);
 			}
 			tableHtmlBuilder.Append("</table>");
 		}
@@ -201,7 +205,7 @@ public static partial class HtmlEmailBuilder
 			//Make headers
 			tableHtmlBuilder.Append("<table><tr>");
 			tableHtmlBuilder.Append(string.Concat(tableHeaders.Select(x => $"<th>{x}</th>")));
-			tableHtmlBuilder.Append("</tr>");
+			tableHtmlBuilder.Append(CloseTr);
 
 			//Add data rows
 			foreach (List<string> rowData in tableData.Skip(1))
@@ -209,7 +213,7 @@ public static partial class HtmlEmailBuilder
 				cancellationToken.ThrowIfCancellationRequested();
 				tableHtmlBuilder.Append("<tr>");
 				tableHtmlBuilder.Append(string.Concat(rowData.Select(x => $"<td>{x}</td>")));
-				tableHtmlBuilder.Append("</tr>");
+				tableHtmlBuilder.Append(CloseTr);
 			}
 			tableHtmlBuilder.Append("</table>");
 		}

@@ -163,7 +163,7 @@ internal static class WrapperHelpers
 
 	internal static void UpdateStreamingHeaders(RestHelperOptions options)
 	{
-		options.HttpHeaders ??= [];
+		options.HttpHeaders ??= new Dictionary<string, string>();
 		options.HttpHeaders[AcceptHeader] = Json; // When streaming, we always want to use JSON
 	}
 

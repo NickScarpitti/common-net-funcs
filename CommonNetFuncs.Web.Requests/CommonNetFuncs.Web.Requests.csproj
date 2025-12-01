@@ -5,7 +5,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>$(AssemblyName)</Title>
@@ -30,7 +30,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.8.23</Version>
+    <Version>3.8.24</Version>
     <MinVerTagPrefix>web.requests-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>

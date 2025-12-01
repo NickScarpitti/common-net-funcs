@@ -14,7 +14,7 @@ using MemoryPack;
 using MessagePack;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelpersStatic;
 
-namespace BenchmarkSuite1;
+namespace BenchmarkSuite;
 
 [MediumRunJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
@@ -29,6 +29,9 @@ public class RestHelpersStaticBenchmarks
 	private byte[] _compressedTextDataGzip = null!;
 	private byte[] _largeJsonData = null!;
 	private byte[] _compressedLargeJsonDataGzip = null!;
+	private byte[] _memoryPackData = null!;
+	private byte[] _compressedMemoryPackDataGzip = null!;
+	private byte[] _compressedMemoryPackDataBrotli = null!;
 	private TestModel _testModel = null!;
 	private List<TestModel> _largeTestModelList = null!;
 	private Dictionary<string, string> _headers = null!;
@@ -45,10 +48,10 @@ public class RestHelpersStaticBenchmarks
 		_largeTestModelList = new List<TestModel>();
 		for (int i = 0; i < 1000; i++)
 		{
-			_largeTestModelList.Add(new TestModel 
-			{ 
-				Name = $"Test User {i}", 
-				Value = i, 
+			_largeTestModelList.Add(new TestModel
+			{
+				Name = $"Test User {i}",
+				Value = i,
 				Description = $"This is test description number {i} with some additional content to make it more realistic and test performance with larger payloads"
 			});
 		}
@@ -110,6 +113,29 @@ public class RestHelpersStaticBenchmarks
 			}
 			_compressedLargeJsonDataGzip = compressedStream.ToArray();
 		}
+
+		// Create MemoryPack data
+		_memoryPackData = MemoryPackSerializer.Serialize(_testModel);
+
+		// Create GZip compressed MemoryPack
+		using (MemoryStream compressedStream = new())
+		{
+			using (GZipStream gzipStream = new(compressedStream, CompressionLevel.Optimal, true))
+			{
+				gzipStream.Write(_memoryPackData, 0, _memoryPackData.Length);
+			}
+			_compressedMemoryPackDataGzip = compressedStream.ToArray();
+		}
+
+		// Create Brotli compressed MemoryPack
+		using (MemoryStream compressedStream = new())
+		{
+			using (BrotliStream brotliStream = new(compressedStream, CompressionLevel.Optimal, true))
+			{
+				brotliStream.Write(_memoryPackData, 0, _memoryPackData.Length);
+			}
+			_compressedMemoryPackDataBrotli = compressedStream.ToArray();
+		}
 	}
 
 	[Benchmark(Baseline = true)]
@@ -159,6 +185,27 @@ public class RestHelpersStaticBenchmarks
 	{
 		await using MemoryStream stream = new(_compressedTextDataGzip);
 		return await stream.ReadResponseStream<string>("text/plain", "gzip", false);
+	}
+
+	[Benchmark]
+	public async Task<TestModel?> ReadResponseStream_MemoryPack_NoCompression()
+	{
+		await using MemoryStream stream = new(_memoryPackData);
+		return await stream.ReadResponseStream<TestModel>("application/x-memorypack", null, false);
+	}
+
+	[Benchmark]
+	public async Task<TestModel?> ReadResponseStream_MemoryPack_GZip()
+	{
+		await using MemoryStream stream = new(_compressedMemoryPackDataGzip);
+		return await stream.ReadResponseStream<TestModel>("application/x-memorypack", "gzip", false);
+	}
+
+	[Benchmark]
+	public async Task<TestModel?> ReadResponseStream_MemoryPack_Brotli()
+	{
+		await using MemoryStream stream = new(_compressedMemoryPackDataBrotli);
+		return await stream.ReadResponseStream<TestModel>("application/x-memorypack", "br", false);
 	}
 
 	[Benchmark]

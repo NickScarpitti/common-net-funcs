@@ -26,7 +26,7 @@ public sealed class UseResponseSizeLoggingMiddleware(RequestDelegate next, ILogg
 		{
 			await next(context).ConfigureAwait(false);
 
-			if (countingStream.BytesWritten > logThreshold)
+			if (countingStream.BytesWritten > logThreshold && logger.IsEnabled(LogLevel.Warning))
 			{
 				logger.LogWarning("Response to {RequestPath} [{RequestMethod}] of type [{RequestHeadersAccept}{AcceptEncoding}] with Size: {ResponseSize}",
 					context.Request.Path, context.Request.Method, context.Request.Headers.Accept, string.IsNullOrEmpty(context.Request.Headers.AcceptEncoding) ? string.Empty : $" + {HtmlEncode(context.Request.Headers.AcceptEncoding)}", countingStream.BytesWritten.GetFileSizeFromBytesWithUnits(2));

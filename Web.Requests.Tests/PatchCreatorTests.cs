@@ -115,9 +115,7 @@ public class PatchCreatorTests
 		patch.Operations[2].path.ShouldBe("/DateTimeOffset");
 		patch.Operations[2].value.ShouldBeOfType<JValue>();
 		((JValue)patch.Operations[0].value).Value.ShouldBe(modified.DateTime);
-#pragma warning disable S6580 // Use a format provider when parsing date and time
 		DateOnly.TryParse(((JValue)patch.Operations[1].value).Value?.ToString(), out DateOnly dateOnlyResult).ShouldBeTrue();
-#pragma warning restore S6580 // Use a format provider when parsing date and time
 		DateOnly? nullableDateOnlyResult = dateOnlyResult;
 		nullableDateOnlyResult.ShouldBe(modified.DateOnly);
 		((DateTimeOffset?)((JValue)patch.Operations[2].value).Value).ShouldBe(modified.DateTimeOffset);

@@ -318,7 +318,7 @@ public static class Email
 				else
 				{
 					await using MemoryStream memoryStream = new();
-					using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
+					await using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
 
 					await attachments.Where(x => !string.IsNullOrWhiteSpace(x.AttachmentName)).Select(x => (x.AttachmentStream, x.AttachmentName!)).AddFilesToZip(archive, CompressionLevel.SmallestSize, cancellationToken).ConfigureAwait(false);
 
@@ -334,7 +334,7 @@ public static class Email
 					//        await entryStream.FlushAsync();
 					//    }
 					//}
-					archive.Dispose();
+					await archive.DisposeAsync();
 					memoryStream.Position = 0;
 					await bodyBuilder.Attachments.AddAsync("Files.zip", memoryStream, cancellationToken).ConfigureAwait(false);
 				}

@@ -215,7 +215,7 @@ public class RestHelpersStaticBenchmarks
 	}
 
 	[Benchmark]
-	public void AttachHeaders_MultipleHeaders()
+	public static void AttachHeaders_MultipleHeaders()
 	{
 		HttpRequestMessage request = new(HttpMethod.Get, DummyUrl);
 		Dictionary<string, string> manyHeaders = new()

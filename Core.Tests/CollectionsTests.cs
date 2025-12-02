@@ -801,9 +801,7 @@ public sealed class CollectionsTests
 		result[1]!.Id.ShouldBe(2);
 		result[1]!.Name.ShouldBe("test2");
 		result[1]!.IsActive.ShouldBeFalse();
-#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
-#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
 	}
 
@@ -839,9 +837,7 @@ public sealed class CollectionsTests
 			result[1]!.Id.ShouldBe(2);
 			result[1]!.Name.ShouldBe("test2");
 			result[1]!.IsActive.ShouldBeFalse();
-#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 			result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
-#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 			result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
 		}
 		else

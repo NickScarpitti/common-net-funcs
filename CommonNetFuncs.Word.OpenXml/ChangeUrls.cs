@@ -115,7 +115,7 @@ public static class ChangeUrls
 				foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
 				{
 					string currentUri = hyperlink.Uri.ToString();
-					if (regex.Matches(currentUri).Count > 0)
+					if (regex.Count(currentUri) > 0)
 					{
 						mainPart.DeleteReferenceRelationship(hyperlink);
 						mainPart.AddHyperlinkRelationship(new Uri(Regex.Replace(currentUri, regexPattern, replacementText, regexOptions, (TimeSpan)regexTimeout)), true, hyperlink.Id);
@@ -165,7 +165,7 @@ public static class ChangeUrls
 					foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
 					{
 						string currentUri = hyperlink.Uri.ToString();
-						if (regex.Matches(currentUri).Count > 0)
+						if (regex.Count(currentUri) > 0)
 						{
 							mainPart.DeleteReferenceRelationship(hyperlink);
 							mainPart.AddHyperlinkRelationship(new Uri(Regex.Replace(currentUri, item.Key, item.Value, regexOptions, (TimeSpan)regexTimeout)), true, hyperlink.Id);

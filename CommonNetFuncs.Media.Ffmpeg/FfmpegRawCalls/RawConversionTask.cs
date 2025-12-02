@@ -202,10 +202,12 @@ public static partial class RawConversionTask
 // Extension method for WaitHandle
 public static class WaitHandleExtensions
 {
+#pragma warning disable RCS1163 // Unused parameter
 	public static Task<bool> WaitOneAsync(this WaitHandle waitHandle)
 	{
 		TaskCompletionSource<bool> tcs = new();
 		ThreadPool.RegisterWaitForSingleObject(waitHandle, (state, timedOut) => tcs.SetResult(!timedOut), null, -1, true);
 		return tcs.Task;
 	}
+#pragma warning restore RCS1163 // Unused parameter
 }

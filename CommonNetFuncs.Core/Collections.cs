@@ -657,7 +657,6 @@ public static partial class Collections
 		return map;
 	}
 
-#pragma warning disable S6580 // Use a format provider when parsing date and time
 	/// <summary>
 	/// Get the mapping between row values and <see langword="class"/> properties for a specific <see langword="class"/> type.
 	/// </summary>
@@ -729,7 +728,6 @@ public static partial class Collections
 		}
 		return item;
 	}
-#pragma warning restore S6580 // Use a format provider when parsing date and time
 
 	/// <summary>
 	/// Convert an <see cref="IEnumerable{T}"/> into equivalent <see cref="DataTable"/> object using expression trees.

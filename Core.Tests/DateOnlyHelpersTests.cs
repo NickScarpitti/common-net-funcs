@@ -1,7 +1,7 @@
 ﻿using CommonNetFuncs.Core;
 
 namespace Core.Tests;
-#pragma warning disable S6580 // Use a format provider when parsing date and time
+
 public sealed class DateOnlyHelpersTests
 {
 	[Theory]
@@ -125,4 +125,3 @@ public sealed class DateOnlyHelpersTests
 		DateOnlyHelpers.GetToday(true).ShouldBe(expected);
 	}
 }
-#pragma warning restore S6580 // Use a format provider when parsing date and time

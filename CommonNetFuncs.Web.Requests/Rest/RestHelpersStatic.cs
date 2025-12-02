@@ -106,7 +106,7 @@ public static class RestHelpersStatic
 				//Ensure JSON header is being used
 				if (requestOptions.HttpHeaders == null)
 				{
-					requestOptions.HttpHeaders = new([JsonAcceptHeader]);
+					requestOptions.HttpHeaders = new Dictionary<string, string>([JsonAcceptHeader]);
 				}
 				else if (requestOptions.HttpHeaders.Remove(AcceptHeader))
 				{
@@ -227,7 +227,7 @@ public static class RestHelpersStatic
 			//Ensure JSON header is being used
 			if (requestOptions.HttpHeaders == null)
 			{
-				requestOptions.HttpHeaders = new([JsonAcceptHeader]);
+				requestOptions.HttpHeaders = new Dictionary<string, string>([JsonAcceptHeader]);
 			}
 			else if (requestOptions.HttpHeaders.TryGetValue(AcceptHeader, out string? header) && header != Json && requestOptions.HttpHeaders.Remove(AcceptHeader))
 			{
@@ -644,7 +644,7 @@ public static class RestHelpersStatic
 	/// <param name="httpHeaders">Headers used in the HTTP request.</param>
 	/// <param name="postObject">Object to add as the content (POST and PUT only).</param>
 	/// <param name="patchDoc">Patch document for PATCH requests.</param>
-	internal static void AddContent<T>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, Dictionary<string, string>? httpHeaders = null, T? postObject = default, HttpContent? patchDoc = null)
+	internal static void AddContent<T>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, IDictionary<string, string>? httpHeaders = null, T? postObject = default, HttpContent? patchDoc = null)
 	{
 		if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
 		{
@@ -679,7 +679,7 @@ public static class RestHelpersStatic
 	/// <param name="httpRequestMessage">HTTP request to add headers to.</param>
 	/// <param name="bearerToken">Token used for bearer authentication</param>
 	/// <param name="httpHeaders">Dictionary of headers</param>
-	internal static void AttachHeaders(this HttpRequestMessage httpRequestMessage, string? bearerToken, Dictionary<string, string>? httpHeaders)
+	internal static void AttachHeaders(this HttpRequestMessage httpRequestMessage, string? bearerToken, IDictionary<string, string>? httpHeaders)
 	{
 		if (!bearerToken.IsNullOrEmpty())
 		{

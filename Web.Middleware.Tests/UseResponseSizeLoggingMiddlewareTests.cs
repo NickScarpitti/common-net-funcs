@@ -42,6 +42,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 
 		byte[] content = new byte[contentSize];
 		A.CallTo(() => _next(context)).Returns(Task.Run(() => context.Response.Body.WriteAsync(content, 0, content.Length)));
+		A.CallTo(() => _logger.IsEnabled(LogLevel.Warning)).Returns(true);
 
 		// Set up request headers
 		context.Request.Method = "GET";
@@ -53,7 +54,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 		await middleware.InvokeAsync(context);
 
 		// Assert - Get the actual call and verify the formatted message
-		IFakeObjectCall call = Fake.GetCalls(_logger).Single();
+		IFakeObjectCall call = Fake.GetCalls(_logger).Single(c => c.Method.Name == "Log");
 		call.Arguments[0].ShouldBe(LogLevel.Warning);
 
 		object? state = call.Arguments[2];
@@ -102,6 +103,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 	public async Task InvokeAsync_HandlesEmptyHeaders()
 	{
 		// Arrange
+		A.CallTo(() => _logger.IsEnabled(LogLevel.Warning)).Returns(true);
 		UseResponseSizeLoggingMiddleware middleware = new(_next, _logger, -1);
 		DefaultHttpContext context = new();
 		context.Response.Body = new MemoryStream();
@@ -114,7 +116,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 		await middleware.InvokeAsync(context);
 
 		// Assert - Get the actual call and verify the formatted message
-		IFakeObjectCall call = Fake.GetCalls(_logger).Single();
+		IFakeObjectCall call = Fake.GetCalls(_logger).Single(c => c.Method.Name == "Log");
 		call.Arguments[0].ShouldBe(LogLevel.Warning);
 
 		object? state = call.Arguments[2];

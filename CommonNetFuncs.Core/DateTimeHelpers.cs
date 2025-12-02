@@ -79,9 +79,7 @@ public static class DateTimeHelpers
 	/// <returns>DateTime for the first day of the specified month</returns>
 	public static DateTime GetFirstDayOfMonth(int month, int year)
 	{
-#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		return new(year, month, 1);
-#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 	}
 
 	/// <summary>
@@ -99,9 +97,7 @@ public static class DateTimeHelpers
 	/// <returns>DateTime for the lest day of the specified month</returns>
 	public static DateTime GetLastDayOfMonth(int month, int year)
 	{
-#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		return new(year, month, DateTime.DaysInMonth(year, month));
-#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 	}
 
 	/// <summary>

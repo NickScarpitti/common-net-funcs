@@ -195,7 +195,7 @@ public class TestEntity
 
 // Retrieve the entity with the maximum Id
 BaseDbContextActions<TestEntity, TestDbContext> actions = new(serviceProvider);
-TestEntity? maxEntity = await actions.GetMaxByOrder(full: false, whereExpression: _ => true, descendingOrderEpression: x => x.Id);
+TestEntity? maxEntity = await actions.GetMaxByOrder(full: false, whereExpression: _ => true, descendingOrderExpression: x => x.Id);
 ```
 
 #### GetMinByOrder

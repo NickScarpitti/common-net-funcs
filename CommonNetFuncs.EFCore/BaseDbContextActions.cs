@@ -22,7 +22,6 @@ public sealed class FullQueryOptions(bool? splitQueryOverride = null) : Navigati
 	/// </summary>
 	public bool? SplitQueryOverride { get; set; } = splitQueryOverride;
 }
-#pragma warning disable S6664 // Reduce the number of Error logging calls within this code block from X to the 1 allowed
 /// <summary>
 /// Common EF Core interactions with a database. Must be using dependency injection for this class to work.
 /// </summary>
@@ -3070,8 +3069,6 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
 	#endregion Write
 }
-
-#pragma warning restore S6664 // Reduce the number of Error logging calls within this code block from X to the 1 allowed
 
 public sealed class GenericPagingModel<T>// where T : class
 {

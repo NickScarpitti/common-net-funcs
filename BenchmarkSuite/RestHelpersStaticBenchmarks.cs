@@ -9,11 +9,12 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Jobs;
+using CommonNetFuncs.Web.Requests.Rest;
 using MemoryPack;
 using MessagePack;
 
 using static CommonNetFuncs.Web.Common.ContentTypes;
-using static CommonNetFuncs.Web.Requests.Rest.RestHelpersStatic;
+
 namespace BenchmarkSuite;
 
 [MediumRunJob(RuntimeMoniker.Net90)]
@@ -29,7 +30,7 @@ public class RestHelpersStaticBenchmarks
 	private byte[] _compressedTextDataGzip = null!;
 	private byte[] _largeJsonData = null!;
 	private byte[] _compressedLargeJsonDataGzip = null!;
-	private TestModel _testModel = null!;
+	private BenchmarkTestModel _testModel = null!;
 	private Dictionary<string, string> _headers = null!;
 	private Dictionary<string, string> _headersWithContentType = null!;
 
@@ -38,15 +39,15 @@ public class RestHelpersStaticBenchmarks
 	[GlobalSetup]
 	public void Setup()
 	{
-		_testModel = new TestModel { Name = "Test User", Value = 12345, Description = "This is a test description with some content to make it more realistic" };
+		_testModel = new BenchmarkTestModel { Name = "Test User", Value = 12345, Description = "This is a test description with some content to make it more realistic" };
 		string jsonString = JsonSerializer.Serialize(_testModel);
 		_jsonData = Encoding.UTF8.GetBytes(jsonString);
 
 		// Create a large list for more realistic testing
-		List<TestModel> _largeTestModelList = new();
+		List<BenchmarkTestModel> _largeTestModelList = new();
 		for (int i = 0; i < 1000; i++)
 		{
-			_largeTestModelList.Add(new TestModel
+			_largeTestModelList.Add(new BenchmarkTestModel
 			{
 				Name = $"Test User {i}",
 				Value = i,
@@ -114,38 +115,38 @@ public class RestHelpersStaticBenchmarks
 	}
 
 	[Benchmark(Baseline = true)]
-	public async Task<TestModel?> ReadResponseStream_Json_NoCompression()
+	public async Task<BenchmarkTestModel?> ReadResponseStream_Json_NoCompression()
 	{
 		await using MemoryStream stream = new(_jsonData);
-		return await stream.ReadResponseStream<TestModel>(Json, null, false);
+		return await stream.ReadResponseStream<BenchmarkTestModel>(Json, null, false);
 	}
 
 	[Benchmark]
-	public async Task<TestModel?> ReadResponseStream_Json_GZip()
+	public async Task<BenchmarkTestModel?> ReadResponseStream_Json_GZip()
 	{
 		await using MemoryStream stream = new(_compressedJsonDataGzip);
-		return await stream.ReadResponseStream<TestModel>(Json, "gzip", false);
+		return await stream.ReadResponseStream<BenchmarkTestModel>(Json, "gzip", false);
 	}
 
 	[Benchmark]
-	public async Task<TestModel?> ReadResponseStream_Json_Brotli()
+	public async Task<BenchmarkTestModel?> ReadResponseStream_Json_Brotli()
 	{
 		await using MemoryStream stream = new(_compressedJsonDataBrotli);
-		return await stream.ReadResponseStream<TestModel>(Json, "br", false);
+		return await stream.ReadResponseStream<BenchmarkTestModel>(Json, "br", false);
 	}
 
 	[Benchmark]
-	public async Task<List<TestModel>?> ReadResponseStream_LargeJson_NoCompression()
+	public async Task<List<BenchmarkTestModel>?> ReadResponseStream_LargeJson_NoCompression()
 	{
 		await using MemoryStream stream = new(_largeJsonData);
-		return await stream.ReadResponseStream<List<TestModel>>(Json, null, false);
+		return await stream.ReadResponseStream<List<BenchmarkTestModel>>(Json, null, false);
 	}
 
 	[Benchmark]
-	public async Task<List<TestModel>?> ReadResponseStream_LargeJson_GZip()
+	public async Task<List<BenchmarkTestModel>?> ReadResponseStream_LargeJson_GZip()
 	{
 		await using MemoryStream stream = new(_compressedLargeJsonDataGzip);
-		return await stream.ReadResponseStream<List<TestModel>>(Json, "gzip", false);
+		return await stream.ReadResponseStream<List<BenchmarkTestModel>>(Json, "gzip", false);
 	}
 
 	[Benchmark]
@@ -215,7 +216,7 @@ public class RestHelpersStaticBenchmarks
 	}
 
 	[Benchmark]
-	public void AttachHeaders_MultipleHeaders()
+	public static void AttachHeaders_MultipleHeaders()
 	{
 		HttpRequestMessage request = new(HttpMethod.Get, DummyUrl);
 		Dictionary<string, string> manyHeaders = new()
@@ -235,7 +236,7 @@ public class RestHelpersStaticBenchmarks
 
 [MemoryPackable]
 [MessagePackObject(true)]
-public partial class TestModel
+public partial class BenchmarkTestModel
 {
 	public string Name { get; set; } = string.Empty;
 	public int Value { get; set; }

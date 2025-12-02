@@ -2,8 +2,6 @@
 
 namespace Core.Tests;
 
-#pragma warning disable S6580 // Use a format provider when parsing date and time
-#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 public sealed class DateTimeHelpersTests
 {
 	[Theory]
@@ -144,5 +142,3 @@ public sealed class DateTimeHelpersTests
 		value.IsValidOaDate().ShouldBe(expected);
 	}
 }
-#pragma warning restore S6580 // Use a format provider when parsing date and time
-#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace Web.Common.Tests;
 
-#pragma warning disable S6580 // Use a format provider when parsing date and time
 public class UriHelpersTests
 {
 	[Theory]
@@ -211,4 +210,3 @@ public class UriHelpersTests
 		result.ShouldBe("https://example.com/api/v1/resource?key=value");
 	}
 }
-#pragma warning restore S6580 // Use a format provider when parsing date and time

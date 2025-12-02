@@ -1011,9 +1011,7 @@ public sealed class StringsTests
 	public void ToNString_Overloads_Work()
 	{
 		// Arrange
-#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		DateTime? dt = new DateTime(2024, 1, 2, 3, 4, 5);
-#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		DateOnly? d = new DateOnly(2024, 1, 2);
 		TimeSpan? ts = new TimeSpan(1, 2, 3);
 		int? i = 42;
@@ -1106,9 +1104,7 @@ public sealed class StringsTests
 		}
 		else
 		{
-#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 			result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value));
-#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		}
 	}
 
@@ -2046,9 +2042,7 @@ public sealed class StringsTests
 		}
 		else
 		{
-#pragma warning disable S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 			result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value));
-#pragma warning restore S6562 // Always set the "DateTimeKind" when creating new "DateTime" instances
 		}
 	}
 

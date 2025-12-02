@@ -39,6 +39,7 @@ public sealed class UseResponseLoggingFilterTests
 	{
 		// Arrange
 		A.CallTo(() => _config.ThresholdInSeconds).Returns(thresholdSeconds);
+		A.CallTo(() => _logger.IsEnabled(LogLevel.Warning)).Returns(true);
 		UseResponseLoggingFilter filter = new(_logger, _config);
 
 		object controller = new();
@@ -112,6 +113,7 @@ public sealed class UseResponseLoggingFilterTests
 	{
 		// Arrange
 		A.CallTo(() => _config.ThresholdInSeconds).Returns(thresholdSeconds);
+		A.CallTo(() => _logger.IsEnabled(LogLevel.Warning)).Returns(true);
 		UseResponseLoggingFilter filter = new(_logger, _config);
 
 		object controller = new();
@@ -133,7 +135,7 @@ public sealed class UseResponseLoggingFilterTests
 		filter.OnActionExecuted(executedContext);
 
 		// Assert - Should log warning for any elapsed time when threshold is zero or negative
-		IFakeObjectCall call = Fake.GetCalls(_logger).Single();
+		IFakeObjectCall call = Fake.GetCalls(_logger).Single(c => c.Method.Name == "Log");
 		call.Arguments[0].ShouldBe(LogLevel.Warning);
 
 		object? state = call.Arguments[2];

@@ -29,8 +29,8 @@ public static class RestHelperConstants
 	public static readonly KeyValuePair<string, string> MsgPackAcceptHeader = new(AcceptHeader, MsgPack);
 	public static readonly KeyValuePair<string, string> JsonAcceptHeader = new(AcceptHeader, Json);
 
-	public static readonly IImmutableDictionary<string, string> MemPackHeaders = ImmutableDictionary.CreateRange([MemPackContentHeader, MemPackAcceptHeader]);
-	public static readonly IImmutableDictionary<string, string> MsgPackHeaders = ImmutableDictionary.CreateRange([MsgPackContentHeader, MsgPackAcceptHeader]);
-	public static readonly IImmutableDictionary<string, string> JsonHeaders = ImmutableDictionary.CreateRange([JsonContentHeader, JsonAcceptHeader]);
-	public static readonly IImmutableDictionary<string, string> JsonNoEncodeHeaders = ImmutableDictionary.CreateRange([JsonContentHeader, JsonAcceptHeader, NoEncodingHeader]);
+	public static readonly ImmutableDictionary<string, string> MemPackHeaders = ImmutableDictionary.CreateRange([MemPackContentHeader, MemPackAcceptHeader]);
+	public static readonly ImmutableDictionary<string, string> MsgPackHeaders = ImmutableDictionary.CreateRange([MsgPackContentHeader, MsgPackAcceptHeader]);
+	public static readonly ImmutableDictionary<string, string> JsonHeaders = ImmutableDictionary.CreateRange([JsonContentHeader, JsonAcceptHeader]);
+	public static readonly ImmutableDictionary<string, string> JsonNoEncodeHeaders = ImmutableDictionary.CreateRange([JsonContentHeader, JsonAcceptHeader, NoEncodingHeader]);
 }

@@ -13,9 +13,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 	public NavigationPropertiesTests()
 	{
 		_fixture = new Fixture();
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
-				.UseInMemoryDatabase(databaseName: _fixture.Create<string>())
-				.Options;
+		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseInMemoryDatabase(databaseName: _fixture.Create<string>()).Options;
 		_context = new TestDbContext(options);
 	}
 

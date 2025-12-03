@@ -465,7 +465,6 @@ public static class AwsS3HelpersStatic
 			{
 				// Read the chunk from the source stream (thread-safe)
 				int totalBytesRead;
-#pragma warning disable S3998 // Threads should not lock on objects with weak identity
 				lock (sourceStream)
 				{
 					sourceStream.Seek(startPosition, SeekOrigin.Begin);
@@ -478,7 +477,6 @@ public static class AwsS3HelpersStatic
 						totalBytesRead += bytesRead;
 					}
 				}
-#pragma warning restore S3998 // Threads should not lock on objects with weak identity
 
 				if (totalBytesRead != actualChunkSize)
 				{

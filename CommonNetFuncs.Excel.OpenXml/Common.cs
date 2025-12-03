@@ -14,7 +14,7 @@ using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
 using Dwg = DocumentFormat.OpenXml.Drawing;
 using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
 namespace CommonNetFuncs.Excel.OpenXml;
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
+
 public static partial class Common
 {
 	private static readonly Lock formatCacheLock = new();
@@ -556,9 +556,7 @@ public static partial class Common
 			borders = stylesheet.Elements<Borders>().First();
 			Border defaultBorder = new(new LeftBorder(), new RightBorder(), new TopBorder(), new BottomBorder());
 			borders.Append(defaultBorder);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 			borders.Count = (uint)borders.Count();
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		}
 		return borders;
 	}
@@ -594,9 +592,7 @@ public static partial class Common
 			fills.Append(defaultFill2);
 
 			// fills.Append(defaultFill3);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 			fills.Count = (uint)fills.Count();
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		}
 		return fills;
 	}
@@ -623,9 +619,7 @@ public static partial class Common
 				FontScheme = new() { Val = FontSchemeValues.Minor }
 			};
 			fonts.Append(defaultFont);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 			fonts.Count = (uint)fonts.Count();
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		}
 		return fonts;
 	}
@@ -651,9 +645,7 @@ public static partial class Common
 				BorderId = 0
 			};
 			cellFormats.Append(defaultCellFormat);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 			cellFormats.Count = (uint)cellFormats.Count();
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		}
 		return cellFormats;
 	}
@@ -693,9 +685,7 @@ public static partial class Common
 				border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
 										new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
 				borders.Append(border);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.BorderId = ((uint)borders.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 				cellFormat.ApplyBorder = true;
 
 				fill = new()
@@ -711,9 +701,7 @@ public static partial class Common
 				};
 
 				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 				cellFormat.ApplyFill = true;
 
 				cellFormat.FontId = GetFontId(EFont.Header, fonts);
@@ -727,9 +715,7 @@ public static partial class Common
 				border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
 										new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Medium }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
 				borders.Append(border);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.BorderId = ((uint)borders.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 				cellFormat.ApplyBorder = true;
 
 				fill = new()
@@ -744,9 +730,7 @@ public static partial class Common
 					},
 				};
 				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 				cellFormat.ApplyFill = true;
 
 				cellFormat.FontId = GetFontId(EFont.Header, fonts);
@@ -760,9 +744,7 @@ public static partial class Common
 				border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
 										new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
 				borders.Append(border);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.BorderId = ((uint)borders.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 				cellFormat.ApplyBorder = true;
 
 				cellFormat.FontId = GetFontId(EFont.Default, fonts);
@@ -784,9 +766,7 @@ public static partial class Common
 				};
 
 				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 				cellFormat.ApplyFill = true;
 				break;
 
@@ -804,9 +784,7 @@ public static partial class Common
 				};
 
 				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 				cellFormat.ApplyFill = true;
 
 				cellFormat.FontId = GetFontId(EFont.Default, fonts); //Default font is black
@@ -826,9 +804,7 @@ public static partial class Common
 					},
 				};
 				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 				cellFormat.ApplyFill = true;
 
 				cellFormat.FontId = GetFontId(EFont.Whiteout, fonts); // White font
@@ -856,7 +832,6 @@ public static partial class Common
 
 		// Check if an identical CellFormat already exists
 		CellFormats cellFormats = stylesheet.GetCellFormats()!;
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		for (uint i = 0; i < (uint)cellFormats.Count(); i++)
 		{
 			if (CellFormatsAreEqual(cellFormat, cellFormats.Elements<CellFormat>().ElementAt((int)i)))
@@ -865,27 +840,20 @@ public static partial class Common
 				return i;
 			}
 		}
-#pragma warning restore S2971 // LINQ expressions should be simplified
 
 		// If no matching format found, add the new one
 		// cellFormat.FormatId = (uint)cellFormats.Count() - 1;
 		cellFormats.Append(cellFormat);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		uint newFormatId = ((uint)cellFormats.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
-
 		lock (formatCacheLock)
 		{
 			formatCache[formatKey] = newFormatId;
 		}
 
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		fonts.Count = (uint)fonts.Count();
 		fills.Count = (uint)fills.Count();
 		borders.Count = (uint)borders.Count();
 		cellFormats.Count = (uint)cellFormats.Count();
-#pragma warning restore S2971 // LINQ expressions should be simplified
-
 		return newFormatId;
 	}
 
@@ -918,10 +886,8 @@ public static partial class Common
 				break;
 		}
 		fonts.Append(font);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		fonts.Count = (uint)fonts.Count();
 		return ((uint)fonts.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 	}
 
 	/// <summary>
@@ -1070,10 +1036,8 @@ public static partial class Common
 			cellFormats = stylesheet.Elements<CellFormats>().First();
 		}
 		cellFormats.Append(cellFormat);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		cellFormats.Count = (uint)cellFormats.Count();
 		uint newFormatId = ((uint)cellFormats.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		cache.CellFormatCache[cellFormatKey] = newFormatId;
 
 		return newFormatId;
@@ -1105,10 +1069,8 @@ public static partial class Common
 			fonts = stylesheet.Elements<Fonts>().First();
 		}
 		fonts.Append(font);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		fonts.Count = (uint)fonts.Count();
 		uint newFontId = ((uint)fonts.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		cache.FontCache[fontHash] = newFontId;
 		return newFontId;
 	}
@@ -1140,10 +1102,8 @@ public static partial class Common
 			fills = stylesheet.Elements<Fills>().First();
 		}
 		fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		fills.Count = (uint)fills.Count();
 		uint newFillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		cache.FillCache[fillHash] = newFillId;
 		return newFillId;
 	}
@@ -1175,10 +1135,8 @@ public static partial class Common
 			borders = stylesheet.Elements<Borders>().First();
 		}
 		borders.Append(border);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		borders.Count = (uint)borders.Count();
 		uint newBorderId = ((uint)borders.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		cache.BorderCache[borderHash] = newBorderId;
 		return newBorderId;
 	}
@@ -1425,10 +1383,7 @@ public static partial class Common
 
 		TablePart tablePart = new() { Id = rId };
 		tableParts.Append(tablePart);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		tableParts.Count = (uint)tableParts.Count();
-#pragma warning restore S2971 // LINQ expressions should be simplified
-
 		TableColumns tableColumns = new() { Count = endColumn - startCol + 1 };
 		for (uint i = 0; i < endColumn - startCol + 1; i++)
 		{
@@ -2426,5 +2381,3 @@ public static partial class Common
 		}
 	}
 }
-
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"

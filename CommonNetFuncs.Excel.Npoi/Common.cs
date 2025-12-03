@@ -1555,14 +1555,12 @@ public static partial class Common
 						else
 						{
 							string? currentCellVal = startCell.GetStringValue();
-#pragma warning disable S1994 // "for" loop increment clauses should modify the loops' counters
 							for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
 							{
 								endColIndex = colIndex - 1;
 								dataTable.Columns.Add(currentCellVal);
 								currentCellVal = startCell.GetCellOffset(colIndex, 0).GetStringValue();
 							}
-#pragma warning restore S1994 // "for" loop increment clauses should modify the loops' counters
 						}
 					}
 					else
@@ -1577,14 +1575,12 @@ public static partial class Common
 						else
 						{
 							string? currentCellVal = startCell.GetStringValue();
-#pragma warning disable S1994 // "for" loop increment clauses should modify the loops' counters
 							for (int colIndex = 1; !string.IsNullOrWhiteSpace(currentCellVal); colIndex++)
 							{
 								endColIndex = colIndex - 1;
 								dataTable.Columns.Add($"Column{colIndex - 1}");
 								currentCellVal = startCell.GetCellOffset(colIndex, 0).GetStringValue();
 							}
-#pragma warning restore S1994 // "for" loop increment clauses should modify the loops' counters
 						}
 					}
 

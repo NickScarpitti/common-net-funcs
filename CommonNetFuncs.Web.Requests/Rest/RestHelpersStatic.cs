@@ -616,12 +616,10 @@ public static class RestHelpersStatic
 
 				await foreach (T? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<T?>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false))
 				{
-#pragma warning disable S2955 // Generic parameters not constrained to reference types should not be compared to "null"
 					if (item != null)
 					{
 						yield return item;
 					}
-#pragma warning restore S2955 // Generic parameters not constrained to reference types should not be compared to "null"
 				}
 			}
 			finally
@@ -739,13 +737,11 @@ public static class RestHelpersStatic
 
 		if (requestOptions.LogBody && requestsWithBody.Contains(requestOptions.HttpMethod))
 		{
-#pragma warning disable S2955 // Generic parameters not constrained to reference types should not be compared to "null"
 			string body = requestOptions.BodyObject != null
 				? System.Text.Json.JsonSerializer.Serialize(requestOptions.BodyObject, requestOptions.JsonSerializerOptions ?? defaultJsonSerializerOptions)
 				: requestOptions.PatchDocument != null
 					? await requestOptions.PatchDocument.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
 					: string.Empty;
-#pragma warning restore S2955 // Generic parameters not constrained to reference types should not be compared to "null"
 			logger.Info("Request Body: {Body}", body);
 		}
 	}

@@ -769,12 +769,10 @@ public static class Async
 		try
 		{
 			await using MemoryStream resultObject = await task;
-#pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{
 				resultObject?.WriteTo(ms);
 			}
-#pragma warning restore S3998 // Threads should not lock on objects with weak identity
 		}
 		catch (Exception ex)
 		{
@@ -798,12 +796,10 @@ public static class Async
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
 			await using MemoryStream resultObject = await task().ConfigureAwait(false);
-#pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{
 				resultObject?.WriteTo(ms);
 			}
-#pragma warning restore S3998 // Threads should not lock on objects with weak identity
 		}
 		catch (Exception ex)
 		{

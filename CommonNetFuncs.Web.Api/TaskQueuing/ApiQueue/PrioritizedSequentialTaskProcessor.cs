@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 
 namespace CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 
-#pragma warning disable S3881 // "IDisposable" should be implemented correctly
 public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -190,4 +189,3 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 		Dispose(false);
 	}
 }
-#pragma warning restore S3881 // "IDisposable" should be implemented correctly

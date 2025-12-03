@@ -43,9 +43,7 @@ public static class Export
 					if (!createTable)
 					{
 						cell.Style = headerStyle;
-#pragma warning disable S1121 // Assignments should not be made from within sub-expressions
 						cell.Style?.Fill.BackgroundColor = headerStyle?.Fill.BackgroundColor;
-#pragma warning restore S1121 // Assignments should not be made from within sub-expressions
 					}
 					else
 					{
@@ -136,9 +134,7 @@ public static class Export
 					if (!createTable)
 					{
 						cell.Style = headerStyle;
-#pragma warning disable S1121 // Assignments should not be made from within sub-expressions
 						cell.Style?.Fill.BackgroundColor = headerStyle?.Fill.BackgroundColor;
-#pragma warning restore S1121 // Assignments should not be made from within sub-expressions
 					}
 					else
 					{

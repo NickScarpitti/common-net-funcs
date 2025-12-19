@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace CommonNetFuncs.Web.Api.OpenApiTransformers;
 
@@ -20,19 +20,21 @@ public sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvide
 
 			const string securitySchemeId = "Bearer";
 
-			document.Components.SecuritySchemes.Add(securitySchemeId, new OpenApiSecurityScheme
+			OpenApiSecurityScheme securityScheme = new()
 			{
 				Type = SecuritySchemeType.Http,
-				Scheme = "bearer",
+				Scheme = "bearer", // "bearer" refers to the header name here
 				In = ParameterLocation.Header,
-				BearerFormat = "Json Web Token"
-			});
+				BearerFormat = "Json Web Token",
+				Description = "Jwt authentication"
+			};
 
-			// Add "Bearer" scheme as a requirement for the API as a whole
-			document.SecurityRequirements.Add(new OpenApiSecurityRequirement
+			Dictionary<string, IOpenApiSecurityScheme> requirements = new()
 			{
-				[new OpenApiSecurityScheme { Reference = new OpenApiReference { Id = securitySchemeId, Type = ReferenceType.SecurityScheme } }] = Array.Empty<string>()
-			});
+				[securitySchemeId] = securityScheme
+			};
+
+			document.Components.SecuritySchemes = requirements;
 		}
 	}
 }

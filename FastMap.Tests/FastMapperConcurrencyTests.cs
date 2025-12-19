@@ -1,0 +1,382 @@
+﻿using System.Collections.Concurrent;
+using CommonNetFuncs.FastMap;
+
+namespace FastMap.Tests;
+
+// Define a collection to ensure tests don't run in parallel with other test classes
+[CollectionDefinition("FastMapperConcurrency", DisableParallelization = true)]
+public class FastMapperConcurrencyCollection;
+
+[Collection("FastMapperConcurrency")] // Run these tests serially
+public sealed class FastMapperConcurrencyTests : IDisposable
+{
+	private bool _disposed;
+
+	public void Dispose()
+	{
+		if (!_disposed)
+		{
+			// Restore default state after concurrency tests
+			FastMapper.CacheManager.SetUseLimitedCache(true);
+			FastMapper.CacheManager.SetLimitedCacheSize(100);
+			FastMapper.CacheManager.ClearAllCaches();
+			_disposed = true;
+		}
+		GC.SuppressFinalize(this);
+	}
+
+	public sealed class SimpleSource
+	{
+		public required string StringProp { get; set; }
+		public int IntProp { get; set; }
+		public DateTime DateProp { get; set; }
+	}
+
+	public sealed class SimpleDestination
+	{
+		public required string StringProp { get; set; }
+		public int IntProp { get; set; }
+		public DateTime DateProp { get; set; }
+	}
+
+	public sealed class ComplexSource
+	{
+		public required string Name { get; set; }
+		public required List<string> Items { get; set; }
+	}
+
+	public sealed class ComplexDestination
+	{
+		public required string Name { get; set; }
+		public required List<string> Items { get; set; }
+	}
+
+	[Fact]
+	public void ConcurrentMapping_MultipleMappings_NoExceptions()
+	{
+		// Arrange
+		const int threadCount = 10;
+		const int operationsPerThread = 1000;
+		ConcurrentBag<Exception> exceptions = [];
+		List<Thread> threads = [];
+
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.SetUseLimitedCache(false);
+
+		// Act - Create multiple threads that perform mapping simultaneously
+		for (int i = 0; i < threadCount; i++)
+		{
+			int threadId = i;
+			Thread thread = new(() =>
+			{
+				try
+				{
+					for (int j = 0; j < operationsPerThread; j++)
+					{
+						SimpleSource source = new()
+						{
+							StringProp = $"Thread{threadId}-Op{j}",
+							IntProp = (threadId * 1000) + j,
+							DateProp = DateTime.Now
+						};
+
+						SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>();
+
+						if (result.StringProp != source.StringProp || result.IntProp != source.IntProp)
+						{
+							throw new InvalidOperationException($"Mapping produced incorrect results on thread {threadId}");
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					exceptions.Add(ex);
+				}
+			});
+			threads.Add(thread);
+			thread.Start();
+		}
+
+		// Wait for all threads to complete
+		foreach (Thread thread in threads)
+		{
+			thread.Join();
+		}
+
+		// Assert
+		exceptions.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void ConcurrentMapping_WithCacheModeDuringMapping_NoExceptions()
+	{
+		// Arrange
+		const int readerThreadCount = 8;
+		const int writerThreadCount = 2;
+		const int operationsPerThread = 500;
+		ConcurrentBag<Exception> exceptions = [];
+		List<Thread> threads = [];
+		int shouldStop = 0; // Use int for Interlocked operations
+
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.SetUseLimitedCache(true);
+
+		// Act - Create reader threads that perform mapping
+		for (int i = 0; i < readerThreadCount; i++)
+		{
+			int threadId = i;
+			Thread thread = new(() =>
+			{
+				try
+				{
+					for (int j = 0; j < operationsPerThread && Interlocked.CompareExchange(ref shouldStop, 0, 0) == 0; j++)
+					{
+						SimpleSource source = new()
+						{
+							StringProp = $"Reader{threadId}-{j}",
+							IntProp = j,
+							DateProp = DateTime.Now
+						};
+
+						SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>();
+
+						if (result.StringProp != source.StringProp)
+						{
+							throw new InvalidOperationException("Mapping corruption detected");
+						}
+
+						// Also test complex mapping
+						ComplexSource complex = new()
+						{
+							Name = $"Complex{threadId}-{j}",
+							Items = [$"Item1-{j}", $"Item2-{j}"]
+						};
+
+						ComplexDestination complexResult = complex.FastMap<ComplexSource, ComplexDestination>();
+						if (complexResult.Items.Count != complex.Items.Count)
+						{
+							throw new InvalidOperationException("Complex mapping corruption detected");
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					exceptions.Add(ex);
+					Interlocked.Exchange(ref shouldStop, 1);
+				}
+			});
+			threads.Add(thread);
+			thread.Start();
+		}
+
+		// Create writer threads that modify cache settings
+		for (int i = 0; i < writerThreadCount; i++)
+		{
+			Thread thread = new(() =>
+			{
+				try
+				{
+					for (int j = 0; j < 50 && Interlocked.CompareExchange(ref shouldStop, 0, 0) == 0; j++)
+					{
+						// Toggle cache mode
+						FastMapper.CacheManager.SetUseLimitedCache(j % 2 == 0);
+						Task.Delay(10);
+
+						// Check cache mode is readable
+						bool _ = FastMapper.CacheManager.IsUsingLimitedCache();
+						// Just verify it doesn't throw
+					}
+				}
+				catch (Exception ex)
+				{
+					exceptions.Add(ex);
+					Interlocked.Exchange(ref shouldStop, 1);
+				}
+			});
+			threads.Add(thread);
+			thread.Start();
+		}
+
+		// Wait for all threads to complete
+		foreach (Thread thread in threads)
+		{
+			thread.Join();
+		}
+
+		// Assert
+		exceptions.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void ConcurrentMapping_MixedCacheAndNonCache_NoExceptions()
+	{
+		// Arrange
+		const int threadCount = 10;
+		const int operationsPerThread = 500;
+		ConcurrentBag<Exception> exceptions = [];
+		List<Thread> threads = [];
+
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.SetUseLimitedCache(false);
+
+		// Act - Half threads use cache, half don't
+		for (int i = 0; i < threadCount; i++)
+		{
+			int threadId = i;
+			bool useCache = threadId % 2 == 0;
+
+			Thread thread = new(() =>
+			{
+				try
+				{
+					for (int j = 0; j < operationsPerThread; j++)
+					{
+						SimpleSource source = new()
+						{
+							StringProp = $"Thread{threadId}-{j}",
+							IntProp = j,
+							DateProp = DateTime.Now
+						};
+
+						SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>(useCache);
+
+						if (result.StringProp != source.StringProp || result.IntProp != source.IntProp)
+						{
+							throw new InvalidOperationException("Mapping corruption detected");
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					exceptions.Add(ex);
+				}
+			});
+			threads.Add(thread);
+			thread.Start();
+		}
+
+		// Wait for all threads to complete
+		foreach (Thread thread in threads)
+		{
+			thread.Join();
+		}
+
+		// Assert
+		exceptions.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void ConcurrentMapping_RapidIsUsingLimitedCacheCalls_NoExceptions()
+	{
+		// Arrange - This test specifically validates the volatile optimization
+		const int threadCount = 20;
+		const int operationsPerThread = 10000;
+		ConcurrentBag<Exception> exceptions = [];
+		ConcurrentBag<bool> results = [];
+		List<Thread> threads = [];
+
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.SetUseLimitedCache(true);
+
+		// Act - Many threads rapidly checking IsUsingLimitedCache
+		for (int i = 0; i < threadCount; i++)
+		{
+			Thread thread = new(() =>
+			{
+				try
+				{
+					for (int j = 0; j < operationsPerThread; j++)
+					{
+						bool mode = FastMapper.CacheManager.IsUsingLimitedCache();
+						results.Add(mode);
+
+						// Also perform a mapping to ensure the cached value is used correctly
+						if (j % 100 == 0)
+						{
+							SimpleSource source = new()
+							{
+								StringProp = "Test",
+								IntProp = j,
+								DateProp = DateTime.Now
+							};
+							SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>();
+							if (result.IntProp != j)
+							{
+								throw new InvalidOperationException("Mapping failed");
+							}
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					exceptions.Add(ex);
+				}
+			});
+			threads.Add(thread);
+			thread.Start();
+		}
+
+		// Wait for all threads to complete
+		foreach (Thread thread in threads)
+		{
+			thread.Join();
+		}
+
+		// Assert
+		exceptions.ShouldBeEmpty();
+		results.Count.ShouldBe(threadCount * operationsPerThread);
+		// All results should be true since we set it to true initially
+		results.All(r => r).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ConcurrentMapping_VolatileReadDuringWrite_EventualConsistency()
+	{
+		// Arrange - Test that volatile reads see writes eventually
+		const int iterations = 100;
+		int successfulTransitions = 0;
+
+		for (int iter = 0; iter < iterations; iter++)
+		{
+			FastMapper.CacheManager.SetUseLimitedCache(true);
+
+			int writerCompleted = 0; // Use int for Interlocked operations
+			bool readerSawFalse = false;
+
+			Thread writerThread = new(() =>
+			{
+				FastMapper.CacheManager.SetUseLimitedCache(false);
+				Interlocked.Exchange(ref writerCompleted, 1);
+			});
+
+			Thread readerThread = new(() =>
+			{
+				while (Interlocked.CompareExchange(ref writerCompleted, 0, 0) == 0)
+				{
+					bool mode = FastMapper.CacheManager.IsUsingLimitedCache();
+					if (!mode)
+					{
+						readerSawFalse = true;
+						break;
+					}
+					Thread.SpinWait(100); // Small spin to allow writer to progress
+				}
+			});
+
+			writerThread.Start();
+			readerThread.Start();
+
+			writerThread.Join();
+			readerThread.Join();
+
+			if (readerSawFalse || !FastMapper.CacheManager.IsUsingLimitedCache())
+			{
+				successfulTransitions++;
+			}
+		}
+
+		// Assert - Volatile should ensure visibility in most cases
+		// We expect at least 90% of iterations to see the change
+		(successfulTransitions / (double)iterations).ShouldBeGreaterThan(0.9);
+	}
+}

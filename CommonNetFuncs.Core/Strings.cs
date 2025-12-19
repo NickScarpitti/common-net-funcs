@@ -2220,8 +2220,8 @@ public static partial class Strings
 		{
 			//Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
 			result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
-								decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
-								null;
+				decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
+				null;
 
 			success = result != null;
 		}
@@ -2251,8 +2251,8 @@ public static partial class Strings
 		{
 			//Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
 			result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
-								decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
-								default;
+				decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
+				default;
 
 			success = result != default;
 		}
@@ -2379,8 +2379,8 @@ public static partial class Strings
 		{
 			//Try reading fraction value first as double.TryParse as double.TryParse will just give numerator if there is a fraction
 			result = inputString.GetOnlyNumbers(true).TryFractionToDouble(out double fractionValue) ? fractionValue :
-								double.TryParse(inputString.GetOnlyNumbers(), out double value) ? value :
-								null;
+				double.TryParse(inputString.GetOnlyNumbers(), out double value) ? value :
+				null;
 
 			success = result != null;
 		}

@@ -684,7 +684,7 @@ public static partial class Common
 	/// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
 	/// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
 	private static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, string? hexColor = null, short? hssfColor = null, IFont? font = null, HorizontalAlignment? alignment = null,
-				FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
+			FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
 	{
 		//ICellStyle cellStyle;
 		CellStyle cellStyle = new();
@@ -795,7 +795,7 @@ public static partial class Common
 	/// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
 	/// <returns>ICellStyle object containing all of the styling associated with the input EStyles option</returns>
 	public static ICellStyle GetCustomStyle(this IWorkbook wb, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
-				FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
+			FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
 	{
 		return GetCustomStyle(wb, cellLocked, null, null, font, alignment, fillPattern, borderStyles, wrapText: wrapText);
 	}
@@ -810,7 +810,7 @@ public static partial class Common
 	/// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
 	/// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
 	public static ICellStyle GetCustomStyle(this IWorkbook wb, string hexColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
-				FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
+			FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, int cachedColorLimit = 100, bool wrapText = false)
 	{
 		return wb.GetCustomStyle(cellLocked, hexColor, null, font, alignment, fillPattern, borderStyles, cachedColorLimit, wrapText);
 	}
@@ -825,7 +825,7 @@ public static partial class Common
 	/// <param name="alignment">NPOI.SS.UserModel.HorizontalAlignment enum indicating text alignment in the cell (only used for custom font)</param>
 	/// <returns>IXLStyle object containing all of the styling associated with the input EStyles option</returns>
 	public static ICellStyle GetCustomStyle(this IWorkbook wb, short? hssfColor, bool cellLocked = false, IFont? font = null, HorizontalAlignment? alignment = null,
-				FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
+			FillPattern? fillPattern = null, NpoiBorderStyles? borderStyles = null, bool wrapText = false)
 	{
 		return wb.GetCustomStyle(cellLocked, null, hssfColor, font, alignment, fillPattern, borderStyles, wrapText: wrapText);
 	}
@@ -1089,7 +1089,7 @@ public static partial class Common
 	/// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
 	/// <param name="showColStripes">Optional: Styles the table to show column stripes or not</param>
 	public static void CreateTable(this XSSFWorkbook xssfWorkbook, string sheetName, string tableName, int firstColIndex, int lastColIndex, int firstRowIndex, int lastRowIndex, List<string>? columnNames = null,
-				ETableStyle tableStyle = ETableStyle.TableStyleMedium1, bool showRowStripes = true, bool showColStripes = false)
+			ETableStyle tableStyle = ETableStyle.TableStyleMedium1, bool showRowStripes = true, bool showColStripes = false)
 	{
 		if (tableName.Length > 255)
 		{

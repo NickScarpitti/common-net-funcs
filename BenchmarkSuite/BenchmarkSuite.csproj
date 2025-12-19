@@ -14,5 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Web.Requests\CommonNetFuncs.Web.Requests.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.FastMap\CommonNetFuncs.FastMap.csproj" />
   </ItemGroup>
 </Project>

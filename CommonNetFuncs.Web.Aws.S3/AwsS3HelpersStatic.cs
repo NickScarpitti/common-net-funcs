@@ -32,8 +32,8 @@ public static class AwsS3HelpersStatic
 	/// <param name="cancellationToken">Optional: The cancellation token for this request.</param>
 	/// <returns><see langword="true"/> if file was successfully uploaded.</returns>
 	public static async Task<bool> UploadS3File(this IAmazonS3 s3Client, string bucketName, string fileName, Stream fileData, ConcurrentDictionary<string, bool>? validatedBuckets = null,
-				long thresholdForMultiPartUpload = MultipartThreshold, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip,
-				CancellationToken cancellationToken = default)
+			long thresholdForMultiPartUpload = MultipartThreshold, bool compressSteam = true, ECompressionType compressionType = ECompressionType.Gzip,
+			CancellationToken cancellationToken = default)
 	{
 		if (compressSteam && compressionType is not ECompressionType.Gzip and not ECompressionType.Deflate)
 		{

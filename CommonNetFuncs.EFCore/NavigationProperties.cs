@@ -55,7 +55,7 @@ public static class NavigationProperties
 
 		public override int GetHashCode()
 		{
-			return (SourceType.GetHashCode() + NavigationPropertyTypesToIgnore?.GetHashCode()) ?? 0;
+			return HashCode.Combine(SourceType, NavigationPropertyTypesToIgnore);
 		}
 
 		public static bool operator ==(NavigationProperiesCacheKey left, NavigationProperiesCacheKey right)

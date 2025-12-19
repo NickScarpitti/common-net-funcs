@@ -283,7 +283,6 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 
 	#endregion
 
-
 	#region GetAll
 
 	/// <summary>

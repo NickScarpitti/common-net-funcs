@@ -4,32 +4,32 @@ namespace CommonNetFuncs.Web.Common;
 
 public sealed class PascalCaseJsonNamingPolicy : JsonNamingPolicy
 {
-  public override string ConvertName(string name)
-  {
-    if (string.IsNullOrEmpty(name) || !char.IsLower(name[0]))
-    {
-      return name;
-    }
+	public override string ConvertName(string name)
+	{
+		if (string.IsNullOrEmpty(name) || !char.IsLower(name[0]))
+		{
+			return name;
+		}
 
-    #if NETCOREAPP
+#if NETCOREAPP
 
-    return string.Create(name.Length, name, (chars, value) =>
-    {
-      value.CopyTo(chars);
-      FixCasing(chars);
-    });
+		return string.Create(name.Length, name, (chars, value) =>
+		{
+			value.CopyTo(chars);
+			FixCasing(chars);
+		});
 
-    #else
+#else
 
-    char[] chars = name.ToCharArray();
-    FixCasing(chars);
-    return new string(chars);
+		char[] chars = name.ToCharArray();
+		FixCasing(chars);
+		return new string(chars);
 
-    #endif
-  }
+#endif
+	}
 
-  private static void FixCasing(Span<char> chars)
-  {
-    chars[0] = char.ToUpperInvariant(chars[0]);
-  }
+	private static void FixCasing(Span<char> chars)
+	{
+		chars[0] = char.ToUpperInvariant(chars[0]);
+	}
 }

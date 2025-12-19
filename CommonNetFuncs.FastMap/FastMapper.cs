@@ -31,7 +31,7 @@ public static class FastMapper
 
 		public override int GetHashCode()
 		{
-			return SourceType.GetHashCode() + DestType.GetHashCode();
+			return HashCode.Combine(SourceType, DestType);
 		}
 
 		public static bool operator ==(MapperCacheKey left, MapperCacheKey right)
@@ -54,23 +54,15 @@ public static class FastMapper
 	/// </summary>
 	private static Delegate GetOrAddPropertiesFromMapperCache<T, UT>(MapperCacheKey key)
 	{
-		bool isLimitedCache = CacheManager.IsUsingLimitedCache();
-		if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Delegate? function) :
-						CacheManager.GetCache().TryGetValue(key, out function))
+		// Use GetOrAdd pattern to reduce lock contention
+		if (CacheManager.IsUsingLimitedCache())
 		{
-			return function!;
-		}
-
-		function = CreateMapper<T, UT>(true);
-		if (isLimitedCache)
-		{
-			CacheManager.TryAddLimitedCache(key, function);
+			return CacheManager.GetOrAddLimitedCache(key, _ => CreateMapper<T, UT>(true));
 		}
 		else
 		{
-			CacheManager.TryAddCache(key, function!);
+			return CacheManager.GetOrAddCache(key, _ => CreateMapper<T, UT>(true));
 		}
-		return function;
 	}
 
 	#endregion
@@ -144,8 +136,7 @@ public static class FastMapper
 					}
 					else if (genericTypeDef == typeof(Stack<>) || genericTypeDef == typeof(Queue<>))
 					{
-						bindings.Add(Expression.Assign(destinationVariable,
-														Expression.New(destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(elementType)])!, tempList)));
+						bindings.Add(Expression.Assign(destinationVariable, Expression.New(destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(elementType)])!, tempList)));
 					}
 					else
 					{
@@ -173,8 +164,9 @@ public static class FastMapper
 		else
 		{
 			bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(UT)))); // Initialize destination object if not a collection
-																																												//PropertyInfo[] sourceProperties = propertyCache.GetOrAdd(typeof(T), t => t.GetProperties());
-																																												//PropertyInfo[] destinationProperties = propertyCache.GetOrAdd(typeof(UT), t => t.GetProperties());
+
+			//PropertyInfo[] sourceProperties = propertyCache.GetOrAdd(typeof(T), t => t.GetProperties());
+			//PropertyInfo[] destinationProperties = propertyCache.GetOrAdd(typeof(UT), t => t.GetProperties());
 			PropertyInfo[] sourceProperties = GetOrAddPropertiesFromReflectionCache(typeof(T));
 			PropertyInfo[] destinationProperties = GetOrAddPropertiesFromReflectionCache(typeof(UT));
 			HashSet<string> assignedProperties = [];
@@ -193,8 +185,8 @@ public static class FastMapper
 						if (!sourceProp.PropertyType.IsValueType || Nullable.GetUnderlyingType(sourceProp.PropertyType) != null)
 						{
 							assignExpression = Expression.Assign(destAccess,
-																Expression.Condition(Expression.Equal(sourceAccess, Expression.Constant(null, sourceProp.PropertyType)),
-																Expression.Default(destProp.PropertyType), sourceAccess));
+								Expression.Condition(Expression.Equal(sourceAccess, Expression.Constant(null, sourceProp.PropertyType)),
+								Expression.Default(destProp.PropertyType), sourceAccess));
 						}
 						else
 						{
@@ -205,20 +197,20 @@ public static class FastMapper
 					{
 						// Add null check for collections
 						assignExpression = Expression.Assign(destAccess,
-														Expression.Condition(
-																Expression.Equal(sourceAccess, Expression.Constant(null, sourceProp.PropertyType)),
-																Expression.Default(destProp.PropertyType),
-																CreateCollectionMapping(sourceAccess, destAccess, sourceProp.PropertyType, destProp.PropertyType, useCache).Right));
+							Expression.Condition(
+								Expression.Equal(sourceAccess, Expression.Constant(null, sourceProp.PropertyType)),
+								Expression.Default(destProp.PropertyType),
+								CreateCollectionMapping(sourceAccess, destAccess, sourceProp.PropertyType, destProp.PropertyType, useCache).Right));
 					}
 					else if (!sourceProp.PropertyType.IsValueType && !destProp.PropertyType.IsValueType)
 					{
 						MethodInfo nestedMapMethod = MethodInfoCache.FastMap.MakeGenericMethod(sourceProp.PropertyType, destProp.PropertyType);
 
 						assignExpression = Expression.Assign(destAccess,
-														Expression.Condition(
-																Expression.Equal(sourceAccess, Expression.Constant(null, sourceProp.PropertyType)),
-																Expression.Default(destProp.PropertyType),
-																Expression.Call(null, nestedMapMethod, sourceAccess, Expression.Constant(useCache, typeof(bool)))));
+							Expression.Condition(
+								Expression.Equal(sourceAccess, Expression.Constant(null, sourceProp.PropertyType)),
+								Expression.Default(destProp.PropertyType),
+								Expression.Call(null, nestedMapMethod, sourceAccess, Expression.Constant(useCache, typeof(bool)))));
 					}
 					else
 					{
@@ -239,8 +231,8 @@ public static class FastMapper
 					if (constructorInfo != null)
 					{
 						ConditionalExpression assignIfNull = Expression.IfThen(
-														Expression.Equal(destAccess, Expression.Constant(null, destProp.PropertyType)),
-														Expression.Assign(destAccess, Expression.New(constructorInfo)));
+							Expression.Equal(destAccess, Expression.Constant(null, destProp.PropertyType)),
+							Expression.Assign(destAccess, Expression.New(constructorInfo)));
 						bindings.Add(assignIfNull);
 					}
 				}
@@ -465,9 +457,9 @@ public static class FastMapper
 		else
 		{
 			return collectionType.GetInterfaces()
-								.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-								.Select(i => i.GetGenericArguments()[0])
-								.FirstOrDefault() ?? typeof(object);
+				.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+				.Select(i => i.GetGenericArguments()[0])
+				.FirstOrDefault() ?? typeof(object);
 		}
 	}
 }

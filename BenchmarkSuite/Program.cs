@@ -1,12 +1,12 @@
+﻿using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 
-namespace BenchmarkSuite
+namespace BenchmarkSuite;
+
+internal class Program
 {
-    internal class Program
-    {
-        static void Main(string[] args)
-        {
-            var _ = BenchmarkRunner.Run(typeof(Program).Assembly);
-        }
-    }
+	static void Main(string[] args)
+	{
+		Summary[] _ = BenchmarkRunner.Run(typeof(Program).Assembly);
+	}
 }

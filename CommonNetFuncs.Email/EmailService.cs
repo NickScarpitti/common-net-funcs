@@ -5,11 +5,11 @@
 /// </summary>
 public interface IEmailService
 {
-  Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, bool readReceipt, string readReceiptEmail, CancellationToken cancellationToken = default);
+	Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, bool readReceipt, string readReceiptEmail, CancellationToken cancellationToken = default);
 
-  Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, CancellationToken cancellationToken = default);
+	Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, CancellationToken cancellationToken = default);
 
-  Task<bool> SendEmail(SendEmailConfig sendEmailConfig, CancellationToken cancellationToken = default);
+	Task<bool> SendEmail(SendEmailConfig sendEmailConfig, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -17,30 +17,30 @@ public interface IEmailService
 /// </summary>
 public sealed class EmailService : IEmailService
 {
-  public Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, bool readReceipt, string readReceiptEmail, CancellationToken cancellationToken = default)
-  {
-    return Email.SendEmail(new()
-        {
-            SmtpSettings = smtpSettings,
-            EmailAddresses = emailAddresses,
-            EmailContent = emailContent,
-            ReadReceipt = readReceipt,
-            ReadReceiptEmail = readReceiptEmail
-        }, cancellationToken);
-  }
+	public Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, bool readReceipt, string readReceiptEmail, CancellationToken cancellationToken = default)
+	{
+		return Email.SendEmail(new()
+		{
+			SmtpSettings = smtpSettings,
+			EmailAddresses = emailAddresses,
+			EmailContent = emailContent,
+			ReadReceipt = readReceipt,
+			ReadReceiptEmail = readReceiptEmail
+		}, cancellationToken);
+	}
 
-  public Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, CancellationToken cancellationToken = default)
-  {
-    return Email.SendEmail(new()
-        {
-            SmtpSettings = smtpSettings,
-            EmailAddresses = emailAddresses,
-            EmailContent = emailContent,
-        }, cancellationToken);
-  }
+	public Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, CancellationToken cancellationToken = default)
+	{
+		return Email.SendEmail(new()
+		{
+			SmtpSettings = smtpSettings,
+			EmailAddresses = emailAddresses,
+			EmailContent = emailContent,
+		}, cancellationToken);
+	}
 
-  public Task<bool> SendEmail(SendEmailConfig sendEmailConfig, CancellationToken cancellationToken = default)
-  {
-    return Email.SendEmail(sendEmailConfig, cancellationToken);
-  }
+	public Task<bool> SendEmail(SendEmailConfig sendEmailConfig, CancellationToken cancellationToken = default)
+	{
+		return Email.SendEmail(sendEmailConfig, cancellationToken);
+	}
 }

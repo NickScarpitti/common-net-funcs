@@ -23,8 +23,10 @@ public sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvide
 			OpenApiSecurityScheme securityScheme = new()
 			{
 				Type = SecuritySchemeType.Http,
-				Scheme = "bearer",
-				BearerFormat = "Json Web Token"
+				Scheme = "bearer", // "bearer" refers to the header name here
+				In = ParameterLocation.Header,
+				BearerFormat = "Json Web Token",
+				Description = "Jwt authentication"
 			};
 
 			Dictionary<string, IOpenApiSecurityScheme> requirements = new()

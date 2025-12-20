@@ -79,7 +79,7 @@ public static class DateTimeHelpers
 	/// <returns>DateTime for the first day of the specified month</returns>
 	public static DateTime GetFirstDayOfMonth(int month, int year)
 	{
-		return new(year, month, 1, 0, 0, 0, DateTimeKind.Unspecified);
+		return new(year, month, 1);
 	}
 
 	/// <summary>
@@ -97,7 +97,7 @@ public static class DateTimeHelpers
 	/// <returns>DateTime for the lest day of the specified month</returns>
 	public static DateTime GetLastDayOfMonth(int month, int year)
 	{
-		return new(year, month, DateTime.DaysInMonth(year, month), 0, 0, 0, DateTimeKind.Unspecified);
+		return new(year, month, DateTime.DaysInMonth(year, month));
 	}
 
 	/// <summary>

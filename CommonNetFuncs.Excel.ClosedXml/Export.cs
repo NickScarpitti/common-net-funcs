@@ -104,7 +104,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(ExportFromTable)} Error");
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(ExportFromTable));
 			return false;
 		}
 	}
@@ -198,7 +198,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(ExportFromTable)} Error");
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(ExportFromTable));
 			return false;
 		}
 	}

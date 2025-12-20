@@ -19,6 +19,9 @@ public static class Export
 
 	public const int MaxCellWidthInExcelUnits = 65280;
 
+	private const string TableNameLengthError = "Table name cannot be longer than 255 characters";
+	private const string ErrorLocationTemplate = "{Class}.{Method} Error";
+
 	/// <summary>
 	/// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the
 	/// data
@@ -51,7 +54,7 @@ public static class Export
 
 			if (tableName.Length > 31)
 			{
-				throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+				throw new ArgumentOutOfRangeException(nameof(tableName), TableNameLengthError);
 			}
 
 			memoryStream ??= new();
@@ -74,7 +77,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(GenericExcelExport)} Error");
+			logger.Error(ex, ErrorLocationTemplate, $"{nameof(Export)}.{nameof(GenericExcelExport)}");
 		}
 
 		return new();
@@ -111,7 +114,7 @@ public static class Export
 
 			if (tableName.Length > 31)
 			{
-				throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+				throw new ArgumentOutOfRangeException(nameof(tableName), TableNameLengthError);
 			}
 
 			memoryStream ??= new();
@@ -134,7 +137,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(GenericExcelExport)} Error");
+			logger.Error(ex, ErrorLocationTemplate, $"{nameof(Export)}.{nameof(GenericExcelExport)}");
 		}
 
 		return new();
@@ -238,7 +241,7 @@ public static class Export
 
 			if (tableName.Length > 31)
 			{
-				throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+				throw new ArgumentOutOfRangeException(nameof(tableName), TableNameLengthError);
 			}
 
 			int i = 1;
@@ -272,7 +275,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(AddGenericTableInternal)} Error");
+			logger.Error(ex, ErrorLocationTemplate, $"{nameof(Export)}.{nameof(AddGenericTableInternal)}");
 		}
 		return success;
 	}
@@ -300,7 +303,7 @@ public static class Export
 
 			if (tableName.Length > 31)
 			{
-				throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+				throw new ArgumentOutOfRangeException(nameof(tableName), TableNameLengthError);
 			}
 
 			if (data?.Any() == true)
@@ -384,7 +387,7 @@ public static class Export
 				}
 				catch (Exception ex)
 				{
-					logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {nameof(Export)}.{nameof(ExcelExport)}");
+					logger.Error(ex, "Error using NPOI AutoSizeColumn in {Class}.{Method}", nameof(Export), nameof(ExcelExport));
 					logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
 				}
 			}
@@ -396,7 +399,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(ExcelExport)} Error");
+			logger.Error(ex, ErrorLocationTemplate, nameof(Export), nameof(ExcelExport));
 			return false;
 		}
 	}
@@ -423,7 +426,7 @@ public static class Export
 
 			if (tableName.Length > 31)
 			{
-				throw new ArgumentOutOfRangeException(nameof(tableName), "Table name cannot be longer than 255 characters");
+				throw new ArgumentOutOfRangeException(nameof(tableName), TableNameLengthError);
 			}
 
 			if (data?.Rows.Count > 0)
@@ -510,7 +513,7 @@ public static class Export
 				}
 				catch (Exception ex)
 				{
-					logger.Error(ex, "{msg}", $"Error using NPOI AutoSizeColumn in {nameof(Export)}.{nameof(ExcelExport)}");
+					logger.Error(ex, "Error using NPOI AutoSizeColumn in {Class}.{Method}", nameof(Export), nameof(ExcelExport));
 					logger.Warn("Ensure that either the liberation-fonts-common or mscorefonts2 package (which can be found here: https://mscorefonts2.sourceforge.net/) is installed when using Linux containers");
 				}
 			}
@@ -522,7 +525,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(ExcelExport)} Error");
+			logger.Error(ex, ErrorLocationTemplate, nameof(Export), nameof(ExcelExport));
 			return false;
 		}
 	}

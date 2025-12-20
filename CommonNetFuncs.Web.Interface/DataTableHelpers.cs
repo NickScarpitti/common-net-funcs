@@ -46,42 +46,42 @@ public static class DataTableHelpers
 				dataTableRequest.PageSize = length != StringValues.Empty ? ToInt32(length) : 0;
 				dataTableRequest.Skip = start != StringValues.Empty ? ToInt32(start) : 0;
 
-				//Get search value key pairs
-				if (!string.IsNullOrEmpty(searchValue))
-				{
-					foreach (string val in searchValue.Split(','))
-					{
-						string cleanVal = val.CleanQueryParam()!;
-						int startPos = cleanVal.IndexOf('=') + 1;
-						if (startPos == 0)
-						{
-							continue;
-						}
-						string key = cleanVal[..(startPos - 1)];
-						if (startPos + 1 <= cleanVal.Length)
-						{
-							int valLength = cleanVal.Length - startPos;
-							string outVal = cleanVal.Substring(startPos, valLength);
-							dataTableRequest.SearchValues.Add(key, outVal);
-						}
-						else
-						{
-							dataTableRequest.SearchValues.Add(key, null);
-						}
-					}
-				}
-			}
-			else
-			{
-				logger.Warn($"Unable to read Datatable request: Body is not a valid form data type [{string.Join(", ", FormDataTypes)}], or form data is null");
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, "{msg}", $"{nameof(DataTableHelpers)}.{nameof(GetDataTableRequest)} Error");
-		}
-		return dataTableRequest;
-	}
+        //Get search value key pairs
+        if (!string.IsNullOrEmpty(searchValue))
+        {
+          foreach (string val in searchValue.Split(','))
+          {
+            string cleanVal = val.CleanQueryParam()!;
+            int startPos = cleanVal.IndexOf('=') + 1;
+            if (startPos == 0)
+            {
+              continue;
+            }
+            string key = cleanVal[..(startPos - 1)];
+            if (startPos + 1 <= cleanVal.Length)
+            {
+              int valLength = cleanVal.Length - startPos;
+              string outVal = cleanVal.Substring(startPos, valLength);
+              dataTableRequest.SearchValues.Add(key, outVal);
+            }
+            else
+            {
+              dataTableRequest.SearchValues.Add(key, null);
+            }
+          }
+        }
+      }
+      else
+      {
+        logger.Warn($"Unable to read Datatable request: Body is not a valid form data type [{string.Join(", ", FormDataTypes)}], or form data is null");
+      }
+    }
+    catch (Exception ex)
+    {
+      logger.Error(ex, "{Class}.{Method} Error", $"{nameof(DataTableHelpers)}.{nameof(GetDataTableRequest)}");
+    }
+    return dataTableRequest;
+  }
 
 	/// <summary>
 	/// Transform DataTableRequest into an object that can be used to limit the results sent back from a query why using paging or applying a sort

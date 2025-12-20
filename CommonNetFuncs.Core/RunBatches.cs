@@ -36,7 +36,7 @@ public static class RunBatches
 
 			if (logProgress)
 			{
-				logger.Info("{msg}", $"Process {i + 1}/{totalBatches} complete");
+				logger.Info("Process {currentBatch}/{totalBatches} complete", i + 1, totalBatches);
 			}
 
 			if (!success && breakOnFail)
@@ -81,7 +81,7 @@ public static class RunBatches
 
 			if (logProgress)
 			{
-				logger.Info("{msg}", $"Process {i + 1}/{totalBatches} complete");
+				logger.Info("Process {currentBatch}/{totalBatches} complete", i + 1, totalBatches);
 			}
 
 			if (!success && breakOnFail)

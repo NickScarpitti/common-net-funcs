@@ -39,6 +39,7 @@ public sealed class UseResponseLoggingFilterTests
 	{
 		// Arrange
 		A.CallTo(() => _config.ThresholdInSeconds).Returns(thresholdSeconds);
+		A.CallTo(() => _logger.IsEnabled(LogLevel.Warning)).Returns(true);
 		UseResponseLoggingFilter filter = new(_logger, _config);
 
 		object controller = new();
@@ -64,6 +65,7 @@ public sealed class UseResponseLoggingFilterTests
 		// Assert
 		if (delaySeconds >= thresholdSeconds)
 		{
+#pragma warning disable CA1873 // Avoid potentially expensive logging
 			A.CallTo(() => _logger.Log(
 					LogLevel.Warning,
 					A<EventId>.Ignored,
@@ -73,6 +75,7 @@ public sealed class UseResponseLoggingFilterTests
 							msg.ToString()!.Contains(nameof(OkResult))),
 					null,
 					A<Func<It.IsAnyType, Exception?, string>>.Ignored));
+#pragma warning restore CA1873 // Avoid potentially expensive logging
 		}
 		else
 		{
@@ -110,6 +113,7 @@ public sealed class UseResponseLoggingFilterTests
 	{
 		// Arrange
 		A.CallTo(() => _config.ThresholdInSeconds).Returns(thresholdSeconds);
+		A.CallTo(() => _logger.IsEnabled(LogLevel.Warning)).Returns(true);
 		UseResponseLoggingFilter filter = new(_logger, _config);
 
 		object controller = new();
@@ -131,7 +135,7 @@ public sealed class UseResponseLoggingFilterTests
 		filter.OnActionExecuted(executedContext);
 
 		// Assert - Should log warning for any elapsed time when threshold is zero or negative
-		IFakeObjectCall call = Fake.GetCalls(_logger).Single();
+		IFakeObjectCall call = Fake.GetCalls(_logger).Single(c => c.Method.Name == "Log");
 		call.Arguments[0].ShouldBe(LogLevel.Warning);
 
 		object? state = call.Arguments[2];

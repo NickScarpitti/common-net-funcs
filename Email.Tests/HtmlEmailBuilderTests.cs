@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using CommonNetFuncs.Email;
+
 using static CommonNetFuncs.Email.HtmlEmailBuilder;
 
 namespace Email.Tests;
@@ -15,7 +16,7 @@ public sealed class HtmlEmailBuilderTests
 	public void StringToHtml_ShouldFormatCorrectly(string? input, string expected, string? unixExpected = null)
 	{
 		// Act
-		string result = input.StringtoHtml();
+		string result = input.StringToHtml();
 
 		// Assert
 		result.ShouldBe(Environment.OSVersion.Platform == PlatformID.Win32NT ? expected : unixExpected ?? expected);

@@ -5,6 +5,7 @@ using CommonNetFuncs.EFCore;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using static CommonNetFuncs.Core.Copy;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.DeepClone.ExpressionTrees;
@@ -35,7 +36,8 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return NoContent();
 	}
@@ -60,7 +62,8 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return NoContent();
 	}
@@ -84,7 +87,8 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return NoContent();
 	}
@@ -108,7 +112,8 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return NoContent();
 	}
@@ -192,7 +197,8 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return NoContent();
 	}

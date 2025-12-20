@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using MemoryPack;
 using MessagePack;
 using Newtonsoft.Json;
+
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -27,6 +28,8 @@ public static class RestHelpersStatic
 	//public static JsonSerializerOptions? JsonSerializerOptions { get; set; }
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 	public static readonly JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles, PropertyNameCaseInsensitive = true };
+
+	private const string RestErrorLocationTemplate = "{ErrorLocation} Error URL: {Url}";
 
 	/// <summary>
 	/// Executes a REST request against the provided URL with the requestOptions.
@@ -62,16 +65,16 @@ public static class RestHelpersStatic
 			string exceptionLocation = tcex.GetLocationOfException();
 			if (requestOptions.ExpectTaskCancellation)
 			{
-				logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+				logger.Info("Task was expectedly canceled for {HttpMethod} request to {Url}", requestOptions.HttpMethod.ToString().ToUpper(), requestOptions.Url);
 			}
 			else
 			{
-				logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+				logger.Error(tcex, RestErrorLocationTemplate, exceptionLocation, requestOptions.Url);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+			logger.Error(ex, RestErrorLocationTemplate, ex.GetLocationOfException(), requestOptions.Url);
 		}
 		return result;
 	}
@@ -122,16 +125,16 @@ public static class RestHelpersStatic
 				string exceptionLocation = tcex.GetLocationOfException();
 				if (requestOptions.ExpectTaskCancellation)
 				{
-					logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+					logger.Info("Task was expectedly canceled for {HttpMethod} request to {Url}", requestOptions.HttpMethod.ToString().ToUpper(), requestOptions.Url);
 				}
 				else
 				{
-					logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+					logger.Error(tcex, RestErrorLocationTemplate, exceptionLocation, requestOptions.Url);
 				}
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+				logger.Error(ex, RestErrorLocationTemplate, ex.GetLocationOfException(), requestOptions.Url);
 			}
 
 			if (enumeratedReader != null)
@@ -186,16 +189,16 @@ public static class RestHelpersStatic
 			string exceptionLocation = tcex.GetLocationOfException();
 			if (requestOptions.ExpectTaskCancellation)
 			{
-				logger.Warn("{msg}", $"Run once REST task was canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+				logger.Warn("Run once REST task was canceled for {HttpMethod} request to {Url}", requestOptions.HttpMethod.ToString().ToUpper(), requestOptions.Url);
 			}
 			else
 			{
-				logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+				logger.Error(tcex, RestErrorLocationTemplate, exceptionLocation, requestOptions.Url);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+			logger.Error(ex, RestErrorLocationTemplate, ex.GetLocationOfException(), requestOptions.Url);
 		}
 		return restObject;
 	}
@@ -243,16 +246,16 @@ public static class RestHelpersStatic
 			string exceptionLocation = tcex.GetLocationOfException();
 			if (requestOptions.ExpectTaskCancellation)
 			{
-				logger.Info("{msg}", $"Task was expectedly canceled for {requestOptions.HttpMethod.ToString().ToUpper()} request to {requestOptions.Url}");
+				logger.Info("Task was expectedly canceled for {HttpMethod} request to {Url}", requestOptions.HttpMethod.ToString().ToUpper(), requestOptions.Url);
 			}
 			else
 			{
-				logger.Error(tcex, "{msg}", $"{exceptionLocation} Error URL: {requestOptions.Url}");
+				logger.Error(tcex, RestErrorLocationTemplate, exceptionLocation, requestOptions.Url);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error URL: {requestOptions.Url}");
+			logger.Error(ex, RestErrorLocationTemplate, ex.GetLocationOfException(), requestOptions.Url);
 		}
 
 		return restObject;
@@ -294,12 +297,15 @@ public static class RestHelpersStatic
 					errorMessage = await ReadResponseStream<string>(responseStream, Text, contentEncoding, requestOptions.UseNewtonsoftDeserializer,
 						requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, cancellationToken).ConfigureAwait(false);
 				}
-				logger.Warn("{msg}", $"{requestOptions.HttpMethod} request with URL {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.RedactedUrl)} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(requestOptions.HttpHeaders != null ? $"Headers: {string.Join(", ", requestOptions.HttpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
+				logger.Warn("{HttpMethod} request with URL {URL} failed with the following response:\n\t{StatusCode}: {ReasonPhrase}\n\tContent: {ErrorMessage}\n\t{Headers}",
+					requestOptions.HttpMethod, requestOptions.LogQuery ? requestOptions.Url : requestOptions.RedactedUrl, response.StatusCode, response.ReasonPhrase, errorMessage,
+					requestOptions.HttpHeaders != null ? $"Headers: {string.Join(", ", requestOptions.HttpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null);
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		await LogResponse(requestOptions, result, true, cancellationToken).ConfigureAwait(false);
@@ -363,12 +369,15 @@ public static class RestHelpersStatic
 					{
 						errorMessage = await ReadResponseStream<string>(responseStream, Text, contentEncoding, false, cancellationToken: cancellationToken).ConfigureAwait(false);
 					}
-					logger.Warn("{msg}", $"{requestOptions.HttpMethod} request with URL {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.RedactedUrl)} failed with the following response:\n\t{response.StatusCode}: {response.ReasonPhrase}\n\tContent: {errorMessage}\n\t{(requestOptions.HttpHeaders != null ? $"Headers: {string.Join(", ", requestOptions.HttpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null)}");
+					logger.Warn("{HttpMethod} request with URL {URL} failed with the following response:\n\t{StatusCode}: {ReasonPhrase}\n\tContent: {ErrorMessage}\n\t{Headers}",
+						requestOptions.HttpMethod, requestOptions.LogQuery ? requestOptions.Url : requestOptions.RedactedUrl, response.StatusCode, response.ReasonPhrase, errorMessage,
+						requestOptions.HttpHeaders != null ? $"Headers: {string.Join(", ", requestOptions.HttpHeaders.Select(x => $"{x.Key}: {x.Value}"))}" : null);
 				}
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 			}
 
 			if (requestOptions.LogResponse)
@@ -552,7 +561,8 @@ public static class RestHelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return result;
 	}
@@ -659,19 +669,6 @@ public static class RestHelpersStatic
 	/// <param name="httpHeaders">Dictionary of headers</param>
 	internal static void AttachHeaders(this HttpRequestMessage httpRequestMessage, string? bearerToken, IDictionary<string, string>? httpHeaders)
 	{
-		//Changed this from inline if due to setting .Authorization to null if bearerToken is empty/null resulting in an exception during the post request: "A task was canceled"
-		//if (bearerToken != null || (bearerToken?.Length == 0 && !(httpHeaders?.Any(x => x.Key.StrEq("Authorization")) ?? false)))
-		//{
-		//	try
-		//	{
-		//		httpRequestMessage.Headers.Authorization = new("Bearer", bearerToken);
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		logger.Warn(ex, "{msg}", $"Failed to add bearer token.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
-		//	}
-		//}
-
 		if (!bearerToken.IsNullOrEmpty())
 		{
 			httpRequestMessage.Headers.TryAddWithoutValidation("Authorization", $"Bearer {bearerToken}");
@@ -679,18 +676,6 @@ public static class RestHelpersStatic
 
 		if (httpHeaders.AnyFast())
 		{
-			//foreach (KeyValuePair<string, string> header in httpHeaders!)
-			//{
-			//	try
-			//	{
-			//		httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
-			//	}
-			//	catch (Exception ex)
-			//	{
-			//		logger.Warn(ex, "{msg}", $"Failed to add header {header.Key} with value {header.Value}.\nDefault headers = {httpRequestMessage.Headers}\nNot validated headers = {httpRequestMessage.Headers.NonValidated}");
-			//	}
-			//}
-
 			foreach (KeyValuePair<string, string> header in httpHeaders!)
 			{
 				httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
@@ -702,15 +687,15 @@ public static class RestHelpersStatic
 	/// Gets the number of chunks and items per chunk to return with yield return to fit within MvcOptions.MaxIAsyncEnumerableBufferLimit.
 	/// </summary>
 	/// <param name="itemCount">Total number of items to transmit.</param>
-	/// <param name="startingitemsPerChunk">
+	/// <param name="startingItemsPerChunk">
 	/// Minimum chunk size to see if it fits within the buffer limit.<br/>Will increase from initial value until the number of chunks fits within the buffer limit.
 	/// </param>
 	/// <param name="bufferLimit">Maximum number of buffer operations allowed by IAsyncEnumerable. Default = 8192</param>
 	/// <returns>itemsPerChunk and numberOfChunks</returns>
-	public static (int itemsPerChunk, int numberOfChunks) GetChunkingParameters(int itemCount, int startingitemsPerChunk = 10000, int bufferLimit = 8192)
+	public static (int itemsPerChunk, int numberOfChunks) GetChunkingParameters(int itemCount, int startingItemsPerChunk = 10000, int bufferLimit = 8192)
 	{
 		//IAsyncEnumerable is limited to MvcOptions.MaxIAsyncEnumerableBufferLimit which is 8192 by default
-		int itemsPerChunk = startingitemsPerChunk;
+		int itemsPerChunk = startingItemsPerChunk;
 
 		//int numberOfChunks = (int)MathHelpers.Ceiling((decimal)itemCount / itemsPerChunk, 1);
 		decimal numberOfChunksDecimal = (decimal)itemCount / itemsPerChunk;

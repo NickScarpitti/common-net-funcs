@@ -40,7 +40,7 @@ public static class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(WriteExcelFile)} Error");
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Common), nameof(WriteExcelFile));
 			return false;
 		}
 	}

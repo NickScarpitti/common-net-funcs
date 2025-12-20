@@ -1,6 +1,5 @@
 ﻿using CliWrap;
 using CliWrap.Buffered;
-
 namespace CommonNetFuncs.Images;
 
 /// <summary>
@@ -109,7 +108,7 @@ public static class Optimizer
 				}
 				else
 				{
-					logger.Warn("{msg}", $"Image compression failed for [{file}] with exit code {result.ExitCode}");
+					logger.Warn("Image compression failed for [{file}] with exit code {ExitCode}", file, result.ExitCode);
 				}
 			}
 		}

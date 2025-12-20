@@ -6,6 +6,7 @@ using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.ReflectionCaches;
 using static CommonNetFuncs.Excel.OpenXml.Common;
 
@@ -50,7 +51,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(GenericExcelExport)} Error");
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExport));
 		}
 
 		return new();
@@ -86,7 +87,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(GenericExcelExport)} Error");
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExport));
 		}
 
 		return new();
@@ -164,7 +165,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Export)}.{nameof(AddGenericTableInternal)} Error");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		return success;
 	}
@@ -237,7 +238,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Export)}.{nameof(ExportFromTable)}");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			return false;
 		}
 	}
@@ -312,7 +313,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Export)}.{nameof(ExportFromTable)}");
+			logger.Error(ex, "Error in {Class}.{Method}", nameof(Export), nameof(ExportFromTable));
 			return false;
 		}
 	}

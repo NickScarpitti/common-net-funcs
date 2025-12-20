@@ -22,7 +22,7 @@
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
 //        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-//        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+//        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, false);
 //        return await wrappedClient.ExecuteWithResilience(async (client, _) =>
@@ -66,7 +66,7 @@
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
 //        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-//        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+//        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, true);
 //        IAsyncEnumerable<T?>? streamingResult =
@@ -114,7 +114,7 @@
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
 //        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-//        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+//        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, false);
 //        return await wrappedClient.ExecuteWithResilience(async (client, _) =>
@@ -159,7 +159,7 @@
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
 //        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-//        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+//        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, true);
 //        IAsyncEnumerable<T?>? streamingResult =
@@ -205,7 +205,7 @@
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
 //        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-//        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+//        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, false);
 //        return await wrappedClient.ExecuteWithResilience(async (client, _) =>
@@ -250,7 +250,7 @@
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
 //        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-//        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+//        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, true);
 //        IAsyncEnumerable<T?>? streamingResult =
@@ -296,7 +296,7 @@
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
 //        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 
-//        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+//        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, false);
 //        return await wrappedClient.ExecuteWithResilience(async (client, _) =>
@@ -346,7 +346,7 @@
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
 //        using ResilienceWrappedHttpClient wrappedClient = new(baseClient, options.ResilienceOptions, baseLogString);
 //        JsonPatchDocument patchDocument = PatchCreator.CreatePatch(oldModel, model);
-//        logger.Info("{msg}", $"{baseLogString} Attempt 1");
+//        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        if (patchDocument.Operations.Count > 0)
 //        {
@@ -486,7 +486,7 @@
 //        }
 //        catch (Exception ex)
 //        {
-//            logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException());;
+//            logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 //        }
 
 //        if (httpHeaders.AnyFast())

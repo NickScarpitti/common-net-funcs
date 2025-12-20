@@ -8,6 +8,7 @@ using CommonNetFuncs.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Z.EntityFramework.Plus;
+
 using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.EFCore;
@@ -22,7 +23,6 @@ public sealed class FullQueryOptions(bool? splitQueryOverride = null) : Navigati
 	/// </summary>
 	public bool? SplitQueryOverride { get; set; } = splitQueryOverride;
 }
-
 /// <summary>
 /// Common EF Core interactions with a database. Must be using dependency injection for this class to work.
 /// </summary>
@@ -34,6 +34,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 	private static readonly JsonSerializerOptions defaultJsonSerializerOptions = new() { ReferenceHandler = ReferenceHandler.IgnoreCycles };
 	static readonly ConcurrentDictionary<Type, bool> circularReferencingEntities = new();
+
+	private const string Error1LocationTemplate = "{ExceptionLocation} Error1";
+	private const string Error2LocationTemplate = "{ExceptionLocation} Error2";
+	private const string AddCircularRefTemplate = "Adding {Type} to circularReferencingEntities";
 
 	#region Read
 
@@ -76,7 +80,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -119,7 +124,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -180,23 +186,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 							_ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(context, model, cancellationToken: cancellationToken),
 						};
 					}
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		//Microsoft.EntityFrameworkCore.Query.NavigationBaseIncludeIgnored
 
@@ -259,23 +266,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 							_ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).GetObjectByPartial(context, model, cancellationToken: cancellationToken),
 						};
 					}
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		return model;
@@ -317,7 +325,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -358,7 +367,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -394,7 +404,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -442,7 +453,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -515,23 +527,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				try
 				{
 					model = await GetQueryAllFull(queryTimeout, true, fullQueryOptions: fullQueryOptions).ToListAsync(cancellationToken).ConfigureAwait(false);
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -562,23 +575,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				try
 				{
 					model = await GetQueryAllFull(selectExpression, queryTimeout, true).ToListAsync(cancellationToken).ConfigureAwait(false);
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -606,23 +620,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				try
 				{
 					enumeratedReader = GetQueryAllFull(queryTimeout, true, fullQueryOptions: fullQueryOptions).AsAsyncEnumerable();
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -662,23 +677,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				{
 					query = GetQueryAllFull(selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
 					enumeratedReader = query.AsAsyncEnumerable();
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -811,7 +827,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -855,7 +872,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -898,7 +916,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -950,7 +969,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -1029,23 +1049,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				{
 					model = await GetQueryWithFilterFull(whereExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions)
 						.ToListAsync(cancellationToken).ConfigureAwait(false);
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -1079,23 +1100,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				{
 					model = await GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions)
 						.ToListAsync(cancellationToken).ConfigureAwait(false);
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -1125,23 +1147,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				try
 				{
 					enumeratedReader = GetQueryWithFilterFull(whereExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions).AsAsyncEnumerable();
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -1181,23 +1204,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				try
 				{
 					enumeratedReader = GetQueryWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions).AsAsyncEnumerable();
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -1343,23 +1367,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				{
 					model = await GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions)
 						.ToListAsync(cancellationToken).ConfigureAwait(false);
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T2), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -1410,23 +1435,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				try
 				{
 					enumeratedReader = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions).AsAsyncEnumerable();
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T2), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -1478,7 +1504,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 			if (ioEx.HResult == -2146233079)
 			{
 				IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-				logger.Warn("{msg}", $"Adding {typeof(T2).Name} to circularReferencingEntities");
+				logger.Warn(AddCircularRefTemplate, typeof(T2).Name);
 				circularReferencingEntities.TryAdd(typeof(T2), true);
 				try
 				{
@@ -1503,7 +1529,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 					{
 						try
 						{
-							logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+							logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 							circularReferencingEntities.TryAdd(typeof(T), true);
 							await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
 							model = fullQueryOptions.SplitQueryOverride switch
@@ -1515,25 +1541,25 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 						}
 						catch (Exception ex2)
 						{
-							logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-							logger.Error(ioEx2, "{msg}", $"{ioEx2.GetLocationOfException()} Error1");
-							logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+							logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+							logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 						}
 					}
 					else
 					{
-						logger.Error(ioEx2, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+						logger.Error(ioEx2, ErrorLocationTemplate, ioEx2.GetLocationOfException());
 					}
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -1578,7 +1604,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 			if (ioEx.HResult == -2146233079)
 			{
 				IQueryable<T> query = GetQueryNavigationWithFilterFull(whereExpression, selectExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
-				logger.Warn("{msg}", $"Adding {typeof(T2).Name} to circularReferencingEntities");
+				logger.Warn(AddCircularRefTemplate, typeof(T2).Name);
 				circularReferencingEntities.TryAdd(typeof(T2), true);
 				try
 				{
@@ -1603,7 +1629,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 					{
 						try
 						{
-							logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+							logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 							circularReferencingEntities.TryAdd(typeof(T), true);
 							await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
 							enumeratedReader = fullQueryOptions.SplitQueryOverride switch
@@ -1615,25 +1641,25 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 						}
 						catch (Exception ex2)
 						{
-							logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-							logger.Error(ioEx2, "{msg}", $"{ioEx2.GetLocationOfException()} Error1");
-							logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+							logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+							logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 						}
 					}
 					else
 					{
-						logger.Error(ioEx2, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+						logger.Error(ioEx2, ErrorLocationTemplate, ioEx2.GetLocationOfException());
 					}
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 
 		if (enumeratedReader != null)
@@ -1746,7 +1772,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -1756,10 +1783,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// Same as running a SELECT [SpecificFields] WHERE [condition] query with Limit/Offset or Fetch/Offset parameters.
 	/// </summary>
 	/// <typeparam name="T2">Class type to return, specified by the selectExpression parameter.</typeparam>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
 	/// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-	/// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
+	/// <param name="ascendingOrderExpression">EF Core expression for order by statement to keep results consistent.</param>
 	/// <param name="skip">Optional: How many records to skip before the ones that should be returned. Default is 0.</param>
 	/// <param name="pageSize">Optional: How many records to take after the skipped records. Default is 0 (same as int.MaxValue)</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
@@ -1768,11 +1795,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
 	public Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-		Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false,
+		Expression<Func<T, TKey>> ascendingOrderExpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false,
 		FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class
 	{
-		return !full ? GetWithPagingFilter(whereExpression, selectExpression, ascendingOrderEpression, skip, pageSize, queryTimeout, trackEntities, cancellationToken) :
-			GetWithPagingFilterFull(whereExpression, selectExpression, ascendingOrderEpression, skip, pageSize, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+		return !full ? GetWithPagingFilter(whereExpression, selectExpression, ascendingOrderExpression, skip, pageSize, queryTimeout, trackEntities, cancellationToken) :
+			GetWithPagingFilterFull(whereExpression, selectExpression, ascendingOrderExpression, skip, pageSize, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
 	}
 
 	/// <summary>
@@ -1780,10 +1807,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// Same as running a SELECT [SpecificFields] WHERE [condition] query with Limit/Offset or Fetch/Offset parameters.
 	/// </summary>
 	/// <typeparam name="T2">Class type to return, specified by the selectExpression parameter.</typeparam>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
 	/// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-	/// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
+	/// <param name="ascendingOrderExpression">EF Core expression for order by statement to keep results consistent.</param>
 	/// <param name="skip">Optional: How many records to skip before the ones that should be returned. Default is 0.</param>
 	/// <param name="pageSize">Optional: How many records to take after the skipped records. Default is 0 (same as int.MaxValue)</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
@@ -1791,7 +1818,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
 	public async Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-		Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
+		Expression<Func<T, TKey>> ascendingOrderExpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class
 	{
 		await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
 		if (queryTimeout != null)
@@ -1802,8 +1829,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		GenericPagingModel<T2> model = new();
 		try
 		{
-			IQueryable<T2> qModel = !trackEntities ? context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-				context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression);
+			IQueryable<T2> qModel = !trackEntities ? context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderExpression).AsNoTracking().Select(selectExpression) :
+				context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderExpression).Select(selectExpression);
 
 			var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() })
 				.Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -1813,7 +1840,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -1855,23 +1883,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 					model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
 					model.Entities = results.ConvertAll(x => x.Entities);
 
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -1881,10 +1910,10 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// Same as running a SELECT [SpecificFields] WHERE [condition] query with Limit/Offset or Fetch/Offset parameters.
 	/// </summary>
 	/// <typeparam name="T2">Class type to return, specified by the selectExpression parameter.</typeparam>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
 	/// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-	/// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
+	/// <param name="ascendingOrderExpression">EF Core expression for order by statement to keep results consistent.</param>
 	/// <param name="skip">Optional: How many records to skip before the ones that should be returned. Default is 0.</param>
 	/// <param name="pageSize">Optional: How many records to take after the skipped records. Default is 0 (same as int.MaxValue)</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
@@ -1893,13 +1922,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
 	public async Task<GenericPagingModel<T2>> GetWithPagingFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression,
-		Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null,
+		Expression<Func<T, TKey>> ascendingOrderExpression, int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null,
 		CancellationToken cancellationToken = default) where T2 : class
 	{
 		GenericPagingModel<T2> model = new();
 		try
 		{
-			IQueryable<T2> qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, false, trackEntities, fullQueryOptions);
+			IQueryable<T2> qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderExpression, queryTimeout, false, trackEntities, fullQueryOptions);
 
 			var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
@@ -1912,29 +1941,30 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 			{
 				try
 				{
-					IQueryable<T2> qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderEpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
+					IQueryable<T2> qModel = GetQueryPagingWithFilterFull(whereExpression, selectExpression, ascendingOrderExpression, queryTimeout, true, fullQueryOptions: fullQueryOptions);
 					var results = await qModel.Select(x => new { Entities = x, TotalCount = qModel.Count() }).Skip(skip).Take(pageSize > 0 ? pageSize : int.MaxValue).ToListAsync(cancellationToken).ConfigureAwait(false);
 
 					model.TotalRecords = results.FirstOrDefault()?.TotalCount ?? await qModel.CountAsync(cancellationToken).ConfigureAwait(false);
 					model.Entities = results.ConvertAll(x => x.Entities);
 
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -1986,16 +2016,16 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// Gets query to get the records specified by the skip and take parameters from the corresponding table that satisfy the conditions of the linq query expression.
 	/// </summary>
 	/// <typeparam name="T2">Class type to return, specified by the selectExpression parameter.</typeparam>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
 	/// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-	/// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
+	/// <param name="ascendingOrderExpression">EF Core expression for order by statement to keep results consistent.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="handlingCircularRefException">Optional: If handling InvalidOperationException where .AsNoTracking() can't be used set to true. Default is <see langword="false"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <returns>The query to get the records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
-	public IQueryable<T2> GetQueryPagingWithFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderEpression,
+	public IQueryable<T2> GetQueryPagingWithFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderExpression,
 		TimeSpan? queryTimeout = null, bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class
 	{
 		fullQueryOptions ??= new FullQueryOptions();
@@ -2009,20 +2039,20 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 			? fullQueryOptions.SplitQueryOverride switch
 			{
 				null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-					context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-					context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
+					context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).AsNoTracking().Select(selectExpression) :
+					context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).Select(selectExpression),
 				true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-					context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-					context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
+					context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).AsNoTracking().Select(selectExpression) :
+					context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).Select(selectExpression),
 				_ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-					context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().Select(selectExpression) :
-					context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression)
+					context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).AsNoTracking().Select(selectExpression) :
+					context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).Select(selectExpression)
 			}
 			: fullQueryOptions.SplitQueryOverride switch
 			{
-				null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
-				true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression),
-				_ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).Select(selectExpression)
+				null => context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).Select(selectExpression),
+				true => context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).Select(selectExpression),
+				_ => context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).Select(selectExpression)
 			};
 	}
 
@@ -2071,7 +2101,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2120,7 +2151,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2173,23 +2205,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 						true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
 						_ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).FirstOrDefaultAsync(whereExpression, cancellationToken).ConfigureAwait(false),
 					};
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2244,23 +2277,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 						true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 						_ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).Select(selectExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 					};
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2272,31 +2306,31 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// <summary>
 	/// Uses a descending order expression to return the record containing the maximum value according to that order with or without navigation properties.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="descendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="descendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity.</param>
 	/// <param name="fullQueryOptions">Optional: Used only when running "Full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the maximum value according to the ascending order expression with or without navigation properties.</returns>
-	public Task<T?> GetMaxByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+	public Task<T?> GetMaxByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
 		FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
 	{
-		return !full ? GetMaxByOrder(whereExpression, descendingOrderEpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-			GetMaxByOrderFull(whereExpression, descendingOrderEpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+		return !full ? GetMaxByOrder(whereExpression, descendingOrderExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+			GetMaxByOrderFull(whereExpression, descendingOrderExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
 	}
 
 	/// <summary>
 	/// Uses a descending order expression to return the record containing the maximum value according to that order.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="descendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="descendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <returns>The record that contains the maximum value according to the ascending order expression.</returns>
-	public async Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
+	public async Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
 	{
 		await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
 		if (queryTimeout != null)
@@ -2307,12 +2341,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		T? model = null;
 		try
 		{
-			model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-				await context.Set<T>().AsNoTracking().Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+			model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderByDescending(descendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+				await context.Set<T>().AsNoTracking().Where(whereExpression).OrderByDescending(descendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2321,15 +2356,15 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// Uses a descending order expression to return the record and its navigation properties containing the maximum value according to that order.
 	/// Navigation properties using System.Text.Json.Serialization <see cref="JsonIgnoreAttribute"/> will not be included.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="descendingOrderEpression">A linq expression used to order the query results with before taking the top result</param>
+	/// <param name="descendingOrderExpression">A linq expression used to order the query results with before taking the top result</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the maximum value according to the ascending order expression with it's navigation properties</returns>
-	public async Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+	public async Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
 		FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
 	{
 		fullQueryOptions ??= new FullQueryOptions();
@@ -2345,14 +2380,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 			model = fullQueryOptions.SplitQueryOverride switch
 			{
 				null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-					await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-					await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+					await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderExpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+					await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 				true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-					await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-					await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+					await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderExpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+					await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 				_ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-					await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-					await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+					await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderExpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+					await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 			};
 		}
 		catch (InvalidOperationException ioEx)
@@ -2363,27 +2398,28 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				{
 					model = fullQueryOptions.SplitQueryOverride switch
 					{
-						null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
-						true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
-						_ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+						null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+						true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+						_ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderByDescending(descendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 					};
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2395,32 +2431,32 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// <summary>
 	/// Uses a ascending order expression to return the record containing the minimum value according to that order with or without navigation properties.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="ascendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="ascendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity.</param>
 	/// <param name="fullQueryOptions">Optional: Used only when running "Full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the minimum value according to the ascending order expression with or without navigation properties.</returns>
-	public Task<T?> GetMinByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+	public Task<T?> GetMinByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
 		FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
 	{
-		return !full ? GetMinByOrder(whereExpression, ascendingOrderEpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
-			GetMinByOrderFull(whereExpression, ascendingOrderEpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
+		return !full ? GetMinByOrder(whereExpression, ascendingOrderExpression, queryTimeout, trackEntities, cancellationToken: cancellationToken) :
+			GetMinByOrderFull(whereExpression, ascendingOrderExpression, queryTimeout, trackEntities, fullQueryOptions, cancellationToken);
 	}
 
 	/// <summary>
 	/// Uses a ascending order expression to return the record containing the minimum value according to that order.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="ascendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="ascendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the minimum value according to the ascending order expression.</returns>
-	public async Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
+	public async Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default)
 	{
 		await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
 		if (queryTimeout != null)
@@ -2431,12 +2467,13 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		T? model = null;
 		try
 		{
-			model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-				await context.Set<T>().AsNoTracking().Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+			model = trackEntities ? await context.Set<T>().Where(whereExpression).OrderBy(ascendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+				await context.Set<T>().AsNoTracking().Where(whereExpression).OrderBy(ascendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2445,15 +2482,15 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// Uses a ascending order expression to return the record and its navigation properties containing the minimum value according to that order.
 	/// Navigation properties using System.Text.Json.Serialization <see cref="JsonIgnoreAttribute"/> will not be included.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="ascendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="ascendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the minimum value according to the ascending order expression with it's navigation properties.</returns>
-	public async Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+	public async Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
 		FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default)
 	{
 		fullQueryOptions ??= new FullQueryOptions();
@@ -2469,14 +2506,14 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 			model = fullQueryOptions.SplitQueryOverride switch
 			{
 				null => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-					await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-					await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+					await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+					await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 				true => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-					await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-					await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+					await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+					await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 				_ => !trackEntities && !circularReferencingEntities.TryGetValue(typeof(T), out _) ?
-					await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
-					await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+					await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false) :
+					await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 			};
 		}
 		catch (InvalidOperationException ioEx)
@@ -2487,27 +2524,28 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 				{
 					model = fullQueryOptions.SplitQueryOverride switch
 					{
-						null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
-						true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
-						_ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderEpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+						null => await context.Set<T>().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+						true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
+						_ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).OrderBy(ascendingOrderExpression).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false),
 					};
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2559,7 +2597,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2613,23 +2652,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 						true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
 						_ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MaxAsync(maxExpression, cancellationToken).ConfigureAwait(false),
 					};
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2682,7 +2722,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2736,23 +2777,24 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 						true => await context.Set<T>().AsSplitQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
 						_ => await context.Set<T>().AsSingleQuery().IncludeNavigationProperties(context, fullQueryOptions).Where(whereExpression).MinAsync(minExpression, cancellationToken).ConfigureAwait(false),
 					};
-					logger.Warn("{msg}", $"Adding {typeof(T).Name} to circularReferencingEntities");
+					logger.Warn(AddCircularRefTemplate, typeof(T).Name);
 					circularReferencingEntities.TryAdd(typeof(T), true);
 				}
 				catch (Exception ex2)
 				{
-					logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error1");
-					logger.Error(ex2, "{msg}", $"{ex2.GetLocationOfException()} Error2");
+					logger.Error(ioEx, Error1LocationTemplate, ioEx.GetLocationOfException());
+					logger.Error(ex2, Error2LocationTemplate, ex2.GetLocationOfException());
 				}
 			}
 			else
 			{
-				logger.Error(ioEx, "{msg}", $"{ioEx.GetLocationOfException()} Error");
+				logger.Error(ioEx, ErrorLocationTemplate, ioEx.GetLocationOfException());
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return model;
 	}
@@ -2781,7 +2823,8 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return count;
 	}
@@ -2814,7 +2857,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model, defaultJsonSerializerOptions)}");
+			logger.Error(ex, "{ErrorLocation} Error\n\tModel: {Model}", ex.GetLocationOfException(), JsonSerializer.Serialize(model, defaultJsonSerializerOptions));
 		}
 	}
 
@@ -2838,7 +2881,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model, defaultJsonSerializerOptions)}");
+			logger.Error(ex, "{ErrorLocation} Error\n\tModel: {Model}", ex.GetLocationOfException(), JsonSerializer.Serialize(model, defaultJsonSerializerOptions));
 		}
 	}
 
@@ -2861,7 +2904,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(model, defaultJsonSerializerOptions)}");
+			logger.Error(ex, "{ErrorLocation} Error\n\tModel: {Model}", ex.GetLocationOfException(), JsonSerializer.Serialize(model, defaultJsonSerializerOptions));
 		}
 	}
 
@@ -2885,7 +2928,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tKey: {JsonSerializer.Serialize(key)}");
+			logger.Error(ex, "{ErrorLocation} Error\n\tKey: {Key}", ex.GetLocationOfException(), JsonSerializer.Serialize(key));
 		}
 		return false;
 	}
@@ -2909,7 +2952,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(models, defaultJsonSerializerOptions)}");
+			logger.Error(ex, "{ErrorLocation} Error\n\tModel: {Models}", ex.GetLocationOfException(), JsonSerializer.Serialize(models, defaultJsonSerializerOptions));
 		}
 		return false;
 	}
@@ -2933,7 +2976,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModel: {JsonSerializer.Serialize(models, defaultJsonSerializerOptions)}");
+			logger.Error(ex, "{ErrorLocation} Error\n\tModel: {Models}", ex.GetLocationOfException(), JsonSerializer.Serialize(models, defaultJsonSerializerOptions));
 		}
 		return false;
 	}
@@ -2952,7 +2995,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tKeys: {JsonSerializer.Serialize(keys)}");
+			logger.Error(ex, "{ErrorLocation} Error\n\tKeys: {Keys}", ex.GetLocationOfException(), JsonSerializer.Serialize(keys));
 		}
 		return false;
 	}
@@ -2992,11 +3035,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (DbUpdateException duex)
 		{
-			logger.Error(duex, "{msg}", $"{duex.GetLocationOfException()} DBUpdate Error\n\tModels: {JsonSerializer.Serialize(models)}");
+			logger.Error(duex, "{ErrorLocation} DBUpdate Error\n\tModels: {Models}", duex.GetLocationOfException(), JsonSerializer.Serialize(models));
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tModels: {JsonSerializer.Serialize(models)}");
+			logger.Error(ex, "{ErrorLocation} Error\n\tModels: {Models}", ex.GetLocationOfException(), JsonSerializer.Serialize(models));
 		}
 		return false;
 	}
@@ -3014,11 +3057,12 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (DbUpdateException duex)
 		{
-			logger.Error(duex, "{msg}", $"{duex.GetLocationOfException()} DBUpdate Error");
+			logger.Error(duex, "{ErrorLocation} DBUpdate Error", duex.GetLocationOfException());
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+
 		}
 		return false;
 	}

@@ -7,6 +7,7 @@ using FastExpressionCompiler;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
+
 using static CommonNetFuncs.Core.ReflectionCaches;
 using static CommonNetFuncs.Core.Strings;
 
@@ -38,19 +39,19 @@ public static class NavigationProperties
 {
 	#region Caching
 
-	public readonly struct NavigationProperiesCacheKey(Type sourceType, string? navigationPropertyTypesToIgnore) : IEquatable<NavigationProperiesCacheKey>
+	public readonly struct NavigationPropertiesCacheKey(Type sourceType, string? navigationPropertyTypesToIgnore) : IEquatable<NavigationPropertiesCacheKey>
 	{
 		public readonly Type SourceType = sourceType;
 		public readonly string? NavigationPropertyTypesToIgnore = navigationPropertyTypesToIgnore;
 
-		public bool Equals(NavigationProperiesCacheKey other)
+		public bool Equals(NavigationPropertiesCacheKey other)
 		{
 			return other.SourceType == SourceType && other.NavigationPropertyTypesToIgnore == NavigationPropertyTypesToIgnore;
 		}
 
 		public override bool Equals(object? obj)
 		{
-			return obj is NavigationProperiesCacheKey navigationProperiesCacheKey && Equals(navigationProperiesCacheKey);
+			return obj is NavigationPropertiesCacheKey navigationPropertiesCacheKey && Equals(navigationPropertiesCacheKey);
 		}
 
 		public override int GetHashCode()
@@ -58,30 +59,30 @@ public static class NavigationProperties
 			return HashCode.Combine(SourceType, NavigationPropertyTypesToIgnore);
 		}
 
-		public static bool operator ==(NavigationProperiesCacheKey left, NavigationProperiesCacheKey right)
+		public static bool operator ==(NavigationPropertiesCacheKey left, NavigationPropertiesCacheKey right)
 		{
 			return left.Equals(right);
 		}
 
-		public static bool operator !=(NavigationProperiesCacheKey left, NavigationProperiesCacheKey right)
+		public static bool operator !=(NavigationPropertiesCacheKey left, NavigationPropertiesCacheKey right)
 		{
 			return !(left == right);
 		}
 	}
 
-	public readonly struct NavigationProperiesCacheValue(HashSet<string> navigationProperties, int maxDepth) : IEquatable<NavigationProperiesCacheValue>
+	public readonly struct NavigationPropertiesCacheValue(HashSet<string> navigationProperties, int maxDepth) : IEquatable<NavigationPropertiesCacheValue>
 	{
 		public readonly HashSet<string> NavigationProperties = navigationProperties;
 		public readonly int MaxDepth = maxDepth;
 
-		public bool Equals(NavigationProperiesCacheValue other)
+		public bool Equals(NavigationPropertiesCacheValue other)
 		{
 			return other.MaxDepth == MaxDepth && other.NavigationProperties.SetEquals(NavigationProperties);
 		}
 
 		public override bool Equals(object? obj)
 		{
-			return obj is NavigationProperiesCacheValue navigationProperiesCacheKey && Equals(navigationProperiesCacheKey);
+			return obj is NavigationPropertiesCacheValue navigationPropertiesCacheKey && Equals(navigationPropertiesCacheKey);
 		}
 
 		public override int GetHashCode()
@@ -101,20 +102,20 @@ public static class NavigationProperties
 			return depth < 0 ? NavigationProperties : NavigationProperties.Where(x => x.HasNoMoreThanNumberOfChars('.', depth)).ToHashSet();
 		}
 
-		public static bool operator ==(NavigationProperiesCacheValue left, NavigationProperiesCacheValue right)
+		public static bool operator ==(NavigationPropertiesCacheValue left, NavigationPropertiesCacheValue right)
 		{
 			return left.Equals(right);
 		}
 
-		public static bool operator !=(NavigationProperiesCacheValue left, NavigationProperiesCacheValue right)
+		public static bool operator !=(NavigationPropertiesCacheValue left, NavigationPropertiesCacheValue right)
 		{
 			return !(left == right);
 		}
 	}
 
-	private static readonly CacheManager<NavigationProperiesCacheKey, NavigationProperiesCacheValue> NavigationCache = new();
+	private static readonly CacheManager<NavigationPropertiesCacheKey, NavigationPropertiesCacheValue> NavigationCache = new();
 
-	public static ICacheManagerApi<NavigationProperiesCacheKey, NavigationProperiesCacheValue> NavigationCacheManager => NavigationCache;
+	public static ICacheManagerApi<NavigationPropertiesCacheKey, NavigationPropertiesCacheValue> NavigationCacheManager => NavigationCache;
 
 	private static readonly CacheManager<Type, List<string>> TopLevelNavigationCache = new();
 
@@ -126,10 +127,10 @@ public static class NavigationProperties
 	/// <param name="key">Type to get navigation properties for.</param>
 	/// <param name="context">DbContext to use for getting the navigation properties.</param>
 	/// <param name="navigationPropertiesOptions">Options for configuring navigation properties retrieval.</param>
-	private static HashSet<string> GetOrAddPropertiesFromEntityNavigationsCache<T>(NavigationProperiesCacheKey key, DbContext context, NavigationPropertiesOptions navigationPropertiesOptions) where T : class
+	private static HashSet<string> GetOrAddPropertiesFromEntityNavigationsCache<T>(NavigationPropertiesCacheKey key, DbContext context, NavigationPropertiesOptions navigationPropertiesOptions) where T : class
 	{
 		if ((NavigationCacheManager.IsUsingLimitedCache() ?
-					NavigationCacheManager.GetLimitedCache().TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out NavigationProperiesCacheValue cachedValue) :
+					NavigationCacheManager.GetLimitedCache().TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out NavigationPropertiesCacheValue cachedValue) :
 					NavigationCacheManager.GetCache().TryGetValue(new(typeof(T), navigationPropertiesOptions.NavPropAttributesToIgnore.CreateNavPropsIgnoreString()), out cachedValue)) &&
 				(cachedValue.MaxDepth < 0 || cachedValue.MaxDepth >= navigationPropertiesOptions.MaxNavigationDepth))
 		{
@@ -356,13 +357,14 @@ public static class NavigationProperties
 	/// <typeparam name="T">The entity type to remove the navigation properties from.</typeparam>
 	/// <param name="obj">The object of type <typeparamref name="T"/> to remove the navigation properties from.</param>
 	/// <param name="context">The context that contains the definition for entity<typeparamref name="T"/>.</param>
-	public static void RemoveNavigationProperties<T>(this T obj, DbContext context) where T : class
+	public static void RemoveNavigationProperties<T>(this T? obj, DbContext context) where T : class
 	{
 		if (obj == null)
 		{
 			return;
 		}
 
+		// Get navigation property names
 		Action<T> setter = NavigationSetterCache.GetOrAdd(typeof(T), type =>
 		{
 			// Get navigation property names
@@ -383,6 +385,11 @@ public static class NavigationProperties
 				}
 			}
 
+			// If no valid assignments, return empty action
+			if (!assignments.AnyFast())
+			{
+				return new Action<object>(_ => { });
+			}
 			// If no valid assignments, return empty action
 			if (!assignments.AnyFast())
 			{

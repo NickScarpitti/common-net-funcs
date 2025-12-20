@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using FastExpressionCompiler;
+
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
@@ -122,7 +123,7 @@ public static class Inspect
 	//		}
 	//		catch (Exception ex)
 	//		{
-	//			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException());;
+	//			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 	//			return false;
 	//		}
 	//	}

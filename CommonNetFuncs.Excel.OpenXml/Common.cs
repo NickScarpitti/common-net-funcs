@@ -2,15 +2,17 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SixLabors.ImageSharp;
-using Color = DocumentFormat.OpenXml.Spreadsheet.Color; //Aliased to prevent issue with DocumentFormat.OpenXml.Spreadsheet.Color
+using static CommonNetFuncs.Core.ExceptionLocation;
+using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
+//Aliased to prevent issue with DocumentFormat.OpenXml.Spreadsheet.Color
 using Dwg = DocumentFormat.OpenXml.Drawing;
 using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
-
 namespace CommonNetFuncs.Excel.OpenXml;
 #pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
 public static partial class Common
@@ -263,7 +265,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromReference)}");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			return null;
 		}
 	}
@@ -285,7 +287,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromReference)}");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			return null;
 		}
 	}
@@ -310,7 +312,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellOffset)}");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		return null;
 	}
@@ -344,7 +346,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromCoordinates)}");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			return null;
 		}
 	}
@@ -366,7 +368,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromName)}");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			return null;
 		}
 	}
@@ -399,7 +401,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellFromName)}");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			return null;
 		}
 	}
@@ -421,7 +423,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellReferenceFromName)}");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			return null;
 		}
 	}
@@ -455,7 +457,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Error in {nameof(Common)}.{nameof(GetCellReferenceFromName)}");
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			return null;
 		}
 	}
@@ -2072,7 +2074,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"Unable to read excel table data. Location {nameof(Common)}.{nameof(ReadExcelTableToDataTable)}");
+			logger.Error(ex, "Unable to read excel table data. Location {Class}.{Method}", nameof(Common), nameof(ReadExcelTableToDataTable));
 		}
 
 		return dataTable;
@@ -2330,7 +2332,7 @@ public static partial class Common
 
 		if ((styleIndex != null) && boldStyles.Contains((uint)styleIndex))
 		{
-			// add an extra char for bold - not 100% acurate but good enough for what i need.
+			// add an extra char for bold - not 100% accurate but good enough for what i need.
 			width++;
 		}
 

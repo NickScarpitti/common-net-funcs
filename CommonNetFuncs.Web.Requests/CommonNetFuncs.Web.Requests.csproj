@@ -30,13 +30,13 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.8.25</Version>
+    <Version>4.0.2</Version>
     <MinVerTagPrefix>web.requests-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
     <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
     <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>3.8.21</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>4.0.2</PackageValidationBaselineVersion>
     <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 

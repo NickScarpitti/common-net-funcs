@@ -86,7 +86,7 @@ public static partial class FileHelpers
 
 				if (!suppressLogging)
 				{
-					logger.Info("Checking new testPath [{testPath}] with iterator [{i}]", testPath, i);
+					logger.Info("[{testPath}] exists, checking with iterator [{i}]", testPath, i);
 				}
 
 				// Prevent infinite loop if file name isn't changing
@@ -94,7 +94,7 @@ public static partial class FileHelpers
 				{
 					if (!suppressLogging)
 					{
-						logger.Warn("File name [{testPath}] not changing, breaking out of loop.", testPath);
+						logger.Warn("[{testPath}] not changing, breaking out of loop.", testPath);
 					}
 					break;
 				}
@@ -105,7 +105,7 @@ public static partial class FileHelpers
 		}
 		else if (!suppressLogging)
 		{
-			logger.Info("Original path with cleaned file name [{testPath}] is unique", testPath);
+			logger.Info("[{testPath}] is unique", testPath);
 		}
 
 		return testPath;
@@ -177,7 +177,7 @@ public static partial class FileHelpers
 
 				if (!suppressLogging)
 				{
-					logger.Info("{msg}", $"Checking new testPath [{testPath}] with iterator [{i}]]");
+					logger.Info("Checking new testPath [{testPath}] with iterator [{i}]", testPath, i);
 				}
 
 				// Prevent infinite loop if file name isn't changing
@@ -185,7 +185,7 @@ public static partial class FileHelpers
 				{
 					if (!suppressLogging)
 					{
-						logger.Warn("{msg}", $"File name [{testPath}] not changing, breaking out of loop.");
+						logger.Warn("File name [{testPath}] not changing, breaking out of loop.", testPath);
 					}
 					break;
 				}
@@ -196,7 +196,7 @@ public static partial class FileHelpers
 		}
 		else if (!suppressLogging)
 		{
-			logger.Info("{msg}", $"Original path with cleaned file name [{testPath}] is unique");
+			logger.Info("Original path with cleaned file name [{testPath}] is unique", testPath);
 		}
 
 		return Path.GetFileName(testPath);

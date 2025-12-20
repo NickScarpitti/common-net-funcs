@@ -17,9 +17,9 @@ public sealed class UseResponseLoggingFilter(ILogger<UseResponseLoggingFilter> l
 	{
 		stopwatch.Stop();
 		TimeSpan elapsedTime = stopwatch.Elapsed;
-		if (elapsedTime >= TimeSpan.FromSeconds(config.ThresholdInSeconds))
+		if (elapsedTime >= TimeSpan.FromSeconds(config.ThresholdInSeconds) && logger.IsEnabled(LogLevel.Warning))
 		{
-			logger.LogWarning("{msg}", $"Method {context.ActionDescriptor.DisplayName} took {elapsedTime} to complete with result: {context.Result} ({context.HttpContext.Response.StatusCode})");
+			logger.LogWarning("Method {DisplayName} took {ElapsedTime} to complete with result: {Result} ({StatusCode})", context.ActionDescriptor.DisplayName, elapsedTime, context.Result, context.HttpContext.Response.StatusCode);
 		}
 	}
 

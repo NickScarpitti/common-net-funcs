@@ -50,7 +50,7 @@ public static class Files
 
 		if (files.Any())
 		{
-			using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Create, true);
+			await using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Create, true);
 			await files.AddFilesToZip(archive, compressionLevel, cancellationToken).ConfigureAwait(false);
 			zipFileStream.Position = 0;
 		}
@@ -69,7 +69,7 @@ public static class Files
 		MemoryStream zipFileStream = new();
 		if (files.Any())
 		{
-			using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Create, true);
+			await using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Create, true);
 			await files.AddFilesToZip(archive, compressionLevel, cancellationToken).ConfigureAwait(false);
 			zipFileStream.Position = 0;
 		}
@@ -105,7 +105,7 @@ public static class Files
 		{
 			fileStream.Position = 0; //Must have this to prevent errors writing data to the attachment
 			ZipArchiveEntry entry = archive.CreateEntry(fileName ?? $"File {archive.Entries.Count}", compressionLevel);
-			await using Stream entryStream = entry.Open();
+			await using Stream entryStream = await entry.OpenAsync(cancellationToken);
 			await fileStream.CopyToAsync(entryStream, cancellationToken).ConfigureAwait(false);
 			await entryStream.FlushAsync(cancellationToken).ConfigureAwait(false);
 		}

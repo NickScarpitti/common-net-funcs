@@ -1,4 +1,5 @@
-﻿// #nullable enable
+<<<<<<< HEAD
+// #nullable enable
 // using System.Collections.Generic;
 // using System.IO;
 // using System.IO.Compression;

@@ -1,12 +1,16 @@
 ﻿using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
+
 using static System.Web.HttpUtility;
 
 namespace CommonNetFuncs.Email;
 
 public static partial class HtmlEmailBuilder
 {
+	const string LineBreak = "<br><br>";
+	const string CloseTr = "</tr>";
+
 	[GeneratedRegex(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase, "en-US")]
 	private static partial Regex UrlRegex();
 
@@ -19,10 +23,10 @@ public static partial class HtmlEmailBuilder
 	public static string BuildHtmlEmail(string body, string? footer = null)
 	{
 		StringBuilder emailTextBuilder = new("<html><body>");
-		emailTextBuilder.Append(body.StringtoHtml());
-		emailTextBuilder.Append(body.StringtoHtml());
-		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty);
-		emailTextBuilder.Append(footer.StringtoHtml());
+		emailTextBuilder.Append(body.StringToHtml());
+		emailTextBuilder.Append(body.StringToHtml());
+		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? LineBreak : string.Empty);
+		emailTextBuilder.Append(footer.StringToHtml());
 		emailTextBuilder.Append("</body></html>");
 		return emailTextBuilder.ToString().FormatAllUrlsToHtml();
 	}
@@ -37,12 +41,12 @@ public static partial class HtmlEmailBuilder
 	public static string BuildHtmlEmail(string body, DataTable? tableData, string? footer = null, CancellationToken cancellationToken = default)
 	{
 		StringBuilder emailTextBuilder = new("<html><body>");
-		emailTextBuilder.Append(body.StringtoHtml());
-		emailTextBuilder.Append(body.StringtoHtml());
-		emailTextBuilder.Append(tableData == null || tableData.Rows.Count == 0 ? string.Empty : "<br><br>");
+		emailTextBuilder.Append(body.StringToHtml());
+		emailTextBuilder.Append(body.StringToHtml());
+		emailTextBuilder.Append(tableData == null || tableData.Rows.Count == 0 ? string.Empty : LineBreak);
 		emailTextBuilder.Append(tableData.CreateHtmlTable(cancellationToken: cancellationToken));
-		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty);
-		emailTextBuilder.Append(footer.StringtoHtml());
+		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? LineBreak : string.Empty);
+		emailTextBuilder.Append(footer.StringToHtml());
 		emailTextBuilder.Append("</body></html>");
 		return emailTextBuilder.ToString().FormatAllUrlsToHtml();
 	}
@@ -59,11 +63,11 @@ public static partial class HtmlEmailBuilder
 		tableData ??= [];
 
 		StringBuilder emailTextBuilder = new("<html><body>");
-		emailTextBuilder.Append(body.StringtoHtml());
-		emailTextBuilder.Append(tableData.Count == 0 ? string.Empty : "<br><br>");
+		emailTextBuilder.Append(body.StringToHtml());
+		emailTextBuilder.Append(tableData.Count == 0 ? string.Empty : LineBreak);
 		emailTextBuilder.Append(tableData.CreateHtmlTable(cancellationToken: cancellationToken));
-		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? "<br><br>" : string.Empty);
-		emailTextBuilder.Append(footer.StringtoHtml());
+		emailTextBuilder.Append(!string.IsNullOrWhiteSpace(footer) ? LineBreak : string.Empty);
+		emailTextBuilder.Append(footer.StringToHtml());
 		emailTextBuilder.Append("</body></html>");
 
 		return emailTextBuilder.ToString().FormatAllUrlsToHtml();
@@ -74,7 +78,7 @@ public static partial class HtmlEmailBuilder
 	/// </summary>
 	/// <param name="text">String to be formatted</param>
 	/// <returns>HTML compatible text</returns>
-	public static string StringtoHtml(this string? text)
+	public static string StringToHtml(this string? text)
 	{
 		if (text != null)
 		{
@@ -149,7 +153,7 @@ public static partial class HtmlEmailBuilder
 			{
 				tableHtmlBuilder.Append($"<th>{column.ColumnName}</th>");
 			}
-			tableHtmlBuilder.Append("</tr>");
+			tableHtmlBuilder.Append(CloseTr);
 
 			//Add data rows
 			foreach (DataRow rowData in tableData.Rows)
@@ -157,7 +161,7 @@ public static partial class HtmlEmailBuilder
 				cancellationToken.ThrowIfCancellationRequested();
 				tableHtmlBuilder.Append("<tr>");
 				tableHtmlBuilder.Append(string.Concat(rowData.ItemArray.Select(x => $"<td>{x?.ToString()}</td>")));
-				tableHtmlBuilder.Append("</tr>");
+				tableHtmlBuilder.Append(CloseTr);
 			}
 			tableHtmlBuilder.Append("</table>");
 		}
@@ -201,7 +205,7 @@ public static partial class HtmlEmailBuilder
 			//Make headers
 			tableHtmlBuilder.Append("<table><tr>");
 			tableHtmlBuilder.Append(string.Concat(tableHeaders.Select(x => $"<th>{x}</th>")));
-			tableHtmlBuilder.Append("</tr>");
+			tableHtmlBuilder.Append(CloseTr);
 
 			//Add data rows
 			foreach (List<string> rowData in tableData.Skip(1))
@@ -209,7 +213,7 @@ public static partial class HtmlEmailBuilder
 				cancellationToken.ThrowIfCancellationRequested();
 				tableHtmlBuilder.Append("<tr>");
 				tableHtmlBuilder.Append(string.Concat(rowData.Select(x => $"<td>{x}</td>")));
-				tableHtmlBuilder.Append("</tr>");
+				tableHtmlBuilder.Append(CloseTr);
 			}
 			tableHtmlBuilder.Append("</table>");
 		}

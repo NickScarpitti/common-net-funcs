@@ -10,6 +10,8 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageReference Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.3.36812.1" />
     <PackageReference Include="NLog" Version="6.0.7" />
+    <PackageReference Include="Mapster" Version="7.4.0" />
+    <PackageReference Include="Riok.Mapperly" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>

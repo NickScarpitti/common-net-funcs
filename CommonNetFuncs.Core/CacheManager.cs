@@ -41,7 +41,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 {
 	private readonly ReaderWriterLockSlim readWriteLock = new();
 
-	private int limitedCacheSize = limitedCacheSize;
+	private volatile int limitedCacheSize = limitedCacheSize;
 
 	// Use volatile for lock-free reads - safe because writes are still protected by lock
 	private volatile bool useLimitedCache = useLimitedCache;
@@ -64,15 +64,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 	/// </summary>
 	public void ClearCache()
 	{
-		readWriteLock.EnterWriteLock();
-		try
-		{
-			Cache.Clear();
-		}
-		finally
-		{
-			readWriteLock.ExitWriteLock();
-		}
+		Cache.Clear();
 	}
 
 	/// <summary>
@@ -180,15 +172,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 	/// <returns>A readonly copy of <see cref="Cache"/>.</returns>
 	public IReadOnlyDictionary<TKey, TValue> GetCache()
 	{
-		readWriteLock.EnterReadLock();
-		try
-		{
-			return Cache.AsReadOnly();
-		}
-		finally
-		{
-			readWriteLock.ExitReadLock();
-		}
+		return Cache.AsReadOnly();
 	}
 
 	/// <summary>
@@ -262,7 +246,7 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 {
 	private readonly ReaderWriterLockSlim readWriteLock = new();
 
-	private int limitedCacheSize = limitedCacheSize;
+	private volatile int limitedCacheSize = limitedCacheSize;
 
 	// Use volatile for lock-free reads - safe because writes are still protected by lock
 	private volatile bool useLimitedCache = useLimitedCache;
@@ -285,15 +269,7 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 	/// </summary>
 	public void ClearCache()
 	{
-		readWriteLock.EnterWriteLock();
-		try
-		{
-			Cache.Clear();
-		}
-		finally
-		{
-			readWriteLock.ExitWriteLock();
-		}
+		Cache.Clear();
 	}
 
 	/// <summary>
@@ -401,15 +377,7 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 	/// <returns>A readonly copy of <see cref="Cache"/>.</returns>
 	public IReadOnlyDictionary<TKey, TValue> GetCache()
 	{
-		readWriteLock.EnterReadLock();
-		try
-		{
-			return Cache.AsReadOnly();
-		}
-		finally
-		{
-			readWriteLock.ExitReadLock();
-		}
+		return Cache.AsReadOnly();
 	}
 
 	/// <summary>

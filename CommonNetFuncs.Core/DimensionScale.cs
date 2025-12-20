@@ -4,6 +4,8 @@ namespace CommonNetFuncs.Core;
 
 public static class DimensionScale
 {
+	private const string ParamGrEqZeroErrorMessage = "Value must be greater than 0";
+
 	/// <summary>
 	/// Get the dimensions to scale a 2d object in a way that maximally fits inside of the maximum constraint dimensions while maintaining its aspect ratio.
 	/// </summary>
@@ -18,22 +20,22 @@ public static class DimensionScale
 	{
 		if (originalWidth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalWidth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalWidth));
 		}
 
 		if (originalHeight <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalHeight));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalHeight));
 		}
 
 		if (maxWidth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxWidth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxWidth));
 		}
 
 		if (maxHeight <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxHeight));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxHeight));
 		}
 
 		// If the image dimensions are exactly the same as the container, or if both dimensions are smaller, return the original dimensions.
@@ -67,22 +69,22 @@ public static class DimensionScale
 	{
 		if (originalWidth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalWidth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalWidth));
 		}
 
 		if (originalHeight <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalHeight));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalHeight));
 		}
 
 		if (maxWidth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxWidth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxWidth));
 		}
 
 		if (maxHeight <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxHeight));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxHeight));
 		}
 
 		// If the image dimensions are exactly the same as the container, or if both dimensions are smaller, return the original dimensions.
@@ -116,32 +118,32 @@ public static class DimensionScale
 	{
 		if (originalWidth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalWidth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalWidth));
 		}
 
 		if (originalHeight <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalHeight));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalHeight));
 		}
 
 		if (originalDepth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalDepth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalDepth));
 		}
 
 		if (maxWidth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxWidth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxWidth));
 		}
 
 		if (maxHeight <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxHeight));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxHeight));
 		}
 
 		if (maxDepth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxDepth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxDepth));
 		}
 
 		// If the object dimensions are exactly the same as the container, or if all dimensions are smaller, return the original dimensions.
@@ -174,32 +176,32 @@ public static class DimensionScale
 	{
 		if (originalWidth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalWidth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalWidth));
 		}
 
 		if (originalHeight <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalHeight));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalHeight));
 		}
 
 		if (originalDepth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(originalDepth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(originalDepth));
 		}
 
 		if (maxWidth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxWidth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxWidth));
 		}
 
 		if (maxHeight <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxHeight));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxHeight));
 		}
 
 		if (maxDepth <= 0)
 		{
-			throw new ArgumentException("Value must be greater than 0", nameof(maxDepth));
+			throw new ArgumentException(ParamGrEqZeroErrorMessage, nameof(maxDepth));
 		}
 
 		// If the object dimensions are exactly the same as the container, or if all dimensions are smaller, return the original dimensions.

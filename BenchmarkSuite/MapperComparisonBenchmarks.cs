@@ -6,8 +6,10 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Jobs;
 using CommonNetFuncs.FastMap;
+
 // using Mapster;
 using Microsoft.VSDiagnostics;
+
 // using Riok.Mapperly.Abstractions;
 
 namespace BenchmarkSuite;
@@ -19,7 +21,7 @@ namespace BenchmarkSuite;
 [MediumRunJob(RuntimeMoniker.Net10_0)]
 [MemoryDiagnoser]
 [EventPipeProfiler(EventPipeProfile.CpuSampling)]
-[CPUUsageDiagnoser]
+// [CPUUsageDiagnoser] // Only works on Windows
 public class MapperComparisonBenchmarks
 {
 	private SimpleSource _simpleSource = null!;
@@ -96,15 +98,15 @@ public class MapperComparisonBenchmarks
 			}
 		};
 
-		// Clear FastMapper cache
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.SetUseLimitedCache(false);
+		// Clear FasterMapper cache
+		FasterMapper.CacheManager.ClearAllCaches();
+		FasterMapper.CacheManager.SetUseLimitedCache(false);
 	}
 
 	[GlobalCleanup]
 	public void Cleanup()
 	{
-		FastMapper.CacheManager.ClearAllCaches();
+		// FastMapper.CacheManager.ClearAllCaches();
 		FasterMapper.ClearCache();
 	}
 
@@ -113,13 +115,14 @@ public class MapperComparisonBenchmarks
 	[Benchmark(Description = "Simple - FastMapper")]
 	public SimpleDestination SimpleMapping_FastMapper()
 	{
-		return _simpleSource.FastMap<SimpleSource, SimpleDestination>(useCache: true);
+		return _simpleSource.FastMap<SimpleSource, SimpleDestination>(true);
+		// return _simpleSource.FastMap<SimpleSource, SimpleDestination>(useCache: true);
 	}
 
 	[Benchmark(Description = "Simple - FasterMapper")]
 	public SimpleDestination SimpleMapping_FasterMapper()
 	{
-		return _simpleSource.FasterMap<SimpleSource, SimpleDestination>();
+		return _simpleSource.FastMap<SimpleSource, SimpleDestination>();
 	}
 
 	// [Benchmark(Description = "Simple - Mapster")]
@@ -155,13 +158,14 @@ public class MapperComparisonBenchmarks
 	[Benchmark(Description = "Complex - FastMapper")]
 	public ComplexDestination ComplexMapping_FastMapper()
 	{
-		return _complexSource.FastMap<ComplexSource, ComplexDestination>(useCache: true);
+		return _complexSource.FastMap<ComplexSource, ComplexDestination>(true);
+		// return _complexSource.FastMap<ComplexSource, ComplexDestination>(useCache: true);
 	}
 
 	[Benchmark(Description = "Complex - FasterMapper")]
 	public ComplexDestination ComplexMapping_FasterMapper()
 	{
-		return _complexSource.FasterMap<ComplexSource, ComplexDestination>();
+		return _complexSource.FastMap<ComplexSource, ComplexDestination>();
 	}
 
 	// [Benchmark(Description = "Complex - Mapster")]
@@ -183,13 +187,14 @@ public class MapperComparisonBenchmarks
 	[Benchmark(Description = "List - FastMapper")]
 	public List<SimpleDestination> ListMapping_FastMapper()
 	{
-		return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(useCache: true);
+		return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(true);
+		// return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(useCache: true);
 	}
 
 	[Benchmark(Description = "List - FasterMapper")]
 	public List<SimpleDestination> ListMapping_FasterMapper()
 	{
-		return _simpleList.FasterMap<List<SimpleSource>, List<SimpleDestination>>();
+		return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>();
 	}
 
 	// [Benchmark(Description = "List - Mapster")]
@@ -211,13 +216,14 @@ public class MapperComparisonBenchmarks
 	[Benchmark(Description = "Nested - FastMapper")]
 	public NestedDestination NestedMapping_FastMapper()
 	{
-		return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>(useCache: true);
+		return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>(true);
+		// return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>(useCache: true);
 	}
 
 	[Benchmark(Description = "Nested - FasterMapper")]
 	public NestedDestination NestedMapping_FasterMapper()
 	{
-		return _deeplyNestedSource.FasterMap<NestedSource, NestedDestination>();
+		return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>();
 	}
 
 	// [Benchmark(Description = "Nested - Mapster")]

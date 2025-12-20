@@ -109,7 +109,7 @@ internal static class WrapperHelpers
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
 		}
 
 		if (httpHeaders.AnyFast())

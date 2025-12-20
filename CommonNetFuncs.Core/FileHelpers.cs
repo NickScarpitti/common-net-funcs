@@ -34,13 +34,13 @@ public static partial class FileHelpers
 			{
 				if (!suppressLogging)
 				{
-					logger.Warn("{msg}", $"[{directory}] does not exist! Creating new directory...");
+					logger.Warn("[{directory}] does not exist! Creating new directory...", directory);
 				}
 				Directory.CreateDirectory(directory);
 			}
 			else if (!suppressLogging)
 			{
-				logger.Warn("{msg}", $"[{directory}] does not exist! Unable to continue...");
+				logger.Warn("[{directory}] does not exist! Unable to continue...", directory);
 				return string.Empty;
 			}
 		}
@@ -68,7 +68,7 @@ public static partial class FileHelpers
 			{
 				if (!suppressLogging)
 				{
-					logger.Info("{msg}", $"[{testPath}] exists, checking with iterator [{i}]");
+					logger.Info("[{testPath}] exists, checking with iterator [{i}]", testPath, i);
 				}
 
 				// Check if file already has an iterator
@@ -86,7 +86,7 @@ public static partial class FileHelpers
 
 				if (!suppressLogging)
 				{
-					logger.Info("{msg}", $"Checking new testPath [{testPath}] with iterator [{i}]]");
+					logger.Info("Checking new testPath [{testPath}] with iterator [{i}]", testPath, i);
 				}
 
 				// Prevent infinite loop if file name isn't changing
@@ -94,7 +94,7 @@ public static partial class FileHelpers
 				{
 					if (!suppressLogging)
 					{
-						logger.Warn("{msg}", $"File name [{testPath}] not changing, breaking out of loop.");
+						logger.Warn("File name [{testPath}] not changing, breaking out of loop.", testPath);
 					}
 					break;
 				}
@@ -105,7 +105,7 @@ public static partial class FileHelpers
 		}
 		else if (!suppressLogging)
 		{
-			logger.Info("{msg}", $"Original path with cleaned file name [{testPath}] is unique");
+			logger.Info("Original path with cleaned file name [{testPath}] is unique", testPath);
 		}
 
 		return testPath;
@@ -132,13 +132,13 @@ public static partial class FileHelpers
 			{
 				if (!suppressLogging)
 				{
-					logger.Warn("{msg}", $"[{directory}] does not exist! Creating new directory...");
+					logger.Warn("[{directory}] does not exist! Creating new directory...", directory);
 				}
 				Directory.CreateDirectory(directory);
 			}
 			else if (!suppressLogging)
 			{
-				logger.Warn("{msg}", $"[{directory}] does not exist! Unable to continue...");
+				logger.Warn("[{directory}] does not exist! Unable to continue...", directory);
 				return string.Empty;
 			}
 		}

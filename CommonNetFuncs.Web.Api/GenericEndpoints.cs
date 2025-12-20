@@ -35,7 +35,7 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
 		}
 		return NoContent();
 	}
@@ -60,7 +60,7 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
 		}
 		return NoContent();
 	}
@@ -84,7 +84,7 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
 		}
 		return NoContent();
 	}
@@ -108,7 +108,7 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
 		}
 		return NoContent();
 	}
@@ -192,7 +192,7 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException()); ;
 		}
 		return NoContent();
 	}

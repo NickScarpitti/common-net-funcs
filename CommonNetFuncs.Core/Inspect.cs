@@ -122,7 +122,7 @@ public static class Inspect
 	//		}
 	//		catch (Exception ex)
 	//		{
-	//			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+	//			logger.Error(ex, "{exceptionLocation} Error", ex.GetLocationOfException());;
 	//			return false;
 	//		}
 	//	}

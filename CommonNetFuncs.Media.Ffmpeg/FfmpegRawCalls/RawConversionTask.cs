@@ -1,12 +1,12 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Xabe.FFmpeg;
 
 namespace CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
 
 public static partial class RawConversionTask
 {
-	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 	/// <summary>
@@ -93,8 +93,6 @@ public static partial class RawConversionTask
 
 		return conversion.Build();
 	}
-		return conversion.Build();
-	}
 
 	/// <summary>
 	/// Run ffmpeg conversion via ffmpeg command. Requires ffmpeg to be in PATH or specified location.
@@ -112,17 +110,7 @@ public static partial class RawConversionTask
 	/// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
 	/// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
 	/// <returns><see langword="true"/> if conversion successfully completed</returns>
-	public static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string ffmpegCommandArguments, bool overwriteExisting, string? workingPath = null, int conversionIndex = 0,
-			ConcurrentDictionary<int, decimal>? fpsDict = null, bool cancelIfLarger = true, string? taskDescription = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null,
-			ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, CancellationTokenSource? cancellationTokenSource = null)
-	{
-		try
-		{
-			string outputPath = Path.Combine(workingPath ?? Path.GetTempPath(), outputFileName);
-			if (!overwriteExisting && File.Exists(outputPath))
-			{
-				return true;
-			}
+
 	/// <summary>
 	/// Run ffmpeg conversion via ffmpeg command. Requires ffmpeg to be in PATH or specified location.
 	/// </summary>

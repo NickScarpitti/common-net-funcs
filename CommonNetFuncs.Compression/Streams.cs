@@ -18,6 +18,8 @@ public static class Streams
 	private const int ChunkSize = 1024 * 1024; // 1 MB
 	private const int MaxCompressionRatio = 1000; // Detect compression bombs
 
+	private const string UnreadableUncompressedStreamErr = "Uncompressed stream does not support reading.";
+
 	private static readonly ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
 	public class CompressionLimitExceededException : Exception
@@ -46,7 +48,7 @@ public static class Streams
 
 		if (!uncompressedStream.CanRead)
 		{
-			throw new NotSupportedException("Uncompressed stream does not support reading.");
+			throw new NotSupportedException(UnreadableUncompressedStreamErr);
 		}
 
 		// Only flush if stream is writable (avoid exception on readonly streams)
@@ -112,7 +114,7 @@ public static class Streams
 
 		if (!uncompressedStream.CanRead)
 		{
-			throw new NotSupportedException("Uncompressed stream does not support reading.");
+			throw new NotSupportedException(UnreadableUncompressedStreamErr);
 		}
 
 		// Only flush if stream is writable
@@ -178,7 +180,7 @@ public static class Streams
 
 		if (!compressedStream.CanRead)
 		{
-			throw new NotSupportedException("Uncompressed stream does not support reading.");
+			throw new NotSupportedException(UnreadableUncompressedStreamErr);
 		}
 
 		// Only flush if stream is writable
@@ -192,9 +194,7 @@ public static class Streams
 			compressedStream.Position = 0; //Reset the position of the uncompressed stream to the beginning
 		}
 
-		long maxDecompressedSize = compressedStream.CanSeek
-			? compressedStream.Length * MaxCompressionRatio
-			: long.MaxValue;
+		long maxDecompressedSize = compressedStream.CalculateMaxDecompressedSize();
 
 		switch (compressionType)
 		{
@@ -248,7 +248,7 @@ public static class Streams
 
 		if (!compressedStream.CanRead)
 		{
-			throw new NotSupportedException("Uncompressed stream does not support reading.");
+			throw new NotSupportedException(UnreadableUncompressedStreamErr);
 		}
 
 		// Only flush if stream is writable
@@ -262,9 +262,7 @@ public static class Streams
 			compressedStream.Position = 0; //Reset the position of the uncompressed stream to the beginning
 		}
 
-		long maxDecompressedSize = compressedStream.CanSeek
-			? compressedStream.Length * MaxCompressionRatio
-			: long.MaxValue;
+		long maxDecompressedSize = compressedStream.CalculateMaxDecompressedSize();
 
 		switch (compressionType)
 		{
@@ -313,7 +311,7 @@ public static class Streams
 	{
 		if (!compressedStream.CanRead)
 		{
-			throw new NotSupportedException("Uncompressed stream does not support reading.");
+			throw new NotSupportedException(UnreadableUncompressedStreamErr);
 		}
 
 		if (compressedStream.CanSeek)
@@ -393,7 +391,7 @@ public static class Streams
 	{
 		if (!uncompressedStream.CanRead)
 		{
-			throw new NotSupportedException("Uncompressed stream does not support reading.");
+			throw new NotSupportedException(UnreadableUncompressedStreamErr);
 		}
 		if (uncompressedStream.CanSeek)
 		{
@@ -748,6 +746,11 @@ public static class Streams
 				ArrayPool<byte>.Shared.Return(header);
 			}
 		}
+	}
+
+	private static long CalculateMaxDecompressedSize(this Stream compressedStream)
+	{
+		return compressedStream.CanSeek ? compressedStream.Length * MaxCompressionRatio : long.MaxValue;
 	}
 }
 

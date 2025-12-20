@@ -99,9 +99,7 @@ public sealed class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueS
 			PrioritizedEndpointQueue queue = kvp.Value;
 			PrioritizedQueueStats stats = queue.Stats;
 
-			if (stats.LastProcessedAt.HasValue &&
-								stats.LastProcessedAt < cutoffTime &&
-								stats.CurrentQueueDepth == 0)
+			if (stats.LastProcessedAt.HasValue && stats.LastProcessedAt < cutoffTime && stats.CurrentQueueDepth == 0)
 			{
 				keysToRemove.Add(kvp.Key);
 			}

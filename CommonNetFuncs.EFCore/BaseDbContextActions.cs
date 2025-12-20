@@ -8,6 +8,7 @@ using CommonNetFuncs.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Z.EntityFramework.Plus;
+
 using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.EFCore;
@@ -289,7 +290,6 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	}
 
 	#endregion
-
 
 	#region GetAll
 

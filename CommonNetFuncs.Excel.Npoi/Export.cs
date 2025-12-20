@@ -33,7 +33,7 @@ public static class Export
 	/// <param name="skipColumnNames">List of columns to not include in export</param>
 	/// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
 	public static async Task<MemoryStream?> GenericExcelExport<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, bool createTable = false,
-				string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
+			string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
 	{
 		try
 		{
@@ -93,7 +93,7 @@ public static class Export
 	/// <param name="skipColumnNames">List of columns to not include in export</param>
 	/// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
 	public static async Task<MemoryStream?> GenericExcelExport(this DataTable datatable, MemoryStream? memoryStream = null, bool createTable = false,
-				string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
+			string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
 	{
 		try
 		{

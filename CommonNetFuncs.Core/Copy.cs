@@ -27,7 +27,7 @@ public static class Copy
 	private static Func<object, object?, int, int, object?> GetOrAddFunctionFromDeepCopyCache((Type sourceType, Type destType) key)
 	{
 		if (DeepCopyCacheManager.IsUsingLimitedCache() ? DeepCopyCacheManager.GetLimitedCache().TryGetValue(key, out Func<object, object?, int, int, object?>? function) :
-						DeepCopyCacheManager.GetCache().TryGetValue(key, out function))
+					DeepCopyCacheManager.GetCache().TryGetValue(key, out function))
 		{
 			return function!;
 		}
@@ -54,7 +54,7 @@ public static class Copy
 		(Type, Type) key = (typeof(TSource), typeof(TDest));
 		bool isLimitedCache = CopyCacheManager.IsUsingLimitedCache();
 		if (isLimitedCache ? CopyCacheManager.GetLimitedCache().TryGetValue(key, out Dictionary<string, (Delegate Set, Delegate Get)>? functions) :
-						CopyCacheManager.GetCache().TryGetValue(key, out functions))
+					CopyCacheManager.GetCache().TryGetValue(key, out functions))
 		{
 			return functions!;
 		}

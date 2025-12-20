@@ -2,7 +2,7 @@
 
 public interface IResponseLoggingConfig
 {
-  double ThresholdInSeconds { get; }
+	double ThresholdInSeconds { get; }
 }
 
 /// <summary>
@@ -10,5 +10,5 @@ public interface IResponseLoggingConfig
 /// </summary>
 public sealed class ResponseLoggingConfig : IResponseLoggingConfig
 {
-  public double ThresholdInSeconds { get; set; }
+	public double ThresholdInSeconds { get; set; }
 }

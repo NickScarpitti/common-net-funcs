@@ -1,17 +1,17 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Collections.Immutable;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MemoryPack;
-using MemoryPack.Compression;
 using MessagePack;
 using Newtonsoft.Json;
+
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;
-using static CommonNetFuncs.Core.Streams;
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Common.EncodingTypes;
@@ -431,143 +431,131 @@ public static class RestHelpersStatic
 		T? result = default;
 		try
 		{
-			if (responseStream.Length > 1)
+			if (responseStream.CanSeek && responseStream.Length <= 1)
 			{
-				if (contentType.StrEq(MsgPack)) //Message Pack uses native compression
-				{
-					if (msgPackOptions?.UseMsgPackCompression == true || msgPackOptions?.UseMsgPackUntrusted == true)
-					{
-						MessagePackSerializerOptions messagePackOptions = MessagePackSerializerOptions.Standard;
-						if (msgPackOptions.UseMsgPackCompression)
-						{
-							messagePackOptions = messagePackOptions.WithCompression(MessagePackCompression.Lz4BlockArray);
-						}
+				return result; // Early exit for empty streams
+			}
 
-						if (msgPackOptions.UseMsgPackUntrusted)
-						{
-							messagePackOptions = messagePackOptions.WithSecurity(MessagePackSecurity.UntrustedData);
-						}
-						result = await MessagePackSerializer.DeserializeAsync<T>(responseStream, messagePackOptions, cancellationToken).ConfigureAwait(false);
-					}
-					else
+			//if (responseStream.Length <= 1)
+			//{
+			//	return result; // Early exit for empty streams
+			//}
+
+			if (contentType.StrEq(MsgPack)) //Message Pack uses native compression
+			{
+				if (msgPackOptions?.UseMsgPackCompression == true || msgPackOptions?.UseMsgPackUntrusted == true)
+				{
+					MessagePackSerializerOptions messagePackOptions = MessagePackSerializerOptions.Standard;
+					if (msgPackOptions.UseMsgPackCompression)
 					{
-						result = await MessagePackSerializer.DeserializeAsync<T>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false);
+						messagePackOptions = messagePackOptions.WithCompression(MessagePackCompression.Lz4BlockArray);
 					}
+
+					if (msgPackOptions.UseMsgPackUntrusted)
+					{
+						messagePackOptions = messagePackOptions.WithSecurity(MessagePackSecurity.UntrustedData);
+					}
+					result = await MessagePackSerializer.DeserializeAsync<T>(responseStream, messagePackOptions, cancellationToken).ConfigureAwait(false);
 				}
-				else if (contentType.StrEq(MemPack)) // ***Will fail if trying to deserialize null value, ensure NoContent is sent back for nulls***
+				else
 				{
-					if (contentEncoding.StrEq(GZip))
-					{
-						//MemoryStream outputStream = new(); //Decompressed data will be written to this stream
-						//try
-						//{
-						//	await responseStream.Decompress(ECompressionType.Gzip).CopyToAsync(outputStream, cancellationToken).ConfigureAwait(false);
-						//	//result = MemoryPackSerializer.Deserialize<T>(new(outputStream.ToArray())); //Access deserialize decompressed data from outputStream
-						//	outputStream.Position = 0;
-						//	result = await MemoryPackSerializer.DeserializeAsync<T>(outputStream, cancellationToken: cancellationToken).ConfigureAwait(false);
-						//}
-						//finally
-						//{
-						//	await outputStream.DisposeAsync().ConfigureAwait(false);
-						//}
-						await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
-						result = await MemoryPackSerializer.DeserializeAsync<T>(decompressedStream, cancellationToken: cancellationToken).ConfigureAwait(false);
-					}
-					else if (contentEncoding.StrEq(Brotli))
-					{
-						BrotliDecompressor decompressor = new();
-						result = MemoryPackSerializer.Deserialize<T>(decompressor.Decompress(new ReadOnlySpan<byte>(await responseStream.ReadStreamAsync(cancellationToken: cancellationToken).ConfigureAwait(false))));
-					}
-					else
-					{
-						result = await MemoryPackSerializer.DeserializeAsync<T>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false);
-					}
+					result = await MessagePackSerializer.DeserializeAsync<T>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false);
 				}
-				else if (contentType.ContainsInvariant("json"))//Assume JSON
+			}
+			else if (contentType.StrEq(MemPack)) // ***Will fail if trying to deserialize null value, ensure NoContent is sent back for nulls***
+			{
+				if (contentEncoding.StrEq(GZip))
 				{
-					//Deserialize as stream - More memory efficient than string deserialization
-					//Stream streamToRead = responseStream;
-					//Stream? decompressedStream = null;
-
-					//try
-					//{
-					if (contentEncoding.StrEq(GZip))
-					{
-						//decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
-						//streamToRead = decompressedStream;
-						await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
-						result = useNewtonsoftDeserializer
-							? await DeserializeWithNewtonsoft<T>(decompressedStream)
-							: await System.Text.Json.JsonSerializer.DeserializeAsync<T>(decompressedStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-					}
-					else if (contentEncoding.StrEq(Brotli))
-					{
-						//decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
-						//streamToRead = decompressedStream;
-
-						await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
-						result = useNewtonsoftDeserializer
-							? await DeserializeWithNewtonsoft<T>(decompressedStream)
-							: await System.Text.Json.JsonSerializer.DeserializeAsync<T>(decompressedStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-					}
-					else if (!useNewtonsoftDeserializer)
-					{
-						result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-					}
-					else
-					{
-						result = await DeserializeWithNewtonsoft<T>(responseStream);
-					}
-
-					//if (useNewtonsoftDeserializer)
-					//{
-					//	using StreamReader streamReader = new(streamToRead);
-					//	await using JsonTextReader jsonReader = new(streamReader);
-					//	Newtonsoft.Json.JsonSerializer serializer = new();
-					//	result = serializer.Deserialize<T>(jsonReader);
-					//}
-					//else
-					//{
-					//	result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-					//}
-					//}
-					//finally
-					//{
-					//	if (decompressedStream != null)
-					//	{
-					//		await decompressedStream.DisposeAsync().ConfigureAwait(false);
-					//	}
-					//}
+					await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+					result = await MemoryPackSerializer.DeserializeAsync<T>(decompressedStream, cancellationToken: cancellationToken).ConfigureAwait(false);
 				}
-				else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
+				else if (contentEncoding.StrEq(Brotli))
 				{
-					Stream streamToRead = responseStream;
-					Stream? decompressedStream = null;
+					await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+					result = await MemoryPackSerializer.DeserializeAsync<T>(decompressedStream, cancellationToken: cancellationToken).ConfigureAwait(false);
+				}
+				else
+				{
+					result = await MemoryPackSerializer.DeserializeAsync<T>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false);
+				}
+			}
+			else if (contentType.ContainsInvariant("json"))//Assume JSON
+			{
+				//Deserialize as stream - More memory efficient than string deserialization
+				//Stream streamToRead = responseStream;
+				//Stream? decompressedStream = null;
 
-					try
-					{
-						if (contentEncoding.StrEq(GZip))
-						{
-							decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
-							streamToRead = decompressedStream;
-						}
-						else if (contentEncoding.StrEq(Brotli))
-						{
-							decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
-							streamToRead = decompressedStream;
-						}
+				//try
+				//{
+				if (contentEncoding.StrEq(GZip))
+				{
+					//decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+					//streamToRead = decompressedStream;
+					await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+					result = useNewtonsoftDeserializer
+						? await DeserializeWithNewtonsoft<T>(decompressedStream)
+						: await System.Text.Json.JsonSerializer.DeserializeAsync<T>(decompressedStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+				}
+				else if (contentEncoding.StrEq(Brotli))
+				{
+					//decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+					//streamToRead = decompressedStream;
 
-						using StreamReader reader = new(streamToRead, Encoding.UTF8);
-						string stringResult = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-						result = (T)(object)stringResult;
-					}
-					finally
-					{
-						if (decompressedStream != null)
-						{
-							await decompressedStream.DisposeAsync().ConfigureAwait(false);
-						}
-					}
+					await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+					result = useNewtonsoftDeserializer
+						? await DeserializeWithNewtonsoft<T>(decompressedStream)
+						: await System.Text.Json.JsonSerializer.DeserializeAsync<T>(decompressedStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+				}
+				else if (!useNewtonsoftDeserializer)
+				{
+					result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+				}
+				else
+				{
+					result = await DeserializeWithNewtonsoft<T>(responseStream);
+				}
+
+				//if (useNewtonsoftDeserializer)
+				//{
+				//	using StreamReader streamReader = new(streamToRead);
+				//	await using JsonTextReader jsonReader = new(streamReader);
+				//	Newtonsoft.Json.JsonSerializer serializer = new();
+				//	result = serializer.Deserialize<T>(jsonReader);
+				//}
+				//else
+				//{
+				//	result = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+				//}
+				//}
+				//finally
+				//{
+				//	if (decompressedStream != null)
+				//	{
+				//		await decompressedStream.DisposeAsync().ConfigureAwait(false);
+				//	}
+				//}
+			}
+			else if (contentType.ContainsInvariant("text")) //String encoding (error usually)
+			{
+				if (contentEncoding.StrEq(GZip))
+				{
+					await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Gzip);
+					using StreamReader reader = new(decompressedStream, Encoding.UTF8);
+					string stringResult = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+					result = (T)(object)stringResult;
+				}
+				else if (contentEncoding.StrEq(Brotli))
+				{
+					await using Stream decompressedStream = responseStream.Decompress(ECompressionType.Brotli);
+					using StreamReader reader = new(decompressedStream, Encoding.UTF8);
+					string stringResult = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+					result = (T)(object)stringResult;
+				}
+				else
+				{
+					using StreamReader reader = new(responseStream, Encoding.UTF8);
+					string stringResult = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+					result = (T)(object)stringResult;
 				}
 			}
 		}
@@ -767,11 +755,14 @@ public static class RestHelpersStatic
 
 			if (includeHeader)
 			{
-				logger.Info($"HTTP Response for {requestOptions.HttpMethod.Method} @ {(requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri())}:\n{resultJson ?? "Empty Result"}");
+				logger.Info("HTTP Response for {Method} @ {Url}: {Result}",
+					requestOptions.HttpMethod.Method,
+					requestOptions.LogQuery ? requestOptions.Url : requestOptions.Url.GetRedactedUri(),
+					resultJson ?? "Empty Result");
 			}
 			else
 			{
-				logger.Info(resultJson ?? "Empty Result");
+				logger.Info("{Result}", resultJson ?? "Empty Result");
 			}
 		}
 	}

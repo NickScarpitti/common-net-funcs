@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using System.Globalization;
 using CsvHelper;
-
 using static System.Convert;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Streams;

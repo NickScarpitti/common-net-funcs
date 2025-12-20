@@ -1,38 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.ObjectModel;
 using CommonNetFuncs.FastMap;
 
 namespace FastMap.Tests;
 
-public sealed class FastMapperTests : IDisposable
+public sealed class FasterMapperTests
 {
-	private bool disposed;
-
-	public void Dispose()
-	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
-	}
-
-	private void Dispose(bool disposing)
-	{
-		if (!disposed)
-		{
-			if (disposing)
-			{
-				FastMapper.CacheManager.SetUseLimitedCache(true);
-				FastMapper.CacheManager.SetLimitedCacheSize(100);
-				FastMapper.CacheManager.ClearAllCaches();
-			}
-			disposed = true;
-		}
-	}
-
-	~FastMapperTests()
-	{
-		Dispose(false);
-	}
-
 	public sealed class SimpleSource
 	{
 		public required string StringProp { get; set; }
@@ -213,11 +186,22 @@ public sealed class FastMapperTests : IDisposable
 		public required Dictionary<string, SimpleDestination> ComplexDict { get; set; }
 	}
 
+	// Types used specifically for TryAdd cache tests to avoid polluting other tests
+	public sealed class TryAddTestSource
+	{
+		public required string Value { get; set; }
+	}
+
+	public sealed class TryAddTestDest
+	{
+		public required string Value { get; set; }
+	}
+
 	[Theory]
 	[InlineData(new[] { 1, 2, 3 }, new[] { 1, 2, 3 })]
 	[InlineData(new int[] { }, new int[] { })]
 	[InlineData(new[] { 1 }, new[] { 1 })]
-	public void FastMap_WithArrays_MapsCorrectly(int[] source, int[] expected)
+	public void FasterMap_WithArrays_MapsCorrectly(int[] source, int[] expected)
 	{
 		// Act
 		int[] result = source.FastMap<int[], int[]>();
@@ -230,7 +214,7 @@ public sealed class FastMapperTests : IDisposable
 	[Theory]
 	[InlineData("Test1", 1, "2025-01-01")]
 	[InlineData("", 0, "0001-01-01")]
-	public void FastMap_WithSimpleProperties_MapsCorrectly(string stringProp, int intProp, string dateProp)
+	public void FasterMap_WithSimpleProperties_MapsCorrectly(string stringProp, int intProp, string dateProp)
 	{
 		// Arrange
 		SimpleSource source = new()
@@ -253,7 +237,7 @@ public sealed class FastMapperTests : IDisposable
 	[Theory]
 	[InlineData("Test1", new[] { "one", "two" }, "key1", 1, "Nested", 1, new[] { 1, 2 }, "first", 1.0)]
 	[InlineData("", new string[] { }, "", 0, "", 0, new int[] { }, "", 0.0)]
-	public void FastMap_WithComplexProperties_MapsCorrectly(string name, string[] stringList, string dictKey, int dictValue,
+	public void FasterMap_WithComplexProperties_MapsCorrectly(string name, string[] stringList, string dictKey, int dictValue,
 			string nestedString, int nestedInt, int[] numberSet, string queueItem, double stackItem)
 	{
 		// Arrange
@@ -292,8 +276,8 @@ public sealed class FastMapperTests : IDisposable
 	[Theory]
 	[InlineData("Test1", new[] { "one", "two" }, "key1", 1, "Nested", 1, new[] { 1, 2 }, "first", 1.0)]
 	[InlineData(null, null, null, null, null, null, null, null, null)]
-	public void FastMap_WithComplexNullableProperties_MapsCorrectly(string? name, string[]? stringList, string? dictKey, int? dictValue,
-		 string? nestedString, int? nestedInt, int[]? numberSet, string? queueItem, double? stackItem)
+	public void FasterMap_WithComplexNullableProperties_MapsCorrectly(string? name, string[]? stringList, string? dictKey, int? dictValue,
+		string? nestedString, int? nestedInt, int[]? numberSet, string? queueItem, double? stackItem)
 	{
 		// Arrange
 		NullableComplexSource source = new()
@@ -324,8 +308,6 @@ public sealed class FastMapperTests : IDisposable
 		result.StringQueue.ShouldBe(source.StringQueue);
 		result.DoubleStack.ShouldBe(source.DoubleStack);
 		result.NestedObject?.StringProp.ShouldBe(source.NestedObject.StringProp);
-
-		result.NestedObject?.StringProp.ShouldBe(source.NestedObject.StringProp);
 		result.NestedObject?.IntProp.ShouldBe(source.NestedObject.IntProp);
 		result.NestedObject?.DateProp.ShouldBe(source.NestedObject.DateProp);
 	}
@@ -333,7 +315,7 @@ public sealed class FastMapperTests : IDisposable
 	[Theory]
 	[InlineData(new[] { 1, 2, 3 }, new[] { "a", "b" })]
 	[InlineData(new int[] { }, new string[] { })]
-	public void FastMap_WithReadOnlyCollections_MapsCorrectly(int[] numbers, string[] strings)
+	public void FasterMap_WithReadOnlyCollections_MapsCorrectly(int[] numbers, string[] strings)
 	{
 		// Arrange
 		ReadOnlyCollectionSource source = new()
@@ -357,7 +339,7 @@ public sealed class FastMapperTests : IDisposable
 	[InlineData(new[] { 1, 2, 3 })]
 	[InlineData(new int[] { })]
 	[InlineData(new[] { 1 })]
-	public void FastMap_WithCustomCollections_MapsCorrectly(int[] sourceData)
+	public void FasterMap_WithCustomCollections_MapsCorrectly(int[] sourceData)
 	{
 		// Arrange
 		CustomCollectionSource source = new()
@@ -381,7 +363,7 @@ public sealed class FastMapperTests : IDisposable
 	[InlineData(new[] { 1, 2, 3 })]
 	[InlineData(new[] { 1 })]
 	[InlineData(new int[] { })]
-	public void FastMap_BetweenDifferentCollectionTypes_MapsCorrectly(int[] sourceData)
+	public void FasterMap_BetweenDifferentCollectionTypes_MapsCorrectly(int[] sourceData)
 	{
 		// Arrange
 		List<int> listSource = sourceData.ToList();
@@ -404,7 +386,7 @@ public sealed class FastMapperTests : IDisposable
 	[InlineData("Test", 30, "Extra")]
 	[InlineData("", 0, "")]
 	[InlineData("Name", 42, null)]
-	public void FastMap_WithMismatchedProperties_MapsMatchingPropertiesOnly(
+	public void FasterMap_WithMismatchedProperties_MapsMatchingPropertiesOnly(
 			string name, int age, string? extraProperty)
 	{
 		// Arrange
@@ -428,7 +410,7 @@ public sealed class FastMapperTests : IDisposable
 	[Theory]
 	[InlineData("Test1", 1, "Test2", 2)]
 	[InlineData("Empty", 0, null, null)]
-	public void FastMap_WithNestedDictionary_MapsCorrectly(string key1Str, int key1Int, string? key2Str, int? key2Int)
+	public void FasterMap_WithNestedDictionary_MapsCorrectly(string key1Str, int key1Int, string? key2Str, int? key2Int)
 	{
 		// Arrange
 		Dictionary<string, SimpleSource> sourceDict = new();
@@ -470,9 +452,8 @@ public sealed class FastMapperTests : IDisposable
 		}
 	}
 
-	// Keep the Fact tests as they are since they test error conditions
 	[Fact]
-	public void FastMap_WhenSourceIsNull_ReturnsNull()
+	public void FasterMap_WhenSourceIsNull_ReturnsNull()
 	{
 		// Arrange
 		SimpleSource? source = null;
@@ -485,76 +466,295 @@ public sealed class FastMapperTests : IDisposable
 	}
 
 	[Fact]
-	public void FastMap_WithInvalidDictionaryMapping_ThrowsInvalidOperationException()
+	public void FasterMap_WithInvalidDictionaryMapping_ThrowsException()
 	{
 		// Arrange
 		Dictionary<int, string> source = new() { [1] = "test" };
 
 		// Act & Assert
-		Should.Throw<InvalidOperationException>(() => source.FastMap<Dictionary<int, string>, List<string>>())
-				.Message.ShouldBe("Both source and destination must be a dictionary in order to be mapped");
+		// FasterMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
+		Exception? exception = Should.Throw<TypeInitializationException>(() => source.FastMap<Dictionary<int, string>, List<string>>());
+		exception.InnerException.ShouldNotBeNull();
+		exception.InnerException.ShouldBeOfType<ArgumentException>();
 	}
 
 	[Fact]
-	public void FastMap_WithMismatchedDictionaryKeyTypes_ThrowsInvalidOperationException()
+	public void FasterMap_WithMismatchedDictionaryKeyTypes_ThrowsException()
 	{
 		// Arrange
 		Dictionary<int, string> source = new() { [1] = "test" };
 
 		// Act & Assert
-		Should.Throw<InvalidOperationException>(() => source.FastMap<Dictionary<int, string>, Dictionary<string, string>>())
-				.Message.ShouldBe("Source and destination dictionary key types must match.");
+		// FasterMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
+		Exception? exception = Should.Throw<TypeInitializationException>(() => source.FastMap<Dictionary<int, string>, Dictionary<string, string>>());
+		exception.InnerException.ShouldNotBeNull();
+		exception.InnerException.ShouldBeOfType<InvalidOperationException>();
+	}
+
+	[Theory]
+	[InlineData("Test1", 1)]
+	[InlineData("Test2", 2)]
+	public void FasterMap_CacheIsReused_MapsConsistently(string stringProp, int intProp)
+	{
+		// Arrange
+		SimpleSource source = new()
+		{
+			StringProp = stringProp,
+			IntProp = intProp,
+			DateProp = DateTime.Now
+		};
+
+		// Act - call multiple times to verify cached mapper works consistently
+		SimpleDestination result1 = source.FastMap<SimpleSource, SimpleDestination>();
+		SimpleDestination result2 = source.FastMap<SimpleSource, SimpleDestination>();
+		SimpleDestination result3 = source.FastMap<SimpleSource, SimpleDestination>();
+
+		// Assert
+		result1.StringProp.ShouldBe(source.StringProp);
+		result2.StringProp.ShouldBe(source.StringProp);
+		result3.StringProp.ShouldBe(source.StringProp);
+		result1.IntProp.ShouldBe(source.IntProp);
+		result2.IntProp.ShouldBe(source.IntProp);
+		result3.IntProp.ShouldBe(source.IntProp);
+	}
+
+	[Fact]
+	public void FasterMap_WithListOfComplexObjects_MapsCorrectly()
+	{
+		// Arrange
+		List<SimpleSource> source =
+		[
+			new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now },
+			new() { StringProp = "B", IntProp = 2, DateProp = DateTime.Now.AddDays(1) },
+			new() { StringProp = "C", IntProp = 3, DateProp = DateTime.Now.AddDays(2) }
+		];
+
+		// Act
+		List<SimpleDestination> result = source.FastMap<List<SimpleSource>, List<SimpleDestination>>();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(3);
+		for (int i = 0; i < source.Count; i++)
+		{
+			result[i].StringProp.ShouldBe(source[i].StringProp);
+			result[i].IntProp.ShouldBe(source[i].IntProp);
+			result[i].DateProp.ShouldBe(source[i].DateProp);
+		}
+	}
+
+	[Fact]
+	public void FasterMap_WithArrayOfComplexObjects_MapsCorrectly()
+	{
+		// Arrange
+		SimpleSource[] source =
+		[
+			new() { StringProp = "X", IntProp = 10, DateProp = DateTime.Now },
+			new() { StringProp = "Y", IntProp = 20, DateProp = DateTime.Now.AddHours(1) }
+		];
+
+		// Act
+		SimpleDestination[] result = source.FastMap<SimpleSource[], SimpleDestination[]>();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Length.ShouldBe(2);
+		for (int i = 0; i < source.Length; i++)
+		{
+			result[i].StringProp.ShouldBe(source[i].StringProp);
+			result[i].IntProp.ShouldBe(source[i].IntProp);
+			result[i].DateProp.ShouldBe(source[i].DateProp);
+		}
+	}
+
+	[Fact]
+	public void FasterMap_WithEmptyList_ReturnsEmptyList()
+	{
+		// Arrange
+		List<SimpleSource> source = [];
+
+		// Act
+		List<SimpleDestination> result = source.FastMap<List<SimpleSource>, List<SimpleDestination>>();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public void FasterMap_WithEmptyArray_ReturnsEmptyArray()
+	{
+		// Arrange
+		SimpleSource[] source = [];
+
+		// Act
+		SimpleDestination[] result = source.FastMap<SimpleSource[], SimpleDestination[]>();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Length.ShouldBe(0);
+	}
+
+	[Fact]
+	public void FasterMap_WithEmptyDictionary_ReturnsEmptyDictionary()
+	{
+		// Arrange
+		Dictionary<string, int> source = [];
+
+		// Act
+		Dictionary<string, int> result = source.FastMap<Dictionary<string, int>, Dictionary<string, int>>();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(0);
+	}
+
+	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	[InlineData("NonEmpty")]
+	public void FasterMap_WithNullableStringProperty_MapsCorrectly(string? stringProp)
+	{
+		// Arrange
+		NullableSimpleSource source = new()
+		{
+			StringProp = stringProp,
+			IntProp = 42,
+			DateProp = DateTime.Now
+		};
+
+		// Act
+		NullableSimpleDestination result = source.FastMap<NullableSimpleSource, NullableSimpleDestination>();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.StringProp.ShouldBe(source.StringProp);
+		result.IntProp.ShouldBe(source.IntProp);
+		result.DateProp.ShouldBe(source.DateProp);
+	}
+
+	[Theory]
+	[InlineData(null)]
+	[InlineData(0)]
+	[InlineData(int.MaxValue)]
+	[InlineData(int.MinValue)]
+	public void FasterMap_WithNullableIntProperty_MapsCorrectly(int? intProp)
+	{
+		// Arrange
+		NullableSimpleSource source = new()
+		{
+			StringProp = "Test",
+			IntProp = intProp,
+			DateProp = DateTime.Now
+		};
+
+		// Act
+		NullableSimpleDestination result = source.FastMap<NullableSimpleSource, NullableSimpleDestination>();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.IntProp.ShouldBe(source.IntProp);
+	}
+
+	#region CacheManager Tests
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void FasterMap_WithUseCacheParameter_MapsCorrectly(bool useCache)
+	{
+		// Arrange
+		SimpleSource source = new()
+		{
+			StringProp = "CacheTest",
+			IntProp = 42,
+			DateProp = DateTime.Now
+		};
+
+		// Act
+		SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>(useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.StringProp.ShouldBe(source.StringProp);
+		result.IntProp.ShouldBe(source.IntProp);
+		result.DateProp.ShouldBe(source.DateProp);
+	}
+
+	[Fact]
+	public void FasterMap_WithUseCacheTrue_UsesManagedCache()
+	{
+		// Arrange
+		FasterMapper.CacheManager.ClearAllCaches();
+		FasterMapper.CacheManager.SetUseLimitedCache(false);
+
+		SimpleSource source = new()
+		{
+			StringProp = "ManagedCacheTest",
+			IntProp = 100,
+			DateProp = DateTime.Now
+		};
+
+		// Act
+		SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>(useCache: true);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.StringProp.ShouldBe(source.StringProp);
+		FasterMapper.CacheManager.GetCache().Count.ShouldBeGreaterThan(0);
 	}
 
 	[Theory]
 	[InlineData(5)]
-	[InlineData(1)]
-	public void FastMapper_CacheManager_SetAndGetLimitedCacheSize_Works(int size)
+	[InlineData(10)]
+	[InlineData(100)]
+	public void FasterMapper_CacheManager_SetAndGetLimitedCacheSize_Works(int size)
 	{
 		// Act
-		FastMapper.CacheManager.SetLimitedCacheSize(size);
+		FasterMapper.CacheManager.SetLimitedCacheSize(size);
 
 		// Assert
-		FastMapper.CacheManager.GetLimitedCacheSize().ShouldBe(size);
+		FasterMapper.CacheManager.GetLimitedCacheSize().ShouldBe(size);
 	}
 
 	[Theory]
 	[InlineData(true)]
 	[InlineData(false)]
-	public void FastMapper_CacheManager_SetAndGetUseLimitedCache_Works(bool useLimited)
+	public void FasterMapper_CacheManager_SetAndGetUseLimitedCache_Works(bool useLimited)
 	{
 		// Act
-		FastMapper.CacheManager.SetUseLimitedCache(useLimited);
+		FasterMapper.CacheManager.SetUseLimitedCache(useLimited);
 
 		// Assert
-		FastMapper.CacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
+		FasterMapper.CacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
 	}
 
 	[Fact]
-	public void FastMapper_CacheManager_ClearAllCaches_RemovesAllEntries()
+	public void FasterMapper_CacheManager_ClearAllCaches_RemovesAllEntries()
 	{
 		// Arrange
-		FastMapper.CacheManager.SetUseLimitedCache(false);
+		FasterMapper.CacheManager.SetUseLimitedCache(false);
 		SimpleSource source = new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now };
 		source.FastMap<SimpleSource, SimpleDestination>(useCache: true);
-		FastMapper.CacheManager.GetCache().Count.ShouldBeGreaterThan(0);
+		FasterMapper.CacheManager.GetCache().Count.ShouldBeGreaterThan(0);
 
 		// Act
-		FastMapper.CacheManager.ClearAllCaches();
+		FasterMapper.CacheManager.ClearAllCaches();
 
 		// Assert
-		FastMapper.CacheManager.GetCache().Count.ShouldBe(0);
-		FastMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
+		FasterMapper.CacheManager.GetCache().Count.ShouldBe(0);
+		FasterMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
 	}
 
 	[Theory]
 	[InlineData(true)]
 	[InlineData(false)]
-	public void FastMapper_CacheManager_GetCacheAndLimitedCache_Work(bool useLimited)
+	public void FasterMapper_CacheManager_GetCacheAndLimitedCache_Work(bool useLimited)
 	{
 		// Arrange
-		FastMapper.CacheManager.SetUseLimitedCache(useLimited);
-		FastMapper.CacheManager.SetLimitedCacheSize(10);
+		FasterMapper.CacheManager.ClearAllCaches();
+		FasterMapper.CacheManager.SetUseLimitedCache(useLimited);
+		FasterMapper.CacheManager.SetLimitedCacheSize(10);
 		SimpleSource source = new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now };
 
 		// Act
@@ -563,51 +763,81 @@ public sealed class FastMapperTests : IDisposable
 		// Assert
 		if (useLimited)
 		{
-			FastMapper.CacheManager.GetLimitedCache().Count.ShouldBe(1);
-			FastMapper.CacheManager.GetCache().Count.ShouldBe(0);
+			FasterMapper.CacheManager.GetLimitedCache().Count.ShouldBe(1);
+			FasterMapper.CacheManager.GetCache().Count.ShouldBe(0);
 		}
 		else
 		{
-			FastMapper.CacheManager.GetCache().Count.ShouldBe(1);
-			FastMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
+			FasterMapper.CacheManager.GetCache().Count.ShouldBe(1);
+			FasterMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
 		}
 	}
 
 	[Fact]
-	public void FastMapper_CacheManager_TryAddCacheAndTryAddLimitedCache_Works()
+	public void FasterMapper_CacheManager_TryAddCacheAndTryAddLimitedCache_Works()
 	{
-		// Arrange
-		FastMapper.MapperCacheKey key = new(typeof(SimpleSource), typeof(SimpleDestination));
-		Func<SimpleSource, SimpleDestination> del = _ => new SimpleDestination { StringProp = "X", IntProp = 2, DateProp = DateTime.Now };
+		// Arrange - use dedicated test types to avoid polluting other tests
+		FasterMapper.MapperCacheKey key = new(typeof(TryAddTestSource), typeof(TryAddTestDest));
+		Func<TryAddTestSource, TryAddTestDest> del = _ => new TryAddTestDest { Value = "X" };
 
-		// Act
-		FastMapper.CacheManager.SetUseLimitedCache(false);
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
-		FastMapper.CacheManager.GetCache().ContainsKey(key).ShouldBeTrue();
+		// Act & Assert - unlimited cache
+		FasterMapper.CacheManager.SetUseLimitedCache(false);
+		FasterMapper.CacheManager.ClearAllCaches();
+		FasterMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+		FasterMapper.CacheManager.GetCache().ContainsKey(key).ShouldBeTrue();
 
-		FastMapper.CacheManager.SetUseLimitedCache(true);
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
-		FastMapper.CacheManager.GetLimitedCache().ContainsKey(key).ShouldBeTrue();
+		// Act & Assert - limited cache
+		FasterMapper.CacheManager.SetUseLimitedCache(true);
+		FasterMapper.CacheManager.ClearAllCaches();
+		FasterMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+		FasterMapper.CacheManager.GetLimitedCache().ContainsKey(key).ShouldBeTrue();
 	}
 
 	[Fact]
-	public void FastMapper_CacheManager_DuplicateTryAddCache_ReturnsFalse()
+	public void FasterMapper_CacheManager_DuplicateTryAddCache_ReturnsFalse()
+	{
+		// Arrange - use dedicated test types to avoid polluting other tests
+		FasterMapper.MapperCacheKey key = new(typeof(TryAddTestSource), typeof(TryAddTestDest));
+		Func<TryAddTestSource, TryAddTestDest> del = _ => new TryAddTestDest { Value = "X" };
+
+		// Act & Assert - unlimited cache
+		FasterMapper.CacheManager.SetUseLimitedCache(false);
+		FasterMapper.CacheManager.ClearAllCaches();
+		FasterMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+		FasterMapper.CacheManager.TryAddCache(key, del).ShouldBeFalse();
+
+		// Act & Assert - limited cache
+		FasterMapper.CacheManager.SetUseLimitedCache(true);
+		FasterMapper.CacheManager.ClearAllCaches();
+		FasterMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+		FasterMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
+	}
+
+	[Fact]
+	public void FasterMap_WithUseCacheFalse_DoesNotAddToCache()
 	{
 		// Arrange
-		FastMapper.MapperCacheKey key = new(typeof(SimpleSource), typeof(SimpleDestination));
-		Func<SimpleSource, SimpleDestination> del = _ => new SimpleDestination { StringProp = "X", IntProp = 2, DateProp = DateTime.Now };
+		FasterMapper.CacheManager.ClearAllCaches();
+		FasterMapper.CacheManager.SetUseLimitedCache(false);
+
+		SimpleSource source = new()
+		{
+			StringProp = "NoCacheTest",
+			IntProp = 999,
+			DateProp = DateTime.Now
+		};
+
+		int initialCacheCount = FasterMapper.CacheManager.GetCache().Count;
 
 		// Act
-		FastMapper.CacheManager.SetUseLimitedCache(false);
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
-		FastMapper.CacheManager.TryAddCache(key, del).ShouldBeFalse();
+		SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>(useCache: false);
 
-		FastMapper.CacheManager.SetUseLimitedCache(true);
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
-		FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
+		// Assert
+		result.ShouldNotBeNull();
+		result.StringProp.ShouldBe(source.StringProp);
+		// Cache count should remain the same when useCache is false
+		FasterMapper.CacheManager.GetCache().Count.ShouldBe(initialCacheCount);
 	}
+
+	#endregion
 }

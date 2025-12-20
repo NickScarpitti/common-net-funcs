@@ -13,9 +13,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 	public NavigationPropertiesTests()
 	{
 		_fixture = new Fixture();
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
-				.UseInMemoryDatabase(databaseName: _fixture.Create<string>())
-				.Options;
+		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseInMemoryDatabase(databaseName: _fixture.Create<string>()).Options;
 		_context = new TestDbContext(options);
 	}
 
@@ -677,7 +675,9 @@ public sealed class NavigationPropertiesTests : IDisposable
 		TestEntity? entity = null;
 
 		// Act & Assert
+#pragma warning disable CS8634 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'class' constraint.
 		Should.NotThrow(() => entity.RemoveNavigationProperties(_context));
+#pragma warning restore CS8634 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'class' constraint.
 	}
 
 	[Fact]

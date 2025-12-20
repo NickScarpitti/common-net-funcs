@@ -332,15 +332,15 @@ public static partial class FileHelpers
 		// Replace invalid characters with safe alternatives
 		StringBuilder stringBuilder = new(fileName);
 		return stringBuilder
-						.Replace("/", "-")
-						.Replace(@"\", "-")
-						.Replace(":", ".")
-						.Replace("<", "_")
-						.Replace(">", "_")
-						.Replace("\"", "'")
-						.Replace("|", "_")
-						.Replace("?", "_")
-						.Replace("*", "_").ToString();
+			.Replace("/", "-")
+			.Replace(@"\", "-")
+			.Replace(":", ".")
+			.Replace("<", "_")
+			.Replace(">", "_")
+			.Replace("\"", "'")
+			.Replace("|", "_")
+			.Replace("?", "_")
+			.Replace("*", "_").ToString();
 	}
 
 	[GeneratedRegex(@"\(([^)]*)\)$")]

@@ -121,9 +121,9 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 							};
 
 							MemoryCacheEntryOptions cacheEntryOptions = new MemoryCacheEntryOptions()
-																.SetSize(responseData.Length)
-																.SetAbsoluteExpiration(customCacheDuration == TimeSpan.Zero ? cacheOptions.DefaultCacheDuration : customCacheDuration)
-																.RegisterPostEvictionCallback(HandleEviction);
+								.SetSize(responseData.Length)
+								.SetAbsoluteExpiration(customCacheDuration == TimeSpan.Zero ? cacheOptions.DefaultCacheDuration : customCacheDuration)
+								.RegisterPostEvictionCallback(HandleEviction);
 
 							cache.Set(cacheKey, entry, cacheEntryOptions);
 							cacheMetrics?.AddToSize(responseData.Length);
@@ -188,8 +188,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 	private async Task EvictCacheAsync(HttpContext context, string cacheKey)
 	{
 		// Check for tag-based eviction
-		string[]? tagsToEvict = context.Request.Query[cacheOptions.EvictTagQueryParam].ToString()
-						?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		string[]? tagsToEvict = context.Request.Query[cacheOptions.EvictTagQueryParam].ToString()?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 		if (tagsToEvict?.Length > 0)
 		{
@@ -480,7 +479,7 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 				return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving cache metrics");
 			}
 		})
-				.WithName("GetMemoryCacheMetrics");
+		.WithName("GetMemoryCacheMetrics");
 
 		return endpoints;
 	}
@@ -533,8 +532,8 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 				return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error evicting cache entry");
 			}
 		})
-				.WithName("EvictCacheByKey")
-				.WithDisplayName("Evict Cache Entry by Key");
+		.WithName("EvictCacheByKey")
+		.WithDisplayName("Evict Cache Entry by Key");
 
 		// Endpoint for evicting by tag
 		RouteHandlerBuilder evictByTagEndpoint = endpoints.MapPost("/api/memorycache/evict/tag/{tag}", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics, string tag, CancellationToken cancellationToken = default) =>
@@ -593,8 +592,8 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 				return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error evicting cache entries");
 			}
 		})
-				.WithName("EvictCacheByTag")
-				.WithDisplayName("Evict Cache Entries by Tag");
+		.WithName("EvictCacheByTag")
+		.WithDisplayName("Evict Cache Entries by Tag");
 
 		// Endpoint that clears out the cache and resets trackers and metrics. Will have count of evicted items in "manuallyRemoved". Call this endpoint again to fully zero it out.
 		RouteHandlerBuilder evictAllCacheEndpoint = endpoints.MapPost("/api/memorycache/evict/all", ([FromServices] IMemoryCache cache, [FromServices] CacheTracker tracker, [FromServices] CacheMetrics? metrics) =>
@@ -618,8 +617,8 @@ public static class MemoryCacheEvictionMiddlewareExtensions
 			}
 			return Results.Problem(detail: "Unable to evict all cache items from concrete MemoryCache object", statusCode: StatusCodes.Status500InternalServerError, title: "Error evicting cache entries");
 		})
-				.WithName("EvictAllCache")
-				.WithDisplayName("Evict All Cache Entries");
+		.WithName("EvictAllCache")
+		.WithDisplayName("Evict All Cache Entries");
 
 		if (!authorizationPolicyName.IsNullOrWhiteSpace())
 		{

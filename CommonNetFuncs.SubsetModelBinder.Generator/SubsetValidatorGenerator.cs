@@ -18,10 +18,10 @@ public sealed class SubsetValidatorGenerator : IIncrementalGenerator
 	{
 		IncrementalValuesProvider<ClassDeclarationSyntax> classDeclarations = context.SyntaxProvider
 			.ForAttributeWithMetadataName( //Used to be CreateSyntaxProvider
-					FullyQualifiedAttributeName,
-					predicate: (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: > 0 },
-					transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx))
-				.Where(static m => m is not null)!;
+				FullyQualifiedAttributeName,
+				predicate: (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: > 0 },
+				transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx))
+			.Where(static m => m is not null)!;
 
 		IncrementalValueProvider<(Compilation, ImmutableArray<ClassDeclarationSyntax>)> compilationAndClasses = context.CompilationProvider.Combine(classDeclarations.Collect());
 

@@ -2,13 +2,13 @@
 
 public static class Constants
 {
-  public enum EOutputTags
-  {
-    FileName,
-    Success,
-    OriginalSize,
-    EndSize,
-    SizeRatio,
-    SizeDif
-  }
+	public enum EOutputTags
+	{
+		FileName,
+		Success,
+		OriginalSize,
+		EndSize,
+		SizeRatio,
+		SizeDif
+	}
 }

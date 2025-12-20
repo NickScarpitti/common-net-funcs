@@ -28,7 +28,7 @@ public static class Export
 	/// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
 	/// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
 	public static MemoryStream? GenericExcelExport<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, bool createTable = false,
-				string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
+			string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
 	{
 		try
 		{
@@ -65,7 +65,7 @@ public static class Export
 	/// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
 	/// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
 	public static MemoryStream? GenericExcelExport(this DataTable datatable, MemoryStream? memoryStream = null, bool createTable = false,
-				string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
+			string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
 	{
 		try
 		{

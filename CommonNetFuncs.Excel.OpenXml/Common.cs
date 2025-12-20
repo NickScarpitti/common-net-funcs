@@ -386,7 +386,7 @@ public static partial class Common
 		try
 		{
 			DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
-								workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
+				workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
 			if (definedName != null)
 			{
 				string reference = definedName.Text;
@@ -441,7 +441,7 @@ public static partial class Common
 		try
 		{
 			DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
-								workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
+				workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
 			if (definedName != null)
 			{
 				string reference = definedName.Text;
@@ -691,7 +691,7 @@ public static partial class Common
 				cellFormat.ApplyAlignment = true;
 
 				border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
-										new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
+					new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
 				borders.Append(border);
 #pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.BorderId = ((uint)borders.Count()) - 1;
@@ -725,7 +725,7 @@ public static partial class Common
 				cellFormat.ApplyAlignment = true;
 
 				border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
-										new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Medium }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
+					new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Medium }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
 				borders.Append(border);
 #pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.BorderId = ((uint)borders.Count()) - 1;
@@ -758,7 +758,7 @@ public static partial class Common
 				cellFormat.ApplyAlignment = true;
 
 				border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
-										new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
+					new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
 				borders.Append(border);
 #pragma warning disable S2971 // LINQ expressions should be simplified
 				cellFormat.BorderId = ((uint)borders.Count()) - 1;
@@ -934,13 +934,13 @@ public static partial class Common
 	{
 		// Compare relevant properties of the CellFormat objects
 		return (format1.BorderId == format2.BorderId) &&
-						(format1.FillId == format2.FillId) &&
-						(format1.FontId == format2.FontId) &&
-						(format1.ApplyBorder == format2.ApplyBorder) &&
-						(format1.ApplyFill == format2.ApplyFill) &&
-						(format1.ApplyFont == format2.ApplyFont) &&
-						FormatAlignmentsAreEqual(format1.Alignment, format2.Alignment) &&
-						FormatProtectionsAreEqual(format1.Protection, format2.Protection);
+			(format1.FillId == format2.FillId) &&
+			(format1.FontId == format2.FontId) &&
+			(format1.ApplyBorder == format2.ApplyBorder) &&
+			(format1.ApplyFill == format2.ApplyFill) &&
+			(format1.ApplyFont == format2.ApplyFont) &&
+			FormatAlignmentsAreEqual(format1.Alignment, format2.Alignment) &&
+			FormatProtectionsAreEqual(format1.Protection, format2.Protection);
 	}
 
 	/// <summary>
@@ -1007,7 +1007,7 @@ public static partial class Common
 	/// <param name="border">Sets Border value of CellFormat, creates if no identical border exists yet</param>
 	/// <returns>ID of the new CellFormat</returns>
 	public static uint? GetCustomStyle(this SpreadsheetDocument document, bool cellLocked = false, Font? font = null,
-				HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null, bool wrapText = false)
+			HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null, bool wrapText = false)
 	{
 		Stylesheet? stylesheet = document.GetStylesheet();
 
@@ -1410,7 +1410,7 @@ public static partial class Common
 	/// <param name="showRowStripes">Optional: Styles the table to show row stripes or not</param>
 	/// <param name="showColStripes">Optional: Styles the table to show column stripes or not</param>
 	public static void CreateTable(this Worksheet worksheet, uint startRow, uint startCol, uint endRow, uint endColumn, string tableName, ETableStyle styleName = ETableStyle.TableStyleMedium1,
-				bool showRowStripes = true, bool showColStripes = false)
+			bool showRowStripes = true, bool showColStripes = false)
 	{
 		TableDefinitionPart tableDefinitionPart = worksheet.WorksheetPart!.AddNewPart<TableDefinitionPart>();
 		string rId = worksheet.WorksheetPart!.GetIdOfPart(tableDefinitionPart);
@@ -1729,7 +1729,7 @@ public static partial class Common
 		if (worksheetDrawing.Elements<Xdr.TwoCellAnchor>().Any())
 		{
 			imageId = worksheetDrawing.Elements<Xdr.TwoCellAnchor>().Where(x => x != null)
-								.Max(x => uint.Parse((x.Elements<Xdr.Picture>().FirstOrDefault()?.NonVisualPictureProperties?.NonVisualDrawingProperties?.Id ?? '0')!)) + 1;
+				.Max(x => uint.Parse((x.Elements<Xdr.Picture>().FirstOrDefault()?.NonVisualPictureProperties?.NonVisualDrawingProperties?.Id ?? '0')!)) + 1;
 		}
 
 		Xdr.TwoCellAnchor anchor = new()
@@ -1752,19 +1752,26 @@ public static partial class Common
 		};
 
 		Xdr.Picture picture = new();
-		Xdr.NonVisualPictureProperties nvPicPr = new(
-						new Xdr.NonVisualDrawingProperties { Id = imageId, Name = $"Picture {imageId}" },
-						new Xdr.NonVisualPictureDrawingProperties(new Dwg.PictureLocks { NoChangeAspect = true }));
+		Xdr.NonVisualPictureProperties nvPicPr = new
+			(
+				new Xdr.NonVisualDrawingProperties { Id = imageId, Name = $"Picture {imageId}" },
+				new Xdr.NonVisualPictureDrawingProperties(new Dwg.PictureLocks { NoChangeAspect = true })
+			);
 
-		Xdr.BlipFill blipFill = new(
-						new Dwg.Blip { Embed = relationshipId },
-						new Dwg.Stretch(new Dwg.FillRectangle()));
+		Xdr.BlipFill blipFill = new
+			(
+				new Dwg.Blip { Embed = relationshipId },
+				new Dwg.Stretch(new Dwg.FillRectangle())
+			);
 
-		Xdr.ShapeProperties spPr = new(
-						new Dwg.Transform2D(
-								new Dwg.Offset { X = 0, Y = 0 },
-								new Dwg.Extents { Cx = width, Cy = height }),
-						new Dwg.PresetGeometry { Preset = Dwg.ShapeTypeValues.Rectangle });
+		Xdr.ShapeProperties spPr = new
+			(
+				new Dwg.Transform2D
+					(
+						new Dwg.Offset { X = 0, Y = 0 },
+						new Dwg.Extents { Cx = width, Cy = height }
+					),
+				new Dwg.PresetGeometry { Preset = Dwg.ShapeTypeValues.Rectangle });
 
 		picture.Append(nvPicPr, blipFill, spPr);
 		anchor.Append(picture);
@@ -1894,7 +1901,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-										.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 
 		return cell?.GetCellValue() ?? string.Empty;
 	}

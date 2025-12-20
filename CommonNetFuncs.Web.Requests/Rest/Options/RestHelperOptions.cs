@@ -5,8 +5,8 @@ namespace CommonNetFuncs.Web.Requests.Rest.Options;
 public sealed class RestHelperOptions
 {
 	public RestHelperOptions(string Url, string ApiName, IDictionary<string, string>? HttpHeaders = null, bool UseBearerToken = false, string? BearerToken = null,
-				bool UseNewtonsoftDeserializer = false, bool LogQuery = true, bool LogBody = true, CompressionOptions? CompressionOptions = null, MsgPackOptions? MsgPackOptions = null,
-				JsonSerializerOptions? JsonSerializerOptions = null, ResilienceOptions? ResilienceOptions = null)
+			bool UseNewtonsoftDeserializer = false, bool LogQuery = true, bool LogBody = true, CompressionOptions? CompressionOptions = null, MsgPackOptions? MsgPackOptions = null,
+			JsonSerializerOptions? JsonSerializerOptions = null, ResilienceOptions? ResilienceOptions = null)
 	{
 		if (string.IsNullOrWhiteSpace(ApiName))
 		{

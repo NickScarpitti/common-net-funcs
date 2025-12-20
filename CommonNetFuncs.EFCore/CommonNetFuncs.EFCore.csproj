@@ -77,7 +77,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.1" PrivateAssets="all" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -85,7 +85,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" PrivateAssets="all" />
     <PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" PrivateAssets="all" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.1" PrivateAssets="all" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="10.105.0" PrivateAssets="all" />
+    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="10.105.2" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

@@ -129,21 +129,21 @@ public static partial class HtmlEmailBuilder
 		if (tableData != null && tableData.Rows.Count != 0)
 		{
 			string tableStyle = !string.IsNullOrWhiteSpace(customCss) ? customCss :
-								"<style>" +
-										"table{" +
-												"font-family: arial, sans-serif;" +
-												"border-collapse: collapse;" +
-												"width: 100%;" +
-										"}" +
-										"td, th {" +
-												"border: 1px solid #dddddd;" +
-												"text-align: left;" +
-												"padding: 8px;" +
-										"}" +
-										"tr:nth-child(even) {" +
-												"background-color: #dddddd;" +
-										"}" +
-								"</style>";
+				"<style>" +
+					"table{" +
+						"font-family: arial, sans-serif;" +
+						"border-collapse: collapse;" +
+						"width: 100%;" +
+					"}" +
+					"td, th {" +
+						"border: 1px solid #dddddd;" +
+						"text-align: left;" +
+						"padding: 8px;" +
+					"}" +
+					"tr:nth-child(even) {" +
+						"background-color: #dddddd;" +
+					"}" +
+				"</style>";
 
 			tableHtmlBuilder.Append(applyTableCss ? tableStyle : string.Empty);
 
@@ -182,21 +182,21 @@ public static partial class HtmlEmailBuilder
 		if (tableData.Count > 0)
 		{
 			string tableStyle = !string.IsNullOrWhiteSpace(customCss) ? customCss :
-								"<style>" +
-										"table{" +
-												"font-family: arial, sans-serif;" +
-												"border-collapse: collapse;" +
-												"width: 100%;" +
-										"}" +
-										"td, th {" +
-												"border: 1px solid #dddddd;" +
-												"text-align: left;" +
-												"padding: 8px;" +
-										"}" +
-										"tr:nth-child(even) {" +
-												"background-color: #dddddd;" +
-										"}" +
-								"</style>";
+				"<style>" +
+						"table{" +
+							"font-family: arial, sans-serif;" +
+							"border-collapse: collapse;" +
+							"width: 100%;" +
+						"}" +
+						"td, th {" +
+							"border: 1px solid #dddddd;" +
+							"text-align: left;" +
+							"padding: 8px;" +
+						"}" +
+						"tr:nth-child(even) {" +
+							"background-color: #dddddd;" +
+						"}" +
+				"</style>";
 
 			tableHtmlBuilder.Append(applyTableCss ? tableStyle : string.Empty);
 

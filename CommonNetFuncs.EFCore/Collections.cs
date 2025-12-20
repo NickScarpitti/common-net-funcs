@@ -93,9 +93,7 @@ public static class Collections
 		// In-memory database stores DateTime values but Local times need UTC conversion
 		if (providerName?.Contains("inmemory") == true)
 		{
-			return dateTimeValue.Kind == DateTimeKind.Local
-				? dateTimeValue.ToUniversalTime()
-				: dateTimeValue;
+			return dateTimeValue.Kind == DateTimeKind.Local ? dateTimeValue.ToUniversalTime() : dateTimeValue;
 		}
 
 		// GetColumnType() only works for relational providers
@@ -124,9 +122,7 @@ public static class Collections
 		{
 			// SQL Server: datetime/datetime2 need Unspecified, datetimeoffset needs UTC
 			bool isTimezoneAware = storeType.Contains("datetimeoffset");
-			return isTimezoneAware
-					? dateTimeValue.ToUniversalTime()
-					: DateTime.SpecifyKind(dateTimeValue, DateTimeKind.Unspecified);
+			return isTimezoneAware ? dateTimeValue.ToUniversalTime() : DateTime.SpecifyKind(dateTimeValue, DateTimeKind.Unspecified);
 		}
 		else if (providerName?.Contains("mysql") == true)
 		{

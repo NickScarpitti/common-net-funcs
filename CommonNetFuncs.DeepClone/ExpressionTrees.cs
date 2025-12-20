@@ -31,8 +31,7 @@ public static class ExpressionTrees
 	private static Func<object, Dictionary<object, object>, object> GetOrAddPropertiesFromCompiledFunctionsCache(Type key)
 	{
 		bool isLimitedCache = CacheManager.IsUsingLimitedCache();
-		if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Func<object, Dictionary<object, object>, object>? compiledFunction) :
-						CacheManager.GetCache().TryGetValue(key, out compiledFunction))
+		if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Func<object, Dictionary<object, object>, object>? compiledFunction) : CacheManager.GetCache().TryGetValue(key, out compiledFunction))
 		{
 			return compiledFunction!;
 		}
@@ -120,7 +119,7 @@ public static class ExpressionTrees
 	{
 		///// INITIALIZATION OF EXPRESSIONS AND VARIABLES
 		InitializeExpressions(type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable, out ParameterExpression boxingVariable,
-								out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions);
+			out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions);
 
 		///// RETURN NULL IF ORIGINAL IS NULL
 		IfNullThenReturnNullExpression(inputParameter, endLabel, expressions);
@@ -148,7 +147,7 @@ public static class ExpressionTrees
 	}
 
 	private static void InitializeExpressions(Type type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable,
-				out ParameterExpression boxingVariable, out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions)
+			out ParameterExpression boxingVariable, out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions)
 	{
 		inputParameter = Expression.Parameter(ObjectType);
 		inputDictionary = Expression.Parameter(ObjectDictionaryType);
@@ -193,7 +192,7 @@ public static class ExpressionTrees
 	}
 
 	private static Expression<Func<object, Dictionary<object, object>, object>> CombineAllIntoLambdaFunctionExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable,
-				LabelTarget endLabel, List<ParameterExpression> variables, List<Expression> expressions)
+			LabelTarget endLabel, List<ParameterExpression> variables, List<Expression> expressions)
 	{
 		expressions.Add(Expression.Label(endLabel));
 		expressions.Add(Expression.Convert(outputVariable, ObjectType));
@@ -202,7 +201,7 @@ public static class ExpressionTrees
 	}
 
 	private static void CreateArrayCopyLoopExpression(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable,
-				List<ParameterExpression> variables, List<Expression> expressions, bool useCache)
+			List<ParameterExpression> variables, List<Expression> expressions, bool useCache)
 	{
 		int rank = type.GetArrayRank();
 		List<ParameterExpression> indices = GenerateIndices(rank);
@@ -254,15 +253,15 @@ public static class ExpressionTrees
 		LoopExpression newLoop =
 			Expression.Loop
 			(
-					Expression.Block
-					(
-						Array.Empty<ParameterExpression>(),
-						Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable), Expression.Break(endLabelForThisLoop)),
-						loopToEncapsulate,
-						Expression.PostIncrementAssign(indexVariable)
-					),
-					endLabelForThisLoop
-				);
+				Expression.Block
+				(
+					Array.Empty<ParameterExpression>(),
+					Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable), Expression.Break(endLabelForThisLoop)),
+					loopToEncapsulate,
+					Expression.PostIncrementAssign(indexVariable)
+				),
+				endLabelForThisLoop
+			);
 
 		BinaryExpression lengthAssignment = GetLengthForDimensionExpression(lengthVariable, inputParameter, dimension);
 		BinaryExpression indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
@@ -277,7 +276,7 @@ public static class ExpressionTrees
 	}
 
 	private static void FieldsCopyExpressions(Type type, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable,
-				ParameterExpression boxingVariable, List<Expression> expressions, bool useCache)
+			ParameterExpression boxingVariable, List<Expression> expressions, bool useCache)
 	{
 		FieldInfo[] fields = GetAllRelevantFields(type);
 		IEnumerable<FieldInfo> readonlyFields = fields.Where(f => f.IsInitOnly).ToList();
@@ -373,12 +372,13 @@ public static class ExpressionTrees
 		MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
 		bool forceDeepCopy = field.FieldType != ObjectType;
 		MethodCallExpression fieldDeepCopyExpression =
-						Expression.Call
-						(
-								Expression.Constant(field, FieldInfoType),
-								SetValueMethod!,
-								boxingVariable,
-								Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary, Expression.Constant(useCache, typeof(bool))));
+			Expression.Call
+			(
+				Expression.Constant(field, FieldInfoType),
+				SetValueMethod!,
+				boxingVariable,
+				Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary, Expression.Constant(useCache, typeof(bool)))
+			);
 
 		expressions.Add(fieldDeepCopyExpression);
 	}
@@ -403,13 +403,15 @@ public static class ExpressionTrees
 		bool forceDeepCopy = field.FieldType != ObjectType;
 
 		BinaryExpression fieldDeepCopyExpression =
-						Expression.Assign
-						(
-								fieldTo,
-								Expression.Convert
-								(
-										Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary, Expression.Constant(useCache, typeof(bool))),
-										fieldType));
+			Expression.Assign
+			(
+				fieldTo,
+				Expression.Convert
+				(
+					Expression.Call(DeepCopyByExpressionTreeObjMethod!, Expression.Convert(fieldFrom, ObjectType), Expression.Constant(forceDeepCopy, typeof(bool)), inputDictionary, Expression.Constant(useCache, typeof(bool))),
+					fieldType
+				)
+			);
 
 		expressions.Add(fieldDeepCopyExpression);
 	}

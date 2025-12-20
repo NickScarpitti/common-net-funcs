@@ -956,13 +956,13 @@ public static partial class Collections
 				localRows.Add(rowValues);
 				return localRows;
 			},
-						localRows =>
-						{
-							lock (lockObj)
-							{
-								rows.AddRange(localRows);
-							}
-						});
+			localRows =>
+			{
+				lock (lockObj)
+				{
+					rows.AddRange(localRows);
+				}
+			});
 
 			// Add all rows to the table
 			foreach (object[] rowVals in rows)
@@ -1048,45 +1048,45 @@ public static partial class Collections
 			? throw new ArgumentException($"Invalid aggregate property values. All values in propsToAgg must be present in type {typeof(T)}", nameof(propsToAgg))
 			: !parallel
 			? collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(y => y.GetValue(x)?.ToString() ?? string.Empty)) })
-								//return collection.GroupBy(_ => new { GroupKey = string.Join("|", groupingProperties.Select(x => x.GetValue(x)?.ToString() ?? string.Empty)) })
-								.Select(x =>
-								{
-									T result = new();
-									foreach (PropertyInfo prop in properties)
-									{
-										if (propsToAgg.Contains(prop.Name))
-										{
-											string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
-																string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
-											prop.SetValue(result, aggregatedValue);
-										}
-										else
-										{
-											prop.SetValue(result, prop.GetValue(x.First()));
-										}
-									}
-									return result;
-								})
+				//return collection.GroupBy(_ => new { GroupKey = string.Join("|", groupingProperties.Select(x => x.GetValue(x)?.ToString() ?? string.Empty)) })
+				.Select(x =>
+				{
+					T result = new();
+					foreach (PropertyInfo prop in properties)
+					{
+						if (propsToAgg.Contains(prop.Name))
+						{
+							string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
+												string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
+							prop.SetValue(result, aggregatedValue);
+						}
+						else
+						{
+							prop.SetValue(result, prop.GetValue(x.First()));
+						}
+					}
+					return result;
+				})
 			: collection.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered)
-								.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(y => y.GetValue(x)?.ToString() ?? string.Empty)) })
-								.Select(x =>
-								{
-									T result = new();
-									foreach (PropertyInfo prop in properties)
-									{
-										if (propsToAgg.Contains(prop.Name))
-										{
-											string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
-																string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
-											prop.SetValue(result, aggregatedValue);
-										}
-										else
-										{
-											prop.SetValue(result, prop.GetValue(x.First()));
-										}
-									}
-									return result;
-								});
+				.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(y => y.GetValue(x)?.ToString() ?? string.Empty)) })
+				.Select(x =>
+				{
+					T result = new();
+					foreach (PropertyInfo prop in properties)
+					{
+						if (propsToAgg.Contains(prop.Name))
+						{
+							string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
+												string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
+							prop.SetValue(result, aggregatedValue);
+						}
+						else
+						{
+							prop.SetValue(result, prop.GetValue(x.First()));
+						}
+					}
+					return result;
+				});
 	}
 
 	/// <summary>

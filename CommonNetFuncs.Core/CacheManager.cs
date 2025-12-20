@@ -41,9 +41,10 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 {
 	private readonly ReaderWriterLockSlim readWriteLock = new();
 
-	private int limitedCacheSize = limitedCacheSize;
+	private volatile int limitedCacheSize = limitedCacheSize;
 
-	private bool UseLimitedCache { get; set; } = useLimitedCache;
+	// Use volatile for lock-free reads - safe because writes are still protected by lock
+	private volatile bool useLimitedCache = useLimitedCache;
 
 	private ConcurrentDictionary<TKey, TValue> Cache { get; } = new();
 
@@ -63,15 +64,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 	/// </summary>
 	public void ClearCache()
 	{
-		readWriteLock.EnterWriteLock();
-		try
-		{
-			Cache.Clear();
-		}
-		finally
-		{
-			readWriteLock.ExitWriteLock();
-		}
+		Cache.Clear();
 	}
 
 	/// <summary>
@@ -112,7 +105,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 			readWriteLock.ExitWriteLock();
 		}
 
-		if (UseLimitedCache)
+		if (useLimitedCache)
 		{
 			ClearLimitedCache();
 			readWriteLock.EnterWriteLock();
@@ -128,7 +121,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 	}
 
 	/// <summary>
-	/// Clears caches and initializes <see cref="LimitedCache"/> to use the size specified by <see cref="limitedCacheSize"/> or 1 if <see cref="UseLimitedCache"/> is false.
+	/// Clears caches and initializes <see cref="LimitedCache"/> to use the size specified by <see cref="limitedCacheSize"/> or 1 if <see cref="useLimitedCache"/> is false.
 	/// </summary>
 	/// <param name="useLimitedCache">When true, uses cache with limited number of total records.</param>
 	public void SetUseLimitedCache(bool useLimitedCache)
@@ -138,7 +131,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 		readWriteLock.EnterWriteLock();
 		try
 		{
-			UseLimitedCache = useLimitedCache;
+			this.useLimitedCache = useLimitedCache;
 		}
 		finally
 		{
@@ -169,15 +162,8 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 	/// <returns><see langword="true"/> if <see cref="LimitedCache"/> is being used.</returns>
 	public bool IsUsingLimitedCache()
 	{
-		readWriteLock.EnterReadLock();
-		try
-		{
-			return UseLimitedCache;
-		}
-		finally
-		{
-			readWriteLock.ExitReadLock();
-		}
+		// Volatile read - no lock needed, safe because writes are protected
+		return useLimitedCache;
 	}
 
 	/// <summary>
@@ -186,15 +172,7 @@ public sealed class CacheManager<TKey, TValue>(int limitedCacheSize = 100, bool 
 	/// <returns>A readonly copy of <see cref="Cache"/>.</returns>
 	public IReadOnlyDictionary<TKey, TValue> GetCache()
 	{
-		readWriteLock.EnterReadLock();
-		try
-		{
-			return Cache.AsReadOnly();
-		}
-		finally
-		{
-			readWriteLock.ExitReadLock();
-		}
+		return Cache.AsReadOnly();
 	}
 
 	/// <summary>
@@ -268,9 +246,10 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 {
 	private readonly ReaderWriterLockSlim readWriteLock = new();
 
-	private int limitedCacheSize = limitedCacheSize;
+	private volatile int limitedCacheSize = limitedCacheSize;
 
-	private bool UseLimitedCache { get; set; } = useLimitedCache;
+	// Use volatile for lock-free reads - safe because writes are still protected by lock
+	private volatile bool useLimitedCache = useLimitedCache;
 
 	private ConcurrentDictionary<TKey, TValue> Cache { get; } = new();
 
@@ -290,15 +269,7 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 	/// </summary>
 	public void ClearCache()
 	{
-		readWriteLock.EnterWriteLock();
-		try
-		{
-			Cache.Clear();
-		}
-		finally
-		{
-			readWriteLock.ExitWriteLock();
-		}
+		Cache.Clear();
 	}
 
 	/// <summary>
@@ -339,7 +310,7 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 			readWriteLock.ExitWriteLock();
 		}
 
-		if (UseLimitedCache)
+		if (useLimitedCache)
 		{
 			ClearLimitedCache();
 			readWriteLock.EnterWriteLock();
@@ -355,7 +326,7 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 	}
 
 	/// <summary>
-	/// Clears <see cref="LimitedCache"/> and <see cref="Cache"/> and initializes <see cref="LimitedCache"/> to use the size specified by <see cref="limitedCacheSize"/> or 1 if <see cref="UseLimitedCache"/> is false.
+	/// Clears <see cref="LimitedCache"/> and <see cref="Cache"/> and initializes <see cref="LimitedCache"/> to use the size specified by <see cref="limitedCacheSize"/> or 1 if <see cref="useLimitedCache"/> is false.
 	/// </summary>
 	/// <param name="useLimitedCache">When <see langword="true"/>, uses cache with limited number of total records.</param>
 	public void SetUseLimitedCache(bool useLimitedCache)
@@ -365,7 +336,7 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 		readWriteLock.EnterWriteLock();
 		try
 		{
-			UseLimitedCache = useLimitedCache;
+			this.useLimitedCache = useLimitedCache;
 		}
 		finally
 		{
@@ -396,15 +367,8 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 	/// <returns><see langword="true"/> if <see cref="LimitedCache"/> is being used, otherwise <see langword="false"/></returns>
 	public bool IsUsingLimitedCache()
 	{
-		readWriteLock.EnterReadLock();
-		try
-		{
-			return UseLimitedCache;
-		}
-		finally
-		{
-			readWriteLock.ExitReadLock();
-		}
+		// Volatile read - no lock needed, safe because writes are protected
+		return useLimitedCache;
 	}
 
 	/// <summary>
@@ -413,15 +377,7 @@ public sealed class CacheManagerFifo<TKey, TValue>(int limitedCacheSize = 100, b
 	/// <returns>A readonly copy of <see cref="Cache"/>.</returns>
 	public IReadOnlyDictionary<TKey, TValue> GetCache()
 	{
-		readWriteLock.EnterReadLock();
-		try
-		{
-			return Cache.AsReadOnly();
-		}
-		finally
-		{
-			readWriteLock.ExitReadLock();
-		}
+		return Cache.AsReadOnly();
 	}
 
 	/// <summary>

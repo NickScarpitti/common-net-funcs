@@ -11,6 +11,10 @@ public static partial class FileHelpers
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+	[GeneratedRegex(@"\(([^)]*)\)$")]
+	private static partial Regex IncrementedFileNameRegex();
+
+
 	/// <summary>
 	/// Simulates automatic Windows behavior of adding a number after the original file name when a file with the same name exists already
 	/// </summary>
@@ -342,7 +346,4 @@ public static partial class FileHelpers
 			.Replace("?", "_")
 			.Replace("*", "_").ToString();
 	}
-
-	[GeneratedRegex(@"\(([^)]*)\)$")]
-	private static partial Regex IncrementedFileNameRegex();
 }

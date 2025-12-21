@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using FastExpressionCompiler;
+
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
@@ -17,7 +18,11 @@ public static class Copy
 
 	private static readonly CacheManager<(Type SourceType, Type DestType), Dictionary<string, (Delegate Set, Delegate Get)>> CopyCache = new();
 
+	private static readonly CacheManager<(Type SourceType, Type DestType), object> CopyCacheTyped = new();
+
 	public static ICacheManagerApi<(Type SourceType, Type DestType), Dictionary<string, (Delegate Set, Delegate Get)>> CopyCacheManager => CopyCache;
+
+	internal static ICacheManagerApi<(Type SourceType, Type DestType), object> CopyCacheTypedManager => CopyCacheTyped;
 
 	/// <summary>
 	/// Gets or adds a function from the deep copy cache based on the source and destination types.
@@ -97,8 +102,8 @@ public static class Copy
 		else
 		{
 			dest ??= Activator.CreateInstance<UT>();
-			IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead);
-			Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
+			IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead && x.GetIndexParameters().Length == 0);
+			Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(UT)).Where(x => x.CanWrite && x.GetIndexParameters().Length == 0).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
 			foreach (PropertyInfo sourceProp in sourceProps)
 			{
@@ -134,7 +139,7 @@ public static class Copy
 		}
 		else
 		{
-			foreach (PropertyInfo sourceProp in GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead))
+			foreach (PropertyInfo sourceProp in GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead && x.GetIndexParameters().Length == 0))
 			{
 				sourceProp.SetValue(dest, sourceProp.GetValue(source, null), null);
 			}
@@ -151,9 +156,6 @@ public static class Copy
 	/// <returns>A new instance of UT with properties copied from <paramref name="source"/></returns>
 	public static UT CopyPropertiesToNew<T, UT>(this T source, bool useCache = true) where T : class where UT : class, new()
 	{
-		IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead);
-		Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
-
 		UT dest = new();
 		if (useCache)
 		{
@@ -164,6 +166,9 @@ public static class Copy
 		}
 		else
 		{
+			IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead && x.GetIndexParameters().Length == 0);
+			Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(UT)).Where(x => x.CanWrite && x.GetIndexParameters().Length == 0).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
+
 			foreach (PropertyInfo sourceProp in sourceProps)
 			{
 				if (destPropDict.TryGetValue(sourceProp.Name, out PropertyInfo? destProp) && destProp.PropertyType == sourceProp.PropertyType)
@@ -281,8 +286,8 @@ public static class Copy
 		}
 		else
 		{
-			IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(sourceType).Where(x => x.CanRead);
-			Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
+			IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(sourceType).Where(x => x.CanRead && x.GetIndexParameters().Length == 0);
+			Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(x => x.CanWrite && x.GetIndexParameters().Length == 0).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
 			foreach (PropertyInfo sourceProp in sourceProps)
 			{
@@ -443,7 +448,33 @@ public static class Copy
 	/// and a <see cref="Func{TSource, Object}"/> to get the property value from the source object.</returns>
 	public static Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)> GetOrCreatePropertyMaps<TSource, TDest>() where TSource : class? where TDest : class?
 	{
-		return GetOrAddFunctionFromCopyCache<TSource, TDest>().ToDictionary(kvp => kvp.Key, kvp => ((Action<TDest, object?>)kvp.Value.Set, (Func<TSource, object?>)kvp.Value.Get));
+		(Type, Type) key = (typeof(TSource), typeof(TDest));
+		bool isLimitedCache = CopyCacheManager.IsUsingLimitedCache();
+
+		if (isLimitedCache ? CopyCacheTyped.GetLimitedCache().TryGetValue(key, out object? typedCache) :
+			CopyCacheTyped.GetCache().TryGetValue(key, out typedCache))
+		{
+			return (Dictionary<string, (Action<TDest, object?> Set, Func<TSource, object?> Get)>)typedCache!;
+		}
+
+		// Get or create the delegate cache first
+		Dictionary<string, (Delegate Set, Delegate Get)> delegateCache = GetOrAddFunctionFromCopyCache<TSource, TDest>();
+
+		// Convert to typed dictionary once and cache it
+		Dictionary<string, (Action<TDest, object?>, Func<TSource, object?>)> typedDict = delegateCache.ToDictionary(
+			kvp => kvp.Key,
+			kvp => ((Action<TDest, object?>)kvp.Value.Set, (Func<TSource, object?>)kvp.Value.Get));
+
+		if (isLimitedCache)
+		{
+			CopyCacheTyped.TryAddLimitedCache(key, typedDict);
+		}
+		else
+		{
+			CopyCacheTyped.TryAddCache(key, typedDict);
+		}
+
+		return typedDict;
 	}
 
 	/// <summary>
@@ -462,8 +493,8 @@ public static class Copy
 	{
 		Dictionary<string, (Delegate Set, Delegate Get)> cacheableMaps = new();
 
-		IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(TSource)).Where(x => x.CanRead);
-		Dictionary<string, PropertyInfo> destProps = GetOrAddPropertiesFromReflectionCache(typeof(TDest)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
+		IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(TSource)).Where(x => x.CanRead && x.GetIndexParameters().Length == 0);
+		Dictionary<string, PropertyInfo> destProps = GetOrAddPropertiesFromReflectionCache(typeof(TDest)).Where(x => x.CanWrite && x.GetIndexParameters().Length == 0).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
 		foreach (PropertyInfo sProp in sourceProps)
 		{
@@ -472,24 +503,35 @@ public static class Copy
 				// Getter: (TSource src) => (object?)src.Prop
 				ParameterExpression srcParam = Expression.Parameter(typeof(TSource), "src");
 				Expression<Func<TSource, object?>> getExpr = Expression.Lambda<Func<TSource, object?>>(
-					Expression.Convert(
-							Expression.Property(
-									typeof(TSource).IsInterface ? Expression.Convert(srcParam, sProp.DeclaringType!) : srcParam,
-									sProp),
-							typeof(object)),
+					Expression.Convert
+					(
+						Expression.Property
+						(
+
+							typeof(TSource).IsInterface ? Expression.Convert(srcParam, sProp.DeclaringType!) : srcParam,
+							sProp
+						),
+						typeof(object)
+					),
 					srcParam);
 				Func<TSource, object?> get = getExpr.CompileFast();
 
 				// Setter: (TDest dest, object? value) => dest.Prop = (TPropType)value
 				ParameterExpression destParam = Expression.Parameter(typeof(TDest), "dest");
 				ParameterExpression valueParam = Expression.Parameter(typeof(object), "value");
-				Expression<Action<TDest, object?>> setExpr = Expression.Lambda<Action<TDest, object?>>(
-										Expression.Assign(
-												Expression.Property(
-														typeof(TDest).IsInterface ? Expression.Convert(destParam, dProp.DeclaringType!) : destParam,
-														dProp),
-												Expression.Convert(valueParam, dProp.PropertyType)),
-										destParam, valueParam);
+				Expression<Action<TDest, object?>> setExpr = Expression.Lambda<Action<TDest, object?>>
+				(
+					Expression.Assign
+					(
+						Expression.Property
+						(
+							typeof(TDest).IsInterface ? Expression.Convert(destParam, dProp.DeclaringType!) : destParam,
+							dProp
+						),
+						Expression.Convert(valueParam, dProp.PropertyType)
+					),
+					destParam, valueParam
+				);
 				Action<TDest, object?> set = setExpr.CompileFast();
 
 				string propertyKey = sProp.Name;
@@ -579,9 +621,9 @@ public static class Copy
 			// Create destination instance
 			expressions.Add(Expression.Assign(typedDest, CreateInstanceExpression(destType)));
 
-			// Get properties for both types
-			PropertyInfo[] sourceProps = GetOrAddPropertiesFromReflectionCache(sourceType).Where(x => x.CanRead).ToArray();
-			Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
+			// Get properties for both types, excluding indexers
+			PropertyInfo[] sourceProps = GetOrAddPropertiesFromReflectionCache(sourceType).Where(x => x.CanRead && x.GetIndexParameters().Length == 0).ToArray();
+			Dictionary<string, PropertyInfo> destPropsDict = GetOrAddPropertiesFromReflectionCache(destType).Where(x => x.CanWrite && x.GetIndexParameters().Length == 0).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
 			// Create property copy expressions
 			foreach (PropertyInfo sourceProp in sourceProps)

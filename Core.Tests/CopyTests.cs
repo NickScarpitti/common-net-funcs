@@ -601,6 +601,8 @@ public sealed class CopyTests
 	{
 		// Arrange
 		Copy.CopyCacheManager.SetUseLimitedCache(false);
+		Copy.CopyCacheManager.ClearAllCaches();
+		Copy.CopyCacheTypedManager.ClearAllCaches();
 		SourceClass source = new() { Id = 42, Name = "CacheTest" };
 		DestinationClass dest = new();
 

@@ -18,6 +18,7 @@ public static class ExpressionTrees
 
 	private static readonly Type ObjectType = typeof(object);
 	private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
+	private static readonly ParameterExpression[] EmptyParameterExpressions = [];
 
 	#region Caching
 
@@ -117,32 +118,32 @@ public static class ExpressionTrees
 	/// <returns>A compiled <see cref="Expression"/></returns>
 	internal static Expression<Func<object, Dictionary<object, object>, object>> CreateCompiledLambdaCopyFunctionForType(Type type, bool useCache)
 	{
-		///// INITIALIZATION OF EXPRESSIONS AND VARIABLES
+		//INITIALIZATION OF EXPRESSIONS AND VARIABLES
 		InitializeExpressions(type, out ParameterExpression inputParameter, out ParameterExpression inputDictionary, out ParameterExpression outputVariable, out ParameterExpression boxingVariable,
 			out LabelTarget endLabel, out List<ParameterExpression> variables, out List<Expression> expressions);
 
-		///// RETURN NULL IF ORIGINAL IS NULL
+		//RETURN NULL IF ORIGINAL IS NULL
 		IfNullThenReturnNullExpression(inputParameter, endLabel, expressions);
 
-		///// MEMBERWISE CLONE ORIGINAL OBJECT
+		//MEMBERWISE CLONE ORIGINAL OBJECT
 		MemberwiseCloneInputToOutputExpression(type, inputParameter, outputVariable, expressions);
 
-		///// STORE COPIED OBJECT TO REFERENCES DICTIONARY
+		//STORE COPIED OBJECT TO REFERENCES DICTIONARY
 		if (!type.IsValueType && type != typeof(string))
 		{
 			StoreReferencesIntoDictionaryExpression(inputParameter, inputDictionary, outputVariable, expressions);
 		}
 
-		///// COPY ALL NONVALUE OR NONPRIMITIVE FIELDS
+		//COPY ALL NON-VALUE OR NON-PRIMITIVE FIELDS
 		FieldsCopyExpressions(type, inputParameter, inputDictionary, outputVariable, boxingVariable, expressions, useCache);
 
-		///// COPY ELEMENTS OF ARRAY
+		//COPY ELEMENTS OF ARRAY
 		if (type.IsArray && type.GetElementType().IsTypeToDeepCopy())
 		{
 			CreateArrayCopyLoopExpression(type, inputParameter, inputDictionary, outputVariable, variables, expressions, useCache);
 		}
 
-		///// COMBINE ALL EXPRESSIONS INTO LAMBDA FUNCTION
+		//COMBINE ALL EXPRESSIONS INTO LAMBDA FUNCTION
 		return CombineAllIntoLambdaFunctionExpression(inputParameter, inputDictionary, outputVariable, endLabel, variables, expressions);
 	}
 
@@ -163,19 +164,19 @@ public static class ExpressionTrees
 
 	private static void IfNullThenReturnNullExpression(ParameterExpression inputParameter, LabelTarget endLabel, List<Expression> expressions)
 	{
-		///// Intended code:
-		///// if (input == null)
-		///// {
-		/////     return null;
-		///// }
+		// Intended code:
+		// if (input == null)
+		// {
+		//     return null;
+		// }
 		ConditionalExpression ifNullThenReturnNullExpression = Expression.IfThen(Expression.Equal(inputParameter, Expression.Constant(null, ObjectType)), Expression.Return(endLabel));
 		expressions.Add(ifNullThenReturnNullExpression);
 	}
 
 	private static void MemberwiseCloneInputToOutputExpression(Type type, ParameterExpression inputParameter, ParameterExpression outputVariable, List<Expression> expressions)
 	{
-		///// Intended code:
-		///// var output = (<type>)input.MemberwiseClone();
+		// Intended code:
+		// var output = (<type>)input.MemberwiseClone();
 #pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 		MethodInfo memberwiseCloneMethod = ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance)!;
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
@@ -185,8 +186,8 @@ public static class ExpressionTrees
 
 	private static void StoreReferencesIntoDictionaryExpression(ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<Expression> expressions)
 	{
-		///// Intended code:
-		///// inputDictionary[(Object)input] = (Object)output;
+		// Intended code:
+		// inputDictionary[(Object)input] = (Object)output;
 		BinaryExpression storeReferencesExpression = Expression.Assign(Expression.Property(inputDictionary, ObjectDictionaryType.GetProperty("Item")!, inputParameter), Expression.Convert(outputVariable, ObjectType));
 		expressions.Add(storeReferencesExpression);
 	}
@@ -222,8 +223,8 @@ public static class ExpressionTrees
 
 	private static List<ParameterExpression> GenerateIndices(int arrayRank)
 	{
-		///// Intended code:
-		///// int i1, i2, ..., in;
+		// Intended code:
+		// int i1, i2, ..., in;
 		List<ParameterExpression> indices = [];
 		for (int i = 0; i < arrayRank; i++)
 		{
@@ -255,7 +256,7 @@ public static class ExpressionTrees
 			(
 				Expression.Block
 				(
-					Array.Empty<ParameterExpression>(),
+					EmptyParameterExpressions,
 					Expression.IfThen(Expression.GreaterThanOrEqual(indexVariable, lengthVariable), Expression.Break(endLabelForThisLoop)),
 					loopToEncapsulate,
 					Expression.PostIncrementAssign(indexVariable)
@@ -279,11 +280,11 @@ public static class ExpressionTrees
 			ParameterExpression boxingVariable, List<Expression> expressions, bool useCache)
 	{
 		FieldInfo[] fields = GetAllRelevantFields(type);
-		IEnumerable<FieldInfo> readonlyFields = fields.Where(f => f.IsInitOnly).ToList();
-		IEnumerable<FieldInfo> writableFields = fields.Where(f => !f.IsInitOnly).ToList();
+		FieldInfo[] readonlyFields = Array.FindAll(fields, f => f.IsInitOnly);
+		FieldInfo[] writableFields = Array.FindAll(fields, f => !f.IsInitOnly);
 
-		///// READONLY FIELDS COPY (with boxing)
-		bool shouldUseBoxing = readonlyFields.Any();
+		// READONLY FIELDS COPY (with boxing)
+		bool shouldUseBoxing = readonlyFields.Length > 0;
 		if (shouldUseBoxing)
 		{
 			BinaryExpression boxingExpression = Expression.Assign(boxingVariable, Expression.Convert(outputVariable, ObjectType));
@@ -308,7 +309,7 @@ public static class ExpressionTrees
 			expressions.Add(unboxingExpression);
 		}
 
-		///// NOT-READONLY FIELDS COPY
+		// NOT-READONLY FIELDS COPY
 		foreach (FieldInfo field in writableFields)
 		{
 			if (typeof(Delegate).IsAssignableFrom(field.FieldType))
@@ -350,8 +351,8 @@ public static class ExpressionTrees
 		// This option must be implemented by Reflection because of the following:
 		// https://visualstudio.uservoice.com/forums/121579-visual-studio-2015/suggestions/2727812-allow-expression-assign-to-set-readonly-struct-f
 
-		///// Intended code:
-		///// fieldInfo.SetValue(boxing, <fieldtype>null);
+		// Intended code:
+		// fieldInfo.SetValue(boxing, <fieldtype>null);
 		MethodCallExpression fieldToNullExpression = Expression.Call(Expression.Constant(field), SetValueMethod!, boxingVariable, Expression.Constant(null, field.FieldType));
 		expressions.Add(fieldToNullExpression);
 	}
@@ -366,8 +367,8 @@ public static class ExpressionTrees
 		// This option must be implemented by Reflection (SetValueMethod) because of the following:
 		// https://visualstudio.uservoice.com/forums/121579-visual-studio-2015/suggestions/2727812-allow-expression-assign-to-set-readonly-struct-f
 
-		///// Intended code:
-		///// fieldInfo.SetValue(boxing, DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>))
+		// Intended code:
+		// fieldInfo.SetValue(boxing, DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>))
 
 		MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
 		bool forceDeepCopy = field.FieldType != ObjectType;
@@ -385,8 +386,8 @@ public static class ExpressionTrees
 
 	private static void WritableFieldToNullExpression(FieldInfo field, ParameterExpression outputVariable, List<Expression> expressions)
 	{
-		///// Intended code:
-		///// output.<field> = (<type>)null;
+		// Intended code:
+		// output.<field> = (<type>)null;
 		MemberExpression fieldTo = Expression.Field(outputVariable, field);
 		BinaryExpression fieldToNullExpression = Expression.Assign(fieldTo, Expression.Constant(null, field.FieldType));
 		expressions.Add(fieldToNullExpression);
@@ -394,8 +395,8 @@ public static class ExpressionTrees
 
 	private static void WritableFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression outputVariable, List<Expression> expressions, bool useCache)
 	{
-		///// Intended code:
-		///// output.<field> = (<fieldType>)DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>);
+		// Intended code:
+		// output.<field> = (<fieldType>)DeepCopyByExpressionTreeObj((Object)((<type>)input).<field>);
 		MemberExpression fieldFrom = Expression.Field(Expression.Convert(inputParameter, type), field);
 		Type fieldType = field.FieldType;
 		MemberExpression fieldTo = Expression.Field(outputVariable, field);
@@ -428,7 +429,7 @@ public static class ExpressionTrees
 		// That is why we do not modify the old dictionary instance but
 		// we replace it with a new instance every time.
 
-		if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out bool isStructTypeToDeepCopy) && !IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out isStructTypeToDeepCopy))
+		if (!IsStructTypeToDeepCopyDictionary.TryGetValue(type!, out bool isStructTypeToDeepCopy))
 		{
 			isStructTypeToDeepCopy = type!.IsStructWhichNeedsDeepCopy_NoDictionaryUsed();
 			IsStructTypeToDeepCopyDictionary.TryAdd(type!, isStructTypeToDeepCopy);
@@ -453,15 +454,39 @@ public static class ExpressionTrees
 		alreadyCheckedTypes.Add(type);
 
 		FieldInfo[] allFields = GetAllFields(type);
-		IEnumerable<Type> allFieldTypes = allFields.Select(f => f.FieldType).Distinct().ToList();
 
-		bool hasFieldsWithClasses = allFieldTypes.Any(x => !x.IsValueType && x != typeof(string));
-		if (hasFieldsWithClasses)
+		// Use HashSet for deduplication and check for classes in single pass
+		HashSet<Type> distinctFieldTypes = new(allFields.Length);
+		// foreach (FieldInfo field in allFields)
+		// {
+		// 	Type fieldType = field.FieldType;
+		// 	if (!fieldType.IsValueType && fieldType != typeof(string))
+		// 	{
+		// 		return true;
+		// 	}
+		// 	distinctFieldTypes.Add(fieldType);
+		// }
+
+		foreach (Type fieldType in allFields.Select(x => x.FieldType))
 		{
-			return true;
+			if (!fieldType.IsValueType && fieldType != typeof(string))
+			{
+				return true;
+			}
+			distinctFieldTypes.Add(fieldType);
 		}
 
-		IEnumerable<Type> notBasicStructsTypes = allFieldTypes.Where(x => x.IsStructOtherThanBasicValueTypes()).ToList();
-		return notBasicStructsTypes.Any(typeToCheck => !alreadyCheckedTypes.Contains(typeToCheck) && typeToCheck.HasInItsHierarchyFieldsWithClasses(alreadyCheckedTypes));
+		// Check struct types that need deep inspection
+		// return distinctFieldTypes.Any(fieldType => fieldType.IsStructOtherThanBasicValueTypes() && !alreadyCheckedTypes.Contains(fieldType) && fieldType.HasInItsHierarchyFieldsWithClasses(alreadyCheckedTypes));
+
+		foreach (Type fieldType in distinctFieldTypes)
+		{
+			if (fieldType.IsStructOtherThanBasicValueTypes() && !alreadyCheckedTypes.Contains(fieldType) && fieldType.HasInItsHierarchyFieldsWithClasses(alreadyCheckedTypes))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

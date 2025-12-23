@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+
 using static System.Convert;
 
 namespace CommonNetFuncs.Core;
@@ -26,10 +27,9 @@ public static class MathHelpers
 		if ((val % significance).NotEquals(0))
 		{
 			return Math.Ceiling(val / significance) * significance;
-			//return ((int)(value / significance) * significance) + (value > 0 ? significance : 0);
 		}
 
-		return ToDouble(val);
+		return val;
 	}
 
 	/// <summary>
@@ -50,10 +50,9 @@ public static class MathHelpers
 		if (val % significance != 0)
 		{
 			return Math.Ceiling(val / significance) * significance;
-			//return ((int)(value / significance) * significance) + (value > 0 ? significance : 0);
 		}
 
-		return ToDecimal(val);
+		return val;
 	}
 
 	/// <summary>
@@ -74,10 +73,9 @@ public static class MathHelpers
 		if ((val % significance).NotEquals(0))
 		{
 			return Math.Floor(val / significance) * significance;
-			//return (int)(value / significance) * significance - (value > 0 ? 0 : significance);
 		}
 
-		return ToDouble(val);
+		return val;
 	}
 
 	/// <summary>
@@ -98,10 +96,9 @@ public static class MathHelpers
 		if (val % significance != 0)
 		{
 			return Math.Floor(val / significance) * significance;
-			//return (int)(value / significance) * significance - (value > 0 ? 0 : significance);
 		}
 
-		return ToDecimal(val);
+		return val;
 	}
 
 	/// <summary>
@@ -132,10 +129,16 @@ public static class MathHelpers
 			return 0;
 		}
 
-		string valueString = value.ToString() ?? string.Empty;
+		Span<char> buffer = stackalloc char[64];
+		if (!value.Value.TryFormat(buffer, out int charsWritten))
+		{
+			return 0;
+		}
+
 		decimalSeparator ??= NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
-		int position = valueString!.IndexOf(decimalSeparator);
-		return position == -1 ? 0 : valueString!.Length - position - 1;
+		ReadOnlySpan<char> valueString = buffer[..charsWritten];
+		int position = valueString.IndexOf(decimalSeparator);
+		return position == -1 ? 0 : valueString.Length - position - 1;
 	}
 
 	/// <summary>
@@ -157,10 +160,16 @@ public static class MathHelpers
 	/// <returns>The number of decimal places of the given double value</returns>
 	public static int GetPrecision(this double value, string? decimalSeparator = null)
 	{
-		string valueString = value.ToString() ?? string.Empty;
+		Span<char> buffer = stackalloc char[64];
+		if (!value.TryFormat(buffer, out int charsWritten))
+		{
+			return 0;
+		}
+
 		decimalSeparator ??= NumberFormatInfo.CurrentInfo.CurrencyDecimalSeparator;
-		int position = valueString!.IndexOf(decimalSeparator);
-		return position == -1 ? 0 : valueString!.Length - position - 1;
+		ReadOnlySpan<char> valueString = buffer[..charsWritten];
+		int position = valueString.IndexOf(decimalSeparator);
+		return position == -1 ? 0 : valueString.Length - position - 1;
 	}
 
 	/// <summary>

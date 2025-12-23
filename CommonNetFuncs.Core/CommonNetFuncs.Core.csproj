@@ -30,7 +30,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>4.0.2</Version>
+    <Version>4.0.3</Version>
     <MinVerTagPrefix>core-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>

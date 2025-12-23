@@ -331,8 +331,14 @@ public static partial class FileHelpers
 	/// </summary>
 	/// <param name="fileName">The filename to clean</param>
 	/// <returns>A clean filename</returns>
-	private static string CleanFileName(string fileName)
+	internal static string CleanFileName(string fileName)
 	{
+		// Early exit if no invalid characters present
+		if (!fileName.AsSpan().ContainsAny(['/', '\\', ':', '<', '>', '"', '|', '?', '*']))
+		{
+			return fileName;
+		}
+
 		// Replace invalid characters with safe alternatives
 		StringBuilder stringBuilder = new(fileName);
 		return stringBuilder

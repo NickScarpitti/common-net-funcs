@@ -47,13 +47,13 @@ public class DeepCloneBenchmarks
 		_nestedObject = new NestedClass
 		{
 			Level = 1,
-			Child = new NestedClass
+			Child2 = new NestedClass
 			{
 				Level = 2,
-				Child = new NestedClass
+				Child2 = new NestedClass
 				{
 					Level = 3,
-					Child = new NestedClass
+					Child2 = new NestedClass
 					{
 						Level = 4,
 						Child = null
@@ -119,28 +119,4 @@ public class DeepCloneBenchmarks
 	{
 		return _dictionary.DeepClone();
 	}
-}
-
-// Test classes
-public class SimpleClass
-{
-	public int Id { get; set; }
-	public string? Name { get; set; }
-	public double Value { get; set; }
-	public bool IsActive { get; set; }
-}
-
-public class ComplexClass
-{
-	public int Id { get; set; }
-	public string? Name { get; set; }
-	public List<int>? Numbers { get; set; }
-	public Dictionary<string, string>? Metadata { get; set; }
-	public SimpleClass? Nested { get; set; }
-}
-
-public class NestedClass
-{
-	public int Level { get; set; }
-	public NestedClass? Child { get; set; }
 }

@@ -14,7 +14,7 @@ namespace CommonNetFuncs.FastMap;
 /// High-performance object mapper using compiled expression trees with aggressive inlining.
 /// Optimized for minimal overhead - targets near-manual-mapping performance.
 /// </summary>
-public static class FasterMapper
+public static class FastMapper
 {
 	#region Caching
 

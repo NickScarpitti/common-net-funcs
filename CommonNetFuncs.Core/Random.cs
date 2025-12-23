@@ -37,10 +37,9 @@ public static class Random
 			return minValue; //There is only one possible value, so just return that
 		}
 
-		//using RandomNumberGenerator rng = RandomNumberGenerator.Create();
-		byte[] randomNumber = new byte[4]; // 4 bytes for an integer
+		Span<byte> randomNumber = stackalloc byte[4]; // 4 bytes for an integer
 		rng.GetBytes(randomNumber);
-		int result = BitConverter.ToInt32(randomNumber, 0) & 0x7FFFFFFF; // Ensure it's non-negative
+		int result = BitConverter.ToInt32(randomNumber) & 0x7FFFFFFF; // Ensure it's non-negative
 		return minValue + (result % (maxValue - minValue));
 	}
 
@@ -102,10 +101,9 @@ public static class Random
 	/// <returns>A random 15 decimal place double with no whole number component.</returns>
 	public static double GetRandomDouble()
 	{
-		//using RandomNumberGenerator rng = RandomNumberGenerator.Create();
-		byte[] randomNumber = new byte[8]; // 8 bytes for a double
+		Span<byte> randomNumber = stackalloc byte[8]; // 8 bytes for a double
 		rng.GetBytes(randomNumber);
-		ulong ulongResult = BitConverter.ToUInt64(randomNumber, 0);
+		ulong ulongResult = BitConverter.ToUInt64(randomNumber);
 		return ulongResult / (double)ulong.MaxValue; // Normalize to [0.0, 1.0)
 	}
 
@@ -150,13 +148,12 @@ public static class Random
 	/// <returns>A random 28 decimal place decimal with no whole number component</returns>
 	public static decimal GetRandomDecimal()
 	{
-		//using RandomNumberGenerator rng = RandomNumberGenerator.Create();
-		byte[] randomBytes = new byte[16]; // 16 bytes for higher entropy
+		Span<byte> randomBytes = stackalloc byte[16]; // 16 bytes for higher entropy
 		rng.GetBytes(randomBytes);
 
 		// Convert the first 12 bytes to a ulong for the integer part
-		ulong intPart = BitConverter.ToUInt64(randomBytes, 0) % 1000000000000000000; // Limit to 10^18
-		uint fracPart = BitConverter.ToUInt32(randomBytes, 8); // Convert the next 4 bytes to a uint for the fractional part
+		ulong intPart = BitConverter.ToUInt64(randomBytes) % 1000000000000000000; // Limit to 10^18
+		uint fracPart = BitConverter.ToUInt32(randomBytes[8..]); // Convert the next 4 bytes to a uint for the fractional part
 
 		// Combine the parts to create a decimal in the range [0, 1)
 		return (intPart / 1000000000000000000m) + ((decimal)fracPart / uint.MaxValue / 1000000000000000000m);

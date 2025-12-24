@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>4.0.3</Version>
+    <Version>4.0.4</Version>
     <MinVerTagPrefix>web.api-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -88,13 +88,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" PrivateAssets="all" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.11.9" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.11.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
     <ProjectReference Include="..\CommonNetFuncs.DeepClone\CommonNetFuncs.DeepClone.csproj" />
     <ProjectReference Include="..\CommonNetFuncs.EFCore\CommonNetFuncs.EFCore.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.FastMap\CommonNetFuncs.FastMap.csproj" />
   </ItemGroup>
 
   <ItemGroup>

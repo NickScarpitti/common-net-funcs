@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using FastExpressionCompiler;
 
+
 using static System.Convert;
 using static System.Web.HttpUtility;
 using static CommonNetFuncs.Core.MathHelpers;
@@ -746,6 +747,38 @@ public static partial class Strings
 #pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 			return true;
 		}
+	}
+
+	/// <summary>
+	/// Checks if a string contains any character from a specified set of characters.
+	/// </summary>
+	/// <param name="s">String to search.</param>
+	/// <param name="characters">Characters to search for in s.</param>
+	/// <returns><see langword="true"/> if s contains any character from the characters set.</returns>
+	public static bool ContainsAnyCharacter(this string? s, ReadOnlySpan<char> characters)
+	{
+		if (s.IsNullOrEmpty() || characters.IsEmpty)
+		{
+			return false;
+		}
+
+		return s.AsSpan().ContainsAnyCharacter(characters);
+	}
+
+	/// <summary>
+	/// Checks if a string contains any character from a specified set of characters.
+	/// </summary>
+	/// <param name="s">String to search.</param>
+	/// <param name="characters">Characters to search for in s.</param>
+	/// <returns><see langword="true"/> if s contains any character from the characters set.</returns>
+	public static bool ContainsAnyCharacter(this ReadOnlySpan<char> s, ReadOnlySpan<char> characters)
+	{
+		if (s.IsEmpty || characters.IsEmpty)
+		{
+			return false;
+		}
+
+		return s.IndexOfAny(characters) >= 0;
 	}
 
 	/// <summary>

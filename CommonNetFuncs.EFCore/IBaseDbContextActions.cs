@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace CommonNetFuncs.EFCore;
 
@@ -995,6 +996,7 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// Delete record in the table corresponding to type <typeparamref name="T"/> matching the primary key passed in.
 	/// </summary>
 	/// <param name="key">Key of the record of type <typeparamref name="T"/> to delete.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	Task<bool> DeleteByKey(object key);
 
 	/// <summary>
@@ -1002,12 +1004,30 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// </summary>
 	/// <param name="models">Records of type <typeparamref name="T"/> to delete.</param>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	bool DeleteMany(IEnumerable<T> models, bool removeNavigationProps = false);
+
+	/// <summary>
+	/// Delete records in the table corresponding to type <typeparamref name="T"/> matching the where expression passed in.
+	/// </summary>
+	/// <param name="whereExpression">The LINQ expression to filter the records to delete.</param>
+	/// <returns>The number of records deleted, or <see langword="null"/> if there was an error.</returns>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	Task<int?> DeleteMany(Expression<Func<T, bool>> whereExpression, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Delete records in the table corresponding to type <typeparamref name="T"/> matching the enumerable objects of type <typeparamref name="T"/> passed in.
+	/// </summary>
+	/// <param name="models">Records of type <typeparamref name="T"/> to delete.</param>
+	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
+	Task<bool> DeleteManyTracked(IEnumerable<T> models, bool removeNavigationProps = false);
 
 	/// <summary>
 	/// Delete records in the table corresponding to type <typeparamref name="T"/> matching the enumerable objects of type <typeparamref name="T"/> passed in.
 	/// </summary>
 	/// <param name="keys">Keys of type <typeparamref name="T"/> to delete.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	Task<bool> DeleteManyByKeys(IEnumerable<object> keys);
 
 	/// <summary>
@@ -1022,7 +1042,11 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// </summary>
 	/// <param name="models">The modified entity.</param>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
-	bool UpdateMany(List<T> models, bool removeNavigationProps = false);
+	/// <returns>The number of records affected by the update operation, or <see langword="null"/> if there was an error.</returns>
+	bool UpdateMany(List<T> models, bool removeNavigationProps = false, CancellationToken cancellationToken = default);
+
+	Task<int?> UpdateMany(Expression<Func<T, bool>> whereExpression, Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
+	 TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default);
 
 	/// <summary>
 	/// Persist any tracked changes to the database.

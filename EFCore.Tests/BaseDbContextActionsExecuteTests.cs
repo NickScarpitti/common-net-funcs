@@ -78,7 +78,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: _ => true,
-			setPropertyCalls: s => s.SetProperty(x => x.Name, newName));
+			updateSetters: s => s.SetProperty(x => x.Name, newName));
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -111,7 +111,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: x => x.Id == targetId,
-			setPropertyCalls: s => s.SetProperty(x => x.Name, newName));
+			updateSetters: s => s.SetProperty(x => x.Name, newName));
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -148,7 +148,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: _ => true,
-			setPropertyCalls: s => s
+			updateSetters: s => s
 				.SetProperty(x => x.Name, newName)
 				.SetProperty(x => x.CreatedDate, newDate));
 
@@ -184,7 +184,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: x => x.Id == targetId,
-			setPropertyCalls: s => s.SetProperty(x => x.Name, "NewName"));
+			updateSetters: s => s.SetProperty(x => x.Name, "NewName"));
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -209,7 +209,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: _ => true,
-			setPropertyCalls: s => s.SetProperty(x => x.Name, "NewName"),
+			updateSetters: s => s.SetProperty(x => x.Name, "NewName"),
 			queryTimeout: timeout);
 
 		// Assert
@@ -236,7 +236,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: _ => true,
-			setPropertyCalls: s => s.SetProperty(x => x.Name, "NewName"),
+			updateSetters: s => s.SetProperty(x => x.Name, "NewName"),
 			cancellationToken: cts.Token);
 
 		// Assert - SQLite may complete before cancellation or return 0 or null
@@ -265,7 +265,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: x => x.Name == "EvenName",
-			setPropertyCalls: s => s.SetProperty(x => x.Name, "UpdatedEvenName"));
+			updateSetters: s => s.SetProperty(x => x.Name, "UpdatedEvenName"));
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -302,7 +302,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: _ => true,
-			setPropertyCalls: s => s.SetProperty(x => x.Name, x => x.Name + "_Updated"));
+			updateSetters: s => s.SetProperty(x => x.Name, x => x.Name + "_Updated"));
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -338,7 +338,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: _ => true,
-			setPropertyCalls: s => s.SetProperty(x => x.CreatedDate, newDate));
+			updateSetters: s => s.SetProperty(x => x.CreatedDate, newDate));
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -369,7 +369,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: _ => true,
-			setPropertyCalls: s => s.SetProperty(x => x.Name, newName));
+			updateSetters: s => s.SetProperty(x => x.Name, newName));
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -407,7 +407,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act - Only update CreatedDate, not Name
 		int? result = await testContext.UpdateMany(
 			whereExpression: _ => true,
-			setPropertyCalls: s => s.SetProperty(x => x.CreatedDate, newDate));
+			updateSetters: s => s.SetProperty(x => x.CreatedDate, newDate));
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -441,7 +441,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: x => targetIds.Contains(x.Id),
-			setPropertyCalls: s => s.SetProperty(x => x.Name, newName));
+			updateSetters: s => s.SetProperty(x => x.Name, newName));
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -473,7 +473,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Act
 		int? result = await testContext.UpdateMany(
 			whereExpression: _ => true,
-			setPropertyCalls: s => s.SetProperty(x => x.Name, "AllParamsTest"),
+			updateSetters: s => s.SetProperty(x => x.Name, "AllParamsTest"),
 			queryTimeout: TimeSpan.FromSeconds(30),
 			cancellationToken: cts.Token);
 

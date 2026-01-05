@@ -2975,7 +2975,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error\n\tDelete Many Error");
+			logger.Error(ex, "{ErrorLocation} Error\n\tDelete Many Error", ex.GetLocationOfException());
 		}
 		return null;
 	}
@@ -3075,11 +3075,11 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// Uses EF Core's ExecuteUpdate for efficient bulk updates.
 	/// </summary>
 	/// <param name="whereExpression">A linq expression used to filter records to update.</param>
-	/// <param name="setPropertyCalls">Expression defining the properties to update using SetProperty calls.</param>
+	/// <param name="updateSetters"><see cref="UpdateSettersBuilder"/> defining the properties to update and how to update them.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The number of records affected by the update operation, or <see langword="null"/> if there was an error.</returns>
-	public async Task<int?> UpdateMany(Expression<Func<T, bool>> whereExpression, Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
+	public async Task<int?> UpdateMany(Expression<Func<T, bool>> whereExpression, Action<UpdateSettersBuilder<T>> updateSetters,
 		TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default)
 	{
 		try
@@ -3089,15 +3089,15 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 			{
 				context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
 			}
-			return await context.Set<T>().AsNoTracking().Where(whereExpression).ExecuteUpdateAsync(setPropertyCalls, cancellationToken).ConfigureAwait(false);
+			return await context.Set<T>().AsNoTracking().Where(whereExpression).ExecuteUpdateAsync(updateSetters, cancellationToken).ConfigureAwait(false);
 		}
 		catch (DbUpdateException duex)
 		{
-			logger.Error(duex, "{msg}", $"{duex.GetLocationOfException()} DBUpdate Error");
+			logger.Error(duex, "{ErrorLocation} DBUpdate Error", duex.GetLocationOfException());
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return null;
 	}

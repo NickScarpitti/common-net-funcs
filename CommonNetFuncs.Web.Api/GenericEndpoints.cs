@@ -114,7 +114,7 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return NoContent();
 	}
@@ -138,7 +138,7 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return NoContent();
 	}
@@ -152,7 +152,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="setPropertyCalls">Set property calls defining the updates to be made.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<int>> UpdateMany<T, UT>(Expression<Func<T, bool>> whereClause, Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
+	public async Task<ActionResult<int>> UpdateMany<T, UT>(Expression<Func<T, bool>> whereClause, Action<UpdateSettersBuilder<T>> setPropertyCalls,
 			IBaseDbContextActions<T, UT> baseAppDbContextActions, CancellationToken cancellationToken = default) where T : class?, new() where UT : DbContext
 	{
 		try

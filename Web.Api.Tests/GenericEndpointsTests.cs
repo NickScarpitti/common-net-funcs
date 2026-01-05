@@ -297,20 +297,19 @@ public sealed class GenericEndpointsTests
 	{
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		Expression<Func<SetPropertyCalls<TestEntity>, SetPropertyCalls<TestEntity>>> setPropertyCalls =
-				x => x.SetProperty(e => e.Name, "Updated Name");
+		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
 		const int expectedUpdatedCount = 5;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, setPropertyCalls)).Returns(expectedUpdatedCount);
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(expectedUpdatedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, setPropertyCalls, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
 		((OkObjectResult)result.Result!).Value.ShouldBe(expectedUpdatedCount);
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, setPropertyCalls)).MustHaveHappenedOnceExactly();
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).MustHaveHappenedOnceExactly();
 	}
 
 	[Fact]
@@ -318,13 +317,12 @@ public sealed class GenericEndpointsTests
 	{
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 100;
-		Expression<Func<SetPropertyCalls<TestEntity>, SetPropertyCalls<TestEntity>>> setPropertyCalls =
-				x => x.SetProperty(e => e.Name, "Updated Name");
+		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, setPropertyCalls)).Returns(0);
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(0);
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, setPropertyCalls, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -337,13 +335,13 @@ public sealed class GenericEndpointsTests
 	{
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		Expression<Func<SetPropertyCalls<TestEntity>, SetPropertyCalls<TestEntity>>> setPropertyCalls =
-				x => x.SetProperty(e => e.Name, "Updated Name");
+
+		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, setPropertyCalls)).Returns(Task.FromResult<int?>(null));
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(Task.FromResult<int?>(null));
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, setPropertyCalls, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -354,13 +352,12 @@ public sealed class GenericEndpointsTests
 	{
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		Expression<Func<SetPropertyCalls<TestEntity>, SetPropertyCalls<TestEntity>>> setPropertyCalls =
-				x => x.SetProperty(e => e.Name, "Updated Name");
+		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, setPropertyCalls)).Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, setPropertyCalls, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -371,15 +368,14 @@ public sealed class GenericEndpointsTests
 	{
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5 && x.Name.StartsWith("Test");
-		Expression<Func<SetPropertyCalls<TestEntity>, SetPropertyCalls<TestEntity>>> setPropertyCalls =
-				x => x.SetProperty(e => e.Name, "New Name")
-							.SetProperty(e => e.Id, e => e.Id + 100);
+		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "New Name").SetProperty(e => e.Id, e => e.Id + 100); // Not used in this test
+
 		const int expectedUpdatedCount = 2;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, setPropertyCalls)).Returns(expectedUpdatedCount);
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(expectedUpdatedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, setPropertyCalls, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();

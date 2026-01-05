@@ -1045,7 +1045,7 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// <returns>The number of records affected by the update operation, or <see langword="null"/> if there was an error.</returns>
 	bool UpdateMany(List<T> models, bool removeNavigationProps = false, CancellationToken cancellationToken = default);
 
-	Task<int?> UpdateMany(Expression<Func<T, bool>> whereExpression, Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
+	Task<int?> UpdateMany(Expression<Func<T, bool>> whereExpression, Action<UpdateSettersBuilder<T>> updateSetters,
 	 TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default);
 
 	/// <summary>

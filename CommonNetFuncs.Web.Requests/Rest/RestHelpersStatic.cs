@@ -299,7 +299,7 @@ public static class RestHelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 
 		await LogResponse(requestOptions, result, true, cancellationToken).ConfigureAwait(false);
@@ -368,7 +368,7 @@ public static class RestHelpersStatic
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+				logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 			}
 
 			if (requestOptions.LogResponse)
@@ -552,7 +552,7 @@ public static class RestHelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return result;
 	}

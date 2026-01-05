@@ -152,7 +152,7 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return success;
 	}
@@ -267,7 +267,7 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return success;
 	}
@@ -629,7 +629,7 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 	}
 
@@ -722,7 +722,7 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 	}
 
@@ -793,7 +793,7 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return success;
 	}
@@ -851,7 +851,7 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return success;
 	}
@@ -911,7 +911,7 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return fileNames;
 	}
@@ -984,7 +984,7 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return url;
 	}
@@ -1059,7 +1059,7 @@ public static class AwsS3HelpersStatic
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		return isValid;
 	}

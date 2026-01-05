@@ -31,7 +31,7 @@ public static class CsvExportHelpers
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 
 		memoryStream.Position = 0;
@@ -95,7 +95,7 @@ public static class CsvExportHelpers
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		finally
 		{

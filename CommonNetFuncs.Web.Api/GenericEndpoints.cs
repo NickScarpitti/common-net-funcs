@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 using System.Net;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.EFCore;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using static CommonNetFuncs.Core.Copy;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.DeepClone.ExpressionTrees;
@@ -94,6 +96,31 @@ public sealed class GenericEndpoints : ControllerBase
 	/// </summary>
 	/// <typeparam name="T">Type of entity being deleted</typeparam>
 	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <param name="whereClause">Where clause to filter entities to delete.</param>
+	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
+	/// <returns>Ok if successful, otherwise NoContent</returns>
+	public async Task<ActionResult<int>> DeleteMany<T, UT>(Expression<Func<T, bool>> whereClause, IBaseDbContextActions<T, UT> baseAppDbContextActions, CancellationToken cancellationToken = default) where T : class?, new() where UT : DbContext
+	{
+		try
+		{
+			int? result = await baseAppDbContextActions.DeleteMany(whereClause, cancellationToken).ConfigureAwait(false);
+			if (result != null)
+			{
+				return Ok(result);
+			}
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+		}
+		return NoContent();
+	}
+
+	/// <summary>
+	/// Basic endpoint to delete more than one entity at a time
+	/// </summary>
+	/// <typeparam name="T">Type of entity being deleted</typeparam>
+	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
@@ -104,6 +131,33 @@ public sealed class GenericEndpoints : ControllerBase
 			if (models.Any() && await baseAppDbContextActions.DeleteManyByKeys(models).ConfigureAwait(false)) //Does not work with PostgreSQL
 			{
 				return Ok(models);
+			}
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{msg}", $"{ex.GetLocationOfException()} Error");
+		}
+		return NoContent();
+	}
+
+	/// <summary>
+	/// Basic endpoint to delete more than one entity at a time
+	/// </summary>
+	/// <typeparam name="T">Type of entity being deleted</typeparam>
+	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <param name="whereClause">Where clause to filter entities to delete.</param>
+	/// <param name="setPropertyCalls">Set property calls defining the updates to be made.</param>
+	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
+	/// <returns>Ok if successful, otherwise NoContent</returns>
+	public async Task<ActionResult<int>> UpdateMany<T, UT>(Expression<Func<T, bool>> whereClause, Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
+			IBaseDbContextActions<T, UT> baseAppDbContextActions, CancellationToken cancellationToken = default) where T : class?, new() where UT : DbContext
+	{
+		try
+		{
+			int? result = await baseAppDbContextActions.UpdateMany(whereClause, setPropertyCalls, null, cancellationToken).ConfigureAwait(false);
+			if (result != null)
+			{
+				return Ok(result);
 			}
 		}
 		catch (Exception ex)
@@ -148,8 +202,8 @@ public sealed class GenericEndpoints : ControllerBase
 	/// </summary>
 	/// <typeparam name="T">Type of entity being updated</typeparam>
 	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
-	/// <param name="dbModel"></param>
-	/// <param name="patch"></param>
+	/// <param name="dbModel">Entity to update</param>
+	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
 	private async Task<ActionResult<T>> PatchInternal<T, UT>(T? dbModel, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class?, new() where UT : DbContext

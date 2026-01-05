@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace CommonNetFuncs.EFCore;
 
@@ -619,10 +620,10 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// Same as running a SELECT [SpecificFields] WHERE [condition] query with Limit/Offset or Fetch/Offset parameters.
 	/// </summary>
 	/// <typeparam name="T2">Class type to return, specified by the selectExpression parameter.</typeparam>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
 	/// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-	/// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
+	/// <param name="ascendingOrderExpression">EF Core expression for order by statement to keep results consistent.</param>
 	/// <param name="skip">Optional: How many records to skip before the ones that should be returned. Default is 0.</param>
 	/// <param name="pageSize">Optional: How many records to take after the skipped records. Default is 0 (same as int.MaxValue)</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
@@ -630,7 +631,7 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// <param name="fullQueryOptions">Optional: Used only when running "Full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
-	Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderEpression,
+	Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderExpression,
 				int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class;
 
 	/// <summary>
@@ -638,17 +639,17 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// Same as running a SELECT [SpecificFields] WHERE [condition] query with Limit/Offset or Fetch/Offset parameters.
 	/// </summary>
 	/// <typeparam name="T2">Class type to return, specified by the selectExpression parameter.</typeparam>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
 	/// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-	/// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
+	/// <param name="ascendingOrderExpression">EF Core expression for order by statement to keep results consistent.</param>
 	/// <param name="skip">Optional: How many records to skip before the ones that should be returned. Default is 0.</param>
 	/// <param name="pageSize">Optional: How many records to take after the skipped records. Default is 0 (same as int.MaxValue)</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
-	Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderEpression, int skip = 0,
+	Task<GenericPagingModel<T2>> GetWithPagingFilter<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderExpression, int skip = 0,
 				int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, CancellationToken cancellationToken = default) where T2 : class;
 
 	/// <summary>
@@ -675,10 +676,10 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// Same as running a SELECT [SpecificFields] WHERE [condition] query with Limit/Offset or Fetch/Offset parameters.
 	/// </summary>
 	/// <typeparam name="T2">Class type to return, specified by the selectExpression parameter.</typeparam>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
 	/// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-	/// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
+	/// <param name="ascendingOrderExpression">EF Core expression for order by statement to keep results consistent.</param>
 	/// <param name="skip">Optional: How many records to skip before the ones that should be returned. Default is 0.</param>
 	/// <param name="pageSize">Optional: How many records to take after the skipped records. Default is 0 (same as int.MaxValue)</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
@@ -686,7 +687,7 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
-	Task<GenericPagingModel<T2>> GetWithPagingFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderEpression,
+	Task<GenericPagingModel<T2>> GetWithPagingFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderExpression,
 				int skip = 0, int pageSize = 0, TimeSpan? queryTimeout = null, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default) where T2 : class;
 
 	/// <summary>
@@ -708,16 +709,16 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// Gets query to get the records specified by the skip and take parameters from the corresponding table that satisfy the conditions of the linq query expression.
 	/// </summary>
 	/// <typeparam name="T2">Class type to return, specified by the selectExpression parameter.</typeparam>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
 	/// <param name="selectExpression">Linq expression to transform the returned records to the desired output.</param>
-	/// <param name="ascendingOrderEpression">EF Core expression for order by statement to keep results consistent.</param>
+	/// <param name="ascendingOrderExpression">EF Core expression for order by statement to keep results consistent.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="handlingCircularRefException">Optional: If handling InvalidOperationException where .AsNoTracking() can't be used set to true. Default is <see langword="false"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <returns>The query to get the records specified by the skip and take parameters from the table corresponding to class <typeparamref name="T"/> that also satisfy the conditions of linq query expression, which are converted to <typeparamref name="T2"/>.</returns>
-	IQueryable<T2> GetQueryPagingWithFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderEpression,
+	IQueryable<T2> GetQueryPagingWithFilterFull<T2, TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, T2>> selectExpression, Expression<Func<T, TKey>> ascendingOrderExpression,
 				TimeSpan? queryTimeout = null, bool handlingCircularRefException = false, bool trackEntities = false, FullQueryOptions? fullQueryOptions = null) where T2 : class;
 
 	/// <summary>
@@ -800,82 +801,82 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// <summary>
 	/// Uses a descending order expression to return the record containing the maximum value according to that order with or without navigation properties.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="descendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="descendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity.</param>
 	/// <param name="fullQueryOptions">Optional: Used only when running "Full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the maximum value according to the ascending order expression with or without navigation properties.</returns>
-	Task<T?> GetMaxByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+	Task<T?> GetMaxByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
 				FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default);
 
 	/// <summary>
 	/// Uses a descending order expression to return the record containing the maximum value according to that order.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="descendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="descendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <returns>The record that contains the maximum value according to the ascending order expression.</returns>
-	Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default);
+	Task<T?> GetMaxByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default);
 
 	/// <summary>
 	/// Uses a descending order expression to return the record and its navigation properties containing the maximum value according to that order.
 	/// Navigation properties using System.Text.Json.Serialization <see cref="JsonIgnoreAttribute"/> will not be included.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderEpression</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the descendingOrderExpression</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="descendingOrderEpression">A linq expression used to order the query results with before taking the top result</param>
+	/// <param name="descendingOrderExpression">A linq expression used to order the query results with before taking the top result</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the maximum value according to the ascending order expression with it's navigation properties</returns>
-	Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+	Task<T?> GetMaxByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> descendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
 				FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default);
 
 	/// <summary>
 	/// Uses a ascending order expression to return the record containing the minimum value according to that order with or without navigation properties.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="ascendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="ascendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity.</param>
 	/// <param name="fullQueryOptions">Optional: Used only when running "Full" query. Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the minimum value according to the ascending order expression with or without navigation properties.</returns>
-	Task<T?> GetMinByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+	Task<T?> GetMinByOrder<TKey>(bool full, Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
 				FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default);
 
 	/// <summary>
 	/// Uses a ascending order expression to return the record containing the minimum value according to that order.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="ascendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="ascendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the minimum value according to the ascending order expression.</returns>
-	Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default);
+	Task<T?> GetMinByOrder<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = true, CancellationToken cancellationToken = default);
 
 	/// <summary>
 	/// Uses a ascending order expression to return the record and its navigation properties containing the minimum value according to that order.
 	/// Navigation properties using System.Text.Json.Serialization <see cref="JsonIgnoreAttribute"/> will not be included.
 	/// </summary>
-	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderEpression.</typeparam>
+	/// <typeparam name="TKey">Type being used to order records with in the ascendingOrderExpression.</typeparam>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
-	/// <param name="ascendingOrderEpression">A linq expression used to order the query results with before taking the top result.</param>
+	/// <param name="ascendingOrderExpression">A linq expression used to order the query results with before taking the top result.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
 	/// <param name="trackEntities">Optional: If <see langword="true"/>, entities will be tracked in memory. Default is <see langword="false"/> for "Full" queries, and queries that return more than one entity. Default is <see langword="false"/>.</param>
 	/// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The record that contains the minimum value according to the ascending order expression with it's navigation properties.</returns>
-	Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderEpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
+	Task<T?> GetMinByOrderFull<TKey>(Expression<Func<T, bool>> whereExpression, Expression<Func<T, TKey>> ascendingOrderExpression, TimeSpan? queryTimeout = null, bool trackEntities = false,
 				FullQueryOptions? fullQueryOptions = null, CancellationToken cancellationToken = default);
 
 	/// <summary>
@@ -995,6 +996,7 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// Delete record in the table corresponding to type <typeparamref name="T"/> matching the primary key passed in.
 	/// </summary>
 	/// <param name="key">Key of the record of type <typeparamref name="T"/> to delete.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	Task<bool> DeleteByKey(object key);
 
 	/// <summary>
@@ -1002,12 +1004,30 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// </summary>
 	/// <param name="models">Records of type <typeparamref name="T"/> to delete.</param>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	bool DeleteMany(IEnumerable<T> models, bool removeNavigationProps = false);
+
+	/// <summary>
+	/// Delete records in the table corresponding to type <typeparamref name="T"/> matching the where expression passed in.
+	/// </summary>
+	/// <param name="whereExpression">The LINQ expression to filter the records to delete.</param>
+	/// <returns>The number of records deleted, or <see langword="null"/> if there was an error.</returns>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	Task<int?> DeleteMany(Expression<Func<T, bool>> whereExpression, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Delete records in the table corresponding to type <typeparamref name="T"/> matching the enumerable objects of type <typeparamref name="T"/> passed in.
+	/// </summary>
+	/// <param name="models">Records of type <typeparamref name="T"/> to delete.</param>
+	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
+	Task<bool> DeleteManyTracked(IEnumerable<T> models, bool removeNavigationProps = false);
 
 	/// <summary>
 	/// Delete records in the table corresponding to type <typeparamref name="T"/> matching the enumerable objects of type <typeparamref name="T"/> passed in.
 	/// </summary>
 	/// <param name="keys">Keys of type <typeparamref name="T"/> to delete.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	Task<bool> DeleteManyByKeys(IEnumerable<object> keys);
 
 	/// <summary>
@@ -1022,7 +1042,11 @@ public interface IBaseDbContextActions<T, UT> where T : class? where UT : DbCont
 	/// </summary>
 	/// <param name="models">The modified entity.</param>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
-	bool UpdateMany(List<T> models, bool removeNavigationProps = false);
+	/// <returns>The number of records affected by the update operation, or <see langword="null"/> if there was an error.</returns>
+	bool UpdateMany(List<T> models, bool removeNavigationProps = false, CancellationToken cancellationToken = default);
+
+	Task<int?> UpdateMany(Expression<Func<T, bool>> whereExpression, Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
+	 TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default);
 
 	/// <summary>
 	/// Persist any tracked changes to the database.

@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-using System.Text.Json.Serialization;
 using CommonNetFuncs.EFCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -901,7 +900,7 @@ public sealed class BaseDbContextActionsTests
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
 
-		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, ascendingOrderEpression: x => x.Id, skip: 1, pageSize: 2);
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, ascendingOrderExpression: x => x.Id, skip: 1, pageSize: 2);
 
 		result.Entities.Count.ShouldBe(2);
 		result.TotalRecords.ShouldBe(5);
@@ -918,7 +917,7 @@ public sealed class BaseDbContextActionsTests
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
 
-		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(full, whereExpression: _ => true, selectExpression: x => x, ascendingOrderEpression: x => x.Id, skip: 1, pageSize: 2);
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(full, whereExpression: _ => true, selectExpression: x => x, ascendingOrderExpression: x => x.Id, skip: 1, pageSize: 2);
 
 		result.Entities.Count.ShouldBe(2);
 		result.TotalRecords.ShouldBe(5);
@@ -1449,7 +1448,7 @@ public sealed class BaseDbContextActionsTests
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(
 				whereExpression: _ => true,
 				selectExpression: x => x,
-				ascendingOrderEpression: x => x.Id,
+				ascendingOrderExpression: x => x.Id,
 				skip: 1,
 				pageSize: 2,
 				fullQueryOptions: options);
@@ -1994,6 +1993,7 @@ public sealed class BaseDbContextActionsTests
 		// Assert
 		result.ShouldNotBeNull();
 		result.Count.ShouldBe(1);
+		result[0].Name.ShouldBe(targetName);
 	}
 
 	[Theory]
@@ -2225,34 +2225,524 @@ public sealed class BaseDbContextActionsTests
 	}
 
 	#endregion
+
+	#region TrackEntities Parameter Tests
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public async Task GetOneWithFilter_WithTrackEntities_ShouldRespectTracking(bool trackEntities)
+	{
+		// Arrange
+		TestEntity entity = _fixture.Create<TestEntity>();
+		await _context.TestEntities.AddAsync(entity);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		TestEntity? result = await testContext.GetOneWithFilter(x => x.Id == entity.Id, trackEntities: trackEntities);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public async Task GetMaxByOrder_WithTrackEntities_ShouldRespectTracking(bool trackEntities)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		TestEntity? result = await testContext.GetMaxByOrder(_ => true, x => x.Id, trackEntities: trackEntities);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entities.Max(x => x.Id));
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public async Task GetMinByOrder_WithTrackEntities_ShouldRespectTracking(bool trackEntities)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		TestEntity? result = await testContext.GetMinByOrder(_ => true, x => x.Id, trackEntities: trackEntities);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entities.Min(x => x.Id));
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public async Task GetMax_WithTrackEntities_ShouldRespectTracking(bool trackEntities)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		int result = await testContext.GetMax(_ => true, x => x.Id, trackEntities: trackEntities);
+
+		// Assert
+		result.ShouldBe(entities.Max(x => x.Id));
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public async Task GetMin_WithTrackEntities_ShouldRespectTracking(bool trackEntities)
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(3).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		int result = await testContext.GetMin(_ => true, x => x.Id, trackEntities: trackEntities);
+
+		// Assert
+		result.ShouldBe(entities.Min(x => x.Id));
+	}
+
+	#endregion
+
+	#region RemoveNavigationProps Tests
+
+	[Fact]
+	public async Task CreateMany_WithRemoveNavigationProps_ShouldNotThrow()
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+		entities.ForEach(e => e.Details = new List<TestEntityDetail> { new() { Description = "test" } });
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		await testContext.CreateMany(entities, removeNavigationProps: true);
+		await testContext.SaveChanges();
+
+		// Assert
+		foreach (TestEntity entity in entities)
+		{
+			TestEntity? savedEntity = await _context.TestEntities.FindAsync(entity.Id);
+			savedEntity.ShouldNotBeNull();
+		}
+	}
+
+	[Fact]
+	public async Task DeleteByObject_WithRemoveNavigationProps_ShouldNotThrow()
+	{
+		// Arrange
+		TestEntity entity = _fixture.Create<TestEntity>();
+		entity.Details = new List<TestEntityDetail> { new() { Description = "test" } };
+		await _context.TestEntities.AddAsync(entity);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		testContext.DeleteByObject(entity, removeNavigationProps: true);
+		await testContext.SaveChanges();
+
+		// Assert
+		TestEntity? deletedEntity = await _context.TestEntities.FindAsync(entity.Id);
+		deletedEntity.ShouldBeNull();
+	}
+
+	[Fact]
+	public void DeleteMany_WithRemoveNavigationProps_ShouldNotThrow()
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+		entities.ForEach(e => e.Details = new List<TestEntityDetail> { new() { Description = "test" } });
+
+		_context.TestEntities.AddRange(entities);
+		_context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		bool result = testContext.DeleteMany(entities, removeNavigationProps: true);
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void UpdateMany_WithRemoveNavigationProps_ShouldNotThrow()
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(2).ToList();
+		_context.TestEntities.AddRange(entities);
+		_context.SaveChanges();
+
+		entities.ForEach(e =>
+		{
+			e.Name = _fixture.Create<string>();
+			e.Details = new List<TestEntityDetail> { new() { Description = "test" } };
+		});
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		bool result = testContext.UpdateMany(entities, removeNavigationProps: true);
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	#endregion
+
+	#region Edge Cases and Parameter Combinations
+
+	[Fact]
+	public async Task GetByKeyFull_WithCompoundKeyAndTrackEntities_ShouldWork()
+	{
+		// Arrange
+		TestEntity entity = _fixture.Create<TestEntity>();
+		await _context.TestEntities.AddAsync(entity);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		TestEntity? result = await testContext.GetByKeyFull(new object[] { entity.Id }, trackEntities: true);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Fact]
+	public async Task GetWithPagingFilter_WithZeroPageSize_ShouldUseZeroPageSize()
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(10).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(
+			whereExpression: _ => true,
+			selectExpression: x => x,
+			orderByString: nameof(TestEntity.Id),
+			skip: 0,
+			pageSize: 0);
+
+		// Assert - This overload uses pageSize directly, so 0 means 0 entities
+		result.Entities.Count.ShouldBe(0);
+		result.TotalRecords.ShouldBe(entities.Count);
+	}
+
+	[Fact]
+	public async Task GetWithPagingFilter_TKey_WithZeroPageSize_ShouldReturnAll()
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(10).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(
+			whereExpression: _ => true,
+			selectExpression: x => x,
+			ascendingOrderExpression: x => x.Id,
+			skip: 0,
+			pageSize: 0);
+
+		// Assert - This overload treats 0 as int.MaxValue
+		result.Entities.Count.ShouldBe(entities.Count);
+		result.TotalRecords.ShouldBe(entities.Count);
+	}
+
+	#endregion
+
+	#region IQueryable GetQuery Methods with TrackEntities
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryAll_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryAll(trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryAll_WithProjectionAndTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<string> query = testContext.GetQueryAll(x => x.Name, trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryWithFilter_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryWithFilter(_ => true, trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryWithFilter_WithProjectionAndTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<string> query = testContext.GetQueryWithFilter(_ => true, x => x.Name, trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryAllFull_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryAllFull(trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryAllFull_WithProjectionAndTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<string> query = testContext.GetQueryAllFull(x => x.Name, trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryWithFilterFull_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryWithFilterFull(_ => true, trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryWithFilterFull_WithProjectionAndTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<string> query = testContext.GetQueryWithFilterFull(_ => true, x => x.Name, trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryNavigationWithFilterFull_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
+		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryNavigationWithFilterFull(where, select, trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryPagingWithFilterFull_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(
+			_ => true,
+			x => x,
+			nameof(TestEntity.Id),
+			trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void GetQueryPagingWithFilterFull_TKey_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(
+			_ => true,
+			x => x,
+			x => x.Id,
+			trackEntities: trackEntities);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Expression.ShouldNotBeNull();
+	}
+
+	#endregion
+
+	#region ServiceProvider Property Test
+
+	[Fact]
+	public void ServiceProvider_SetAndGet_ShouldWork()
+	{
+		// Arrange
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		ServiceCollection newServices = new();
+		newServices.AddDbContextPool<TestDbContext>(options =>
+			options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+		IServiceProvider newServiceProvider = newServices.BuildServiceProvider();
+
+		// Act
+		testContext.ServiceProvider = newServiceProvider;
+
+		// Assert
+		testContext.ServiceProvider.ShouldBe(newServiceProvider);
+	}
+
+	#endregion
+
+	#region Additional Edge Cases
+
+	[Fact]
+	public async Task GetWithPagingFilter_WithLargeSkip_ShouldHandleCorrectly()
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(5).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(
+			whereExpression: _ => true,
+			selectExpression: x => x,
+			orderByString: nameof(TestEntity.Id),
+			skip: 10, // Skip more than exists
+			pageSize: 2);
+
+		// Assert
+		result.Entities.Count.ShouldBe(0);
+		result.TotalRecords.ShouldBe(5);
+	}
+
+	[Fact]
+	public async Task GetWithPagingFilter_TKey_WithLargeSkip_ShouldHandleCorrectly()
+	{
+		// Arrange
+		List<TestEntity> entities = _fixture.CreateMany<TestEntity>(5).ToList();
+		await _context.TestEntities.AddRangeAsync(entities);
+		await _context.SaveChangesAsync();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+
+		// Act
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(
+			whereExpression: _ => true,
+			selectExpression: x => x,
+			ascendingOrderExpression: x => x.Id,
+			skip: 10, // Skip more than exists
+			pageSize: 2);
+
+		// Assert
+		result.Entities.Count.ShouldBe(0);
+		result.TotalRecords.ShouldBe(5);
+	}
+
+	#endregion
 }
 
-
-// Test types
-public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)
-{
-	public DbSet<TestEntity> TestEntities => Set<TestEntity>();
-}
-
-public class TestEntity
-{
-	public int Id { get; set; }
-
-	public required string Name { get; set; }
-
-	public DateTime CreatedDate { get; set; }
-
-	public ICollection<TestEntityDetail>? Details { get; set; }
-}
-
-public class TestEntityDetail
-{
-	public int Id { get; set; }
-
-	public required string Description { get; set; }
-
-	public int TestEntityId { get; set; }
-
-	[JsonIgnore]
-	public TestEntity? TestEntity { get; set; }
-}

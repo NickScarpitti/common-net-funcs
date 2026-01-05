@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -49,7 +49,7 @@ public class RestHelpersStaticBenchmarks
 		_jsonData = Encoding.UTF8.GetBytes(jsonString);
 
 		// Create a large list for more realistic testing
-		List<TestModel> largeTestModelList = new List<TestModel>();
+		List<TestModel> largeTestModelList = new();
 		for (int i = 0; i < 1000; i++)
 		{
 			largeTestModelList.Add(new TestModel
@@ -265,7 +265,7 @@ public class RestHelpersStaticBenchmarks
 	}
 
 	[Benchmark]
-	public void AttachHeaders_MultipleHeaders()
+	public static void AttachHeaders_MultipleHeaders()
 	{
 		HttpRequestMessage request = new(HttpMethod.Get, TestUrl);
 		Dictionary<string, string> manyHeaders = new()

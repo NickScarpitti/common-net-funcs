@@ -18,13 +18,15 @@ public sealed class GenericDotEndpoints : ControllerBase
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 	/// <summary>
-	/// Basic endpoint to create more than one entity at a time
+	/// Basic endpoint to create more than one entity at a time.
 	/// </summary>
-	/// <typeparam name="T">Type of entity being created</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
-	/// <param name="models">Entities to create</param>
-	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
-	/// <returns>Ok if successful, otherwise NoContent</returns>
+	/// <typeparam name="TModel">Type of entity being created.</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation.</typeparam>
+	/// <typeparam name="TInDto">The type of DTO containing updated values.</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
+	/// <param name="models">Entities to create.</param>
+	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
+	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<List<TOutDto>>> CreateMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
 		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
 	{
@@ -45,13 +47,15 @@ public sealed class GenericDotEndpoints : ControllerBase
 	}
 
 	/// <summary>
-	/// Basic endpoint to delete one entity
+	/// Basic endpoint to delete one entity.
 	/// </summary>
-	/// <typeparam name="T">Type of entity being deleted</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TModel">Type of entity being deleted.</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation.</typeparam>
+	/// <typeparam name="TInDto">The type of DTO containing updated values.</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
 	/// <param name="model">Entity to delete.</param>
-	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
-	/// <returns>Ok if successful, otherwise NoContent</returns>
+	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
+	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<TOutDto>> Delete<TModel, TContext, TInDto, TOutDto>(TInDto model, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
 		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
 	{
@@ -72,13 +76,15 @@ public sealed class GenericDotEndpoints : ControllerBase
 	}
 
 	/// <summary>
-	/// Basic endpoint to delete more than one entity at a time
+	/// Basic endpoint to delete more than one entity at a time.
 	/// </summary>
-	/// <typeparam name="T">Type of entity being deleted</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TModel">Type of entity being deleted.</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation.</typeparam>
+	/// <typeparam name="TInDto">The type of DTO containing updated values.</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
 	/// <param name="models">Entities to delete.</param>
-	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
-	/// <returns>Ok if successful, otherwise NoContent</returns>
+	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
+	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<List<TOutDto>>> DeleteMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
 		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
 	{
@@ -100,8 +106,9 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <summary>
 	/// Basic endpoint to delete more than one entity at a time
 	/// </summary>
-	/// <typeparam name="T">Type of entity being deleted</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TModel">Type of entity being deleted</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
@@ -126,8 +133,9 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <summary>
 	/// Basic endpoint to update an entity with a single field primary key
 	/// </summary>
-	/// <typeparam name="T">Type of entity being updated</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TModel">Type of entity being updated</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
 	/// <param name="primaryKey">Primary key of the entity to update</param>
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
@@ -140,14 +148,15 @@ public sealed class GenericDotEndpoints : ControllerBase
 	}
 
 	/// <summary>
-	/// Basic endpoint to update an entity with a multi-field primary key
+	/// Basic endpoint to update an entity with a multi-field primary key.
 	/// </summary>
-	/// <typeparam name="T">Type of entity being updated</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
-	/// <param name="primaryKey">Ordered values comprising the key of the entity to update</param>
+	/// <typeparam name="TModel">Type of entity being updated.</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation.</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
+	/// <param name="primaryKey">Ordered values comprising the key of the entity to update.</param>
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
-	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
-	/// <returns>Ok if successful, otherwise NoContent</returns>
+	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
+	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<TOutDto>> Patch<TModel, TContext, TOutDto>(object[] primaryKey, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TOutDto : class?, new() where TContext : DbContext
 	{
@@ -156,14 +165,15 @@ public sealed class GenericDotEndpoints : ControllerBase
 	}
 
 	/// <summary>
-	/// Helper method to update an entity
+	/// Helper method to update an entity.
 	/// </summary>
-	/// <typeparam name="T">Type of entity being updated</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
-	/// <param name="dbModel"></param>
-	/// <param name="patch"></param>
-	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
-	/// <returns>Ok if successful, otherwise NoContent</returns>
+	/// <typeparam name="TModel">Type of entity being updated.</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation.</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
+	/// <param name="dbModel">Model to patch</param>
+	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>
+	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
+	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	private async Task<ActionResult<TOutDto>> PatchInternal<TModel, TContext, TOutDto>(TModel? dbModel, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TOutDto : class?, new() where TContext : DbContext
 	{
@@ -210,6 +220,18 @@ public sealed class GenericDotEndpoints : ControllerBase
 		return NoContent();
 	}
 
+	/// <summary>
+	/// Updates an existing entity in the database using the specified primary key and input data transfer object (DTO).
+	/// </summary>
+	/// <typeparam name="TModel">Type of entity being updated.</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation.</typeparam>
+	/// <typeparam name="TInDto">The type of DTO containing updated values.</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
+	/// <param name="primaryKey">Key value that uniquely identifies the entity to update.
+	/// primary key definition.</param>
+	/// <param name="inDto">The input DTO containing the updated values for the entity. Cannot be null.</param>
+	/// <param name="baseAppDbContextActions">An object that provides database context actions for the specified entity and context types.</param>
+	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<TOutDto>> Update<TModel, TContext, TInDto, TOutDto>(object primaryKey, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
 	{
@@ -217,6 +239,17 @@ public sealed class GenericDotEndpoints : ControllerBase
 		return await UpdateInternal<TModel, TContext, TInDto, TOutDto>(dbModel, inDto, baseAppDbContextActions).ConfigureAwait(false);
 	}
 
+	/// <summary>
+	/// Updates an existing entity in the database using the specified primary key and input data transfer object (DTO).
+	/// </summary>
+	/// <typeparam name="TModel">Type of entity being updated.</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation.</typeparam>
+	/// <typeparam name="TInDto">The type of DTO containing updated values.</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
+	/// <param name="primaryKey">An array of key values that uniquely identify the entity to update. The order and types must match the entity's primary key definition.</param>
+	/// <param name="inDto">The input DTO containing the updated values for the entity. Cannot be null.</param>
+	/// <param name="baseAppDbContextActions">An object that provides database context actions for the specified entity and context types.</param>
+	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<TOutDto>> Update<TModel, TContext, TInDto, TOutDto>(object[] primaryKey, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
 	{
@@ -225,14 +258,16 @@ public sealed class GenericDotEndpoints : ControllerBase
 	}
 
 	/// <summary>
-	/// Helper method to update an entity
+	/// Helper method to update an entity.
 	/// </summary>
-	/// <typeparam name="TModel">Type of entity being updated</typeparam>
-	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
-	/// <param name="dbModel"></param>
-	/// <param name="patch"></param>
-	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
-	/// <returns>Ok if successful, otherwise NoContent</returns>
+	/// <typeparam name="TModel">Type of entity being updated.</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation.</typeparam>
+	/// <typeparam name="TInDto">The type of DTO containing updated values.</typeparam>
+	/// <typeparam name="TOutDto">The type of DTO to be returned after the update.</typeparam>
+	/// <param name="dbModel">Model to update</param>
+	/// <param name="inDto">Input DTO with updated values</param>
+	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
+	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	private async Task<ActionResult<TOutDto>> UpdateInternal<TModel, TContext, TInDto, TOutDto>(TModel? dbModel, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
 	{

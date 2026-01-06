@@ -127,7 +127,7 @@
 //    public HttpClient UnderlyingClient { get; }
 
 //    // Wrapper method that applies custom resilience to existing static methods
-//    public async Task<T?> ExecuteWithResilience<T>(Func<HttpClient, CancellationToken, Task<T?>> operation, CancellationToken cancellationToken = default)
+//    public async Task<TBody?> ExecuteWithResilience<TBody>(Func<HttpClient, CancellationToken, Task<TBody?>> operation, CancellationToken cancellationToken = default)
 //    {
 //        if (customPipeline != null)
 //        {
@@ -179,7 +179,7 @@
 //    }
 
 //    // Wrapper method for streaming operations
-//    public async Task<IAsyncEnumerable<T?>> ExecuteStreamingWithResilience<T>(Func<HttpClient, CancellationToken, Task<IAsyncEnumerable<T?>>> operation, CancellationToken cancellationToken = default)
+//    public async Task<IAsyncEnumerable<TBody?>> ExecuteStreamingWithResilience<TBody>(Func<HttpClient, CancellationToken, Task<IAsyncEnumerable<TBody?>>> operation, CancellationToken cancellationToken = default)
 //    {
 //        if (customPipeline != null)
 //        {

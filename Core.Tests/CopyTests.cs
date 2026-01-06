@@ -157,7 +157,7 @@ public sealed class CopyTests
 
 	#endregion
 
-	#region CopyPropertiesToNew<T, UT> Tests
+	#region CopyPropertiesToNew<TSource, TDest> Tests
 
 	[Theory]
 	[InlineData(true)]

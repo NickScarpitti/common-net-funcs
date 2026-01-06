@@ -821,17 +821,17 @@ public static class Async
 	/// <param name="obj">Object to update.</param>
 	/// <param name="propertyName">Name of property to update within <paramref name="obj"/>.</param>
 	/// <param name="task">Async task to run that returns the value to assign to the property indicated.</param>
-	public static async Task ObjectUpdate<T, UT>(this T? obj, string propertyName, Task<UT> task)
+	public static async Task ObjectUpdate<TObj, TTask>(this TObj? obj, string propertyName, Task<TTask> task)
 	{
 		try
 		{
-			PropertyInfo[] props = GetOrAddPropertiesFromReflectionCache(typeof(T));
+			PropertyInfo[] props = GetOrAddPropertiesFromReflectionCache(typeof(TObj));
 			if (props.Length > 0)
 			{
 				PropertyInfo? prop = Array.Find(props, x => x.Name.StrEq(propertyName));
 				if (prop != null)
 				{
-					UT value = await task;
+					TTask value = await task;
 					prop.SetValue(obj, value);
 				}
 				else
@@ -858,7 +858,7 @@ public static class Async
 	/// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectUpdate<T, UT>(this T? obj, string propertyName, Func<Task<UT>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
+	public static async Task ObjectUpdate<T, TTask>(this T? obj, string propertyName, Func<Task<TTask>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
 	{
 		try
 		{
@@ -874,7 +874,7 @@ public static class Async
 				if (prop != null)
 				{
 					// Only start the task after acquiring the semaphore
-					UT value = await task().ConfigureAwait(false);
+					TTask value = await task().ConfigureAwait(false);
 					prop.SetValue(obj, value);
 				}
 				else

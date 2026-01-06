@@ -52,16 +52,16 @@ public static class FastMapper
 	/// <summary>
 	/// Clears LimitedMapperCache cache and sets the size to the specified value.
 	/// </summary>
-	private static Delegate GetOrAddPropertiesFromMapperCache<T, UT>(MapperCacheKey key)
+	private static Delegate GetOrAddPropertiesFromMapperCache<TSource, TDest>(MapperCacheKey key)
 	{
 		// Use GetOrAdd pattern to reduce lock contention
 		if (CacheManager.IsUsingLimitedCache())
 		{
-			return CacheManager.GetOrAddLimitedCache(key, _ => CreateMapper<T, UT>(true));
+			return CacheManager.GetOrAddLimitedCache(key, _ => CreateMapper<TSource, TDest>(true));
 		}
 		else
 		{
-			return CacheManager.GetOrAddCache(key, _ => CreateMapper<T, UT>(true));
+			return CacheManager.GetOrAddCache(key, _ => CreateMapper<TSource, TDest>(true));
 		}
 	}
 
@@ -70,29 +70,29 @@ public static class FastMapper
 	/// <summary>
 	/// Method that maps one object onto another by property name using expression trees
 	/// </summary>
-	/// <typeparam name="T">Type to map data from</typeparam>
-	/// <typeparam name="UT">Type to map data to</typeparam>
+	/// <typeparam name="TSource">Type to map data from</typeparam>
+	/// <typeparam name="TDest">Type to map data to</typeparam>
 	/// <param name="source">Object to map data from</param>
 	/// <returns>New instance of type UT with values populated from source object</returns>
 	[return: NotNullIfNotNull(nameof(source))]
-	public static UT? FastMap<T, UT>(this T source, bool useCache = true) where T : class? where UT : class?
+	public static TDest? FastMap<TSource, TDest>(this TSource source, bool useCache = true) where TSource : class? where TDest : class?
 	{
 		if (source == null)
 		{
 			return default;
 		}
 
-		Func<T, UT> mapper = useCache ? (Func<T, UT>)GetOrAddPropertiesFromMapperCache<T, UT>(new(typeof(T), typeof(UT))) : CreateMapper<T, UT>(useCache);
+		Func<TSource, TDest> mapper = useCache ? (Func<TSource, TDest>)GetOrAddPropertiesFromMapperCache<TSource, TDest>(new(typeof(TSource), typeof(TDest))) : CreateMapper<TSource, TDest>(useCache);
 		return mapper(source)!;
 	}
 
-	private static Func<T, UT> CreateMapper<T, UT>(bool useCache)
+	private static Func<TSource, TDest> CreateMapper<TSource, TDest>(bool useCache)
 	{
-		ParameterExpression sourceParameter = Expression.Parameter(typeof(T), "source");
-		ParameterExpression destinationVariable = Expression.Variable(typeof(UT), "destination");
+		ParameterExpression sourceParameter = Expression.Parameter(typeof(TSource), "source");
+		ParameterExpression destinationVariable = Expression.Variable(typeof(TDest), "destination");
 
-		Type destType = typeof(UT);
-		Type sourceType = typeof(T);
+		Type destType = typeof(TDest);
+		Type sourceType = typeof(TSource);
 
 		// Create variable declaration and initial assignment
 		List<ParameterExpression> variables = [destinationVariable];
@@ -101,7 +101,7 @@ public static class FastMapper
 		if (typeof(IDictionary).IsAssignableFrom(sourceType) || typeof(IDictionary).IsAssignableFrom(destType))
 		{
 			// Always initialize the destination
-			bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(UT))));
+			bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(TDest))));
 			bindings.Add(CreateCollectionMapping(sourceParameter, destinationVariable, sourceType, destType, useCache));
 		}
 		else if (typeof(IEnumerable).IsAssignableFrom(sourceType) && typeof(IEnumerable).IsAssignableFrom(destType) && sourceType != typeof(string) && destType != typeof(string))
@@ -163,12 +163,12 @@ public static class FastMapper
 		}
 		else
 		{
-			bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(UT)))); // Initialize destination object if not a collection
+			bindings.Add(Expression.Assign(destinationVariable, Expression.New(typeof(TDest)))); // Initialize destination object if not a collection
 
 			//PropertyInfo[] sourceProperties = propertyCache.GetOrAdd(typeof(T), t => t.GetProperties());
 			//PropertyInfo[] destinationProperties = propertyCache.GetOrAdd(typeof(UT), t => t.GetProperties());
-			PropertyInfo[] sourceProperties = GetOrAddPropertiesFromReflectionCache(typeof(T));
-			PropertyInfo[] destinationProperties = GetOrAddPropertiesFromReflectionCache(typeof(UT));
+			PropertyInfo[] sourceProperties = GetOrAddPropertiesFromReflectionCache(typeof(TSource));
+			PropertyInfo[] destinationProperties = GetOrAddPropertiesFromReflectionCache(typeof(TDest));
 			HashSet<string> assignedProperties = [];
 			foreach (PropertyInfo destProp in destinationProperties.Where(x => x.CanWrite))
 			{
@@ -242,7 +242,7 @@ public static class FastMapper
 		bindings.Add(destinationVariable);
 
 		BlockExpression body = Expression.Block(variables, bindings);
-		Expression<Func<T, UT>> lambda = Expression.Lambda<Func<T, UT>>(body, sourceParameter);
+		Expression<Func<TSource, TDest>> lambda = Expression.Lambda<Func<TSource, TDest>>(body, sourceParameter);
 		return lambda.CompileFast();
 	}
 

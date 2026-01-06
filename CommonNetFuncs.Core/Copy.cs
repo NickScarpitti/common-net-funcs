@@ -71,12 +71,12 @@ public static class Copy
 	/// <summary>
 	/// Copy properties of the same name from one object to another
 	/// </summary>
-	/// <typeparam name="T">Type of source object</typeparam>
-	/// <typeparam name="UT">Type of destination object</typeparam>
+	/// <typeparam name="TSource">Type of source object</typeparam>
+	/// <typeparam name="TDest">Type of destination object</typeparam>
 	/// <param name="source">Object to copy common properties from</param>
 	/// <param name="dest">Object to copy common properties to</param>
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
-	public static void CopyPropertiesTo<T, UT>(this T source, UT dest, bool useCache = true) where T : class? where UT : class?
+	public static void CopyPropertiesTo<TSource, TDest>(this TSource source, TDest dest, bool useCache = true) where TSource : class? where TDest : class?
 	{
 		if (source == null)
 		{
@@ -89,16 +89,16 @@ public static class Copy
 				return;
 			}
 
-			foreach ((Action<UT, object?> Set, Func<T, object?> Get) in GetOrCreatePropertyMaps<T, UT>().Values)
+			foreach ((Action<TDest, object?> Set, Func<TSource, object?> Get) in GetOrCreatePropertyMaps<TSource, TDest>().Values)
 			{
 				Set(dest, Get(source));
 			}
 		}
 		else
 		{
-			dest ??= Activator.CreateInstance<UT>();
-			IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead);
-			Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
+			dest ??= Activator.CreateInstance<TDest>();
+			IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(TSource)).Where(x => x.CanRead);
+			Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(TDest)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
 			foreach (PropertyInfo sourceProp in sourceProps)
 			{
@@ -145,19 +145,19 @@ public static class Copy
 	/// <summary>
 	/// Copy properties of the same name from one object to another
 	/// </summary>
-	/// <typeparam name="T">Type of object being copied</typeparam>
+	/// <typeparam name="TSource">Type of object being copied</typeparam>
 	/// <param name="source">Object to copy common properties from</param>
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
-	/// <returns>A new instance of UT with properties copied from <paramref name="source"/></returns>
-	public static UT CopyPropertiesToNew<T, UT>(this T source, bool useCache = true) where T : class where UT : class, new()
+	/// <returns>A new instance of TDest with properties copied from <paramref name="source"/></returns>
+	public static TDest CopyPropertiesToNew<TSource, TDest>(this TSource source, bool useCache = true) where TSource : class where TDest : class, new()
 	{
-		IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.CanRead);
-		Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(UT)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
+		IEnumerable<PropertyInfo> sourceProps = GetOrAddPropertiesFromReflectionCache(typeof(TSource)).Where(x => x.CanRead);
+		Dictionary<string, PropertyInfo> destPropDict = GetOrAddPropertiesFromReflectionCache(typeof(TDest)).Where(x => x.CanWrite).ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
-		UT dest = new();
+		TDest dest = new();
 		if (useCache)
 		{
-			foreach ((Action<UT, object?> Set, Func<T, object?> Get) in GetOrCreatePropertyMaps<T, UT>().Values)
+			foreach ((Action<TDest, object?> Set, Func<TSource, object?> Get) in GetOrCreatePropertyMaps<TSource, TDest>().Values)
 			{
 				Set(dest, Get(source));
 			}
@@ -179,14 +179,14 @@ public static class Copy
 	/// <summary>
 	/// Copies properties of one class to a new instance of a <see langword="class"/> using reflection based on property name matching
 	/// </summary>
-	/// <typeparam name="T">Type to copy values from</typeparam>
-	/// <typeparam name="UT">Type to copy values to</typeparam>
+	/// <typeparam name="TSource">Type to copy values from</typeparam>
+	/// <typeparam name="TDest">Type to copy values to</typeparam>
 	/// <param name="source">Object to copy values into new object from</param>
 	/// <param name="maxDepth">Optional: How deep to recursively traverse. Default = -1 which is unlimited recursion.</param>
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
-	/// <returns>A new instance of UT with properties of the same name from source populated.</returns>
+	/// <returns>A new instance of TDest with properties of the same name from source populated.</returns>
 	[return: NotNullIfNotNull(nameof(source))]
-	public static UT? CopyPropertiesToNewRecursive<T, UT>(this T source, int maxDepth = -1, bool useCache = true) where T : class where UT : class, new()
+	public static TDest? CopyPropertiesToNewRecursive<TSource, TDest>(this TSource source, int maxDepth = -1, bool useCache = true) where TSource : class where TDest : class, new()
 	{
 		if (source == null)
 		{
@@ -195,16 +195,16 @@ public static class Copy
 
 		if (useCache)
 		{
-			return CopyPropertiesToNewRecursiveExpressionTrees<T, UT>(source, maxDepth)!;
+			return CopyPropertiesToNewRecursiveExpressionTrees<TSource, TDest>(source, maxDepth)!;
 		}
 		else
 		{
-			if (typeof(IEnumerable).IsAssignableFrom(typeof(T)) && typeof(IEnumerable).IsAssignableFrom(typeof(UT)) && (typeof(T) != typeof(string)) && (typeof(UT) != typeof(string)))
+			if (typeof(IEnumerable).IsAssignableFrom(typeof(TSource)) && typeof(IEnumerable).IsAssignableFrom(typeof(TDest)) && (typeof(TSource) != typeof(string)) && (typeof(TDest) != typeof(string)))
 			{
-				return (UT?)CopyCollection(source, typeof(UT), maxDepth) ?? new();
+				return (TDest?)CopyCollection(source, typeof(TDest), maxDepth) ?? new();
 			}
 
-			return (UT?)CopyObject(source, typeof(UT), 0, maxDepth) ?? new();
+			return (TDest?)CopyObject(source, typeof(TDest), 0, maxDepth) ?? new();
 		}
 	}
 
@@ -510,15 +510,15 @@ public static class Copy
 	/// <param name="source">Source object to copy from.</param>
 	/// <param name="maxDepth">Optional: The maximum depth of recursion. Default is -1, which means unlimited recursion.</param>
 	/// <returns>A new instance of the destination type with copied properties.</returns>
-	private static UT? CopyPropertiesToNewRecursiveExpressionTrees<T, UT>(this T source, int maxDepth = -1) where T : class where UT : class, new()
+	private static TDest? CopyPropertiesToNewRecursiveExpressionTrees<TSource, TDest>(this TSource source, int maxDepth = -1) where TSource : class where TDest : class, new()
 	{
 		if (source == null)
 		{
 			return default;
 		}
 
-		Func<object, object?, int, int, object?> copyFunc = GetOrCreateCopyFunction(typeof(T), typeof(UT));
-		return (UT?)copyFunc(source, null, 0, maxDepth);
+		Func<object, object?, int, int, object?> copyFunc = GetOrCreateCopyFunction(typeof(TSource), typeof(TDest));
+		return (TDest?)copyFunc(source, null, 0, maxDepth);
 	}
 
 	/// <summary>

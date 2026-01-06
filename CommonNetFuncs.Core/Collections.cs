@@ -435,7 +435,7 @@ public static partial class Collections
 	/// </summary>
 	/// <param name="dict">The dictionary to run the Clear and TrimExcess actions on.</param>
 	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
-	public static void ClearTrim<T, UT>(this Dictionary<T, UT>? dict, bool forceGc = false) where T : notnull
+	public static void ClearTrim<TKey, TValue>(this Dictionary<TKey, TValue>? dict, bool forceGc = false) where TKey : notnull
 	{
 		if (dict == null)
 		{

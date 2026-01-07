@@ -1,11 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using CommonNetFuncs.Core;
 
 namespace BenchmarkSuite;
 
-#pragma warning disable S6562 // Provide the "DateTimeKind" when creating this object.
 [MemoryDiagnoser]
 [RankColumn]
 public class CoreDateTimeHelpersBenchmarks
@@ -70,4 +69,3 @@ public class CoreDateTimeHelpersBenchmarks
 		return oaDate.IsValidOaDate();
 	}
 }
-#pragma warning restore S6562 // Provide the "DateTimeKind" when creating this object.

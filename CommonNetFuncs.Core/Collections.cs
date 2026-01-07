@@ -428,9 +428,7 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'
 			GC.Collect(2, GCCollectionMode.Optimized, false);
-#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'
 		}
 	}
 
@@ -450,9 +448,7 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'
 			GC.Collect(2, GCCollectionMode.Optimized, false);
-#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'
 		}
 	}
 
@@ -472,9 +468,7 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'
 			GC.Collect(2, GCCollectionMode.Optimized, false);
-#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'
 		}
 	}
 
@@ -494,9 +488,7 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'
 			GC.Collect(2, GCCollectionMode.Optimized, false);
-#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'
 		}
 	}
 
@@ -516,9 +508,7 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'
 			GC.Collect(2, GCCollectionMode.Optimized, false);
-#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'
 		}
 	}
 

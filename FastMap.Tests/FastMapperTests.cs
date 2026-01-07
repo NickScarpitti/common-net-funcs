@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
 using CommonNetFuncs.FastMap;
 
@@ -217,14 +217,12 @@ public sealed class FastMapperTests
 	public void FasterMap_WithSimpleProperties_MapsCorrectly(string stringProp, int intProp, string dateProp)
 	{
 		// Arrange
-#pragma warning disable S6580 // Use a format provider when parsing date and time.
 		SimpleSource source = new()
 		{
 			StringProp = stringProp,
 			IntProp = intProp,
 			DateProp = DateTime.Parse(dateProp)
 		};
-#pragma warning restore S6580 // Use a format provider when parsing date and time.
 
 		// Act
 		SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>();

@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,11 +5,9 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Jobs;
 using CommonNetFuncs.FastMap;
+using Mapster;
 
-// using Mapster;
-using Microsoft.VSDiagnostics;
-
-// using Riok.Mapperly.Abstractions;
+// using Microsoft.VSDiagnostics; // For CPUUsageDiagnoser
 
 namespace BenchmarkSuite;
 
@@ -32,14 +29,14 @@ public class MapperComparisonBenchmarks
 	[GlobalSetup]
 	public void Setup()
 	{
-		// Configure Mapster (global configuration)
-		// TypeAdapterConfig.GlobalSettings.NewConfig<SimpleSource, SimpleDestination>();
-		// TypeAdapterConfig.GlobalSettings.NewConfig<ComplexSource, ComplexDestination>();
-		// TypeAdapterConfig.GlobalSettings.NewConfig<NestedSource, NestedDestination>();
-		// TypeAdapterConfig.GlobalSettings.NewConfig<Level1, Level1Dest>();
-		// TypeAdapterConfig.GlobalSettings.NewConfig<Level2, Level2Dest>();
-		// TypeAdapterConfig.GlobalSettings.NewConfig<Level3, Level3Dest>();
-		// TypeAdapterConfig.GlobalSettings.Compile();
+		//Configure Mapster (global configuration)
+		TypeAdapterConfig.GlobalSettings.NewConfig<SimpleSource, SimpleDestination>();
+		TypeAdapterConfig.GlobalSettings.NewConfig<ComplexSource, ComplexDestination>();
+		TypeAdapterConfig.GlobalSettings.NewConfig<NestedSource, NestedDestination>();
+		TypeAdapterConfig.GlobalSettings.NewConfig<Level1, Level1Dest>();
+		TypeAdapterConfig.GlobalSettings.NewConfig<Level2, Level2Dest>();
+		TypeAdapterConfig.GlobalSettings.NewConfig<Level3, Level3Dest>();
+		TypeAdapterConfig.GlobalSettings.Compile();
 
 		// Initialize test data
 		_simpleSource = new SimpleSource
@@ -99,15 +96,15 @@ public class MapperComparisonBenchmarks
 		};
 
 		// Clear FasterMapper cache
-		FasterMapper.CacheManager.ClearAllCaches();
-		FasterMapper.CacheManager.SetUseLimitedCache(false);
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.SetUseLimitedCache(false);
 	}
 
 	[GlobalCleanup]
 	public void Cleanup()
 	{
-		// FastMapper.CacheManager.ClearAllCaches();
-		FasterMapper.ClearCache();
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.ClearCache();
 	}
 
 	#region Simple Object Mapping
@@ -116,7 +113,6 @@ public class MapperComparisonBenchmarks
 	public SimpleDestination SimpleMapping_FastMapper()
 	{
 		return _simpleSource.FastMap<SimpleSource, SimpleDestination>(true);
-		// return _simpleSource.FastMap<SimpleSource, SimpleDestination>(useCache: true);
 	}
 
 	[Benchmark(Description = "Simple - FasterMapper")]
@@ -125,11 +121,11 @@ public class MapperComparisonBenchmarks
 		return _simpleSource.FastMap<SimpleSource, SimpleDestination>();
 	}
 
-	// [Benchmark(Description = "Simple - Mapster")]
-	// public SimpleDestination SimpleMapping_Mapster()
-	// {
-	// 	return _simpleSource.Adapt<SimpleDestination>();
-	// }
+	[Benchmark(Description = "Simple - Mapster")]
+	public SimpleDestination SimpleMapping_Mapster()
+	{
+		return _simpleSource.Adapt<SimpleDestination>();
+	}
 
 	[Benchmark(Description = "Simple - Mapperly")]
 	public SimpleDestination SimpleMapping_Mapperly()
@@ -159,7 +155,6 @@ public class MapperComparisonBenchmarks
 	public ComplexDestination ComplexMapping_FastMapper()
 	{
 		return _complexSource.FastMap<ComplexSource, ComplexDestination>(true);
-		// return _complexSource.FastMap<ComplexSource, ComplexDestination>(useCache: true);
 	}
 
 	[Benchmark(Description = "Complex - FasterMapper")]
@@ -168,11 +163,11 @@ public class MapperComparisonBenchmarks
 		return _complexSource.FastMap<ComplexSource, ComplexDestination>();
 	}
 
-	// [Benchmark(Description = "Complex - Mapster")]
-	// public ComplexDestination ComplexMapping_Mapster()
-	// {
-	// 	return _complexSource.Adapt<ComplexDestination>();
-	// }
+	[Benchmark(Description = "Complex - Mapster")]
+	public ComplexDestination ComplexMapping_Mapster()
+	{
+		return _complexSource.Adapt<ComplexDestination>();
+	}
 
 	[Benchmark(Description = "Complex - Mapperly")]
 	public ComplexDestination ComplexMapping_Mapperly()
@@ -188,7 +183,6 @@ public class MapperComparisonBenchmarks
 	public List<SimpleDestination> ListMapping_FastMapper()
 	{
 		return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(true);
-		// return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(useCache: true);
 	}
 
 	[Benchmark(Description = "List - FasterMapper")]
@@ -197,11 +191,11 @@ public class MapperComparisonBenchmarks
 		return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>();
 	}
 
-	// [Benchmark(Description = "List - Mapster")]
-	// public List<SimpleDestination> ListMapping_Mapster()
-	// {
-	// 	return _simpleList.Adapt<List<SimpleDestination>>();
-	// }
+	[Benchmark(Description = "List - Mapster")]
+	public List<SimpleDestination> ListMapping_Mapster()
+	{
+		return _simpleList.Adapt<List<SimpleDestination>>();
+	}
 
 	[Benchmark(Description = "List - Mapperly")]
 	public List<SimpleDestination> ListMapping_Mapperly()
@@ -217,7 +211,6 @@ public class MapperComparisonBenchmarks
 	public NestedDestination NestedMapping_FastMapper()
 	{
 		return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>(true);
-		// return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>(useCache: true);
 	}
 
 	[Benchmark(Description = "Nested - FasterMapper")]
@@ -226,11 +219,11 @@ public class MapperComparisonBenchmarks
 		return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>();
 	}
 
-	// [Benchmark(Description = "Nested - Mapster")]
-	// public NestedDestination NestedMapping_Mapster()
-	// {
-	// 	return _deeplyNestedSource.Adapt<NestedDestination>();
-	// }
+	[Benchmark(Description = "Nested - Mapster")]
+	public NestedDestination NestedMapping_Mapster()
+	{
+		return _deeplyNestedSource.Adapt<NestedDestination>();
+	}
 
 	[Benchmark(Description = "Nested - Mapperly")]
 	public NestedDestination NestedMapping_Mapperly()

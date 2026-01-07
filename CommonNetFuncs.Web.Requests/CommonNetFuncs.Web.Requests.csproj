@@ -1,116 +1,116 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Optimized -->
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Platforms>AnyCPU;x86;x64</Platforms>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <Title>$(AssemblyName)</Title>
-    <AssemblyVersion>$(Version)</AssemblyVersion>
-    <FileVersion>$(Version)</FileVersion>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Authors>NickScarpitti</Authors>
-    <PackageIcon>TTLogo.png</PackageIcon>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
-    <!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
-    <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <DebugType>embedded</DebugType>
-    <Description>
+	<!-- Optimized -->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Platforms>AnyCPU;x86;x64</Platforms>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Title>$(AssemblyName)</Title>
+		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<FileVersion>$(Version)</FileVersion>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Authors>NickScarpitti</Authors>
+		<PackageIcon>TTLogo.png</PackageIcon>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
+		<!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<DebugType>embedded</DebugType>
+		<Description>
       Helper methods that deal with creating, sending, and handling the responses from REST API calls
-    </Description>
-    <PackageTags>dotnet;helpers;web;api;rest;requests;response;</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Configurations>Debug;Release;ReducedBuild</Configurations>
-  </PropertyGroup>
+		</Description>
+		<PackageTags>dotnet;helpers;web;api;rest;requests;response;</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Configurations>Debug;Release;ReducedBuild</Configurations>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <Version>4.0.2</Version>
-    <MinVerTagPrefix>web.requests-</MinVerTagPrefix>
-    <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
-    <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
-    <MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
-    <!-- Optional: Detect breaking changes from a previous stable version -->
-    <PackageValidationBaselineVersion>4.0.2</PackageValidationBaselineVersion>
-    <EnablePackageValidation>true</EnablePackageValidation>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Version>4.0.6</Version>
+		<MinVerTagPrefix>web.requests-</MinVerTagPrefix>
+		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
+		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
+		<!-- Optional: Detect breaking changes from a previous stable version -->
+		<PackageValidationBaselineVersion>4.0.2</PackageValidationBaselineVersion>
+		<EnablePackageValidation>true</EnablePackageValidation>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <WarningLevel>8</WarningLevel>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<WarningLevel>8</WarningLevel>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <WarningLevel>8</WarningLevel>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+		<WarningLevel>8</WarningLevel>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <WarningLevel>8</WarningLevel>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+		<WarningLevel>8</WarningLevel>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <WarningLevel>8</WarningLevel>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<WarningLevel>8</WarningLevel>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <WarningLevel>8</WarningLevel>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+		<WarningLevel>8</WarningLevel>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <WarningLevel>8</WarningLevel>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+		<WarningLevel>8</WarningLevel>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|AnyCPU'">
-    <WarningLevel>8</WarningLevel>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|AnyCPU'">
+		<WarningLevel>8</WarningLevel>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|x86'">
-    <WarningLevel>8</WarningLevel>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|x86'">
+		<WarningLevel>8</WarningLevel>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|x64'">
-    <WarningLevel>8</WarningLevel>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|x64'">
+		<WarningLevel>8</WarningLevel>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MemoryPack" Version="1.21.4" />
-    <PackageReference Include="MessagePack" Version="3.1.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.1" />
-    <PackageReference Include="MinVer" Version="6.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" PrivateAssets="all" />
-    <PackageReference Include="System.Linq.Async" Version="7.0.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="MemoryPack" Version="1.21.4" />
+		<PackageReference Include="MessagePack" Version="3.1.4" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.1" />
+		<PackageReference Include="MinVer" Version="7.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" PrivateAssets="all" />
+		<PackageReference Include="System.Linq.Async" Version="7.0.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
-    <ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
-    <ProjectReference Include="..\CommonNetFuncs.Web.Common\CommonNetFuncs.Web.Common.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.Web.Common\CommonNetFuncs.Web.Common.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Update="TTLogo.png">
-      <PackagePath>\</PackagePath>
-      <Pack>True</Pack>
-    </None>
-    <None Include="README.md">
-      <PackagePath>\</PackagePath>
-      <Pack>True</Pack>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Update="TTLogo.png">
+			<PackagePath>\</PackagePath>
+			<Pack>True</Pack>
+		</None>
+		<None Include="README.md">
+			<PackagePath>\</PackagePath>
+			<Pack>True</Pack>
+		</None>
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Remove=".editorconfig" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove=".editorconfig" />
+	</ItemGroup>
 
 </Project>

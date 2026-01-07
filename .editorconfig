@@ -6,6 +6,7 @@ root = true
 # All files
 [*]
 indent_style = tab
+tab_width = 2
 guidelines = 175 1.5px dotted cc30b0d4, 190 1.5px dashed ccbf9000, 205 1.5px solid cccc0000
 
 # XML project files
@@ -69,7 +70,6 @@ dotnet_naming_symbols.constant_fields.applicable_accessibilities  = *
 dotnet_naming_symbols.constant_fields.required_modifiers          = const
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
-tab_width = 2
 end_of_line = crlf
 dotnet_style_namespace_match_folder = true:suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion
@@ -100,6 +100,10 @@ dotnet_diagnostic.IDE0306.severity = none
 csharp_style_var_for_built_in_types = false:suggestion
 csharp_style_var_when_type_is_apparent = false:suggestion
 csharp_style_var_elsewhere = false:suggestion
+
+# IDE0008: Use explicit type instead of 'var'
+dotnet_diagnostic.IDE0008.severity = suggestion
+
 # Expression-bodied members
 csharp_style_expression_bodied_methods = false:silent
 csharp_style_expression_bodied_constructors = false:silent
@@ -157,7 +161,11 @@ csharp_style_namespace_declarations = file_scoped:silent
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_expression_bodied_lambdas = true:silent
 csharp_style_expression_bodied_local_functions = false:silent
-csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
+csharp_style_implicit_object_creation_when_type_is_apparent = true:warning
+
+# IDE0090: Simplify 'new' expression
+dotnet_diagnostic.IDE0090.severity = suggestion
+
 csharp_style_unused_value_expression_statement_preference = discard_variable:silent
 csharp_style_prefer_null_check_over_type_check = true:suggestion
 csharp_style_prefer_local_over_anonymous_function = true:suggestion
@@ -170,6 +178,7 @@ csharp_style_allow_embedded_statements_on_same_line_experimental = true:silent
 csharp_style_allow_blank_lines_between_consecutive_braces_experimental = true:silent
 csharp_style_allow_blank_line_after_colon_in_constructor_initializer_experimental = true:silent
 csharp_style_prefer_parameter_null_checking = true:suggestion
+
 ###############################
 # VB Coding Conventions       #
 ###############################

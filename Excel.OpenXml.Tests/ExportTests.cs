@@ -72,8 +72,8 @@ public sealed class ExportTests : IDisposable
 		WorksheetPart? worksheetPart = workbookPart.WorksheetParts.FirstOrDefault();
 		worksheetPart.ShouldNotBeNull();
 
-		Worksheet worksheet = worksheetPart.Worksheet;
-		SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
+		Worksheet? worksheet = worksheetPart.Worksheet;
+		SheetData? sheetData = worksheet?.GetFirstChild<SheetData>();
 		sheetData.ShouldNotBeNull();
 
 		// Verify headers
@@ -104,7 +104,7 @@ public sealed class ExportTests : IDisposable
 		{
 			TableDefinitionPart? tableDefinitionPart = worksheetPart.TableDefinitionParts.FirstOrDefault();
 			tableDefinitionPart.ShouldNotBeNull();
-			tableDefinitionPart.Table.Name?.Value.ShouldBe(tableName);
+			tableDefinitionPart.Table?.Name?.Value.ShouldBe(tableName);
 		}
 	}
 
@@ -130,7 +130,7 @@ public sealed class ExportTests : IDisposable
 		WorksheetPart? worksheetPart = doc.WorkbookPart?.WorksheetParts.FirstOrDefault();
 		worksheetPart.ShouldNotBeNull();
 
-		SheetData? sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+		SheetData? sheetData = worksheetPart.Worksheet?.GetFirstChild<SheetData>();
 		sheetData.ShouldNotBeNull();
 		sheetData.Elements<Row>().Count().ShouldBe(3); // Header + 2 data rows
 	}

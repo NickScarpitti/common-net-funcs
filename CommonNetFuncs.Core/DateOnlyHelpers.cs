@@ -36,7 +36,16 @@ public static class DateOnlyHelpers
 
 		if (exceptionDates != null)
 		{
-			int exceptionDays = exceptionDates.Count(x => (x >= sDate) && (x <= eDate) && (x.DayOfWeek != DayOfWeek.Saturday) && (x.DayOfWeek != DayOfWeek.Sunday));
+			int exceptionDays = 0;
+			foreach (DateOnly exceptionDate in exceptionDates)
+			{
+				if ((exceptionDate >= sDate) && (exceptionDate <= eDate) && 
+				    (exceptionDate.DayOfWeek != DayOfWeek.Saturday) && 
+				    (exceptionDate.DayOfWeek != DayOfWeek.Sunday))
+				{
+					exceptionDays++;
+				}
+			}
 			calcBusinessDays -= exceptionDays;
 		}
 

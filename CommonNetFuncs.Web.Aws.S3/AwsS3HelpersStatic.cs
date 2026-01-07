@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -87,7 +88,7 @@ public static class AwsS3HelpersStatic
 
 					if (compressSteam)
 					{
-						await decompressedStream.CompressStream(uploadStream, compressionType, cancellationToken).ConfigureAwait(false);
+						await decompressedStream.CompressStream(uploadStream, compressionType, CompressionLevel.Optimal, cancellationToken).ConfigureAwait(false);
 					}
 					else if (currentCompression != ECompressionType.None)
 					{

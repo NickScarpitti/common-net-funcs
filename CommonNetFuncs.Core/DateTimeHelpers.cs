@@ -34,9 +34,18 @@ public static class DateTimeHelpers
 			calcBusinessDays--;
 		}
 
-		if (exceptionDates != null)
+		if (exceptionDates != null && exceptionDates.Count > 0)
 		{
-			int exceptionDays = exceptionDates.Count(x => (x >= sDate) && (x <= eDate) && (x.DayOfWeek != DayOfWeek.Saturday) && (x.DayOfWeek != DayOfWeek.Sunday));
+			int exceptionDays = 0;
+			foreach (DateTime exceptionDate in exceptionDates)
+			{
+				if (exceptionDate >= sDate && exceptionDate <= eDate &&
+					exceptionDate.DayOfWeek != DayOfWeek.Saturday &&
+					exceptionDate.DayOfWeek != DayOfWeek.Sunday)
+				{
+					exceptionDays++;
+				}
+			}
 			calcBusinessDays -= exceptionDays;
 		}
 

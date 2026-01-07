@@ -20,8 +20,8 @@ public static class RunBatches
 		ArgumentNullException.ThrowIfNull(processor);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
 
-		// Materialize distinct items once
-		List<T> distinctItems = itemsToProcess.Distinct().ToList();
+		// Materialize distinct items once - use HashSet directly to avoid double materialization
+		List<T> distinctItems = new(new HashSet<T>(itemsToProcess));
 		int totalBatches = (int)MathHelpers.Ceiling((decimal)distinctItems.Count / batchSize, 1);
 		bool success = true;
 
@@ -65,8 +65,8 @@ public static class RunBatches
 		ArgumentNullException.ThrowIfNull(processor);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
 
-		// Materialize distinct items once
-		List<T> distinctItems = itemsToProcess.Distinct().ToList();
+		// Materialize distinct items once - use HashSet directly to avoid double materialization
+		List<T> distinctItems = new(new HashSet<T>(itemsToProcess));
 		int totalBatches = (int)MathHelpers.Ceiling((decimal)distinctItems.Count / batchSize, 1);
 		bool success = true;
 

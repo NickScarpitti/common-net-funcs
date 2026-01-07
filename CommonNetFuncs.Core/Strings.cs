@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using FastExpressionCompiler;
 
+
 using static System.Convert;
 using static System.Web.HttpUtility;
 using static CommonNetFuncs.Core.MathHelpers;
@@ -177,7 +178,7 @@ public static partial class Strings
 		}
 		else if (numChars <= s.Length)
 		{
-			return s.Substring(s.Length - numChars, numChars);
+			return s[^numChars..];
 		}
 		else
 		{
@@ -749,6 +750,38 @@ public static partial class Strings
 	}
 
 	/// <summary>
+	/// Checks if a string contains any character from a specified set of characters.
+	/// </summary>
+	/// <param name="s">String to search.</param>
+	/// <param name="characters">Characters to search for in s.</param>
+	/// <returns><see langword="true"/> if s contains any character from the characters set.</returns>
+	public static bool ContainsAnyCharacter(this string? s, ReadOnlySpan<char> characters)
+	{
+		if (s.IsNullOrEmpty() || characters.IsEmpty)
+		{
+			return false;
+		}
+
+		return s.AsSpan().ContainsAnyCharacter(characters);
+	}
+
+	/// <summary>
+	/// Checks if a string contains any character from a specified set of characters.
+	/// </summary>
+	/// <param name="s">String to search.</param>
+	/// <param name="characters">Characters to search for in s.</param>
+	/// <returns><see langword="true"/> if s contains any character from the characters set.</returns>
+	public static bool ContainsAnyCharacter(this ReadOnlySpan<char> s, ReadOnlySpan<char> characters)
+	{
+		if (s.IsEmpty || characters.IsEmpty)
+		{
+			return false;
+		}
+
+		return s.IndexOfAny(characters) >= 0;
+	}
+
+	/// <summary>
 	/// Replace a substring with another string, ignoring the case and culture when finding the substring to replace
 	/// </summary>
 	/// <param name="s">String to search for substring to replace</param>
@@ -771,40 +804,56 @@ public static partial class Strings
 	[return: NotNullIfNotNull(nameof(s))]
 	public static string? ReplaceInvariant(this string? s, IEnumerable<string> oldValues, string newValue, bool replaceAllInstances = true, CancellationToken cancellationToken = default)
 	{
-		if (s.IsNullOrEmpty() || oldValues.All(x => x.IsNullOrEmpty()))
+		if (s.IsNullOrEmpty())
 		{
 			return s;
 		}
 
-		// Use StringBuilder to avoid creating multiple string copies
-		StringBuilder stringBuilder = new(s);
-
-		foreach (string oldValue in oldValues.Where(x => !x.IsNullOrEmpty()))
+		string result = s;
+		foreach (string oldValue in oldValues)
 		{
-			cancellationToken.ThrowIfCancellationRequested();
-			int index = stringBuilder.ToString().IndexOf(oldValue, StringComparison.InvariantCultureIgnoreCase);
-			while (index != -1)
+			if (oldValue.IsNullOrEmpty())
 			{
-				// Replace the oldValue with newValue
-				stringBuilder.Remove(index, oldValue.Length);
-				stringBuilder.Insert(index, newValue);
+				continue;
+			}
 
-				// Continue searching for the next occurrence
-				string currentString = stringBuilder.ToString();
-				if (currentString.IsNullOrEmpty())
+			cancellationToken.ThrowIfCancellationRequested();
+
+			if (!replaceAllInstances)
+			{
+				int singleIndex = result.IndexOf(oldValue, StringComparison.InvariantCultureIgnoreCase);
+				if (singleIndex != -1)
 				{
-					return currentString; //No string left so stop processing
+					result = string.Concat(result.AsSpan(0, singleIndex), newValue, result.AsSpan(singleIndex + oldValue.Length));
 				}
-				if (!replaceAllInstances)
+			}
+			else
+			{
+				// For multiple replacements, use StringBuilder but minimize ToString() calls
+				int startIndex = 0;
+				int index = result.IndexOf(oldValue, startIndex, StringComparison.InvariantCultureIgnoreCase);
+
+				if (index == -1)
 				{
-					break;
+					continue;
 				}
 
-				index = currentString.IndexOf(oldValue, index + newValue.Length, StringComparison.InvariantCultureIgnoreCase);
+				StringBuilder sb = new(result.Length);
+
+				while (index != -1)
+				{
+					sb.Append(result.AsSpan(startIndex, index - startIndex));
+					sb.Append(newValue);
+					startIndex = index + oldValue.Length;
+					index = result.IndexOf(oldValue, startIndex, StringComparison.InvariantCultureIgnoreCase);
+				}
+
+				sb.Append(result.AsSpan(startIndex));
+				result = sb.ToString();
 			}
 		}
 
-		return stringBuilder.ToString();
+		return result;
 	}
 
 	/// <summary>
@@ -815,7 +864,10 @@ public static partial class Strings
 	/// <returns><see langword="true"/> if the strings are equal when ignoring culture and case</returns>
 	public static bool StrEq(this string? s1, string? s2)
 	{
-		return string.Equals(s1?.Trim() ?? string.Empty, s2?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
+		// return string.Equals(s1?.Trim() ?? string.Empty, s2?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
+		if (s1 == null && s2 == null) return true;
+		if (s1 == null || s2 == null) return string.Equals(string.Empty, (s1 ?? s2)?.Trim(), StringComparison.InvariantCultureIgnoreCase);
+		return string.Equals(s1.Trim(), s2.Trim(), StringComparison.InvariantCultureIgnoreCase);
 	}
 
 	/// <summary>
@@ -826,7 +878,11 @@ public static partial class Strings
 	/// <returns><see langword="true"/> if the strings are equal</returns>
 	public static bool StrComp(this string? s1, string? s2)
 	{
-		return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty);
+		// return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty);
+		if (s1 == null && s2 == null) return true;
+		if (s1 == null) return s2!.Length == 0;
+		if (s2 == null) return s1.Length == 0;
+		return string.Equals(s1, s2);
 	}
 
 	/// <summary>
@@ -837,7 +893,11 @@ public static partial class Strings
 	/// <returns><see langword="true"/> if the strings are equal based on the stringComparison value</returns>
 	public static bool StrComp(this string? s1, string? s2, StringComparison stringComparison)
 	{
-		return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison);
+		//		return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison);
+		if (s1 == null && s2 == null) return true;
+		if (s1 == null) return s2!.Length == 0;
+		if (s2 == null) return s1.Length == 0;
+		return string.Equals(s1, s2, stringComparison);
 	}
 
 	/// <summary>
@@ -1138,7 +1198,7 @@ public static partial class Strings
 		(Type type, bool enableTrim, NormalizationForm normalizationForm, bool recursive) key = (type, enableTrim, normalizationForm, recursive);
 
 		Action<T> action = useCache ? (Action<T>)GetOrAddNormalizeObjectStringsCache<T>(key, enableTrim, normalizationForm, recursive) :
-						CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive, useCache).CompileFast();
+			CreateNormalizeObjectStringsExpression<T>(enableTrim, normalizationForm, recursive, useCache).CompileFast();
 		action(obj);
 
 		return obj;

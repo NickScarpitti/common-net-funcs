@@ -2,6 +2,8 @@
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
 
+
+
 namespace Core.Tests;
 
 public sealed class StringsTests
@@ -810,6 +812,122 @@ public sealed class StringsTests
 	{
 		// Act
 		bool result = s.AsSpan().Contains(search, useOr);
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData("hello world", "aeiou", true)]        // Contains vowels
+	[InlineData("hello world", "xyz", false)]         // No xyz characters
+	[InlineData("test123", "0123456789", true)]       // Contains digits
+	[InlineData("test", "0123456789", false)]         // No digits
+	[InlineData("", "abc", false)]                    // Empty string
+	[InlineData(null, "abc", false)]                  // Null string
+	[InlineData("test", "", false)]                   // Empty character set
+	public void ContainsAnyCharacter_String_Works(string? s, string characters, bool expected)
+	{
+		// Act
+		bool result = s.ContainsAnyCharacter(characters.AsSpan());
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData("hello world", "aeiou", true)]        // Contains vowels
+	[InlineData("hello world", "xyz", false)]         // No xyz characters
+	[InlineData("test123", "0123456789", true)]       // Contains digits
+	[InlineData("test", "0123456789", false)]         // No digits
+	[InlineData("", "abc", false)]                    // Empty span
+	[InlineData("test", "", false)]                   // Empty character set
+	public void ContainsAnyCharacter_Span_Works(string s, string characters, bool expected)
+	{
+		// Act
+		bool result = s.AsSpan().ContainsAnyCharacter(characters.AsSpan());
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData("user@domain.com", "@", true)]        // Contains @
+	[InlineData("username", "@", false)]              // No @
+	[InlineData("test<tag>", "<>", true)]             // Contains angle brackets
+	[InlineData("normal text", "<>", false)]          // No angle brackets
+	public void ContainsAnyCharacter_SingleChar_Works(string s, string characters, bool expected)
+	{
+		// Act
+		bool result = s.ContainsAnyCharacter(characters.AsSpan());
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData("test!@#", "!@#$%^&*()", true)]       // Contains special chars
+	[InlineData("test", "!@#$%^&*()", false)]         // No special chars
+	[InlineData("hello world", " \t\n\r", true)]      // Contains whitespace
+	[InlineData("helloworld", " \t\n\r", false)]      // No whitespace
+	public void ContainsAnyCharacter_MultipleChars_Works(string s, string characters, bool expected)
+	{
+		// Act - using span overload to differentiate from single char test
+		bool result = s.AsSpan().ContainsAnyCharacter(characters.AsSpan());
+
+		// Assert
+		result.ShouldBe(expected);
+		// Additional check: verify string overload gives same result
+		s.ContainsAnyCharacter(characters.AsSpan()).ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData("café", "é", true)]                   // Unicode char present
+	[InlineData("cafe", "é", false)]                  // Unicode char not present
+	[InlineData("test™", "™®©", true)]                // Special unicode symbols
+	[InlineData("test", "™®©", false)]                // No special symbols
+	public void ContainsAnyCharacter_UnicodeChars_Works(string s, string characters, bool expected)
+	{
+		// Arrange - test both string and span overloads with unicode
+		ReadOnlySpan<char> span = s.AsSpan();
+		ReadOnlySpan<char> charSpan = characters.AsSpan();
+
+		// Act
+		bool result = span.ContainsAnyCharacter(charSpan);
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData("Test", "test", true)]                // Case sensitive - matches on e, s, and t
+	[InlineData("Test", "E", false)]                  // Case sensitive - no match
+	[InlineData("Test", "T", true)]                   // Exact match
+	[InlineData("hello", "HELLO", false)]             // Case sensitive - no match
+	[InlineData("ABC", "abc", false)]                 // Case sensitive - no match
+	public void ContainsAnyCharacter_CaseSensitive_Works(string s, string characters, bool expected)
+	{
+		// Act - verify case sensitivity using string extension method
+		bool stringResult = s.ContainsAnyCharacter(characters.AsSpan());
+		bool spanResult = s.AsSpan().ContainsAnyCharacter(characters.AsSpan());
+
+		// Assert - both should behave the same
+		stringResult.ShouldBe(expected);
+		spanResult.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData("a", "a", true)]                      // Single char, match
+	[InlineData("a", "b", false)]                     // Single char, no match
+	[InlineData("abc", "xyz", false)]                 // Multiple chars, no match
+	[InlineData("abc", "cde", true)]                  // Multiple chars, partial match (c)
+	public void ContainsAnyCharacter_EdgeCases_Works(string s, string characters, bool expected)
+	{
+		// Arrange - test minimum and boundary cases
+		string testString = s;
+		ReadOnlySpan<char> testChars = characters.AsSpan();
+
+		// Act
+		bool result = testString.ContainsAnyCharacter(testChars);
 
 		// Assert
 		result.ShouldBe(expected);
@@ -2387,6 +2505,6 @@ public sealed class StringsTests
 	}
 }
 
-#endregion
+	#endregion
 
 

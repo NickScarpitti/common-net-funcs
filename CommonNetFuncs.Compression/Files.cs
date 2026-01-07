@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+
 using static CommonNetFuncs.Compression.Streams;
 
 namespace CommonNetFuncs.Compression;
@@ -135,7 +136,7 @@ public static class Files
 		await using FileStream inputStream = new(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, ChunkSize, FileOptions.SequentialScan);
 		await using FileStream outputStream = new(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, ChunkSize, FileOptions.SequentialScan);
 
-		await inputStream.CompressStream(outputStream, compressionType, cancellationToken).ConfigureAwait(false);
+		await inputStream.CompressStream(outputStream, compressionType, CompressionLevel.Optimal, cancellationToken).ConfigureAwait(false);
 	}
 
 	/// <summary>

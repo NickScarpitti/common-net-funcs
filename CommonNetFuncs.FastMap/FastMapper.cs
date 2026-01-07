@@ -14,7 +14,7 @@ namespace CommonNetFuncs.FastMap;
 /// High-performance object mapper using compiled expression trees with aggressive inlining.
 /// Optimized for minimal overhead - targets near-manual-mapping performance.
 /// </summary>
-public static class FasterMapper
+public static class FastMapper
 {
 	#region Caching
 
@@ -28,16 +28,31 @@ public static class FasterMapper
 		public readonly Type DestType = destType;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(MapperCacheKey other) => SourceType == other.SourceType && DestType == other.DestType;
+		public bool Equals(MapperCacheKey other)
+		{
+			return SourceType == other.SourceType && DestType == other.DestType;
+		}
 
-		public override bool Equals(object? obj) => obj is MapperCacheKey key && Equals(key);
+		public override bool Equals(object? obj)
+		{
+			return obj is MapperCacheKey key && Equals(key);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode() => HashCode.Combine(SourceType, DestType);
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(SourceType, DestType);
+		}
 
-		public static bool operator ==(MapperCacheKey left, MapperCacheKey right) => left.Equals(right);
+		public static bool operator ==(MapperCacheKey left, MapperCacheKey right)
+		{
+			return left.Equals(right);
+		}
 
-		public static bool operator !=(MapperCacheKey left, MapperCacheKey right) => !left.Equals(right);
+		public static bool operator !=(MapperCacheKey left, MapperCacheKey right)
+		{
+			return !left.Equals(right);
+		}
 	}
 
 	// CacheManager-based cache for configurable caching (LRU support, size limits)
@@ -159,7 +174,7 @@ public static class FasterMapper
 		return CreateObjectMappingExpression(source, sourceType, destType);
 	}
 
-	private static Expression CreateObjectMappingExpression(Expression source, Type sourceType, Type destType)
+	private static MemberInitExpression CreateObjectMappingExpression(Expression source, Type sourceType, Type destType)
 	{
 		PropertyInfo[] sourceProps = GetProperties(sourceType);
 		PropertyInfo[] destProps = GetProperties(destType);
@@ -287,7 +302,7 @@ public static class FasterMapper
 		return Expression.Call(null, toListMethod, source);
 	}
 
-	private static Expression CreateMappedCollectionExpression(Expression source, Type destType, Type sourceElemType, Type destElemType)
+	private static MethodCallExpression CreateMappedCollectionExpression(Expression source, Type destType, Type sourceElemType, Type destElemType)
 	{
 		// Use LINQ Select + appropriate conversion - more efficient than manual loop
 		// because List<T> constructor from IEnumerable<T> uses optimized copy when source implements ICollection<T>

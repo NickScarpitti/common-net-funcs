@@ -1,10 +1,10 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
 using CommonNetFuncs.FastMap;
 
 namespace FastMap.Tests;
 
-public sealed class FasterMapperTests
+public sealed class FastMapperTests
 {
 	public sealed class SimpleSource
 	{
@@ -472,7 +472,7 @@ public sealed class FasterMapperTests
 		Dictionary<int, string> source = new() { [1] = "test" };
 
 		// Act & Assert
-		// FasterMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
+		// FastMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
 		Exception? exception = Should.Throw<TypeInitializationException>(() => source.FastMap<Dictionary<int, string>, List<string>>());
 		exception.InnerException.ShouldNotBeNull();
 		exception.InnerException.ShouldBeOfType<ArgumentException>();
@@ -485,7 +485,7 @@ public sealed class FasterMapperTests
 		Dictionary<int, string> source = new() { [1] = "test" };
 
 		// Act & Assert
-		// FasterMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
+		// FastMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
 		Exception? exception = Should.Throw<TypeInitializationException>(() => source.FastMap<Dictionary<int, string>, Dictionary<string, string>>());
 		exception.InnerException.ShouldNotBeNull();
 		exception.InnerException.ShouldBeOfType<InvalidOperationException>();
@@ -685,8 +685,8 @@ public sealed class FasterMapperTests
 	public void FasterMap_WithUseCacheTrue_UsesManagedCache()
 	{
 		// Arrange
-		FasterMapper.CacheManager.ClearAllCaches();
-		FasterMapper.CacheManager.SetUseLimitedCache(false);
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.SetUseLimitedCache(false);
 
 		SimpleSource source = new()
 		{
@@ -701,60 +701,60 @@ public sealed class FasterMapperTests
 		// Assert
 		result.ShouldNotBeNull();
 		result.StringProp.ShouldBe(source.StringProp);
-		FasterMapper.CacheManager.GetCache().Count.ShouldBeGreaterThan(0);
+		FastMapper.CacheManager.GetCache().Count.ShouldBeGreaterThan(0);
 	}
 
 	[Theory]
 	[InlineData(5)]
 	[InlineData(10)]
 	[InlineData(100)]
-	public void FasterMapper_CacheManager_SetAndGetLimitedCacheSize_Works(int size)
+	public void FastMapper_CacheManager_SetAndGetLimitedCacheSize_Works(int size)
 	{
 		// Act
-		FasterMapper.CacheManager.SetLimitedCacheSize(size);
+		FastMapper.CacheManager.SetLimitedCacheSize(size);
 
 		// Assert
-		FasterMapper.CacheManager.GetLimitedCacheSize().ShouldBe(size);
+		FastMapper.CacheManager.GetLimitedCacheSize().ShouldBe(size);
 	}
 
 	[Theory]
 	[InlineData(true)]
 	[InlineData(false)]
-	public void FasterMapper_CacheManager_SetAndGetUseLimitedCache_Works(bool useLimited)
+	public void FastMapper_CacheManager_SetAndGetUseLimitedCache_Works(bool useLimited)
 	{
 		// Act
-		FasterMapper.CacheManager.SetUseLimitedCache(useLimited);
+		FastMapper.CacheManager.SetUseLimitedCache(useLimited);
 
 		// Assert
-		FasterMapper.CacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
+		FastMapper.CacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
 	}
 
 	[Fact]
-	public void FasterMapper_CacheManager_ClearAllCaches_RemovesAllEntries()
+	public void FastMapper_CacheManager_ClearAllCaches_RemovesAllEntries()
 	{
 		// Arrange
-		FasterMapper.CacheManager.SetUseLimitedCache(false);
+		FastMapper.CacheManager.SetUseLimitedCache(false);
 		SimpleSource source = new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now };
 		source.FastMap<SimpleSource, SimpleDestination>(useCache: true);
-		FasterMapper.CacheManager.GetCache().Count.ShouldBeGreaterThan(0);
+		FastMapper.CacheManager.GetCache().Count.ShouldBeGreaterThan(0);
 
 		// Act
-		FasterMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.ClearAllCaches();
 
 		// Assert
-		FasterMapper.CacheManager.GetCache().Count.ShouldBe(0);
-		FasterMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
+		FastMapper.CacheManager.GetCache().Count.ShouldBe(0);
+		FastMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
 	}
 
 	[Theory]
 	[InlineData(true)]
 	[InlineData(false)]
-	public void FasterMapper_CacheManager_GetCacheAndLimitedCache_Work(bool useLimited)
+	public void FastMapper_CacheManager_GetCacheAndLimitedCache_Work(bool useLimited)
 	{
 		// Arrange
-		FasterMapper.CacheManager.ClearAllCaches();
-		FasterMapper.CacheManager.SetUseLimitedCache(useLimited);
-		FasterMapper.CacheManager.SetLimitedCacheSize(10);
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.SetUseLimitedCache(useLimited);
+		FastMapper.CacheManager.SetLimitedCacheSize(10);
 		SimpleSource source = new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now };
 
 		// Act
@@ -763,62 +763,62 @@ public sealed class FasterMapperTests
 		// Assert
 		if (useLimited)
 		{
-			FasterMapper.CacheManager.GetLimitedCache().Count.ShouldBe(1);
-			FasterMapper.CacheManager.GetCache().Count.ShouldBe(0);
+			FastMapper.CacheManager.GetLimitedCache().Count.ShouldBe(1);
+			FastMapper.CacheManager.GetCache().Count.ShouldBe(0);
 		}
 		else
 		{
-			FasterMapper.CacheManager.GetCache().Count.ShouldBe(1);
-			FasterMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
+			FastMapper.CacheManager.GetCache().Count.ShouldBe(1);
+			FastMapper.CacheManager.GetLimitedCache().Count.ShouldBe(0);
 		}
 	}
 
 	[Fact]
-	public void FasterMapper_CacheManager_TryAddCacheAndTryAddLimitedCache_Works()
+	public void FastMapper_CacheManager_TryAddCacheAndTryAddLimitedCache_Works()
 	{
 		// Arrange - use dedicated test types to avoid polluting other tests
-		FasterMapper.MapperCacheKey key = new(typeof(TryAddTestSource), typeof(TryAddTestDest));
+		FastMapper.MapperCacheKey key = new(typeof(TryAddTestSource), typeof(TryAddTestDest));
 		Func<TryAddTestSource, TryAddTestDest> del = _ => new TryAddTestDest { Value = "X" };
 
 		// Act & Assert - unlimited cache
-		FasterMapper.CacheManager.SetUseLimitedCache(false);
-		FasterMapper.CacheManager.ClearAllCaches();
-		FasterMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
-		FasterMapper.CacheManager.GetCache().ContainsKey(key).ShouldBeTrue();
+		FastMapper.CacheManager.SetUseLimitedCache(false);
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+		FastMapper.CacheManager.GetCache().ContainsKey(key).ShouldBeTrue();
 
 		// Act & Assert - limited cache
-		FasterMapper.CacheManager.SetUseLimitedCache(true);
-		FasterMapper.CacheManager.ClearAllCaches();
-		FasterMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
-		FasterMapper.CacheManager.GetLimitedCache().ContainsKey(key).ShouldBeTrue();
+		FastMapper.CacheManager.SetUseLimitedCache(true);
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+		FastMapper.CacheManager.GetLimitedCache().ContainsKey(key).ShouldBeTrue();
 	}
 
 	[Fact]
-	public void FasterMapper_CacheManager_DuplicateTryAddCache_ReturnsFalse()
+	public void FastMapper_CacheManager_DuplicateTryAddCache_ReturnsFalse()
 	{
 		// Arrange - use dedicated test types to avoid polluting other tests
-		FasterMapper.MapperCacheKey key = new(typeof(TryAddTestSource), typeof(TryAddTestDest));
+		FastMapper.MapperCacheKey key = new(typeof(TryAddTestSource), typeof(TryAddTestDest));
 		Func<TryAddTestSource, TryAddTestDest> del = _ => new TryAddTestDest { Value = "X" };
 
 		// Act & Assert - unlimited cache
-		FasterMapper.CacheManager.SetUseLimitedCache(false);
-		FasterMapper.CacheManager.ClearAllCaches();
-		FasterMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
-		FasterMapper.CacheManager.TryAddCache(key, del).ShouldBeFalse();
+		FastMapper.CacheManager.SetUseLimitedCache(false);
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+		FastMapper.CacheManager.TryAddCache(key, del).ShouldBeFalse();
 
 		// Act & Assert - limited cache
-		FasterMapper.CacheManager.SetUseLimitedCache(true);
-		FasterMapper.CacheManager.ClearAllCaches();
-		FasterMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
-		FasterMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
+		FastMapper.CacheManager.SetUseLimitedCache(true);
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+		FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
 	}
 
 	[Fact]
 	public void FasterMap_WithUseCacheFalse_DoesNotAddToCache()
 	{
 		// Arrange
-		FasterMapper.CacheManager.ClearAllCaches();
-		FasterMapper.CacheManager.SetUseLimitedCache(false);
+		FastMapper.CacheManager.ClearAllCaches();
+		FastMapper.CacheManager.SetUseLimitedCache(false);
 
 		SimpleSource source = new()
 		{
@@ -827,7 +827,7 @@ public sealed class FasterMapperTests
 			DateProp = DateTime.Now
 		};
 
-		int initialCacheCount = FasterMapper.CacheManager.GetCache().Count;
+		int initialCacheCount = FastMapper.CacheManager.GetCache().Count;
 
 		// Act
 		SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>(useCache: false);
@@ -836,7 +836,7 @@ public sealed class FasterMapperTests
 		result.ShouldNotBeNull();
 		result.StringProp.ShouldBe(source.StringProp);
 		// Cache count should remain the same when useCache is false
-		FasterMapper.CacheManager.GetCache().Count.ShouldBe(initialCacheCount);
+		FastMapper.CacheManager.GetCache().Count.ShouldBe(initialCacheCount);
 	}
 
 	#endregion

@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using CommonNetFuncs.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.DependencyInjection;
 using Z.EntityFramework.Plus;
 
@@ -2912,6 +2913,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// Delete record in the table corresponding to type <typeparamref name="T"/> matching the primary key passed in.
 	/// </summary>
 	/// <param name="key">Key of the record of type <typeparamref name="T"/> to delete.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	public async Task<bool> DeleteByKey(object key)
 	{
 		await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
@@ -2938,6 +2940,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// </summary>
 	/// <param name="models">Records of type <typeparamref name="T"/> to delete.</param>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	public bool DeleteMany(IEnumerable<T> models, bool removeNavigationProps = false)
 	{
 		using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
@@ -2958,10 +2961,31 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	}
 
 	/// <summary>
+	/// Delete records in the table corresponding to type <typeparamref name="T"/> matching the where expression passed in.
+	/// </summary>
+	/// <param name="whereExpression">Expression to filter the records to delete.</param>
+	/// <returns>The number of records deleted, or <see langword="null"/> if there was an error.</returns>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	public async Task<int?> DeleteMany(Expression<Func<T, bool>> whereExpression, CancellationToken cancellationToken = default)
+	{
+		await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
+		try
+		{
+			return await context.Set<T>().AsNoTracking().Where(whereExpression).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{ErrorLocation} Error\n\tDelete Many Error", ex.GetLocationOfException());
+		}
+		return null;
+	}
+
+	/// <summary>
 	/// Delete records in the table corresponding to type <typeparamref name="T"/> matching the enumerable objects of type <typeparamref name="T"/> passed in.
 	/// </summary>
 	/// <param name="models">Records of type <typeparamref name="T"/> to delete.</param>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	public async Task<bool> DeleteManyTracked(IEnumerable<T> models, bool removeNavigationProps = false)
 	{
 		await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
@@ -2985,6 +3009,7 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// Delete records in the table corresponding to type <typeparamref name="T"/> matching the enumerable objects of type <typeparamref name="T"/> passed in.
 	/// </summary>
 	/// <param name="keys">Keys of type <typeparamref name="T"/> to delete.</param>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	public async Task<bool> DeleteManyByKeys(IEnumerable<object> keys) //Does not work with PostgreSQL, not testable
 	{
 		await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
@@ -3020,14 +3045,15 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	/// </summary>
 	/// <param name="models">The modified entity.</param>>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
-	public bool UpdateMany(List<T> models, bool removeNavigationProps = false) //Send in modified objects
+	/// <returns><see langword="bool"/> indicating success.</returns>
+	public bool UpdateMany(List<T> models, bool removeNavigationProps = false, CancellationToken cancellationToken = default) //Send in modified objects
 	{
 		try
 		{
 			using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
 			if (removeNavigationProps)
 			{
-				models.SetValue(x => x.RemoveNavigationProperties(context));
+				models.SetValue(x => x.RemoveNavigationProperties(context), cancellationToken: cancellationToken);
 			}
 			//await context.BulkUpdateAsync(models); EF Core Extensions (Paid)
 			context.UpdateRange(models);
@@ -3045,9 +3071,41 @@ public class BaseDbContextActions<T, UT>(IServiceProvider serviceProvider) : IBa
 	}
 
 	/// <summary>
+	/// Executes an update operation on records matching the where expression without loading them into memory.
+	/// Uses EF Core's ExecuteUpdate for efficient bulk updates.
+	/// </summary>
+	/// <param name="whereExpression">A linq expression used to filter records to update.</param>
+	/// <param name="updateSetters"><see cref="UpdateSettersBuilder"/> defining the properties to update and how to update them.</param>
+	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	/// <returns>The number of records affected by the update operation, or <see langword="null"/> if there was an error.</returns>
+	public async Task<int?> UpdateMany(Expression<Func<T, bool>> whereExpression, Action<UpdateSettersBuilder<T>> updateSetters,
+		TimeSpan? queryTimeout = null, CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			await using DbContext context = ServiceProvider.GetRequiredService<UT>()!;
+			if (queryTimeout != null)
+			{
+				context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
+			}
+			return await context.Set<T>().AsNoTracking().Where(whereExpression).ExecuteUpdateAsync(updateSetters, cancellationToken).ConfigureAwait(false);
+		}
+		catch (DbUpdateException duex)
+		{
+			logger.Error(duex, "{ErrorLocation} DBUpdate Error", duex.GetLocationOfException());
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+		}
+		return null;
+	}
+
+	/// <summary>
 	/// Persist any tracked changes to the database.
 	/// </summary>
-	/// <returns>Boolean indicating success.</returns>
+	/// <returns><see langword="bool"/> indicating success.</returns>
 	public async Task<bool> SaveChanges()
 	{
 		try

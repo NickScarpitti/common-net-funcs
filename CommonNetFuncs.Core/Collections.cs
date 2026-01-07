@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using FastExpressionCompiler;
+
 using static System.Convert;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
@@ -411,10 +413,10 @@ public static partial class Collections
 	}
 
 	/// <summary>
-	/// Clears the <see cref="List{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+	/// Clears the <see cref="List{T}"/>, shrinks the capacity back to the default, and optionally performs optimized garbage collection.
 	/// </summary>
 	/// <param name="list">The list to run the Clear and TrimExcess actions on.</param>
-	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+	/// <param name="forceGc">If true, requests optimized garbage collection targeting generation 2 (large objects) after clearing and trimming. Use only when dealing with very large collections where immediate memory reclamation is critical.</param>
 	public static void ClearTrim<T>(this List<T>? list, bool forceGc = false)
 	{
 		if (list == null)
@@ -426,15 +428,15 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-			GC.Collect();
+			GC.Collect(2, GCCollectionMode.Optimized, false);
 		}
 	}
 
 	/// <summary>
-	/// Clears the <see cref="Dictionary{TKey, TValue}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+	/// Clears the <see cref="Dictionary{TKey, TValue}"/>, shrinks the capacity back to the default, and optionally performs optimized garbage collection.
 	/// </summary>
 	/// <param name="dict">The dictionary to run the Clear and TrimExcess actions on.</param>
-	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+	/// <param name="forceGc">If true, requests optimized garbage collection targeting generation 2 (large objects) after clearing and trimming. Use only when dealing with very large collections where immediate memory reclamation is critical.</param>
 	public static void ClearTrim<T, UT>(this Dictionary<T, UT>? dict, bool forceGc = false) where T : notnull
 	{
 		if (dict == null)
@@ -446,15 +448,15 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-			GC.Collect();
+			GC.Collect(2, GCCollectionMode.Optimized, false);
 		}
 	}
 
 	/// <summary>
-	/// Clears the <see cref="HashSet{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+	/// Clears the <see cref="HashSet{T}"/>, shrinks the capacity back to the default, and optionally performs optimized garbage collection.
 	/// </summary>
 	/// <param name="hashSet">The hashSet to run the Clear and TrimExcess actions on.</param>
-	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+	/// <param name="forceGc">If true, requests optimized garbage collection targeting generation 2 (large objects) after clearing and trimming. Use only when dealing with very large collections where immediate memory reclamation is critical.</param>
 	public static void ClearTrim<T>(this HashSet<T>? hashSet, bool forceGc = false)
 	{
 		if (hashSet == null)
@@ -466,15 +468,15 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-			GC.Collect();
+			GC.Collect(2, GCCollectionMode.Optimized, false);
 		}
 	}
 
 	/// <summary>
-	/// Clears the <see cref="Stack{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+	/// Clears the <see cref="Stack{T}"/>, shrinks the capacity back to the default, and optionally performs optimized garbage collection.
 	/// </summary>
 	/// <param name="stack">The stack to run the Clear and TrimExcess actions on.</param>
-	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+	/// <param name="forceGc">If true, requests optimized garbage collection targeting generation 2 (large objects) after clearing and trimming. Use only when dealing with very large collections where immediate memory reclamation is critical.</param>
 	public static void ClearTrim<T>(this Stack<T>? stack, bool forceGc = false)
 	{
 		if (stack == null)
@@ -486,15 +488,15 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-			GC.Collect();
+			GC.Collect(2, GCCollectionMode.Optimized, false);
 		}
 	}
 
 	/// <summary>
-	/// Clears the <see cref="Queue{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
+	/// Clears the <see cref="Queue{T}"/>, shrinks the capacity back to the default, and optionally performs optimized garbage collection.
 	/// </summary>
 	/// <param name="queue">The queue to run the Clear and TrimExcess actions on.</param>
-	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+	/// <param name="forceGc">If true, requests optimized garbage collection targeting generation 2 (large objects) after clearing and trimming. Use only when dealing with very large collections where immediate memory reclamation is critical.</param>
 	public static void ClearTrim<T>(this Queue<T>? queue, bool forceGc = false)
 	{
 		if (queue == null)
@@ -506,7 +508,7 @@ public static partial class Collections
 
 		if (forceGc)
 		{
-			GC.Collect();
+			GC.Collect(2, GCCollectionMode.Optimized, false);
 		}
 	}
 
@@ -588,7 +590,7 @@ public static partial class Collections
 	/// </summary>
 	/// <typeparam name="T">Class to use in table conversion.</typeparam>
 	/// <param name="table">Table to convert to list.</param>
-	/// <param name="convertShortToBool">Optional: Allow checking for parameters that are short values in the table that correlate to a bool parameter when true. Defailt is false.</param>
+	/// <param name="convertShortToBool">Optional: Allow checking for parameters that are short values in the table that correlate to a bool parameter when true. Default is false.</param>
 	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
 	/// <returns><see cref="List{T}"/> containing table values as the specified <see langword="class"/>.</returns>
 	public static IEnumerable<T> ToEnumerableStreaming<T>(this DataTable table, bool convertShortToBool = false, CancellationToken cancellationToken = default) where T : class, new()
@@ -691,7 +693,7 @@ public static partial class Collections
 						{
 							pair.PropertyInfo!.SetValue(item, DateOnly.FromDateTime((DateTime)value));
 						}
-						else if (DateOnly.TryParse((string)value, out DateOnly dateOnlyValue))
+						else if (DateOnly.TryParse((string)value, CultureInfo.InvariantCulture, out DateOnly dateOnlyValue))
 						{
 							pair.PropertyInfo!.SetValue(item, dateOnlyValue);
 						}
@@ -706,7 +708,7 @@ public static partial class Collections
 						{
 							pair.PropertyInfo!.SetValue(item, ((DateOnly)value).ToDateTime(TimeOnly.MinValue));
 						}
-						else if (DateTime.TryParse((string)value, out DateTime dateTimeValue))
+						else if (DateTime.TryParse((string)value, CultureInfo.InvariantCulture, out DateTime dateTimeValue))
 						{
 							pair.PropertyInfo!.SetValue(item, dateTimeValue);
 						}

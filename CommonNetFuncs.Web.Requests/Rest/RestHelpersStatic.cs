@@ -711,6 +711,7 @@ public static class RestHelpersStatic
 		return (itemsPerChunk, numberOfChunks);
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static TimeSpan GetTimeout<T>(RequestOptions<T> requestOptions)
 	{
 		return TimeSpan.FromSeconds(requestOptions.Timeout is null or <= 0 ? DefaultRequestTimeout : (double)requestOptions.Timeout);

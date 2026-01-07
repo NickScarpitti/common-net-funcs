@@ -1,21 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<Platforms>AnyCPU;x86;x64</Platforms>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <OutputType>Exe</OutputType>
-    <Platforms>AnyCPU;x86;x64</Platforms>
-  </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+		<PackageReference Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.3.36812.1" />
+		<PackageReference Include="NLog" Version="6.0.7" />
+		<PackageReference Include="Mapster" Version="7.4.0" />
+		<PackageReference Include="Riok.Mapperly" Version="4.3.1" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageReference Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.3.36812.1" />
-    <PackageReference Include="NLog" Version="6.0.7" />
-    <PackageReference Include="Mapster" Version="7.4.0" />
-    <PackageReference Include="Riok.Mapperly" Version="4.2.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\CommonNetFuncs.Web.Requests\CommonNetFuncs.Web.Requests.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.FastMap\CommonNetFuncs.FastMap.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.DeepClone\CommonNetFuncs.DeepClone.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\CommonNetFuncs.Web.Requests\CommonNetFuncs.Web.Requests.csproj" />
-    <ProjectReference Include="..\CommonNetFuncs.FastMap\CommonNetFuncs.FastMap.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove=".editorconfig" />
+	</ItemGroup>
 </Project>

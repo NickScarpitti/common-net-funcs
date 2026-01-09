@@ -51,11 +51,11 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="model">Entity to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
 	{
 		try
 		{
-			baseAppDbContextActions.DeleteByObject(model, removeNavigationProps);
+			baseAppDbContextActions.DeleteByObject(model, removeNavigationProps, globalFilterOptions);
 			if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
 				return Ok(model);
@@ -77,11 +77,12 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions,
+		bool removeNavigationProps = false, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
 	{
 		try
 		{
-			if (models.Any() && baseAppDbContextActions.DeleteMany(models, removeNavigationProps) && await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
+			if (models.Any() && baseAppDbContextActions.DeleteMany(models, removeNavigationProps, globalFilterOptions) && await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
 				return Ok(models);
 			}
@@ -102,11 +103,11 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="whereClause">Where clause to filter entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<int>> DeleteMany<T, UT>(Expression<Func<T, bool>> whereClause, IBaseDbContextActions<T, UT> baseAppDbContextActions, CancellationToken cancellationToken = default) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<int>> DeleteMany<T, UT>(Expression<Func<T, bool>> whereClause, IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null, CancellationToken cancellationToken = default) where T : class?, new() where UT : DbContext
 	{
 		try
 		{
-			int? result = await baseAppDbContextActions.DeleteMany(whereClause, cancellationToken).ConfigureAwait(false);
+			int? result = await baseAppDbContextActions.DeleteMany(whereClause, globalFilterOptions, cancellationToken).ConfigureAwait(false);
 			if (result != null)
 			{
 				return Ok(result);
@@ -127,11 +128,11 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<T>>> DeleteManyByKeys<T, UT>(IEnumerable<object> models, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<List<T>>> DeleteManyByKeys<T, UT>(IEnumerable<object> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
 	{
 		try
 		{
-			if (models.Any() && await baseAppDbContextActions.DeleteManyByKeys(models).ConfigureAwait(false)) //Does not work with PostgreSQL
+			if (models.Any() && await baseAppDbContextActions.DeleteManyByKeys(models, globalFilterOptions).ConfigureAwait(false)) //Does not work with PostgreSQL
 			{
 				return Ok(models);
 			}
@@ -153,11 +154,11 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
 	public async Task<ActionResult<int>> UpdateMany<T, UT>(Expression<Func<T, bool>> whereClause, Action<UpdateSettersBuilder<T>> setPropertyCalls,
-			IBaseDbContextActions<T, UT> baseAppDbContextActions, CancellationToken cancellationToken = default) where T : class?, new() where UT : DbContext
+			IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null, CancellationToken cancellationToken = default) where T : class?, new() where UT : DbContext
 	{
 		try
 		{
-			int? result = await baseAppDbContextActions.UpdateMany(whereClause, setPropertyCalls, null, cancellationToken).ConfigureAwait(false);
+			int? result = await baseAppDbContextActions.UpdateMany(whereClause, setPropertyCalls, null, globalFilterOptions, cancellationToken).ConfigureAwait(false);
 			if (result != null)
 			{
 				return Ok(result);
@@ -180,9 +181,9 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
 	{
-		T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
+		T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
 		return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
 	}
 
@@ -195,9 +196,9 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
 	{
-		T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
+		T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
 		return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
 	}
 

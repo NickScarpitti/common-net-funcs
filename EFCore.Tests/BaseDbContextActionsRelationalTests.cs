@@ -12,6 +12,7 @@ namespace EFCore.Tests;
 public sealed class BaseDbContextActionsRelationalTests : IDisposable
 {
 	private readonly SqliteConnection _connection;
+	private readonly SqliteConnection _connectionWithFilters;
 	private readonly IServiceProvider _serviceProvider;
 	private readonly Fixture _fixture;
 	private bool _disposed;
@@ -29,14 +30,27 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		_connection = new SqliteConnection("DataSource=:memory:");
 		_connection.Open();
 
+		// Separate connection for filtered entities to avoid schema conflicts
+		_connectionWithFilters = new SqliteConnection("DataSource=:memory:");
+		_connectionWithFilters.Open();
+
 		ServiceCollection services = new();
 		services.AddDbContext<TestDbContext>(options => options.UseSqlite(_connection), ServiceLifetime.Transient);
+		services.AddDbContext<TestDbContextWithFilters>(options => options.UseSqlite(_connectionWithFilters), ServiceLifetime.Transient);
 		_serviceProvider = services.BuildServiceProvider();
 
-		// Ensure database is created
-		using IServiceScope scope = _serviceProvider.CreateScope();
-		TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-		context.Database.EnsureCreated();
+		// Ensure both databases are created
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+			context.Database.EnsureCreated();
+		}
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters contextWithFilters = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			contextWithFilters.Database.EnsureCreated();
+		}
 	}
 
 	public void Dispose()
@@ -52,6 +66,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			if (disposing)
 			{
 				_connection?.Dispose();
+				_connectionWithFilters?.Dispose();
 				(_serviceProvider as IDisposable)?.Dispose();
 			}
 			_disposed = true;
@@ -374,4 +389,348 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 	}
 
 	#endregion
+
+	#region GlobalFilterOptions GetByKey Tests
+
+	[Fact]
+	public async Task GetByKey_WithoutGlobalFilterOptions_ShouldApplyFilters()
+	{
+		// Arrange
+		TestEntityWithFilter activeEntity = new() { Id = 1, Name = "Active", IsActive = true };
+		TestEntityWithFilter inactiveEntity = new() { Id = 2, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddRangeAsync(activeEntity, inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+
+		// Act
+		TestEntityWithFilter? activeResult = await testContext.GetByKey(1);
+		TestEntityWithFilter? inactiveResult = await testContext.GetByKey(2);
+
+		// Assert
+		activeResult.ShouldNotBeNull();
+		activeResult.Id.ShouldBe(1);
+		inactiveResult.ShouldBeNull(); // Filter should exclude inactive entities
+	}
+
+	[Fact]
+	public async Task GetByKey_WithDisableAllFilters_ShouldIgnoreFilters()
+	{
+		// Arrange
+		TestEntityWithFilter activeEntity = new() { Id = 1, Name = "Active", IsActive = true };
+		TestEntityWithFilter inactiveEntity = new() { Id = 2, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddRangeAsync(activeEntity, inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		TestEntityWithFilter? activeResult = await testContext.GetByKey(1, globalFilterOptions: filterOptions);
+		TestEntityWithFilter? inactiveResult = await testContext.GetByKey(2, globalFilterOptions: filterOptions);
+
+		// Assert
+		activeResult.ShouldNotBeNull();
+		activeResult.Id.ShouldBe(1);
+		inactiveResult.ShouldNotBeNull(); // Should find inactive entity with filters disabled
+		inactiveResult.Id.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task GetByKey_WithFilterNamesToDisable_ShouldDisableSpecifiedFilters()
+	{
+		// Arrange
+		TestEntityWithFilter inactiveEntity = new() { Id = 1, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = ["IsActiveFilter"] };
+
+		// Act
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions);
+
+		// Assert
+		// Note: EF Core's IgnoreQueryFilters() disables all filters, not specific ones
+		// So this test verifies that FilterNamesToDisable triggers filter disabling
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task GetByKey_CompoundKey_WithoutGlobalFilterOptions_ShouldApplyFilters()
+	{
+		// Arrange
+		TestEntityWithCompoundKeyAndFilter activeEntity = new() { Id1 = 1, Id2 = 1, Name = "Active", IsActive = true };
+		TestEntityWithCompoundKeyAndFilter inactiveEntity = new() { Id1 = 1, Id2 = 2, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithCompoundKeyAndFilter.AddRangeAsync(activeEntity, inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+
+		// Act
+		TestEntityWithCompoundKeyAndFilter? activeResult = await testContext.GetByKey(new object[] { 1, 1 });
+		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testContext.GetByKey(new object[] { 1, 2 });
+
+		// Assert
+		activeResult.ShouldNotBeNull();
+		activeResult.Id1.ShouldBe(1);
+		activeResult.Id2.ShouldBe(1);
+		inactiveResult.ShouldBeNull(); // Filter should exclude inactive entities
+	}
+
+	[Fact]
+	public async Task GetByKey_CompoundKey_WithDisableAllFilters_ShouldIgnoreFilters()
+	{
+		// Arrange
+		TestEntityWithCompoundKeyAndFilter activeEntity = new() { Id1 = 1, Id2 = 1, Name = "Active", IsActive = true };
+		TestEntityWithCompoundKeyAndFilter inactiveEntity = new() { Id1 = 1, Id2 = 2, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithCompoundKeyAndFilter.AddRangeAsync(activeEntity, inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		TestEntityWithCompoundKeyAndFilter? activeResult = await testContext.GetByKey(new object[] { 1, 1 }, globalFilterOptions: filterOptions);
+		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testContext.GetByKey(new object[] { 1, 2 }, globalFilterOptions: filterOptions);
+
+		// Assert
+		activeResult.ShouldNotBeNull();
+		activeResult.Id1.ShouldBe(1);
+		activeResult.Id2.ShouldBe(1);
+		inactiveResult.ShouldNotBeNull(); // Should find inactive entity with filters disabled
+		inactiveResult.Id1.ShouldBe(1);
+		inactiveResult.Id2.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task GetByKey_WithNullGlobalFilterOptions_ShouldApplyFilters()
+	{
+		// Arrange
+		TestEntityWithFilter inactiveEntity = new() { Id = 1, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+
+		// Act
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: null);
+
+		// Assert
+		result.ShouldBeNull(); // Filter should still apply with null options
+	}
+
+	[Fact]
+	public async Task GetByKey_WithEmptyFilterNamesToDisable_ShouldApplyFilters()
+	{
+		// Arrange
+		TestEntityWithFilter inactiveEntity = new() { Id = 1, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = [] };
+
+		// Act
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions);
+
+		// Assert
+		result.ShouldBeNull(); // Filter should still apply with empty array
+	}
+
+	[Fact]
+	public async Task GetByKey_WithDisableAllFiltersFalse_ShouldApplyFilters()
+	{
+		// Arrange
+		TestEntityWithFilter inactiveEntity = new() { Id = 1, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions);
+
+		// Assert
+		result.ShouldBeNull(); // Filter should still apply
+	}
+
+	[Fact]
+	public async Task GetByKey_WithNonExistentKey_AndDisableAllFilters_ShouldReturnNull()
+	{
+		// Arrange
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		TestEntityWithFilter? result = await testContext.GetByKey(999, globalFilterOptions: filterOptions);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task GetByKey_CompoundKey_WithNonExistentKey_AndDisableAllFilters_ShouldReturnNull()
+	{
+		// Arrange
+		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		TestEntityWithCompoundKeyAndFilter? result = await testContext.GetByKey(new object[] { 999, 999 }, globalFilterOptions: filterOptions);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task GetByKey_WithQueryTimeout_AndGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		TestEntityWithFilter inactiveEntity = new() { Id = 1, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		TestEntityWithFilter? result = await testContext.GetByKey(1, queryTimeout: TimeSpan.FromSeconds(30), globalFilterOptions: filterOptions);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task GetByKey_WithCancellationToken_AndGlobalFilterOptions_ShouldRespectCancellation()
+	{
+		// Arrange
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+		using CancellationTokenSource cts = new();
+		await cts.CancelAsync();
+
+		// Act
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: cts.Token);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task GetByKey_FilterNamesToDisableTakesPriorityOverDisableAllFilters()
+	{
+		// Arrange
+		TestEntityWithFilter inactiveEntity = new() { Id = 1, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = _serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity);
+			await context.SaveChangesAsync();
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(_serviceProvider);
+		GlobalFilterOptions filterOptions = new()
+		{
+			DisableAllFilters = false, // This should be ignored
+			FilterNamesToDisable = ["IsActiveFilter"]
+		};
+
+		// Act
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions);
+
+		// Assert
+		// FilterNamesToDisable takes priority, so filters should be disabled
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(1);
+	}
+
+	#endregion
+}
+
+// Test DbContext with global query filters
+public class TestDbContextWithFilters(DbContextOptions<TestDbContextWithFilters> options) : DbContext(options)
+{
+	public DbSet<TestEntityWithFilter> TestEntitiesWithFilter => Set<TestEntityWithFilter>();
+	public DbSet<TestEntityWithCompoundKeyAndFilter> TestEntitiesWithCompoundKeyAndFilter => Set<TestEntityWithCompoundKeyAndFilter>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		// Configure global query filter for TestEntityWithFilter
+		modelBuilder.Entity<TestEntityWithFilter>()
+			.HasQueryFilter("IsActiveFilter", e => e.IsActive);
+
+		// Configure global query filter for TestEntityWithCompoundKeyAndFilter
+		modelBuilder.Entity<TestEntityWithCompoundKeyAndFilter>()
+			.HasKey(e => new { e.Id1, e.Id2 });
+
+		modelBuilder.Entity<TestEntityWithCompoundKeyAndFilter>()
+			.HasQueryFilter("IsActiveFilter", e => e.IsActive);
+	}
+}
+
+// Test entity with filter
+public class TestEntityWithFilter
+{
+	public int Id { get; set; }
+	public required string Name { get; set; }
+	public bool IsActive { get; set; }
+}
+
+// Test entity with compound key and filter
+public class TestEntityWithCompoundKeyAndFilter
+{
+	public int Id1 { get; set; }
+	public int Id2 { get; set; }
+	public required string Name { get; set; }
+	public bool IsActive { get; set; }
 }

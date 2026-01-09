@@ -12,6 +12,8 @@
 		<PackageReference Include="NLog" Version="6.0.7" />
 		<PackageReference Include="Mapster" Version="7.4.0" />
 		<PackageReference Include="Riok.Mapperly" Version="4.3.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -19,6 +21,7 @@
 		<ProjectReference Include="..\CommonNetFuncs.FastMap\CommonNetFuncs.FastMap.csproj" />
 		<ProjectReference Include="..\CommonNetFuncs.DeepClone\CommonNetFuncs.DeepClone.csproj" />
 		<ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.EFCore\CommonNetFuncs.EFCore.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

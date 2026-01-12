@@ -356,7 +356,7 @@ public static partial class Collections
 	public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, T partialObject, bool ignoreDefaultValues = false, CancellationToken cancellationToken = default) where T : class
 	{
 		// Get the properties of the object using reflection
-		//PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+		//PropertyInfo[] properties = typeof(TObj).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 		PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
 
 		// Build the expression tree for the conditions
@@ -437,7 +437,7 @@ public static partial class Collections
 	/// </summary>
 	/// <param name="dict">The dictionary to run the Clear and TrimExcess actions on.</param>
 	/// <param name="forceGc">If true, requests optimized garbage collection targeting generation 2 (large objects) after clearing and trimming. Use only when dealing with very large collections where immediate memory reclamation is critical.</param>
-	public static void ClearTrim<T, UT>(this Dictionary<T, UT>? dict, bool forceGc = false) where T : notnull
+	public static void ClearTrim<TKey, TValue>(this Dictionary<TKey, TValue>? dict, bool forceGc = false) where TKey : notnull
 	{
 		if (dict == null)
 		{
@@ -755,9 +755,9 @@ public static partial class Collections
 	}
 
 	///// <summary>
-	///// Convert an <see cref="IEnumerable{T}"/> into equivalent <see cref="DataTable"/> object using expression trees.
+	///// Convert an <see cref="IEnumerable{TObj}"/> into equivalent <see cref="DataTable"/> object using expression trees.
 	///// </summary>
-	///// <typeparam name="T">Class to use in table creation.</typeparam>
+	///// <typeparam name="TObj">Class to use in table creation.</typeparam>
 	///// <param name="data">Collection to convert into a DataTable.</param>
 	///// <param name="dataTable">DataTable to optionally insert data into.</param>
 	///// <param name="useParallel">Optional: Parallelizes the conversion. Default is <see langword="false"/>.</param>
@@ -765,9 +765,9 @@ public static partial class Collections
 	///// <param name="degreeOfParallelism">Optional: Used for setting number of parallel operations when using parallelization, default is -1 (#cores on machine).</param>
 	///// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
 	///// <returns>A <see cref="DataTable"/> representation of <paramref name="data"/>.</returns>
-	//[Obsolete("Please use ToDataTable<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) instead", false)]
+	//[Obsolete("Please use ToDataTable<TObj>(this IEnumerable<TObj>? data, DataTable? dataTable = null, bool useExpressionTrees = true, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) instead", false)]
 	//[return: NotNullIfNotNull(nameof(data))]
-	//public static DataTable? ToDataTableReflection<T>(this IEnumerable<T>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where T : class, new()
+	//public static DataTable? ToDataTableReflection<TObj>(this IEnumerable<TObj>? data, DataTable? dataTable = null, bool useParallel = false, int? approximateCount = null, int degreeOfParallelism = -1, CancellationToken cancellationToken = default) where TObj : class, new()
 	//{
 	//	if (data == null)
 	//	{
@@ -775,7 +775,7 @@ public static partial class Collections
 	//	}
 
 	//	dataTable ??= new();
-	//	PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
+	//	PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(TObj));
 
 	//	// Remove invalid columns
 	//	IEnumerable<string> propertyNames = properties.Select(x => x.Name);
@@ -795,7 +795,7 @@ public static partial class Collections
 	//	// Add rows
 	//	if (!useParallel)
 	//	{
-	//		foreach (T item in data.Where(x => x != null))
+	//		foreach (TObj item in data.Where(x => x != null))
 	//		{
 	//			cancellationToken.ThrowIfCancellationRequested();
 	//			DataRow row = dataTable.NewRow();

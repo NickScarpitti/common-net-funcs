@@ -32,7 +32,7 @@ public static class CsvReadHelpers
 	/// <param name="hasHeaders">Optional: Indicates file has headers. Default is <see langword="true"/>.</param>
 	/// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
 	/// <param name="bufferSize">Optional: Size of the buffer to use when reading the file. Default is 4096 bytes.</param>
-	/// <returns><see cref="List{T}"/> of T read from the CSV <see cref="Stream"/></returns>
+	/// <returns><see cref="List{T}"/> of TObj read from the CSV <see cref="Stream"/></returns>
 	public static List<T> ReadCsv<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
 		using StreamReader reader = new(stream, bufferSize: bufferSize);
@@ -47,7 +47,7 @@ public static class CsvReadHelpers
 	/// <param name="hasHeaders">Optional: Indicates file has headers. Default is <see langword="true"/>.</param>
 	/// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
 	/// <param name="bufferSize">Optional: Size of the buffer to use when reading the file. Default is 4096 bytes.</param>
-	/// <returns><see cref="List{T}"/> of T read from the CSV <see cref="StreamReader"/></returns>
+	/// <returns><see cref="List{T}"/> of TObj read from the CSV <see cref="StreamReader"/></returns>
 	private static List<T> ReadCsv<T>(StreamReader reader, bool hasHeaders, CultureInfo? cultureInfo, int bufferSize)
 	{
 		using CsvReader csv = new(reader, new CsvHelper.Configuration.CsvConfiguration(cultureInfo ?? CultureInfo.InvariantCulture)

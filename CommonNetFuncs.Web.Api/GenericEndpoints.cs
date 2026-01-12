@@ -20,12 +20,12 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <summary>
 	/// Basic endpoint to create more than one entity at a time
 	/// </summary>
-	/// <typeparam name="T">Type of entity being created</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TEntity">Type of entity being created</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
 	/// <param name="models">Entities to create</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<T>>> CreateMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<List<TEntity>>> CreateMany<TEntity, TContext>(IEnumerable<TEntity> models, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions, bool removeNavigationProps = false) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
 		{
@@ -46,12 +46,13 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <summary>
 	/// Basic endpoint to delete one entity
 	/// </summary>
-	/// <typeparam name="T">Type of entity being deleted</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TEntity">Type of entity being deleted</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
 	/// <param name="model">Entity to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<T>> Delete<T, UT>(T model, IBaseDbContextActions<T, UT> baseAppDbContextActions, bool removeNavigationProps = false, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<TEntity>> Delete<TEntity, TContext>(TEntity model, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions, bool removeNavigationProps = false,
+		GlobalFilterOptions? globalFilterOptions = null) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
 		{
@@ -72,13 +73,13 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <summary>
 	/// Basic endpoint to delete more than one entity at a time
 	/// </summary>
-	/// <typeparam name="T">Type of entity being deleted</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TEntity">Type of entity being deleted</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<T>>> DeleteMany<T, UT>(IEnumerable<T> models, IBaseDbContextActions<T, UT> baseAppDbContextActions,
-		bool removeNavigationProps = false, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<List<TEntity>>> DeleteMany<TEntity, TContext>(IEnumerable<TEntity> models, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions,
+		bool removeNavigationProps = false, GlobalFilterOptions? globalFilterOptions = null) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
 		{
@@ -98,12 +99,13 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <summary>
 	/// Basic endpoint to delete more than one entity at a time
 	/// </summary>
-	/// <typeparam name="T">Type of entity being deleted</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TEntity">Type of entity being deleted</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
 	/// <param name="whereClause">Where clause to filter entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<int>> DeleteMany<T, UT>(Expression<Func<T, bool>> whereClause, IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null, CancellationToken cancellationToken = default) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<int>> DeleteMany<TEntity, TContext>(Expression<Func<TEntity, bool>> whereClause, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions,
+		GlobalFilterOptions? globalFilterOptions = null, CancellationToken cancellationToken = default) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
 		{
@@ -123,12 +125,13 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <summary>
 	/// Basic endpoint to delete more than one entity at a time
 	/// </summary>
-	/// <typeparam name="T">Type of entity being deleted</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TEntity">Type of entity being deleted</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<T>>> DeleteManyByKeys<T, UT>(IEnumerable<object> models, IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<List<TEntity>>> DeleteManyByKeys<TEntity, TContext>(IEnumerable<object> models, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions,
+		GlobalFilterOptions? globalFilterOptions = null) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
 		{
@@ -147,14 +150,14 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <summary>
 	/// Basic endpoint to delete more than one entity at a time
 	/// </summary>
-	/// <typeparam name="T">Type of entity being deleted</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TEntity">Type of entity being deleted</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
 	/// <param name="whereClause">Where clause to filter entities to delete.</param>
 	/// <param name="setPropertyCalls">Set property calls defining the updates to be made.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<int>> UpdateMany<T, UT>(Expression<Func<T, bool>> whereClause, Action<UpdateSettersBuilder<T>> setPropertyCalls,
-			IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null, CancellationToken cancellationToken = default) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<int>> UpdateMany<TEntity, TContext>(Expression<Func<TEntity, bool>> whereClause, Action<UpdateSettersBuilder<TEntity>> setPropertyCalls,
+			IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null, CancellationToken cancellationToken = default) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
 		{
@@ -175,43 +178,45 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <summary>
 	/// Basic endpoint to update an entity with a single field primary key
 	/// </summary>
-	/// <typeparam name="T">Type of entity being updated</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TEntity">Type of entity being updated</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
 	/// <param name="primaryKey">Primary key of the entity to update</param>
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<T>> Patch<T, UT>(object primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<TEntity>> Patch<TEntity, TContext>(object primaryKey, JsonPatchDocument<TEntity> patch, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions,
+		GlobalFilterOptions? globalFilterOptions = null) where TEntity : class?, new() where TContext : DbContext
 	{
-		T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
+		TEntity? dbModel = await baseAppDbContextActions.GetByKey(primaryKey, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
 		return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
 	}
 
 	/// <summary>
 	/// Basic endpoint to update an entity with a multi-field primary key
 	/// </summary>
-	/// <typeparam name="T">Type of entity being updated</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TEntity">Type of entity being updated</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
 	/// <param name="primaryKey">Ordered values comprising the key of the entity to update</param>
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<T>> Patch<T, UT>(object[] primaryKey, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions, GlobalFilterOptions? globalFilterOptions = null) where T : class?, new() where UT : DbContext
+	public async Task<ActionResult<TEntity>> Patch<TEntity, TContext>(object[] primaryKey, JsonPatchDocument<TEntity> patch, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions,
+		GlobalFilterOptions? globalFilterOptions = null) where TEntity : class?, new() where TContext : DbContext
 	{
-		T? dbModel = await baseAppDbContextActions.GetByKey(primaryKey, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
+		TEntity? dbModel = await baseAppDbContextActions.GetByKey(primaryKey, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
 		return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
 	}
 
 	/// <summary>
 	/// Helper method to update an entity
 	/// </summary>
-	/// <typeparam name="T">Type of entity being updated</typeparam>
-	/// <typeparam name="UT">DB Context to use for this operation</typeparam>
+	/// <typeparam name="TEntity">Type of entity being updated</typeparam>
+	/// <typeparam name="TContext">DB Context to use for this operation</typeparam>
 	/// <param name="dbModel">Entity to update</param>
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	private async Task<ActionResult<T>> PatchInternal<T, UT>(T? dbModel, JsonPatchDocument<T> patch, IBaseDbContextActions<T, UT> baseAppDbContextActions) where T : class?, new() where UT : DbContext
+	private async Task<ActionResult<TEntity>> PatchInternal<TEntity, TContext>(TEntity? dbModel, JsonPatchDocument<TEntity> patch, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
 		{
@@ -225,7 +230,7 @@ public sealed class GenericEndpoints : ControllerBase
 				return Ok(dbModel);
 			}
 
-			T updateModel = dbModel.DeepClone();
+			TEntity updateModel = dbModel.DeepClone();
 
 			patch.ApplyTo(updateModel);
 

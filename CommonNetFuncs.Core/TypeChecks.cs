@@ -159,7 +159,7 @@ public static class TypeChecks
 
 	// Duplicated in CommonNetFuncs.FastMap.FastMapper to remove dependency
 	/// <summary>
-	/// Checks if the specified type is a read-only collection type, such as IReadOnlyCollection<T>, IReadOnlyList<T>, or ReadOnlyCollection<T>.
+	/// Checks if the specified type is a read-only collection type, such as IReadOnlyCollection<TObj>, IReadOnlyList<TObj>, or ReadOnlyCollection<TObj>.
 	/// </summary>
 	/// <param name="type">Type to check if it's a read-only collection type</param>
 	/// <returns><see langword="true"/> if type is a read-only collection type</returns>

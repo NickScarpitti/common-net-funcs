@@ -122,7 +122,7 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
 	}
 
 	/// <summary>
-	/// Returns a IEnumerable of T resulting from the SQL query
+	/// Returns a IEnumerable of TObj resulting from the SQL query
 	/// </summary>
 	/// <param name="sql">Select query to retrieve populate datatable.</param>
 	/// <param name="connStr">Connection string to run the query on</param>
@@ -156,7 +156,7 @@ public class DirectQuery(Func<string, OdbcConnection>? connectionFactory = null)
 	}
 
 	/// <summary>
-	/// Returns an IEnumerable of T resulting from the SQL query
+	/// Returns an IEnumerable of TObj resulting from the SQL query
 	/// </summary>
 	/// <param name="sql">Select query to retrieve populate datatable.</param>
 	/// <param name="connStr">Connection string to run the query on</param>

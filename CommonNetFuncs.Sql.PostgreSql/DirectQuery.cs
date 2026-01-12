@@ -155,7 +155,7 @@ public class DirectQuery(Func<string, NpgsqlConnection>? connectionFactory = nul
 	}
 
 	/// <summary>
-	/// Returns an IEnumerable of T resulting from the SQL query
+	/// Returns an IEnumerable of TObj resulting from the SQL query
 	/// </summary>
 	/// <param name="sql">Select query to retrieve populate datatable.</param>
 	/// <param name="connStr">Connection string to run the query on</param>

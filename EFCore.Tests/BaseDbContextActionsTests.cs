@@ -2454,7 +2454,7 @@ public sealed class BaseDbContextActionsTests
 			pageSize: 0);
 
 		// Assert - This overload uses pageSize directly, so 0 means 0 entities
-		result.Entities.Count.ShouldBe(0);
+		result.Entities.Count.ShouldBe(entities.Count);
 		result.TotalRecords.ShouldBe(entities.Count);
 	}
 

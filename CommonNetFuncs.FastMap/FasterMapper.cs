@@ -1,4 +1,4 @@
-// using System.Collections;
+﻿// using System.Collections;
 // using System.Diagnostics.CodeAnalysis;
 // using System.Linq.Expressions;
 // using System.Reflection;
@@ -267,15 +267,15 @@
 // 			return Expression.Call(null, toArrayMethod, source);
 // 		}
 
-// 		// For List<T>
+// 		// For List<TObj>
 // 		if (destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(List<>))
 // 		{
-// 			// Use List<T> constructor that takes IEnumerable<T> - pre-allocates if Count is known
+// 			// Use List<TObj> constructor that takes IEnumerable<TObj> - pre-allocates if Count is known
 // 			ConstructorInfo listCtor = destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(elemType)])!;
 // 			return Expression.New(listCtor, source);
 // 		}
 
-// 		// For HashSet<T>
+// 		// For HashSet<TObj>
 // 		if (destType.IsGenericType && destType.GetGenericTypeDefinition() == typeof(HashSet<>))
 // 		{
 // 			ConstructorInfo hashSetCtor = destType.GetConstructor([typeof(IEnumerable<>).MakeGenericType(elemType)])!;
@@ -290,7 +290,7 @@
 // 	private static Expression CreateMappedCollectionExpression(Expression source, Type destType, Type sourceElemType, Type destElemType)
 // 	{
 // 		// Use LINQ Select + appropriate conversion - more efficient than manual loop
-// 		// because List<T> constructor from IEnumerable<T> uses optimized copy when source implements ICollection<T>
+// 		// because List<TObj> constructor from IEnumerable<TObj> uses optimized copy when source implements ICollection<TObj>
 
 // 		// Create the element mapping lambda: item => new TDest { ... }
 // 		ParameterExpression itemParam = Expression.Parameter(sourceElemType, "item");

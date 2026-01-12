@@ -1037,15 +1037,15 @@ public static partial class Strings
 	///// <summary>
 	///// Removes excess spaces in string properties inside of an object
 	///// </summary>
-	///// <typeparam name="T">Type of object to trim strings in</typeparam>
+	///// <typeparam name="TObj">Type of object to trim strings in</typeparam>
 	///// <param name="obj">Object containing string properties to be trimmed</param>
 	//[return: NotNullIfNotNull(nameof(obj))]
 	//[Obsolete("Please use TrimObjectStrings instead")]
-	//public static T? TrimObjectStringsR<T>(this T? obj) where T : class
+	//public static TObj? TrimObjectStringsR<TObj>(this TObj? obj) where TObj : class
 	//{
 	//	if (obj != null)
 	//	{
-	//		IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string));
+	//		IEnumerable<PropertyInfo> props = GetOrAddPropertiesFromReflectionCache(typeof(TObj)).Where(x => x.PropertyType == typeof(string));
 	//		if (props.Any())
 	//		{
 	//			foreach (PropertyInfo prop in props)
@@ -1092,7 +1092,7 @@ public static partial class Strings
 		List<Expression> expressions = [];
 		List<ParameterExpression> variables = [];
 
-		//foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.PropertyType == typeof(string) || (recursive && x.PropertyType.IsClass)))
+		//foreach (PropertyInfo prop in typeof(TObj).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.PropertyType == typeof(string) || (recursive && x.PropertyType.IsClass)))
 		foreach (PropertyInfo prop in GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string) || (recursive && x.PropertyType.IsClass)))
 		{
 			if (prop.PropertyType == typeof(string))

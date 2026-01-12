@@ -10,14 +10,14 @@ public static class Reflection
 	///// <summary>
 	///// Deep clone a non-delegate type class (cloned object doesn't retain memory references) using reflection (mid-tier speed)
 	///// </summary>
-	///// <typeparam name="T">Type of object to clone.</typeparam>
+	///// <typeparam name="TObj">Type of object to clone.</typeparam>
 	///// <param name="original">Object to clone.</param>
 	///// <returns>An exact copy of the original object that is distinct from the original object.</returns>
 	//[Obsolete("Please use CommonNetFuncs.DeepClone.ExpressionTrees.DeepClone instead")]
 	// [return: NotNullIfNotNull(nameof(original))]
-	// public static T? DeepCloneR<T>(this T? original)
+	// public static TObj? DeepCloneR<TObj>(this TObj? original)
 	// {
-	//   return (T?)original.Copy();
+	//   return (TObj?)original.Copy();
 	// }
 
 	/// <summary>

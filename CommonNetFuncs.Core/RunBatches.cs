@@ -5,9 +5,9 @@
 /// </summary>
 public static class RunBatches
 {
-	//public delegate bool BatchedProcess<T>(IReadOnlyList<T> itemsToProcess);
-	//public delegate Task<bool> AsyncBatchedProcess<T>(IReadOnlyList<T> itemsToProcess);
-	//public delegate Task<bool> AsyncBatchedProcessList<T>(List<T> itemsToProcess);
+	//public delegate bool BatchedProcess<TObj>(IReadOnlyList<TObj> itemsToProcess);
+	//public delegate Task<bool> AsyncBatchedProcess<TObj>(IReadOnlyList<TObj> itemsToProcess);
+	//public delegate Task<bool> AsyncBatchedProcessList<TObj>(List<TObj> itemsToProcess);
 
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -58,7 +58,7 @@ public static class RunBatches
 	/// <summary>
 	/// Takes a collection of items and processes them in batches using the provided sync processor.
 	/// </summary>
-	//public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, SyncBatchProcessor<T> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true)
+	//public static bool RunBatchedProcess<TObj>(this IEnumerable<TObj> itemsToProcess, SyncBatchProcessor<TObj> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true)
 	public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, bool> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(itemsToProcess);

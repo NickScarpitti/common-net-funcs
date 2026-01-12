@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
@@ -6,6 +6,7 @@ using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Jobs;
 using CommonNetFuncs.FastMap;
 using Mapster;
+using Microsoft.VSDiagnostics;
 
 // using Microsoft.VSDiagnostics; // For CPUUsageDiagnoser
 
@@ -18,7 +19,7 @@ namespace BenchmarkSuite;
 [MediumRunJob(RuntimeMoniker.Net10_0)]
 [MemoryDiagnoser]
 [EventPipeProfiler(EventPipeProfile.CpuSampling)]
-// [CPUUsageDiagnoser] // Only works on Windows
+[CPUUsageDiagnoser] // Only works on Windows
 public class MapperComparisonBenchmarks
 {
 	private SimpleSource _simpleSource = null!;

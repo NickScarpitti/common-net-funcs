@@ -22,15 +22,15 @@ public class BaseDbContextActionsReadBenchmarks : IDisposable
 	[GlobalSetup]
 	public void Setup()
 	{
-		var services = new ServiceCollection();
+		ServiceCollection services = new();
 		services.AddDbContext<TestDbContext>(
 			options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()),
 			ServiceLifetime.Transient);
 		_serviceProvider = services.BuildServiceProvider();
 
-		using (var scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = _serviceProvider.CreateScope())
 		{
-			var context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			context.Database.EnsureCreated();
 
 			// Seed data - 100 records for realistic performance testing
@@ -59,7 +59,7 @@ public class BaseDbContextActionsReadBenchmarks : IDisposable
 	[Benchmark(Description = "GetByKey - with disabled filters")]
 	public async Task<TestEntity?> GetByKey_WithDisabledFilters()
 	{
-		var filterOptions = new GlobalFilterOptions { DisableAllFilters = true };
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 		return await _actions!.GetByKey(50, globalFilterOptions: filterOptions);
 	}
 
@@ -72,7 +72,7 @@ public class BaseDbContextActionsReadBenchmarks : IDisposable
 	[Benchmark(Description = "GetByKey - compound key, with disabled filters")]
 	public async Task<TestEntity?> GetByKey_CompoundKey_WithDisabledFilters()
 	{
-		var filterOptions = new GlobalFilterOptions { DisableAllFilters = true };
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 		return await _actions!.GetByKey(new object[] { 50 }, globalFilterOptions: filterOptions);
 	}
 
@@ -174,19 +174,19 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 	[GlobalSetup]
 	public void Setup()
 	{
-		var services = new ServiceCollection();
+		ServiceCollection services = new();
 		services.AddDbContext<TestDbContext>(
 			options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()),
 			ServiceLifetime.Transient);
 		_serviceProvider = services.BuildServiceProvider();
 
-		using (var scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = _serviceProvider.CreateScope())
 		{
-			var context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			context.Database.EnsureCreated();
 
 			// Seed 1000 records for scale testing
-			var entities = Enumerable.Range(1, 1000)
+			List<TestEntity> entities = Enumerable.Range(1, 1000)
 				.Select(i => new TestEntity
 				{
 					Id = i,
@@ -215,7 +215,7 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 	[Benchmark(Description = "Scale: 10k GetByKey - Expression path")]
 	public async Task Scale_GetByKey_Expression_10k()
 	{
-		var filterOptions = new GlobalFilterOptions { DisableAllFilters = true };
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 		for (int i = 0; i < ScaleIterations; i++)
 		{
 			int id = (i % 1000) + 1;
@@ -236,7 +236,7 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 	[Benchmark(Description = "Scale: 10k GetByKey compound - Expression path")]
 	public async Task Scale_GetByKey_Compound_Expression_10k()
 	{
-		var filterOptions = new GlobalFilterOptions { DisableAllFilters = true };
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 		for (int i = 0; i < ScaleIterations; i++)
 		{
 			int id = (i % 1000) + 1;
@@ -275,18 +275,18 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 	[GlobalSetup]
 	public void Setup()
 	{
-		var services = new ServiceCollection();
+		ServiceCollection services = new();
 		services.AddDbContext<TestDbContext>(
 			options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()),
 			ServiceLifetime.Transient);
 		_serviceProvider = services.BuildServiceProvider();
 
-		using (var scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = _serviceProvider.CreateScope())
 		{
-			var context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			context.Database.EnsureCreated();
 
-			var entities = Enumerable.Range(1, 100)
+			List<TestEntity> entities = Enumerable.Range(1, 100)
 				.Select(i => new TestEntity
 				{
 					Id = i,
@@ -311,7 +311,7 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 	[Benchmark(Description = "Memory: GetByKey Expression")]
 	public async Task<TestEntity?> Memory_GetByKey_Expression()
 	{
-		var filterOptions = new GlobalFilterOptions { DisableAllFilters = true };
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 		return await _actions!.GetByKey(50, globalFilterOptions: filterOptions);
 	}
 
@@ -324,7 +324,7 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 	[Benchmark(Description = "Memory: GetByKey compound Expression")]
 	public async Task<TestEntity?> Memory_GetByKey_Compound_Expression()
 	{
-		var filterOptions = new GlobalFilterOptions { DisableAllFilters = true };
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 		return await _actions!.GetByKey(new object[] { 50 }, globalFilterOptions: filterOptions);
 	}
 
@@ -334,12 +334,12 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 		// Test pure expression building cost without DB access
 		for (int i = 0; i < 100; i++)
 		{
-			var parameter = Expression.Parameter(typeof(TestEntity), "x");
-			var property = Expression.Property(parameter, "Id");
-			var constant = Expression.Constant(50, typeof(int));
-			var equality = Expression.Equal(property, constant);
-			var lambda = Expression.Lambda<Func<TestEntity, bool>>(equality, parameter);
-			var compiled = lambda.Compile();
+			ParameterExpression parameter = Expression.Parameter(typeof(TestEntity), "x");
+			MemberExpression property = Expression.Property(parameter, "Id");
+			ConstantExpression constant = Expression.Constant(50, typeof(int));
+			BinaryExpression equality = Expression.Equal(property, constant);
+			Expression<Func<TestEntity, bool>> lambda = Expression.Lambda<Func<TestEntity, bool>>(equality, parameter);
+			Func<TestEntity, bool> compiled = lambda.Compile();
 		}
 	}
 
@@ -349,7 +349,7 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 		// Test allocation cost of creating filter options
 		for (int i = 0; i < 1000; i++)
 		{
-			var filterOptions = new GlobalFilterOptions { DisableAllFilters = true };
+			GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 		}
 	}
 

@@ -881,7 +881,7 @@ public static class AwsS3HelpersStatic
 	/// <param name="bucketName">Name of the S3 bucket to get file list from.</param>
 	/// <param name="maxKeysPerQuery">Number of records to return per request.</param>
 	/// <paramref name="cancellationToken"/>>Optional: The cancellation token for this request.</paramref>
-	/// <returns><see cref="List{T}"/> containing the names of every file within the given S3 bucket.</returns>
+	/// <returns><see cref="List{TObj}"/> containing the names of every file within the given S3 bucket.</returns>
 	public static async Task<List<string>?> GetAllS3BucketFiles(this IAmazonS3 s3Client, string bucketName, int maxKeysPerQuery = 1000, CancellationToken cancellationToken = default)
 	{
 		List<string> fileNames = [];

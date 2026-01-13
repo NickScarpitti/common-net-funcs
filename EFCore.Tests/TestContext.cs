@@ -8,6 +8,20 @@ namespace EFCore.Tests;
 public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)
 {
 	public DbSet<TestEntity> TestEntities => Set<TestEntity>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<TestEntity>()
+			.HasKey(e => e.Id);
+
+		modelBuilder.Entity<TestEntityDetail>()
+			.HasKey(e => e.Id);
+
+		modelBuilder.Entity<TestEntityDetail>()
+			.HasOne(e => e.TestEntity)
+			.WithMany(e => e.Details)
+			.HasForeignKey(e => e.TestEntityId);
+	}
 }
 
 public class TestEntity

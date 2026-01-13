@@ -163,7 +163,7 @@ public sealed class TypeChecksTests
 		result.ShouldBe(expected);
 	}
 
-	// Helper types for interface/class that implement IReadOnlyCollection<T>
+	// Helper types for interface/class that implement IReadOnlyCollection<TObj>
 	private interface IMyReadOnlyCollectionInterface : IReadOnlyCollection<int>;
 
 	private class MyReadOnlyCollectionClass : IReadOnlyCollection<int>

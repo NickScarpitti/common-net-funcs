@@ -191,7 +191,7 @@ public static class SshFtp
 	/// <param name="remoteFilePath">The remote CSV file path.</param>
 	/// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
 	/// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-	/// <returns><see cref="List{T}"/> of T read from the CSV file.</returns>
+	/// <returns><see cref="List{T}"/> of TObj read from the CSV file.</returns>
 	public static async Task<List<T>> GetDataFromCsvAsync<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
 	{
 		if (sftpClient?.IsConnected() != true)
@@ -216,7 +216,7 @@ public static class SshFtp
 	/// <param name="remoteFilePath">The remote CSV file path.</param>
 	/// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
 	/// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-	/// <returns>Async enumerable of T read from the CSV file.</returns>
+	/// <returns>Async enumerable of TObj read from the CSV file.</returns>
 	public static IAsyncEnumerable<T> GetDataFromCsvAsyncEnumerable<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
 	{
 		if (sftpClient?.IsConnected() != true)
@@ -249,7 +249,7 @@ public static class SshFtp
 	/// <param name="remoteFilePath">The remote CSV file path.</param>
 	/// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
 	/// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-	/// <returns>Async enumerable of T read from the CSV file.</returns>
+	/// <returns>Async enumerable of TObj read from the CSV file.</returns>
 	public static IAsyncEnumerable<T> GetDataFromCsvCopyAsyncEnumerable<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default)
 	{
 		if (sftpClient?.IsConnected() != true)
@@ -282,7 +282,7 @@ public static class SshFtp
 	/// <param name="remoteFilePath">The remote CSV file path.</param>
 	/// <param name="csvHasHeaderRow">Optional: Indicates file has headers. Default is true.</param>
 	/// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
-	/// <returns><see cref="List{T}"/> of T read from the CSV file.</returns>
+	/// <returns><see cref="List{T}"/> of TObj read from the CSV file.</returns>
 	public static List<T> GetDataFromCsv<T>(this SftpClient? sftpClient, string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
 		if (sftpClient?.IsConnected() != true)

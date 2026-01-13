@@ -29,13 +29,13 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.7</Version>
+		<Version>4.0.9</Version>
 		<MinVerTagPrefix>web.api-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
 		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
 		<!-- Optional: Detect breaking changes from a previous stable version -->
-		<PackageValidationBaselineVersion>4.0.2</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>4.0.9</PackageValidationBaselineVersion>
 		<EnablePackageValidation>true</EnablePackageValidation>
 	</PropertyGroup>
 
@@ -88,7 +88,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" PrivateAssets="all" />
-		<PackageReference Include="Scalar.AspNetCore" Version="2.11.10" />
+		<PackageReference Include="Scalar.AspNetCore" Version="2.12.5" />
 	</ItemGroup>
 
 	<ItemGroup>

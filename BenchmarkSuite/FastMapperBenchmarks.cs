@@ -15,6 +15,7 @@ namespace BenchmarkSuite;
 [MediumRunJob(RuntimeMoniker.Net10_0)]
 [EventPipeProfiler(EventPipeProfile.CpuSampling)]
 [CPUUsageDiagnoser]
+[MemoryDiagnoser]
 public class FastMapperBenchmarks
 {
 	private SimpleSource _simpleSource = null!;

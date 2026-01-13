@@ -20,6 +20,45 @@ public static class Collections
 	/// <returns>First object that matches all non-null fields in <paramref name="partialObject"/></returns>
 	public static T? GetObjectByPartial<T>(this IQueryable<T> queryable, DbContext context, T partialObject, bool ignoreDefaultValues = true, CancellationToken cancellationToken = default)
 	{
+		(Expression? conditions, ParameterExpression? parameter) = GetObjectByPartialExpression(context, partialObject, ignoreDefaultValues, cancellationToken);
+
+		T? model = default;
+		if (conditions != null)
+		{
+			// Build the final lambda expression and execute the query
+			Expression<Func<T, bool>> lambda = Expression.Lambda<Func<T, bool>>(conditions, parameter);
+			model = queryable.FirstOrDefault(lambda);
+		}
+		return model;
+	}
+
+	/// <summary>
+	/// Select object from an <see cref="IQueryable{T}"/> by matching all non-null fields to an object of the same type comprising the collection.
+	/// This overload is for database specific queries using EF Core where DateTime values may need to be compared.
+	/// </summary>
+	/// <typeparam name="T">Object type.</typeparam>
+	/// <param name="queryable">Queryable collection to select from</param>
+	/// <param name="context">EF Core DB Context</param>
+	/// <param name="partialObject">Object with fields to match with objects in the queryable collection</param>
+	/// <param name="ignoreDefaultValues">Optional: Ignore default values in retrieval when true. Default is <see langword="false"/>.</param>
+	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+	/// <returns>First object that matches all non-null fields in <paramref name="partialObject"/></returns>
+	public static async Task<T?> GetObjectByPartialAsync<T>(this IQueryable<T> queryable, DbContext context, T partialObject, bool ignoreDefaultValues = true, CancellationToken cancellationToken = default)
+	{
+		(Expression? conditions, ParameterExpression? parameter) = GetObjectByPartialExpression(context, partialObject, ignoreDefaultValues, cancellationToken);
+
+		T? model = default;
+		if (conditions != null)
+		{
+			// Build the final lambda expression and execute the query
+			Expression<Func<T, bool>> lambda = Expression.Lambda<Func<T, bool>>(conditions, parameter);
+			model = await queryable.FirstOrDefaultAsync(lambda, cancellationToken);
+		}
+		return model;
+	}
+
+	private static (Expression? conditions, ParameterExpression parameter) GetObjectByPartialExpression<T>(DbContext context, T partialObject, bool ignoreDefaultValues = true, CancellationToken cancellationToken = default)
+	{
 		Type entityType = typeof(T);
 		PropertyInfo[] properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 		ParameterExpression parameter = Expression.Parameter(entityType, "$x");
@@ -59,22 +98,7 @@ public static class Collections
 			conditions = conditions == null ? condition : Expression.AndAlso(conditions, condition);
 		}
 
-		T? model = default;
-		if (conditions != null)
-		{
-			// Build the final lambda expression and execute the query
-			Expression<Func<T, bool>> lambda = Expression.Lambda<Func<T, bool>>(conditions, parameter);
-			model = queryable.FirstOrDefault(lambda);
-		}
-		return model;
-
-		//if (conditions == null)
-		//{
-		//	return await context.Set<T>().ToListAsync(cancellationToken);
-		//}
-
-		//Expression<Func<T, bool>> lambda = Expression.Lambda<Func<T, bool>>(conditions, parameter);
-		//return await context.Set<T>().Where(lambda).ToListAsync(cancellationToken);
+		return (conditions, parameter);
 	}
 
 	private static DateTime NormalizeDateTimeForDatabase(DateTime dateTimeValue, PropertyInfo property, IEntityType? entityTypeMetadata, DbContext context)

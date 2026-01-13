@@ -12,14 +12,14 @@ public sealed class RestClient(HttpClient httpClient) : IRestClient
 	public Uri? BaseAddress => _httpClient.BaseAddress;
 
 	/// <inheritdoc/>
-	public Task<RestObject<T>> RestObjectRequest<T, UT>(RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
+	public Task<RestObject<TResponse>> RestObjectRequest<TResponse, TBody>(RequestOptions<TBody> requestOptions, CancellationToken cancellationToken = default)
 	{
-		return _httpClient.RestObjectRequest<T, UT>(requestOptions, cancellationToken);
+		return _httpClient.RestObjectRequest<TResponse, TBody>(requestOptions, cancellationToken);
 	}
 
 	/// <inheritdoc/>
-	public Task<StreamingRestObject<T>> StreamingRestObjectRequest<T, UT>(RequestOptions<UT> requestOptions, CancellationToken cancellationToken = default)
+	public Task<StreamingRestObject<TResponse>> StreamingRestObjectRequest<TResponse, TBody>(RequestOptions<TBody> requestOptions, CancellationToken cancellationToken = default)
 	{
-		return _httpClient.StreamingRestObjectRequest<T, UT>(requestOptions, cancellationToken);
+		return _httpClient.StreamingRestObjectRequest<TResponse, TBody>(requestOptions, cancellationToken);
 	}
 }

@@ -22,13 +22,13 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a GET request to the specified URL and returns the response deserialized into the specified type.
 	/// </summary>
-	/// <typeparam name="T">The object type to be returned by the request.</typeparam>
+	/// <typeparam name="TResponse">The object type to be returned by the request.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The deserialized response object, or <see cref="null"/> if the request failed.</returns>
-	public async Task<T?> Get<T>(RestHelperOptions options, CancellationToken cancellationToken = default)
+	public async Task<TResponse?> Get<TResponse>(RestHelperOptions options, CancellationToken cancellationToken = default)
 	{
-		RestObject<T>? result = null;
+		RestObject<TResponse>? result = null;
 		int attempts = 0;
 		string? bearerToken = null;
 
@@ -53,9 +53,9 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
+				RequestOptions<TResponse> baseRequestOptions = GetRequestOptions<TResponse>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
 
-				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<TResponse, TResponse>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -89,15 +89,15 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a GET request to the specified URL and returns the response as an asynchronous stream of the specified type.
 	/// </summary>
-	/// <typeparam name="T">The object type to be returned by the request.</typeparam>
+	/// <typeparam name="TResponse">The object type to be returned by the request.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The deserialized response object, or <see cref="null"/> if the request failed.</returns>
-	public async IAsyncEnumerable<T?> GetStreaming<T>(RestHelperOptions options, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+	public async IAsyncEnumerable<TResponse?> GetStreaming<TResponse>(RestHelperOptions options, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
 		UpdateStreamingHeaders(options); // Ensure application/json is used for streaming
 
-		StreamingRestObject<T>? result = null;
+		StreamingRestObject<TResponse>? result = null;
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
@@ -121,9 +121,9 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
+				RequestOptions<TResponse> baseRequestOptions = GetRequestOptions<TResponse>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
 
-				result = await client.StreamingRestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.StreamingRestObjectRequest<TResponse, TResponse>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -153,7 +153,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 		if (result?.Result != null)
 		{
-			await foreach (T? item in result.Result.WithCancellation(cancellationToken).ConfigureAwait(false))
+			await foreach (TResponse? item in result.Result.WithCancellation(cancellationToken).ConfigureAwait(false))
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 				yield return item;
@@ -172,14 +172,14 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a POST request to the specified URL with the provided object and returns the response deserialized into the specified type.
 	/// </summary>
-	/// <typeparam name="T">The object type to populate the request body with and / or be returned by the request.</typeparam>
+	/// <typeparam name="TBody">The object type to populate the request body with and / or be returned by the request.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="postObject">The object to be sent in the request body.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The deserialized response object, or <see cref="null"/> if the request failed.</returns>
-	public async Task<T?> PostRequest<T>(RestHelperOptions options, T postObject, CancellationToken cancellationToken = default)
+	public async Task<TBody?> PostRequest<TBody>(RestHelperOptions options, TBody postObject, CancellationToken cancellationToken = default)
 	{
-		RestObject<T>? result = null;
+		RestObject<TBody>? result = null;
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
@@ -203,9 +203,9 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions<TBody>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
-				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -239,16 +239,16 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a POST request to the specified URL with the provided object and returns the response as an asynchronous stream of the specified type.
 	/// </summary>
-	/// <typeparam name="T">The object type to populate the request body with and / or be returned by the request stream.</typeparam>
+	/// <typeparam name="TBody">The object type to populate the request body with and / or be returned by the request stream.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="postObject">The object to be sent in the request body.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>An asynchronous stream of the response objects.</returns>
-	public async IAsyncEnumerable<T?> PostRequestStreaming<T>(RestHelperOptions options, T postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+	public async IAsyncEnumerable<TBody?> PostRequestStreaming<TBody>(RestHelperOptions options, TBody postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
 		UpdateStreamingHeaders(options); // Ensure application/json is used for streaming
 
-		StreamingRestObject<T>? result = null;
+		StreamingRestObject<TBody>? result = null;
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
@@ -272,9 +272,9 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions<TBody>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
-				result = await client.StreamingRestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.StreamingRestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -304,7 +304,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 		if (result?.Result != null)
 		{
-			await foreach (T? item in result.Result.WithCancellation(cancellationToken).ConfigureAwait(false))
+			await foreach (TBody? item in result.Result.WithCancellation(cancellationToken).ConfigureAwait(false))
 			{
 				yield return item;
 			}
@@ -318,15 +318,15 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a POST request to the specified URL with the provided object and returns the response deserialized into the specified type.
 	/// </summary>
-	/// <typeparam name="T">The object type to populate the request body with.</typeparam>
-	/// <typeparam name="UT">The object type to be returned in the response.</typeparam>
+	/// <typeparam name="TResponse">The object type to populate the request body with.</typeparam>
+	/// <typeparam name="TBody">The object type to be returned in the response.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="postObject">The object to be sent in the request body.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The deserialized response object, or <see cref="null"/> if the request failed.</returns>
-	public async Task<T?> GenericPostRequest<T, UT>(RestHelperOptions options, UT postObject, CancellationToken cancellationToken = default)
+	public async Task<TResponse?> GenericPostRequest<TResponse, TBody>(RestHelperOptions options, TBody postObject, CancellationToken cancellationToken = default)
 	{
-		RestObject<T>? result = null;
+		RestObject<TResponse>? result = null;
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
@@ -350,9 +350,9 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<UT> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
-				result = await client.RestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<TResponse, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -386,17 +386,17 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a POST request to the specified URL with the provided object and returns the response as an asynchronous stream of the specified type.
 	/// </summary>
-	/// <typeparam name="T">The object type to populate the request body with.</typeparam>
-	/// <typeparam name="UT">The object type to be returned in the stream.</typeparam>
+	/// <typeparam name="TResponse">The object type to populate the request body with.</typeparam>
+	/// <typeparam name="TBody">The object type to be returned in the stream.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="postObject">The object to be sent in the request body.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>An asynchronous stream of the response objects.</returns>
-	public async IAsyncEnumerable<T?> GenericPostRequestStreaming<T, UT>(RestHelperOptions options, UT postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+	public async IAsyncEnumerable<TResponse?> GenericPostRequestStreaming<TResponse, TBody>(RestHelperOptions options, TBody postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
 		UpdateStreamingHeaders(options); // Ensure application/json is used for streaming
 
-		StreamingRestObject<T>? result = null;
+		StreamingRestObject<TResponse>? result = null;
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
@@ -420,9 +420,9 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<UT> baseRequestOptions = GetRequestOptions<UT>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions<TBody>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
-				result = await client.StreamingRestObjectRequest<T, UT>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.StreamingRestObjectRequest<TResponse, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -452,7 +452,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 
 		if (result?.Result != null)
 		{
-			await foreach (T? item in result.Result.WithCancellation(cancellationToken).ConfigureAwait(false))
+			await foreach (TResponse? item in result.Result.WithCancellation(cancellationToken).ConfigureAwait(false))
 			{
 				yield return item;
 			}
@@ -466,12 +466,12 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a POST request to the specified URL with the provided object and returns the response as a string.
 	/// </summary>
-	/// <typeparam name="T">The object type to populate the request body with.</typeparam>
+	/// <typeparam name="TBody">The object type to populate the request body with.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="postObject">The object to be sent in the request body.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The response body as a string, or <see cref="null"/> if the request failed.</returns>
-	public async Task<string?> StringPostRequest<T>(RestHelperOptions options, T postObject, CancellationToken cancellationToken = default)
+	public async Task<string?> StringPostRequest<TBody>(RestHelperOptions options, TBody postObject, CancellationToken cancellationToken = default)
 	{
 		RestObject<string?>? result = null;
 		int attempts = 0;
@@ -497,9 +497,9 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions<TBody>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
-				result = await client.RestObjectRequest<string?, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<string?, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -537,13 +537,13 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a PATCH request to the specified URL with the provided model, comparing it to the old model to create a JSON Patch document.
 	/// </summary>
-	/// <typeparam name="T">Type of the object to be patched.</typeparam>
+	/// <typeparam name="TEntity">Type of the object to be patched.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="model">The updated model to be sent in the request.</param>
 	/// <param name="oldModel">The original model to compare against.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The returned value from the reques or <see cref="null"/> if the reuqest failed.</returns>
-	public async Task<T?> PatchRequest<T>(RestHelperOptions options, T model, T oldModel, CancellationToken cancellationToken = default) where T : class
+	public async Task<TEntity?> PatchRequest<TEntity>(RestHelperOptions options, TEntity model, TEntity oldModel, CancellationToken cancellationToken = default) where TEntity : class
 	{
 		JsonPatchDocument patchDocument = PatchCreator.CreatePatch(oldModel, model);
 
@@ -553,7 +553,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 			return model; // No changes detected, return the original model
 		}
 
-		RestObject<T>? result = null;
+		RestObject<TEntity>? result = null;
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
@@ -577,10 +577,10 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Patch, bearerToken, default,
+				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions<TEntity>(options, client.BaseAddress, headers, HttpMethod.Patch, bearerToken, default,
 								patchDocument: new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json)); //new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json)); // System.Text.Json has issues producing JsonPatchDocument in the correct format
 
-				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<TEntity, TEntity>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -614,14 +614,14 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a PUT request to the specified URL with the provided replacement model and returns the response deserialized into the specified type.
 	/// </summary>
-	/// <typeparam name="T">Type of the object to be replaced and returned.</typeparam>
+	/// <typeparam name="TEntity">Type of the object to be replaced and returned.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="replacementModel">The model to replace the existing resource with.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The returned value from the reques or <see cref="null"/> if the reuqest failed.</returns>
-	public async Task<T?> PutRequest<T>(RestHelperOptions options, T replacementModel, CancellationToken cancellationToken = default) where T : class
+	public async Task<TEntity?> PutRequest<TEntity>(RestHelperOptions options, TEntity replacementModel, CancellationToken cancellationToken = default) where TEntity : class
 	{
-		RestObject<T>? result = null;
+		RestObject<TEntity>? result = null;
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
@@ -645,9 +645,9 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Put, bearerToken, replacementModel);
+				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions<TEntity>(options, client.BaseAddress, headers, HttpMethod.Put, bearerToken, replacementModel);
 
-				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<TEntity, TEntity>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{
@@ -680,13 +680,13 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a DELETE request to the specified URL and returns the response deserialized into the specified type.
 	/// </summary>
-	/// <typeparam name="T">Type of the expected return value.</typeparam>
+	/// <typeparam name="TEntity">Type of the expected return value.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The returned value from the reques or <see cref="null"/> if the reuqest failed.</returns>
-	public async Task<T?> DeleteRequest<T>(RestHelperOptions options, CancellationToken cancellationToken = default) where T : class
+	public async Task<TEntity?> DeleteRequest<TEntity>(RestHelperOptions options, CancellationToken cancellationToken = default) where TEntity : class
 	{
-		RestObject<T>? result = null;
+		RestObject<TEntity>? result = null;
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
@@ -710,9 +710,9 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<T> baseRequestOptions = GetRequestOptions<T>(options, client.BaseAddress, headers, HttpMethod.Delete, bearerToken, default);
+				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions<TEntity>(options, client.BaseAddress, headers, HttpMethod.Delete, bearerToken, default);
 
-				result = await client.RestObjectRequest<T, T>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+				result = await client.RestObjectRequest<TEntity, TEntity>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 				if (!ShouldRetry(result.Response, options.ResilienceOptions))
 				{

@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.8.28</Version>
+    <Version>3.8.31</Version>
     <MinVerTagPrefix>sql.odbc-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -81,7 +81,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" />
-    <PackageReference Include="System.Data.Odbc" Version="10.0.1" />
+    <PackageReference Include="System.Data.Odbc" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>

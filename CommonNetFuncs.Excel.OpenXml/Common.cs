@@ -87,7 +87,7 @@ public static partial class Common
 			throw new ArgumentException("The document does not contain a WorkbookPart.");
 		}
 
-		Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => string.Equals(s.Name?.Value, sheetName, StringComparison.InvariantCultureIgnoreCase));
+		Sheet? sheet = workbookPart.Workbook?.Descendants<Sheet>().FirstOrDefault(s => string.Equals(s.Name?.Value, sheetName, StringComparison.InvariantCultureIgnoreCase));
 
 		if ((sheet == null) && createIfMissing)
 		{
@@ -113,7 +113,7 @@ public static partial class Common
 	public static Worksheet? GetWorksheetById(this SpreadsheetDocument document, uint sheetId)
 	{
 		WorkbookPart? workbookPart = document.WorkbookPart ?? throw new ArgumentException("The document does not contain a WorkbookPart.");
-		Sheet? sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => (s.SheetId != null) && (s.SheetId.Value == sheetId));
+		Sheet? sheet = workbookPart.Workbook?.Descendants<Sheet>().FirstOrDefault(s => (s.SheetId != null) && (s.SheetId.Value == sheetId));
 
 		if (sheet == null)
 		{
@@ -139,7 +139,7 @@ public static partial class Common
 	/// </summary>
 	/// <param name="cell">The Cell object to get the Workbook from</param>
 	/// <returns>The Workbook containing the Cell, or null if not found</returns>
-	public static Workbook GetWorkbookFromCell(this Cell cell)
+	public static Workbook? GetWorkbookFromCell(this Cell cell)
 	{
 		// Get the parent worksheet
 		Worksheet worksheet = cell.GetWorksheetFromCell();
@@ -157,7 +157,7 @@ public static partial class Common
 	/// <param name="worksheet">The Worksheet object to get the Workbook from</param>
 	/// <returns>The Workbook containing the Worksheet, or null if not found</returns>
 	/// <exception cref="InvalidOperationException"></exception>
-	public static Workbook GetWorkbookFromWorksheet(this Worksheet worksheet)
+	public static Workbook? GetWorkbookFromWorksheet(this Worksheet worksheet)
 	{
 		// Get the workbook part
 		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
@@ -172,7 +172,7 @@ public static partial class Common
 	/// <param name="worksheetPart">The WorksheetPart object to get the Workbook from</param>
 	/// <returns>The Workbook containing the WorksheetPart, or null if not found</returns>
 	/// <exception cref="InvalidOperationException"></exception>
-	public static Workbook GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
+	public static Workbook? GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
 	{
 		// Get the workbook part
 		WorkbookPart? workbookPart = worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
@@ -189,7 +189,7 @@ public static partial class Common
 	/// <returns>The WorksheetPart containing the CellReference, or null if not found</returns>
 	public static WorksheetPart? GetWorksheetPartByCellReference(WorkbookPart workbookPart, CellReference cellReference)
 	{
-		return workbookPart.WorksheetParts.FirstOrDefault(wp => wp.Worksheet.Descendants<Cell>().Any(c => c.CellReference == cellReference.ToString()));
+		return workbookPart.WorksheetParts.FirstOrDefault(wp => wp.Worksheet?.Descendants<Cell>().Any(c => c.CellReference == cellReference.ToString()) ?? false);
 	}
 
 	/// <summary>
@@ -201,7 +201,7 @@ public static partial class Common
 	public static Sheet? GetSheetByName(this SpreadsheetDocument document, string? sheetName = null)
 	{
 		WorkbookPart? workbookPart = document.WorkbookPart;
-		return workbookPart?.Workbook.Descendants<Sheet>().FirstOrDefault(s => (sheetName == null) || (s.Name == sheetName));
+		return workbookPart?.Workbook?.Descendants<Sheet>().FirstOrDefault(s => (sheetName == null) || (s.Name == sheetName));
 	}
 
 	/// <summary>
@@ -219,8 +219,8 @@ public static partial class Common
 		if ((sheet != null) && (workbookPart != null))
 		{
 			WorksheetPart? worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
-			Worksheet worksheet = worksheetPart.Worksheet;
-			sheetData = worksheet.GetFirstChild<SheetData>() ?? new();
+			Worksheet? worksheet = worksheetPart.Worksheet;
+			sheetData = worksheet?.GetFirstChild<SheetData>() ?? new();
 		}
 		return sheetData;
 	}
@@ -383,17 +383,17 @@ public static partial class Common
 	{
 		try
 		{
-			DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
-				workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
+			DefinedName? definedName = workbookPart.Workbook?.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
+				workbookPart.Workbook?.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
 			if (definedName != null)
 			{
 				string reference = definedName.Text;
 				string sheetName = reference.Split('!')[0].Trim('\'');
 				string cellReference = reference.Split('!')[1].Replace("$", null);
 
-				Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().First(x => x.Name == sheetName);
-				WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
-				return worksheetPart.Worksheet.GetCellFromReference(cellReference, colOffset, rowOffset);
+				Sheet? sheet = workbookPart.Workbook?.Descendants<Sheet>().First(x => x.Name == sheetName);
+				WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet?.Id!);
+				return worksheetPart.Worksheet?.GetCellFromReference(cellReference, colOffset, rowOffset);
 			}
 			return null;
 		}
@@ -438,17 +438,17 @@ public static partial class Common
 	{
 		try
 		{
-			DefinedName? definedName = workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
-				workbookPart.Workbook.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
+			DefinedName? definedName = workbookPart.Workbook?.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => x.Name == cellName) ??
+				workbookPart.Workbook?.DefinedNames?.Elements<DefinedName>().FirstOrDefault(x => string.Equals(x.Name?.ToString(), cellName, StringComparison.InvariantCultureIgnoreCase)); // Search invariant case if exact fails
 			if (definedName != null)
 			{
 				string reference = definedName.Text;
 				string sheetName = reference.Split('!')[0].Trim('\'');
 				string cellReference = reference.Split('!')[1].Replace("$", null);
 
-				Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().First(x => x.Name == sheetName);
-				WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
-				Cell? cell = worksheetPart.Worksheet.GetCellFromReference(cellReference, colOffset, rowOffset);
+				Sheet? sheet = workbookPart.Workbook?.Descendants<Sheet>().First(x => x.Name == sheetName);
+				WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet?.Id!);
+				Cell? cell = worksheetPart.Worksheet?.GetCellFromReference(cellReference, colOffset, rowOffset);
 				return (cell?.CellReference != null) ? new(cell.CellReference!) : null;
 			}
 			return null;
@@ -1306,8 +1306,8 @@ public static partial class Common
 		{
 			if (cellType == CellValues.SharedString)
 			{
-				Workbook workbook = cell.GetWorkbookFromCell();
-				int index = workbook.InsertSharedStringItem(cellValue.InnerText);
+				Workbook? workbook = cell.GetWorkbookFromCell();
+				int index = workbook?.InsertSharedStringItem(cellValue.InnerText) ?? -1;
 				cell.CellValue = new CellValue(index.ToString());
 				cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
 			}
@@ -1586,7 +1586,7 @@ public static partial class Common
 	public static void AddImagePart(this WorksheetPart worksheetPart, DrawingsPart drawingsPart, (CellReference FirstCell, CellReference LastCell) mergedCellArea, uint cellStyleIndex, byte[] imageData)
 	{
 		// Set cells to standard font to ensure cell sizes are gotten correctly
-		Cell? cell = worksheetPart.Worksheet.GetCellFromReference(mergedCellArea.FirstCell);
+		Cell? cell = worksheetPart.Worksheet?.GetCellFromReference(mergedCellArea.FirstCell);
 		cell?.StyleIndex = cellStyleIndex;
 		using Image image = Image.Load(imageData);
 		int imgWidthPx = image.Width;
@@ -1627,7 +1627,7 @@ public static partial class Common
 			drawingsPart.WorksheetDrawing = new Xdr.WorksheetDrawing();
 
 			Drawing drawing = new() { Id = worksheetPart.GetIdOfPart(drawingsPart) };
-			worksheetPart.Worksheet.Append(drawing);
+			worksheetPart.Worksheet?.Append(drawing);
 		}
 
 		return worksheetPart.DrawingsPart;
@@ -1641,7 +1641,7 @@ public static partial class Common
 	/// <returns>Cell references for the first (top left) and last (bottom right) cell</returns>
 	public static (CellReference FirstCell, CellReference LastCell) GetMergedCellArea(this WorksheetPart worksheetPart, CellReference cellReference)
 	{
-		MergeCells? mergedCells = worksheetPart.Worksheet.Elements<MergeCells>().FirstOrDefault();
+		MergeCells? mergedCells = worksheetPart.Worksheet?.Elements<MergeCells>().FirstOrDefault();
 		if (mergedCells != null)
 		{
 			foreach (MergeCell? mergedCell in mergedCells.Elements<MergeCell>().Where(mergedCell => mergedCell.Reference?.Value != null))
@@ -1667,13 +1667,13 @@ public static partial class Common
 	/// <returns>The width of the specified range in EMU</returns>
 	public static int GetRangeWidthInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
 	{
-		Worksheet worksheet = worksheetPart.Worksheet;
-		Columns? columns = worksheet.Elements<Columns>().FirstOrDefault();
+		Worksheet? worksheet = worksheetPart.Worksheet;
+		Columns? columns = worksheet?.Elements<Columns>().FirstOrDefault();
 
 		double totalWidthChars = 0;
 		for (uint colIndex = range.start.ColumnIndex; colIndex <= range.end.ColumnIndex; colIndex++)
 		{
-			Column? column = worksheet.GetOrCreateColumn(colIndex, columns: columns);
+			Column? column = worksheet?.GetOrCreateColumn(colIndex, columns: columns);
 			double columnWidthChars = column?.Width ?? 8.43; // Default column width (# in characters)
 			totalWidthChars += columnWidthChars; //(int)Math.Truncate((columnWidthChars *  7 + 5) / 7 * 256)/ 256;
 		}
@@ -1689,15 +1689,15 @@ public static partial class Common
 	/// <returns>The height of the specified range in EMU</returns>
 	public static int GetRangeHeightInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
 	{
-		Worksheet worksheet = worksheetPart.Worksheet;
+		Worksheet? worksheet = worksheetPart.Worksheet;
 
 		int totalHeight = 0;
 		for (uint rowIndex = range.start.RowIndex; rowIndex <= range.end.RowIndex; rowIndex++)
 		{
-			Row? row = worksheet.GetRow(rowIndex);
+			Row? row = worksheet?.GetRow(rowIndex);
 			if (row == null)
 			{
-				SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
+				SheetData? sheetData = worksheet?.GetFirstChild<SheetData>();
 				row = new Row { RowIndex = rowIndex };
 				sheetData!.Append(row);
 			}
@@ -1721,10 +1721,10 @@ public static partial class Common
 	/// <param name="height">Height of the image</param>
 	public static void AddImageToWorksheet(DrawingsPart drawingsPart, string relationshipId, CellReference fromCell, CellReference toCell, int xMargin, int yMargin, int width, int height)
 	{
-		Xdr.WorksheetDrawing worksheetDrawing = drawingsPart.WorksheetDrawing;
+		Xdr.WorksheetDrawing? worksheetDrawing = drawingsPart.WorksheetDrawing;
 
 		uint imageId = 1;
-		if (worksheetDrawing.Elements<Xdr.TwoCellAnchor>().Any())
+		if (worksheetDrawing?.Elements<Xdr.TwoCellAnchor>().Any() == true)
 		{
 			imageId = worksheetDrawing.Elements<Xdr.TwoCellAnchor>().Where(x => x != null)
 				.Max(x => uint.Parse((x.Elements<Xdr.Picture>().FirstOrDefault()?.NonVisualPictureProperties?.NonVisualDrawingProperties?.Id ?? '0')!)) + 1;
@@ -1775,7 +1775,7 @@ public static partial class Common
 		anchor.Append(picture);
 		anchor.Append(new Xdr.ClientData());
 
-		worksheetDrawing.Append(anchor);
+		worksheetDrawing?.Append(anchor);
 	}
 
 	/// <summary>
@@ -1825,8 +1825,8 @@ public static partial class Common
 			if ((sheet != null) && (workbookPart != null))
 			{
 				WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
-				Worksheet worksheet = worksheetPart.Worksheet;
-				SheetData sheetData = worksheet.GetFirstChild<SheetData>() ?? new();
+				Worksheet? worksheet = worksheetPart.Worksheet;
+				SheetData sheetData = worksheet?.GetFirstChild<SheetData>() ?? new();
 
 				// Determine start and end cells
 				CellReference startCell = new(startCellReference ?? "A1");
@@ -1944,10 +1944,10 @@ public static partial class Common
 		// If this is a shared string, look up the actual value
 		if ((cell.DataType != null) && (cell.DataType.Value == CellValues.SharedString))
 		{
-			SharedStringTablePart? sharedStringPart = cell.GetWorkbookFromCell().WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+			SharedStringTablePart? sharedStringPart = cell.GetWorkbookFromCell()?.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
 			if (sharedStringPart != null)
 			{
-				return sharedStringPart.SharedStringTable.ElementAt(int.Parse(value)).InnerText;
+				return sharedStringPart.SharedStringTable?.ElementAt(int.Parse(value)).InnerText ?? string.Empty;
 			}
 		}
 
@@ -1984,11 +1984,11 @@ public static partial class Common
 			if (string.Equals(cellDataType, CellValues.SharedString.ToString()))
 			{
 				Worksheet worksheet = cell.GetWorksheetFromCell();
-				Workbook workbook = worksheet.GetWorkbookFromWorksheet();
-				SharedStringTablePart? stringTable = workbook.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+				Workbook? workbook = worksheet.GetWorkbookFromWorksheet();
+				SharedStringTablePart? stringTable = workbook?.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
 				if (stringTable != null)
 				{
-					return stringTable.SharedStringTable.ElementAt(int.Parse(cell.InnerText)).InnerText;
+					return stringTable.SharedStringTable?.ElementAt(int.Parse(cell.InnerText)).InnerText;
 				}
 			}
 			else if (string.Equals(cellDataType, CellValues.Boolean.ToString()))
@@ -2031,7 +2031,7 @@ public static partial class Common
 			}
 
 			WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id.Value);
-			Worksheet worksheet = worksheetPart.Worksheet;
+			Worksheet? worksheet = worksheetPart.Worksheet;
 
 			// Get table range
 			string[] tableRange = table.Reference?.Value?.Split(':') ?? [];
@@ -2046,7 +2046,7 @@ public static partial class Common
 			// Get headers
 			for (uint col = startCell.ColumnIndex; col <= endCell.ColumnIndex; col++)
 			{
-				Cell? headerCell = worksheet.GetCellFromCoordinates((int)col, (int)startCell.RowIndex);
+				Cell? headerCell = worksheet?.GetCellFromCoordinates((int)col, (int)startCell.RowIndex);
 				if (headerCell != null)
 				{
 					dataTable.Columns.Add(headerCell.GetStringValue() ?? $"Column{col - startCell.ColumnIndex + 1}");
@@ -2060,7 +2060,7 @@ public static partial class Common
 				DataRow dataRow = dataTable.NewRow();
 				for (uint col = startCell.ColumnIndex; col <= endCell.ColumnIndex; col++)
 				{
-					Cell? cell = worksheet.GetCellFromCoordinates((int)col, (int)row);
+					Cell? cell = worksheet?.GetCellFromCoordinates((int)col, (int)row);
 					if (cell != null)
 					{
 						dataRow[((int)col) - ((int)startCell.ColumnIndex)] = cell.GetStringValue();
@@ -2097,7 +2097,7 @@ public static partial class Common
 					string relId = workbookPart.GetIdOfPart(worksheetPart);
 
 					// Find the Sheet with this relationship Id
-					return workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(x => x.Id != null && x.Id == relId);
+					return workbookPart.Workbook?.Descendants<Sheet>().FirstOrDefault(x => x.Id != null && x.Id == relId);
 				}
 			}
 		}
@@ -2113,7 +2113,7 @@ public static partial class Common
 	public static Table? FindTable(this WorkbookPart workbookPart, string? tableName)
 	{
 		return workbookPart.WorksheetParts.Where(worksheetPart => worksheetPart.TableDefinitionParts != null)
-			.SelectMany(worksheetPart => worksheetPart.TableDefinitionParts.Where(tableDefinitionPart => (tableName == null) || (tableDefinitionPart.Table.Name == tableName))).FirstOrDefault()?.Table;
+			.SelectMany(worksheetPart => worksheetPart.TableDefinitionParts.Where(tableDefinitionPart => (tableName == null) || (tableDefinitionPart.Table?.Name == tableName))).FirstOrDefault()?.Table;
 	}
 
 	/// <summary>

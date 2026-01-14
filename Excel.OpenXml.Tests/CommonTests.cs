@@ -49,7 +49,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		sheetId.ShouldBeGreaterThan(0u);
 		document.WorkbookPart.ShouldNotBeNull();
-		document.WorkbookPart!.Workbook.Sheets?.Count().ShouldBe(1);
+		document.WorkbookPart!.Workbook?.Sheets?.Count().ShouldBe(1);
 	}
 
 	[RetryTheory(3)]
@@ -66,8 +66,8 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		sheetId.ShouldBeGreaterThan(0u);
-		Sheet sheet = document.WorkbookPart!.Workbook.Sheets!.Elements<Sheet>().First();
-		sheet.Name!.Value.ShouldBe(sheetName ?? $"Sheet{sheetId}");
+		Sheet? sheet = document.WorkbookPart!.Workbook?.Sheets!.Elements<Sheet>().First();
+		sheet?.Name!.Value.ShouldBe(sheetName ?? $"Sheet{sheetId}");
 	}
 
 	[RetryFact(3)]
@@ -85,7 +85,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		worksheet.ShouldNotBeNull();
-		Sheet sheet = document.WorkbookPart!.Workbook.Descendants<Sheet>().First(x => x.Name == sheetName);
+		Sheet? sheet = document.WorkbookPart!.Workbook?.Descendants<Sheet>().First(x => x.Name == sheetName);
 		sheet.ShouldNotBeNull();
 	}
 
@@ -561,7 +561,7 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 
 		document.CreateNewSheet("Test Sheet");
-		Workbook workbook = document.WorkbookPart!.Workbook;
+		Workbook workbook = document.WorkbookPart!.Workbook!;
 		const string text = "Duplicate Text";
 
 		// Act
@@ -583,7 +583,7 @@ public sealed class CommonTests : IDisposable
 		Cell cell = worksheet.InsertCell(1, 1)!;
 
 		// Act
-		Workbook workbook = cell.GetWorkbookFromCell();
+		Workbook? workbook = cell.GetWorkbookFromCell();
 
 		// Assert
 		workbook.ShouldNotBeNull();
@@ -600,7 +600,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 
 		// Act
-		Workbook workbook = worksheet.GetWorkbookFromWorksheet();
+		Workbook? workbook = worksheet.GetWorkbookFromWorksheet();
 
 		// Assert
 		workbook.ShouldNotBeNull();
@@ -722,7 +722,7 @@ public sealed class CommonTests : IDisposable
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
 #pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
+		document.WorkbookPart!.Workbook?.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
 #pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
 
 		// Act
@@ -742,7 +742,7 @@ public sealed class CommonTests : IDisposable
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
 #pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
+		document.WorkbookPart!.Workbook?.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
 #pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
 
 		// Act
@@ -794,7 +794,7 @@ public sealed class CommonTests : IDisposable
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
 #pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
+		document.WorkbookPart!.Workbook?.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
 #pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
 
 		byte[] imageData = File.ReadAllBytes("TestData/test.png");
@@ -817,7 +817,7 @@ public sealed class CommonTests : IDisposable
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
 #pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
+		document.WorkbookPart!.Workbook?.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
 #pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
 		List<byte[]> imageData = [File.ReadAllBytes("TestData/test.png")];
 		List<string> cellNames = [cellName];

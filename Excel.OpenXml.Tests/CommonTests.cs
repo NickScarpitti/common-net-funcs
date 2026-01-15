@@ -583,7 +583,7 @@ public sealed class CommonTests : IDisposable
 		Cell cell = worksheet.InsertCell(1, 1)!;
 
 		// Act
-		Workbook workbook = cell.GetWorkbookFromCell();
+		Workbook? workbook = cell.GetWorkbookFromCell();
 
 		// Assert
 		workbook.ShouldNotBeNull();
@@ -600,7 +600,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 
 		// Act
-		Workbook workbook = worksheet.GetWorkbookFromWorksheet();
+		Workbook? workbook = worksheet.GetWorkbookFromWorksheet();
 
 		// Assert
 		workbook.ShouldNotBeNull();

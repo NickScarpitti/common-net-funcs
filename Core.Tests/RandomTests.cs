@@ -201,7 +201,7 @@ public sealed class RandomTests
 	public void GenerateRandomString_RespectsBlacklist()
 	{
 		// Arrange
-		char[] blacklist = ['a', 'e', 'i', 'o', 'u'];
+		HashSet<char> blacklist = ['a', 'e', 'i', 'o', 'u'];
 
 		// Act
 		string result = GenerateRandomString(100, blacklistedCharacters: blacklist);
@@ -229,14 +229,14 @@ public sealed class RandomTests
 	public void GenerateRandomStringByCharSet_UsesProvidedCharSet(int length)
 	{
 		// Arrange
-		char[] charSet = ['A', 'B', 'C', '1', '2', '3'];
+		HashSet<char> charSet = ['A', 'B', 'C', '1', '2', '3'];
 
 		// Act
 		string result = GenerateRandomStringByCharSet(length, charSet);
 
 		// Assert
 		result.Length.ShouldBe(length);
-		result.All(c => charSet.Contains(c)).ShouldBeTrue();
+		result.All(charSet.Contains).ShouldBeTrue();
 	}
 
 	[Theory]
@@ -251,7 +251,7 @@ public sealed class RandomTests
 		result.Length.ShouldBe(length);
 
 		// Check if all characters are from the default char set
-		result.All(c => DefaultCharSet.Contains(c)).ShouldBeTrue();
+		result.All(DefaultCharSet.Contains).ShouldBeTrue();
 	}
 
 	[Fact]

@@ -3,7 +3,7 @@ using CommonNetFuncs.Web.Common;
 
 namespace CommonNetFuncs.Web.Requests.Rest;
 
-public sealed class RequestOptions<T>
+public sealed class RequestOptions<TBody>
 {
 	public string Url { get; set; } = null!;
 
@@ -52,7 +52,7 @@ public sealed class RequestOptions<T>
 
 	public HttpContent? PatchDocument { get; set; }
 
-	public T? BodyObject { get; set; }
+	public TBody? BodyObject { get; set; }
 }
 
 public interface IRestHelpersCommon

@@ -16,7 +16,7 @@
 //{
 //    #region GET Methods
 
-//    public async Task<TObj?> Get<TObj>(RestHelperOptions options, CancellationToken cancellationToken = default)
+//    public async Task<TBody?> Get<TBody>(RestHelperOptions options, CancellationToken cancellationToken = default)
 //    {
 //        string baseLogString = $"GET {options.Url}";
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
@@ -29,7 +29,7 @@
 //               {
 //                   //bool forceRefresh = attemptCounter > 0;
 //                   bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
-//                   RequestOptions<TObj> baseRequestOptions = new()
+//                   RequestOptions<TBody> baseRequestOptions = new()
 //                    {
 //                        Url = $"{client.BaseAddress}{options.Url}",
 //                        HttpMethod = HttpMethod.Get,
@@ -43,7 +43,7 @@
 //                        MsgPackOptions = options.MsgPackOptions,
 //                    };
 
-//                   RestObject<TObj>? result = await client.RestObjectRequest<TObj, TObj>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+//                   RestObject<TBody>? result = await client.RestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 //                   if (result == null)
 //                   {
@@ -53,7 +53,7 @@
 //               }, cancellationToken).ConfigureAwait(false);
 //    }
 
-//    public async IAsyncEnumerable<TObj?> GetStreaming<TObj>(RestHelperOptions options, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+//    public async IAsyncEnumerable<TBody?> GetStreaming<TBody>(RestHelperOptions options, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 //    {
 //        // Add JSON headers for streaming
 //        options.HttpHeaders ??= [];
@@ -69,11 +69,11 @@
 //        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, true);
-//        IAsyncEnumerable<TObj?>? streamingResult =
+//        IAsyncEnumerable<TBody?>? streamingResult =
 //            await wrappedClient.ExecuteStreamingWithResilience(async (client, _) =>
 //            {
 //                bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
-//                RequestOptions<TObj> baseRequestOptions = new()
+//                RequestOptions<TBody> baseRequestOptions = new()
 //                {
 //                    Url = $"{client.BaseAddress}{options.Url}",
 //                    HttpMethod = HttpMethod.Get,
@@ -87,13 +87,13 @@
 //                    MsgPackOptions = options.MsgPackOptions
 //                };
 
-//                StreamingRestObject<TObj>? result = await client.StreamingRestObjectRequest<TObj, TObj>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
-//                return result?.Result ?? AsyncEnumerable.Empty<TObj?>();
+//                StreamingRestObject<TBody>? result = await client.StreamingRestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+//                return result?.Result ?? AsyncEnumerable.Empty<TBody?>();
 //            }, cancellationToken).ConfigureAwait(false);
 
 //        if (streamingResult != null)
 //        {
-//            await foreach (TObj? item in streamingResult)
+//            await foreach (TBody? item in streamingResult)
 //            {
 //                yield return item;
 //            }
@@ -108,7 +108,7 @@
 
 //    #region POST Methods
 
-//    public async Task<TObj?> PostRequest<TObj>(RestHelperOptions options, TObj postObject, CancellationToken cancellationToken = default)
+//    public async Task<TBody?> PostRequest<TBody>(RestHelperOptions options, TBody postObject, CancellationToken cancellationToken = default)
 //    {
 //        string baseLogString = $"POST {options.Url}";
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
@@ -120,7 +120,7 @@
 //        return await wrappedClient.ExecuteWithResilience(async (client, _) =>
 //               {
 //                   bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
-//                   RequestOptions<TObj> baseRequestOptions = new()
+//                   RequestOptions<TBody> baseRequestOptions = new()
 //                   {
 //                       Url = $"{client.BaseAddress}{options.Url}",
 //                       HttpMethod = HttpMethod.Post,
@@ -136,7 +136,7 @@
 //                       BodyObject = postObject,
 //                   };
 
-//                   RestObject<TObj>? result = await client.RestObjectRequest<TObj, TObj>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+//                   RestObject<TBody>? result = await client.RestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 //                   if (result == null)
 //                   {
@@ -146,7 +146,7 @@
 //               }, cancellationToken).ConfigureAwait(false);
 //    }
 
-//    public async IAsyncEnumerable<TObj?> PostRequestStreaming<TObj>(RestHelperOptions options, TObj postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+//    public async IAsyncEnumerable<TBody?> PostRequestStreaming<TBody>(RestHelperOptions options, TBody postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 //    {
 //        // Add JSON headers for streaming POST
 //        options.HttpHeaders ??= [];
@@ -162,11 +162,11 @@
 //        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, true);
-//        IAsyncEnumerable<TObj?>? streamingResult =
+//        IAsyncEnumerable<TBody?>? streamingResult =
 //            await wrappedClient.ExecuteStreamingWithResilience(async (client, _) =>
 //            {
 //                bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
-//                RequestOptions<TObj> baseRequestOptions = new()
+//                RequestOptions<TBody> baseRequestOptions = new()
 //                {
 //                    Url = $"{client.BaseAddress}{options.Url}",
 //                    HttpMethod = HttpMethod.Post,
@@ -182,13 +182,13 @@
 //                    BodyObject = postObject,
 //                };
 
-//                StreamingRestObject<TObj>? result = await client.StreamingRestObjectRequest<TObj, TObj>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
-//                return result?.Result ?? AsyncEnumerable.Empty<TObj?>();
+//                StreamingRestObject<TBody>? result = await client.StreamingRestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+//                return result?.Result ?? AsyncEnumerable.Empty<TBody?>();
 //            }, cancellationToken).ConfigureAwait(false);
 
 //        if (streamingResult != null)
 //        {
-//            await foreach (TObj? item in streamingResult)
+//            await foreach (TBody? item in streamingResult)
 //            {
 //                yield return item;
 //            }
@@ -199,7 +199,7 @@
 //        }
 //    }
 
-//    public async Task<TObj?> GenericPostRequest<TObj, TTask>(RestHelperOptions options, TTask postObject, CancellationToken cancellationToken = default)
+//    public async Task<TBody?> GenericPostRequest<TBody, TBody>(RestHelperOptions options, TBody postObject, CancellationToken cancellationToken = default)
 //    {
 //        string baseLogString = $"POST (Generic) {options.Url}";
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
@@ -211,7 +211,7 @@
 //        return await wrappedClient.ExecuteWithResilience(async (client, _) =>
 //               {
 //                   bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
-//                   RequestOptions<TTask> baseRequestOptions = new()
+//                   RequestOptions<TBody> baseRequestOptions = new()
 //                   {
 //                       Url = $"{client.BaseAddress}{options.Url}",
 //                       HttpMethod = HttpMethod.Post,
@@ -227,7 +227,7 @@
 //                       BodyObject = postObject,
 //                   };
 
-//                   RestObject<TObj>? result = await client.RestObjectRequest<TObj, TTask>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+//                   RestObject<TBody>? result = await client.RestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 //                   if (result == null)
 //                   {
@@ -237,7 +237,7 @@
 //               }, cancellationToken).ConfigureAwait(false);
 //    }
 
-//    public async IAsyncEnumerable<TObj?> GenericPostRequestStreaming<TObj, TTask>(RestHelperOptions options, TTask postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+//    public async IAsyncEnumerable<TBody?> GenericPostRequestStreaming<TBody, TBody>(RestHelperOptions options, TBody postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 //    {
 //        // Add JSON headers for streaming POST
 //        options.HttpHeaders ??= [];
@@ -253,11 +253,11 @@
 //        logger.Info("{baseLogString} Attempt 1", baseLogString);
 
 //        Dictionary<string, string> headers = GetHeaders(options, true);
-//        IAsyncEnumerable<TObj?>? streamingResult =
+//        IAsyncEnumerable<TBody?>? streamingResult =
 //            await wrappedClient.ExecuteStreamingWithResilience(async (client, _) =>
 //            {
 //                bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
-//                RequestOptions<TTask> baseRequestOptions = new()
+//                RequestOptions<TBody> baseRequestOptions = new()
 //                {
 //                    Url = $"{client.BaseAddress}{options.Url}",
 //                    HttpMethod = HttpMethod.Post,
@@ -273,13 +273,13 @@
 //                    BodyObject = postObject,
 //                };
 
-//                StreamingRestObject<TObj>? result = await client.StreamingRestObjectRequest<TObj, TTask>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+//                StreamingRestObject<TBody>? result = await client.StreamingRestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
-//                return result?.Result ?? AsyncEnumerable.Empty<TObj?>();
+//                return result?.Result ?? AsyncEnumerable.Empty<TBody?>();
 //            }, cancellationToken).ConfigureAwait(false);
 //        if (streamingResult != null)
 //        {
-//            await foreach (TObj? item in streamingResult)
+//            await foreach (TBody? item in streamingResult)
 //            {
 //                yield return item;
 //            }
@@ -290,7 +290,7 @@
 //        }
 //    }
 
-//    public async Task<string?> StringPostRequest<TObj>(RestHelperOptions options, TObj postObject, CancellationToken cancellationToken = default)
+//    public async Task<string?> StringPostRequest<TBody>(RestHelperOptions options, TBody postObject, CancellationToken cancellationToken = default)
 //    {
 //        string baseLogString = $"POST (String) {options.Url}";
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
@@ -302,7 +302,7 @@
 //        return await wrappedClient.ExecuteWithResilience(async (client, _) =>
 //               {
 //                   bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
-//                   RequestOptions<TObj> baseRequestOptions = new()
+//                   RequestOptions<TBody> baseRequestOptions = new()
 //                   {
 //                       Url = $"{client.BaseAddress}{options.Url}",
 //                       HttpMethod = HttpMethod.Post,
@@ -318,7 +318,7 @@
 //                       BodyObject = postObject,
 //                   };
 
-//                   return (await client.RestObjectRequest<string?, TObj>(baseRequestOptions, cancellationToken).ConfigureAwait(false)).Result;
+//                   return (await client.RestObjectRequest<string?, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false)).Result;
 //               }
 //        , cancellationToken).ConfigureAwait(false);
 //    }
@@ -340,7 +340,7 @@
 
 //    #region PATCH Methods
 
-//    public async Task<TObj?> PatchRequest<TObj>(RestHelperOptions options, TObj model, TObj oldModel, CancellationToken cancellationToken = default) where TObj : class
+//    public async Task<TBody?> PatchRequest<TBody>(RestHelperOptions options, TBody model, TBody oldModel, CancellationToken cancellationToken = default) where TBody : class
 //    {
 //        string baseLogString = $"PATCH {options.Url}";
 //        using HttpClient baseClient = httpClientFactory.CreateClient(options.ApiName);
@@ -354,7 +354,7 @@
 //            return await wrappedClient.ExecuteWithResilience(async (client, _) =>
 //                   {
 //                       bool forceRefresh = options.ResilienceOptions?.RefreshToken == true;
-//                       RequestOptions<TObj> baseRequestOptions = new()
+//                       RequestOptions<TBody> baseRequestOptions = new()
 //                       {
 //                           Url = $"{client.BaseAddress}{options.Url}",
 //                           HttpMethod = HttpMethod.Patch,
@@ -370,7 +370,7 @@
 //                           PatchDocument = new StringContent(SerializeObject(patchDocument), Encoding.UTF8, ContentTypes.Json),
 //                       };
 
-//                       RestObject<TObj>? result = await client.RestObjectRequest<TObj, TObj>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
+//                       RestObject<TBody>? result = await client.RestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
 //                       if (result == null)
 //                       {

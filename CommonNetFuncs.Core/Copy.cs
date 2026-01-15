@@ -153,7 +153,7 @@ public static class Copy
 	/// <typeparam name="TSource">Type of object being copied</typeparam>
 	/// <param name="source">Object to copy common properties from</param>
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
-	/// <returns>A new instance of TTask with properties copied from <paramref name="source"/></returns>
+	/// <returns>A new instance of TDest with properties copied from <paramref name="source"/></returns>
 	public static TDest CopyPropertiesToNew<TSource, TDest>(this TSource source, bool useCache = true) where TSource : class where TDest : class, new()
 	{
 		TDest dest = new();
@@ -189,7 +189,7 @@ public static class Copy
 	/// <param name="source">Object to copy values into new object from</param>
 	/// <param name="maxDepth">Optional: How deep to recursively traverse. Default = -1 which is unlimited recursion.</param>
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
-	/// <returns>A new instance of TTask with properties of the same name from source populated.</returns>
+	/// <returns>A new instance of TDest with properties of the same name from source populated.</returns>
 	[return: NotNullIfNotNull(nameof(source))]
 	public static TDest? CopyPropertiesToNewRecursive<TSource, TDest>(this TSource source, int maxDepth = -1, bool useCache = true) where TSource : class where TDest : class, new()
 	{

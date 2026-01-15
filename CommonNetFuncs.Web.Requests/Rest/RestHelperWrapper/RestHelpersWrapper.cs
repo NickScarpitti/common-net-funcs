@@ -318,8 +318,8 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a POST request to the specified URL with the provided object and returns the response deserialized into the specified type.
 	/// </summary>
-	/// <typeparam name="TResponse">The object type to populate the request body with.</typeparam>
-	/// <typeparam name="TBody">The object type to be returned in the response.</typeparam>
+	/// <typeparam name="TResponse">The object type to be returned in the response.</typeparam>
+	/// <typeparam name="TBody">The object type to populate the request body with.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="postObject">The object to be sent in the request body.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -386,8 +386,8 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <summary>
 	/// Sends a POST request to the specified URL with the provided object and returns the response as an asynchronous stream of the specified type.
 	/// </summary>
-	/// <typeparam name="TResponse">The object type to populate the request body with.</typeparam>
-	/// <typeparam name="TBody">The object type to be returned in the stream.</typeparam>
+	/// <typeparam name="TResponse">The object type to be returned in the stream.</typeparam>
+	/// <typeparam name="TBody">The object type to populate the request body with.</typeparam>
 	/// <param name="options">Options specifying the request details.</param>
 	/// <param name="postObject">The object to be sent in the request body.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>

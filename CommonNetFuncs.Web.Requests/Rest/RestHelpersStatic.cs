@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Frozen;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -22,7 +22,7 @@ namespace CommonNetFuncs.Web.Requests.Rest;
 
 public static class RestHelpersStatic
 {
-	private static readonly HttpMethod[] requestsWithBody = [HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch];
+	private static readonly FrozenSet<HttpMethod> requestsWithBody = [HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch];
 	private const double DefaultRequestTimeout = 100;
 
 	//public static JsonSerializerOptions? JsonSerializerOptions { get; set; }
@@ -334,12 +334,12 @@ public static class RestHelpersStatic
 				string? contentType = response.Content.Headers.ContentType?.ToString();
 				string? contentEncoding = response.Content.Headers.ContentEncoding?.ToString();
 
-				//response.Content.ReadFromJsonAsAsyncEnumerable<TObj>(cancellationToken: cancellationToken);
+				//response.Content.ReadFromJsonAsAsyncEnumerable<TBody>(cancellationToken: cancellationToken);
 
 				responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
 				if (response.IsSuccessStatusCode)
 				{
-					//enumeratedReader = responseStream.ReadResponseStreamAsync<TObj?>(contentType, contentEncoding, requestOptions.JsonSerializerOptions, cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
+					//enumeratedReader = responseStream.ReadResponseStreamAsync<TBody?>(contentType, contentEncoding, requestOptions.JsonSerializerOptions, cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
 
 					// Apply decompression if needed
 					Stream streamToRead = responseStream;
@@ -520,11 +520,11 @@ public static class RestHelpersStatic
 				//	using StreamReader streamReader = new(streamToRead);
 				//	await using JsonTextReader jsonReader = new(streamReader);
 				//	Newtonsoft.Json.JsonSerializer serializer = new();
-				//	result = serializer.Deserialize<TObj>(jsonReader);
+				//	result = serializer.Deserialize<TBody>(jsonReader);
 				//}
 				//else
 				//{
-				//	result = await System.Text.Json.JsonSerializer.DeserializeAsync<TObj>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+				//	result = await System.Text.Json.JsonSerializer.DeserializeAsync<TBody>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
 				//}
 				//}
 				//finally

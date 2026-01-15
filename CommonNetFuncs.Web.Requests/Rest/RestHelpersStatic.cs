@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Frozen;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -21,7 +21,7 @@ namespace CommonNetFuncs.Web.Requests.Rest;
 
 public static class RestHelpersStatic
 {
-	private static readonly HttpMethod[] requestsWithBody = [HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch];
+	private static readonly FrozenSet<HttpMethod> requestsWithBody = [HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch];
 	private const double DefaultRequestTimeout = 100;
 
 	//public static JsonSerializerOptions? JsonSerializerOptions { get; set; }

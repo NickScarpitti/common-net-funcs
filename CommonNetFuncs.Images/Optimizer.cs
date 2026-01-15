@@ -1,4 +1,5 @@
-﻿using CliWrap;
+﻿using System.Collections.Frozen;
+using CliWrap;
 using CliWrap.Buffered;
 
 namespace CommonNetFuncs.Images;
@@ -13,9 +14,9 @@ public static class Optimizer
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-	private static readonly string[] GifsicleExtensions = ["gif"];
-	private static readonly string[] JpegoptimExtensions = ["jpg", "jpeg"];
-	private static readonly string[] OptipngExtensions = ["png", "bmp", "pnm", "tiff"];
+	private static readonly FrozenSet<string> GifsicleExtensions = ["gif"];
+	private static readonly FrozenSet<string> JpegoptimExtensions = ["jpg", "jpeg"];
+	private static readonly FrozenSet<string> OptipngExtensions = ["png", "bmp", "pnm", "tiff"];
 
 	/// <summary>
 	/// Optimizes image to be smaller size if possible

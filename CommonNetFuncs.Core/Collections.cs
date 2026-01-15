@@ -1029,7 +1029,7 @@ public static partial class Collections
 	/// <param name="distinct">Optional: Whether to include only distinct values in the aggregation. Default is true.</param>
 	/// <param name="parallel">Optional: Whether to perform the aggregation in parallel or not. Default is <see langword="false"/>.</param>
 	/// <returns><see cref="IEnumerable{T}"/> with specified properties aggregated</returns>
-	public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string[] propsToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
+	public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, HashSet<string> propsToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
 	{
 		if (collection?.Any() != true)
 		{
@@ -1044,7 +1044,7 @@ public static partial class Collections
 		PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
 		PropertyInfo[] groupingProperties = properties.Where(p => !propsToAgg.Contains(p.Name)).ToArray();
 
-		return !groupingProperties.AnyFast() || (propsToAgg.Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Length)
+		return !groupingProperties.AnyFast() || (propsToAgg.Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Count)
 			? throw new ArgumentException($"Invalid aggregate property values. All values in propsToAgg must be present in type {typeof(T)}", nameof(propsToAgg))
 			: !parallel
 			? collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(y => y.GetValue(x)?.ToString() ?? string.Empty)) })
@@ -1057,7 +1057,7 @@ public static partial class Collections
 						if (propsToAgg.Contains(prop.Name))
 						{
 							string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
-												string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
+								string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
 							prop.SetValue(result, aggregatedValue);
 						}
 						else
@@ -1077,7 +1077,7 @@ public static partial class Collections
 						if (propsToAgg.Contains(prop.Name))
 						{
 							string aggregatedValue = distinct ? string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty).Distinct()) :
-												string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
+								string.Join(separator, x.Select(y => prop.GetValue(y)?.ToString() ?? string.Empty));
 							prop.SetValue(result, aggregatedValue);
 						}
 						else
@@ -1157,7 +1157,7 @@ public static partial class Collections
 		int length = sourcesArray.Length;
 
 		// Create initial combination with first sequence
-		List<List<string>> current = sourcesArray[0].Select(x => new[] { x?.ToString() ?? string.Empty }.ToList()).ToList();
+		List<List<string>> current = sourcesArray[0].Select(x => (List<string>)[x?.ToString() ?? string.Empty]).ToList();
 
 		// Build up combinations for remaining sequences
 		for (int i = 1; i < length; i++)

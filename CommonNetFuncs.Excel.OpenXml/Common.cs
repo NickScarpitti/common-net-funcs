@@ -2310,8 +2310,8 @@ public static partial class Common
 		}
 
 		const int padding = 1; // Extra padding
-		uint[] numberStyles = [5, 6, 7, 8]; //styles that will add extra chars
-		uint[] boldStyles = [1, 2, 3, 4, 6, 7, 8]; //styles that will bold
+		HashSet<uint> numberStyles = [5, 6, 7, 8]; //styles that will add extra chars
+		HashSet<uint> boldStyles = [1, 2, 3, 4, 6, 7, 8]; //styles that will bold
 		double width = text.Length + padding;
 
 		// Add extra width for numbers to account for digit grouping

@@ -1441,7 +1441,7 @@ public sealed class CollectionsTests
 		List<TestClass> collection = new() { new TestClass { Id = 1, Name = "test1" } };
 
 		// Act & Assert
-		Should.Throw<ArgumentException>(() => collection.StringAggProps(Array.Empty<string>()).ToList());
+		Should.Throw<ArgumentException>(() => collection.StringAggProps([]).ToList());
 	}
 
 	#endregion

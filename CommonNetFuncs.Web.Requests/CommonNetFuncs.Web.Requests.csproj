@@ -30,7 +30,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.9</Version>
+		<Version>4.0.10</Version>
 		<MinVerTagPrefix>web.requests-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -83,7 +83,7 @@
 	<ItemGroup>
 		<PackageReference Include="MemoryPack" Version="1.21.4" />
 		<PackageReference Include="MessagePack" Version="3.1.4" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.2" />
 		<PackageReference Include="MinVer" Version="7.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -9,6 +9,7 @@ namespace CommonNetFuncs.Core;
 /// </summary>
 public static partial class FileHelpers
 {
+	private static readonly System.Buffers.SearchValues<char> invalidFileNameChars = System.Buffers.SearchValues.Create("/\\:<>\"|?*");
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 	[GeneratedRegex(@"\(([^)]*)\)$")]
@@ -334,7 +335,7 @@ public static partial class FileHelpers
 	internal static string CleanFileName(string fileName)
 	{
 		// Early exit if no invalid characters present
-		if (!fileName.AsSpan().ContainsAny(['/', '\\', ':', '<', '>', '"', '|', '?', '*']))
+		if (!fileName.AsSpan().ContainsAny(invalidFileNameChars))
 		{
 			return fileName;
 		}

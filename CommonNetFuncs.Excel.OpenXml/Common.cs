@@ -141,7 +141,7 @@ public static partial class Common
 	/// </summary>
 	/// <param name="cell">The Cell object to get the Workbook from</param>
 	/// <returns>The Workbook containing the Cell, or null if not found</returns>
-	public static Workbook GetWorkbookFromCell(this Cell cell)
+	public static Workbook? GetWorkbookFromCell(this Cell cell)
 	{
 		// Get the parent worksheet
 		Worksheet worksheet = cell.GetWorksheetFromCell();
@@ -159,7 +159,7 @@ public static partial class Common
 	/// <param name="worksheet">The Worksheet object to get the Workbook from</param>
 	/// <returns>The Workbook containing the Worksheet, or null if not found</returns>
 	/// <exception cref="InvalidOperationException"></exception>
-	public static Workbook GetWorkbookFromWorksheet(this Worksheet worksheet)
+	public static Workbook? GetWorkbookFromWorksheet(this Worksheet worksheet)
 	{
 		// Get the workbook part
 		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
@@ -174,7 +174,7 @@ public static partial class Common
 	/// <param name="worksheetPart">The WorksheetPart object to get the Workbook from</param>
 	/// <returns>The Workbook containing the WorksheetPart, or null if not found</returns>
 	/// <exception cref="InvalidOperationException"></exception>
-	public static Workbook GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
+	public static Workbook? GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
 	{
 		// Get the workbook part
 		WorkbookPart? workbookPart = worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
@@ -1314,8 +1314,8 @@ public static partial class Common
 		{
 			if (cellType == CellValues.SharedString)
 			{
-				Workbook workbook = cell.GetWorkbookFromCell();
-				int index = workbook.InsertSharedStringItem(cellValue.InnerText);
+				Workbook? workbook = cell.GetWorkbookFromCell();
+				int index = workbook?.InsertSharedStringItem(cellValue.InnerText) ?? -1;
 				cell.CellValue = new CellValue(index.ToString());
 				cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
 			}
@@ -1952,7 +1952,7 @@ public static partial class Common
 		// If this is a shared string, look up the actual value
 		if ((cell.DataType != null) && (cell.DataType.Value == CellValues.SharedString))
 		{
-			SharedStringTablePart? sharedStringPart = cell.GetWorkbookFromCell().WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+			SharedStringTablePart? sharedStringPart = cell.GetWorkbookFromCell()?.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
 			if (sharedStringPart != null)
 			{
 				return sharedStringPart.SharedStringTable?.ElementAt(int.Parse(value)).InnerText ?? string.Empty;
@@ -1992,8 +1992,8 @@ public static partial class Common
 			if (string.Equals(cellDataType, CellValues.SharedString.ToString()))
 			{
 				Worksheet worksheet = cell.GetWorksheetFromCell();
-				Workbook workbook = worksheet.GetWorkbookFromWorksheet();
-				SharedStringTablePart? stringTable = workbook.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+				Workbook? workbook = worksheet.GetWorkbookFromWorksheet();
+				SharedStringTablePart? stringTable = workbook?.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
 				if (stringTable != null)
 				{
 					return stringTable.SharedStringTable?.ElementAt(int.Parse(cell.InnerText)).InnerText;
@@ -2318,8 +2318,8 @@ public static partial class Common
 		}
 
 		const int padding = 1; // Extra padding
-		uint[] numberStyles = [5, 6, 7, 8]; //styles that will add extra chars
-		uint[] boldStyles = [1, 2, 3, 4, 6, 7, 8]; //styles that will bold
+		HashSet<uint> numberStyles = [5, 6, 7, 8]; //styles that will add extra chars
+		HashSet<uint> boldStyles = [1, 2, 3, 4, 6, 7, 8]; //styles that will bold
 		double width = text.Length + padding;
 
 		// Add extra width for numbers to account for digit grouping

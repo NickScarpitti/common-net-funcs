@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Collections.Frozen;
+using System.Security.Cryptography;
 using System.Text;
 using static System.Math;
 using static System.Random;
@@ -356,7 +357,7 @@ public static class Random
 	/// <param name="cancellationToken">The cancellation token for this operation.</param>
 	/// <returns>A random string of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if any of the provided bounds are invalid.</exception>
-	public static string GenerateRandomString(int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null, CancellationToken cancellationToken = default)
+	public static string GenerateRandomString(int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, HashSet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default)
 	{
 		if (lowerAsciiBound < 0 || upperAsciiBound > 127 || lowerAsciiBound >= upperAsciiBound)
 		{
@@ -377,7 +378,7 @@ public static class Random
 
 		StringBuilder result = new(length);
 
-		if (blacklistedCharacters == null || blacklistedCharacters.Length == 0)
+		if (blacklistedCharacters == null || blacklistedCharacters.Count == 0)
 		{
 			for (int i = 0; i < length; i++)
 			{
@@ -394,7 +395,7 @@ public static class Random
 			}
 
 			// Build a whitelist of allowed characters for efficiency and S127 compliance
-			char[] allowedChars = new char[upperAsciiBound - lowerAsciiBound + 1 - blackListCharVals.Count];
+			Span<char> allowedChars = stackalloc char[upperAsciiBound - lowerAsciiBound + 1 - blackListCharVals.Count];
 			int allowedIndex = 0;
 			for (int i = lowerAsciiBound; i <= upperAsciiBound; i++)
 			{
@@ -434,7 +435,8 @@ public static class Random
 	/// <param name="cancellationToken">The cancellation token for this operation.</param>
 	/// <returns>An enumerable of random strings of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if any of the provided bounds are invalid.</exception>
-	public static IEnumerable<string> GenerateRandomStrings(int numberToGenerate, int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, char[]? blacklistedCharacters = null, CancellationToken cancellationToken = default)
+	public static IEnumerable<string> GenerateRandomStrings(int numberToGenerate, int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126,
+		HashSet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default)
 	{
 		for (int i = 0; i < numberToGenerate; i++)
 		{
@@ -442,7 +444,8 @@ public static class Random
 		}
 	}
 
-	internal static readonly char[] DefaultCharSet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+	internal static readonly FrozenSet<char> DefaultCharSet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 	/// <summary>
 	/// Generates a random string of the indicated length using either a custom character set, or the default of a-z A-Z 1-9.
@@ -451,20 +454,22 @@ public static class Random
 	/// <param name="charSet">Characters that are to be used in the generated string.</param>
 	/// <param name="cancellationToken">The cancellation token for this operation.</param>
 	/// <returns>A random string of the given length comprised only of characters in either the default or custom character set</returns>
-	public static string GenerateRandomStringByCharSet(int length, char[]? charSet = null, CancellationToken cancellationToken = default)
+	public static string GenerateRandomStringByCharSet(int length, HashSet<char>? charSet = null, CancellationToken cancellationToken = default)
 	{
 		// Use a default character set if none is provided
-		if (charSet == null || charSet.Length == 0)
+		if (charSet == null || charSet.Count == 0)
 		{
-			charSet = DefaultCharSet;
+			charSet = new(DefaultCharSet);
 		}
 
-		StringBuilder result = new(length);
+		ReadOnlySpan<char> charSetSpan = new(charSet.ToArray());
+		int setLength = charSetSpan.Length;
 
+		StringBuilder result = new(length);
 		for (int i = 0; i < length; i++)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-			char randomChar = charSet[GetRandomInt(0, charSet.Length)];
+			char randomChar = charSetSpan[GetRandomInt(0, setLength)];
 			result.Append(randomChar);
 		}
 

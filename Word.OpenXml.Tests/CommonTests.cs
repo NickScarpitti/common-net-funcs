@@ -88,11 +88,11 @@ public sealed class ChangeUrlTests : IDisposable
 	{
 		// Arrange
 		Dictionary<string, string> urlsToUpdate = new()
-				{
-						{ "http://TestUrl/1", "http://NewUrl/1" },
-						{ "http://TestUrl/2", "http://NewUrl/2" },
-						{ "http://TestUrl/3", "http://NewUrl/3" }
-				};
+			{
+				{ "http://TestUrl/1", "http://NewUrl/1" },
+				{ "http://TestUrl/2", "http://NewUrl/2" },
+				{ "http://TestUrl/3", "http://NewUrl/3" }
+			};
 
 		// Act
 		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDoc(_tempFileStream!, urlsToUpdate);

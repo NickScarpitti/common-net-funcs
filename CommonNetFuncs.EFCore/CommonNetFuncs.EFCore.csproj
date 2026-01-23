@@ -85,7 +85,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" PrivateAssets="all" />
     <PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" PrivateAssets="all" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.1" PrivateAssets="all" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="9.105.2" PrivateAssets="all" />
+    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="9.105.2.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,6 +4,8 @@
 		<OutputType>Exe</OutputType>
 		<Platforms>AnyCPU;x86;x64</Platforms>
 		<Nullable>enable</Nullable>
+		<!-- Suppress CS0436 warnings from MessagePack source generators -->
+		<NoWarn>$(NoWarn);CS0436</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

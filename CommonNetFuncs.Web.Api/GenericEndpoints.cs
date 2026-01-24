@@ -117,7 +117,7 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		return NoContent();
 	}
@@ -142,7 +142,7 @@ public sealed class GenericEndpoints : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		return NoContent();
 	}

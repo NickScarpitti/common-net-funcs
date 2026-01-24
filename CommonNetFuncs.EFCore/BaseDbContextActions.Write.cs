@@ -287,7 +287,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 		}
 		return null;
 	}

@@ -103,7 +103,7 @@ public class DirectQuery(Func<string, NpgsqlConnection>? connectionFactory = nul
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			}
 		}
 
@@ -147,7 +147,7 @@ public class DirectQuery(Func<string, NpgsqlConnection>? connectionFactory = nul
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 			}
 		}
 

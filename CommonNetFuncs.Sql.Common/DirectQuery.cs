@@ -57,7 +57,7 @@ public static class DirectQuery
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 				dt.Clear();
 			}
 			finally
@@ -109,7 +109,7 @@ public static class DirectQuery
 			}
 			catch (Exception ex)
 			{
-				logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+				logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 				dt.Clear();
 			}
 			finally

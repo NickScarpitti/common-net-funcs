@@ -76,7 +76,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="4.0.17.3" PrivateAssets="all" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.18" PrivateAssets="all" />
     <PackageReference Include="MinVer" Version="7.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

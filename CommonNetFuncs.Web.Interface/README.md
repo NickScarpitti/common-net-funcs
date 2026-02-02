@@ -144,3 +144,19 @@ List<SelectListItem> colorOptions = colors.Select(x => x.ToSelectListItem()); //
 ```
 
 </details>
+
+## Installation
+
+Install via NuGet:
+
+```bash
+dotnet add package CommonNetFuncs.Web.Interface
+```
+
+## Dependencies
+
+- CommonNetFuncs.Core
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

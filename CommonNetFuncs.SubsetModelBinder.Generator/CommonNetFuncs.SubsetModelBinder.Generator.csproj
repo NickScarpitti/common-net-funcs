@@ -39,7 +39,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.8.32</Version>
+    <Version>3.8.33</Version>
     <MinVerTagPrefix>subsetmodelbinder.generator-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>

@@ -18,6 +18,7 @@
     <Project Path="Excel.Npoi.Tests/Excel.Npoi.Tests.csproj" />
     <Project Path="Excel.OpenXml.Tests/Excel.OpenXml.Tests.csproj" />
     <Project Path="FastMap.Tests/FastMap.Tests.csproj" />
+    <Project Path="Hangfire.Tests/Hangfire.Tests.csproj" />
     <Project Path="Images.Tests/Images.Tests.csproj" />
     <Project Path="Media.Ffmpeg.Tests/Media.Ffmpeg.Tests.csproj" />
     <Project Path="Office.Common.Tests/Office.Common.Tests.csproj" />
@@ -48,6 +49,7 @@
     <Platform Solution="*|x86" Project="x86" />
   </Project>
   <Project Path="CommonNetFuncs.FastMap/CommonNetFuncs.FastMap.csproj" />
+  <Project Path="CommonNetFuncs.Hangfire/CommonNetFuncs.Hangfire.csproj" />
   <Project Path="CommonNetFuncs.Images/CommonNetFuncs.Images.csproj" />
   <Project Path="CommonNetFuncs.Media.Ffmpeg/CommonNetFuncs.Media.Ffmpeg.csproj" />
   <Project Path="CommonNetFuncs.Office.Common/CommonNetFuncs.Office.Common.csproj" />

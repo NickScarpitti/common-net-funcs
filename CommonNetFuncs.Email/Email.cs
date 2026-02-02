@@ -29,11 +29,78 @@ public sealed class MailAddress(string? Name = null, string? Email = null)
 	public string? Email { get; set; } = Email;
 }
 
-public sealed class MailAttachment(string? AttachmentName = null, Stream? AttachmentStream = null)
+/// <summary>
+/// Represents an email attachment with a name and stream. This class takes ownership of the stream and will dispose it when disposed.
+/// </summary>
+public sealed class MailAttachment : IAsyncDisposable, IDisposable
 {
-	public string? AttachmentName { get; set; } = AttachmentName;
+	private bool disposed;
 
-	public Stream? AttachmentStream { get; set; } = AttachmentStream;
+	public MailAttachment(string? AttachmentName = null, byte[]? AttachmentBytes = null)
+	{
+		this.AttachmentName = AttachmentName;
+		if (AttachmentBytes != null)
+		{
+			AttachmentStream = new MemoryStream();
+			AttachmentStream.Write(AttachmentBytes, 0, AttachmentBytes.Length);
+			AttachmentStream.Position = 0;
+		}
+	}
+
+	public MailAttachment(string? AttachmentName = null, Stream? AttachmentStream = null)
+	{
+		this.AttachmentName = AttachmentName;
+		this.AttachmentStream = AttachmentStream;
+	}
+
+	public string? AttachmentName { get; set; }
+
+	public Stream? AttachmentStream { get; set; }
+
+	public async ValueTask DisposeAsync()
+	{
+		if (!disposed)
+		{
+			if (AttachmentStream != null)
+			{
+				await AttachmentStream.DisposeAsync().ConfigureAwait(false);
+			}
+			disposed = true;
+		}
+		GC.SuppressFinalize(this);
+	}
+
+	public void Dispose()
+	{
+		if (!disposed)
+		{
+			AttachmentStream?.Dispose();
+			disposed = true;
+		}
+		GC.SuppressFinalize(this);
+	}
+}
+
+public sealed class MailAttachmentBytes
+{
+	public MailAttachmentBytes(string? AttachmentName = null, byte[]? AttachmentBytes = null)
+	{
+		this.AttachmentName = AttachmentName;
+		this.AttachmentBytes = AttachmentBytes;
+	}
+
+	public MailAttachmentBytes(string? AttachmentName = null, Stream? AttachmentStream = null)
+	{
+		using MemoryStream memoryStream = new();
+		AttachmentStream?.CopyTo(memoryStream);
+
+		this.AttachmentName = AttachmentName;
+		AttachmentBytes = memoryStream.ToArray();
+	}
+
+	public string? AttachmentName { get; set; }
+
+	public byte[]? AttachmentBytes { get; set; }
 }
 
 public sealed class SendEmailConfig(SmtpSettings? smtpSettings = null, EmailAddresses? emailAddresses = null, EmailContent? emailContent = null, bool readReceipt = false, string? readReceiptEmail = null)
@@ -261,9 +328,9 @@ public static class Email
 
 		if (sendEmailConfig.EmailContent.AutoDisposeAttachments)
 		{
-			foreach (MailAttachment attachment in sendEmailConfig.EmailContent.Attachments?.Where(x => x.AttachmentStream != null) ?? [])
+			foreach (MailAttachment attachment in sendEmailConfig.EmailContent.Attachments ?? [])
 			{
-				await attachment.AttachmentStream!.DisposeAsync().ConfigureAwait(false);
+				await attachment.DisposeAsync().ConfigureAwait(false);
 			}
 		}
 

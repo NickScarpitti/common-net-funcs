@@ -208,7 +208,7 @@ public static partial class FileHelpers
 	/// <param name="fileName">Full file name (with extension) to check for a valid file extension</param>
 	/// <param name="validExtensions">Array of valid file extensions</param>
 	/// <returns><see langword="true"/> if the file has a valid extension</returns>
-	public static bool ValidateFileExtension(this string fileName, HashSet<string> validExtensions)
+	public static bool ValidateFileExtension(this string fileName, ISet<string> validExtensions)
 	{
 		string extension = Path.GetExtension(fileName);
 		return validExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);

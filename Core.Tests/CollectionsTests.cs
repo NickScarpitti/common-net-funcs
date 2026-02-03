@@ -1407,7 +1407,7 @@ public sealed class CollectionsTests
 				};
 
 		// Act
-		List<TestClass> result = collection.StringAggProps(["Name", "Description"], distinct: distinct).ToList();
+		List<TestClass> result = collection.StringAggProps(new HashSet<string> { "Name", "Description" }, distinct: distinct).ToList();
 
 		// Assert
 		if (distinct)
@@ -1441,7 +1441,7 @@ public sealed class CollectionsTests
 		List<TestClass> collection = new() { new TestClass { Id = 1, Name = "test1" } };
 
 		// Act & Assert
-		Should.Throw<ArgumentException>(() => collection.StringAggProps([]).ToList());
+		Should.Throw<ArgumentException>(() => collection.StringAggProps(new HashSet<string>()).ToList());
 	}
 
 	#endregion

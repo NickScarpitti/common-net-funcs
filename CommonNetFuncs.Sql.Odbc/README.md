@@ -100,3 +100,21 @@ IEnumerable<TestEntity> queryResults = await DirectQuery.GetDataDirectAsync(sql,
 ```
 
 </details>
+
+## Installation
+
+Install via NuGet:
+
+```bash
+dotnet add package CommonNetFuncs.Sql.Odbc
+```
+
+## Dependencies
+
+- CommonNetFuncs.Core
+- CommonNetFuncs.Sql.Common
+- System.Data.Odbc (>= 9.0.1)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

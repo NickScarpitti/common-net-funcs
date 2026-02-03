@@ -16,6 +16,15 @@ public static class EmailConstants
 }
 
 /// <summary>
+/// Interface for email attachments
+/// </summary>
+public interface IMailAttachment
+{
+	string? AttachmentName { get; set; }
+	Stream? GetStream();
+}
+
+/// <summary>
 /// Class that stores both fields of a Mail Address
 /// </summary>
 public sealed class MailAddress(string? Name = null, string? Email = null)
@@ -28,11 +37,92 @@ public sealed class MailAddress(string? Name = null, string? Email = null)
 	public string? Email { get; set; } = Email;
 }
 
-public sealed class MailAttachment(string? AttachmentName = null, Stream? AttachmentStream = null)
+/// <summary>
+/// Represents an email attachment with a name and stream. This class takes ownership of the stream and will dispose it when disposed.
+/// </summary>
+public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposable
 {
-	public string? AttachmentName { get; set; } = AttachmentName;
+	private bool disposed;
 
-	public Stream? AttachmentStream { get; set; } = AttachmentStream;
+	public MailAttachment(string? AttachmentName = null, byte[]? AttachmentBytes = null)
+	{
+		this.AttachmentName = AttachmentName;
+		if (AttachmentBytes != null)
+		{
+			AttachmentStream = new MemoryStream();
+			AttachmentStream.Write(AttachmentBytes, 0, AttachmentBytes.Length);
+			AttachmentStream.Position = 0;
+		}
+	}
+
+	public MailAttachment(string? AttachmentName = null, Stream? AttachmentStream = null)
+	{
+		this.AttachmentName = AttachmentName;
+		this.AttachmentStream = AttachmentStream;
+	}
+
+	public string? AttachmentName { get; set; }
+
+	public Stream? AttachmentStream { get; set; }
+
+	public Stream? GetStream()
+	{
+		return AttachmentStream;
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (!disposed)
+		{
+			if (AttachmentStream != null)
+			{
+				await AttachmentStream.DisposeAsync().ConfigureAwait(false);
+			}
+			disposed = true;
+		}
+		GC.SuppressFinalize(this);
+	}
+
+	public void Dispose()
+	{
+		if (!disposed)
+		{
+			AttachmentStream?.Dispose();
+			disposed = true;
+		}
+		GC.SuppressFinalize(this);
+	}
+}
+
+public sealed class MailAttachmentBytes : IMailAttachment
+{
+	public MailAttachmentBytes(string? AttachmentName = null, byte[]? AttachmentBytes = null)
+	{
+		this.AttachmentName = AttachmentName;
+		this.AttachmentBytes = AttachmentBytes;
+	}
+
+	public MailAttachmentBytes(string? AttachmentName = null, Stream? AttachmentStream = null)
+	{
+		using MemoryStream memoryStream = new();
+		AttachmentStream?.CopyTo(memoryStream);
+
+		this.AttachmentName = AttachmentName;
+		AttachmentBytes = memoryStream.ToArray();
+	}
+
+	public string? AttachmentName { get; set; }
+
+	public byte[]? AttachmentBytes { get; set; }
+
+	public Stream? GetStream()
+	{
+		if (AttachmentBytes == null) return null;
+		MemoryStream stream = new();
+		stream.Write(AttachmentBytes, 0, AttachmentBytes.Length);
+		stream.Position = 0;
+		return stream;
+	}
 }
 
 public sealed class SendEmailConfig(SmtpSettings? smtpSettings = null, EmailAddresses? emailAddresses = null, EmailContent? emailContent = null, bool readReceipt = false, string? readReceiptEmail = null)
@@ -123,7 +213,7 @@ public sealed class EmailAddresses(MailAddress? fromAddress = null, IEnumerable<
 	public IEnumerable<MailAddress> BccAddresses { get; set; } = bccAddresses ?? [];
 }
 
-public sealed class EmailContent(string? subject = null, string? body = null, bool bodyIsHtml = false, IEnumerable<MailAttachment>? attachments = null, bool autoDisposeAttachments = true, bool zipAttachments = false)
+public sealed class EmailContent(string? subject = null, string? body = null, bool bodyIsHtml = false, IEnumerable<IMailAttachment>? attachments = null, bool autoDisposeAttachments = true, bool zipAttachments = false)
 {
 	/// <summary>
 	/// Gets or sets the subject of the message.
@@ -143,7 +233,7 @@ public sealed class EmailContent(string? subject = null, string? body = null, bo
 	/// <summary>
 	/// Gets or sets the collection of attachments associated with the mail message.
 	/// </summary>
-	public IEnumerable<MailAttachment>? Attachments { get; set; } = attachments;
+	public IEnumerable<IMailAttachment>? Attachments { get; set; } = attachments;
 
 	/// <summary>
 	/// Gets or sets a value indicating whether attachments should be automatically disposed when they are no longer needed.
@@ -156,6 +246,68 @@ public sealed class EmailContent(string? subject = null, string? body = null, bo
 	/// Gets or sets a value indicating whether email attachments should be compressed into a ZIP archive.
 	/// </summary>
 	public bool ZipAttachments { get; set; } = zipAttachments;
+}
+
+/// <summary>
+/// Email content configuration using MailAttachmentBytes for serialization-friendly scenarios (e.g., Hangfire background jobs).
+/// </summary>
+public sealed class EmailContentBytes(string? subject = null, string? body = null, bool bodyIsHtml = false, IEnumerable<MailAttachmentBytes>? attachments = null, bool zipAttachments = false)
+{
+	/// <summary>
+	/// Gets or sets the subject of the message.
+	/// </summary>
+	public string? Subject { get; set; } = subject;
+
+	/// <summary>
+	/// Gets or sets the body content of the message.
+	/// </summary>
+	public string? Body { get; set; } = body;
+
+	/// <summary>
+	/// Gets or sets a value indicating whether the body of the message is formatted as HTML.
+	/// </summary>
+	public bool BodyIsHtml { get; set; } = bodyIsHtml;
+
+	/// <summary>
+	/// Gets or sets the collection of byte-based attachments associated with the mail message.
+	/// </summary>
+	public IEnumerable<MailAttachmentBytes>? Attachments { get; set; } = attachments;
+
+	/// <summary>
+	/// Gets or sets a value indicating whether email attachments should be compressed into a ZIP archive.
+	/// </summary>
+	public bool ZipAttachments { get; set; } = zipAttachments;
+}
+
+/// <summary>
+/// Send email configuration using EmailContentBytes for serialization-friendly scenarios (e.g., Hangfire background jobs).
+/// </summary>
+public sealed class SendEmailConfigBytes(SmtpSettings? smtpSettings = null, EmailAddresses? emailAddresses = null, EmailContentBytes? emailContent = null, bool readReceipt = false, string? readReceiptEmail = null)
+{
+	/// <summary>
+	/// Gets or sets the values to use for the SMTP server connection.
+	/// </summary>
+	public SmtpSettings SmtpSettings { get; set; } = smtpSettings ?? new();
+
+	/// <summary>
+	/// Gets or sets the email addresses used in the email, including From, To, CC, and BCC.
+	/// </summary>
+	public EmailAddresses EmailAddresses { get; set; } = emailAddresses ?? new();
+
+	/// <summary>
+	/// Gets or sets a value indicating whether a read receipt request should be added to the email. ReadReceiptEmail must have a value for the read receipt to work.
+	/// </summary>
+	public bool ReadReceipt { get; set; } = readReceipt;
+
+	/// <summary>
+	/// Gets or sets the email address to which read receipts should be sent when ReadReceipt is true.
+	/// </summary>
+	public string? ReadReceiptEmail { get; set; } = readReceiptEmail;
+
+	/// <summary>
+	/// Gets or sets the email content to be sent, including subject, body, and attachments.
+	/// </summary>
+	public EmailContentBytes EmailContent { get; set; } = emailContent ?? new();
 }
 
 public static class Email
@@ -260,13 +412,47 @@ public static class Email
 
 		if (sendEmailConfig.EmailContent.AutoDisposeAttachments)
 		{
-			foreach (MailAttachment attachment in sendEmailConfig.EmailContent.Attachments?.Where(x => x.AttachmentStream != null) ?? [])
+			foreach (IMailAttachment attachment in sendEmailConfig.EmailContent.Attachments ?? [])
 			{
-				await attachment.AttachmentStream!.DisposeAsync().ConfigureAwait(false);
+				if (attachment is IAsyncDisposable asyncDisposable)
+				{
+					await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+				}
+				else if (attachment is IDisposable disposable)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 
 		return success;
+	}
+
+	/// <summary>
+	/// Sends an email using the SMTP server specified in the parameters. This overload uses MailAttachmentBytes for serialization-friendly scenarios (e.g., Hangfire background jobs).
+	/// </summary>
+	/// <param name="sendEmailConfig">Configuration options for sending the email with byte-based attachments.</param>
+	/// <param name="cancellationToken">Cancellation token for this operation.</param>
+	/// <returns><see langword="true"/> if email was sent successfully, otherwise <see langword="false"/></returns>
+	public static Task<bool> SendEmail(SendEmailConfigBytes sendEmailConfig, CancellationToken cancellationToken = default)
+	{
+		// Convert to standard SendEmailConfig
+		SendEmailConfig standardConfig = new(
+			sendEmailConfig.SmtpSettings,
+			sendEmailConfig.EmailAddresses,
+			new EmailContent(
+				sendEmailConfig.EmailContent.Subject,
+				sendEmailConfig.EmailContent.Body,
+				sendEmailConfig.EmailContent.BodyIsHtml,
+				sendEmailConfig.EmailContent.Attachments?.Cast<IMailAttachment>(),
+				autoDisposeAttachments: false, // Don't dispose byte-based attachments
+				sendEmailConfig.EmailContent.ZipAttachments
+			),
+			sendEmailConfig.ReadReceipt,
+			sendEmailConfig.ReadReceiptEmail
+		);
+
+		return SendEmail(standardConfig, cancellationToken);
 	}
 
 	/// <summary>
@@ -294,7 +480,7 @@ public static class Email
 	/// <param name="attachments">Attachments to add to the email</param>
 	/// <param name="bodyBuilder">Builder for the email to add attachments to</param>
 	/// <param name="zipAttachments">If <see langword="true"/>, will perform zip compression on the attachment files before adding them to the email</param>
-	public static async Task AddAttachments(IEnumerable<MailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments, CancellationToken cancellationToken = default)
+	public static async Task AddAttachments(IEnumerable<IMailAttachment>? attachments, BodyBuilder bodyBuilder, bool zipAttachments, CancellationToken cancellationToken = default)
 	{
 		try
 		{
@@ -304,12 +490,13 @@ public static class Email
 				{
 					List<Task> tasks = [];
 					int i = 1;
-					foreach (MailAttachment attachment in attachments)
+					foreach (IMailAttachment attachment in attachments)
 					{
-						if (attachment.AttachmentStream != null)
+						Stream? stream = attachment.GetStream();
+						if (stream != null)
 						{
-							attachment.AttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
-							tasks.Add(bodyBuilder.Attachments.AddAsync(attachment.AttachmentName ?? $"File {i}", attachment.AttachmentStream, cancellationToken));
+							stream.Position = 0; //Must have this to prevent errors writing data to the attachment
+							tasks.Add(bodyBuilder.Attachments.AddAsync(attachment.AttachmentName ?? $"File {i}", stream, cancellationToken));
 							i++;
 						}
 					}
@@ -320,7 +507,7 @@ public static class Email
 					await using MemoryStream memoryStream = new();
 					await using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
 
-					await attachments.Where(x => !string.IsNullOrWhiteSpace(x.AttachmentName)).Select(x => (x.AttachmentStream, x.AttachmentName!)).AddFilesToZip(archive, CompressionLevel.SmallestSize, cancellationToken).ConfigureAwait(false);
+					await attachments.Where(x => !string.IsNullOrWhiteSpace(x.AttachmentName)).Select(x => (x.GetStream(), x.AttachmentName!)).AddFilesToZip(archive, CompressionLevel.SmallestSize, cancellationToken).ConfigureAwait(false);
 
 					//foreach (MailAttachment attachment in attachments)
 					//{

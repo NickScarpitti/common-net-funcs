@@ -60,3 +60,21 @@ SimpleDestination destination = source.FastMap<SimpleSource, SimpleDestination>(
 ```
 
 </details>
+
+## Installation
+
+Install via NuGet:
+
+```bash
+dotnet add package CommonNetFuncs.FastMap
+```
+
+## Dependencies
+
+- CommonNetFuncs.Core (>= 3.8.32)
+- FastExpressionCompiler (>= 5.3.0)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.
+

@@ -35,3 +35,20 @@ This lightweight project contains helper methods for several common functions re
 ```
 
 </details>
+
+## Installation
+
+Install via NuGet:
+
+```bash
+dotnet add package CommonNetFuncs.Web.Middleware
+```
+
+## Dependencies
+
+- CommonNetFuncs.Core
+- CommonNetFuncs.Web.Common
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

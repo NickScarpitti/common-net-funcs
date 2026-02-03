@@ -1,0 +1,67 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Platforms>AnyCPU;x86;x64</Platforms>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<LangVersion>preview</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Title>$(AssemblyName)</Title>
+		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<FileVersion>$(Version)</FileVersion>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Authors>NickScarpitti</Authors>
+		<PackageIcon>TTLogo.png</PackageIcon>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
+		<!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<DebugType>embedded</DebugType>
+		<Description>
+			Helpers for integrating Hangfire into ASP.NET Core applications
+		</Description>
+		<PackageTags>dotnet;helpers;api;asp.net;asp.net core;web;endpoints</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Configurations>Debug;Release;ReducedBuild</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Version>3.8.33</Version>
+		<MinVerTagPrefix>hangfire-</MinVerTagPrefix>
+		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
+		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
+		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
+		<!-- Optional: Detect breaking changes from a previous stable version -->
+		<!--<PackageValidationBaselineVersion>3.8.31</PackageValidationBaselineVersion>-->
+		<EnablePackageValidation>true</EnablePackageValidation>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.22" />
+    <PackageReference Include="Hangfire.Core" Version="1.8.22" />
+		<PackageReference Include="MinVer" Version="7.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" PrivateAssets="all" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="TTLogo.png">
+	    <PackagePath>\</PackagePath>
+	    <Pack>True</Pack>
+	  </None>
+		<None Include="README.md">
+			<PackagePath>\</PackagePath>
+			<Pack>True</Pack>
+		</None>
+	</ItemGroup>
+
+</Project>

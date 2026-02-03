@@ -9,7 +9,13 @@ public interface IEmailService
 
 	Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, CancellationToken cancellationToken = default);
 
+	Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContentBytes emailContent, bool readReceipt, string readReceiptEmail, CancellationToken cancellationToken = default);
+
+	Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContentBytes emailContent, CancellationToken cancellationToken = default);
+
 	Task<bool> SendEmail(SendEmailConfig sendEmailConfig, CancellationToken cancellationToken = default);
+
+	Task<bool> SendEmail(SendEmailConfigBytes sendEmailConfig, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -19,7 +25,7 @@ public sealed class EmailService : IEmailService
 {
 	public Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, bool readReceipt, string readReceiptEmail, CancellationToken cancellationToken = default)
 	{
-		return Email.SendEmail(new()
+		return Email.SendEmail(new SendEmailConfig()
 		{
 			SmtpSettings = smtpSettings,
 			EmailAddresses = emailAddresses,
@@ -31,7 +37,28 @@ public sealed class EmailService : IEmailService
 
 	public Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, CancellationToken cancellationToken = default)
 	{
-		return Email.SendEmail(new()
+		return Email.SendEmail(new SendEmailConfig()
+		{
+			SmtpSettings = smtpSettings,
+			EmailAddresses = emailAddresses,
+			EmailContent = emailContent,
+		}, cancellationToken);
+	}
+	public Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContentBytes emailContent, bool readReceipt, string readReceiptEmail, CancellationToken cancellationToken = default)
+	{
+		return Email.SendEmail(new SendEmailConfigBytes()
+		{
+			SmtpSettings = smtpSettings,
+			EmailAddresses = emailAddresses,
+			EmailContent = emailContent,
+			ReadReceipt = readReceipt,
+			ReadReceiptEmail = readReceiptEmail
+		}, cancellationToken);
+	}
+
+	public Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContentBytes emailContent, CancellationToken cancellationToken = default)
+	{
+		return Email.SendEmail(new SendEmailConfigBytes()
 		{
 			SmtpSettings = smtpSettings,
 			EmailAddresses = emailAddresses,
@@ -40,6 +67,11 @@ public sealed class EmailService : IEmailService
 	}
 
 	public Task<bool> SendEmail(SendEmailConfig sendEmailConfig, CancellationToken cancellationToken = default)
+	{
+		return Email.SendEmail(sendEmailConfig, cancellationToken);
+	}
+
+	public Task<bool> SendEmail(SendEmailConfigBytes sendEmailConfig, CancellationToken cancellationToken = default)
 	{
 		return Email.SendEmail(sendEmailConfig, cancellationToken);
 	}

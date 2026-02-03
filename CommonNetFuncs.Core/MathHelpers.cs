@@ -1,7 +1,5 @@
 ﻿using System.Globalization;
 
-using static System.Convert;
-
 namespace CommonNetFuncs.Core;
 
 /// <summary>

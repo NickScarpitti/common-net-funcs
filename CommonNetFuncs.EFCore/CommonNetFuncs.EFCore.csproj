@@ -77,15 +77,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FakeItEasy" Version="8.3.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.2" PrivateAssets="all" />
 		<PackageReference Include="MinVer" Version="7.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" PrivateAssets="all" />
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" PrivateAssets="all" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" PrivateAssets="all" />
 		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.1" PrivateAssets="all" />
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="10.105.2" PrivateAssets="all" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="10.105.2.1" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

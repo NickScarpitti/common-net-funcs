@@ -3,15 +3,15 @@ using CommonNetFuncs.Excel.Npoi;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
-using xRetry;
+using xRetry.v3;
 
 namespace Excel.Npoi.Tests;
 
 public class ExportTests
 {
-	private readonly IFixture _fixture;
+	private readonly IFixture fixture;
 
-	public ExportTests() { _fixture = new Fixture(); }
+	public ExportTests() { fixture = new Fixture(); }
 
 	public class TestData
 	{
@@ -28,7 +28,7 @@ public class ExportTests
 	public async Task GenericExcelExport_WithValidList_ShouldReturnMemoryStream(bool createTable, string sheetName, string tableName)
 	{
 		// Arrange
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 		List<string> skipColumnNames = new() { "DateProperty" };
 
 		// Act
@@ -80,7 +80,7 @@ public class ExportTests
 	{
 		// Arrange
 		using SXSSFWorkbook workbook = new();
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 
 		// Act
 		bool result = workbook.AddGenericTable(testData, "TestSheet", createTable: true, tableName: "TestTable");
@@ -114,7 +114,7 @@ public class ExportTests
 		// Arrange
 		using SXSSFWorkbook workbook = new();
 		ISheet sheet = workbook.CreateSheet();
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 
 		// Act
 		bool result = testData.ExcelExport(workbook, sheet, createTable: true, tableName: "TestTable");
@@ -149,7 +149,7 @@ public class ExportTests
 	{
 		// Arrange
 		using SXSSFWorkbook workbook = new();
-		List<TestData> testData = _fixture.CreateMany<TestData>(2).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(2).ToList();
 
 		// Act
 		bool result1 = workbook.AddGenericTable(testData, "TestSheet");
@@ -169,7 +169,7 @@ public class ExportTests
 	public async Task GenericExcelExport_WithCancellation_ShouldHandleCancellation()
 	{
 		// Arrange
-		List<TestData> testData = _fixture.CreateMany<TestData>(100).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(100).ToList();
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
@@ -228,7 +228,7 @@ public class ExportTests
 		// Arrange
 		using SXSSFWorkbook workbook = new();
 		ISheet sheet = workbook.CreateSheet("TestSheet");
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 
 		// Act
 		bool result = testData.ExcelExport(workbook, sheet, createTable: false); // This will use auto-filter instead of table
@@ -250,7 +250,7 @@ public class ExportTests
 		// Arrange
 		using SXSSFWorkbook workbook = new();
 		ISheet sheet = workbook.CreateSheet();
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 
 		// Act
 		bool result = testData.ExcelExport(workbook, sheet, createTable: createTable, tableName: "TestTable", skipColumnNames: columnsToSkip.ToList());
@@ -272,7 +272,7 @@ public class ExportTests
 	{
 		// Arrange
 		using SXSSFWorkbook workbook = new();
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 		string invalidTableName = new('X', 257); // Excel table names have a length limit
 
 		// Act
@@ -286,7 +286,7 @@ public class ExportTests
 	public void GenericExcelExport_WithLargeDataSet_ShouldHandleMemoryEfficiently()
 	{
 		// Arrange
-		List<TestData> largeDataSet = _fixture.CreateMany<TestData>(10000).ToList();
+		List<TestData> largeDataSet = fixture.CreateMany<TestData>(10000).ToList();
 
 		// Act
 		Task<MemoryStream?> Export()
@@ -303,7 +303,7 @@ public class ExportTests
 	public async Task GenericExcelExport_WithInvalidSheetName_ShouldUseDefaultName(string? sheetName)
 	{
 		// Arrange
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 
 		// Act
 		await using MemoryStream? result = await testData.GenericExcelExport(sheetName: sheetName!, tableName: "TestTable");
@@ -320,7 +320,7 @@ public class ExportTests
 		// Arrange
 		using SXSSFWorkbook workbook = new();
 		ISheet sheet = workbook.CreateSheet();
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 
 		// Act
 		bool result = testData.ExcelExport(workbook, sheet, createTable: true, tableName: "StyledTable");
@@ -335,7 +335,7 @@ public class ExportTests
 	public async Task GenericExcelExport_WithDisposedMemoryStream_ShouldHandleError()
 	{
 		// Arrange
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 		await using MemoryStream memoryStream = new();
 		await memoryStream.DisposeAsync();
 

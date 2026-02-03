@@ -6,14 +6,14 @@ namespace Office.Common.Tests;
 
 public sealed class PdfConversionTests //: IDisposable
 {
-	private readonly string _testDataPath;
-	private readonly string _libreOfficePath;
+	private readonly string testDataPath;
+	private readonly string libreOfficePath;
 
 	public PdfConversionTests()
 	{
 		// Set LibreOffice path based on OS
-		_libreOfficePath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\Program Files\LibreOffice\program\soffice.com" : "soffice";
-		_testDataPath = Combine(GetDirectoryName(typeof(PdfConversionTests).Assembly.Location)!, "TestData");
+		libreOfficePath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\Program Files\LibreOffice\program\soffice.com" : "soffice";
+		testDataPath = Combine(GetDirectoryName(typeof(PdfConversionTests).Assembly.Location)!, "TestData");
 	}
 
 	[Theory]
@@ -30,13 +30,13 @@ public sealed class PdfConversionTests //: IDisposable
 		string _tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 		Directory.CreateDirectory(_tempPath);
 
-		string sourceFile = Combine(_testDataPath, fileName);
+		string sourceFile = Combine(testDataPath, fileName);
 		string outputFile = Combine(_tempPath, $"{GetFileNameWithoutExtension(fileName)}.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 
 		// Act
 #pragma warning disable S6966 // Awaitable method should be used
-		ConvertToPdf(_libreOfficePath, sourceFile, _tempPath);
+		ConvertToPdf(libreOfficePath, sourceFile, _tempPath);
 #pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
@@ -51,29 +51,29 @@ public sealed class PdfConversionTests //: IDisposable
 	public async Task ConvertToPdf_WithInvalidExtension_ShouldThrowArgumentException(string fileName)
 	{
 		// Arrange
-		string sourceFile = Combine(_testDataPath, fileName);
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		string sourceFile = Combine(testDataPath, fileName);
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 
 		// Act & Assert
-		Should.Throw<ArgumentException>(() => ConvertToPdf(_libreOfficePath, sourceFile));
+		Should.Throw<ArgumentException>(() => ConvertToPdf(libreOfficePath, sourceFile));
 	}
 
 	[Fact]
 	public void ConvertToPdf_WithNonExistentFile_ShouldThrowFileNotFoundException()
 	{
 		// Arrange
-		string nonExistentFile = Combine(_testDataPath, "nonexistent.xlsx");
+		string nonExistentFile = Combine(testDataPath, "nonexistent.xlsx");
 
 		// Act & Assert
-		Should.Throw<FileNotFoundException>(() => ConvertToPdf(_libreOfficePath, nonExistentFile));
+		Should.Throw<FileNotFoundException>(() => ConvertToPdf(libreOfficePath, nonExistentFile));
 	}
 
 	[Fact]
 	public async Task ConvertToPdf_WithInvalidLibreOfficePath_ShouldThrowLibreOfficeFailedException()
 	{
 		// Arrange
-		string sourceFile = Combine(_testDataPath, $"TestExcel-{Guid.NewGuid()}.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		string sourceFile = Combine(testDataPath, $"TestExcel-{Guid.NewGuid()}.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		const string invalidLibreOfficePath = "invalid/path/to/soffice";
 
 		// Act & Assert
@@ -87,12 +87,12 @@ public sealed class PdfConversionTests //: IDisposable
 		string _tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 		Directory.CreateDirectory(_tempPath);
 
-		string sourceFile = Combine(_testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		string sourceFile = Combine(testDataPath, "Test.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		TimeSpan timeout = TimeSpan.FromMilliseconds(1); // Very short timeout
 
 		// Act & Assert
-		Should.Throw<LibreOfficeFailedException>(() => ConvertToPdf(_libreOfficePath, sourceFile, _tempPath, timeout));
+		Should.Throw<LibreOfficeFailedException>(() => ConvertToPdf(libreOfficePath, sourceFile, _tempPath, timeout));
 		Directory.Delete(_tempPath, true); // Cleanup
 	}
 
@@ -101,13 +101,13 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string fileName = $"Test-{Guid.NewGuid()}.xlsx";
-		string sourceFile = Combine(_testDataPath, fileName);
-		string expectedOutputFile = Combine(_testDataPath, $"{GetFileNameWithoutExtension(fileName)}.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		string sourceFile = Combine(testDataPath, fileName);
+		string expectedOutputFile = Combine(testDataPath, $"{GetFileNameWithoutExtension(fileName)}.pdf");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 
 		// Act
 #pragma warning disable S6966 // Awaitable method should be used
-		ConvertToPdf(_libreOfficePath, sourceFile);
+		ConvertToPdf(libreOfficePath, sourceFile);
 #pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
@@ -119,13 +119,13 @@ public sealed class PdfConversionTests //: IDisposable
 	public async Task ConvertToPdf_WithCancellation_ShouldThrowLibreOfficeFailedException()
 	{
 		// Arrange
-		string sourceFile = Combine(_testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		string sourceFile = Combine(testDataPath, "Test.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		using CancellationTokenSource cts = new();
 
 		// Act & Assert
 		await cts.CancelAsync();
-		await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(_libreOfficePath, sourceFile, cancellationToken: cts.Token));
+		await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token));
 	}
 
 	[Theory]
@@ -135,8 +135,8 @@ public sealed class PdfConversionTests //: IDisposable
 	public async Task ConvertToPdf_WithRetries_ShouldRetrySpecifiedTimes(int maxRetries)
 	{
 		// Arrange
-		string sourceFile = Combine(_testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		string sourceFile = Combine(testDataPath, "Test.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		const string invalidLibreOfficePath = "invalid/path/to/soffice";
 
 		// Act & Assert
@@ -149,8 +149,8 @@ public sealed class PdfConversionTests //: IDisposable
 	public async Task ConvertToPdf_WithMaxRetriesZero_ShouldFailImmediately()
 	{
 		// Arrange
-		string sourceFile = Combine(_testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		string sourceFile = Combine(testDataPath, "Test.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		const string invalidLibreOfficePath = "invalid/path/to/soffice";
 
 		// Act & Assert
@@ -165,12 +165,12 @@ public sealed class PdfConversionTests //: IDisposable
 		// Arrange
 		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 		Directory.CreateDirectory(tempPath);
-		string sourceFile = Combine(_testDataPath, "Test.xlsx");
+		string sourceFile = Combine(testDataPath, "Test.xlsx");
 		string outputFile = Combine(tempPath, "Test.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 
 		// Act
-		await ConvertToPdfAsync(_libreOfficePath, sourceFile, tempPath, maxRetries: 3);
+		await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 3);
 
 		// Assert
 		File.Exists(outputFile).ShouldBeTrue();
@@ -181,12 +181,12 @@ public sealed class PdfConversionTests //: IDisposable
 	public async Task ConvertToPdf_WithCancellationAndRetries_ShouldRespectBoth()
 	{
 		// Arrange
-		string sourceFile = Combine(_testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content");
+		string sourceFile = Combine(testDataPath, "Test.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		using CancellationTokenSource cts = new();
 		cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
 		// Act & Assert
-		await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(_libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 3));
+		await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 3));
 	}
 }

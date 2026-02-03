@@ -39,9 +39,9 @@ public static class DateOnlyHelpers
 			int exceptionDays = 0;
 			foreach (DateOnly exceptionDate in exceptionDates)
 			{
-				if ((exceptionDate >= sDate) && (exceptionDate <= eDate) && 
-				    (exceptionDate.DayOfWeek != DayOfWeek.Saturday) && 
-				    (exceptionDate.DayOfWeek != DayOfWeek.Sunday))
+				if ((exceptionDate >= sDate) && (exceptionDate <= eDate) &&
+						(exceptionDate.DayOfWeek != DayOfWeek.Saturday) &&
+						(exceptionDate.DayOfWeek != DayOfWeek.Sunday))
 				{
 					exceptionDays++;
 				}

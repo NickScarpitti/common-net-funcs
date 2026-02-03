@@ -2,18 +2,18 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using xRetry;
+using xRetry.v3;
 
 namespace Web.Middleware.Tests;
 
 public sealed class UseXsrfTokenMiddlewareTests
 {
-	private readonly IFixture _fixture;
+	private readonly IFixture fixture;
 	private readonly IApplicationBuilder _builder;
 
 	public UseXsrfTokenMiddlewareTests()
 	{
-		_fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
+		fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
 		_builder = A.Fake<IApplicationBuilder>();
 		// Setup UseMiddleware to return the builder for fluent chaining
 		A.CallTo(() => _builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(_builder);
@@ -29,7 +29,7 @@ public sealed class UseXsrfTokenMiddlewareTests
 		IAntiforgery antiforgery = A.Fake<IAntiforgery>();
 		HttpContext context = new DefaultHttpContext();
 
-		string expectedToken = _fixture.Create<string>();
+		string expectedToken = fixture.Create<string>();
 		AntiforgeryTokenSet tokenSet = new(expectedToken, expectedToken, "form", "header");
 
 		A.CallTo(() => antiforgery.GetAndStoreTokens(context))
@@ -78,8 +78,8 @@ public sealed class UseXsrfTokenMiddlewareTests
 		IAntiforgery antiforgery = A.Fake<IAntiforgery>();
 		HttpContext context = new DefaultHttpContext();
 
-		AntiforgeryTokenSet tokenSet = new(_fixture.Create<string>(),
-				_fixture.Create<string>(), "form", "header");
+		AntiforgeryTokenSet tokenSet = new(fixture.Create<string>(),
+				fixture.Create<string>(), "form", "header");
 
 		A.CallTo(() => antiforgery.GetAndStoreTokens(context))
 				.Returns(tokenSet);
@@ -101,8 +101,8 @@ public sealed class UseXsrfTokenMiddlewareTests
 		IAntiforgery antiforgery = A.Fake<IAntiforgery>();
 		HttpContext context = new DefaultHttpContext();
 
-		AntiforgeryTokenSet tokenSet = new(_fixture.Create<string>(),
-				_fixture.Create<string>(), "form", "header");
+		AntiforgeryTokenSet tokenSet = new(fixture.Create<string>(),
+				fixture.Create<string>(), "form", "header");
 
 		A.CallTo(() => antiforgery.GetAndStoreTokens(context))
 				.Returns(tokenSet);

@@ -4,7 +4,6 @@ namespace CommonNetFuncs.DeepClone;
 
 public static class Reflection
 {
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 	private static readonly MethodInfo? CloneMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
 
 	///// <summary>
@@ -140,5 +139,4 @@ public static class Reflection
 			fieldInfo.SetValue(cloneObject, clonedFieldValue);
 		}
 	}
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 }

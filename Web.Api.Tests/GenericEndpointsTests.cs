@@ -12,12 +12,12 @@ namespace Web.Api.Tests;
 
 public sealed class GenericEndpointsTests
 {
-	private readonly IFixture _fixture;
+	private readonly IFixture fixture;
 	private readonly GenericEndpoints _sut;
 
 	public GenericEndpointsTests()
 	{
-		_fixture = new Fixture()
+		fixture = new Fixture()
 				.Customize(new AutoFakeItEasyCustomization());
 		_sut = new GenericEndpoints();
 	}
@@ -41,7 +41,7 @@ public sealed class GenericEndpointsTests
 	public async Task CreateMany_WhenSuccessful_ReturnsOkWithModels(bool removeNavigationProps)
 	{
 		// Arrange
-		List<TestEntity> models = _fixture.CreateMany<TestEntity>(3).ToList();
+		List<TestEntity> models = fixture.CreateMany<TestEntity>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
@@ -59,7 +59,7 @@ public sealed class GenericEndpointsTests
 	public async Task CreateMany_WhenSaveFails_ReturnsNoContent()
 	{
 		// Arrange
-		List<TestEntity> models = _fixture.CreateMany<TestEntity>(3).ToList();
+		List<TestEntity> models = fixture.CreateMany<TestEntity>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
@@ -76,7 +76,7 @@ public sealed class GenericEndpointsTests
 	public async Task Delete_WhenSuccessful_ReturnsOkWithModel(bool removeNavigationProps)
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
@@ -96,7 +96,7 @@ public sealed class GenericEndpointsTests
 	public async Task DeleteMany_WhenSuccessful_ReturnsOkWithModels(bool removeNavigationProps)
 	{
 		// Arrange
-		List<TestEntity> models = _fixture.CreateMany<TestEntity>(3).ToList();
+		List<TestEntity> models = fixture.CreateMany<TestEntity>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteMany(models, removeNavigationProps)).Returns(true);
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
@@ -114,7 +114,7 @@ public sealed class GenericEndpointsTests
 	public async Task DeleteManyByKeys_WhenSuccessful_ReturnsOkWithKeys()
 	{
 		// Arrange
-		List<object> keys = _fixture.CreateMany<int>(3).Cast<object>().ToList();
+		List<object> keys = fixture.CreateMany<int>(3).Cast<object>().ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys)).Returns(true);
 
@@ -131,7 +131,7 @@ public sealed class GenericEndpointsTests
 	public async Task Patch_SingleKey_WhenSuccessful_ReturnsOkWithUpdatedModel()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, "Updated Name");
 
@@ -154,7 +154,7 @@ public sealed class GenericEndpointsTests
 	public async Task Patch_MultiKey_WhenSuccessful_ReturnsOkWithUpdatedModel()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, "Updated Name");
 
@@ -192,7 +192,7 @@ public sealed class GenericEndpointsTests
 	public async Task Patch_WhenValidationFails_ReturnsValidationProblem()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, null); // Will fail Required validation
 
@@ -211,7 +211,7 @@ public sealed class GenericEndpointsTests
 	public async Task Patch_WhenNoPatchOperations_ReturnsOriginalModel()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
@@ -236,7 +236,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Returns(expectedDeletedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions);
+		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -254,7 +254,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Returns(0);
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions);
+		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -271,7 +271,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Returns(Task.FromResult<int?>(null));
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions);
+		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -286,7 +286,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions);
+		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -303,7 +303,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(expectedUpdatedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -322,7 +322,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(0);
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -341,7 +341,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(Task.FromResult<int?>(null));
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -357,7 +357,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -375,7 +375,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(expectedUpdatedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions);
+		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -393,7 +393,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Returns(expectedDeletedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions);
+		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();

@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using CommonNetFuncs.Web.Common.ValidationAttributes;
 
 namespace Web.Common.Tests.ValidationAttributes;
@@ -304,7 +304,7 @@ public sealed class ListDenyCharactersAttributeTests : ValidationTestBase
 	{
 		// Arrange
 		ListDenyCharactersAttribute attribute = new("<>");
-		int nonEnumerable = 42;
+		const int nonEnumerable = 42;
 
 		// Act & Assert
 		Should.Throw<InvalidDataException>(() => attribute.GetValidationResult(nonEnumerable, DummyValidationContext));
@@ -315,7 +315,7 @@ public sealed class ListDenyCharactersAttributeTests : ValidationTestBase
 	{
 		// Arrange
 		ListDenyCharactersAttribute attribute = new("<>");
-		string singleString = "test";
+		const string singleString = "test";
 
 		// Act & Assert
 		Should.Throw<InvalidDataException>(() => attribute.GetValidationResult(singleString, DummyValidationContext));

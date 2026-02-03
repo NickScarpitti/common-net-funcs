@@ -5,19 +5,19 @@ namespace Core.Tests;
 
 public sealed class FileHelpersTests : IDisposable
 {
-	private readonly string _tempDir;
+	private readonly string tempDir;
 
 	public FileHelpersTests()
 	{
-		_tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-		Directory.CreateDirectory(_tempDir);
+		tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+		Directory.CreateDirectory(tempDir);
 	}
 
 	public void Dispose()
 	{
-		if (Directory.Exists(_tempDir))
+		if (Directory.Exists(tempDir))
 		{
-			Directory.Delete(_tempDir, true);
+			Directory.Delete(tempDir, true);
 		}
 		GC.SuppressFinalize(this);
 	}
@@ -31,8 +31,8 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetSafeSaveName_String_ReturnsUniqueName_WhenFileExists()
 	{
 		// Arrange
-		string fileName = Path.Combine(_tempDir, "test.txt");
-		await File.WriteAllTextAsync(fileName, "data");
+		string fileName = Path.Combine(tempDir, "test.txt");
+		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
 		string duplicateName = fileName;
 
 		// Act
@@ -48,7 +48,7 @@ public sealed class FileHelpersTests : IDisposable
 	public void GetSafeSaveName_String_CreatesDirectory_WhenMissingAndFlagSet()
 	{
 		// Arrange
-		string newDir = Path.Combine(_tempDir, "newsubdir");
+		string newDir = Path.Combine(tempDir, "newsubdir");
 		string fileName = Path.Combine(newDir, "file.txt");
 
 		// Act
@@ -63,7 +63,7 @@ public sealed class FileHelpersTests : IDisposable
 	public void GetSafeSaveName_String_ReturnsEmpty_WhenDirectoryMissingAndNoCreate()
 	{
 		// Arrange
-		string newDir = Path.Combine(_tempDir, "missingdir");
+		string newDir = Path.Combine(tempDir, "missingdir");
 		string fileName = Path.Combine(newDir, "file.txt");
 
 		// Act
@@ -78,11 +78,11 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		const string fileName = "test2.txt";
-		string filePath = Path.Combine(_tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data");
+		string filePath = Path.Combine(tempDir, fileName);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(_tempDir, fileName);
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
 
 		// Assert
 		safeName.ShouldNotBe(fileName);
@@ -93,7 +93,7 @@ public sealed class FileHelpersTests : IDisposable
 	public void GetSafeSaveName_PathAndFileName_CreatesDirectory_WhenMissingAndFlagSet()
 	{
 		// Arrange
-		string newDir = Path.Combine(_tempDir, "newsubdir2");
+		string newDir = Path.Combine(tempDir, "newsubdir2");
 		const string fileName = "file2.txt";
 
 		// Act
@@ -108,7 +108,7 @@ public sealed class FileHelpersTests : IDisposable
 	public void GetSafeSaveName_PathAndFileName_ReturnsEmpty_WhenDirectoryMissingAndNoCreate()
 	{
 		// Arrange
-		string newDir = Path.Combine(_tempDir, "missingdir2");
+		string newDir = Path.Combine(tempDir, "missingdir2");
 		const string fileName = "file3.txt";
 
 		// Act
@@ -141,9 +141,9 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetHashFromFile_And_GetHashFromStream_ProduceExpectedHashes(EHashAlgorithm algo)
 	{
 		// Arrange
-		string fileName = Path.Combine(_tempDir, $"hash_{algo}.txt");
+		string fileName = Path.Combine(tempDir, $"hash_{algo}.txt");
 		const string content = "hash test content";
-		await File.WriteAllTextAsync(fileName, content, Encoding.UTF8);
+		await File.WriteAllTextAsync(fileName, content, Encoding.UTF8, TestContext.Current.CancellationToken);
 
 		// Act
 		string fileHash = await fileName.GetHashFromFile(algo);
@@ -161,7 +161,7 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetHashFromFile_ReturnsEmptyString_OnException()
 	{
 		// Arrange
-		string fileName = Path.Combine(_tempDir, "doesnotexist.txt");
+		string fileName = Path.Combine(tempDir, "doesnotexist.txt");
 
 		// Act
 		string hash = await fileName.GetHashFromFile();
@@ -174,15 +174,15 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetAllFilesRecursive_ReturnsAllFiles()
 	{
 		// Arrange
-		string subDir = Path.Combine(_tempDir, "sub");
+		string subDir = Path.Combine(tempDir, "sub");
 		Directory.CreateDirectory(subDir);
-		string file1 = Path.Combine(_tempDir, "a.txt");
+		string file1 = Path.Combine(tempDir, "a.txt");
 		string file2 = Path.Combine(subDir, "b.txt");
-		await File.WriteAllTextAsync(file1, "1");
-		await File.WriteAllTextAsync(file2, "2");
+		await File.WriteAllTextAsync(file1, "1", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file2, "2", TestContext.Current.CancellationToken);
 
 		// Act
-		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(_tempDir);
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		files.ShouldContain(file1);
@@ -193,11 +193,11 @@ public sealed class FileHelpersTests : IDisposable
 	public void GetAllFilesRecursive_ReturnsEmpty_WhenDirectoryMissingOrNull()
 	{
 		// Arrange
-		string missingDir = Path.Combine(_tempDir, "notfound");
+		string missingDir = Path.Combine(tempDir, "notfound");
 
 		// Act
-		IEnumerable<string> files1 = FileHelpers.GetAllFilesRecursive(missingDir);
-		IEnumerable<string> files2 = FileHelpers.GetAllFilesRecursive(null);
+		IEnumerable<string> files1 = FileHelpers.GetAllFilesRecursive(missingDir, cancellationToken: TestContext.Current.CancellationToken);
+		IEnumerable<string> files2 = FileHelpers.GetAllFilesRecursive(null, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		files1.ShouldBeEmpty();
@@ -208,17 +208,17 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetAllFilesRecursive_RespectsSearchPattern()
 	{
 		// Arrange
-		string subDir = Path.Combine(_tempDir, "sub2");
+		string subDir = Path.Combine(tempDir, "sub2");
 		Directory.CreateDirectory(subDir);
-		string file1 = Path.Combine(_tempDir, "a.txt");
+		string file1 = Path.Combine(tempDir, "a.txt");
 		string file2 = Path.Combine(subDir, "b.txt");
 		string file3 = Path.Combine(subDir, "c.doc");
-		await File.WriteAllTextAsync(file1, "1");
-		await File.WriteAllTextAsync(file2, "2");
-		await File.WriteAllTextAsync(file3, "3");
+		await File.WriteAllTextAsync(file1, "1", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file2, "2", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file3, "3", TestContext.Current.CancellationToken);
 
 		// Act
-		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(_tempDir, "*.txt");
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, "*.txt", TestContext.Current.CancellationToken);
 
 		// Assert
 		files.ShouldContain(file1);
@@ -231,11 +231,11 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		const string fileName = "test (3).txt";
-		string filePath = Path.Combine(_tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data");
+		string filePath = Path.Combine(tempDir, fileName);
+		await File.WriteAllTextAsync(filePath, "data", cancellationToken: TestContext.Current.CancellationToken);
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(_tempDir, fileName, startFromZero: false);
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
 
 		// Assert
 		safeName.ShouldNotBe(fileName);
@@ -247,11 +247,11 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		const string fileName = "test (1).txt";
-		string filePath = Path.Combine(_tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data");
+		string filePath = Path.Combine(tempDir, fileName);
+		await File.WriteAllTextAsync(filePath, "data", cancellationToken: TestContext.Current.CancellationToken);
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(_tempDir, fileName);
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
 
 		// Assert
 		safeName.ShouldNotBe(fileName);
@@ -265,11 +265,11 @@ public sealed class FileHelpersTests : IDisposable
 		// Simulate a scenario where StrComp returns true (file name doesn't change)
 		// This is tricky to simulate directly, so we can use a file name that matches the incrementing pattern but doesn't actually change after replacement.
 		const string fileName = "test (0).txt";
-		string filePath = Path.Combine(_tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data");
+		string filePath = Path.Combine(tempDir, fileName);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(_tempDir, fileName);
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
 
 		// Assert
 		// The method should break out of the loop and return a name (should not loop infinitely)

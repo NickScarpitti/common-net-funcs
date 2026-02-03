@@ -177,9 +177,7 @@ public static class ExpressionTrees
 	{
 		// Intended code:
 		// var output = (<type>)input.MemberwiseClone();
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 		MethodInfo memberwiseCloneMethod = ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance)!;
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 		BinaryExpression memberwiseCloneInputExpression = Expression.Assign(outputVariable, Expression.Convert(Expression.Call(inputParameter, memberwiseCloneMethod), type));
 		expressions.Add(memberwiseCloneInputExpression);
 	}
@@ -329,10 +327,8 @@ public static class ExpressionTrees
 		Type? typeCache = type;
 		while (typeCache != null)
 		{
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			fieldsList.AddRange(typeCache.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy)
 				.Where(field => forceAllFields || field.FieldType.IsTypeToDeepCopy()));
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			typeCache = typeCache.BaseType;
 		}
 		return fieldsList.ToArray();
@@ -358,9 +354,7 @@ public static class ExpressionTrees
 	}
 
 	private static readonly Type ThisType = typeof(ExpressionTrees);
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 	private static readonly MethodInfo? DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod(nameof(DeepCopyByExpressionTreeObj), BindingFlags.NonPublic | BindingFlags.Static);
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 
 	private static void ReadonlyFieldCopyExpression(Type type, FieldInfo field, ParameterExpression inputParameter, ParameterExpression inputDictionary, ParameterExpression boxingVariable, List<Expression> expressions, bool useCache)
 	{

@@ -89,7 +89,7 @@ public sealed class HtmlEmailBuilderTests
 		table.Rows.Add("Jane", "25");
 
 		// Act
-		string result = table.CreateHtmlTable();
+		string result = table.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain("<table>");
@@ -115,7 +115,7 @@ public sealed class HtmlEmailBuilderTests
 		table.Rows.Add("Jane", "25");
 
 		// Act
-		string result = BuildHtmlEmail(body, table, footer);
+		string result = BuildHtmlEmail(body, table, footer, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain("<table>");
@@ -143,7 +143,7 @@ public sealed class HtmlEmailBuilderTests
 		];
 
 		// Act
-		string result = tableData.CreateHtmlTable();
+		string result = tableData.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain("<table>");
@@ -161,13 +161,13 @@ public sealed class HtmlEmailBuilderTests
 		// Arrange
 		List<List<string>> tableData =
 		[
-				new() { "Header" },
-						new() { "Data" }
+			new() { "Header" },
+			new() { "Data" }
 		];
 		const string customCss = "<style>table { color: red; }</style>";
 
 		// Act
-		string result = tableData.CreateHtmlTable(customCss: customCss);
+		string result = tableData.CreateHtmlTable(customCss: customCss, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain(customCss);
@@ -178,13 +178,13 @@ public sealed class HtmlEmailBuilderTests
 	{
 		// Arrange
 		List<List<string>> tableData = new()
-				{
-						new() { "Header" },
-						new() { "Data" }
-				};
+		{
+			new() { "Header" },
+			new() { "Data" }
+		};
 
 		// Act
-		string result = tableData.CreateHtmlTable(applyTableCss: false);
+		string result = tableData.CreateHtmlTable(applyTableCss: false, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotContain("<style>");
@@ -197,13 +197,13 @@ public sealed class HtmlEmailBuilderTests
 		const string body = "Hello";
 		const string footer = "Goodbye";
 		List<List<string>> tableData = new()
-				{
-						new() { "Header" },
-						new() { "Data" }
-				};
+		{
+			new() { "Header" },
+			new() { "Data" }
+		};
 
 		// Act
-		string result = BuildHtmlEmail(body, tableData, footer);
+		string result = BuildHtmlEmail(body, tableData, footer, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain("<br><br>");
@@ -220,8 +220,8 @@ public sealed class HtmlEmailBuilderTests
 		List<List<string>>? emptyList = null;
 
 		// Act
-		string resultFromTable = emptyTable.CreateHtmlTable();
-		string resultFromList = emptyList.CreateHtmlTable();
+		string resultFromTable = emptyTable.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
+		string resultFromList = emptyList.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		resultFromTable.ShouldBe(string.Empty);
@@ -234,11 +234,11 @@ public sealed class HtmlEmailBuilderTests
 		// Arrange
 		using CancellationTokenSource cts = new();
 		List<List<string>> tableData = new()
-				{
-						new() { "Header" },
-						new() { "Data1" },
-						new() { "Data2" }
-				};
+		{
+			new() { "Header" },
+			new() { "Data1" },
+			new() { "Data2" }
+		};
 		await cts.CancelAsync();
 
 		// Act & Assert

@@ -7,13 +7,13 @@ namespace EFCore.Tests;
 
 public sealed class NavigationPropertiesTests : IDisposable
 {
-	private readonly Fixture _fixture;
+	private readonly Fixture fixture;
 	private readonly TestDbContext _context;
 
 	public NavigationPropertiesTests()
 	{
-		_fixture = new Fixture();
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseInMemoryDatabase(databaseName: _fixture.Create<string>()).Options;
+		fixture = new Fixture();
+		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseInMemoryDatabase(databaseName: fixture.Create<string>()).Options;
 		_context = new TestDbContext(options);
 	}
 

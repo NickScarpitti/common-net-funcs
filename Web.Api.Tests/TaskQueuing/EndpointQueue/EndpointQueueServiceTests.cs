@@ -12,7 +12,7 @@ public class EndpointQueueServiceTests
 		BoundedChannelOptions options = new(1);
 		EndpointQueueService service = new();
 
-		int result = await service.ExecuteAsync("key", _ => Task.FromResult(77), options);
+		int result = await service.ExecuteAsync("key", _ => Task.FromResult(77), options, TestContext.Current.CancellationToken);
 
 		result.ShouldBe(77);
 	}
@@ -23,7 +23,7 @@ public class EndpointQueueServiceTests
 		UnboundedChannelOptions options = new();
 		EndpointQueueService service = new();
 
-		int result = await service.ExecuteAsync("key", _ => Task.FromResult(88), options);
+		int result = await service.ExecuteAsync("key", _ => Task.FromResult(88), options, TestContext.Current.CancellationToken);
 
 		result.ShouldBe(88);
 	}

@@ -23,11 +23,11 @@ public sealed class InspectTests
 	}
 
 	public static readonly TheoryData<(Type, object?)> defaultValueTestData = new()
-		{
-				new(typeof(int), default(int)),
-				new(typeof(string), default(string)),
-				new(typeof(DateTime), default(DateTime)),
-		};
+	{
+		{ (typeof(int), default(int)) },
+		{ (typeof(string), default(string)) },
+		{ (typeof(DateTime), default(DateTime)) },
+	};
 
 	[Theory]
 	[MemberData(nameof(defaultValueTestData), MemberType = typeof(InspectTests))]

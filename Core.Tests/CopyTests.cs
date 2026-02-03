@@ -405,7 +405,7 @@ public sealed class CopyTests
 		};
 
 		// Act
-		SourceClass result = target.MergeInstances(new[] { source1, source2 });
+		SourceClass result = target.MergeInstances(new[] { source1, source2 }, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeSameAs(target); // Should return the same instance
@@ -430,7 +430,7 @@ public sealed class CopyTests
 		};
 
 		// Act
-		SourceClass result = target.MergeInstances(source);
+		SourceClass result = target.MergeInstances(source, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeSameAs(target); // Should return the same instance
@@ -455,7 +455,7 @@ public sealed class CopyTests
 		};
 
 		// Act
-		SourceClass result = target.MergeInstances(source);
+		SourceClass result = target.MergeInstances(source, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeSameAs(target); // Should return the same instance

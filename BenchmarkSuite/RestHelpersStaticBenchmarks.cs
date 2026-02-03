@@ -36,10 +36,7 @@ public class RestHelpersStaticBenchmarks
 	private TestModel _testModel = null!;
 	private Dictionary<string, string> _headers = null!;
 	private Dictionary<string, string> _headersWithContentType = null!;
-
-#pragma warning disable S1075 // Refactor your code not to use hardcoded absolute paths or URIs.
 	const string TestUrl = "http://test";
-#pragma warning restore S1075 // Refactor your code not to use hardcoded absolute paths or URIs.
 
 	[GlobalSetup]
 	public void Setup()

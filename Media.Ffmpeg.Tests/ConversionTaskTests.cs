@@ -5,20 +5,20 @@ using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
 using CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
 using Xabe.FFmpeg;
-using xRetry;
+using xRetry.v3;
 
 namespace Media.Ffmpeg.Tests;
 
 public sealed class ConversionTaskTests : IDisposable
 {
-	private readonly Fixture _fixture;
+	private readonly Fixture fixture;
 	private readonly string _testVideoPath;
 	private readonly string _workingDir;
 
 	public ConversionTaskTests()
 	{
-		_fixture = new Fixture();
-		_fixture.Customize(new AutoFakeItEasyCustomization());
+		fixture = new Fixture();
+		fixture.Customize(new AutoFakeItEasyCustomization());
 
 		// Setup test paths
 		string testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");

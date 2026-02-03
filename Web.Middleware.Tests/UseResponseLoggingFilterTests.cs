@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
-using xRetry;
+using xRetry.v3;
 
 namespace Web.Middleware.Tests;
 
@@ -65,7 +65,6 @@ public sealed class UseResponseLoggingFilterTests
 		// Assert
 		if (delaySeconds >= thresholdSeconds)
 		{
-#pragma warning disable CA1873 // Avoid potentially expensive logging
 			A.CallTo(() => _logger.Log(
 					LogLevel.Warning,
 					A<EventId>.Ignored,
@@ -75,7 +74,6 @@ public sealed class UseResponseLoggingFilterTests
 							msg.ToString()!.Contains(nameof(OkResult))),
 					null,
 					A<Func<It.IsAnyType, Exception?, string>>.Ignored));
-#pragma warning restore CA1873 // Avoid potentially expensive logging
 		}
 		else
 		{

@@ -63,9 +63,9 @@ public class CoreDateTimeHelpersBenchmarks
 	}
 
 	[Benchmark]
-	public bool IsValidOaDate()
+	public static bool IsValidOaDate()
 	{
-		double oaDate = 44927.0; // Jan 1, 2023
+		const double oaDate = 44927.0; // Jan 1, 2023
 		return oaDate.IsValidOaDate();
 	}
 }

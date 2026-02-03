@@ -5,19 +5,19 @@ namespace EFCore.Tests;
 
 public sealed class CollectionsTests
 {
-	private readonly Fixture _fixture;
-	private readonly TestDbContext _context;
+	private readonly Fixture fixture;
+	private readonly TestDbContext context;
 
 	public CollectionsTests()
 	{
-		_fixture = new Fixture();
-		_fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList().ForEach(x => _fixture.Behaviors.Remove(x));
-		_fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+		fixture = new Fixture();
+		fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList().ForEach(x => fixture.Behaviors.Remove(x));
+		fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
 		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
-				.UseInMemoryDatabase(databaseName: _fixture.Create<string>())
-				.Options;
-		_context = new TestDbContext(options);
+			.UseInMemoryDatabase(databaseName: fixture.Create<string>())
+			.Options;
+		context = new TestDbContext(options);
 	}
 
 	[Theory]
@@ -28,13 +28,13 @@ public sealed class CollectionsTests
 		// Arrange
 		TestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, CreatedDate = DateTime.UtcNow };
 		TestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 200, CreatedDate = DateTime.UtcNow.AddDays(1) };
-		_context.TestEntities.AddRange(entity1, entity2);
-		_context.SaveChanges();
+		context.TestEntities.AddRange(entity1, entity2);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "Test1", Value = 0 };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, ignoreDefaultValues);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		if (ignoreDefaultValues)
@@ -55,13 +55,13 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = DateTime.UtcNow };
-		_context.TestEntities.Add(entity);
-		_context.SaveChanges();
+		context.TestEntities.Add(entity);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "Test", Value = 100, Description = null };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -74,13 +74,13 @@ public sealed class CollectionsTests
 		// Arrange
 		DateTime utcDate = DateTime.UtcNow;
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
-		_context.TestEntities.Add(entity);
-		_context.SaveChanges();
+		context.TestEntities.Add(entity);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { CreatedDate = utcDate };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -94,13 +94,13 @@ public sealed class CollectionsTests
 		DateTime localDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Local);
 		DateTime utcDate = localDate.ToUniversalTime();
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
-		_context.TestEntities.Add(entity);
-		_context.SaveChanges();
+		context.TestEntities.Add(entity);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { CreatedDate = localDate };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -113,13 +113,13 @@ public sealed class CollectionsTests
 		// Arrange
 		DateTime unspecifiedDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Unspecified);
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = unspecifiedDate };
-		_context.TestEntities.Add(entity);
-		_context.SaveChanges();
+		context.TestEntities.Add(entity);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { CreatedDate = unspecifiedDate };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -132,13 +132,13 @@ public sealed class CollectionsTests
 		// Arrange
 		DateTimeOffset dateTimeOffset = new(2024, 1, 1, 12, 0, 0, TimeSpan.FromHours(-5));
 		TestEntityWithDateTimeOffset entity = new() { Id = 1, Name = "Test", CreatedDate = dateTimeOffset };
-		_context.TestEntitiesWithDateTimeOffset.Add(entity);
-		_context.SaveChanges();
+		context.TestEntitiesWithDateTimeOffset.Add(entity);
+		context.SaveChanges();
 
 		TestEntityWithDateTimeOffset partialObject = new() { CreatedDate = dateTimeOffset };
 
 		// Act
-		TestEntityWithDateTimeOffset? result = _context.TestEntitiesWithDateTimeOffset.GetObjectByPartial(_context, partialObject, true);
+		TestEntityWithDateTimeOffset? result = context.TestEntitiesWithDateTimeOffset.GetObjectByPartial(context, partialObject, true, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -150,13 +150,13 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test1", Value = 100 };
-		_context.TestEntities.Add(entity);
-		_context.SaveChanges();
+		context.TestEntities.Add(entity);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "NonExistent" };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -167,13 +167,13 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		_context.TestEntities.Add(entity);
-		_context.SaveChanges();
+		context.TestEntities.Add(entity);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = null, Description = null };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -184,13 +184,13 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		_context.TestEntities.Add(entity);
-		_context.SaveChanges();
+		context.TestEntities.Add(entity);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "Test", Value = 0, Id = 0 }; // 0 is default for int
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, ignoreDefaultValues: true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: true, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -202,15 +202,15 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 0 };
-		_context.TestEntities.Add(entity);
-		_context.SaveChanges();
+		context.TestEntities.Add(entity);
+		context.SaveChanges();
 
 		// When ignoreDefaultValues = false, ALL non-null properties are included
 		// So we need to match Id and avoid CreatedDate comparison
 		TestEntity partialObject = new() { Id = 1, Name = "Test", Value = 0 };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, ignoreDefaultValues: false);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: false, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -225,8 +225,8 @@ public sealed class CollectionsTests
 		// Arrange
 		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100 };
 		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 200 };
-		_context.TestEntities.AddRange(entity1, entity2);
-		_context.SaveChanges();
+		context.TestEntities.AddRange(entity1, entity2);
+		context.SaveChanges();
 
 		TestEntity partialObject;
 		if (ignoreDefaultValues)
@@ -242,7 +242,7 @@ public sealed class CollectionsTests
 		}
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, ignoreDefaultValues);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -258,8 +258,8 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		_context.TestEntities.Add(entity);
-		_context.SaveChanges();
+		context.TestEntities.Add(entity);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "Test" };
 		using CancellationTokenSource cts = new();
@@ -267,7 +267,7 @@ public sealed class CollectionsTests
 
 		// Act & Assert
 		Should.Throw<OperationCanceledException>(() =>
-				_context.TestEntities.GetObjectByPartial(_context, partialObject, cancellationToken: cts.Token));
+				context.TestEntities.GetObjectByPartial(context, partialObject, cancellationToken: cts.Token));
 	}
 
 	[Fact]
@@ -277,13 +277,13 @@ public sealed class CollectionsTests
 		TestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, Description = "Desc1" };
 		TestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 100, Description = "Desc2" };
 		TestEntity entity3 = new() { Id = 3, Name = "Test1", Value = 200, Description = "Desc1" };
-		_context.TestEntities.AddRange(entity1, entity2, entity3);
-		_context.SaveChanges();
+		context.TestEntities.AddRange(entity1, entity2, entity3);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "Test1", Value = 100, Description = "Desc1" };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -299,13 +299,13 @@ public sealed class CollectionsTests
 		// Arrange
 		TestEntity entity1 = new() { Id = 1, Name = "", Value = 100 };
 		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100 };
-		_context.TestEntities.AddRange(entity1, entity2);
-		_context.SaveChanges();
+		context.TestEntities.AddRange(entity1, entity2);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "" };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -319,13 +319,13 @@ public sealed class CollectionsTests
 		// Arrange
 		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, Description = "HasDescription" };
 		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100, Description = null };
-		_context.TestEntities.AddRange(entity1, entity2);
-		_context.SaveChanges();
+		context.TestEntities.AddRange(entity1, entity2);
+		context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "Test", Value = 100 };
 
 		// Act
-		TestEntity? result = _context.TestEntities.GetObjectByPartial(_context, partialObject, true);
+		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -341,13 +341,13 @@ public sealed class CollectionsTests
 		// Arrange
 		TestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, CreatedDate = DateTime.UtcNow };
 		TestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 200, CreatedDate = DateTime.UtcNow.AddDays(1) };
-		_context.TestEntities.AddRange(entity1, entity2);
-		await _context.SaveChangesAsync();
+		context.TestEntities.AddRange(entity1, entity2);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { Name = "Test1", Value = 0 };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, ignoreDefaultValues);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues, TestContext.Current.CancellationToken);
 
 		// Assert
 		if (ignoreDefaultValues)
@@ -368,13 +368,13 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = DateTime.UtcNow };
-		_context.TestEntities.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntities.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { Name = "Test", Value = 100, Description = null };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -387,13 +387,13 @@ public sealed class CollectionsTests
 		// Arrange
 		DateTime utcDate = DateTime.UtcNow;
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
-		_context.TestEntities.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntities.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { CreatedDate = utcDate };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -407,13 +407,13 @@ public sealed class CollectionsTests
 		DateTime localDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Local);
 		DateTime utcDate = localDate.ToUniversalTime();
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
-		_context.TestEntities.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntities.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { CreatedDate = localDate };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -426,13 +426,13 @@ public sealed class CollectionsTests
 		// Arrange
 		DateTime unspecifiedDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Unspecified);
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = unspecifiedDate };
-		_context.TestEntities.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntities.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { CreatedDate = unspecifiedDate };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 
 		// Assert
@@ -446,13 +446,13 @@ public sealed class CollectionsTests
 		// Arrange
 		DateTimeOffset dateTimeOffset = new(2024, 1, 1, 12, 0, 0, TimeSpan.FromHours(-5));
 		TestEntityWithDateTimeOffset entity = new() { Id = 1, Name = "Test", CreatedDate = dateTimeOffset };
-		_context.TestEntitiesWithDateTimeOffset.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntitiesWithDateTimeOffset.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntityWithDateTimeOffset partialObject = new() { CreatedDate = dateTimeOffset };
 
 		// Act
-		TestEntityWithDateTimeOffset? result = await _context.TestEntitiesWithDateTimeOffset.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntityWithDateTimeOffset? result = await context.TestEntitiesWithDateTimeOffset.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -464,13 +464,13 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test1", Value = 100 };
-		_context.TestEntities.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntities.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { Name = "NonExistent" };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -481,13 +481,13 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		_context.TestEntities.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntities.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { Name = null, Description = null };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -498,13 +498,13 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		_context.TestEntities.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntities.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { Name = "Test", Value = 0, Id = 0 }; // 0 is default for int
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, ignoreDefaultValues: true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -516,15 +516,15 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 0 };
-		_context.TestEntities.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntities.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		// When ignoreDefaultValues = false, ALL non-null properties are included
 		// So we need to match Id and avoid CreatedDate comparison
 		TestEntity partialObject = new() { Id = 1, Name = "Test", Value = 0 };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, ignoreDefaultValues: false);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, false, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -539,8 +539,8 @@ public sealed class CollectionsTests
 		// Arrange
 		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100 };
 		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 200 };
-		_context.TestEntities.AddRange(entity1, entity2);
-		await _context.SaveChangesAsync();
+		context.TestEntities.AddRange(entity1, entity2);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject;
 		if (ignoreDefaultValues)
@@ -556,7 +556,7 @@ public sealed class CollectionsTests
 		}
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, ignoreDefaultValues);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -572,16 +572,16 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		_context.TestEntities.Add(entity);
-		await _context.SaveChangesAsync();
+		context.TestEntities.Add(entity);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { Name = "Test" };
 		using CancellationTokenSource cts = new();
-		cts.Cancel();
+		await cts.CancelAsync();
 
 		// Act & Assert
 		await Should.ThrowAsync<OperationCanceledException>(async () =>
-				await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, cancellationToken: cts.Token));
+				await context.TestEntities.GetObjectByPartialAsync(context, partialObject, cancellationToken: cts.Token));
 	}
 
 	[Fact]
@@ -591,13 +591,13 @@ public sealed class CollectionsTests
 		TestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, Description = "Desc1" };
 		TestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 100, Description = "Desc2" };
 		TestEntity entity3 = new() { Id = 3, Name = "Test1", Value = 200, Description = "Desc1" };
-		_context.TestEntities.AddRange(entity1, entity2, entity3);
-		await _context.SaveChangesAsync();
+		context.TestEntities.AddRange(entity1, entity2, entity3);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { Name = "Test1", Value = 100, Description = "Desc1" };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -613,13 +613,13 @@ public sealed class CollectionsTests
 		// Arrange
 		TestEntity entity1 = new() { Id = 1, Name = "", Value = 100 };
 		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100 };
-		_context.TestEntities.AddRange(entity1, entity2);
-		await _context.SaveChangesAsync();
+		context.TestEntities.AddRange(entity1, entity2);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { Name = "" };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -633,13 +633,13 @@ public sealed class CollectionsTests
 		// Arrange
 		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, Description = "HasDescription" };
 		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100, Description = null };
-		_context.TestEntities.AddRange(entity1, entity2);
-		await _context.SaveChangesAsync();
+		context.TestEntities.AddRange(entity1, entity2);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		TestEntity partialObject = new() { Name = "Test", Value = 100 };
 
 		// Act
-		TestEntity? result = await _context.TestEntities.GetObjectByPartialAsync(_context, partialObject, true);
+		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();

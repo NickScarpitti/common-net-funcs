@@ -179,7 +179,7 @@ public sealed class StringsTests
 	public void ReplaceInvariant_ReplacesText(string? input, string oldValue, string newValue, string? expected)
 	{
 		// Act
-		string? result = input.ReplaceInvariant(oldValue, newValue);
+		string? result = input.ReplaceInvariant(oldValue, newValue, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(expected);
@@ -207,11 +207,11 @@ public sealed class StringsTests
 		const string input = "THE QUICK BROWN FOX";
 
 		// Act & Assert
-		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase).ShouldBe("The Quick Brown Fox");
+		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken).ShouldBe("The Quick Brown Fox");
 
-		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.IgnoreUppercase).ShouldBe("THE QUICK BROWN FOX");
+		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.IgnoreUppercase, cancellationToken: TestContext.Current.CancellationToken).ShouldBe("THE QUICK BROWN FOX");
 
-		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 4).ShouldBe("THE Quick Brown FOX");
+		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 4, cancellationToken: TestContext.Current.CancellationToken).ShouldBe("THE Quick Brown FOX");
 	}
 
 	[Theory]
@@ -324,7 +324,7 @@ public sealed class StringsTests
 	public void SplitLines_CountsCorrectly(string? input, int expectedLineCount)
 	{
 		// Act
-		IEnumerable<string> lines = input.SplitLines();
+		IEnumerable<string> lines = input.SplitLines(TestContext.Current.CancellationToken);
 
 		// Assert
 		lines.Count().ShouldBe(expectedLineCount);
@@ -554,7 +554,7 @@ public sealed class StringsTests
 		const string input = "Hello World (test) * /";
 
 		// Act
-		string? result = input.UrlEncodeReadable();
+		string? result = input.UrlEncodeReadable(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("Hello World (test) * /");
@@ -940,7 +940,7 @@ public sealed class StringsTests
 	public void ReplaceInvariant_Single_Works(string? s, string oldValue, string newValue, bool replaceAll, string? expected)
 	{
 		// Act
-		string? result = s.ReplaceInvariant(oldValue, newValue, replaceAll);
+		string? result = s.ReplaceInvariant(oldValue, newValue, replaceAll, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(expected);
@@ -953,7 +953,7 @@ public sealed class StringsTests
 	public void ReplaceInvariant_Multiple_Works(string? s, string[] oldValues, string newValue, bool replaceAll, string? expected)
 	{
 		// Act
-		string? result = s.ReplaceInvariant(oldValues, newValue, replaceAll);
+		string? result = s.ReplaceInvariant(oldValues, newValue, replaceAll, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(expected);
@@ -2505,6 +2505,6 @@ public sealed class StringsTests
 	}
 }
 
-	#endregion
+#endregion
 
 

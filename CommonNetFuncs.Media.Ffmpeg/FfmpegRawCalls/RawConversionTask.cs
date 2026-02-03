@@ -161,15 +161,12 @@ public static partial class RawConversionTask
 
 			RawMediaInfo mediaInfo = await Helpers.GetMediaInfoAsync(fileToConvert.FullName).ConfigureAwait(false);
 
-			// TODO:: Check to make sure this is the correct regex for my ffmpeg version
-			// TODO:: Check to make sure that this is the correct event to use for progress updates
-
 			process.ErrorDataReceived += (sender, args) =>
 			{
 				bool conversionFailed = false;
 				bool sizeFailure = false;
 				args.LogFfmpegOutput(ref lastProgressUpdate, ref lastSummaryUpdate, ref conversionFailed, ref sizeFailure, fileToConvert, mediaInfo.Duration, conversionIndex,
-										cancelIfLarger, taskDescription, additionalLogText, conversionOutputs, fpsDict, cancellationTokenSource);
+					cancelIfLarger, taskDescription, additionalLogText, conversionOutputs, fpsDict, cancellationTokenSource);
 			};
 
 			process.Start();

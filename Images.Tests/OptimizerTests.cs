@@ -1,6 +1,6 @@
 ﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Images;
-using xRetry;
+using xRetry.v3;
 
 namespace Images.Tests;
 
@@ -29,7 +29,7 @@ public sealed class OptimizerTests : IDisposable
 		Dispose(false);
 	}
 
-	private readonly Fixture _fixture;
+	private readonly Fixture fixture;
 	private readonly string _testPngPath;
 	private readonly string _testJpgPath;
 	private readonly string _testGifPath;
@@ -37,8 +37,8 @@ public sealed class OptimizerTests : IDisposable
 
 	public OptimizerTests()
 	{
-		_fixture = new Fixture();
-		_fixture.Customize(new AutoFakeItEasyCustomization());
+		fixture = new Fixture();
+		fixture.Customize(new AutoFakeItEasyCustomization());
 
 		// Setup test file paths
 		string testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");

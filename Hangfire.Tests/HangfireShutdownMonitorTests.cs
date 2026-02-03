@@ -69,7 +69,7 @@ public sealed class HangfireShutdownMonitorTests
 		long scheduledCount)
 	{
 		// Arrange
-		using ServiceProvider serviceProvider = SetupServiceProviderWithHangfire(processingCount, enqueuedCount, scheduledCount);
+		await using ServiceProvider serviceProvider = SetupServiceProviderWithHangfire(processingCount, enqueuedCount, scheduledCount);
 		using CancellationTokenSource cts = new();
 		IHostApplicationLifetime lifetime = A.Fake<IHostApplicationLifetime>();
 		A.CallTo(() => lifetime.ApplicationStopping).Returns(cts.Token);
@@ -81,7 +81,7 @@ public sealed class HangfireShutdownMonitorTests
 		await cts.CancelAsync();
 
 		// Give the callback time to execute
-		await Task.Delay(100);
+		await Task.Delay(100, TestContext.Current.CancellationToken);
 
 		// Assert - Verify the monitoring API was called (proves callback executed)
 		JobStorage storage = JobStorage.Current;
@@ -108,7 +108,7 @@ public sealed class HangfireShutdownMonitorTests
 		await cts.CancelAsync();
 
 		// Give the callback time to execute
-		await Task.Delay(100);
+		await Task.Delay(100, TestContext.Current.CancellationToken);
 
 		// Assert - Verify the service provider was called (proves callback executed despite error)
 		A.CallTo(() => serviceProvider.GetService(typeof(BackgroundJobServer))).MustHaveHappened();
@@ -142,7 +142,7 @@ public sealed class HangfireShutdownMonitorTests
 		await cts.CancelAsync();
 
 		// Give the callback time to execute
-		await Task.Delay(100);
+		await Task.Delay(100, TestContext.Current.CancellationToken);
 
 		// Assert - Verify GetMonitoringApi was called (callback executed despite exception)
 		A.CallTo(() => mockStorage.GetMonitoringApi()).MustHaveHappened();
@@ -164,7 +164,7 @@ public sealed class HangfireShutdownMonitorTests
 		await cts.CancelAsync();
 
 		// Give the callback time to execute
-		await Task.Delay(100);
+		await Task.Delay(100, TestContext.Current.CancellationToken);
 
 		// Assert - Verify the callback executed by checking the monitoring API was called
 		JobStorage storage = JobStorage.Current;

@@ -494,8 +494,6 @@ public static partial class Strings
 			return false;
 		}
 
-
-#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 		foreach (ReadOnlySpan<char> item in s)
 		{
 			if (item.ContainsInvariant(textToFind))
@@ -503,7 +501,7 @@ public static partial class Strings
 				return true;
 			}
 		}
-#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
+
 		return false;
 	}
 
@@ -557,7 +555,6 @@ public static partial class Strings
 
 		if (useOrComparison)
 		{
-#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 			foreach (ReadOnlySpan<char> textToFind in textsToFind)
 			{
 				if (s.ContainsInvariant(textToFind))
@@ -565,12 +562,11 @@ public static partial class Strings
 					return true;
 				}
 			}
-#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
+
 			return false;
 		}
 		else
 		{
-#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 			foreach (ReadOnlySpan<char> textToFind in textsToFind)
 			{
 				if (!s.ContainsInvariant(textToFind))
@@ -578,7 +574,7 @@ public static partial class Strings
 					return false;
 				}
 			}
-#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
+
 			return true;
 		}
 	}
@@ -723,7 +719,6 @@ public static partial class Strings
 
 		if (useOrComparison)
 		{
-#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 			foreach (ReadOnlySpan<char> textToFind in stringsToFind)
 			{
 				if (s.Contains(textToFind, stringComparison))
@@ -731,12 +726,11 @@ public static partial class Strings
 					return true;
 				}
 			}
-#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
+
 			return false;
 		}
 		else
 		{
-#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 			foreach (ReadOnlySpan<char> textToFind in stringsToFind)
 			{
 				if (!s.Contains(textToFind, stringComparison))
@@ -744,7 +738,7 @@ public static partial class Strings
 					return false;
 				}
 			}
-#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
+
 			return true;
 		}
 	}

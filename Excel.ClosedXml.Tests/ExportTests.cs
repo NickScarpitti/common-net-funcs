@@ -6,13 +6,13 @@ namespace Excel.ClosedXml.Tests;
 
 public sealed class ExportTests : IDisposable
 {
-	private readonly IFixture _fixture;
-	private readonly XLWorkbook _workbook;
+	private readonly IFixture fixture;
+	private readonly XLWorkbook workbook;
 
 	public ExportTests()
 	{
-		_fixture = new Fixture();
-		_workbook = new XLWorkbook();
+		fixture = new Fixture();
+		workbook = new XLWorkbook();
 	}
 
 	private bool disposed;
@@ -29,7 +29,7 @@ public sealed class ExportTests : IDisposable
 		{
 			if (disposing)
 			{
-				_workbook?.Dispose();
+				workbook?.Dispose();
 			}
 			disposed = true;
 		}
@@ -55,11 +55,11 @@ public sealed class ExportTests : IDisposable
 	public void ExportFromTable_Generic_WithValidData_ShouldExportSuccessfully(bool createTable)
 	{
 		// Arrange
-		IXLWorksheet worksheet = _workbook.AddWorksheet("Test");
-		List<TestData> testData = _fixture.CreateMany<TestData>(3).ToList();
+		IXLWorksheet worksheet = workbook.AddWorksheet("Test");
+		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 
 		// Act
-		bool result = ExportFromTable(_workbook, worksheet, testData, createTable);
+		bool result = ExportFromTable(workbook, worksheet, testData, createTable, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -88,11 +88,11 @@ public sealed class ExportTests : IDisposable
 	public void ExportFromTable_Generic_WithNullData_ShouldReturnTrue()
 	{
 		// Arrange
-		IXLWorksheet worksheet = _workbook.AddWorksheet("Test");
+		IXLWorksheet worksheet = workbook.AddWorksheet("Test");
 		IEnumerable<TestData>? testData = null;
 
 		// Act
-		bool result = ExportFromTable(_workbook, worksheet, testData);
+		bool result = ExportFromTable(workbook, worksheet, testData, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -103,11 +103,11 @@ public sealed class ExportTests : IDisposable
 	public void ExportFromTable_Generic_WithEmptyData_ShouldReturnTrue()
 	{
 		// Arrange
-		IXLWorksheet worksheet = _workbook.AddWorksheet("Test");
+		IXLWorksheet worksheet = workbook.AddWorksheet("Test");
 		TestData[] testData = Array.Empty<TestData>();
 
 		// Act
-		bool result = ExportFromTable(_workbook, worksheet, testData);
+		bool result = ExportFromTable(workbook, worksheet, testData, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -120,7 +120,7 @@ public sealed class ExportTests : IDisposable
 	public void ExportFromTable_DataTable_WithValidData_ShouldExportSuccessfully(bool createTable)
 	{
 		// Arrange
-		IXLWorksheet worksheet = _workbook.AddWorksheet("Test");
+		IXLWorksheet worksheet = workbook.AddWorksheet("Test");
 		DataTable dataTable = new();
 		dataTable.Columns.Add("Column1", typeof(string));
 		dataTable.Columns.Add("Column2", typeof(int));
@@ -129,13 +129,13 @@ public sealed class ExportTests : IDisposable
 		for (int i = 0; i < 3; i++)
 		{
 			dataTable.Rows.Add(
-					_fixture.Create<string>(),
-					_fixture.Create<int>(),
-					_fixture.Create<DateTime>());
+				fixture.Create<string>(),
+				fixture.Create<int>(),
+				fixture.Create<DateTime>());
 		}
 
 		// Act
-		bool result = ExportFromTable(_workbook, worksheet, dataTable, createTable);
+		bool result = ExportFromTable(workbook, worksheet, dataTable, createTable, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -164,11 +164,11 @@ public sealed class ExportTests : IDisposable
 	public void ExportFromTable_DataTable_WithNullData_ShouldReturnTrue()
 	{
 		// Arrange
-		IXLWorksheet worksheet = _workbook.AddWorksheet("Test");
+		IXLWorksheet worksheet = workbook.AddWorksheet("Test");
 		using DataTable? dataTable = null;
 
 		// Act
-		bool result = ExportFromTable(_workbook, worksheet, dataTable);
+		bool result = ExportFromTable(workbook, worksheet, dataTable, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -179,12 +179,12 @@ public sealed class ExportTests : IDisposable
 	public void ExportFromTable_DataTable_WithEmptyData_ShouldReturnTrue()
 	{
 		// Arrange
-		IXLWorksheet worksheet = _workbook.AddWorksheet("Test");
+		IXLWorksheet worksheet = workbook.AddWorksheet("Test");
 		DataTable dataTable = new();
 		dataTable.Columns.Add("Column1");
 
 		// Act
-		bool result = ExportFromTable(_workbook, worksheet, dataTable);
+		bool result = ExportFromTable(workbook, worksheet, dataTable, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -195,13 +195,13 @@ public sealed class ExportTests : IDisposable
 	public async Task ExportFromTable_Generic_ShouldRespectCancellationToken()
 	{
 		// Arrange
-		IXLWorksheet worksheet = _workbook.AddWorksheet("Test");
-		List<TestData> testData = _fixture.CreateMany<TestData>(1000).ToList();
+		IXLWorksheet worksheet = workbook.AddWorksheet("Test");
+		List<TestData> testData = fixture.CreateMany<TestData>(1000).ToList();
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
 		// Act
-		bool result = ExportFromTable(_workbook, worksheet, testData, false, false, cts.Token);
+		bool result = ExportFromTable(workbook, worksheet, testData, false, false, cts.Token);
 
 		// Assert
 		result.ShouldBe(false);
@@ -211,19 +211,19 @@ public sealed class ExportTests : IDisposable
 	public async Task ExportFromTable_DataTable_ShouldRespectCancellationToken()
 	{
 		// Arrange
-		IXLWorksheet worksheet = _workbook.AddWorksheet("Test");
+		IXLWorksheet worksheet = workbook.AddWorksheet("Test");
 		DataTable dataTable = new();
 		dataTable.Columns.Add("Column1");
 		for (int i = 0; i < 1000; i++)
 		{
-			dataTable.Rows.Add(_fixture.Create<string>());
+			dataTable.Rows.Add(fixture.Create<string>());
 		}
 
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
 		// Act
-		bool result = ExportFromTable(_workbook, worksheet, dataTable, false, false, cts.Token);
+		bool result = ExportFromTable(workbook, worksheet, dataTable, false, false, cts.Token);
 
 		// Assert
 		result.ShouldBe(false);

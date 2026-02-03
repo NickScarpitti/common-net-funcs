@@ -1,8 +1,6 @@
 ﻿using System.Collections.Frozen;
 using System.Security.Claims;
 using CommonNetFuncs.Hangfire;
-using FakeItEasy;
-using Hangfire;
 using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,18 +9,18 @@ namespace Hangfire.Tests;
 
 public sealed class HangfireAuthorizationFilterTests
 {
-	private static DashboardContext CreateDashboardContext(HttpContext httpContext)
+	private static AspNetCoreDashboardContext CreateDashboardContext(HttpContext httpContext)
 	{
 		JobStorage storage = A.Fake<JobStorage>();
 		DashboardOptions options = new();
-		
+
 		// Setup HttpContext with RequestServices if not set
 		if (httpContext.RequestServices == null)
 		{
 			ServiceCollection services = new();
 			httpContext.RequestServices = services.BuildServiceProvider();
 		}
-		
+
 		return new AspNetCoreDashboardContext(storage, options, httpContext);
 	}
 

@@ -10,11 +10,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
-#pragma warning disable S1450 // Private fields only used as local variables in methods should become local variables
 	private readonly Channel<QueuedTask> queue;
-#pragma warning restore S1450 // Private fields only used as local variables in methods should become local variables
-
 	private readonly CancellationTokenSource cancellationTokenSource;
 	private readonly ChannelWriter<QueuedTask> writer;
 	private readonly ChannelReader<QueuedTask> reader;

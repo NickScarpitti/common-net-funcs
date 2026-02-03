@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
@@ -65,7 +65,7 @@ public class CoreCollectionsBenchmarks
 	[Benchmark]
 	public void SetValue()
 	{
-		_intList.SetValue(x => { });
+		_intList.SetValue(_ => { });
 	}
 
 	[Benchmark]
@@ -83,7 +83,7 @@ public class CoreCollectionsBenchmarks
 	}
 
 	[Benchmark]
-	public List<int> SingleToList()
+	public static List<int> SingleToList()
 	{
 		return 42.SingleToList();
 	}

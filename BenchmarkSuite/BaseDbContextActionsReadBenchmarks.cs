@@ -14,10 +14,10 @@ namespace BenchmarkSuite;
 [RankColumn]
 public class BaseDbContextActionsReadBenchmarks : IDisposable
 {
-	private IServiceProvider? _serviceProvider;
-	private BaseDbContextActions<TestEntity, TestDbContext>? _actions;
-	private List<TestEntity> _entities = null!;
-	private bool _disposed;
+	private IServiceProvider? serviceProvider;
+	private BaseDbContextActions<TestEntity, TestDbContext>? actions;
+	private List<TestEntity> entities = null!;
+	private bool disposed;
 
 	[GlobalSetup]
 	public void Setup()
@@ -26,15 +26,15 @@ public class BaseDbContextActionsReadBenchmarks : IDisposable
 		services.AddDbContext<TestDbContext>(
 			options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()),
 			ServiceLifetime.Transient);
-		_serviceProvider = services.BuildServiceProvider();
+		serviceProvider = services.BuildServiceProvider();
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			context.Database.EnsureCreated();
 
 			// Seed data - 100 records for realistic performance testing
-			_entities = Enumerable.Range(1, 100)
+			entities = Enumerable.Range(1, 100)
 				.Select(i => new TestEntity
 				{
 					Id = i,
@@ -43,103 +43,103 @@ public class BaseDbContextActionsReadBenchmarks : IDisposable
 				})
 				.ToList();
 
-			context.TestEntities.AddRange(_entities);
+			context.TestEntities.AddRange(entities);
 			context.SaveChanges();
 		}
 
-		_actions = new BaseDbContextActions<TestEntity, TestDbContext>(_serviceProvider);
+		actions = new BaseDbContextActions<TestEntity, TestDbContext>(serviceProvider);
 	}
 
 	[Benchmark(Description = "GetByKey - no filters")]
 	public async Task<TestEntity?> GetByKey_NoFilters()
 	{
-		return await _actions!.GetByKey(50);
+		return await actions!.GetByKey(50);
 	}
 
 	[Benchmark(Description = "GetByKey - with disabled filters")]
 	public async Task<TestEntity?> GetByKey_WithDisabledFilters()
 	{
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
-		return await _actions!.GetByKey(50, globalFilterOptions: filterOptions);
+		return await actions!.GetByKey(50, globalFilterOptions: filterOptions);
 	}
 
 	[Benchmark(Description = "GetByKey - compound key, no filters")]
 	public async Task<TestEntity?> GetByKey_CompoundKey_NoFilters()
 	{
-		return await _actions!.GetByKey(new object[] { 50 });
+		return await actions!.GetByKey(new object[] { 50 });
 	}
 
 	[Benchmark(Description = "GetByKey - compound key, with disabled filters")]
 	public async Task<TestEntity?> GetByKey_CompoundKey_WithDisabledFilters()
 	{
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
-		return await _actions!.GetByKey(new object[] { 50 }, globalFilterOptions: filterOptions);
+		return await actions!.GetByKey(new object[] { 50 }, globalFilterOptions: filterOptions);
 	}
 
 	[Benchmark(Description = "GetAll - basic")]
 	public async Task<List<TestEntity>?> GetAll_Basic()
 	{
-		return await _actions!.GetAll();
+		return await actions!.GetAll();
 	}
 
 	[Benchmark(Description = "GetAll - with projection")]
 	public async Task<List<string>?> GetAll_WithProjection()
 	{
-		return await _actions!.GetAll(x => x.Name);
+		return await actions!.GetAll(x => x.Name);
 	}
 
 	[Benchmark(Description = "GetWithFilter - simple where clause")]
 	public async Task<List<TestEntity>?> GetWithFilter_Simple()
 	{
-		return await _actions!.GetWithFilter(x => x.Id > 50);
+		return await actions!.GetWithFilter(x => x.Id > 50);
 	}
 
 	[Benchmark(Description = "GetWithFilter - complex where clause")]
 	public async Task<List<TestEntity>?> GetWithFilter_Complex()
 	{
-		return await _actions!.GetWithFilter(x => x.Id > 25 && x.Id < 75 && x.Name.StartsWith("Entity"));
+		return await actions!.GetWithFilter(x => x.Id > 25 && x.Id < 75 && x.Name.StartsWith("Entity"));
 	}
 
 	[Benchmark(Description = "GetWithFilter - with projection")]
 	public async Task<List<int>?> GetWithFilter_WithProjection()
 	{
-		return await _actions!.GetWithFilter(x => x.Id > 50, x => x.Id);
+		return await actions!.GetWithFilter(x => x.Id > 50, x => x.Id);
 	}
 
 	[Benchmark(Description = "GetOneWithFilter")]
 	public async Task<TestEntity?> GetOneWithFilter()
 	{
-		return await _actions!.GetOneWithFilter(x => x.Id == 50);
+		return await actions!.GetOneWithFilter(x => x.Id == 50);
 	}
 
 	[Benchmark(Description = "GetCount")]
 	public async Task<int> GetCount()
 	{
-		return await _actions!.GetCount(x => x.Id > 50);
+		return await actions!.GetCount(x => x.Id > 50);
 	}
 
 	[Benchmark(Description = "GetMaxByOrder")]
 	public async Task<TestEntity?> GetMaxByOrder()
 	{
-		return await _actions!.GetMaxByOrder(x => x.Id > 0, x => x.Id);
+		return await actions!.GetMaxByOrder(x => x.Id > 0, x => x.Id);
 	}
 
 	[Benchmark(Description = "GetMinByOrder")]
 	public async Task<TestEntity?> GetMinByOrder()
 	{
-		return await _actions!.GetMinByOrder(x => x.Id > 0, x => x.Id);
+		return await actions!.GetMinByOrder(x => x.Id > 0, x => x.Id);
 	}
 
 	[Benchmark(Description = "GetMax")]
 	public async Task<int> GetMax()
 	{
-		return await _actions!.GetMax(x => x.Id > 0, x => x.Id);
+		return await actions!.GetMax(x => x.Id > 0, x => x.Id);
 	}
 
 	[Benchmark(Description = "GetMin")]
 	public async Task<int> GetMin()
 	{
-		return await _actions!.GetMin(x => x.Id > 0, x => x.Id);
+		return await actions!.GetMin(x => x.Id > 0, x => x.Id);
 	}
 
 	[GlobalCleanup]
@@ -148,13 +148,21 @@ public class BaseDbContextActionsReadBenchmarks : IDisposable
 		Dispose();
 	}
 
+	protected virtual void Dispose(bool disposing)
+	{
+		if (!disposed)
+		{
+			if (disposing)
+			{
+				(serviceProvider as IDisposable)?.Dispose();
+			}
+			disposed = true;
+		}
+	}
+
 	public void Dispose()
 	{
-		if (!_disposed)
-		{
-			(_serviceProvider as IDisposable)?.Dispose();
-			_disposed = true;
-		}
+		Dispose(true);
 		GC.SuppressFinalize(this);
 	}
 }
@@ -250,13 +258,21 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 		Dispose();
 	}
 
-	public void Dispose()
+	protected virtual void Dispose(bool disposing)
 	{
 		if (!_disposed)
 		{
-			(_serviceProvider as IDisposable)?.Dispose();
+			if (disposing)
+			{
+				(_serviceProvider as IDisposable)?.Dispose();
+			}
 			_disposed = true;
 		}
+	}
+
+	public void Dispose()
+	{
+		Dispose(true);
 		GC.SuppressFinalize(this);
 	}
 }
@@ -329,7 +345,7 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 	}
 
 	[Benchmark(Description = "Memory: Expression building overhead")]
-	public void Memory_ExpressionBuilding_Overhead()
+	public static void Memory_ExpressionBuilding_Overhead()
 	{
 		// Test pure expression building cost without DB access
 		for (int i = 0; i < 100; i++)
@@ -339,17 +355,25 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 			ConstantExpression constant = Expression.Constant(50, typeof(int));
 			BinaryExpression equality = Expression.Equal(property, constant);
 			Expression<Func<TestEntity, bool>> lambda = Expression.Lambda<Func<TestEntity, bool>>(equality, parameter);
+#pragma warning disable S1481 // Unused local variables should be removed
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 			Func<TestEntity, bool> compiled = lambda.Compile();
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
+#pragma warning restore S1481 // Unused local variables should be removed
 		}
 	}
 
 	[Benchmark(Description = "Memory: GlobalFilterOptions allocation")]
-	public void Memory_FilterOptions_Allocation()
+	public static void Memory_FilterOptions_Allocation()
 	{
 		// Test allocation cost of creating filter options
 		for (int i = 0; i < 1000; i++)
 		{
+#pragma warning disable S1481 // Unused local variables should be removed
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 			GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
+#pragma warning restore S1481 // Unused local variables should be removed
 		}
 	}
 
@@ -359,13 +383,21 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 		Dispose();
 	}
 
-	public void Dispose()
+	protected virtual void Dispose(bool disposing)
 	{
 		if (!_disposed)
 		{
-			(_serviceProvider as IDisposable)?.Dispose();
+			if (disposing)
+			{
+				(_serviceProvider as IDisposable)?.Dispose();
+			}
 			_disposed = true;
 		}
+	}
+
+	public void Dispose()
+	{
+		Dispose(true);
 		GC.SuppressFinalize(this);
 	}
 }
@@ -387,10 +419,8 @@ public class TestEntityDetail
 	public TestEntity? TestEntity { get; set; }
 }
 
-public class TestDbContext : DbContext
+public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)
 {
-	public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
-
 	public DbSet<TestEntity> TestEntities => Set<TestEntity>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.EFCore;
 using CommonNetFuncs.Web.Api;
@@ -10,12 +10,12 @@ namespace Web.Api.Tests;
 
 public sealed class GenericDtoEndpointsTests
 {
-	private readonly IFixture _fixture;
+	private readonly IFixture fixture;
 	private readonly GenericDotEndpoints _sut;
 
 	public GenericDtoEndpointsTests()
 	{
-		_fixture = new Fixture()
+		fixture = new Fixture()
 				.Customize(new AutoFakeItEasyCustomization());
 		_sut = new GenericDotEndpoints();
 	}
@@ -62,7 +62,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task CreateMany_WhenSuccessful_ReturnsOkWithModels(bool removeNavigationProps)
 	{
 		// Arrange
-		List<TestInDto> models = _fixture.CreateMany<TestInDto>(3).ToList();
+		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
@@ -80,7 +80,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task CreateMany_WhenSaveFails_ReturnsNoContent()
 	{
 		// Arrange
-		List<TestInDto> models = _fixture.CreateMany<TestInDto>(3).ToList();
+		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
@@ -95,7 +95,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task CreateMany_WhenExceptionThrown_ReturnsNoContent()
 	{
 		// Arrange
-		List<TestInDto> models = _fixture.CreateMany<TestInDto>(3).ToList();
+		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.CreateMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored))
 				.Throws<InvalidOperationException>();
@@ -117,7 +117,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Delete_WhenSuccessful_ReturnsOkWithModel(bool removeNavigationProps)
 	{
 		// Arrange
-		TestInDto model = _fixture.Create<TestInDto>();
+		TestInDto model = fixture.Create<TestInDto>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
@@ -135,7 +135,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Delete_WhenSaveFails_ReturnsNoContent()
 	{
 		// Arrange
-		TestInDto model = _fixture.Create<TestInDto>();
+		TestInDto model = fixture.Create<TestInDto>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
@@ -150,7 +150,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Delete_WhenExceptionThrown_ReturnsNoContent()
 	{
 		// Arrange
-		TestInDto model = _fixture.Create<TestInDto>();
+		TestInDto model = fixture.Create<TestInDto>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteByObject(A<TestEntity>.Ignored, A<bool>.Ignored))
 				.Throws<InvalidOperationException>();
@@ -172,7 +172,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task DeleteMany_WhenSuccessful_ReturnsOkWithModels(bool removeNavigationProps)
 	{
 		// Arrange
-		List<TestInDto> models = _fixture.CreateMany<TestInDto>(3).ToList();
+		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, removeNavigationProps)).Returns(true);
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
@@ -190,7 +190,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task DeleteMany_WhenDeleteManyReturnsFalse_ReturnsNoContent()
 	{
 		// Arrange
-		List<TestInDto> models = _fixture.CreateMany<TestInDto>(3).ToList();
+		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Returns(false);
 
@@ -205,7 +205,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task DeleteMany_WhenSaveFails_ReturnsNoContent()
 	{
 		// Arrange
-		List<TestInDto> models = _fixture.CreateMany<TestInDto>(3).ToList();
+		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Returns(true);
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
@@ -235,7 +235,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task DeleteMany_WhenExceptionThrown_ReturnsNoContent()
 	{
 		// Arrange
-		List<TestInDto> models = _fixture.CreateMany<TestInDto>(3).ToList();
+		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored))
 				.Throws<InvalidOperationException>();
@@ -255,7 +255,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task DeleteManyByKeys_WhenSuccessful_ReturnsOkWithKeys()
 	{
 		// Arrange
-		List<object> keys = _fixture.CreateMany<int>(3).Cast<object>().ToList();
+		List<object> keys = fixture.CreateMany<int>(3).Cast<object>().ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys)).Returns(true);
 
@@ -272,7 +272,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task DeleteManyByKeys_WhenDeleteFails_ReturnsNoContent()
 	{
 		// Arrange
-		List<object> keys = _fixture.CreateMany<int>(3).Cast<object>().ToList();
+		List<object> keys = fixture.CreateMany<int>(3).Cast<object>().ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys)).Returns(false);
 
@@ -301,7 +301,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task DeleteManyByKeys_WhenExceptionThrown_ReturnsNoContent()
 	{
 		// Arrange
-		List<object> keys = _fixture.CreateMany<int>(3).Cast<object>().ToList();
+		List<object> keys = fixture.CreateMany<int>(3).Cast<object>().ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(A<IEnumerable<object>>.Ignored))
 				.Throws<InvalidOperationException>();
@@ -321,7 +321,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Patch_SingleKey_WhenSuccessful_ReturnsOkWithUpdatedModel()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, "Updated Name");
 
@@ -359,7 +359,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Patch_SingleKey_WhenValidationFails_ReturnsValidationProblem()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, null); // Will fail Required validation
 
@@ -378,7 +378,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Patch_SingleKey_WhenNoPatchOperations_ReturnsOriginalModel()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
@@ -397,7 +397,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Patch_SingleKey_WhenSaveFails_ReturnsNoContent()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, "Updated Name");
 
@@ -416,7 +416,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Patch_SingleKey_WhenExceptionThrown_ReturnsNoContent()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, "Updated Name");
 
@@ -440,7 +440,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Patch_MultiKey_WhenSuccessful_ReturnsOkWithUpdatedModel()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, "Updated Name");
 
@@ -478,7 +478,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Patch_MultiKey_WhenValidationFails_ReturnsValidationProblem()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, null); // Will fail Required validation
 
@@ -497,7 +497,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Patch_MultiKey_WhenSaveFails_ReturnsNoContent()
 	{
 		// Arrange
-		TestEntity model = _fixture.Create<TestEntity>();
+		TestEntity model = fixture.Create<TestEntity>();
 		JsonPatchDocument<TestEntity> patch = new();
 		patch.Replace(x => x.Name, "Updated Name");
 
@@ -520,8 +520,8 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Update_SingleKey_WhenSuccessful_ReturnsOkWithUpdatedModel()
 	{
 		// Arrange
-		TestEntity dbModel = _fixture.Create<TestEntity>();
-		TestInDto inDto = _fixture.Create<TestInDto>();
+		TestEntity dbModel = fixture.Create<TestEntity>();
+		TestInDto inDto = fixture.Create<TestInDto>();
 		inDto.Name = "Updated Name";
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
@@ -543,7 +543,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Update_SingleKey_WhenModelNotFound_ReturnsNoContent()
 	{
 		// Arrange
-		TestInDto inDto = _fixture.Create<TestInDto>();
+		TestInDto inDto = fixture.Create<TestInDto>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(Task.FromResult<TestEntity?>(null));
 
@@ -558,8 +558,8 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Update_SingleKey_WhenValidationFails_ReturnsValidationProblem()
 	{
 		// Arrange
-		TestEntity dbModel = _fixture.Create<TestEntity>();
-		TestInDto inDto = _fixture.Create<TestInDto>();
+		TestEntity dbModel = fixture.Create<TestEntity>();
+		TestInDto inDto = fixture.Create<TestInDto>();
 		inDto.Name = null!; // Will fail Required validation
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
@@ -577,8 +577,8 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Update_SingleKey_WhenSaveFails_ReturnsNoContent()
 	{
 		// Arrange
-		TestEntity dbModel = _fixture.Create<TestEntity>();
-		TestInDto inDto = _fixture.Create<TestInDto>();
+		TestEntity dbModel = fixture.Create<TestEntity>();
+		TestInDto inDto = fixture.Create<TestInDto>();
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(dbModel);
@@ -595,8 +595,8 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Update_SingleKey_WhenExceptionThrown_ReturnsNoContent()
 	{
 		// Arrange
-		TestEntity dbModel = _fixture.Create<TestEntity>();
-		TestInDto inDto = _fixture.Create<TestInDto>();
+		TestEntity dbModel = fixture.Create<TestEntity>();
+		TestInDto inDto = fixture.Create<TestInDto>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(dbModel);
 		A.CallTo(() => dbContextActions.SaveChanges()).Throws<InvalidOperationException>();
@@ -616,8 +616,8 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Update_MultiKey_WhenSuccessful_ReturnsOkWithUpdatedModel()
 	{
 		// Arrange
-		TestEntity dbModel = _fixture.Create<TestEntity>();
-		TestInDto inDto = _fixture.Create<TestInDto>();
+		TestEntity dbModel = fixture.Create<TestEntity>();
+		TestInDto inDto = fixture.Create<TestInDto>();
 		inDto.Name = "Updated Name";
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
@@ -639,7 +639,7 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Update_MultiKey_WhenModelNotFound_ReturnsNoContent()
 	{
 		// Arrange
-		TestInDto inDto = _fixture.Create<TestInDto>();
+		TestInDto inDto = fixture.Create<TestInDto>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.GetByKey(A<object[]>.Ignored, null, default)).Returns(Task.FromResult<TestEntity?>(null));
 
@@ -654,8 +654,8 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Update_MultiKey_WhenValidationFails_ReturnsValidationProblem()
 	{
 		// Arrange
-		TestEntity dbModel = _fixture.Create<TestEntity>();
-		TestInDto inDto = _fixture.Create<TestInDto>();
+		TestEntity dbModel = fixture.Create<TestEntity>();
+		TestInDto inDto = fixture.Create<TestInDto>();
 		inDto.Name = null!; // Will fail Required validation
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
@@ -673,8 +673,8 @@ public sealed class GenericDtoEndpointsTests
 	public async Task Update_MultiKey_WhenSaveFails_ReturnsNoContent()
 	{
 		// Arrange
-		TestEntity dbModel = _fixture.Create<TestEntity>();
-		TestInDto inDto = _fixture.Create<TestInDto>();
+		TestEntity dbModel = fixture.Create<TestEntity>();
+		TestInDto inDto = fixture.Create<TestInDto>();
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.GetByKey(A<object[]>.Ignored, null, default)).Returns(dbModel);

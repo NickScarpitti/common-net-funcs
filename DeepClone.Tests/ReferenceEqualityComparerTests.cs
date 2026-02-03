@@ -2,12 +2,12 @@
 
 public sealed class ReferenceEqualityComparerTests
 {
-    private readonly Fixture _fixture;
+    private readonly Fixture fixture;
     private readonly CommonNetFuncs.DeepClone.ReferenceEqualityComparer _comparer;
 
     public ReferenceEqualityComparerTests()
     {
-        _fixture = new Fixture();
+        fixture = new Fixture();
         _comparer = new CommonNetFuncs.DeepClone.ReferenceEqualityComparer();
     }
 
@@ -39,7 +39,7 @@ public sealed class ReferenceEqualityComparerTests
     public void Equals_WhenDifferentReferences_ShouldReturnFalse()
     {
         // Arrange
-        string str1 = _fixture.Create<string>();
+        string str1 = fixture.Create<string>();
         string str2 = new(str1.ToCharArray());
 
         // Act

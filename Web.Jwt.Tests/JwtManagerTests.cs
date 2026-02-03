@@ -5,12 +5,12 @@ namespace Web.Jwt.Tests;
 public sealed class JwtManagerTests
 {
     private readonly JwtManager _jwtManager;
-    private readonly IFixture _fixture;
+    private readonly IFixture fixture;
 
     public JwtManagerTests()
     {
         _jwtManager = new JwtManager();
-        _fixture = new Fixture();
+        fixture = new Fixture();
     }
 
     [Theory]
@@ -24,7 +24,7 @@ public sealed class JwtManagerTests
     {
         // Arrange
         const string environment = "Production";
-        string key = string.Join(string.Empty, _fixture.CreateMany<char>(500));
+        string key = string.Join(string.Empty, fixture.CreateMany<char>(500));
         TimeSpan devSpan = TimeSpan.FromHours(24);
         TimeSpan stdSpan = TimeSpan.FromHours(1);
 
@@ -55,7 +55,7 @@ public sealed class JwtManagerTests
         // Arrange
         const string username = "test";
         const string password = "test";
-        string key = string.Join(string.Empty, _fixture.CreateMany<char>(500));
+        string key = string.Join(string.Empty, fixture.CreateMany<char>(500));
         TimeSpan devSpan = TimeSpan.FromHours(24);
         TimeSpan stdSpan = TimeSpan.FromHours(1);
 
@@ -75,10 +75,10 @@ public sealed class JwtManagerTests
         // Arrange
         const string username = "test";
         const string password = "test";
-        string key = string.Join(string.Empty, _fixture.CreateMany<char>(500));
-        string issuer = _fixture.Create<string>();
-        string email = _fixture.Create<string>();
-        string audience = _fixture.Create<string>();
+        string key = string.Join(string.Empty, fixture.CreateMany<char>(500));
+        string issuer = fixture.Create<string>();
+        string email = fixture.Create<string>();
+        string audience = fixture.Create<string>();
         TimeSpan span = TimeSpan.FromHours(1);
 
         // Act
@@ -101,7 +101,7 @@ public sealed class JwtManagerTests
         // Arrange
         const string username = "test";
         const string password = "test";
-        string key = string.Join(string.Empty, _fixture.CreateMany<char>(500));
+        string key = string.Join(string.Empty, fixture.CreateMany<char>(500));
         TimeSpan span = TimeSpan.FromHours(1);
 
         // Act

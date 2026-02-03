@@ -1,6 +1,4 @@
-using CommonNetFuncs.Hangfire;
-using FakeItEasy;
-using Hangfire;
+﻿using CommonNetFuncs.Hangfire;
 using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
 
@@ -15,9 +13,12 @@ public sealed class WaitForHangfireJobsToCompleteTests
 		SetupHangfireStorage(processing: 0, enqueued: 0, scheduled: 0);
 
 		// Act
+		DateTime startTime = DateTime.UtcNow;
 		await WaitForHangfireJobsToComplete.WaitForAllHangfireJobsToComplete(checkIntervalSeconds: 1, maxWaitMinutes: 1);
+		TimeSpan duration = DateTime.UtcNow - startTime;
 
-		// Assert - Should complete without exceptions
+		// Assert - Should return immediately (within 2 seconds) when no jobs are pending
+		Assert.True(duration.TotalSeconds < 2, $"Method should return immediately but took {duration.TotalSeconds} seconds");
 	}
 
 	[Theory]
@@ -140,9 +141,12 @@ public sealed class WaitForHangfireJobsToCompleteTests
 		SetupHangfireStorage(processing: 0, enqueued: 0, scheduled: 0);
 
 		// Act
+		DateTime startTime = DateTime.UtcNow;
 		await WaitForHangfireJobsToComplete.WaitForAllHangfireJobsToComplete(checkIntervalSeconds, maxWaitMinutes);
+		TimeSpan duration = DateTime.UtcNow - startTime;
 
-		// Assert - Should complete without exceptions
+		// Assert - Should complete quickly when no jobs are pending
+		Assert.True(duration.TotalSeconds < 5, $"Method should complete quickly but took {duration.TotalSeconds} seconds");
 	}
 
 	[Fact]
@@ -152,9 +156,12 @@ public sealed class WaitForHangfireJobsToCompleteTests
 		SetupHangfireStorage(processing: 0, enqueued: 0, scheduled: 0);
 
 		// Act
+		DateTime startTime = DateTime.UtcNow;
 		await WaitForHangfireJobsToComplete.WaitForAllHangfireJobsToComplete();
+		TimeSpan duration = DateTime.UtcNow - startTime;
 
-		// Assert - Should complete without exceptions using defaults (5 seconds, 60 minutes)
+		// Assert - Should complete quickly when no jobs are pending using defaults (5 seconds, 60 minutes)
+		Assert.True(duration.TotalSeconds < 5, $"Method should complete quickly but took {duration.TotalSeconds} seconds");
 	}
 
 	[Fact]
@@ -164,9 +171,13 @@ public sealed class WaitForHangfireJobsToCompleteTests
 		SetupHangfireStorage(processing: 10, enqueued: 5, scheduled: 3); // Always has pending jobs
 
 		// Act - Use 1 minute timeout and check every 10 seconds
+		DateTime startTime = DateTime.UtcNow;
 		await WaitForHangfireJobsToComplete.WaitForAllHangfireJobsToComplete(checkIntervalSeconds: 10, maxWaitMinutes: 1);
+		TimeSpan duration = DateTime.UtcNow - startTime;
 
-		// Assert - Should complete without exceptions even when max wait time exceeded
+		// Assert - Should stop after max wait time even when jobs never complete
+		Assert.True(duration.TotalSeconds >= 60, $"Method should wait at least 60 seconds but only waited {duration.TotalSeconds} seconds");
+		Assert.True(duration.TotalSeconds < 70, $"Method should not wait much longer than 60 seconds but waited {duration.TotalSeconds} seconds");
 		// Logging verification would require capturing NLog output
 	}
 

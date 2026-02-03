@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using CommonNetFuncs.FastMap;
 
 namespace FastMap.Tests;
@@ -196,7 +196,7 @@ public sealed class FasterMapperConcurrencyTests
 						{
 							if (result[k].StringProp != source[k].StringProp || result[k].IntProp != source[k].IntProp)
 							{
-								throw new InvalidOperationException($"List mapping produced incorrect results");
+								throw new InvalidOperationException("List mapping produced incorrect results");
 							}
 						}
 					}
@@ -247,7 +247,7 @@ public sealed class FasterMapperConcurrencyTests
 					{
 						throw new InvalidOperationException("Async mapping failed");
 					}
-				});
+				}, _);
 			}
 			catch (Exception ex)
 			{

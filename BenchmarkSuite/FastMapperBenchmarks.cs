@@ -24,8 +24,8 @@ public class FastMapperBenchmarks
 	private SimpleSource[] _simpleArray = null!;
 	private Dictionary<string, SimpleSource> _complexDictionary = null!;
 	private NestedSource _deeplyNestedSource = null!;
-	private int[] _largeArray = null!;
-	private List<ComplexSource> _largeComplexList = null!;
+	private int[] largeArray = null!;
+	private List<ComplexSource> largeComplexList = null!;
 	private IReadOnlyCollection<SimpleSource> _readOnlyCollection = null!;
 	[GlobalSetup]
 	public void Setup()
@@ -85,18 +85,18 @@ public class FastMapperBenchmarks
 			}
 		};
 		// Large array for array mapping
-		_largeArray = Enumerable.Range(0, 1000).ToArray();
+		largeArray = Enumerable.Range(0, 1000).ToArray();
 		// Large complex list
-		_largeComplexList = Enumerable.Range(0, 500).Select(i => new ComplexSource { Name = $"Complex {i}", StringList = Enumerable.Range(0, 5).Select(j => $"Item {i}-{j}").ToList(), Dictionary = Enumerable.Range(0, 5).ToDictionary(j => $"Key{i}-{j}", j => j), NestedObject = new SimpleSource { StringProp = $"Nested {i}", IntProp = i, DateProp = DateTime.Now, DoubleProp = i * 1.1, BoolProp = i % 2 == 0, GuidProp = Guid.NewGuid() }, NumberSet = Enumerable.Range(0, 5).ToHashSet(), StringQueue = new Queue<string>(Enumerable.Range(0, 5).Select(j => $"Queue {i}-{j}")), DoubleStack = new Stack<double>(Enumerable.Range(0, 5).Select(j => (double)j)) }).ToList();
+		largeComplexList = Enumerable.Range(0, 500).Select(i => new ComplexSource { Name = $"Complex {i}", StringList = Enumerable.Range(0, 5).Select(j => $"Item {i}-{j}").ToList(), Dictionary = Enumerable.Range(0, 5).ToDictionary(j => $"Key{i}-{j}", j => j), NestedObject = new SimpleSource { StringProp = $"Nested {i}", IntProp = i, DateProp = DateTime.Now, DoubleProp = i * 1.1, BoolProp = i % 2 == 0, GuidProp = Guid.NewGuid() }, NumberSet = Enumerable.Range(0, 5).ToHashSet(), StringQueue = new Queue<string>(Enumerable.Range(0, 5).Select(j => $"Queue {i}-{j}")), DoubleStack = new Stack<double>(Enumerable.Range(0, 5).Select(j => (double)j)) }).ToList();
 		// Clear cache before benchmarks
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.SetUseLimitedCache(false);
+		CacheManager.ClearAllCaches();
+		CacheManager.SetUseLimitedCache(false);
 	}
 
 	[GlobalCleanup]
-	public void Cleanup()
+	public static void Cleanup()
 	{
-		FastMapper.CacheManager.ClearAllCaches();
+		CacheManager.ClearAllCaches();
 	}
 
 	[Benchmark(Baseline = true)]
@@ -186,25 +186,25 @@ public class FastMapperBenchmarks
 	[Benchmark]
 	public int[] LargeArrayMapping_Cached()
 	{
-		return _largeArray.FastMap<int[], int[]>(useCache: true);
+		return largeArray.FastMap<int[], int[]>(useCache: true);
 	}
 
 	[Benchmark]
 	public int[] LargeArrayMapping_Uncached()
 	{
-		return _largeArray.FastMap<int[], int[]>(useCache: false);
+		return largeArray.FastMap<int[], int[]>(useCache: false);
 	}
 
 	[Benchmark]
 	public List<ComplexDestination> LargeComplexListMapping_Cached()
 	{
-		return _largeComplexList.FastMap<List<ComplexSource>, List<ComplexDestination>>(useCache: true);
+		return largeComplexList.FastMap<List<ComplexSource>, List<ComplexDestination>>(useCache: true);
 	}
 
 	[Benchmark]
 	public List<ComplexDestination> LargeComplexListMapping_Uncached()
 	{
-		return _largeComplexList.FastMap<List<ComplexSource>, List<ComplexDestination>>(useCache: false);
+		return largeComplexList.FastMap<List<ComplexSource>, List<ComplexDestination>>(useCache: false);
 	}
 
 	[Benchmark]

@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Web.Common.ValidationAttributes;
 
@@ -18,7 +18,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	public void Constructor_WithValidPattern_ShouldSetProperties()
 	{
 		// Arrange
-		const string pattern = @"^admin.*";
+		const string pattern = "^admin.*";
 
 		// Act
 		DenyRegularExpressionAttribute attribute = new(pattern);
@@ -32,7 +32,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithNull_ShouldReturnSuccess()
 	{
 		// Arrange
-		DenyRegularExpressionAttribute attribute = new(@"^admin.*");
+		DenyRegularExpressionAttribute attribute = new("^admin.*");
 
 		// Act
 		ValidationResult? result = attribute.GetValidationResult(null, DummyValidationContext);
@@ -45,7 +45,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithEmptyString_ShouldReturnSuccess()
 	{
 		// Arrange
-		DenyRegularExpressionAttribute attribute = new(@"^admin.*");
+		DenyRegularExpressionAttribute attribute = new("^admin.*");
 
 		// Act
 		ValidationResult? result = attribute.GetValidationResult(string.Empty, DummyValidationContext);
@@ -55,9 +55,9 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	}
 
 	[Theory]
-	[InlineData("user123", @"^admin.*", true)]        // Does not match pattern - valid
-	[InlineData("admin123", @"^admin.*", false)]      // Matches pattern - invalid
-	[InlineData("Admin123", @"^admin.*", true)]       // Does not match (case sensitive) - valid
+	[InlineData("user123", "^admin.*", true)]        // Does not match pattern - valid
+	[InlineData("admin123", "^admin.*", false)]      // Matches pattern - invalid
+	[InlineData("Admin123", "^admin.*", true)]       // Does not match (case sensitive) - valid
 	[InlineData("test@example.com", @".*@test\.com$", true)]  // Does not match - valid
 	[InlineData("user@test.com", @".*@test\.com$", false)]    // Matches - invalid
 	public void IsValid_WithStringValue_ShouldValidateCorrectly(string value, string pattern, bool shouldBeValid)
@@ -81,10 +81,10 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	}
 
 	[Theory]
-	[InlineData("normaluser", @"^(admin|root|superuser)$", true)]
-	[InlineData("admin", @"^(admin|root|superuser)$", false)]
-	[InlineData("root", @"^(admin|root|superuser)$", false)]
-	[InlineData("superuser", @"^(admin|root|superuser)$", false)]
+	[InlineData("normaluser", "^(admin|root|superuser)$", true)]
+	[InlineData("admin", "^(admin|root|superuser)$", false)]
+	[InlineData("root", "^(admin|root|superuser)$", false)]
+	[InlineData("superuser", "^(admin|root|superuser)$", false)]
 	public void IsValid_WithMultiplePatterns_ShouldValidateCorrectly(string value, string pattern, bool shouldBeValid)
 	{
 		// Arrange
@@ -105,9 +105,9 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	}
 
 	[Theory]
-	[InlineData("<script>", @"<.*>", false)]           // HTML tags - should fail
-	[InlineData("hello world", @"<.*>", true)]         // No HTML tags - should pass
-	[InlineData("test<tag>", @"<.*>", false)]          // Contains tag - should fail
+	[InlineData("<script>", "<.*>", false)]           // HTML tags - should fail
+	[InlineData("hello world", "<.*>", true)]         // No HTML tags - should pass
+	[InlineData("test<tag>", "<.*>", false)]          // Contains tag - should fail
 	public void IsValid_WithHtmlPattern_ShouldValidateCorrectly(string value, string pattern, bool shouldBeValid)
 	{
 		// Arrange
@@ -131,7 +131,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithCustomErrorMessage_ShouldUseCustomMessage()
 	{
 		// Arrange
-		DenyRegularExpressionAttribute attribute = new(@"^admin.*")
+		DenyRegularExpressionAttribute attribute = new("^admin.*")
 		{
 			ErrorMessage = "Custom error: {0} cannot start with admin"
 		};
@@ -154,7 +154,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 		{
 			MatchTimeoutInMilliseconds = 100
 		};
-		string value = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!"; // Catastrophic backtracking case
+		const string value = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!"; // Catastrophic backtracking case
 
 		// Act & Assert
 		Should.Throw<RegexMatchTimeoutException>(() => attribute.GetValidationResult(value, DummyValidationContext));
@@ -203,7 +203,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	public void FormatErrorMessage_WithDefaultMessage_ShouldReturnFormattedMessage()
 	{
 		// Arrange
-		DenyRegularExpressionAttribute attribute = new(@"^test.*");
+		DenyRegularExpressionAttribute attribute = new("^test.*");
 
 		// Act
 		string message = attribute.FormatErrorMessage("TestField");
@@ -218,7 +218,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	public void FormatErrorMessage_WithCustomMessage_ShouldUseCustomFormat()
 	{
 		// Arrange
-		DenyRegularExpressionAttribute attribute = new(@"^test.*")
+		DenyRegularExpressionAttribute attribute = new("^test.*")
 		{
 			ErrorMessage = "{0} is not allowed to match {1}"
 		};
@@ -234,7 +234,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	[Theory]
 	[InlineData(123, @"^\d+$", false)]                // Integer converts to "123" - matches
 	[InlineData(3.14, @"^\d+$", true)]                // Double converts to "3.14" - doesn't match exactly
-	[InlineData(true, @"^True$", false)]              // Boolean converts to "True" - matches
+	[InlineData(true, "^True$", false)]              // Boolean converts to "True" - matches
 	public void IsValid_WithNonStringTypes_ShouldConvertAndValidate(object value, string pattern, bool shouldBeValid)
 	{
 		// Arrange
@@ -255,9 +255,9 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	}
 
 	[Theory]
-	[InlineData("test!", @"[!@#$%^&*]", false)]       // Contains special char - invalid
-	[InlineData("test", @"[!@#$%^&*]", true)]         // No special chars - valid (no match)
-	[InlineData("test@", @"[!@#$%^&*]", false)]       // Contains @ - invalid
+	[InlineData("test!", "[!@#$%^&*]", false)]       // Contains special char - invalid
+	[InlineData("test", "[!@#$%^&*]", true)]         // No special chars - valid (no match)
+	[InlineData("test@", "[!@#$%^&*]", false)]       // Contains @ - invalid
 	public void IsValid_WithSpecialCharacterPattern_ShouldValidateCorrectly(string value, string pattern, bool shouldBeValid)
 	{
 		// Arrange
@@ -281,7 +281,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_ValidationContext_ShouldIncludeMemberName()
 	{
 		// Arrange
-		DenyRegularExpressionAttribute attribute = new(@"^forbidden$");
+		DenyRegularExpressionAttribute attribute = new("^forbidden$");
 		ValidationContext context = CreateValidationContext("TestProperty");
 
 		// Act
@@ -296,7 +296,7 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	public void MatchTimeout_Property_ShouldReturnCorrectTimeSpan()
 	{
 		// Arrange
-		DenyRegularExpressionAttribute attribute = new(@"test")
+		DenyRegularExpressionAttribute attribute = new("test")
 		{
 			MatchTimeoutInMilliseconds = 5000
 		};
@@ -333,10 +333,10 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	}
 
 	[Theory]
-	[InlineData("test!value", @"[!@#$%^&*()]", false, false)]  // Contains special char, deny any - invalid
-	[InlineData("test!value", @"[!@#$%^&*()]", true, true)]   // Contains special char, deny full only - valid
-	[InlineData("!", @"[!@#$%^&*()]", true, false)]          // Only special char, deny full - invalid
-	[InlineData("!", @"[!@#$%^&*()]", false, false)]         // Only special char, deny any - invalid
+	[InlineData("test!value", "[!@#$%^&*()]", false, false)]  // Contains special char, deny any - invalid
+	[InlineData("test!value", "[!@#$%^&*()]", true, true)]   // Contains special char, deny full only - valid
+	[InlineData("!", "[!@#$%^&*()]", true, false)]          // Only special char, deny full - invalid
+	[InlineData("!", "[!@#$%^&*()]", false, false)]         // Only special char, deny any - invalid
 	public void IsValid_WithCharacterClass_AndDenyOnlyFullMatch_ShouldValidateCorrectly(string value, string pattern, bool denyOnlyFullMatch, bool shouldBeValid)
 	{
 		// Arrange
@@ -360,17 +360,17 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 	public void DenyOnlyFullMatch_DefaultValue_ShouldBeFalse()
 	{
 		// Arrange & Act
-		DenyRegularExpressionAttribute attribute = new(@"test");
+		DenyRegularExpressionAttribute attribute = new("test");
 
 		// Assert
 		attribute.DenyOnlyFullMatch.ShouldBeFalse();
 	}
 
 	[Theory]
-	[InlineData("<script>alert('xss')</script>", @"<script.*?>", false, false)]  // XSS attempt, deny any - invalid
-	[InlineData("hello <script> world", @"<script.*?>", false, false)]         // Partial XSS, deny any - invalid
-	[InlineData("hello <script> world", @"<script.*?>", true, true)]          // Partial XSS, deny full only - valid
-	[InlineData("<script></script>", @"^<script.*?</script>$", true, false)]  // Full XSS, deny full - invalid
+	[InlineData("<script>alert('xss')</script>", "<script.*?>", false, false)]  // XSS attempt, deny any - invalid
+	[InlineData("hello <script> world", "<script.*?>", false, false)]         // Partial XSS, deny any - invalid
+	[InlineData("hello <script> world", "<script.*?>", true, true)]          // Partial XSS, deny full only - valid
+	[InlineData("<script></script>", "^<script.*?</script>$", true, false)]  // Full XSS, deny full - invalid
 	public void IsValid_WithXSSPattern_ShouldValidateCorrectly(string value, string pattern, bool denyOnlyFullMatch, bool shouldBeValid)
 	{
 		// Arrange

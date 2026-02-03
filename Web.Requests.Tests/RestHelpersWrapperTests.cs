@@ -56,7 +56,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
 		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options);
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -81,7 +81,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 1));
 
 		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options);
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -110,7 +110,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 2, RetryDelay: 10));
 
 		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options);
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -135,7 +135,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi", UseBearerToken: true, BearerToken: "test-token");
 
 		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options);
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -167,7 +167,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 				ResilienceOptions: new ResilienceOptions(GetBearerTokenFunc: getBearerTokenFunc));
 
 		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options);
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -206,7 +206,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 				ResilienceOptions: new ResilienceOptions(MaxRetry: 2, RetryDelay: 10, GetBearerTokenFunc: getBearerTokenFunc));
 
 		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options);
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -242,7 +242,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: null);
 
 		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options);
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -258,25 +258,25 @@ public sealed class RestHelpersWrapperTests : IDisposable
 	{
 		// Arrange
 		List<TestModel> expectedResults = new()
-				{
-						new TestModel { Id = 1, Name = "Test1" },
-						new TestModel { Id = 2, Name = "Test2" }
-				};
+			{
+				new TestModel { Id = 1, Name = "Test1" },
+				new TestModel { Id = 2, Name = "Test2" }
+			};
 
 		StreamingRestObject<TestModel> streamingResponse = new()
 		{
-			Result = AsyncEnumerableFromList(expectedResults),
+			Result = AsyncEnumerableFromList(expectedResults, TestContext.Current.CancellationToken),
 			Response = new HttpResponseMessage(HttpStatusCode.OK)
 		};
 
 		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.Returns(Task.FromResult(streamingResponse));
+			.Returns(Task.FromResult(streamingResponse));
 
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
 		// Act
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in wrapper.GetStreaming<TestModel>(options))
+		await foreach (TestModel? item in wrapper.GetStreaming<TestModel>(options, TestContext.Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -298,13 +298,13 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		};
 
 		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.Returns(Task.FromResult(streamingResponse));
+			.Returns(Task.FromResult(streamingResponse));
 
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 1));
 
 		// Act
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in wrapper.GetStreaming<TestModel>(options))
+		await foreach (TestModel? item in wrapper.GetStreaming<TestModel>(options, TestContext.Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -349,12 +349,12 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		};
 
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.Returns(Task.FromResult(restObject));
+			.Returns(Task.FromResult(restObject));
 
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
 		// Act
-		TestModel? result = await wrapper.PostRequest(options, postObject);
+		TestModel? result = await wrapper.PostRequest(options, postObject, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -374,12 +374,12 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		};
 
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.Returns(Task.FromResult(restObject));
+			.Returns(Task.FromResult(restObject));
 
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 1));
 
 		// Act
-		TestModel? result = await wrapper.PostRequest(options, postObject);
+		TestModel? result = await wrapper.PostRequest(options, postObject, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -391,7 +391,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		// Arrange
 		TestModel postObject = new() { Id = 1, Name = "Test" };
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.Throws(new InvalidOperationException("Test exception"));
+			.Throws(new InvalidOperationException("Test exception"));
 
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
@@ -409,14 +409,14 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		// Arrange
 		TestModel postObject = new() { Id = 1, Name = "Test" };
 		List<TestModel> expectedResults = new()
-				{
-						new TestModel { Id = 1, Name = "Result1" },
-						new TestModel { Id = 2, Name = "Result2" }
-				};
+			{
+				new TestModel { Id = 1, Name = "Result1" },
+				new TestModel { Id = 2, Name = "Result2" }
+			};
 
 		StreamingRestObject<TestModel> streamingResponse = new()
 		{
-			Result = AsyncEnumerableFromList(expectedResults),
+			Result = AsyncEnumerableFromList(expectedResults, TestContext.Current.CancellationToken),
 			Response = new HttpResponseMessage(HttpStatusCode.OK)
 		};
 
@@ -427,7 +427,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 
 		// Act
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in wrapper.PostRequestStreaming(options, postObject))
+		await foreach (TestModel? item in wrapper.PostRequestStreaming(options, postObject, TestContext.Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -456,7 +456,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 
 		// Act
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in wrapper.PostRequestStreaming(options, postObject))
+		await foreach (TestModel? item in wrapper.PostRequestStreaming(options, postObject, TestContext.Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -507,7 +507,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
 		// Act
-		string? result = await wrapper.GenericPostRequest<string, TestModel>(options, postObject);
+		string? result = await wrapper.GenericPostRequest<string, TestModel>(options, postObject, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -531,7 +531,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 1));
 
 		// Act
-		string? result = await wrapper.GenericPostRequest<string, TestModel>(options, postObject);
+		string? result = await wrapper.GenericPostRequest<string, TestModel>(options, postObject, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -564,7 +564,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 
 		StreamingRestObject<string> streamingResponse = new()
 		{
-			Result = AsyncEnumerableFromList(expectedResults),
+			Result = AsyncEnumerableFromList(expectedResults, TestContext.Current.CancellationToken),
 			Response = new HttpResponseMessage(HttpStatusCode.OK)
 		};
 
@@ -575,7 +575,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 
 		// Act
 		List<string?> results = new();
-		await foreach (string? item in wrapper.GenericPostRequestStreaming<string, TestModel>(options, postObject))
+		await foreach (string? item in wrapper.GenericPostRequestStreaming<string, TestModel>(options, postObject, TestContext.Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -604,7 +604,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 
 		// Act
 		List<string?> results = new();
-		await foreach (string? item in wrapper.GenericPostRequestStreaming<string, TestModel>(options, postObject))
+		await foreach (string? item in wrapper.GenericPostRequestStreaming<string, TestModel>(options, postObject, TestContext.Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -654,7 +654,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
 		// Act
-		string? result = await wrapper.StringPostRequest(options, postObject);
+		string? result = await wrapper.StringPostRequest(options, postObject, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -678,7 +678,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 1));
 
 		// Act
-		string? result = await wrapper.StringPostRequest(options, postObject);
+		string? result = await wrapper.StringPostRequest(options, postObject, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -720,7 +720,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
 		// Act
-		TestModel? result = await wrapper.PatchRequest(options, newModel, oldModel);
+		TestModel? result = await wrapper.PatchRequest(options, newModel, oldModel, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -736,7 +736,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
 		// Act
-		TestModel? result = await wrapper.PatchRequest(options, model, model);
+		TestModel? result = await wrapper.PatchRequest(options, model, model, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -763,7 +763,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 1));
 
 		// Act
-		TestModel? result = await wrapper.PatchRequest(options, newModel, oldModel);
+		TestModel? result = await wrapper.PatchRequest(options, newModel, oldModel, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -805,7 +805,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
 		// Act
-		TestModel? result = await wrapper.PutRequest(options, replacementModel);
+		TestModel? result = await wrapper.PutRequest(options, replacementModel, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -830,7 +830,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 1));
 
 		// Act
-		TestModel? result = await wrapper.PutRequest(options, replacementModel);
+		TestModel? result = await wrapper.PutRequest(options, replacementModel, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -871,7 +871,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi");
 
 		// Act
-		TestModel? result = await wrapper.DeleteRequest<TestModel>(options);
+		TestModel? result = await wrapper.DeleteRequest<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -894,7 +894,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 1));
 
 		// Act
-		TestModel? result = await wrapper.DeleteRequest<TestModel>(options);
+		TestModel? result = await wrapper.DeleteRequest<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -997,17 +997,17 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		};
 
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.Returns(Task.FromResult(failedResponse));
+			.Returns(Task.FromResult(failedResponse));
 
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 3, RetryDelay: 10));
 
 		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options);
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.MustHaveHappened(3, Times.Exactly);
+			.MustHaveHappened(3, Times.Exactly);
 	}
 
 	[Fact]
@@ -1029,18 +1029,18 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		};
 
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.ReturnsNextFromSequence(Task.FromResult(failedResponse), Task.FromResult(successResponse));
+			.ReturnsNextFromSequence(Task.FromResult(failedResponse), Task.FromResult(successResponse));
 
 		RestHelperOptions options = new("test-endpoint", "TestApi",
-				ResilienceOptions: new ResilienceOptions(MaxRetry: 2, RetryDelay: 10, DelayBackoffType: RestHelperConstants.EDelayBackoffType.Exponential, UseJitter: false));
+			ResilienceOptions: new ResilienceOptions(MaxRetry: 2, RetryDelay: 10, DelayBackoffType: RestHelperConstants.EDelayBackoffType.Exponential, UseJitter: false));
 
 		// Act
-		TestModel? result = await wrapper.PostRequest(options, postObject);
+		TestModel? result = await wrapper.PostRequest(options, postObject, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.MustHaveHappened(2, Times.Exactly);
+			.MustHaveHappened(2, Times.Exactly);
 	}
 
 	#endregion
@@ -1052,9 +1052,9 @@ public sealed class RestHelpersWrapperTests : IDisposable
 	{
 		// Arrange
 		Dictionary<string, string> customHeaders = new()
-				{
-						{ "X-Custom-Header", "CustomValue" }
-				};
+			{
+				{ "X-Custom-Header", "CustomValue" }
+			};
 
 		RestObject<TestModel> restObject = new()
 		{
@@ -1063,19 +1063,19 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		};
 
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.Returns(Task.FromResult(restObject));
+			.Returns(Task.FromResult(restObject));
 
 		RestHelperOptions options = new("test-endpoint", "TestApi", HttpHeaders: customHeaders);
 
 		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options);
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(
-				A<RequestOptions<TestModel>>.That.Matches(r => r.HttpHeaders != null && r.HttpHeaders.ContainsKey("X-Custom-Header")),
-				A<CancellationToken>._))
-				.MustHaveHappenedOnceExactly();
+			A<RequestOptions<TestModel>>.That.Matches(r => r.HttpHeaders != null && r.HttpHeaders.ContainsKey("X-Custom-Header")),
+			A<CancellationToken>._))
+			.MustHaveHappenedOnceExactly();
 	}
 
 	#endregion

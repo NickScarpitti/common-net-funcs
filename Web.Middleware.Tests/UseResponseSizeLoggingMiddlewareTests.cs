@@ -3,7 +3,7 @@ using FakeItEasy.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
-using xRetry;
+using xRetry.v3;
 
 namespace Web.Middleware.Tests;
 

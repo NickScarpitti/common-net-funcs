@@ -120,9 +120,7 @@ public static class Common
 	private static IXLStyle? CreateEmptyStyle()
 	{
 		Type type = typeof(XLConstants).Assembly.GetType("ClosedXML.Excel.XLStyle")!;
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 		MethodInfo methodInfo = type.GetMethod("CreateEmptyStyle", BindingFlags.Static | BindingFlags.NonPublic)!;
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 		return methodInfo?.Invoke(null, null) as IXLStyle;
 	}
 

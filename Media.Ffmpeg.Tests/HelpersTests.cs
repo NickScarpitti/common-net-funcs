@@ -1,20 +1,20 @@
 ﻿using System.Collections.Concurrent;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
-using xRetry;
+using xRetry.v3;
 
 namespace Media.Ffmpeg.Tests;
 
 public sealed class HelpersTests : IDisposable
 {
-	private readonly Fixture _fixture;
+	private readonly Fixture fixture;
 	private readonly string _testVideoPath;
 	private readonly string _tempLogFile;
 
 	public HelpersTests()
 	{
-		_fixture = new Fixture();
-		_fixture.Customize(new AutoFakeItEasyCustomization());
+		fixture = new Fixture();
+		fixture.Customize(new AutoFakeItEasyCustomization());
 
 		string testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
 		_testVideoPath = Path.Combine(testDataDir, "test.mp4");

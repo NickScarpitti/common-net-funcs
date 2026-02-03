@@ -72,7 +72,7 @@ public class PagingCountApproachesBenchmarks
 		return new GenericPagingModel<BenchmarkEntity>
 		{
 			TotalRecords = results.FirstOrDefault()?.TotalCount ?? 0,
-			Entities = results.Select(x => x.Entities).ToList()
+			Entities = results.ConvertAll(x => x.Entities)
 		};
 	}
 
@@ -95,7 +95,7 @@ public class PagingCountApproachesBenchmarks
 		return new GenericPagingModel<BenchmarkEntity>
 		{
 			TotalRecords = results.FirstOrDefault()?.TotalCount ?? 0,
-			Entities = results.Select(x => x.Entities).ToList()
+			Entities = results.ConvertAll(x => x.Entities)
 		};
 	}
 

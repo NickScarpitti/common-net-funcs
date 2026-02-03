@@ -2670,3 +2670,16 @@ Sets all properties that are invalid based on their validation decorators / attr
 ```
 
 </details>
+
+## Installation
+
+Install via NuGet:
+
+```bash
+dotnet add package CommonNetFuncs.Core
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.
+

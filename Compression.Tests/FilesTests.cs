@@ -6,23 +6,23 @@ namespace Compression.Tests;
 
 public sealed class FilesTests
 {
-	private readonly Fixture _fixture;
+	private readonly Fixture fixture;
 
 	public FilesTests()
 	{
-		_fixture = new Fixture();
+		fixture = new Fixture();
 	}
 
 	[Fact]
 	public async Task ZipFile_Should_Create_Zip_With_Single_File()
 	{
 		// Arrange
-		string fileName = _fixture.Create<string>();
-		MemoryStream fileStream = new(_fixture.CreateMany<byte>(100).ToArray());
+		string fileName = fixture.Create<string>();
+		MemoryStream fileStream = new(fixture.CreateMany<byte>(100).ToArray());
 		MemoryStream zipFileStream = new();
 
 		// Act
-		await (fileStream, fileName).ZipFile(zipFileStream);
+		await (fileStream, fileName).ZipFile(zipFileStream, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		zipFileStream.Length.ShouldBeGreaterThan(0);
@@ -35,11 +35,11 @@ public sealed class FilesTests
 	public async Task ZipFile_NullStream_Should_Create_Zip_With_Single_File()
 	{
 		// Arrange
-		string fileName = _fixture.Create<string>();
-		await using MemoryStream fileStream = new(_fixture.CreateMany<byte>(100).ToArray());
+		string fileName = fixture.Create<string>();
+		await using MemoryStream fileStream = new(fixture.CreateMany<byte>(100).ToArray());
 
 		// Act
-		await using MemoryStream zipFileStream = await (fileStream, fileName).ZipFile();
+		await using MemoryStream zipFileStream = await (fileStream, fileName).ZipFile(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		zipFileStream.Length.ShouldBeGreaterThan(0);
@@ -61,7 +61,7 @@ public sealed class FilesTests
 		await using MemoryStream zipFileStream = new();
 
 		// Act
-		await files.ZipFiles(zipFileStream);
+		await files.ZipFiles(zipFileStream, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		zipFileStream.Length.ShouldBeGreaterThan(0);
@@ -85,7 +85,7 @@ public sealed class FilesTests
 		];
 
 		// Act
-		await using MemoryStream? zipFileStream = await files.ZipFiles();
+		await using MemoryStream? zipFileStream = await files.ZipFiles(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		zipFileStream?.Length.ShouldBeGreaterThan(0);
@@ -110,7 +110,7 @@ public sealed class FilesTests
 		await using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
 		{
 			// Act
-			await files.AddFilesToZip(archive);
+			await files.AddFilesToZip(archive, cancellationToken: TestContext.Current.CancellationToken);
 		}
 
 		// Reopen the ZipArchive in Read mode to verify its contents
@@ -128,14 +128,14 @@ public sealed class FilesTests
 	public async Task AddFileToZip_Should_Add_Single_File_To_Archive()
 	{
 		// Arrange
-		string fileName = _fixture.Create<string>();
+		string fileName = fixture.Create<string>();
 		await using MemoryStream fileStream = new(Enumerable.Range(0, 100).Select(i => (byte)i).ToArray());
 		await using MemoryStream memoryStream = new();
 
 		// Act
 		await using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
 		{
-			await fileStream.AddFileToZip(archive, fileName);
+			await fileStream.AddFileToZip(archive, fileName, cancellationToken: TestContext.Current.CancellationToken);
 		}
 
 		// Assert
@@ -149,13 +149,13 @@ public sealed class FilesTests
 	{
 		// Arrange
 		Stream? fileStream = null;
-		string fileName = _fixture.Create<string>();
+		string fileName = fixture.Create<string>();
 		await using MemoryStream memoryStream = new();
 
 		// Act
 		await using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
 		{
-			await fileStream.AddFileToZip(archive, fileName);
+			await fileStream.AddFileToZip(archive, fileName, cancellationToken: TestContext.Current.CancellationToken);
 		}
 
 		// Assert
@@ -176,10 +176,10 @@ public sealed class FilesTests
 		try
 		{
 			byte[] data = Enumerable.Range(0, 1000).Select(i => (byte)i).ToArray();
-			await File.WriteAllBytesAsync(tempInput, data);
+			await File.WriteAllBytesAsync(tempInput, data, TestContext.Current.CancellationToken);
 
 			// Act
-			await CompressFile(tempInput, tempOutput, compressionType);
+			await CompressFile(tempInput, tempOutput, compressionType, TestContext.Current.CancellationToken);
 
 			// Assert
 			File.Exists(tempOutput).ShouldBeTrue();
@@ -220,10 +220,10 @@ public sealed class FilesTests
 		string tempOutput = Path.Combine(outputDir, "out.cmp");
 		try
 		{
-			await File.WriteAllTextAsync(tempInput, "test data");
+			await File.WriteAllTextAsync(tempInput, "test data", TestContext.Current.CancellationToken);
 
 			// Act
-			await CompressFile(tempInput, tempOutput, ECompressionType.Gzip);
+			await CompressFile(tempInput, tempOutput, ECompressionType.Gzip, TestContext.Current.CancellationToken);
 
 			// Assert
 			File.Exists(tempOutput).ShouldBeTrue();
@@ -262,16 +262,16 @@ public sealed class FilesTests
 		try
 		{
 			byte[] data = Enumerable.Range(0, 1000).Select(i => (byte)i).ToArray();
-			await File.WriteAllBytesAsync(tempInput, data);
+			await File.WriteAllBytesAsync(tempInput, data, TestContext.Current.CancellationToken);
 
-			await CompressFile(tempInput, tempCompressed, compressionType);
+			await CompressFile(tempInput, tempCompressed, compressionType, TestContext.Current.CancellationToken);
 
 			// Act
-			await DecompressFile(tempCompressed, tempOutput, compressionType);
+			await DecompressFile(tempCompressed, tempOutput, compressionType, TestContext.Current.CancellationToken);
 
 			// Assert
 			File.Exists(tempOutput).ShouldBeTrue();
-			byte[] decompressed = await File.ReadAllBytesAsync(tempOutput);
+			byte[] decompressed = await File.ReadAllBytesAsync(tempOutput, TestContext.Current.CancellationToken);
 			decompressed.ShouldBe(data);
 		}
 		finally
@@ -315,11 +315,11 @@ public sealed class FilesTests
 		string tempOutput = Path.Combine(outputDir, "out.txt");
 		try
 		{
-			await File.WriteAllTextAsync(tempInput, "test data");
-			await CompressFile(tempInput, tempCompressed, ECompressionType.Gzip);
+			await File.WriteAllTextAsync(tempInput, "test data", TestContext.Current.CancellationToken);
+			await CompressFile(tempInput, tempCompressed, ECompressionType.Gzip, TestContext.Current.CancellationToken);
 
 			// Act
-			await DecompressFile(tempCompressed, tempOutput, ECompressionType.Gzip);
+			await DecompressFile(tempCompressed, tempOutput, ECompressionType.Gzip, TestContext.Current.CancellationToken);
 
 			// Assert
 			File.Exists(tempOutput).ShouldBeTrue();

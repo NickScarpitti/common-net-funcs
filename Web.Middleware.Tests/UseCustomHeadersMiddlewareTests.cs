@@ -1,6 +1,6 @@
 ﻿using CommonNetFuncs.Web.Middleware;
 using Microsoft.AspNetCore.Http;
-using xRetry;
+using xRetry.v3;
 
 namespace Web.Middleware.Tests;
 

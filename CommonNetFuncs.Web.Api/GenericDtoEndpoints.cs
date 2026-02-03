@@ -28,7 +28,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<List<TOutDto>>> CreateMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
-		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
 		{
@@ -57,7 +57,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<TOutDto>> Delete<TModel, TContext, TInDto, TOutDto>(TInDto model, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
-		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
 		{
@@ -86,7 +86,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<List<TOutDto>>> DeleteMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
-		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
 		{
@@ -113,7 +113,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
 	public async Task<ActionResult<List<TOutDto>>> DeleteManyByKeys<TModel, TContext, TOutDto>(IEnumerable<object> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
-		where TModel : class?, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TOutDto : class?, new()
 	{
 		try
 		{
@@ -141,7 +141,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
 	public async Task<ActionResult<TOutDto>> Patch<TModel, TContext, TOutDto>(object primaryKey, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
-		where TModel : class?, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TOutDto : class?, new()
 	{
 		TModel? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
 		return await PatchInternal<TModel, TContext, TOutDto>(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
@@ -158,7 +158,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<TOutDto>> Patch<TModel, TContext, TOutDto>(object[] primaryKey, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
-		where TModel : class?, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TOutDto : class?, new()
 	{
 		TModel? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
 		return await PatchInternal<TModel, TContext, TOutDto>(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
@@ -175,7 +175,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	private async Task<ActionResult<TOutDto>> PatchInternal<TModel, TContext, TOutDto>(TModel? dbModel, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
-		where TModel : class?, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TOutDto : class?, new()
 	{
 		try
 		{
@@ -233,7 +233,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">An object that provides database context actions for the specified entity and context types.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<TOutDto>> Update<TModel, TContext, TInDto, TOutDto>(object primaryKey, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
-		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		TModel? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
 		return await UpdateInternal<TModel, TContext, TInDto, TOutDto>(dbModel, inDto, baseAppDbContextActions).ConfigureAwait(false);
@@ -251,7 +251,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">An object that provides database context actions for the specified entity and context types.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	public async Task<ActionResult<TOutDto>> Update<TModel, TContext, TInDto, TOutDto>(object[] primaryKey, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
-		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		TModel? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
 		return await UpdateInternal<TModel, TContext, TInDto, TOutDto>(dbModel, inDto, baseAppDbContextActions).ConfigureAwait(false);
@@ -269,7 +269,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
 	private async Task<ActionResult<TOutDto>> UpdateInternal<TModel, TContext, TInDto, TOutDto>(TModel? dbModel, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
-		where TModel : class?, new() where TInDto : class, new() where TOutDto : class?, new() where TContext : DbContext
+		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
 		{

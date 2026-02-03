@@ -1,6 +1,6 @@
 ﻿using CommonNetFuncs.Images;
 using SixLabors.ImageSharp;
-using xRetry;
+using xRetry.v3;
 
 namespace Images.Tests;
 

@@ -102,7 +102,7 @@ public class MapperComparisonBenchmarks
 	}
 
 	[GlobalCleanup]
-	public void Cleanup()
+	public static void Cleanup()
 	{
 		FastMapper.CacheManager.ClearAllCaches();
 		FastMapper.ClearCache();
@@ -240,7 +240,7 @@ public class MapperComparisonBenchmarks
 /// The [Mapper] attribute triggers source generation to create the implementations.
 /// </summary>
 [Riok.Mapperly.Abstractions.Mapper]
-public partial class MapperlyMappers
+public static partial class MapperlyMappers
 {
 	public static partial SimpleDestination MapSimpleSourceToDestination(SimpleSource source);
 	public static partial ComplexDestination MapComplexSourceToDestination(ComplexSource source);

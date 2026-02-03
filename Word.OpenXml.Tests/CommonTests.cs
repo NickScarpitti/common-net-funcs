@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml.Packaging;
-using xRetry;
+using xRetry.v3;
 
 namespace Word.OpenXml.Tests;
 

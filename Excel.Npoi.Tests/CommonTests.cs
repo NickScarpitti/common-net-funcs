@@ -7,7 +7,7 @@ using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
-using xRetry;
+using xRetry.v3;
 using static CommonNetFuncs.Excel.Npoi.Common;
 
 namespace Excel.Npoi.Tests;
@@ -1215,5 +1215,5 @@ public sealed class CommonTests : IDisposable
 		result.Columns[1].ColumnName.ShouldBe("Col2");
 	}
 
-  #endregion
+	#endregion
 }

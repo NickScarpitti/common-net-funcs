@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using CommonNetFuncs.Web.Common.ValidationAttributes;
 
 namespace Web.Common.Tests.ValidationAttributes;
@@ -16,7 +16,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void Constructor_WithValidPattern_ShouldSetProperties()
 	{
 		// Arrange
-		const string pattern = @"^admin.*";
+		const string pattern = "^admin.*";
 
 		// Act
 		ListDenyRegularExpressionAttribute attribute = new(pattern);
@@ -44,7 +44,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithNull_ShouldReturnSuccess()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^admin");
+		ListDenyRegularExpressionAttribute attribute = new("^admin");
 
 		// Act
 		ValidationResult? result = attribute.GetValidationResult(null, DummyValidationContext);
@@ -57,7 +57,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithEmptyList_ShouldReturnSuccess()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^admin");
+		ListDenyRegularExpressionAttribute attribute = new("^admin");
 		List<string> emptyList = [];
 
 		// Act
@@ -71,7 +71,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithAllNullItems_ShouldReturnSuccess()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^admin");
+		ListDenyRegularExpressionAttribute attribute = new("^admin");
 		List<string?> nullList = [null, null, null];
 
 		// Act
@@ -85,7 +85,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithAllEmptyStrings_ShouldReturnSuccess()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^admin");
+		ListDenyRegularExpressionAttribute attribute = new("^admin");
 		List<string> emptyStrings = [string.Empty, "", ""];
 
 		// Act
@@ -96,10 +96,10 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	}
 
 	[Theory]
-	[InlineData(@"^admin.*", "user123", true)]
-	[InlineData(@"^admin.*", "Admin123", true)]  // Case-sensitive, doesn't match
-	[InlineData(@"^admin.*", "admin123", false)] // Matches - invalid
-	[InlineData(@"^admin.*", "testadmin", true)] // Doesn't match start - valid
+	[InlineData("^admin.*", "user123", true)]
+	[InlineData("^admin.*", "Admin123", true)]  // Case-sensitive, doesn't match
+	[InlineData("^admin.*", "admin123", false)] // Matches - invalid
+	[InlineData("^admin.*", "testadmin", true)] // Doesn't match start - valid
 	public void IsValid_WithAnyMatchMode_ShouldValidateCorrectly(string pattern, string value, bool shouldBeValid)
 	{
 		// Arrange
@@ -128,8 +128,8 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	[InlineData(@"^\d+$", "123", false)]         // Full match - invalid
 	[InlineData(@"^\d+$", "abc123def", true)]    // Not full match - valid
 	[InlineData(@"^\d+$", "abc", true)]          // No match - valid
-	[InlineData(@"^test$", "test", false)]       // Exact match - invalid
-	[InlineData(@"^test$", "testing", true)]     // Not full match - valid
+	[InlineData("^test$", "test", false)]       // Exact match - invalid
+	[InlineData("^test$", "testing", true)]     // Not full match - valid
 	public void IsValid_WithFullMatchMode_ShouldValidateCorrectly(string pattern, string value, bool shouldBeValid)
 	{
 		// Arrange
@@ -156,7 +156,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithAllValidItems_ShouldReturnSuccess()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^admin");
+		ListDenyRegularExpressionAttribute attribute = new("^admin");
 		List<string> items = ["user1", "customer", "guest"];
 
 		// Act
@@ -170,7 +170,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithOneInvalidItem_ShouldFailAtCorrectIndex()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^admin");
+		ListDenyRegularExpressionAttribute attribute = new("^admin");
 		List<string> items = ["user1", "admin123", "guest"];
 
 		// Act
@@ -188,7 +188,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithFirstItemInvalid_ShouldFailAtIndex0()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"<script");
+		ListDenyRegularExpressionAttribute attribute = new("<script");
 		List<string> items = ["<script>alert('xss')</script>", "safe", "clean"];
 
 		// Act
@@ -204,7 +204,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithLastItemInvalid_ShouldFailAtCorrectIndex()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"DROP|DELETE|INSERT");
+		ListDenyRegularExpressionAttribute attribute = new("DROP|DELETE|INSERT");
 		List<string> items = ["safe query", "another safe", "DROP TABLE users"];
 
 		// Act
@@ -238,7 +238,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithMixedNullAndValidItems_ShouldReturnSuccess()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^admin");
+		ListDenyRegularExpressionAttribute attribute = new("^admin");
 		List<string?> items = ["user", null, "guest", "", "customer"];
 
 		// Act
@@ -252,7 +252,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithMixedNullAndInvalidItems_ShouldFailAtInvalidIndex()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^test");
+		ListDenyRegularExpressionAttribute attribute = new("^test");
 		List<string?> items = ["user", null, "testing123", "", "guest"];
 
 		// Act
@@ -269,7 +269,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithCustomErrorMessage_ShouldUseCustomMessage()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^admin")
+		ListDenyRegularExpressionAttribute attribute = new("^admin")
 		{
 			ErrorMessage = "Custom error: Item {0} '{1}' matches forbidden pattern '{2}'"
 		};
@@ -289,22 +289,8 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithNonStringEnumerable_ShouldConvertAndValidate()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^0");
+		ListDenyRegularExpressionAttribute attribute = new("^0");
 		List<int> numbers = [123, 456, 789];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(numbers, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithNonStringEnumerable_ContainingMatch_ShouldFail()
-	{
-		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^0");
-		List<int> numbers = [123, 456, 789]; // None start with 0
 
 		// Act
 		ValidationResult? result = attribute.GetValidationResult(numbers, DummyValidationContext);
@@ -317,7 +303,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithNonStringEnumerable_StartingWithZero_ShouldFail()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^0");
+		ListDenyRegularExpressionAttribute attribute = new("^0");
 		List<double> numbers = [123.45, 0.456, 789.0]; // 0.456 starts with '0'
 
 		// Act
@@ -333,8 +319,8 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithNonEnumerableType_ShouldThrow()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^test");
-		int nonEnumerable = 42;
+		ListDenyRegularExpressionAttribute attribute = new("^test");
+		const int nonEnumerable = 42;
 
 		// Act & Assert
 		Should.Throw<InvalidDataException>(() => attribute.GetValidationResult(nonEnumerable, DummyValidationContext));
@@ -344,8 +330,8 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithStringType_ShouldThrow()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^test");
-		string singleString = "test";
+		ListDenyRegularExpressionAttribute attribute = new("^test");
+		const string singleString = "test";
 
 		// Act & Assert
 		Should.Throw<InvalidDataException>(() => attribute.GetValidationResult(singleString, DummyValidationContext));
@@ -355,7 +341,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithArray_ShouldValidateCorrectly()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^admin");
+		ListDenyRegularExpressionAttribute attribute = new("^admin");
 		string[] items = ["user1", "guest", "admin"];
 
 		// Act
@@ -371,7 +357,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithIEnumerableString_ShouldValidateCorrectly()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^test");
+		ListDenyRegularExpressionAttribute attribute = new("^test");
 		IEnumerable<string> items = new List<string> { "user", "guest" };
 
 		// Act
@@ -410,7 +396,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithXSSPatterns_ShouldDetectMaliciousContent()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"<script|javascript:|onerror=|onclick=", denyOnlyFullMatch: false);
+		ListDenyRegularExpressionAttribute attribute = new("<script|javascript:|onerror=|onclick=", denyOnlyFullMatch: false);
 		List<string> items = [
 			"clean content",
 			"<script>alert('xss')</script>",
@@ -430,7 +416,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithSQLInjectionPatterns_ShouldDetectMaliciousContent()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"(DROP|DELETE|INSERT|UPDATE).*(TABLE|FROM|INTO)", denyOnlyFullMatch: false);
+		ListDenyRegularExpressionAttribute attribute = new("(DROP|DELETE|INSERT|UPDATE).*(TABLE|FROM|INTO)", denyOnlyFullMatch: false);
 		List<string> items = [
 			"SELECT * FROM users",
 			"clean query",
@@ -450,8 +436,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithCaseInsensitivePattern_ShouldRespectRegexOptions()
 	{
 		// Arrange - Using default regex which is case-sensitive
-		ListDenyRegularExpressionAttribute attribute = new(@"^ADMIN");
-		List<string> items = ["admin", "ADMIN"];
+		ListDenyRegularExpressionAttribute attribute = new("^ADMIN");
 
 		// Act
 		ValidationResult? resultLower = attribute.GetValidationResult(new List<string> { "admin" }, DummyValidationContext);
@@ -482,7 +467,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithManyItems_ShouldValidateAll()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^X");
+		ListDenyRegularExpressionAttribute attribute = new("^X");
 		List<string> items = new(100);
 		for (int i = 0; i < 100; i++)
 		{
@@ -500,7 +485,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithManyItems_OneInvalid_ShouldFailAtCorrectIndex()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^X");
+		ListDenyRegularExpressionAttribute attribute = new("^X");
 		List<string> items = new(100);
 		for (int i = 0; i < 100; i++)
 		{
@@ -521,7 +506,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithUrlEncodableCharacters_ShouldEncodeInErrorMessage()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"<script");
+		ListDenyRegularExpressionAttribute attribute = new("<script");
 		List<string> items = ["<script>alert('xss')</script>"];
 
 		// Act
@@ -538,7 +523,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void FormatErrorMessage_ShouldContainPlaceholders()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^test");
+		ListDenyRegularExpressionAttribute attribute = new("^test");
 
 		// Act
 		string message = attribute.FormatErrorMessage("TestField");
@@ -553,7 +538,7 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void MatchTimeout_ShouldReflectMilliseconds()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"^test")
+		ListDenyRegularExpressionAttribute attribute = new("^test")
 		{
 			MatchTimeoutInMilliseconds = 5000
 		};
@@ -566,7 +551,9 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithInvalidRegexPattern_ShouldThrowOnFirstUse()
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new(@"[invalid(regex");
+#pragma warning disable RE0001 // Invalid regex pattern
+		ListDenyRegularExpressionAttribute attribute = new("[invalid(regex");
+#pragma warning restore RE0001 // Invalid regex pattern
 		List<string> items = ["test"];
 
 		// Act & Assert
@@ -575,8 +562,8 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 
 	[Theory]
 	[InlineData(@"^\d+$", "123")]
-	[InlineData(@"^[A-Z]+$", "ABC")]
-	[InlineData(@"^test.*", "testing")]
+	[InlineData("^[A-Z]+$", "ABC")]
+	[InlineData("^test.*", "testing")]
 	public void IsValid_DenyOnlyFullMatch_WithExactMatch_ShouldFail(string pattern, string value)
 	{
 		// Arrange
@@ -594,8 +581,8 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 
 	[Theory]
 	[InlineData(@"^\d+$", "abc123")]
-	[InlineData(@"^[A-Z]+$", "ABCdef")]
-	[InlineData(@"^test$", "testing")]
+	[InlineData("^[A-Z]+$", "ABCdef")]
+	[InlineData("^test$", "testing")]
 	public void IsValid_DenyOnlyFullMatch_WithPartialMatch_ShouldSucceed(string pattern, string value)
 	{
 		// Arrange

@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.10</Version>
+		<Version>4.0.12</Version>
 		<MinVerTagPrefix>web.interface-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -80,13 +80,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FakeItEasy" Version="8.3.0" />
 		<PackageReference Include="MemoryPack" Version="1.21.4" />
 		<PackageReference Include="MessagePack" Version="3.1.4" />
 		<PackageReference Include="MinVer" Version="7.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" PrivateAssets="all" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

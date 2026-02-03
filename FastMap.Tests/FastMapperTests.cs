@@ -473,7 +473,7 @@ public sealed class FastMapperTests
 
 		// Act & Assert
 		// FastMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
-		Exception? exception = Should.Throw<TypeInitializationException>(() => source.FastMap<Dictionary<int, string>, List<string>>());
+		Exception? exception = Should.Throw<TypeInitializationException>(source.FastMap<Dictionary<int, string>, List<string>>);
 		exception.InnerException.ShouldNotBeNull();
 		exception.InnerException.ShouldBeOfType<ArgumentException>();
 	}
@@ -486,7 +486,7 @@ public sealed class FastMapperTests
 
 		// Act & Assert
 		// FastMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
-		Exception? exception = Should.Throw<TypeInitializationException>(() => source.FastMap<Dictionary<int, string>, Dictionary<string, string>>());
+		Exception? exception = Should.Throw<TypeInitializationException>(source.FastMap<Dictionary<int, string>, Dictionary<string, string>>);
 		exception.InnerException.ShouldNotBeNull();
 		exception.InnerException.ShouldBeOfType<InvalidOperationException>();
 	}

@@ -4,11 +4,11 @@
 
 //public sealed class SerializeTests
 //{
-//	private readonly Fixture _fixture;
+//	private readonly Fixture fixture;
 
 //	public SerializeTests()
 //	{
-//		_fixture = new Fixture();
+//		fixture = new Fixture();
 //	}
 
 //	public sealed class TestClass
@@ -68,7 +68,7 @@
 //	public void DeepClone_WhenInputIsSimpleClass_ShouldCreateDeepCopy()
 //	{
 //		// Arrange
-//		TestClass source = _fixture.Build<TestClass>()
+//		TestClass source = fixture.Build<TestClass>()
 //				.Without(x => x.Child)
 //				.Without(x => x.Numbers)
 //				.Create();

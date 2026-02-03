@@ -4,7 +4,7 @@ namespace Core.Tests;
 
 public sealed class RunBatchesTests
 {
-	private readonly Fixture _fixture = new();
+	private readonly Fixture fixture = new();
 
 	[Theory]
 	[InlineData(100, 30)]  // Multiple batches
@@ -20,7 +20,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = _fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -29,7 +29,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -49,7 +49,7 @@ public sealed class RunBatchesTests
 
 		async Task<bool> BatchProcessor(List<int> batch)
 		{
-			byte[] data = _fixture.CreateMany<byte>(batch[0]).ToArray();
+			byte[] data = fixture.CreateMany<byte>(batch[0]).ToArray();
 			await using MemoryStream stream = new(data);
 			_ = await stream.ReadStreamAsync();
 			processedItems.AddRange(batch);
@@ -57,7 +57,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -79,7 +79,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = _fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -88,7 +88,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -110,7 +110,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = _fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -119,7 +119,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, breakOnFail);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, breakOnFail, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -137,7 +137,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = _fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
 				using MemoryStream stream = new(data);
 				_ = stream.ToArray();
 				processedItems.Add(item);
@@ -146,7 +146,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = items.RunBatchedProcess(BatchProcessor, 30);
+		bool result = items.RunBatchedProcess(BatchProcessor, 30, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -167,7 +167,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = _fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -176,7 +176,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -198,7 +198,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = _fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -207,7 +207,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -220,13 +220,13 @@ public sealed class RunBatchesTests
 	{
 		// Arrange
 		List<int> processedItems = [];
-		List<int> items = _fixture.CreateMany<int>(100).ToList();
+		List<int> items = fixture.CreateMany<int>(100).ToList();
 
 		async Task<bool> BatchProcessor(IEnumerable<int> batch)
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = _fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -235,7 +235,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -247,13 +247,13 @@ public sealed class RunBatchesTests
 	{
 		// Arrange
 		List<TestItem> processedItems = [];
-		List<TestItem> items = _fixture.CreateMany<TestItem>(100).ToList();
+		List<TestItem> items = fixture.CreateMany<TestItem>(100).ToList();
 
 		async Task<bool> BatchProcessor(IEnumerable<TestItem> batch)
 		{
 			foreach (TestItem item in batch)
 			{
-				byte[] data = _fixture.CreateMany<byte>(100).ToArray();
+				byte[] data = fixture.CreateMany<byte>(100).ToArray();
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -262,7 +262,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();

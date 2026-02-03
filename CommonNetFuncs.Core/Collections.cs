@@ -1019,7 +1019,7 @@ public static partial class Collections
 	/// <returns><see cref="IEnumerable{T}"/> with specified <see langword="property"/> aggregated</returns>
 	public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, string propToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
 	{
-		return collection.StringAggProps([propToAgg], separator, distinct, parallel);
+		return collection.StringAggProps(new HashSet<string> { propToAgg }, separator, distinct, parallel);
 	}
 
 	/// <summary>
@@ -1031,7 +1031,7 @@ public static partial class Collections
 	/// <param name="distinct">Optional: Whether to include only distinct values in the aggregation. Default is true.</param>
 	/// <param name="parallel">Optional: Whether to perform the aggregation in parallel or not. Default is <see langword="false"/>.</param>
 	/// <returns><see cref="IEnumerable{T}"/> with specified properties aggregated</returns>
-	public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, HashSet<string> propsToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
+	public static IEnumerable<T> StringAggProps<T>(this IEnumerable<T>? collection, ISet<string> propsToAgg, string separator = ";", bool distinct = true, bool parallel = false) where T : class, new()
 	{
 		if (collection?.Any() != true)
 		{

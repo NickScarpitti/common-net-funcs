@@ -392,7 +392,6 @@ public static class DirectQuery
 				Func<IDataReader, T> mapper = GetOrCreateMapperDelegate<T>(useCache);
 				while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
 				{
-#pragma warning disable S2139 // Exceptions should be either logged or rethrown but not both
 					try
 					{
 						values.Add(mapper(reader));
@@ -402,7 +401,6 @@ public static class DirectQuery
 						logger.Error(ex, "Error mapping data: @ {ErrorLocation}", ex.GetLocationOfException());
 						throw;
 					}
-#pragma warning restore S2139 // Exceptions should be either logged or rethrown but not both
 				}
 				break;
 			}
@@ -423,7 +421,6 @@ public static class DirectQuery
 		while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
 		{
 			T result;
-#pragma warning disable S2139 // Exceptions should be either logged or rethrown but not both
 			try
 			{
 				result = mapper(reader);
@@ -433,7 +430,7 @@ public static class DirectQuery
 				logger.Error(ex, "Error mapping data @ {ErrorLocation}", ex.GetLocationOfException());
 				throw;
 			}
-#pragma warning restore S2139 // Exceptions should be either logged or rethrown but not both
+
 			yield return result;
 		}
 	}
@@ -443,7 +440,6 @@ public static class DirectQuery
 		while (reader.Read())
 		{
 			T result;
-#pragma warning disable S2139 // Exceptions should be either logged or rethrown but not both
 			try
 			{
 				result = mapper(reader);
@@ -453,7 +449,6 @@ public static class DirectQuery
 				logger.Error(ex, "Error mapping data @ {ErrorLocation}", ex.GetLocationOfException());
 				throw;
 			}
-#pragma warning restore S2139 // Exceptions should be either logged or rethrown but not both
 
 			if (!cancellationToken.IsCancellationRequested)
 			{

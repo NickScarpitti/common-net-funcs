@@ -357,7 +357,7 @@ public static class Random
 	/// <param name="cancellationToken">The cancellation token for this operation.</param>
 	/// <returns>A random string of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if any of the provided bounds are invalid.</exception>
-	public static string GenerateRandomString(int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, HashSet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default)
+	public static string GenerateRandomString(int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, ISet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default)
 	{
 		if (lowerAsciiBound < 0 || upperAsciiBound > 127 || lowerAsciiBound >= upperAsciiBound)
 		{
@@ -436,7 +436,7 @@ public static class Random
 	/// <returns>An enumerable of random strings of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if any of the provided bounds are invalid.</exception>
 	public static IEnumerable<string> GenerateRandomStrings(int numberToGenerate, int maxLength, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126,
-		HashSet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default)
+		ISet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default)
 	{
 		for (int i = 0; i < numberToGenerate; i++)
 		{
@@ -454,12 +454,12 @@ public static class Random
 	/// <param name="charSet">Characters that are to be used in the generated string.</param>
 	/// <param name="cancellationToken">The cancellation token for this operation.</param>
 	/// <returns>A random string of the given length comprised only of characters in either the default or custom character set</returns>
-	public static string GenerateRandomStringByCharSet(int length, HashSet<char>? charSet = null, CancellationToken cancellationToken = default)
+	public static string GenerateRandomStringByCharSet(int length, ISet<char>? charSet = null, CancellationToken cancellationToken = default)
 	{
 		// Use a default character set if none is provided
 		if (charSet == null || charSet.Count == 0)
 		{
-			charSet = new(DefaultCharSet);
+			charSet = DefaultCharSet;
 		}
 
 		ReadOnlySpan<char> charSetSpan = new(charSet.ToArray());

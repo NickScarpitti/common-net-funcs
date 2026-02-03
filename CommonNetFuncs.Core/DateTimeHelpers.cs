@@ -34,7 +34,7 @@ public static class DateTimeHelpers
 			calcBusinessDays--;
 		}
 
-		if (exceptionDates != null && exceptionDates.Count > 0)
+		if (exceptionDates?.Count > 0)
 		{
 			int exceptionDays = 0;
 			foreach (DateTime exceptionDate in exceptionDates)

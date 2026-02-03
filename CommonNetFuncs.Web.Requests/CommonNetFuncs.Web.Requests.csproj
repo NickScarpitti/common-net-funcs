@@ -30,7 +30,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.10</Version>
+		<Version>4.0.12</Version>
 		<MinVerTagPrefix>web.requests-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -75,12 +75,13 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|x64'">
 		<WarningLevel>8</WarningLevel>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FakeItEasy" Version="8.3.0" />
 		<PackageReference Include="MemoryPack" Version="1.21.4" />
 		<PackageReference Include="MessagePack" Version="3.1.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.2" />
@@ -88,7 +89,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.0" PrivateAssets="all" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" PrivateAssets="all" />
 		<PackageReference Include="System.Linq.Async" Version="7.0.0" />
 	</ItemGroup>
 

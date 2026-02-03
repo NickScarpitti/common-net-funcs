@@ -7,12 +7,12 @@ namespace Core.Tests;
 
 public sealed class AsyncTests
 {
-	private readonly Fixture _fixture;
+	private readonly Fixture fixture;
 
 	public AsyncTests()
 	{
-		_fixture = new Fixture();
-		_fixture.Customize(new AutoFakeItEasyCustomization());
+		fixture = new Fixture();
+		fixture.Customize(new AutoFakeItEasyCustomization());
 	}
 
 	#region ObjectFill<T> Simple/Null/Exception
@@ -183,7 +183,7 @@ public sealed class AsyncTests
 		byte[] testData = Enumerable.Range(1, length).Select(x => (byte)x).ToArray();
 		await using MemoryStream ms = new();
 		await using MemoryStream resultMs = new();
-		await resultMs.WriteAsync(testData);
+		await resultMs.WriteAsync(testData, TestContext.Current.CancellationToken);
 		resultMs.Position = 0;
 		Task<MemoryStream> task = Task.FromResult(resultMs);
 
@@ -191,7 +191,7 @@ public sealed class AsyncTests
 
 		ms.Position = 0;
 		byte[] buffer = new byte[testData.Length];
-		await ms.ReadAsync(buffer.AsMemory(0, testData.Length));
+		await ms.ReadAsync(buffer.AsMemory(0, testData.Length), TestContext.Current.CancellationToken);
 		buffer.ShouldBe(testData);
 	}
 

@@ -4,7 +4,7 @@ using CommonNetFuncs.Web.Middleware.CachingMiddleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
-using xRetry;
+using xRetry.v3;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 

@@ -739,9 +739,7 @@ public static class Copy
 		// Handle collections
 		if (sourceType.IsEnumerable() && destType.IsEnumerable())
 		{
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			MethodInfo copyCollectionMethod = typeof(Copy).GetMethod(nameof(CopyCollectionRuntime), BindingFlags.NonPublic | BindingFlags.Static)!;
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			MethodCallExpression copyCall = Expression.Call(copyCollectionMethod, Expression.Convert(sourceValue, typeof(object)), Expression.Constant(destType), depthParam, maxDepthParam);
 			return Expression.Assign(destProperty, Expression.Convert(copyCall, destType));
 		}
@@ -754,9 +752,7 @@ public static class Copy
 			BinaryExpression setDefault = Expression.Assign(destProperty, Expression.Convert(Expression.Constant(null), destType));
 
 			// Recursive copy call
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			MethodInfo copyObjectMethod = typeof(Copy).GetMethod(nameof(CopyObjectRuntime), BindingFlags.NonPublic | BindingFlags.Static)!;
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
 			MethodCallExpression recursiveCopy = Expression.Call(copyObjectMethod, Expression.Convert(sourceValue, typeof(object)), Expression.Constant(destType), Expression.Add(depthParam, Expression.Constant(1)), maxDepthParam);
 			BinaryExpression assignCopy = Expression.Assign(destProperty, Expression.Convert(recursiveCopy, destType));
 			return Expression.IfThenElse(depthCheck, setDefault, assignCopy);

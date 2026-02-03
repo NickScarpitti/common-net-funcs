@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using CommonNetFuncs.Core;
@@ -52,18 +52,12 @@ public class CoreRunBatchesBenchmarks
 	[Benchmark(Description = "RunBatchedProcess - with duplicates")]
 	public bool RunBatchedProcess_WithDuplicates()
 	{
-		return _itemsWithDuplicates.RunBatchedProcess(batch =>
-		{
-			return batch.Any();
-		}, batchSize: 1000, logProgress: false);
+		return _itemsWithDuplicates.RunBatchedProcess(batch => batch.Any(), batchSize: 1000, logProgress: false);
 	}
 
 	[Benchmark(Description = "RunBatchedProcess - large with duplicates")]
 	public bool RunBatchedProcess_LargeWithDuplicates()
 	{
-		return _largeItemsWithDuplicates.RunBatchedProcess(batch =>
-		{
-			return batch.Any();
-		}, batchSize: 10000, logProgress: false);
+		return _largeItemsWithDuplicates.RunBatchedProcess(batch => batch.Any(), batchSize: 10000, logProgress: false);
 	}
 }

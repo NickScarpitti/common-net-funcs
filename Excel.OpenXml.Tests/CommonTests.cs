@@ -4,7 +4,7 @@ using CommonNetFuncs.Excel.OpenXml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using xRetry;
+using xRetry.v3;
 using static CommonNetFuncs.Excel.OpenXml.Common;
 
 namespace Excel.OpenXml.Tests;

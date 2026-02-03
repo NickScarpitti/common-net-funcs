@@ -6,12 +6,12 @@ namespace Csv.Tests;
 
 public sealed class CsvReadHelpersTests
 {
-	private readonly Fixture _fixture;
+	private readonly Fixture fixture;
 	private readonly string _testFilePath;
 
 	public CsvReadHelpersTests()
 	{
-		_fixture = new Fixture();
+		fixture = new Fixture();
 		_testFilePath = Path.GetTempFileName();
 	}
 
@@ -24,7 +24,7 @@ public sealed class CsvReadHelpersTests
 	//public void ReadCsv_WithValidFile_ShouldReturnExpectedRecords(bool hasHeader, string? cultureName)
 	//{
 	//    // Arrange
-	//    List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+	//    List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 	//    CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 	//    string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
@@ -68,7 +68,7 @@ public sealed class CsvReadHelpersTests
 	//public void ReadCsvFromStream_WithValidStream_ShouldReturnExpectedRecords(bool hasHeader, string? cultureName)
 	//{
 	//    // Arrange
-	//    List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+	//    List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 	//    CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 	//    string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
@@ -133,11 +133,11 @@ public sealed class CsvReadHelpersTests
 	public async Task ReadCsv_WithValidFile_ShouldReturnExpectedRecords(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent);
+		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
@@ -179,7 +179,7 @@ public sealed class CsvReadHelpersTests
 	public void ReadCsvFromStream_WithValidStream_ShouldReturnExpectedRecords(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
@@ -227,16 +227,16 @@ public sealed class CsvReadHelpersTests
 	public async Task ReadCsvAsync_WithValidFile_ShouldReturnExpectedRecords(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent);
+		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
 			// Act
-			List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(_testFilePath, hasHeader, cultureInfo);
+			List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(_testFilePath, hasHeader, cultureInfo, cancellationToken: TestContext.Current.CancellationToken);
 
 			// Assert
 			result.ShouldNotBeNull();
@@ -271,14 +271,14 @@ public sealed class CsvReadHelpersTests
 	public async Task ReadCsvFromStreamAsync_WithValidStream_ShouldReturnExpectedRecords(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
 		await using MemoryStream stream = new(System.Text.Encoding.UTF8.GetBytes(csvContent));
 
 		// Act
-		List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(stream, hasHeader, cultureInfo);
+		List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(stream, hasHeader, cultureInfo, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -305,7 +305,7 @@ public sealed class CsvReadHelpersTests
 		await using MemoryStream emptyStream = new();
 
 		// Act
-		List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(emptyStream);
+		List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(emptyStream, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -319,17 +319,17 @@ public sealed class CsvReadHelpersTests
 	public async Task ReadCsvAsyncEnumerable_WithValidFile_ShouldYieldExpectedRecords(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent);
+		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
 			// Act
 			List<TestRecord> result = new();
-			await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(_testFilePath, hasHeader, cultureInfo))
+			await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(_testFilePath, hasHeader, cultureInfo, cancellationToken: TestContext.Current.CancellationToken))
 			{
 				result.Add(record);
 			}
@@ -373,7 +373,7 @@ public sealed class CsvReadHelpersTests
 	public async Task ReadCsvFromStreamAsyncEnumerable_WithValidStream_ShouldYieldExpectedRecords(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
@@ -381,7 +381,7 @@ public sealed class CsvReadHelpersTests
 
 		// Act
 		List<TestRecord> result = new();
-		await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(stream, hasHeader, cultureInfo))
+		await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(stream, hasHeader, cultureInfo, cancellationToken: TestContext.Current.CancellationToken))
 		{
 			result.Add(record);
 		}
@@ -418,7 +418,7 @@ public sealed class CsvReadHelpersTests
 
 		// Act
 		List<TestRecord> result = new();
-		await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(emptyStream))
+		await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(emptyStream, cancellationToken: TestContext.Current.CancellationToken))
 		{
 			result.Add(record);
 		}
@@ -435,11 +435,11 @@ public sealed class CsvReadHelpersTests
 	public async Task ReadCsvToDataTable_WithValidFile_ShouldReturnExpectedDataTable(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent);
+		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
@@ -479,11 +479,11 @@ public sealed class CsvReadHelpersTests
 	public async Task ReadCsvToDataTable_WithType_WithValidFile_ShouldReturnExpectedDataTable(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent);
+		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
@@ -520,7 +520,7 @@ public sealed class CsvReadHelpersTests
 	public void ReadCsvStreamToDataTable_WithValidStream_ShouldReturnExpectedDataTable(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
@@ -568,7 +568,7 @@ public sealed class CsvReadHelpersTests
 	public void ReadCsvStreamToDataTable_WithType_WithValidStream_ShouldReturnExpectedDataTable(bool hasHeader, string? cultureName)
 	{
 		// Arrange
-		List<TestRecord> expectedRecords = _fixture.CreateMany<TestRecord>(3).ToList();
+		List<TestRecord> expectedRecords = fixture.CreateMany<TestRecord>(3).ToList();
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);

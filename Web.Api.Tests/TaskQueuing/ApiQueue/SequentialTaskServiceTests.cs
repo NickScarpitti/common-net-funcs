@@ -6,18 +6,17 @@ namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 
 public class SequentialTaskServiceTests
 {
-  [Fact]
-  public async Task ExecuteAsync_Should_Invoke_Processor()
-  {
-    Mock<SequentialTaskProcessor> processorMock = new(MockBehavior.Strict, new BoundedChannelOptions(1), 1000);
-    processorMock.Setup(x => x.EnqueueAsync(It.IsAny<Func<CancellationToken, Task<int>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(99);
+	[Fact]
+	public async Task ExecuteAsync_Should_Invoke_Processor()
+	{
+		Mock<SequentialTaskProcessor> processorMock = new(MockBehavior.Strict, new BoundedChannelOptions(1), 1000);
+		processorMock.Setup(x => x.EnqueueAsync(It.IsAny<Func<CancellationToken, Task<int>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(99);
 
-    SequentialTaskService service = new(processorMock.Object);
+		SequentialTaskService service = new(processorMock.Object);
 
-    int result = await service.ExecuteAsync(_ => Task.FromResult(99));
+		int result = await service.ExecuteAsync(_ => Task.FromResult(99), TestContext.Current.CancellationToken);
 
-    result.ShouldBe(99);
-    processorMock.Verify(x => x.EnqueueAsync(It.IsAny<Func<CancellationToken, Task<int>>>(), It.IsAny<CancellationToken>()), Moq.Times.Once);
-  }
+		result.ShouldBe(99);
+		processorMock.Verify(x => x.EnqueueAsync(It.IsAny<Func<CancellationToken, Task<int>>>(), It.IsAny<CancellationToken>()), Moq.Times.Once);
+	}
 }

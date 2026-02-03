@@ -3,18 +3,18 @@ using CommonNetFuncs.Excel.OpenXml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using xRetry;
+using xRetry.v3;
 
 namespace Excel.OpenXml.Tests;
 
 public sealed class ExportTests : IDisposable
 {
-	private readonly Fixture _fixture;
+	private readonly Fixture fixture;
 	private readonly MemoryStream _memoryStream;
 
 	public ExportTests()
 	{
-		_fixture = new Fixture();
+		fixture = new Fixture();
 		_memoryStream = new MemoryStream();
 	}
 
@@ -56,7 +56,7 @@ public sealed class ExportTests : IDisposable
 	public void GenericExcelExport_WithValidList_ShouldCreateExcelFile()
 	{
 		// Arrange
-		List<TestModel> testData = _fixture.CreateMany<TestModel>(3).ToList();
+		List<TestModel> testData = fixture.CreateMany<TestModel>(3).ToList();
 
 		// Act
 		MemoryStream? result = testData.GenericExcelExport();
@@ -87,7 +87,7 @@ public sealed class ExportTests : IDisposable
 	public void GenericExcelExport_WithTableFormatting_ShouldRespectTableSettings(bool createTable, string tableName)
 	{
 		// Arrange
-		List<TestModel> testData = _fixture.CreateMany<TestModel>(2).ToList();
+		List<TestModel> testData = fixture.CreateMany<TestModel>(2).ToList();
 
 		// Act
 		MemoryStream? result = testData.GenericExcelExport(
@@ -139,7 +139,7 @@ public sealed class ExportTests : IDisposable
 	//public void AddGenericTable_WithValidData_ShouldAddNewSheet()
 	//{
 	//    // Arrange
-	//    List<TestModel> testData = _fixture.CreateMany<TestModel>(2).ToList();
+	//    List<TestModel> testData = fixture.CreateMany<TestModel>(2).ToList();
 	//    using SpreadsheetDocument doc = SpreadsheetDocument.Create(_memoryStream, SpreadsheetDocumentType.Workbook);
 	//    doc.AddWorkbookPart();
 
@@ -156,7 +156,7 @@ public sealed class ExportTests : IDisposable
 	public void ExportFromTable_WithSkipColumns_ShouldOmitSpecifiedColumns()
 	{
 		// Arrange
-		List<TestModel> testData = _fixture.CreateMany<TestModel>(2).ToList();
+		List<TestModel> testData = fixture.CreateMany<TestModel>(2).ToList();
 		List<string> skipColumns = new() { "Description" };
 
 		using SpreadsheetDocument doc = SpreadsheetDocument.Create(_memoryStream, SpreadsheetDocumentType.Workbook);
@@ -181,7 +181,7 @@ public sealed class ExportTests : IDisposable
 	public async Task ExportFromTable_WithCancellation_ShouldRespectCancellationToken()
 	{
 		// Arrange
-		List<TestModel> testData = _fixture.CreateMany<TestModel>(100).ToList();
+		List<TestModel> testData = fixture.CreateMany<TestModel>(100).ToList();
 		using CancellationTokenSource cts = new();
 		using SpreadsheetDocument doc = SpreadsheetDocument.Create(_memoryStream, SpreadsheetDocumentType.Workbook);
 		doc.AddWorkbookPart();

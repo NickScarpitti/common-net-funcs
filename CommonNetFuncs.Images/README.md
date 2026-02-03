@@ -158,3 +158,14 @@ await OptimizeImage(@"C:\path\to\input_image.jpg", @"C:\path\to\output_image.jpg
 ```
 
 </details>
+## Installation
+
+Install via NuGet:
+
+```bash
+dotnet add package CommonNetFuncs.Images
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

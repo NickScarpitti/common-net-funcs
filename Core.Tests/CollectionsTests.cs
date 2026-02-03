@@ -36,11 +36,11 @@ public enum ETest
 
 public sealed class CollectionsTests
 {
-	private readonly Fixture _fixture;
+	private readonly Fixture fixture;
 
 	public CollectionsTests()
 	{
-		_fixture = new Fixture();
+		fixture = new Fixture();
 	}
 
 	#region AnyFast Tests
@@ -65,7 +65,7 @@ public sealed class CollectionsTests
 		List<string> collection = new();
 		for (int i = 0; i < count; i++)
 		{
-			collection.Add(_fixture.Create<string>());
+			collection.Add(fixture.Create<string>());
 		}
 
 		// Act
@@ -95,7 +95,7 @@ public sealed class CollectionsTests
 		List<string> list = new();
 		for (int i = 0; i < count; i++)
 		{
-			list.Add(_fixture.Create<string>());
+			list.Add(fixture.Create<string>());
 		}
 
 		// Act
@@ -125,7 +125,7 @@ public sealed class CollectionsTests
 		ConcurrentBag<string> bag = new();
 		for (int i = 0; i < count; i++)
 		{
-			bag.Add(_fixture.Create<string>());
+			bag.Add(fixture.Create<string>());
 		}
 
 		// Act
@@ -155,7 +155,7 @@ public sealed class CollectionsTests
 		string[] array = new string[count];
 		for (int i = 0; i < count; i++)
 		{
-			array[i] = _fixture.Create<string>();
+			array[i] = fixture.Create<string>();
 		}
 
 		// Act
@@ -185,7 +185,7 @@ public sealed class CollectionsTests
 		Dictionary<string, string> dict = new();
 		for (int i = 0; i < count; i++)
 		{
-			dict.Add(_fixture.Create<string>(), _fixture.Create<string>());
+			dict.Add(fixture.Create<string>(), fixture.Create<string>());
 		}
 
 		// Act
@@ -215,7 +215,7 @@ public sealed class CollectionsTests
 		ConcurrentDictionary<string, string> dict = new();
 		for (int i = 0; i < count; i++)
 		{
-			dict.TryAdd(_fixture.Create<string>(), _fixture.Create<string>());
+			dict.TryAdd(fixture.Create<string>(), fixture.Create<string>());
 		}
 
 		// Act
@@ -274,7 +274,7 @@ public sealed class CollectionsTests
 				};
 
 		// Act
-		dict.AddDictionaryItems(pairs);
+		dict.AddDictionaryItems(pairs, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		dict.ShouldContainKey("test1");
@@ -295,7 +295,7 @@ public sealed class CollectionsTests
 				};
 
 		// Act
-		dict.AddDictionaryItems(pairs);
+		dict.AddDictionaryItems(pairs, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		dict["test1"].ShouldBe(42);
@@ -314,7 +314,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", null };
 
 		// Act
-		bag.AddRange(items);
+		bag.AddRange(items, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		bag.Count.ShouldBe(2);
@@ -330,7 +330,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", null };
 
 		// Act
-		bag.AddRangeParallel(items);
+		bag.AddRangeParallel(items, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		bag.Count.ShouldBe(2);
@@ -347,7 +347,7 @@ public sealed class CollectionsTests
 		ParallelOptions options = new() { MaxDegreeOfParallelism = 2 };
 
 		// Act
-		bag.AddRangeParallel(items, options);
+		bag.AddRangeParallel(items, options, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		bag.Count.ShouldBe(2);
@@ -363,7 +363,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", null };
 
 		// Act
-		hashSet.AddRange(items);
+		hashSet.AddRange(items, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		hashSet.Count.ShouldBe(2);
@@ -382,7 +382,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		items.SetValue(item => item.Name = item.Name?.ToUpper());
+		items.SetValue(item => item.Name = item.Name?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		items.Count.ShouldBe(items.Count);
@@ -399,7 +399,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		IEnumerable<TestClass> result = items.SetValueEnumerate(item => item.Name = item.Name?.ToUpper());
+		IEnumerable<TestClass> result = items.SetValueEnumerate(item => item.Name = item.Name?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Count().ShouldBe(items.Count);
@@ -416,7 +416,7 @@ public sealed class CollectionsTests
 		List<string> items = new() { "test1", "test2" };
 
 		// Act
-		items.SetValue(s => s?.ToUpper());
+		items.SetValue(s => s?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		items.Count.ShouldBe(2);
@@ -431,7 +431,7 @@ public sealed class CollectionsTests
 		List<string> items = new() { "test1", "test2" };
 
 		// Act
-		List<string?> result = items.SetValueEnumerate(s => s?.ToUpper()).ToList();
+		List<string?> result = items.SetValueEnumerate(s => s?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken).ToList();
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -446,7 +446,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		items.SetValueParallel(item => item.Name = item.Name?.ToUpper());
+		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		items.Count.ShouldBe(2);
@@ -461,8 +461,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), 2);
-
+		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), 2, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 		// Assert
 		items.Count.ShouldBe(2);
 		items.ShouldContain(item => item.Name == "TEST1");
@@ -480,7 +479,7 @@ public sealed class CollectionsTests
 		int[,] array = new int[,] { { 1, 2 }, { 3, 4 } };
 
 		// Act
-		array.SetValue((arr, indices) => arr.SetValue(((int)arr.GetValue(indices)!) * 2, indices));
+		array.SetValue((arr, indices) => arr.SetValue(((int)arr.GetValue(indices)!) * 2, indices), cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		array[0, 0].ShouldBe(2);
@@ -650,7 +649,7 @@ public sealed class CollectionsTests
 		TestClass partial = new() { Id = 2 };
 
 		// Act
-		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues);
+		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -673,7 +672,7 @@ public sealed class CollectionsTests
 		TestClass partial = new() { Id = 3 };
 
 		// Act
-		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues);
+		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -695,7 +694,7 @@ public sealed class CollectionsTests
 		TestClass partial = new() { Id = 2, Name = "test3" };
 
 		// Act
-		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues);
+		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		if (ignoreDefaultValues)
@@ -729,7 +728,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", false, null);
 
 		// Act
-		List<TestClass> result = dataTable.ToList<TestClass>();
+		List<TestClass> result = dataTable.ToList<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -758,7 +757,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", (short)0, DateTime.MaxValue, DateOnly.MaxValue);
 
 		// Act
-		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -789,7 +788,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", (short)0, DateOnly.MaxValue, DateTime.MaxValue);
 
 		// Act
-		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -825,7 +824,7 @@ public sealed class CollectionsTests
 		if (!badFirstDate && !badSecondDate)
 		{
 			// Act
-			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 			// Assert
 			result.Count.ShouldBe(2);
@@ -867,7 +866,7 @@ public sealed class CollectionsTests
 		if (!badFirstDate && !badSecondDate)
 		{
 			// Act
-			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true);
+			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 			// Assert
 			result.Count.ShouldBe(2);
@@ -902,7 +901,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", false);
 
 		// Act
-		List<TestClass> result = dataTable.ToListParallel<TestClass>();
+		List<TestClass> result = dataTable.ToListParallel<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -922,7 +921,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2");
 
 		// Act
-		List<TestClass> result = dataTable.ToEnumerableParallel<TestClass>().ToList();
+		List<TestClass> result = dataTable.ToEnumerableParallel<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken).ToList();
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -942,7 +941,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2");
 
 		// Act
-		List<TestClass> result = dataTable.ToEnumerableStreaming<TestClass>().ToList();
+		List<TestClass> result = dataTable.ToEnumerableStreaming<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken).ToList();
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -1407,7 +1406,7 @@ public sealed class CollectionsTests
 				};
 
 		// Act
-		List<TestClass> result = collection.StringAggProps(["Name", "Description"], distinct: distinct).ToList();
+		List<TestClass> result = collection.StringAggProps(new HashSet<string> { "Name", "Description" }, distinct: distinct).ToList();
 
 		// Assert
 		if (distinct)
@@ -1441,7 +1440,7 @@ public sealed class CollectionsTests
 		List<TestClass> collection = new() { new TestClass { Id = 1, Name = "test1" } };
 
 		// Act & Assert
-		Should.Throw<ArgumentException>(() => collection.StringAggProps([]).ToList());
+		Should.Throw<ArgumentException>(() => collection.StringAggProps(new HashSet<string>()).ToList());
 	}
 
 	#endregion

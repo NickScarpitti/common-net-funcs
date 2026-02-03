@@ -40,7 +40,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("\"result\"", Encoding.UTF8, "application/json")
 		};
 
-		string? result = await restHelpers.RestRequest<string, string>(options);
+		string? result = await restHelpers.RestRequest<string, string>(options, TestContext.Current.CancellationToken);
 
 		result.ShouldBe("result");
 	}
@@ -67,7 +67,7 @@ public sealed class RestHelpersCommonTests
 		};
 
 		List<string?> results = new();
-		await foreach (StringWrapper? item in restHelpers.StreamingRestRequest<StringWrapper, string>(options))
+		await foreach (StringWrapper? item in restHelpers.StreamingRestRequest<StringWrapper, string>(options, TestContext.Current.CancellationToken))
 		{
 			results.Add(item?.Value);
 		}
@@ -87,7 +87,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("\"foo\"", Encoding.UTF8, "application/json")
 		};
 
-		RestObject<string> result = await restHelpers.RestRequestObject<string, string>(options);
+		RestObject<string> result = await restHelpers.RestRequestObject<string, string>(options, TestContext.Current.CancellationToken);
 
 		result.Result.ShouldBe("foo");
 		result.Response.ShouldNotBeNull();
@@ -106,7 +106,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("[\"x\",\"y\"]", Encoding.UTF8, "application/json")
 		};
 
-		StreamingRestObject<string> result = await restHelpers.StreamingRestRequestObject<string, string>(options);
+		StreamingRestObject<string> result = await restHelpers.StreamingRestRequestObject<string, string>(options, TestContext.Current.CancellationToken);
 
 		List<string?> items = new();
 		await foreach (string? item in result.Result!)

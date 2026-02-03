@@ -56,7 +56,7 @@ public sealed class RandomTests
 	public void GetRandomInts_GeneratesCorrectNumberOfValuesInRange(int count, int min, int max)
 	{
 		// Act
-		IEnumerable<int> results = GetRandomInts(count, min, max);
+		IEnumerable<int> results = GetRandomInts(count, min, max, TestContext.Current.CancellationToken);
 
 		// Assert
 		results.Count().ShouldBe(count);
@@ -92,7 +92,7 @@ public sealed class RandomTests
 	public void GetRandomDoubles_GeneratesCorrectNumberAndPrecision(int count, int precision)
 	{
 		// Act
-		IEnumerable<double> results = GetRandomDoubles(count, precision);
+		IEnumerable<double> results = GetRandomDoubles(count, precision, TestContext.Current.CancellationToken);
 
 		// Assert
 		results.Count().ShouldBe(count);
@@ -129,7 +129,7 @@ public sealed class RandomTests
 	public void GetRandomDecimals_GeneratesCorrectNumberAndPrecision(int count, int precision)
 	{
 		// Act
-		IEnumerable<decimal> results = GetRandomDecimals(count, precision);
+		IEnumerable<decimal> results = GetRandomDecimals(count, precision, TestContext.Current.CancellationToken);
 
 		// Assert
 		results.Count().ShouldBe(count);
@@ -145,7 +145,7 @@ public sealed class RandomTests
 		List<int> copy = original.ToList();
 
 		// Act
-		original.ShuffleListInPlace();
+		original.ShuffleListInPlace(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		original.Count.ShouldBe(copy.Count);
@@ -177,7 +177,7 @@ public sealed class RandomTests
 	public void GenerateRandomString_RespectsLengthBounds(int maxLength, int minLength)
 	{
 		// Act
-		string result = GenerateRandomString(maxLength, minLength);
+		string result = GenerateRandomString(maxLength, minLength, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Length.ShouldBeGreaterThanOrEqualTo(minLength);
@@ -191,7 +191,7 @@ public sealed class RandomTests
 	public void GenerateRandomString_RespectsAsciiRange(int maxLength, int minLength, int lower, int upper)
 	{
 		// Act
-		string result = GenerateRandomString(maxLength, minLength, lower, upper);
+		string result = GenerateRandomString(maxLength, minLength, lower, upper, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.All(c => c >= lower && c <= upper).ShouldBeTrue();
@@ -204,10 +204,10 @@ public sealed class RandomTests
 		HashSet<char> blacklist = ['a', 'e', 'i', 'o', 'u'];
 
 		// Act
-		string result = GenerateRandomString(100, blacklistedCharacters: blacklist);
+		string result = GenerateRandomString(100, blacklistedCharacters: blacklist, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
-		result.Any(c => blacklist.Contains(c)).ShouldBeFalse();
+		result.Any(blacklist.Contains).ShouldBeFalse();
 	}
 
 	[Theory]
@@ -216,7 +216,7 @@ public sealed class RandomTests
 	public void GenerateRandomStrings_GeneratesCorrectNumber(int count, int length)
 	{
 		// Act
-		IEnumerable<string> results = GenerateRandomStrings(count, length);
+		IEnumerable<string> results = GenerateRandomStrings(count, length, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		results.Count().ShouldBe(count);
@@ -232,7 +232,7 @@ public sealed class RandomTests
 		HashSet<char> charSet = ['A', 'B', 'C', '1', '2', '3'];
 
 		// Act
-		string result = GenerateRandomStringByCharSet(length, charSet);
+		string result = GenerateRandomStringByCharSet(length, charSet, TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Length.ShouldBe(length);
@@ -245,7 +245,7 @@ public sealed class RandomTests
 	public void GenerateRandomStringByCharSet_UsesDefaultCharSet(int length)
 	{
 		// Act
-		string result = GenerateRandomStringByCharSet(length);
+		string result = GenerateRandomStringByCharSet(length, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Length.ShouldBe(length);

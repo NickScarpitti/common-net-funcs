@@ -125,3 +125,15 @@ Gets the key frame spacing of the specified video file using FFMpeg. Optionally 
 ```
 
 </details>
+
+## Installation
+
+Install via NuGet:
+
+```bash
+dotnet add package CommonNetFuncs.Media.Ffmpeg
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

@@ -1,9 +1,8 @@
-﻿using BenchmarkDotNet.Reports;
-using BenchmarkDotNet.Running;
+﻿using BenchmarkDotNet.Running;
 
 namespace BenchmarkSuite;
 
-internal class Program
+internal static class Program
 {
 	// static void Main(string[] args)
 	// {
@@ -14,5 +13,8 @@ internal class Program
 
 	// This setup allow running specific benchmarks from command line like this:
 	// dotnet run -c Release -- --job short --runtimes Net10_0 --filter *BenchmarkClass1*
-	static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+	static void Main(string[] args)
+	{
+		BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+	}
 }

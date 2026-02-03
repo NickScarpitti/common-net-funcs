@@ -166,9 +166,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 			try
 			{
 				TResult? result = await operation(true, cancellationToken).ConfigureAwait(false);
-#pragma warning disable S6667 // Logging in a catch clause should pass the caught exception as a parameter.
 				logger.Warn(AddCircularRefTemplate, typeof(TEntity).Name);
-#pragma warning restore S6667 // Logging in a catch clause should pass the caught exception as a parameter.
 				circularReferencingEntities.TryAdd(typeof(TEntity), true);
 				return result;
 			}
@@ -202,9 +200,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 			try
 			{
 				enumeratedReader = queryBuilder(true).AsAsyncEnumerable();
-#pragma warning disable S6667 // Logging in a catch clause should pass the caught exception as a parameter.
 				logger.Warn(AddCircularRefTemplate, typeof(TEntity).Name);
-#pragma warning restore S6667 // Logging in a catch clause should pass the caught exception as a parameter.
 				circularReferencingEntities.TryAdd(typeof(TEntity), true);
 			}
 			catch (Exception ex2)

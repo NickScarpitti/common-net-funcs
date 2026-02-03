@@ -13,13 +13,13 @@ namespace Web.Api.Tests;
 public sealed class GenericEndpointsTests
 {
 	private readonly IFixture fixture;
-	private readonly GenericEndpoints _sut;
+	private readonly GenericEndpoints sut;
 
 	public GenericEndpointsTests()
 	{
 		fixture = new Fixture()
 				.Customize(new AutoFakeItEasyCustomization());
-		_sut = new GenericEndpoints();
+		sut = new GenericEndpoints();
 	}
 
 	public sealed class TestEntity
@@ -46,7 +46,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await _sut.CreateMany(models, dbContextActions, removeNavigationProps);
+		ActionResult<List<TestEntity>> result = await sut.CreateMany(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -64,7 +64,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await _sut.CreateMany(models, dbContextActions);
+		ActionResult<List<TestEntity>> result = await sut.CreateMany(models, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -81,7 +81,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<TestEntity> result = await _sut.Delete(model, dbContextActions, removeNavigationProps);
+		ActionResult<TestEntity> result = await sut.Delete(model, dbContextActions, removeNavigationProps);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -102,7 +102,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await _sut.DeleteMany(models, dbContextActions, removeNavigationProps);
+		ActionResult<List<TestEntity>> result = await sut.DeleteMany(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -119,7 +119,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys)).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await _sut.DeleteManyByKeys(keys, dbContextActions);
+		ActionResult<List<TestEntity>> result = await sut.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -140,7 +140,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<TestEntity> result = await _sut.Patch(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await sut.Patch(1, patch, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -163,7 +163,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<TestEntity> result = await _sut.Patch(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestEntity> result = await sut.Patch(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -182,7 +182,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(Task.FromResult<TestEntity?>(null));
 
 		// Act
-		ActionResult<TestEntity> result = await _sut.Patch(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await sut.Patch(1, patch, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -200,7 +200,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(model);
 
 		// Act
-		ActionResult<TestEntity> result = await _sut.Patch(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await sut.Patch(1, patch, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<ObjectResult>();
@@ -218,7 +218,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(model);
 
 		// Act
-		ActionResult<TestEntity> result = await _sut.Patch(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await sut.Patch(1, patch, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -233,16 +233,16 @@ public sealed class GenericEndpointsTests
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
 		const int expectedDeletedCount = 3;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Returns(expectedDeletedCount);
+		A.CallTo(() => dbContextActions.DeleteMany(whereClause, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(expectedDeletedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
 		((OkObjectResult)result.Result!).Value.ShouldBe(expectedDeletedCount);
-		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).MustHaveHappenedOnceExactly();
+		A.CallTo(() => dbContextActions.DeleteMany(whereClause, A<GlobalFilterOptions?>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 	}
 
 	[Fact]
@@ -251,10 +251,10 @@ public sealed class GenericEndpointsTests
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 100;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Returns(0);
+		A.CallTo(() => dbContextActions.DeleteMany(A<Expression<Func<TestEntity, bool>>>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(0);
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -268,10 +268,10 @@ public sealed class GenericEndpointsTests
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Returns(Task.FromResult<int?>(null));
+		A.CallTo(() => dbContextActions.DeleteMany(whereClause, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(Task.FromResult<int?>(null));
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -283,10 +283,10 @@ public sealed class GenericEndpointsTests
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.DeleteMany(whereClause, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -300,16 +300,16 @@ public sealed class GenericEndpointsTests
 		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
 		const int expectedUpdatedCount = 5;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(expectedUpdatedCount);
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(expectedUpdatedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
 		((OkObjectResult)result.Result!).Value.ShouldBe(expectedUpdatedCount);
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).MustHaveHappenedOnceExactly();
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 	}
 
 	[Fact]
@@ -319,10 +319,10 @@ public sealed class GenericEndpointsTests
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 100;
 		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(0);
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(0);
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -338,10 +338,10 @@ public sealed class GenericEndpointsTests
 
 		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(Task.FromResult<int?>(null));
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(Task.FromResult<int?>(null));
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -354,10 +354,10 @@ public sealed class GenericEndpointsTests
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
 		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -372,10 +372,10 @@ public sealed class GenericEndpointsTests
 
 		const int expectedUpdatedCount = 2;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig)).Returns(expectedUpdatedCount);
+		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(expectedUpdatedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -390,10 +390,10 @@ public sealed class GenericEndpointsTests
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Name.Contains("delete");
 		const int expectedDeletedCount = 1000;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(whereClause)).Returns(expectedDeletedCount);
+		A.CallTo(() => dbContextActions.DeleteMany(A<Expression<Func<TestEntity, bool>>>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(expectedDeletedCount);
 
 		// Act
-		ActionResult<int> result = await _sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
+		ActionResult<int> result = await sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();

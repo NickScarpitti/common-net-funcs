@@ -547,6 +547,7 @@ public sealed class CopyTests
 	public void GetLimitedDeepCopyCache_ShouldNotThrow()
 	{
 		// Arrange
+		Copy.DeepCopyCacheManager.SetUseLimitedCache(true);
 		Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
 		SourceClass source = new() { Id = 42, Name = "CacheTest" };
 
@@ -564,6 +565,7 @@ public sealed class CopyTests
 	public void GetLimitedCache_ShouldNotThrow()
 	{
 		// Arrange
+		Copy.CopyCacheManager.SetUseLimitedCache(true);
 		Copy.CopyCacheManager.SetLimitedCacheSize(10);
 		SourceClass source = new() { Id = 42, Name = "CacheTest" };
 		DestinationClass dest = new();

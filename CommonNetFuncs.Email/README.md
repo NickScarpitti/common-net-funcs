@@ -62,10 +62,6 @@ Install via NuGet:
 dotnet add package CommonNetFuncs.Email
 ```
 
-## Dependencies
-
-- MailKit (>= 4.9.0)
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

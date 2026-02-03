@@ -109,12 +109,6 @@ Install via NuGet:
 dotnet add package CommonNetFuncs.Sql.PostgreSql
 ```
 
-## Dependencies
-
-- CommonNetFuncs.Core
-- CommonNetFuncs.Sql.Common
-- Npgsql (>= 9.1.1)
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

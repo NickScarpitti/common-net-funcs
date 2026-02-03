@@ -44,11 +44,6 @@ Install via NuGet:
 dotnet add package CommonNetFuncs.Web.Aws.S3
 ```
 
-## Dependencies
-
-- AWSSDK.S3 (>= 4.0.2.2)
-- CommonNetFuncs.Core
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

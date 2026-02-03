@@ -120,12 +120,12 @@ using CommonNetFuncs.Hangfire;
 public async Task ProcessPayment(int paymentId)
 {
     var payment = await GetPayment(paymentId);
-    
+
     if (payment.Status == PaymentStatus.AlreadyProcessed)
     {
         // Don't retry - this is a permanent failure condition
         throw new HangfireJobException(
-            "Payment has already been processed", 
+            "Payment has already been processed",
             allowRetry: false);
     }
 }
@@ -166,7 +166,7 @@ public async Task UpdateCustomerData(int customerId)
     try
     {
         var customer = await dbContext.Customers.FindAsync(customerId);
-        
+
         if (customer == null)
         {
             throw new HangfireJobException(
@@ -175,7 +175,7 @@ public async Task UpdateCustomerData(int customerId)
                 entityId: customerId,
                 allowRetry: false); // Don't retry if customer doesn't exist
         }
-        
+
         // Process customer...
     }
     catch (DbUpdateException ex)
@@ -233,7 +233,7 @@ The monitor will automatically log pending jobs when the application shuts down:
 ```
 or
 ```
-[WARN] Application shutting down with 5 pending Hangfire job(s): 2 processing, 2 enqueued, 1 scheduled. 
+[WARN] Application shutting down with 5 pending Hangfire job(s): 2 processing, 2 enqueued, 1 scheduled.
        Jobs will be persisted in database and resumed by next instance.
 ```
 
@@ -264,10 +264,10 @@ using CommonNetFuncs.Hangfire;
 public async Task ShutdownGracefully()
 {
     logger.Info("Starting graceful shutdown...");
-    
+
     // Wait for all Hangfire jobs to complete
     await WaitForHangfireJobsToComplete.WaitForAllHangfireJobsToComplete();
-    
+
     logger.Info("All jobs completed, continuing shutdown");
 }
 ```
@@ -284,13 +284,13 @@ public async Task RunIntegrationTest()
     // Enqueue test jobs
     BackgroundJob.Enqueue(() => ProcessTestData());
     BackgroundJob.Enqueue(() => ValidateResults());
-    
+
     // Wait for jobs to complete before asserting results
     // Check every 10 seconds, timeout after 10 minutes
     await WaitForHangfireJobsToComplete.WaitForAllHangfireJobsToComplete(
-        checkIntervalSeconds: 10, 
+        checkIntervalSeconds: 10,
         maxWaitMinutes: 10);
-    
+
     // Assert test results...
 }
 ```
@@ -318,12 +318,6 @@ Install via NuGet:
 ```bash
 dotnet add package CommonNetFuncs.Hangfire
 ```
-
-## Dependencies
-
-- Hangfire.AspNetCore (>= 1.8.22)
-- Hangfire.Core (>= 1.8.22)
-- NLog.Extensions.Logging (>= 6.1.1)
 
 ## License
 

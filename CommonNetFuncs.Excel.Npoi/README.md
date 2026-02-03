@@ -44,12 +44,6 @@ Install via NuGet:
 dotnet add package CommonNetFuncs.Excel.Npoi
 ```
 
-## Dependencies
-
-- NPOI (>= 2.9.0)
-- CommonNetFuncs.Excel.Common
-- CommonNetFuncs.Office.Common
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

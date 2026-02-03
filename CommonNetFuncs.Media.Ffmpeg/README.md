@@ -134,11 +134,6 @@ Install via NuGet:
 dotnet add package CommonNetFuncs.Media.Ffmpeg
 ```
 
-## Dependencies
-
-- FFMpegCore (>= 6.1.1)
-- CommonNetFuncs.Core
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/NickScarpitti/common-net-funcs/blob/main/LICENSE) file for details.

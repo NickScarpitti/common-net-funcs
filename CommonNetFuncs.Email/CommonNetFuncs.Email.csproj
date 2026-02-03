@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.8.34</Version>
+    <Version>3.8.35</Version>
     <MinVerTagPrefix>email-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -87,6 +87,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
+    <ProjectReference Include="..\CommonNetFuncs.Hangfire\CommonNetFuncs.Hangfire.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -30,7 +30,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.10</Version>
+		<Version>4.0.12</Version>
 		<MinVerTagPrefix>web.requests-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -75,7 +75,7 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReducedBuild|x64'">
 		<WarningLevel>8</WarningLevel>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>

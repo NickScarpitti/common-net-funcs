@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.12</Version>
+		<Version>4.0.13</Version>
 		<MinVerTagPrefix>hangfire-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -42,6 +42,9 @@
   <ItemGroup>
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.22" />
     <PackageReference Include="Hangfire.Core" Version="1.8.22" />
+
+		<!-- Required to eliminate package vulnerability brought in by Hangfire -->
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" /> 
 		<PackageReference Include="MinVer" Version="7.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
+using Newtonsoft.Json;
 using static CommonNetFuncs.Compression.Files;
 using static CommonNetFuncs.Email.EmailConstants;
 
@@ -96,6 +97,7 @@ public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposa
 
 public sealed class MailAttachmentBytes : IMailAttachment
 {
+	[JsonConstructor] // Required for Hangfire serialization
 	public MailAttachmentBytes(string? AttachmentName = null, byte[]? AttachmentBytes = null)
 	{
 		this.AttachmentName = AttachmentName;
@@ -200,17 +202,17 @@ public sealed class EmailAddresses(MailAddress? fromAddress = null, IEnumerable<
 	/// <summary>
 	/// Gets or sets the collection of recipient email addresses for the message.
 	/// </summary>
-	public IEnumerable<MailAddress> ToAddresses { get; set; } = toAddresses ?? [];
+	public MailAddress[] ToAddresses { get; set; } = toAddresses?.ToArray() ?? Array.Empty<MailAddress>();
 
 	/// <summary>
 	/// Gets or sets the collection of email addresses to be included as CC (carbon copy) recipients.
 	/// </summary>
-	public IEnumerable<MailAddress> CcAddresses { get; set; } = ccAddresses ?? [];
+	public MailAddress[] CcAddresses { get; set; } = ccAddresses?.ToArray() ?? Array.Empty<MailAddress>();
 
 	/// <summary>
 	/// Gets or sets the collection of email addresses to be included as blind carbon copy (BCC) recipients.
 	/// </summary>
-	public IEnumerable<MailAddress> BccAddresses { get; set; } = bccAddresses ?? [];
+	public MailAddress[] BccAddresses { get; set; } = bccAddresses?.ToArray() ?? Array.Empty<MailAddress>();
 }
 
 public sealed class EmailContent(string? subject = null, string? body = null, bool bodyIsHtml = false, IEnumerable<IMailAttachment>? attachments = null, bool autoDisposeAttachments = true, bool zipAttachments = false)
@@ -233,7 +235,7 @@ public sealed class EmailContent(string? subject = null, string? body = null, bo
 	/// <summary>
 	/// Gets or sets the collection of attachments associated with the mail message.
 	/// </summary>
-	public IEnumerable<IMailAttachment>? Attachments { get; set; } = attachments;
+	public IMailAttachment[]? Attachments { get; set; } = attachments?.ToArray();
 
 	/// <summary>
 	/// Gets or sets a value indicating whether attachments should be automatically disposed when they are no longer needed.
@@ -271,7 +273,7 @@ public sealed class EmailContentBytes(string? subject = null, string? body = nul
 	/// <summary>
 	/// Gets or sets the collection of byte-based attachments associated with the mail message.
 	/// </summary>
-	public IEnumerable<MailAttachmentBytes>? Attachments { get; set; } = attachments;
+	public MailAttachmentBytes[]? Attachments { get; set; } = attachments?.ToArray();
 
 	/// <summary>
 	/// Gets or sets a value indicating whether email attachments should be compressed into a ZIP archive.
@@ -332,7 +334,7 @@ public static class Email
 			}
 
 			// Check that there is at least one recipient
-			success = (success && sendEmailConfig.EmailAddresses.ToAddresses.Any()) || sendEmailConfig.EmailAddresses.CcAddresses?.Any() == true || sendEmailConfig.EmailAddresses.BccAddresses?.Any() == true;
+			success = (success && sendEmailConfig.EmailAddresses.ToAddresses.Length != 0) || sendEmailConfig.EmailAddresses.CcAddresses?.Length > 0 || sendEmailConfig.EmailAddresses.BccAddresses?.Length > 0;
 
 			// Validate all recipient email addresses
 			success = success && sendEmailConfig.EmailAddresses.ToAddresses.All(mailAddress => mailAddress.Email.IsValidEmail());
@@ -344,11 +346,11 @@ public static class Email
 				MimeMessage email = new();
 				email.From.Add(new MailboxAddress(sendEmailConfig.EmailAddresses.FromAddress?.Name, sendEmailConfig.EmailAddresses.FromAddress?.Email));
 				email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
-				if (sendEmailConfig.EmailAddresses.CcAddresses?.Any() == true)
+				if (sendEmailConfig.EmailAddresses.CcAddresses?.Length > 0)
 				{
 					email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
 				}
-				if (sendEmailConfig.EmailAddresses.BccAddresses?.Any() == true)
+				if (sendEmailConfig.EmailAddresses.BccAddresses?.Length > 0)
 				{
 					email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
 				}

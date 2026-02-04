@@ -447,8 +447,8 @@ public sealed class EmailTests
 	public void EmailContentBytes_Initialization_ShouldSetPropertiesCorrectly()
 	{
 		// Arrange
-		string subject = "Test Subject";
-		string body = "Test Body";
+		const string subject = "Test Subject";
+		const string body = "Test Body";
 		MailAttachmentBytes[] attachments = new[]
 		{
 						new MailAttachmentBytes("test.txt", new byte[] { 1, 2, 3 })

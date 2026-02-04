@@ -1,4 +1,4 @@
-using CommonNetFuncs.Hangfire;
+﻿using CommonNetFuncs.Hangfire;
 
 namespace Hangfire.Tests;
 
@@ -164,8 +164,8 @@ public sealed class HangfireJobExceptionTests
 	public void Message_ShouldIncludeOperationName_WhenSet()
 	{
 		// Arrange
-		string message = "Test error";
-		string operationName = "TestOperation";
+		const string message = "Test error";
+		const string operationName = "TestOperation";
 
 		// Act
 		HangfireJobException exception = new(message, operationName);
@@ -179,9 +179,9 @@ public sealed class HangfireJobExceptionTests
 	public void Message_ShouldIncludeEntityId_WhenSet()
 	{
 		// Arrange
-		string message = "Test error";
-		string operationName = "TestOperation";
-		int entityId = 123;
+		const string message = "Test error";
+		const string operationName = "TestOperation";
+		const int entityId = 123;
 
 		// Act
 		HangfireJobException exception = new(message, operationName, entityId);
@@ -194,7 +194,7 @@ public sealed class HangfireJobExceptionTests
 	public void Message_ShouldIncludePermanentFailureTag_WhenAllowRetryIsFalse()
 	{
 		// Arrange
-		string message = "Test error";
+		const string message = "Test error";
 
 		// Act
 		HangfireJobException exception = new(message, allowRetry: false);
@@ -207,7 +207,7 @@ public sealed class HangfireJobExceptionTests
 	public void Message_ShouldNotIncludePermanentFailureTag_WhenAllowRetryIsTrue()
 	{
 		// Arrange
-		string message = "Test error";
+		const string message = "Test error";
 
 		// Act
 		HangfireJobException exception = new(message, allowRetry: true);
@@ -222,9 +222,9 @@ public sealed class HangfireJobExceptionTests
 	public void ThrowEntityNotFound_WithIntId_ShouldThrowCorrectException(bool allowRetry)
 	{
 		// Arrange
-		string entityType = "User";
-		int entityId = 123;
-		string operationName = "UpdateUser";
+		const string entityType = "User";
+		const int entityId = 123;
+		const string operationName = "UpdateUser";
 
 		// Act & Assert
 		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
@@ -242,9 +242,9 @@ public sealed class HangfireJobExceptionTests
 	public void ThrowEntityNotFound_WithStringId_ShouldThrowCorrectException(bool allowRetry)
 	{
 		// Arrange
-		string entityType = "Document";
-		string entityId = "doc-12345";
-		string operationName = "ProcessDocument";
+		const string entityType = "Document";
+		const string entityId = "doc-12345";
+		const string operationName = "ProcessDocument";
 
 		// Act & Assert
 		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
@@ -262,9 +262,9 @@ public sealed class HangfireJobExceptionTests
 	public void ThrowEntityNotFound_WithLongId_ShouldThrowCorrectException(bool allowRetry)
 	{
 		// Arrange
-		string entityType = "Transaction";
-		long entityId = 9876543210L;
-		string operationName = "ProcessTransaction";
+		const string entityType = "Transaction";
+		const long entityId = 9876543210L;
+		const string operationName = "ProcessTransaction";
 
 		// Act & Assert
 		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
@@ -282,9 +282,9 @@ public sealed class HangfireJobExceptionTests
 	public void ThrowValidationFailed_ShouldThrowCorrectException(bool allowRetry)
 	{
 		// Arrange
-		string validationMessage = "Email format is invalid";
-		string operationName = "ValidateUser";
-		int entityId = 456;
+		const string validationMessage = "Email format is invalid";
+		const string operationName = "ValidateUser";
+		const int entityId = 456;
 
 		// Act & Assert
 		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
@@ -302,8 +302,8 @@ public sealed class HangfireJobExceptionTests
 	public void ThrowDependencyUnavailable_ShouldThrowCorrectException(bool allowRetry)
 	{
 		// Arrange
-		string dependencyName = "PaymentGateway";
-		string operationName = "ProcessPayment";
+		const string dependencyName = "PaymentGateway";
+		const string operationName = "ProcessPayment";
 
 		// Act & Assert
 		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
@@ -319,9 +319,9 @@ public sealed class HangfireJobExceptionTests
 	public void ThrowEntityNotFound_DefaultAllowRetry_ShouldBeTrue()
 	{
 		// Arrange
-		string entityType = "Order";
-		int entityId = 789;
-		string operationName = "ProcessOrder";
+		const string entityType = "Order";
+		const int entityId = 789;
+		const string operationName = "ProcessOrder";
 
 		// Act & Assert
 		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
@@ -334,9 +334,9 @@ public sealed class HangfireJobExceptionTests
 	public void ThrowValidationFailed_DefaultAllowRetry_ShouldBeTrue()
 	{
 		// Arrange
-		string validationMessage = "Invalid input";
-		string operationName = "ValidateInput";
-		int entityId = 999;
+		const string validationMessage = "Invalid input";
+		const string operationName = "ValidateInput";
+		const int entityId = 999;
 
 		// Act & Assert
 		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
@@ -349,8 +349,8 @@ public sealed class HangfireJobExceptionTests
 	public void ThrowDependencyUnavailable_DefaultAllowRetry_ShouldBeTrue()
 	{
 		// Arrange
-		string dependencyName = "DatabaseConnection";
-		string operationName = "SaveData";
+		const string dependencyName = "DatabaseConnection";
+		const string operationName = "SaveData";
 
 		// Act & Assert
 		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
@@ -363,9 +363,9 @@ public sealed class HangfireJobExceptionTests
 	public void Message_WithAllComponents_ShouldFormatCorrectly()
 	{
 		// Arrange
-		string message = "Something went wrong";
-		string operationName = "ComplexOperation";
-		int entityId = 555;
+		const string message = "Something went wrong";
+		const string operationName = "ComplexOperation";
+		const int entityId = 555;
 
 		// Act
 		HangfireJobException exception = new(message, operationName, entityId, allowRetry: false);
@@ -382,7 +382,7 @@ public sealed class HangfireJobExceptionTests
 	public void Message_WithOnlyMessage_ShouldReturnBaseMessage()
 	{
 		// Arrange
-		string message = "Simple error";
+		const string message = "Simple error";
 
 		// Act
 		HangfireJobException exception = new(message);

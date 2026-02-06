@@ -199,6 +199,10 @@ public static class Manipulation
 			throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
 		}
 
+		// If input and output paths are the same, use a temporary file to avoid corruption
+		bool isSameFile = string.Equals(Path.GetFullPath(inputFilePath), Path.GetFullPath(outputFilePath), StringComparison.OrdinalIgnoreCase);
+		string tempFilePath = isSameFile ? Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp") : outputFilePath;
+
 		Image? image = null;
 		try
 		{
@@ -213,7 +217,7 @@ public static class Manipulation
 
 			if (outputImageFormat == null || outputImageFormat == JpegFormat.Instance)
 			{
-				image.Save(outputFilePath, jpegEncoder ?? new() { Quality = quality });
+				image.Save(tempFilePath, jpegEncoder ?? new() { Quality = quality });
 			}
 			else
 			{
@@ -224,9 +228,15 @@ public static class Manipulation
 				using MemoryStream reducedStream = new();
 				reducedImage.Save(reducedStream, outputImageFormat);
 				reducedStream.Position = 0;
-				using FileStream fileStream = new(outputFilePath, FileMode.Create, FileAccess.Write);
+				using FileStream fileStream = new(tempFilePath, FileMode.Create, FileAccess.Write);
 				fileStream.Write(reducedStream.ToArray());
 				fileStream.Flush();
+			}
+
+			// If we used a temp file, replace the original atomically
+			if (isSameFile)
+			{
+				File.Move(tempFilePath, outputFilePath, true);
 			}
 
 			return true;
@@ -234,6 +244,12 @@ public static class Manipulation
 		catch (Exception ex)
 		{
 			logger.Error(ex, "Error reducing image quality from {InputFilePath} to {OutputFilePath} with quality {Quality}", inputFilePath, outputFilePath, quality);
+
+			// Clean up temp file if it exists
+			if (isSameFile && File.Exists(tempFilePath))
+			{
+				try { File.Delete(tempFilePath); } catch { /* Ignore cleanup errors */ }
+			}
 		}
 		finally
 		{
@@ -452,6 +468,10 @@ public static class Manipulation
 			throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
 		}
 
+		// If input and output paths are the same, use a temporary file to avoid corruption
+		bool isSameFile = string.Equals(Path.GetFullPath(inputFilePath), Path.GetFullPath(outputFilePath), StringComparison.OrdinalIgnoreCase);
+		string tempFilePath = isSameFile ? Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp") : outputFilePath;
+
 		Image? image = null;
 		try
 		{
@@ -466,7 +486,7 @@ public static class Manipulation
 
 			if (outputImageFormat == null || outputImageFormat == JpegFormat.Instance)
 			{
-				await image.SaveAsync(outputFilePath).ConfigureAwait(false);
+				await image.SaveAsync(tempFilePath, jpegEncoder ?? new() { Quality = quality }).ConfigureAwait(false);
 			}
 			else
 			{
@@ -477,9 +497,15 @@ public static class Manipulation
 				await using MemoryStream reducedStream = new();
 				await reducedImage.SaveAsync(reducedStream, outputImageFormat).ConfigureAwait(false);
 				reducedStream.Position = 0;
-				await using FileStream fileStream = new(outputFilePath, FileMode.Create, FileAccess.Write);
+				await using FileStream fileStream = new(tempFilePath, FileMode.Create, FileAccess.Write);
 				await fileStream.WriteAsync(reducedStream.ToArray()).ConfigureAwait(false);
 				await fileStream.FlushAsync().ConfigureAwait(false);
+			}
+
+			// If we used a temp file, replace the original atomically
+			if (isSameFile)
+			{
+				File.Move(tempFilePath, outputFilePath, true);
 			}
 
 			return true;
@@ -487,6 +513,12 @@ public static class Manipulation
 		catch (Exception ex)
 		{
 			logger.Error(ex, "Error reducing image quality to {Quality} with width {Width} and height {Height}", quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
+
+			// Clean up temp file if it exists
+			if (isSameFile && File.Exists(tempFilePath))
+			{
+				try { File.Delete(tempFilePath); } catch { /* Ignore cleanup errors */ }
+			}
 		}
 		finally
 		{
@@ -787,6 +819,7 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputFilePath">Path to image file to resize.</param>
 	/// <param name="outputFilePath">Path to output resized image file to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
 	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
 	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
 	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
@@ -807,6 +840,7 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputFilePath">Path to image file to resize.</param>
 	/// <param name="outputFilePath">Path to output resized image file to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
 	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
 	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
 	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
@@ -865,6 +899,7 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputStream">Stream filled with image file to resize.</param>
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
 	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
 	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
 	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
@@ -885,6 +920,7 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputStream">Stream filled with image file to resize.</param>
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
 	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
 	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
 	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
@@ -943,6 +979,7 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputSpan">Span filled with image file to resize.</param>
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
 	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
 	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
 	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
@@ -963,6 +1000,7 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputSpan">Span filled with image file to resize.</param>
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
 	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
 	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
 	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>

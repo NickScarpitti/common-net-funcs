@@ -7,6 +7,7 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Metadata;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using xRetry;
 using xRetry.v3;
 
 namespace Images.Tests;
@@ -1185,10 +1186,9 @@ public sealed class ManipulationTests : IDisposable
 			Manipulation.ResizeImage(inputPath, outputPath, width, height);
 #pragma warning restore S6966 // Awaitable method should be used
 
+			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
 			// Spot check: pixel [0,0] should be inverted from original
 			using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(outputPath);
-			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-
 			bool isInverted = IsInvertedVersion(orig, imgClone);
 
 			isInverted.ShouldBeTrue();
@@ -1262,9 +1262,8 @@ public sealed class ManipulationTests : IDisposable
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 
-		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
 		using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-
+		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
 		bool isInverted = IsInvertedVersion(orig, imgClone);
 
 		isInverted.ShouldBeTrue();
@@ -1297,9 +1296,8 @@ public sealed class ManipulationTests : IDisposable
 			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
 			using Image orig = await Image.LoadAsync(inputPath);
-			using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 			using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-
+			using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 			bool isInverted = IsInvertedVersion(origClone, imgClone);
 			isInverted.ShouldBeTrue();
 		}
@@ -1436,10 +1434,9 @@ public sealed class ManipulationTests : IDisposable
 			// Now check if the image is inverted
 			await Manipulation.ConvertImageFormatAsync(inputPath, outputPath, format);
 
+			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
 			// Spot check: pixel [0,0] should be inverted from original
 			using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(outputPath);
-			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-
 			bool isInverted = IsInvertedVersion(orig, imgClone);
 
 			isInverted.ShouldBeTrue();
@@ -1507,9 +1504,8 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(format);
 
 		using Image orig = await Image.LoadAsync(input);
-		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-
+		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		bool isInverted = IsInvertedVersion(origClone, imgClone);
 		isInverted.ShouldBeTrue();
 	}
@@ -1546,10 +1542,9 @@ public sealed class ManipulationTests : IDisposable
 			Manipulation.ResizeImage(inputPath, outputPath, width, height);
 #pragma warning restore S6966 // Awaitable method should be used
 
+			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
 			// Spot check: pixel [0,0] should be inverted from original
 			using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(outputPath);
-			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-
 			bool isInverted = IsInvertedVersion(orig, imgClone);
 
 			isInverted.ShouldBeTrue();
@@ -1590,9 +1585,8 @@ public sealed class ManipulationTests : IDisposable
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 
-		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
 		using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-
+		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
 		bool isInverted = IsInvertedVersion(orig, imgClone);
 
 		isInverted.ShouldBeTrue();
@@ -1622,9 +1616,8 @@ public sealed class ManipulationTests : IDisposable
 			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
 			using Image orig = await Image.LoadAsync(inputPath);
-			using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 			using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-
+			using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 			bool isInverted = IsInvertedVersion(origClone, imgClone);
 			isInverted.ShouldBeTrue();
 		}
@@ -1660,9 +1653,8 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
 		using Image orig = await Image.LoadAsync(input);
-		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-
+		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		bool isInverted = IsInvertedVersion(origClone, imgClone);
 		isInverted.ShouldBeTrue();
 	}
@@ -1929,5 +1921,195 @@ public sealed class ManipulationTests : IDisposable
 		});
 
 		return isInverted;
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 75)]
+	[InlineData("test.jpeg", 50)]
+	[InlineData("test.png", 60)]
+	[InlineData("test.gif", 80)]
+	[InlineData("test.tiff", 70)]
+	[InlineData("test.bmp", 65)]
+	public async Task ReduceImageQuality_SameFilePath_Jpeg_Succeeds(string fileName, int quality)
+	{
+		// Arrange
+		string inputPath = GetTestImagePath(fileName);
+		string testFilePath = GetTempFilePath(Path.GetExtension(fileName));
+
+		try
+		{
+			// Copy the test file to a temporary location since we'll be modifying it
+			File.Copy(inputPath, testFilePath, true);
+
+			// Get original file info
+			using Image originalImage = await Image.LoadAsync(testFilePath);
+			int originalWidth = originalImage.Width;
+			int originalHeight = originalImage.Height;
+
+			// Act - Use same path for input and output
+#pragma warning disable S6966 // Awaitable method should be used
+			bool result = Manipulation.ReduceImageQuality(testFilePath, testFilePath, quality, null);
+#pragma warning restore S6966 // Awaitable method should be used
+
+			// Assert
+			result.ShouldBeTrue();
+			File.Exists(testFilePath).ShouldBeTrue();
+
+			// Verify the file was modified and is still a valid JPEG
+			using Image img = await Image.LoadAsync(testFilePath);
+			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+			img.Width.ShouldBe(originalWidth);
+			img.Height.ShouldBe(originalHeight);
+
+			// File should exist and typically be smaller (though not guaranteed with high quality)
+			File.Exists(testFilePath).ShouldBeTrue();
+		}
+		finally
+		{
+			if (File.Exists(testFilePath))
+			{
+				File.Delete(testFilePath);
+			}
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 75)]
+	[InlineData("test.jpeg", 50)]
+	[InlineData("test.png", 60)]
+	[InlineData("test.gif", 80)]
+	[InlineData("test.tiff", 70)]
+	[InlineData("test.bmp", 65)]
+	public async Task ReduceImageQuality_SameFilePath_ToPng_Succeeds(string fileName, int quality)
+	{
+		// Arrange
+		string inputPath = GetTestImagePath(fileName);
+		string testFilePath = GetTempFilePath(Path.GetExtension(fileName));
+
+		try
+		{
+			// Copy the test file to a temporary location since we'll be modifying it
+			File.Copy(inputPath, testFilePath, true);
+
+			// Get original file info
+			using Image originalImage = await Image.LoadAsync(testFilePath);
+			int originalWidth = originalImage.Width;
+			int originalHeight = originalImage.Height;
+
+			// Act - Use same path for input and output, converting to PNG
+#pragma warning disable S6966 // Awaitable method should be used
+			bool result = Manipulation.ReduceImageQuality(testFilePath, testFilePath, PngFormat.Instance, quality, null);
+#pragma warning restore S6966 // Awaitable method should be used
+
+			// Assert
+			result.ShouldBeTrue();
+			File.Exists(testFilePath).ShouldBeTrue();
+
+			// Verify the file was converted to PNG
+			using Image img = await Image.LoadAsync(testFilePath);
+			img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
+			img.Width.ShouldBe(originalWidth);
+			img.Height.ShouldBe(originalHeight);
+		}
+		finally
+		{
+			if (File.Exists(testFilePath))
+			{
+				File.Delete(testFilePath);
+			}
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 75)]
+	[InlineData("test.jpeg", 50)]
+	[InlineData("test.png", 60)]
+	[InlineData("test.gif", 80)]
+	[InlineData("test.tiff", 70)]
+	[InlineData("test.bmp", 65)]
+	public async Task ReduceImageQualityAsync_SameFilePath_Jpeg_Succeeds(string fileName, int quality)
+	{
+		// Arrange
+		string inputPath = GetTestImagePath(fileName);
+		string testFilePath = GetTempFilePath(Path.GetExtension(fileName));
+
+		try
+		{
+			// Copy the test file to a temporary location since we'll be modifying it
+			File.Copy(inputPath, testFilePath, true);
+
+			// Get original file info
+			using Image originalImage = await Image.LoadAsync(testFilePath);
+			int originalWidth = originalImage.Width;
+			int originalHeight = originalImage.Height;
+
+			// Act - Use same path for input and output
+			bool result = await Manipulation.ReduceImageQualityAsync(testFilePath, testFilePath, quality, null);
+
+			// Assert
+			result.ShouldBeTrue();
+			File.Exists(testFilePath).ShouldBeTrue();
+
+			// Verify the file was modified and is still a valid JPEG
+			using Image img = await Image.LoadAsync(testFilePath);
+			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+			img.Width.ShouldBe(originalWidth);
+			img.Height.ShouldBe(originalHeight);
+
+			// File should exist and typically be smaller (though not guaranteed with high quality)
+			File.Exists(testFilePath).ShouldBeTrue();
+		}
+		finally
+		{
+			if (File.Exists(testFilePath))
+			{
+				File.Delete(testFilePath);
+			}
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 75)]
+	[InlineData("test.jpeg", 50)]
+	[InlineData("test.png", 60)]
+	[InlineData("test.gif", 80)]
+	[InlineData("test.tiff", 70)]
+	[InlineData("test.bmp", 65)]
+	public async Task ReduceImageQualityAsync_SameFilePath_ToPng_Succeeds(string fileName, int quality)
+	{
+		// Arrange
+		string inputPath = GetTestImagePath(fileName);
+		string testFilePath = GetTempFilePath(Path.GetExtension(fileName));
+
+		try
+		{
+			// Copy the test file to a temporary location since we'll be modifying it
+			File.Copy(inputPath, testFilePath, true);
+
+			// Get original file info
+			using Image originalImage = await Image.LoadAsync(testFilePath);
+			int originalWidth = originalImage.Width;
+			int originalHeight = originalImage.Height;
+
+			// Act - Use same path for input and output, converting to PNG
+			bool result = await Manipulation.ReduceImageQualityAsync(testFilePath, testFilePath, PngFormat.Instance, quality, null);
+
+			// Assert
+			result.ShouldBeTrue();
+			File.Exists(testFilePath).ShouldBeTrue();
+
+			// Verify the file was converted to PNG
+			using Image img = await Image.LoadAsync(testFilePath);
+			img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
+			img.Width.ShouldBe(originalWidth);
+			img.Height.ShouldBe(originalHeight);
+		}
+		finally
+		{
+			if (File.Exists(testFilePath))
+			{
+				File.Delete(testFilePath);
+			}
+		}
 	}
 }

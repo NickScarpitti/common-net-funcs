@@ -1,7 +1,7 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: Compression Tests
+name: FastMap Tests
 permissions:
   contents: read
   pull-requests: write
@@ -34,15 +34,15 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
-        working-directory: ./Compression.Tests
+        working-directory: ./FastMap.Tests
 
       - name: Build
         run: dotnet build --no-restore
-        working-directory: ./Compression.Tests
+        working-directory: ./FastMap.Tests
 
       - name: Test
         run: dotnet test --verbosity normal -p:TestTfmsInParallel=false --collect:"XPlat Code Coverage" --results-directory ./coverage # Change this to run inside each .csproj file with separate actions
-        working-directory: ./Compression.Tests
+        working-directory: ./Hangfire.Tests
 
       - name: Coveralls GitHub Action
         uses: coverallsapp/github-action@v2.3.6
@@ -53,7 +53,7 @@ jobs:
       # - name: Code Coverage Report
       #   uses: irongut/CodeCoverageSummary@v1.3.0
       #   with:
-      #     filename: Compression.Tests/coverage/**/coverage.cobertura.xml
+      #     filename: FastMap.Tests/coverage/**/coverage.cobertura.xml
       #     badge: true
       #     fail_below_min: false #true // If true, fails the build when falling below a certain percentage of code coverage
       #     format: markdown
@@ -63,10 +63,10 @@ jobs:
       #     output: both
       #     thresholds: "60 80"
 
-      # # - name: Add Coverage PR Comment
-      # #   uses: marocchino/sticky-pull-request-comment@v2
-      # #   if: github.event_name == 'pull_request'
-      # #   with:
-      # #     append: true #Appends instead of overwrites the comment
-      # #     recreate: true
-      # #     path: code-coverage-results.md
+      # - name: Add Coverage PR Comment
+      #   uses: marocchino/sticky-pull-request-comment@v2
+      #   if: github.event_name == 'pull_request'
+      #   with:
+      #     append: true #Appends instead of overwrites the comment
+      #     recreate: true
+      #     path: code-coverage-results.md

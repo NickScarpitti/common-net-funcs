@@ -27,6 +27,8 @@ bld/
 [Oo]bj/
 [Ll]og/
 
+**/coverage/**
+
 #Custom filter to allow publish folder to be included for .NET applications (uncomment to use)
 #Will need to change net5.0 to match the version of .NET you are publishing
 #[your_app_name]/bin/

@@ -48,7 +48,7 @@ jobs:
         uses: coverallsapp/github-action@v2.3.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # file: ./Core.Tests/coverage/**/coverage.cobertura.xml
+          file: ./Compression.Tests/coverage/**/coverage.cobertura.xml
 
       # - name: Code Coverage Report
       #   uses: irongut/CodeCoverageSummary@v1.3.0

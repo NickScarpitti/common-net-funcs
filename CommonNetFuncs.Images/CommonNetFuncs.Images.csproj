@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.13</Version>
+		<Version>4.0.14</Version>
 		<MinVerTagPrefix>images-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -77,7 +77,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="CliWrap" Version="3.10.0" PrivateAssets="all" />
-		<PackageReference Include="FakeItEasy" Version="8.3.0" />
 		<PackageReference Include="MinVer" Version="7.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

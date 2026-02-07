@@ -21,10 +21,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="FakeItEasy" Version="8.3.0" />
+    <PackageReference Include="FakeItEasy" Version="9.0.1" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
-	
+
 	<ItemGroup>
     <ProjectReference Include="..\CommonNetFuncs.Web.Requests\CommonNetFuncs.Web.Requests.csproj" />
   </ItemGroup>

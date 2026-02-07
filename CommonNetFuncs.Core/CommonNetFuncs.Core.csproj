@@ -30,13 +30,13 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.12</Version>
+		<Version>4.0.14</Version>
 		<MinVerTagPrefix>core-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
 		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
 		<!-- Optional: Detect breaking changes from a previous stable version -->
-		<PackageValidationBaselineVersion>4.0.9</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>4.0.14</PackageValidationBaselineVersion>
 		<EnablePackageValidation>true</EnablePackageValidation>
 	</PropertyGroup>
 
@@ -83,7 +83,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="FakeItEasy" Version="8.3.0" />
 		<PackageReference Include="FastExpressionCompiler" Version="5.3.0" />
 		<PackageReference Include="MinVer" Version="7.0.0">
 			<PrivateAssets>all</PrivateAssets>

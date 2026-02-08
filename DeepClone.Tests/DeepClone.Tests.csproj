@@ -6,9 +6,13 @@
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<LangVersion>latest</LangVersion>
-		<ExcludeByFile>**/*.g.cs,**/obj/**</ExcludeByFile>
 	</PropertyGroup>
-
+	<ItemGroup>
+		<CoverletExclude Include="[*.Tests]*" />
+		<CoverletExcludeByFile Include="**/*.g.cs" />
+		<CoverletExcludeByFile Include="**/obj/**" />
+		<CoverletExcludeByFile Include="**/bin/**" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="AutoFixture" Version="4.18.1" />
 		<PackageReference Include="coverlet.collector" Version="6.0.4">

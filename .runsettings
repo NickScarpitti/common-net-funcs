@@ -4,8 +4,13 @@
 		<DataCollectors>
 			<DataCollector friendlyName="XPlat Code Coverage">
 				<Configuration>
-					<ExcludeByFile>**/*.g.cs,**/obj/**</ExcludeByFile>
-					<ExcludeByFile>**/obj/**</ExcludeByFile>
+					<Format>cobertura</Format>
+					<ExcludeByFile>**/*.g.cs;**/obj/**;**/bin/**,**\*.Designer.cs</ExcludeByFile>
+					<ExcludeByFile>**\*.g.cs,**\obj\**,**\bin\**,**\*.Designer.cs</ExcludeByFile>
+					<Exclude>[*.Tests]*</Exclude>
+					<ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+					<SkipAutoProps>true</SkipAutoProps>
+					<DeterministicReport>true</DeterministicReport>
 				</Configuration>
 			</DataCollector>
 		</DataCollectors>

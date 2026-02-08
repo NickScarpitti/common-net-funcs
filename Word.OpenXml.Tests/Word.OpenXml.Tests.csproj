@@ -6,8 +6,14 @@
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<LangVersion>latest</LangVersion>
-		<ExcludeByFile>**/*.g.cs,**/obj/**</ExcludeByFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<CoverletExclude Include="[*.Tests]*" />
+		<CoverletExcludeByFile Include="**/*.g.cs" />
+		<CoverletExcludeByFile Include="**/obj/**" />
+		<CoverletExcludeByFile Include="**/bin/**" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Remove="TestData\TestDocument.docx" />

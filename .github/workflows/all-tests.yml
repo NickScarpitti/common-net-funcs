@@ -1,89 +1,121 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-# name: All Tests
-# permissions:
-#   contents: read
+name: All Tests
+permissions:
+  contents: read
+  pull-requests: write
 
-# on:
-#   push:
-#     branches: ["main"]
-#   pull_request:
-#     branches: ["main"]
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     container:
-#       image: zeshue/aspnet9-jammy-ffmpeg:1.0.2
-#       credentials:
-#         username: zeshue
-#         password: ${{ secrets.docker_hub_password }}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: zeshue/aspnet9-jammy-ffmpeg:1.0.2
+      credentials:
+        username: zeshue
+        password: ${{ secrets.docker_hub_password }}
 
-#     steps:
-#       - uses: actions/checkout@v4
+    strategy:
+      fail-fast: false
+      matrix:
+        test-suite:
+          - Compression.Tests
+          - Core.Tests
+          - Csv.Tests
+          - DeepClone.Tests
+          - EFCore.Tests
+          - Email.Tests
+          - Excel.ClosedXml.Tests
+          - Excel.Npoi.Tests
+          - Excel.OpenXml.Tests
+          - FastMap.Tests
+          - Hangfire.Tests
+          - Images.Tests
+          - Media.Ffmpeg.Tests
+          - Office.Common.Tests
+          - Sql.Common.Tests
+          - SubsetModelBinder.Tests
+          - Web.Api.Tests
+          - Web.Aws.S3.Tests
+          - Web.Common.Tests
+          - Web.Ftp.Tests
+          - Web.Interface.Tests
+          - Web.Jwt.Tests
+          - Web.Middleware.Tests
+          - Web.Requests.Tests
+          - Word.OpenXml.Tests
 
-#       - name: Get Curl
-#         run: apt-get update && apt-get install -y curl
+    steps:
+      - uses: actions/checkout@v4
 
-#       - name: Add LibreOffice
-#         run: apt-get install libreoffice -y
+      - name: Get Curl
+        run: apt-get update && apt-get install -y curl
 
-#       - name: Get Libre Office Version
-#         run: soffice --version
+      - name: Add LibreOffice
+        if: matrix.test-suite == 'Office.Common.Tests'
+        run: apt-get install libreoffice -y
 
-#       - name: Setup .NET
-#         uses: actions/setup-dotnet@v4
-#         with:
-#           dotnet-version: 10.x.x
+      - name: Get Libre Office Version
+        if: matrix.test-suite == 'Office.Common.Tests'
+        run: soffice --version
 
-#       - name: Add Fonts
-#         run: apt-get update && apt-get install -y fonts-dejavu fonts-liberation fonts-ubuntu
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.x.x
 
-#       - name: Add OptiPng
-#         run: apt-get install -y optipng
+      - name: Add Fonts
+        if: matrix.test-suite == 'Office.Common.Tests'
+        run: apt-get update && apt-get install -y fonts-dejavu fonts-liberation fonts-ubuntu
 
-#       - name: Add GifSicle
-#         run: apt-get install -y gifsicle
+      - name: Update Font Cache
+        if: matrix.test-suite == 'Office.Common.Tests'
+        run: fc-cache -f
 
-#       - name: Add JpegOptim
-#         run: apt-get install -y jpegoptim
+      - name: Add OptiPng
+        if: matrix.test-suite == 'Images.Tests'
+        run: apt-get install -y optipng
 
-#       - name: Update Font Cache
-#         run: fc-cache -f
+      - name: Add GifSicle
+        if: matrix.test-suite == 'Images.Tests'
+        run: apt-get install -y gifsicle
 
-#       - name: Restore dependencies
-#         run: dotnet restore
+      - name: Add JpegOptim
+        if: matrix.test-suite == 'Images.Tests'
+        run: apt-get install -y jpegoptim
 
-#       - name: Build
-#         run: dotnet build --no-restore
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: ./${{ matrix.test-suite }}
 
-#       - name: Test
-#         run: dotnet test --verbosity normal -p:TestTfmsInParallel=false --collect:"XPlat Code Coverage" --results-directory ./coverage # Change this to run inside each .csproj file with separate actions
+      - name: Build
+        run: dotnet build --no-restore
+        working-directory: ./${{ matrix.test-suite }}
 
-# - name: Coveralls GitHub Action
-#   uses: coverallsapp/github-action@v2.3.6
-#   with:
-#     github-token: ${{ secrets.GITHUB_TOKEN }}
-#     file: ./Core.Tests/coverage/**/coverage.cobertura.xml
+      - name: Test
+        run: dotnet test --verbosity normal -p:TestTfmsInParallel=false --collect:"XPlat Code Coverage" --results-directory ./coverage
+        working-directory: ./${{ matrix.test-suite }}
 
-#       - name: Code Coverage Report
-#         uses: irongut/CodeCoverageSummary@v1.3.0
-#         with:
-#           filename: coverage/**/coverage.cobertura.xml
-#           badge: true
-#           fail_below_min: false #true // If true, fails the build when falling below a certain percentage of code coverage
-#           format: markdown
-#           hide_branch_rate: false
-#           hide_complexity: true
-#           indicators: true
-#           output: both
-#           thresholds: "65 85"
+      - name: Coveralls Parallel
+        uses: coverallsapp/github-action@v2.3.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./${{ matrix.test-suite }}/coverage/**/coverage.cobertura.xml
+          flag-name: ${{ matrix.test-suite }}
+          parallel: true
 
-#       # - name: Add Coverage PR Comment
-#       #   uses: marocchino/sticky-pull-request-comment@v2
-#       #   if: github.event_name == 'pull_request'
-#       #   with:
-#       #     append: true #Appends instead of overwrites the comment
-#       #     recreate: true
-#       #     path: code-coverage-results.md
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@v2.3.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true

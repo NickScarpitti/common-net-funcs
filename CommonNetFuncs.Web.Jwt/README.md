@@ -1,7 +1,6 @@
 # CommonNetFuncs.Web.Jwt
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Web.Jwt)](https://www.nuget.org/packages/CommonNetFuncs.Web.Jwt/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Web.Jwt)](https://www.nuget.org/packages/CommonNetFuncs.Web.Jwt/)
 
@@ -10,10 +9,12 @@ This lightweight project contains helper methods for several common functions re
 ## Contents
 
 - [CommonNetFuncs.Web.Jwt](#commonnetfuncswebjwt)
-  - [Contents](#contents)
-  - [JwtManager](#jwtmanager)
-    - [JwtManager Usage Examples](#jwtmanager-usage-examples)
-      - [Authenticate](#authenticate)
+	- [Contents](#contents)
+	- [JwtManager](#jwtmanager)
+		- [JwtManager Usage Examples](#jwtmanager-usage-examples)
+			- [Authenticate](#authenticate)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

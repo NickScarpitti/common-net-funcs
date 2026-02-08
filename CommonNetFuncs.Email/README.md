@@ -1,7 +1,6 @@
 # CommonNetFuncs.Email
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Email)](https://www.nuget.org/packages/CommonNetFuncs.Email/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Email)](https://www.nuget.org/packages/CommonNetFuncs.Email/)
 
@@ -10,10 +9,12 @@ This  contains helper methods for sending emails in .NET applications. It includ
 ## Contents
 
 - [CommonNetFuncs.Email](#commonnetfuncsemail)
-  - [Contents](#contents)
-  - [Email](#email)
-    - [Email Usage Examples](#email-usage-examples)
-      - [SendEmail](#sendemail)
+	- [Contents](#contents)
+	- [Email](#email)
+		- [Email Usage Examples](#email-usage-examples)
+			- [SendEmail](#sendemail)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

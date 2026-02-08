@@ -1,7 +1,6 @@
 # CommonNetFuncs.Web.Api
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Web.Api)](https://www.nuget.org/packages/CommonNetFuncs.Web.Api/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Web.Api)](https://www.nuget.org/packages/CommonNetFuncs.Web.Api/)
 
@@ -10,10 +9,12 @@ This project contains helper methods for several common functions required by AP
 ## Contents
 
 - [CommonNetFuncs.Web.Api](#commonnetfuncswebapi)
-  - [Contents](#contents)
-  - [GenericEndpoints](#genericendpoints)
-    - [\[Class Name\] Usage Examples](#class-name-usage-examples)
-      - [\[MethodNameHere\]](#methodnamehere)
+	- [Contents](#contents)
+	- [GenericEndpoints](#genericendpoints)
+		- [\[Class Name\] Usage Examples](#class-name-usage-examples)
+			- [\[MethodNameHere\]](#methodnamehere)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

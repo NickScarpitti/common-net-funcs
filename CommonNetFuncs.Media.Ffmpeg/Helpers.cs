@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
 using Xabe.FFmpeg;
 using static CommonNetFuncs.Core.Collections;
@@ -421,5 +422,67 @@ public static class Helpers
 		Nb_Read_Frames,
 		Nb_Read_Packets,
 		Extradata_Size,
+	}
+
+	public enum EHwAccelerator
+	{
+		h264_nvenc,
+		h264_qsv,
+		h264_amf,
+		h264_vaapi,
+		h264_vdpau,
+		h264_vulkan,
+		h264_videotoolbox
+	}
+
+	public static async Task<bool> IsAnyHardwareAcceleratorAvailable()
+	{
+		try
+		{
+			return await CheckHardwareEncoderByName(nameof(EHwAccelerator.h264_nvenc)) || // Check for NVENC (NVIDIA)
+					await CheckHardwareEncoderByName(nameof(EHwAccelerator.h264_qsv)) || // Check for QuickSync (Intel)
+					await CheckHardwareEncoderByName(nameof(EHwAccelerator.h264_amf)) || // Check for AMF (AMD)
+					await CheckHardwareEncoderByName(nameof(EHwAccelerator.h264_vaapi)) || // Check for VAAPI (Linux)
+					await CheckHardwareEncoderByName(nameof(EHwAccelerator.h264_vdpau)) || // Check for VDPAU (Legacy Linux)
+					await CheckHardwareEncoderByName(nameof(EHwAccelerator.h264_vulkan)) || // Check for Vulkan
+					await CheckHardwareEncoderByName(nameof(EHwAccelerator.h264_videotoolbox)); // Check for VideoToolbox (macOS)
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
+	public static async Task<bool> CheckHardwareEncoderByName(string encoderName)
+	{
+		try
+		{
+			// Run FFmpeg to check if encoder is available
+			ProcessStartInfo psi = new()
+			{
+				FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "/usr/bin/ffmpeg" : "ffmpeg",
+				Arguments = "-encoders",
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true
+			};
+
+			using Process? process = Process.Start(psi);
+			if (process == null)
+			{
+				return false;
+			}
+
+			string output = await process.StandardOutput.ReadToEndAsync();
+			await process.WaitForExitAsync();
+
+			// Check if the encoder name appears in the output
+			return output.Contains(encoderName, StringComparison.OrdinalIgnoreCase);
+		}
+		catch
+		{
+			return false;
+		}
 	}
 }

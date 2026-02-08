@@ -1,7 +1,6 @@
 # CommonNetFuncs.FastMap
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.FastMap)](https://www.nuget.org/packages/CommonNetFuncs.FastMap/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.FastMap)](https://www.nuget.org/packages/CommonNetFuncs.FastMap/)
 
@@ -10,10 +9,12 @@ This lightweight project contains a helper method for fast mapping of properties
 ## Contents
 
 - [CommonNetFuncs.FastMap](#commonnetfuncsfastmap)
-  - [Contents](#contents)
-  - [FastMapper](#fastmapper)
-    - [FastMapper Usage Examples](#fastmapper-usage-examples)
-      - [FastMap](#fastmap)
+	- [Contents](#contents)
+	- [FastMapper](#fastmapper)
+		- [FastMapper Usage Examples](#fastmapper-usage-examples)
+			- [FastMap](#fastmap)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

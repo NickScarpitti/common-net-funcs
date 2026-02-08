@@ -1,7 +1,6 @@
 # CommonNetFuncs.Images
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Images)](https://www.nuget.org/packages/CommonNetFuncs.Images)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Images)](https://www.nuget.org/packages/CommonNetFuncs.Images/)
 
@@ -10,24 +9,26 @@ This project contains helper methods for dealing with base64 image encoding and 
 ## Contents
 
 - [CommonNetFuncs.Images](#commonnetfuncsimages)
-  - [Contents](#contents)
-  - [Base64](#base64)
-    - [Base64 Usage Examples](#base64-usage-examples)
-      - [ConvertImageFileToBase64](#convertimagefiletobase64)
-      - [CleanImageValue \[Obsolete, please use ExtractBase64\]](#cleanimagevalue-obsolete-please-use-extractbase64)
-      - [ExtractBase64](#extractbase64)
-      - [ImageSaveToFile](#imagesavetofile)
-      - [IsValidBase64Image](#isvalidbase64image)
-  - [Manipulation](#manipulation)
-  - [Manipulation Usage Examples](#manipulation-usage-examples)
-      - [ResizeImage](#resizeimage)
-      - [ConvertImageFormat](#convertimageformat)
-      - [ReduceImageQuality](#reduceimagequality)
-      - [TryDetectImageType](#trydetectimagetype)
-      - [TryGetMetadata](#trygetmetadata)
-  - [Optimizer](#optimizer)
-    - [Optimizer Usage Examples](#optimizer-usage-examples)
-      - [OptimizeImage](#optimizeimage)
+	- [Contents](#contents)
+	- [Base64](#base64)
+		- [Base64 Usage Examples](#base64-usage-examples)
+			- [ConvertImageFileToBase64](#convertimagefiletobase64)
+			- [CleanImageValue \[Obsolete, please use ExtractBase64\]](#cleanimagevalue-obsolete-please-use-extractbase64)
+			- [ExtractBase64](#extractbase64)
+			- [ImageSaveToFile](#imagesavetofile)
+			- [IsValidBase64Image](#isvalidbase64image)
+	- [Manipulation](#manipulation)
+	- [Manipulation Usage Examples](#manipulation-usage-examples)
+			- [ResizeImage](#resizeimage)
+			- [ConvertImageFormat](#convertimageformat)
+			- [ReduceImageQuality](#reduceimagequality)
+			- [TryDetectImageType](#trydetectimagetype)
+			- [TryGetMetadata](#trygetmetadata)
+	- [Optimizer](#optimizer)
+		- [Optimizer Usage Examples](#optimizer-usage-examples)
+			- [OptimizeImage](#optimizeimage)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

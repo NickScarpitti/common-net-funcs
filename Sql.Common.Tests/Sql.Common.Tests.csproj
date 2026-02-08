@@ -6,6 +6,7 @@
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<LangVersion>latest</LangVersion>
+		<ExcludeByFile>**/*.g.cs,**/obj/**</ExcludeByFile>
 	</PropertyGroup>
 
 	<ItemGroup>

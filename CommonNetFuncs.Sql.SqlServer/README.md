@@ -1,7 +1,6 @@
 # CommonNetFuncs.Sql.SqlServer
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Sql.SqlServer)](https://www.nuget.org/packages/CommonNetFuncs.Sql.SqlServer/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Sql.SqlServer)](https://www.nuget.org/packages/CommonNetFuncs.Sql.SqlServer/)
 
@@ -10,16 +9,18 @@ This project contains helper methods for executing SQL queries and commands agai
 ## Contents
 
 - [CommonNetFuncs.Sql.SqlServer](#commonnetfuncssqlsqlserver)
-  - [Contents](#contents)
-  - [DirectQuery](#directquery)
-    - [DirectQuery Usage Examples](#directquery-usage-examples)
-      - [GetDataTable](#getdatatable)
-      - [GetDataTableSynchronous](#getdatatablesynchronous)
-      - [RunUpdateQuery](#runupdatequery)
-      - [RunUpdateQuerySynchronous](#runupdatequerysynchronous)
-      - [GetDataStreamSynchronous](#getdatastreamsynchronous)
-      - [GetDataStreamAsync](#getdatastreamasync)
-      - [GetDataDirectAsync](#getdatadirectasync)
+	- [Contents](#contents)
+	- [DirectQuery](#directquery)
+		- [DirectQuery Usage Examples](#directquery-usage-examples)
+			- [GetDataTable](#getdatatable)
+			- [GetDataTableSynchronous](#getdatatablesynchronous)
+			- [RunUpdateQuery](#runupdatequery)
+			- [RunUpdateQuerySynchronous](#runupdatequerysynchronous)
+			- [GetDataStreamSynchronous](#getdatastreamsynchronous)
+			- [GetDataStreamAsync](#getdatastreamasync)
+			- [GetDataDirectAsync](#getdatadirectasync)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

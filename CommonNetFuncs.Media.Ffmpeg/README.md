@@ -1,7 +1,6 @@
 # CommonNetFuncs.Media.Ffmpeg
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Media.Ffmpeg)](https://www.nuget.org/packages/CommonNetFuncs.Media.Ffmpeg/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Media.Ffmpeg)](https://www.nuget.org/packages/CommonNetFuncs.Media.Ffmpeg/)
 
@@ -10,19 +9,21 @@ This project contains helper methods using Xabe.FFMpeg including file conversion
 ## Contents
 
 - [CommonNetFuncs.Media.Ffmpeg](#commonnetfuncsmediaffmpeg)
-  - [Contents](#contents)
-  - [ConversionTask](#conversiontask)
-    - [ConversionTask Usage Examples](#conversiontask-usage-examples)
-      - [FfmpegConversionTask](#ffmpegconversiontask)
-  - [Helpers](#helpers)
-    - [Helpers Usage Examples](#helpers-usage-examples)
-      - [GetTotalFps](#gettotalfps)
-      - [ParseFfmpegLogFps](#parseffmpeglogfps)
-      - [GetTotalFileDif](#gettotalfiledif)
-      - [RecordResults](#recordresults)
-      - [GetVideoMetadata](#getvideometadata)
-      - [GetFrameRate](#getframerate)
-      - [GetKeyFrameSpacing](#getkeyframespacing)
+	- [Contents](#contents)
+	- [ConversionTask](#conversiontask)
+		- [ConversionTask Usage Examples](#conversiontask-usage-examples)
+			- [FfmpegConversionTask](#ffmpegconversiontask)
+	- [Helpers](#helpers)
+		- [Helpers Usage Examples](#helpers-usage-examples)
+			- [GetTotalFps](#gettotalfps)
+			- [ParseFfmpegLogFps](#parseffmpeglogfps)
+			- [GetTotalFileDif](#gettotalfiledif)
+			- [RecordResults](#recordresults)
+			- [GetVideoMetadata](#getvideometadata)
+			- [GetFrameRate](#getframerate)
+			- [GetKeyFrameSpacing](#getkeyframespacing)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

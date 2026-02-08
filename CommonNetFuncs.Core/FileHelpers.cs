@@ -11,7 +11,7 @@ namespace CommonNetFuncs.Core;
 /// </summary>
 public static partial class FileHelpers
 {
-	private static readonly System.Buffers.SearchValues<char> invalidFileNameChars = System.Buffers.SearchValues.Create("/\\:<>\"|?*");
+	private static readonly SearchValues<char> invalidFileNameChars = SearchValues.Create("/\\:<>\"|?*");
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 	[GeneratedRegex(@"\(([^)]*)\)$")]
@@ -357,10 +357,10 @@ public static partial class FileHelpers
 	}
 
 	/// <summary>
-	/// Reads a file from a PipeReader and writes it to a provided Stream, with optional file size limit and error handling. Designed for efficiently handling file uploads without unnecessary memory allocations.
+	/// Reads a file from a <see cref="PipeReader"/> and writes it to a provided <see cref="Stream"/>.
 	/// </summary>
 	/// <param name="reader">PipeReader to read from.</param>
-	/// <param name="fileStream">Stream to write the file to.</param>
+	/// <param name="outputStream">Stream to write the file to.</param>
 	/// <param name="MaxProfileImageFileSize">Maximum allowed file size.</param>
 	/// <param name="successReturn">Optional: Return value on success.</param>
 	/// <param name="fileTooLargeReturn">Optional: Return value if file is too large.</param>
@@ -368,7 +368,7 @@ public static partial class FileHelpers
 	/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
 	/// <typeparam name="TReturn">Type of the return value.</typeparam>
 	/// <returns>A tuple with a success flag and the appropriate return value based on the outcome of the operation, or null if not provided.</returns>
-	public static async Task<(bool success, TReturn? result)> ReadFileFromPipe<TReturn>(this PipeReader reader, Stream fileStream, long MaxProfileImageFileSize, TReturn? successReturn = default,
+	public static async Task<(bool success, TReturn? result)> ReadFileFromPipe<TReturn>(this PipeReader reader, Stream outputStream, long MaxProfileImageFileSize, TReturn? successReturn = default,
 		TReturn? fileTooLargeReturn = default, Func<Exception, TReturn?>? errorReturn = default, CancellationToken cancellationToken = default)
 	{
 		long totalBytesRead = 0;
@@ -393,13 +393,13 @@ public static partial class FileHelpers
 				// Write directly without ToArray() allocation
 				if (data.IsSingleSegment)
 				{
-					await fileStream.WriteAsync(data.First, cancellationToken);
+					await outputStream.WriteAsync(data.First, cancellationToken);
 				}
 				else
 				{
 					foreach (ReadOnlyMemory<byte> segment in data)
 					{
-						await fileStream.WriteAsync(segment, cancellationToken);
+						await outputStream.WriteAsync(segment, cancellationToken);
 					}
 				}
 
@@ -420,16 +420,16 @@ public static partial class FileHelpers
 			}
 		}
 
-		await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-		if (fileStream.CanSeek)
+		await outputStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+		if (outputStream.CanSeek)
 		{
-			fileStream.Position = 0;
+			outputStream.Position = 0;
 		}
 		return (true, successReturn);
 	}
 
 	/// <summary>
-	/// Reads a file from a PipeReader and writes it to a provided Stream, with optional file size limit and error handling. Designed for efficiently handling file uploads without unnecessary memory allocations.
+	/// Reads a file from a <see cref="PipeReader"/> and writes it to a provided <see cref="Stream"/>
 	/// </summary>
 	/// <param name="reader">PipeReader to read from.</param>
 	/// <param name="fileStream">Stream to write the file to.</param>
@@ -440,7 +440,7 @@ public static partial class FileHelpers
 	/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
 	/// <typeparam name="TReturn">Type of the return value.</typeparam>
 	/// <returns>A tuple with a success flag and the appropriate return value based on the outcome of the operation, or null if not provided.</returns>
-	public static async Task<(bool success, TReturn? result)> ReadFileFromPipe<TReturn>(this PipeReader reader, Stream fileStream, TReturn? successReturn = default,
+	public static async Task<(bool success, TReturn? result)> ReadFileFromPipe<TReturn>(this PipeReader reader, Stream outputStream, TReturn? successReturn = default,
 		Func<Exception, TReturn?>? errorReturn = default, CancellationToken cancellationToken = default)
 	{
 		while (true)
@@ -458,13 +458,13 @@ public static partial class FileHelpers
 				// Write directly without ToArray() allocation
 				if (data.IsSingleSegment)
 				{
-					await fileStream.WriteAsync(data.First, cancellationToken);
+					await outputStream.WriteAsync(data.First, cancellationToken);
 				}
 				else
 				{
 					foreach (ReadOnlyMemory<byte> segment in data)
 					{
-						await fileStream.WriteAsync(segment, cancellationToken);
+						await outputStream.WriteAsync(segment, cancellationToken);
 					}
 				}
 
@@ -485,10 +485,10 @@ public static partial class FileHelpers
 			}
 		}
 
-		await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-		if (fileStream.CanSeek)
+		await outputStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+		if (outputStream.CanSeek)
 		{
-			fileStream.Position = 0;
+			outputStream.Position = 0;
 		}
 		return (true, successReturn);
 	}

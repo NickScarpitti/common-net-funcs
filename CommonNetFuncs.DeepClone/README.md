@@ -1,7 +1,6 @@
 # CommonNetFuncs.DeepClone
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.DeepClone)](https://www.nuget.org/packages/CommonNetFuncs.DeepClone/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.DeepClone)](https://www.nuget.org/packages/CommonNetFuncs.DeepClone/)
 
@@ -10,16 +9,18 @@ This project contains helper methods for deep cloning objects in .NET applicatio
 ## Contents
 
 - [CommonNetFuncs.DeepClone](#commonnetfuncsdeepclone)
-  - [Contents](#contents)
-  - [ExpressionTrees](#expressiontrees)
-    - [ExpressionTrees Usage Examples](#expressiontrees-usage-examples)
-      - [DeepClone](#deepclone)
-  - [Reflection](#reflection)
-    - [Reflection Usage Examples](#reflection-usage-examples)
-      - [DeepCloneR](#deepcloner)
-  - [Serialize](#serialize)
-    - [Serialize Usage Examples](#serialize-usage-examples)
-      - [DeepCloneS](#deepclones)
+	- [Contents](#contents)
+	- [ExpressionTrees](#expressiontrees)
+		- [ExpressionTrees Usage Examples](#expressiontrees-usage-examples)
+			- [DeepClone](#deepclone)
+	- [Reflection](#reflection)
+		- [Reflection Usage Examples](#reflection-usage-examples)
+			- [DeepCloneR](#deepcloner)
+	- [Serialize](#serialize)
+		- [Serialize Usage Examples](#serialize-usage-examples)
+			- [DeepCloneS](#deepclones)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

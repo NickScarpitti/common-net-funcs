@@ -1,7 +1,6 @@
 # CommonNetFuncs.Csv
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Csv)](https://www.nuget.org/packages/CommonNetFuncs.Csv/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Csv)](https://www.nuget.org/packages/CommonNetFuncs.Csv/)
 
@@ -10,16 +9,18 @@ This project contains helper methods for reading and writing CSV files.
 ## Contents
 
 - [CommonNetFuncs.Csv](#commonnetfuncscsv)
-  - [Contents](#contents)
-  - [CsvExportHelpers](#csvexporthelpers)
-    - [CsvExportHelpers Usage Examples](#csvexporthelpers-usage-examples)
-      - [ExportToCsv](#exporttocsv)
-  - [CsvReadHelpers](#csvreadhelpers)
-    - [CsvReadHelpers Usage Examples](#csvreadhelpers-usage-examples)
-      - [ReadCsv](#readcsv)
-      - [ReadCsvAsync](#readcsvasync)
-      - [ReadCsvAsyncEnumerable](#readcsvasyncenumerable)
-      - [ReadCsvToDataTable](#readcsvtodatatable)
+	- [Contents](#contents)
+	- [CsvExportHelpers](#csvexporthelpers)
+		- [CsvExportHelpers Usage Examples](#csvexporthelpers-usage-examples)
+			- [ExportToCsv](#exporttocsv)
+	- [CsvReadHelpers](#csvreadhelpers)
+		- [CsvReadHelpers Usage Examples](#csvreadhelpers-usage-examples)
+			- [ReadCsv](#readcsv)
+			- [ReadCsvAsync](#readcsvasync)
+			- [ReadCsvAsyncEnumerable](#readcsvasyncenumerable)
+			- [ReadCsvToDataTable](#readcsvtodatatable)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

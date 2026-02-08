@@ -1,7 +1,6 @@
 # CommonNetFuncs.Hangfire
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Hangfire)](https://www.nuget.org/packages/CommonNetFuncs.Hangfire/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Hangfire)](https://www.nuget.org/packages/CommonNetFuncs.Hangfire/)
 
@@ -10,24 +9,26 @@ This project contains helper methods and utilities for integrating Hangfire back
 ## Contents
 
 - [CommonNetFuncs.Hangfire](#commonnetfuncshangfire)
-  - [Contents](#contents)
-  - [HangfireAuthorizationFilter](#hangfireauthorizationfilter)
-    - [HangfireAuthorizationFilter Usage Examples](#hangfireauthorizationfilter-usage-examples)
-      - [Basic Setup with Roles](#basic-setup-with-roles)
-      - [Authentication Only (No Role Restrictions)](#authentication-only-no-role-restrictions)
-  - [HangfireJobException](#hangfirejobexception)
-    - [HangfireJobException Usage Examples](#hangfirejobexception-usage-examples)
-      - [Basic Job Exception](#basic-job-exception)
-      - [Exception with Retry Control](#exception-with-retry-control)
-      - [Exception with Operation Context](#exception-with-operation-context)
-      - [Full Context Exception](#full-context-exception)
-  - [HangfireShutdownMonitor](#hangfireshutdownmonitor)
-    - [HangfireShutdownMonitor Usage Examples](#hangfireshutdownmonitor-usage-examples)
-      - [Register Shutdown Monitor](#register-shutdown-monitor)
-  - [WaitForHangfireJobsToComplete](#waitforhangfirejobstocomplete)
-    - [WaitForHangfireJobsToComplete Usage Examples](#waitforhangfirejobstocomplete-usage-examples)
-      - [Wait for Jobs with Defaults](#wait-for-jobs-with-defaults)
-      - [Wait for Jobs with Custom Settings](#wait-for-jobs-with-custom-settings)
+	- [Contents](#contents)
+	- [HangfireAuthorizationFilter](#hangfireauthorizationfilter)
+		- [HangfireAuthorizationFilter Usage Examples](#hangfireauthorizationfilter-usage-examples)
+			- [Basic Setup with Roles](#basic-setup-with-roles)
+			- [Authentication Only (No Role Restrictions)](#authentication-only-no-role-restrictions)
+	- [HangfireJobException](#hangfirejobexception)
+		- [HangfireJobException Usage Examples](#hangfirejobexception-usage-examples)
+			- [Basic Job Exception](#basic-job-exception)
+			- [Exception with Retry Control](#exception-with-retry-control)
+			- [Exception with Operation Context](#exception-with-operation-context)
+			- [Full Context Exception](#full-context-exception)
+	- [HangfireShutdownMonitor](#hangfireshutdownmonitor)
+		- [HangfireShutdownMonitor Usage Examples](#hangfireshutdownmonitor-usage-examples)
+			- [Register Shutdown Monitor](#register-shutdown-monitor)
+	- [WaitForHangfireJobsToComplete](#waitforhangfirejobstocomplete)
+		- [WaitForHangfireJobsToComplete Usage Examples](#waitforhangfirejobstocomplete-usage-examples)
+			- [Wait for Jobs with Defaults](#wait-for-jobs-with-defaults)
+			- [Wait for Jobs with Custom Settings](#wait-for-jobs-with-custom-settings)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

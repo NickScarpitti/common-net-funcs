@@ -1,7 +1,6 @@
 # CommonNetFuncs.SubsetModelBinder
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.SubsetModelBinder)](https://www.nuget.org/packages/CommonNetFuncs.SubsetModelBinder/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.SubsetModelBinder)](https://www.nuget.org/packages/CommonNetFuncs.SubsetModelBinder/)
 
@@ -10,7 +9,9 @@ This project provides an attribute that forces a class to only contain propertie
 ## Contents
 
 - [CommonNetFuncs.SubsetModelBinder](#commonnetfuncssubsetmodelbinder)
-  - [Contents](#contents)
+	- [Contents](#contents)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

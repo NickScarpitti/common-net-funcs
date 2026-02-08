@@ -1,3 +1,6 @@
+[![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
+[![Coverage Status](https://coveralls.io/repos/github/NickScarpitti/common-net-funcs/badge.svg?branch=main&flag=Compression.Tests)](https://coveralls.io/github/NickScarpitti/common-net-funcs?branch=main&flag=Compression.Tests)
+
 # CommonNetFuncs is a collection of helper classes and methods that aim to make coding in C# easier with less boilerplate code
 
 ## Included Packages
@@ -24,11 +27,11 @@
 12. Web
     1. [Api](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Api)
     2. Aws
-        1. [S3](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.S3)
+       1. [S3](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.S3)
     3. [Common](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Common)
     4. [Interface](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Interface)
     5. [Jwt](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Jwt)
     6. [Middleware](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Middleware)
     7. [Requests](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Requests)
- 13. Word
-     1.  [OpenXML](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Word.OpenXml)
+13. Word
+    1. [OpenXML](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Word.OpenXml)

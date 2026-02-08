@@ -1,21 +1,21 @@
 # CommonNetFuncs.Compression
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Compression)](https://www.nuget.org/packages/CommonNetFuncs.Compression/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Compression)](https://www.nuget.org/packages/CommonNetFuncs.Compression/)
-
 
 This project contains helper methods for compressing files into a zip file as well as compress and decompress streams.
 
 ## Contents
 
 - [CommonNetFuncs.Compression](#commonnetfuncscompression)
-  - [Contents](#contents)
-  - [Files](#files)
-    - [Files Usage Examples](#files-usage-examples)
-  - [Streams](#streams)
-    - [Streams Usage Examples](#streams-usage-examples)
+	- [Contents](#contents)
+	- [Files](#files)
+		- [Files Usage Examples](#files-usage-examples)
+	- [Streams](#streams)
+		- [Streams Usage Examples](#streams-usage-examples)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

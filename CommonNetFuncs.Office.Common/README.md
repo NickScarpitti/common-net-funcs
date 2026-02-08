@@ -1,7 +1,6 @@
 # CommonNetFuncs.Images
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Office.Common)](https://www.nuget.org/packages/CommonNetFuncs.Office.Common/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Office.Common)](https://www.nuget.org/packages/CommonNetFuncs.Office.Common/)
 
@@ -10,10 +9,12 @@ This project contains helper methods to convert compatible file types (`.xlsx`, 
 ## Contents
 
 - [CommonNetFuncs.Images](#commonnetfuncsimages)
-  - [Contents](#contents)
-  - [PdfConversion](#pdfconversion)
-    - [PdfConversion Usage Examples](#pdfconversion-usage-examples)
-      - [ConvertToPdf](#converttopdf)
+	- [Contents](#contents)
+	- [PdfConversion](#pdfconversion)
+		- [PdfConversion Usage Examples](#pdfconversion-usage-examples)
+			- [ConvertToPdf](#converttopdf)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

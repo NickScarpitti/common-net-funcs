@@ -1,7 +1,6 @@
 # CommonNetFuncs.Web.Middleware
 
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Build](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/dotnet.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Web.Middleware)](https://www.nuget.org/packages/CommonNetFuncs.Web.Middleware/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Web.Middleware)](https://www.nuget.org/packages/CommonNetFuncs.Web.Middleware/)
 
@@ -10,10 +9,12 @@ This lightweight project contains helper methods for several common functions re
 ## Contents
 
 - [CommonNetFuncs.Web.Middleware](#commonnetfuncswebmiddleware)
-  - [Contents](#contents)
-  - [\[Class Name\]](#class-name)
-    - [\[Class Name\] Usage Examples](#class-name-usage-examples)
-      - [\[MethodNameHere\]](#methodnamehere)
+	- [Contents](#contents)
+	- [\[Class Name\]](#class-name)
+		- [\[Class Name\] Usage Examples](#class-name-usage-examples)
+			- [\[MethodNameHere\]](#methodnamehere)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 

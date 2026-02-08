@@ -9,12 +9,12 @@ namespace CommonNetFuncs.Email;
 public sealed class HangfireEmailService(IEmailService emailService) : IEmailService
 {
 	private readonly IEmailService emailService = emailService;
-
+	private const string HangfireJobExceptionMessage = "Failed to send email";
 	public async Task<bool> SendEmail(SmtpSettings smtpSettings, EmailAddresses emailAddresses, EmailContent emailContent, bool readReceipt, string readReceiptEmail, CancellationToken cancellationToken = default)
 	{
 		if (!await emailService.SendEmail(new SendEmailConfig() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent, ReadReceipt = readReceipt, ReadReceiptEmail = readReceiptEmail }, cancellationToken))
 		{
-			throw new HangfireJobException("Failed to send email");
+			throw new HangfireJobException(HangfireJobExceptionMessage);
 		}
 		return true;
 	}
@@ -23,7 +23,7 @@ public sealed class HangfireEmailService(IEmailService emailService) : IEmailSer
 	{
 		if (!await emailService.SendEmail(new SendEmailConfig() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent, }, cancellationToken))
 		{
-			throw new HangfireJobException("Failed to send email");
+			throw new HangfireJobException(HangfireJobExceptionMessage);
 		}
 		return true;
 	}
@@ -32,7 +32,7 @@ public sealed class HangfireEmailService(IEmailService emailService) : IEmailSer
 	{
 		if (!await emailService.SendEmail(new SendEmailConfigBytes() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent, ReadReceipt = readReceipt, ReadReceiptEmail = readReceiptEmail }, cancellationToken))
 		{
-			throw new HangfireJobException("Failed to send email");
+			throw new HangfireJobException(HangfireJobExceptionMessage);
 		}
 		return true;
 	}
@@ -41,7 +41,7 @@ public sealed class HangfireEmailService(IEmailService emailService) : IEmailSer
 	{
 		if (!await emailService.SendEmail(new SendEmailConfigBytes() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent, }, cancellationToken))
 		{
-			throw new HangfireJobException("Failed to send email");
+			throw new HangfireJobException(HangfireJobExceptionMessage);
 		}
 		return true;
 	}
@@ -50,7 +50,7 @@ public sealed class HangfireEmailService(IEmailService emailService) : IEmailSer
 	{
 		if (!await emailService.SendEmail(sendEmailConfig, cancellationToken))
 		{
-			throw new HangfireJobException("Failed to send email");
+			throw new HangfireJobException(HangfireJobExceptionMessage);
 		}
 		return true;
 	}
@@ -59,7 +59,7 @@ public sealed class HangfireEmailService(IEmailService emailService) : IEmailSer
 	{
 		if (!await emailService.SendEmail(sendEmailConfig, cancellationToken))
 		{
-			throw new HangfireJobException("Failed to send email");
+			throw new HangfireJobException(HangfireJobExceptionMessage);
 		}
 		return true;
 	}

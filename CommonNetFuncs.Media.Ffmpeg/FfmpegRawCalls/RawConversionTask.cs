@@ -34,14 +34,14 @@ public static partial class RawConversionTask
 	/// <returns><see langword="true"/> if conversion successfully completed</returns>
 	public static async Task<bool> FfmpegConversionTaskFromXabe(FileInfo fileToConvert, string outputFileName, VideoCodec codec, bool overwriteExisting, Format outputFormat = Format.mp4,
 			ConversionPreset conversionPreset = ConversionPreset.Slower, string? workingPath = null, int conversionIndex = 0, ConcurrentDictionary<int, decimal>? fpsDict = null,
-			IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true, bool overwriteOutput = true,
+			IMediaInfo? mediaInfo = null, int numberOfThreads = 1, bool cancelIfLarger = true, string? taskDescription = null, bool strict = true,
 			ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, HardwareAccelerationValues? hardwareAccelerationValues = null, ConcurrentBag<string>? conversionOutputs = null,
 			string? additionalLogText = null, CancellationTokenSource? cancellationTokenSource = null)
 	{
 		string ffmpegCommandArguments = await GetConversionCommandFromXabe(fileToConvert, outputFileName, codec, outputFormat, conversionPreset, workingPath, mediaInfo, numberOfThreads,
-			strict, overwriteOutput, processPriority, hardwareAccelerationValues).ConfigureAwait(false);
+			strict, overwriteExisting, processPriority, hardwareAccelerationValues).ConfigureAwait(false);
 
-		return await FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommandArguments, overwriteExisting, workingPath, conversionIndex, fpsDict, cancelIfLarger, taskDescription, conversionOutputs,
+		return await InnerFmpegConversionTask(fileToConvert, outputFileName, ffmpegCommandArguments, overwriteExisting, workingPath, conversionIndex, fpsDict, cancelIfLarger, taskDescription, conversionOutputs,
 			additionalLogText, processPriority, cancellationTokenSource).ConfigureAwait(false);
 	}
 
@@ -61,31 +61,27 @@ public static partial class RawConversionTask
 			.UseMultiThread(numberOfThreads)
 			.SetPriority(processPriority);
 
-		conversion.AddStream(videoStream?.SetCodec(codec!)).SetOutputFormat(outputFormat!).SetPreset(conversionPreset!);
-		conversion.AddStream(videoStream?.SetCodec(codec!)).SetOutputFormat(outputFormat!).SetPreset(conversionPreset!);
-
-		if (hardwareAccelerationValues != null)
-		{
-			conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
-		}
 		if (hardwareAccelerationValues != null)
 		{
 			conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
 		}
 
-		if (hardwareAccelerationValues != null)
+		if (videoStream != null)
 		{
-			conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
+			if (hardwareAccelerationValues == null)
+			{
+				conversion.AddStream(videoStream.SetCodec(codec)).SetOutputFormat(outputFormat).SetPreset(conversionPreset);
+			}
+			else
+			{
+				conversion.AddStream(videoStream).SetPreset(conversionPreset);
+			}
 		}
-		if (hardwareAccelerationValues != null)
+		else
 		{
-			conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
+			conversion.SetOutputFormat(outputFormat).SetPreset(conversionPreset);
 		}
 
-		if (strict)
-		{
-			conversion.AddParameter("-strict -2");
-		}
 		if (strict)
 		{
 			conversion.AddParameter("-strict -2");
@@ -110,26 +106,24 @@ public static partial class RawConversionTask
 	/// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
 	/// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
 	/// <returns><see langword="true"/> if conversion successfully completed</returns>
-
-	/// <summary>
-	/// Run ffmpeg conversion via ffmpeg command. Requires ffmpeg to be in PATH or specified location.
-	/// </summary>
-	/// <param name="fileToConvert">Full file path and file name of the file to be converted</param>
-	/// <param name="outputFileName">Name of the output file</param>
-	/// <param name="ffmpegCommandArguments">All arguments that would come after "ffmpeg" in an ffmpeg CLI command</param>
-	/// <param name="workingPath">Directory for conversion to put temporary files</param>
-	/// <param name="conversionIndex">Optional: Index of this task. Used to distinguish between multiple tasks. Defaults to 0 if null</param>
-	/// <param name="fpsDict">Optional: Dictionary used to display total conversion FPS. Can be used to sum total FPS between multiple simultaneous conversion tasks. If null, will only show FPS for current conversion</param>
-	/// <param name="cancelIfLarger">Optional: Cancel the conversion task if the output becomes larger than the original file</param>
-	/// <param name="taskDescription">Optional: Description to use in logging</param>
-	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
-	/// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
-	/// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
-	/// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
-	/// <returns><see langword="true"/> if conversion successfully completed</returns>
 	public static async Task<bool> FfmpegConversionTask(FileInfo fileToConvert, string outputFileName, string ffmpegCommandArguments, bool overwriteExisting, string? workingPath = null, int conversionIndex = 0,
-				ConcurrentDictionary<int, decimal>? fpsDict = null, bool cancelIfLarger = true, string? taskDescription = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null,
-				ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, CancellationTokenSource? cancellationTokenSource = null)
+			ConcurrentDictionary<int, decimal>? fpsDict = null, bool cancelIfLarger = true, string? taskDescription = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null,
+			ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, CancellationTokenSource? cancellationTokenSource = null)
+	{
+		string outputPath = Path.Combine(workingPath ?? Path.GetTempPath(), outputFileName);
+
+		// Manually construct the ffmpeg command arguments here since InnerFmpegConversionTask is expecting the full arguments string and not just the portion after the input file
+		ffmpegCommandArguments = $"{(overwriteExisting ? "-y " : null)}-i \"{fileToConvert.FullName}\" {ffmpegCommandArguments} \"{outputPath}\"";
+		return await InnerFmpegConversionTask(fileToConvert, outputFileName, ffmpegCommandArguments, overwriteExisting, workingPath, conversionIndex, fpsDict, cancelIfLarger, taskDescription, conversionOutputs,
+			additionalLogText, processPriority, cancellationTokenSource).ConfigureAwait(false);
+	}
+
+	// [GeneratedRegex(@"time=(\d{2}):(\d{2}):(\d{2})\.(\d{2}).*?fps=\s*(\d+(?:\.\d+)?)")]
+	// private static partial Regex ProgressRegex();
+
+	private static async Task<bool> InnerFmpegConversionTask(FileInfo fileToConvert, string outputFileName, string ffmpegCommandArguments, bool overwriteExisting, string? workingPath = null, int conversionIndex = 0,
+			ConcurrentDictionary<int, decimal>? fpsDict = null, bool cancelIfLarger = true, string? taskDescription = null, ConcurrentBag<string>? conversionOutputs = null, string? additionalLogText = null,
+			ProcessPriorityClass processPriority = ProcessPriorityClass.BelowNormal, CancellationTokenSource? cancellationTokenSource = null)
 	{
 		try
 		{
@@ -138,8 +132,6 @@ public static partial class RawConversionTask
 			{
 				return true;
 			}
-
-			ffmpegCommandArguments = $"{(overwriteExisting ? "-y " : null)}-i \"{fileToConvert.FullName}\" {ffmpegCommandArguments} \"{outputPath}\"";
 
 			ProcessStartInfo startInfo = new()
 			{
@@ -157,7 +149,6 @@ public static partial class RawConversionTask
 			// Set up progress tracking
 			DateTime lastProgressUpdate = DateTime.Now.AddSeconds(-5);
 			DateTime lastSummaryUpdate = DateTime.Now.AddSeconds(-5);
-			_ = ProgressRegex();
 
 			RawMediaInfo mediaInfo = await Helpers.GetMediaInfoAsync(fileToConvert.FullName).ConfigureAwait(false);
 
@@ -171,9 +162,16 @@ public static partial class RawConversionTask
 
 			process.Start();
 			process.BeginErrorReadLine();
-			process.PriorityClass = processPriority;
-			// Wait for completion or cancellation
+			try
+			{
+				process.PriorityClass = processPriority;
+			}
+			catch (Exception ex)
+			{
+				logger.Warn(ex, $"Task {conversionIndex}: Failed to set process priority");
+			}
 
+			// Wait for completion or cancellation
 			Task completionTask = process.WaitForExitAsync();
 			List<Task> tasks = [completionTask];
 
@@ -223,8 +221,8 @@ public static partial class RawConversionTask
 		}
 	}
 
-	[GeneratedRegex(@"time=(\d{2}):(\d{2}):(\d{2})\.(\d{2}).*?fps=\s*(\d+(?:\.\d+)?)")]
-	private static partial Regex ProgressRegex();
+	// [GeneratedRegex(@"time=(\d{2}):(\d{2}):(\d{2})\.(\d{2}).*?fps=\s*(\d+(?:\.\d+)?)")]
+	// private static partial Regex ProgressRegex();
 }
 
 // Extension method for WaitHandle

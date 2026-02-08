@@ -16,6 +16,7 @@ public sealed class CommonTests : IDisposable
 	public void Dispose()
 	{
 		ClearCustomFormatCache();
+		ClearStandardFormatCache();
 		GC.SuppressFinalize(this);
 	}
 
@@ -26,6 +27,7 @@ public sealed class CommonTests : IDisposable
 			if (disposing)
 			{
 				ClearCustomFormatCache();
+				ClearStandardFormatCache();
 			}
 			disposed = true;
 		}

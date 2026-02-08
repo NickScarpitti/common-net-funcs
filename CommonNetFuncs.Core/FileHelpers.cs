@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿using System.Buffers;
+using System.IO.Pipelines;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -352,5 +354,142 @@ public static partial class FileHelpers
 			.Replace("|", "_")
 			.Replace("?", "_")
 			.Replace("*", "_").ToString();
+	}
+
+	/// <summary>
+	/// Reads a file from a PipeReader and writes it to a provided Stream, with optional file size limit and error handling. Designed for efficiently handling file uploads without unnecessary memory allocations.
+	/// </summary>
+	/// <param name="reader">PipeReader to read from.</param>
+	/// <param name="fileStream">Stream to write the file to.</param>
+	/// <param name="MaxProfileImageFileSize">Maximum allowed file size.</param>
+	/// <param name="successReturn">Optional: Return value on success.</param>
+	/// <param name="fileTooLargeReturn">Optional: Return value if file is too large.</param>
+	/// <param name="errorReturn">Function to handle errors. If not provided, exceptions are thrown.</param>
+	/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+	/// <typeparam name="TReturn">Type of the return value.</typeparam>
+	/// <returns>A tuple with a success flag and the appropriate return value based on the outcome of the operation, or null if not provided.</returns>
+	public static async Task<(bool success, TReturn? result)> ReadFileFromPipe<TReturn>(this PipeReader reader, Stream fileStream, long MaxProfileImageFileSize, TReturn? successReturn = default,
+		TReturn? fileTooLargeReturn = default, Func<Exception, TReturn?>? errorReturn = default, CancellationToken cancellationToken = default)
+	{
+		long totalBytesRead = 0;
+		while (true)
+		{
+			try
+			{
+				ReadResult readResult = await reader.ReadAsync(cancellationToken);
+				ReadOnlySequence<byte> data = readResult.Buffer;
+				totalBytesRead += data.Length;
+
+				if (totalBytesRead > MaxProfileImageFileSize)
+				{
+					return (false, fileTooLargeReturn);
+				}
+
+				if (data.IsEmpty && readResult.IsCompleted)
+				{
+					break;
+				}
+
+				// Write directly without ToArray() allocation
+				if (data.IsSingleSegment)
+				{
+					await fileStream.WriteAsync(data.First, cancellationToken);
+				}
+				else
+				{
+					foreach (ReadOnlyMemory<byte> segment in data)
+					{
+						await fileStream.WriteAsync(segment, cancellationToken);
+					}
+				}
+
+				reader.AdvanceTo(data.End);
+
+				if (readResult.IsCompleted)
+				{
+					break;
+				}
+			}
+			catch (Exception ex)
+			{
+				if (errorReturn != null)
+				{
+					return (false, errorReturn(ex));
+				}
+				throw new FileLoadException("Error reading file from pipe", ex);
+			}
+		}
+
+		await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+		if (fileStream.CanSeek)
+		{
+			fileStream.Position = 0;
+		}
+		return (true, successReturn);
+	}
+
+	/// <summary>
+	/// Reads a file from a PipeReader and writes it to a provided Stream, with optional file size limit and error handling. Designed for efficiently handling file uploads without unnecessary memory allocations.
+	/// </summary>
+	/// <param name="reader">PipeReader to read from.</param>
+	/// <param name="fileStream">Stream to write the file to.</param>
+	/// <param name="MaxProfileImageFileSize">Maximum allowed file size.</param>
+	/// <param name="successReturn">Optional: Return value on success.</param>
+	/// <param name="fileTooLargeReturn">Optional: Return value if file is too large.</param>
+	/// <param name="errorReturn">Function to handle errors.</param>
+	/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+	/// <typeparam name="TReturn">Type of the return value.</typeparam>
+	/// <returns>A tuple with a success flag and the appropriate return value based on the outcome of the operation, or null if not provided.</returns>
+	public static async Task<(bool success, TReturn? result)> ReadFileFromPipe<TReturn>(this PipeReader reader, Stream fileStream, TReturn? successReturn = default,
+		Func<Exception, TReturn?>? errorReturn = default, CancellationToken cancellationToken = default)
+	{
+		while (true)
+		{
+			try
+			{
+				ReadResult readResult = await reader.ReadAsync(cancellationToken);
+				ReadOnlySequence<byte> data = readResult.Buffer;
+
+				if (data.IsEmpty && readResult.IsCompleted)
+				{
+					break;
+				}
+
+				// Write directly without ToArray() allocation
+				if (data.IsSingleSegment)
+				{
+					await fileStream.WriteAsync(data.First, cancellationToken);
+				}
+				else
+				{
+					foreach (ReadOnlyMemory<byte> segment in data)
+					{
+						await fileStream.WriteAsync(segment, cancellationToken);
+					}
+				}
+
+				reader.AdvanceTo(data.End);
+
+				if (readResult.IsCompleted)
+				{
+					break;
+				}
+			}
+			catch (Exception ex)
+			{
+				if (errorReturn != null)
+				{
+					return (false, errorReturn(ex));
+				}
+				throw new FileLoadException("Error reading file from pipe", ex);
+			}
+		}
+
+		await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+		if (fileStream.CanSeek)
+		{
+			fileStream.Position = 0;
+		}
+		return (true, successReturn);
 	}
 }

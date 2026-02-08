@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.IO.Pipelines;
+using System.Text;
 using CommonNetFuncs.Core;
 
 namespace Core.Tests;
@@ -48,7 +49,7 @@ public sealed class FileHelpersTests : IDisposable
 	public void GetSafeSaveName_String_CreatesDirectory_WhenMissingAndFlagSet()
 	{
 		// Arrange
-		string newDir = Path.Combine(tempDir, "newsubdir");
+		string newDir = Path.Combine(tempDir, "NewSubDir");
 		string fileName = Path.Combine(newDir, "file.txt");
 
 		// Act
@@ -63,7 +64,7 @@ public sealed class FileHelpersTests : IDisposable
 	public void GetSafeSaveName_String_ReturnsEmpty_WhenDirectoryMissingAndNoCreate()
 	{
 		// Arrange
-		string newDir = Path.Combine(tempDir, "missingdir");
+		string newDir = Path.Combine(tempDir, "MissingDir");
 		string fileName = Path.Combine(newDir, "file.txt");
 
 		// Act
@@ -93,7 +94,7 @@ public sealed class FileHelpersTests : IDisposable
 	public void GetSafeSaveName_PathAndFileName_CreatesDirectory_WhenMissingAndFlagSet()
 	{
 		// Arrange
-		string newDir = Path.Combine(tempDir, "newsubdir2");
+		string newDir = Path.Combine(tempDir, "NewSubDir2");
 		const string fileName = "file2.txt";
 
 		// Act
@@ -108,7 +109,7 @@ public sealed class FileHelpersTests : IDisposable
 	public void GetSafeSaveName_PathAndFileName_ReturnsEmpty_WhenDirectoryMissingAndNoCreate()
 	{
 		// Arrange
-		string newDir = Path.Combine(tempDir, "missingdir2");
+		string newDir = Path.Combine(tempDir, "MissingDir2");
 		const string fileName = "file3.txt";
 
 		// Act
@@ -123,7 +124,7 @@ public sealed class FileHelpersTests : IDisposable
 	[InlineData("file.doc", new[] { ".txt", ".doc" }, true)]
 	[InlineData("file.pdf", new[] { ".txt", ".doc" }, false)]
 	[InlineData("file", new[] { ".txt" }, false)]
-	public void ValidateFileExtention_Works(string fileName, string[] validExtensions, bool expected)
+	public void ValidateFileExtension_Works(string fileName, string[] validExtensions, bool expected)
 	{
 		// Act
 		bool result = fileName.ValidateFileExtension(validExtensions.ToHashSet());
@@ -161,7 +162,7 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetHashFromFile_ReturnsEmptyString_OnException()
 	{
 		// Arrange
-		string fileName = Path.Combine(tempDir, "doesnotexist.txt");
+		string fileName = Path.Combine(tempDir, "DoesNotExist.txt");
 
 		// Act
 		string hash = await fileName.GetHashFromFile();
@@ -276,4 +277,496 @@ public sealed class FileHelpersTests : IDisposable
 		safeName.ShouldNotBeNullOrWhiteSpace();
 		safeName.ShouldEndWith(".txt");
 	}
+
+	#region ReadFileFromPipe tests with size limit
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithSizeLimit_SuccessfullyReadsData()
+	{
+		// Arrange
+		const string testData = "Hello, World! This is test data.";
+		byte[] dataBytes = Encoding.UTF8.GetBytes(testData);
+
+		PipeReader pipeReader = CreatePipeReaderFromData(dataBytes);
+		using MemoryStream outputStream = new();
+		const long maxSize = 1024;
+		const string successValue = "Success!";
+
+		// Act
+		(bool success, string? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			maxSize,
+			successValue,
+			"TooLarge",
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		result.ShouldBe(successValue);
+		outputStream.Position.ShouldBe(0);
+		outputStream.Length.ShouldBe(dataBytes.Length);
+
+		outputStream.Position = 0;
+		using StreamReader reader = new(outputStream);
+		string actualData = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		actualData.ShouldBe(testData);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithSizeLimit_ReturnsFileTooLarge_WhenExceedingLimit()
+	{
+		// Arrange
+		byte[] largeData = new byte[2048];
+		System.Random.Shared.NextBytes(largeData);
+
+		PipeReader pipeReader = CreatePipeReaderFromData(largeData);
+		using MemoryStream outputStream = new();
+		const long maxSize = 1024;
+		const string tooLargeValue = "File too large!";
+
+		// Act
+		(bool success, string? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			maxSize,
+			"Success",
+			tooLargeValue,
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeFalse();
+		result.ShouldBe(tooLargeValue);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithSizeLimit_HandlesEmptyData()
+	{
+		// Arrange
+		PipeReader pipeReader = CreatePipeReaderFromData(Array.Empty<byte>());
+		using MemoryStream outputStream = new();
+		const long maxSize = 1024;
+		const int successValue = 42;
+
+		// Act
+		(bool success, int? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			maxSize,
+			successValue,
+			0,
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		result.ShouldBe(successValue);
+		outputStream.Length.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithSizeLimit_HandlesMultipleSegments()
+	{
+		// Arrange
+		const string part1 = "First part of data. ";
+		const string part2 = "Second part of data. ";
+		const string part3 = "Third part of data.";
+		byte[] data1 = Encoding.UTF8.GetBytes(part1);
+		byte[] data2 = Encoding.UTF8.GetBytes(part2);
+		byte[] data3 = Encoding.UTF8.GetBytes(part3);
+
+		PipeReader pipeReader = CreatePipeReaderFromMultipleSegments(data1, data2, data3);
+		using MemoryStream outputStream = new();
+		const long maxSize = 1024;
+
+		// Act
+		(bool success, string? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			maxSize,
+			"OK",
+			"TooLarge",
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		result.ShouldBe("OK");
+		outputStream.Position = 0;
+		using StreamReader reader = new(outputStream);
+		string actualData = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		actualData.ShouldBe(part1 + part2 + part3);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithSizeLimit_UsesErrorReturnFunction_OnException()
+	{
+		// Arrange
+		PipeReader pipeReader = CreateFaultyPipeReader();
+		using MemoryStream outputStream = new();
+		const long maxSize = 1024;
+		const string errorValue = "Error occurred";
+
+		string? ErrorHandler(Exception ex)
+		{
+			return errorValue;
+		}
+
+		// Act
+		(bool success, string? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			maxSize,
+			"Success",
+			"TooLarge",
+			ErrorHandler,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeFalse();
+		result.ShouldBe(errorValue);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithSizeLimit_ThrowsException_WhenNoErrorHandler()
+	{
+		// Arrange
+		PipeReader pipeReader = CreateFaultyPipeReader();
+		using MemoryStream outputStream = new();
+		const long maxSize = 1024;
+
+		// Act & Assert
+		Exception exception = await Should.ThrowAsync<Exception>(async () =>
+		{
+			await pipeReader.ReadFileFromPipe(
+				outputStream,
+				maxSize,
+				"Success",
+				"TooLarge",
+				null,
+				TestContext.Current.CancellationToken);
+		});
+
+		exception.Message.ShouldBe("Error reading file from pipe");
+		exception.InnerException.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithSizeLimit_RespectsCancellationToken()
+	{
+		// Arrange
+		using CancellationTokenSource cts = new();
+		await cts.CancelAsync();
+
+		byte[] data = Encoding.UTF8.GetBytes("Test data");
+		PipeReader pipeReader = CreatePipeReaderFromData(data);
+		using MemoryStream outputStream = new();
+		const long maxSize = 1024;
+
+		// Act & Assert
+		// Note: The cancellation exception gets wrapped in a generic Exception by the implementation
+		Exception exception = await Should.ThrowAsync<Exception>(async () =>
+		{
+			await pipeReader.ReadFileFromPipe(
+				outputStream,
+				maxSize,
+				"Success",
+				"TooLarge",
+				null,
+				cts.Token);
+		});
+
+		exception.Message.ShouldBe("Error reading file from pipe");
+		exception.InnerException.ShouldBeOfType<TaskCanceledException>();
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithSizeLimit_ResetsStreamPosition()
+	{
+		// Arrange
+		byte[] data = Encoding.UTF8.GetBytes("Stream position test");
+		PipeReader pipeReader = CreatePipeReaderFromData(data);
+		using MemoryStream outputStream = new();
+		const long maxSize = 1024;
+
+		// Act
+		(bool success, _) = await pipeReader.ReadFileFromPipe<string>(
+			outputStream,
+			maxSize,
+			null,
+			null,
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		outputStream.Position.ShouldBe(0);
+	}
+
+	#endregion
+
+	#region ReadFileFromPipe tests without size limit
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithoutSizeLimit_SuccessfullyReadsData()
+	{
+		// Arrange
+		const string testData = "Hello, World! This is test data without size limit.";
+		byte[] dataBytes = Encoding.UTF8.GetBytes(testData);
+
+		PipeReader pipeReader = CreatePipeReaderFromData(dataBytes);
+		using MemoryStream outputStream = new();
+		const string successValue = "Success!";
+
+		// Act
+		(bool success, string? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			successValue,
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		result.ShouldBe(successValue);
+		outputStream.Position.ShouldBe(0);
+		outputStream.Length.ShouldBe(dataBytes.Length);
+
+		outputStream.Position = 0;
+		using StreamReader reader = new(outputStream);
+		string actualData = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		actualData.ShouldBe(testData);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithoutSizeLimit_HandlesLargeData()
+	{
+		// Arrange
+		byte[] largeData = new byte[10 * 1024]; // 10 KB
+		System.Random.Shared.NextBytes(largeData);
+
+		PipeReader pipeReader = CreatePipeReaderFromData(largeData);
+		using MemoryStream outputStream = new();
+		const int successValue = 1;
+
+		// Act
+		(bool success, int? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			successValue,
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		result.ShouldBe(successValue);
+		outputStream.Length.ShouldBe(largeData.Length);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithoutSizeLimit_HandlesEmptyData()
+	{
+		// Arrange
+		PipeReader pipeReader = CreatePipeReaderFromData(Array.Empty<byte>());
+		using MemoryStream outputStream = new();
+		const int successValue = 100;
+
+		// Act
+		(bool success, int? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			successValue,
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		result.ShouldBe(successValue);
+		outputStream.Length.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithoutSizeLimit_HandlesMultipleSegments()
+	{
+		// Arrange
+		const string part1 = "Segment one. ";
+		const string part2 = "Segment two. ";
+		const string part3 = "Segment three.";
+		byte[] data1 = Encoding.UTF8.GetBytes(part1);
+		byte[] data2 = Encoding.UTF8.GetBytes(part2);
+		byte[] data3 = Encoding.UTF8.GetBytes(part3);
+
+		PipeReader pipeReader = CreatePipeReaderFromMultipleSegments(data1, data2, data3);
+		using MemoryStream outputStream = new();
+
+		// Act
+		(bool success, string? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			"Complete",
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		result.ShouldBe("Complete");
+		outputStream.Position = 0;
+		using StreamReader reader = new(outputStream);
+		string actualData = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		actualData.ShouldBe(part1 + part2 + part3);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithoutSizeLimit_UsesErrorReturnFunction_OnException()
+	{
+		// Arrange
+		PipeReader pipeReader = CreateFaultyPipeReader();
+		using MemoryStream outputStream = new();
+		const string errorValue = "Error occurred during read";
+
+		string? ErrorHandler(Exception ex)
+		{
+			ex.ShouldNotBeNull();
+			return errorValue;
+		}
+
+		// Act
+		(bool success, string? result) = await pipeReader.ReadFileFromPipe(
+			outputStream,
+			"Success",
+			ErrorHandler,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeFalse();
+		result.ShouldBe(errorValue);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithoutSizeLimit_ThrowsException_WhenNoErrorHandler()
+	{
+		// Arrange
+		PipeReader pipeReader = CreateFaultyPipeReader();
+		using MemoryStream outputStream = new();
+
+		// Act & Assert
+		Exception exception = await Should.ThrowAsync<Exception>(async () =>
+		{
+			await pipeReader.ReadFileFromPipe(
+				outputStream,
+				"Success",
+				null,
+				TestContext.Current.CancellationToken);
+		});
+
+		exception.Message.ShouldBe("Error reading file from pipe");
+		exception.InnerException.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithoutSizeLimit_RespectsCancellationToken()
+	{
+		// Arrange
+		using CancellationTokenSource cts = new();
+		await cts.CancelAsync();
+
+		byte[] data = Encoding.UTF8.GetBytes("Test data");
+		PipeReader pipeReader = CreatePipeReaderFromData(data);
+		using MemoryStream outputStream = new();
+
+		// Act & Assert
+		// Note: The cancellation exception gets wrapped in a generic Exception by the implementation
+		Exception exception = await Should.ThrowAsync<Exception>(async () =>
+		{
+			await pipeReader.ReadFileFromPipe(
+				outputStream,
+				"Success",
+				null,
+				cts.Token);
+		});
+
+		exception.Message.ShouldBe("Error reading file from pipe");
+		exception.InnerException.ShouldBeOfType<TaskCanceledException>();
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithoutSizeLimit_ResetsStreamPosition()
+	{
+		// Arrange
+		byte[] data = Encoding.UTF8.GetBytes("Position reset test");
+		PipeReader pipeReader = CreatePipeReaderFromData(data);
+		using MemoryStream outputStream = new();
+
+		// Act
+		(bool success, _) = await pipeReader.ReadFileFromPipe<string>(
+			outputStream,
+			null,
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		outputStream.Position.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ReadFileFromPipe_WithoutSizeLimit_HandlesNullSuccessReturn()
+	{
+		// Arrange
+		byte[] data = Encoding.UTF8.GetBytes("Null return test");
+		PipeReader pipeReader = CreatePipeReaderFromData(data);
+		using MemoryStream outputStream = new();
+
+		// Act
+		(bool success, string? result) = await pipeReader.ReadFileFromPipe<string>(
+			outputStream,
+			null,
+			null,
+			TestContext.Current.CancellationToken);
+
+		// Assert
+		success.ShouldBeTrue();
+		result.ShouldBeNull();
+		outputStream.Length.ShouldBeGreaterThan(0);
+	}
+
+	#endregion
+
+	#region Helper methods for PipeReader creation
+
+#pragma warning disable S1481 // Remove the unused local variable
+	private static PipeReader CreatePipeReaderFromData(byte[] data)
+	{
+		Pipe pipe = new();
+		Task writeTask = Task.Run(async () =>
+		{
+			await pipe.Writer.WriteAsync(data);
+			await pipe.Writer.CompleteAsync();
+		});
+
+		return pipe.Reader;
+	}
+
+	private static PipeReader CreatePipeReaderFromMultipleSegments(params byte[][] segments)
+	{
+		Pipe pipe = new();
+		Task writeTask = Task.Run(async () =>
+		{
+			foreach (byte[] segment in segments)
+			{
+				await pipe.Writer.WriteAsync(segment);
+				await pipe.Writer.FlushAsync();
+			}
+			await pipe.Writer.CompleteAsync();
+		});
+
+		return pipe.Reader;
+	}
+
+	private static PipeReader CreateFaultyPipeReader()
+	{
+		Pipe pipe = new();
+		Task writeTask = Task.Run(async () =>
+		{
+			await pipe.Writer.CompleteAsync(new InvalidOperationException("Simulated pipe error"));
+		});
+
+		return pipe.Reader;
+	}
+#pragma warning restore S1481 // Remove the unused local variable
+
+	#endregion
 }

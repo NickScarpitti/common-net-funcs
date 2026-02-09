@@ -192,4 +192,140 @@ public sealed class MathHelpersTests
             CultureInfo.CurrentCulture = original;
         }
     }
+
+    [Theory]
+    [InlineData(123.0, 0)]              // whole number
+    [InlineData(123.1, 1)]              // one decimal place
+    [InlineData(123.12, 2)]             // two decimal places
+    [InlineData(123.123, 3)]            // three decimal places
+    [InlineData(-123.12, 2)]            // negative number
+    [InlineData(0.0, 0)]                // zero
+    public void GetPrecision_NonNullable_Double_Works(double value, int expected)
+    {
+        int precision = value.GetPrecision();
+        precision.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(123.0, 0)]
+    [InlineData(123.1, 1)]
+    [InlineData(123.12, 2)]
+    [InlineData(123.123, 3)]
+    [InlineData(-123.12, 2)]
+    [InlineData(0.0, 0)]
+    public void GetPrecision_NonNullable_Decimal_Works(double value, int expected)
+    {
+        decimal decimalValue = (decimal)value;
+        int precision = decimalValue.GetPrecision();
+        precision.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void GetPrecision_Double_WithCustomSeparator_Works()
+    {
+        const double value = 123.45;
+        int precision = value.GetPrecision(".");
+        precision.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData(10.0, 10.0, true)]          // equal values
+    [InlineData(10.0, 10.00001, true)]      // within tolerance
+    [InlineData(10.0, 10.001, false)]       // outside tolerance
+    [InlineData(10.0, 11.0, false)]         // different values
+    [InlineData(0.0, 0.0, true)]            // zero values
+    [InlineData(-10.0, -10.0, true)]        // negative equal values
+    public void Equals_Double_Works(double a, double b, bool expected)
+    {
+        bool result = MathHelpers.Equals(a, b);
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(10.0, 10.0, true)]          // equal values
+    [InlineData(10.0, 10.00001, true)]      // within tolerance
+    [InlineData(10.0, 10.001, false)]       // outside tolerance
+    [InlineData(10.0, 11.0, false)]         // different values
+    [InlineData(null, null, true)]          // both null
+    [InlineData(10.0, null, false)]         // first not null
+    [InlineData(null, 10.0, false)]         // second not null
+    public void Equals_NullableDouble_Works(double? a, double? b, bool expected)
+    {
+        bool result = MathHelpers.Equals(a, b);
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Equals_Double_WithCustomTolerance_Works()
+    {
+        const double a = 10.0;
+        const double b = 10.01;
+        
+        // Within custom tolerance
+        MathHelpers.Equals(a, b, 0.1m).ShouldBeTrue();
+        
+        // Outside custom tolerance
+        MathHelpers.Equals(a, b, 0.001m).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(10.0, 10.0, false)]         // equal values
+    [InlineData(10.0, 10.00001, false)]     // within tolerance
+    [InlineData(10.0, 10.001, true)]        // outside tolerance
+    [InlineData(10.0, 11.0, true)]          // different values
+    [InlineData(0.0, 0.0, false)]           // zero values
+    [InlineData(-10.0, -10.0, false)]       // negative equal values
+    public void NotEquals_Double_Works(double a, double b, bool expected)
+    {
+        bool result = MathHelpers.NotEquals(a, b);
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(10.0, 10.0, false)]         // equal values
+    [InlineData(10.0, 10.00001, false)]     // within tolerance
+    [InlineData(10.0, 10.001, true)]        // outside tolerance
+    [InlineData(10.0, 11.0, true)]          // different values
+    [InlineData(null, null, false)]         // both null
+    [InlineData(10.0, null, true)]          // first not null
+    [InlineData(null, 10.0, true)]          // second not null
+    public void NotEquals_NullableDouble_Works(double? a, double? b, bool expected)
+    {
+        bool result = MathHelpers.NotEquals(a, b);
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void NotEquals_Double_WithCustomTolerance_Works()
+    {
+        const double a = 10.0;
+        const double b = 10.01;
+        
+        // Within custom tolerance
+        MathHelpers.NotEquals(a, b, 0.1m).ShouldBeFalse();
+        
+        // Outside custom tolerance
+        MathHelpers.NotEquals(a, b, 0.001m).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(double.NaN, 0)]
+    [InlineData(double.PositiveInfinity, 0)]
+    [InlineData(double.NegativeInfinity, 0)]
+    public void GetPrecision_Double_SpecialValues_Works(double value, int expected)
+    {
+        int precision = value.GetPrecision();
+        precision.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(double.NaN, 0)]
+    [InlineData(double.PositiveInfinity, 0)]
+    [InlineData(double.NegativeInfinity, 0)]
+    public void GetPrecision_NullableDouble_SpecialValues_Works(double value, int expected)
+    {
+        double? nullableValue = value;
+        int precision = nullableValue.GetPrecision();
+        precision.ShouldBe(expected);
+    }
 }

@@ -767,7 +767,7 @@ public sealed class InspectTests
 		ClassWithComplexObject obj1 = new() { Value = 1, Nested = null };
 		ClassWithComplexObject obj2 = new() { Value = 2, Nested = null };
 		var collection = new[] { obj1, obj2 };
-		
+
 		// Create a wrapper class
 		var wrapper = new { Items = collection };
 
@@ -820,14 +820,14 @@ public sealed class InspectTests
 		result.ShouldBeFalse();
 	}
 
-[Fact]
-public void ObjectHasAttribute_WithDifferentAttributeName_ReturnsFalse()
-{
-	// This tests the path where attrName is not null but doesn't match attributeName
-	Type type = typeof(ClassWithDescription);
-	bool result = type.ObjectHasAttribute("NonExistentAttribute");
-	result.ShouldBeFalse();
-}
+	[Fact]
+	public void ObjectHasAttribute_WithDifferentAttributeName_ReturnsFalse()
+	{
+		// This tests the path where attrName is not null but doesn't match attributeName
+		Type type = typeof(ClassWithDescription);
+		bool result = type.ObjectHasAttribute("NonExistentAttribute");
+		result.ShouldBeFalse();
+	}
 }
 #pragma warning restore IDE0079 // Remove unnecessary suppression
 

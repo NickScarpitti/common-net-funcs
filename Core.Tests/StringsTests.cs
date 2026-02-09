@@ -321,6 +321,7 @@ public sealed class StringsTests
 	[InlineData(null, "test", false)]
 	[InlineData("  test  ", "test", true)]
 	[InlineData("test", "  test  ", true)]
+	[InlineData("", "", true)]
 	public void StrEq_ComparesStrings(string? input1, string? input2, bool expected)
 	{
 		// Act
@@ -453,6 +454,19 @@ public sealed class StringsTests
 		// Assert
 		result.StringProp.ShouldBe("test");
 		result.NestedObject.InnerString.ShouldBe("inner1");
+	}
+
+	[Fact]
+	public void TrimObjectStrings_HandlesNull()
+	{
+		// Arrange
+		TestObject? testObject = null;
+
+		// Act
+		TestObject? result = testObject?.TrimObjectStrings(recursive: true);
+
+		// Assert
+		result.ShouldBeNull();
 	}
 
 	public sealed class TestObject
@@ -730,10 +744,24 @@ public sealed class StringsTests
 		result.ShouldBe("Hello World\nTest");
 	}
 
+	[Fact]
+	public void NormalizeWhiteSpace_HandlesNullInput()
+	{
+		// Arrange
+		const string? input = null;
+
+		// Act
+		string result = input.NormalizeWhiteSpace();
+
+		// Assert
+		result.ShouldBe(string.Empty);
+	}
+
 	[Theory]
 	[InlineData("20230101", "yyyyMMdd", "MM/dd/yyyy", "01/01/2023")]
 	[InlineData("2023-01-01", "yyyy-MM-dd", "yyyy.MM.dd", "2023.01.01")]
-	public void FormatDateString_FormatsCorrectly(string input, string sourceFormat, string outputFormat, string expected)
+	[InlineData(null, "yyyy-MM-dd", "yyyy.MM.dd", null)]
+	public void FormatDateString_FormatsCorrectly(string? input, string sourceFormat, string outputFormat, string? expected)
 	{
 		// Act
 		string? result = input.FormatDateString(sourceFormat, outputFormat);
@@ -1299,6 +1327,21 @@ public sealed class StringsTests
 		}
 	}
 
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void NormalizeObjectStrings_HandlesNull(bool inlineData)
+	{
+		// Arrange
+		TestObject? testObject = null;
+
+		// Act
+		TestObject? result = testObject.NormalizeObjectStrings(inlineData, NormalizationForm.FormD, true);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
 	private class TestNullObj
 	{
 		public string? Name { get; set; }
@@ -1390,15 +1433,21 @@ public sealed class StringsTests
 	{
 		// Arrange
 		IEnumerable<string> enumerable = new[] { "1", "2", "3" };
+		IEnumerable<string> enumerableStrings = new[] { "four", "five", "six" };
 		IList<string> list = new List<string> { "4", "5", "6" };
+		IList<string> listStrings = new List<string> { "four", "five", "six" };
 
 		// Act
 		IEnumerable<int> result1 = enumerable.ToListInt();
 		List<int> result2 = list.ToListInt();
+		List<int> result3 = listStrings.ToListInt();
+		IEnumerable<int> result4 = enumerableStrings.ToListInt();
 
 		// Assert
 		result1.ShouldBe([1, 2, 3]);
 		result2.ShouldBe(new List<int> { 4, 5, 6 });
+		result3.ShouldBeEmpty();
+		result4.ShouldBeEmpty();
 	}
 
 	[Theory]
@@ -1533,15 +1582,21 @@ public sealed class StringsTests
 		string result1 = Strings.GetSafeDate(format);
 		string result2 = dt.GetSafeDate(format);
 		string result3 = d.GetSafeDate(format);
+		string result4 = ((DateOnly?)null).GetSafeDate(format);
+		string result5 = ((DateTime?)null).GetSafeDate(format);
 
 		// Assert
 		string.IsNullOrWhiteSpace(result1).ShouldBeFalse();
 		string.IsNullOrWhiteSpace(result2).ShouldBeFalse();
 		string.IsNullOrWhiteSpace(result3).ShouldBeFalse();
+		string.IsNullOrWhiteSpace(result4).ShouldBeFalse();
+		string.IsNullOrWhiteSpace(result5).ShouldBeFalse();
 	}
 
-	[Fact]
-	public void MakeExportNameUnique_Works()
+	[Theory]
+	[InlineData("png")]
+	[InlineData(null)]
+	public void MakeExportNameUnique_Works(string? extension)
 	{
 		// Arrange
 		const string tempDir = "TestData";
@@ -1549,7 +1604,7 @@ public sealed class StringsTests
 		const string ext = "png";
 
 		// Act
-		string unique = Strings.MakeExportNameUnique(tempDir, fileName, ext);
+		string unique = Strings.MakeExportNameUnique(tempDir, fileName, extension);
 
 		// Assert
 		unique.ShouldStartWith(fileName.Replace($".{ext}", string.Empty));
@@ -1603,6 +1658,11 @@ public sealed class StringsTests
 	[InlineData("abc123", @"\d+", "*", false, "*123")]
 	[InlineData("abc123", "[a-z]+", "#", false, "abc#")]
 	[InlineData(null, @"\d+", "*", false, null)]
+	[InlineData("abc123", "[a-z]+", null, false, "abc")]
+	[InlineData("abc123", @"\d+", "*", true, "*123")]
+	[InlineData("abc123", "[a-z]+", "#", true, "abc#")]
+	[InlineData(null, @"\d+", "*", true, null)]
+	[InlineData("abc123", "[a-z]+", null, true, "abc")]
 	public void ReplaceInverse_Regex_Works(string? input, string pattern, string? replacement, bool matchFirstOnly, string? expected)
 	{
 		// Arrange

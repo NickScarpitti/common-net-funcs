@@ -283,16 +283,11 @@ public static partial class Strings
 	/// <returns>Null if the string passed in is null or is the word null with no other text characters other than whitespace</returns>
 	public static string? MakeNullNull(this string? s)
 	{
-		if (!s.IsNullOrWhiteSpace())
+		if (!s.IsNullOrWhiteSpace() && (s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0))
 		{
-			if ((s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0))
-			{
-				return null;
-			}
+			return null;
 		}
 		return s;
-
-		// return !s.IsNullOrWhiteSpace() && (s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0 || s.Trim().StrEq("Null")) ? null : s;
 	}
 
 
@@ -807,7 +802,6 @@ public static partial class Strings
 		}
 #pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 	}
-
 
 	/// <summary>
 	/// Checks if a string contains any character from a specified set of characters.
@@ -1582,7 +1576,6 @@ public static partial class Strings
 		return values.Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value);
 	}
 
-
 	/// <summary>
 	/// Converts list of string representations of integers into list of integers
 	/// </summary>
@@ -1592,7 +1585,6 @@ public static partial class Strings
 	{
 		return values.Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value).ToList();
 	}
-
 
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable integers

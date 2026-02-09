@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Core;
+﻿using System.Reflection.Emit;
+using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
@@ -117,15 +118,11 @@ public sealed class ExceptionLocationTests
 	{
 		// Arrange
 		// Create a dynamic method which has no ReflectedType
-		var dynamicMethod = new System.Reflection.Emit.DynamicMethod(
-				"DynamicTestMethod",
-				typeof(void),
-				Type.EmptyTypes);
+		DynamicMethod dynamicMethod = new("DynamicTestMethod", typeof(void), Type.EmptyTypes);
 
-		var ilGenerator = dynamicMethod.GetILGenerator();
-		ilGenerator.Emit(System.Reflection.Emit.OpCodes.Newobj,
-				typeof(InvalidOperationException).GetConstructor([typeof(string)])!);
-		ilGenerator.Emit(System.Reflection.Emit.OpCodes.Throw);
+		ILGenerator ilGenerator = dynamicMethod.GetILGenerator();
+		ilGenerator.Emit(OpCodes.Newobj, typeof(InvalidOperationException).GetConstructor([typeof(string)])!);
+		ilGenerator.Emit(OpCodes.Throw);
 
 		Action action = (Action)dynamicMethod.CreateDelegate(typeof(Action));
 

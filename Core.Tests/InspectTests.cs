@@ -202,25 +202,20 @@ public sealed class InspectTests
 		public IEnumerable<int>? Items { get; set; }
 	}
 
-	private sealed class ClassWithReadOnlyProperty
+	private sealed class ClassWithReadOnlyProperty(int value)
 	{
-		public int ReadOnlyProp { get; }
+		public int ReadOnlyProp { get; } = value;
 		public int WritableProp { get; set; }
-
-		public ClassWithReadOnlyProperty(int value)
-		{
-			ReadOnlyProp = value;
-		}
 	}
 
 	private sealed class ClassWithIndexer
 	{
-		private readonly int[] _data = new int[10];
+		private readonly int[] data = new int[10];
 
 		public int this[int index]
 		{
-			get => _data[index];
-			set => _data[index] = value;
+			//get => data[index];
+			set => data[index] = value;
 		}
 
 		public int RegularProp { get; set; }
@@ -353,8 +348,10 @@ public sealed class InspectTests
 	public void IsEqual_WithComparableTypes_UsesCompareTo()
 	{
 		// Arrange
+#pragma warning disable S6562 // Provide the "DateTimeKind" when creating this object
 		ClassWithComparable a = new() { DateValue = new DateTime(2024, 1, 1), StringValue = "test" };
 		ClassWithComparable b = new() { DateValue = new DateTime(2024, 1, 1), StringValue = "test" };
+#pragma warning restore S6562 // Provide the "DateTimeKind" when creating this object
 
 		// Act
 		bool result = a.IsEqual(b);
@@ -367,8 +364,10 @@ public sealed class InspectTests
 	public void IsEqual_WithComparableTypes_DifferentDates_ReturnsFalse()
 	{
 		// Arrange
+#pragma warning disable S6562 // Provide the "DateTimeKind" when creating this object
 		ClassWithComparable a = new() { DateValue = new DateTime(2024, 1, 1), StringValue = "test" };
 		ClassWithComparable b = new() { DateValue = new DateTime(2024, 1, 2), StringValue = "test" };
+#pragma warning restore S6562 // Provide the "DateTimeKind" when creating this object
 
 		// Act
 		bool result = a.IsEqual(b);
@@ -766,7 +765,7 @@ public sealed class InspectTests
 		// Arrange
 		ClassWithComplexObject obj1 = new() { Value = 1, Nested = null };
 		ClassWithComplexObject obj2 = new() { Value = 2, Nested = null };
-		var collection = new[] { obj1, obj2 };
+		ClassWithComplexObject[] collection = new[] { obj1, obj2 };
 
 		// Create a wrapper class
 		var wrapper = new { Items = collection };
@@ -782,7 +781,7 @@ public sealed class InspectTests
 	public async Task GetHashForObjectAsync_CollectionWithComplexObjects_ProducesHash()
 	{
 		// Arrange
-		var collection = new[]
+		SimpleClass[] collection = new[]
 		{
 			new SimpleClass { IntProp = 1, StringProp = "a" },
 			new SimpleClass { IntProp = 2, StringProp = "b" }

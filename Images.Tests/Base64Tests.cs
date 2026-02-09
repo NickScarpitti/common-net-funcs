@@ -6,21 +6,21 @@ namespace Images.Tests;
 
 public sealed class Base64Tests : IDisposable
 {
-	private readonly string _testImagePath;
-	private readonly string _tempSavePath;
+	private readonly string testImagePath;
+	private readonly string tempSavePath;
 	private const string TestBase64String = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNk+M9Qz0AEYBxVSF+FAAhKDveksOjmAAAAAElFTkSuQmCC";
 
 	public Base64Tests()
 	{
-		_testImagePath = Path.Combine("TestData", "test.png");
-		_tempSavePath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.png");
+		testImagePath = Path.Combine("TestData", "test.png");
+		tempSavePath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.png");
 	}
 
 	private bool disposed;
 
 	public void Dispose()
 	{
-		File.Delete(_tempSavePath);
+		File.Delete(tempSavePath);
 		GC.SuppressFinalize(this);
 	}
 
@@ -30,7 +30,7 @@ public sealed class Base64Tests : IDisposable
 		{
 			if (disposing)
 			{
-				File.Delete(_tempSavePath);
+				File.Delete(tempSavePath);
 			}
 			disposed = true;
 		}
@@ -45,7 +45,7 @@ public sealed class Base64Tests : IDisposable
 	public void ConvertImageFileToBase64_WithValidPath_ReturnsBase64String()
 	{
 		// Act
-		string? result = _testImagePath.ConvertImageFileToBase64();
+		string? result = testImagePath.ConvertImageFileToBase64();
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -89,7 +89,7 @@ public sealed class Base64Tests : IDisposable
 	public void ConvertImageFileToBase64_WithMemoryStream_ReturnsBase64String()
 	{
 		// Arrange
-		using MemoryStream ms = new(File.ReadAllBytes(_testImagePath));
+		using MemoryStream ms = new(File.ReadAllBytes(testImagePath));
 
 		// Act
 		string? result = ms.ConvertImageFileToBase64();
@@ -201,17 +201,17 @@ public sealed class Base64Tests : IDisposable
 	public async Task ImageSaveToFile_WithValidBase64_SavesFileSuccessfully()
 	{
 		// Arrange
-		string base64Image = _testImagePath.ConvertImageFileToBase64()!;
+		string base64Image = testImagePath.ConvertImageFileToBase64()!;
 
 		// Act
 #pragma warning disable S6966 // Awaitable method should be used
-		bool result = base64Image.ImageSaveToFile(_tempSavePath);
+		bool result = base64Image.ImageSaveToFile(tempSavePath);
 #pragma warning restore S6966 // Awaitable method should be used
 
-		File.Exists(_tempSavePath).ShouldBeTrue();
+		File.Exists(tempSavePath).ShouldBeTrue();
 		result.ShouldBeTrue();
-		File.Exists(_tempSavePath).ShouldBeTrue();
-		using Image image = await Image.LoadAsync(_tempSavePath);
+		File.Exists(tempSavePath).ShouldBeTrue();
+		using Image image = await Image.LoadAsync(tempSavePath);
 
 		image.Height.ShouldBeGreaterThan(0);
 	}
@@ -223,10 +223,10 @@ public sealed class Base64Tests : IDisposable
 		const string invalidBase64 = "invalid base64 string";
 
 		// Act
-		bool result = invalidBase64.ImageSaveToFile(_tempSavePath);
+		bool result = invalidBase64.ImageSaveToFile(tempSavePath);
 
 		// Assert
 		result.ShouldBeFalse();
-		File.Exists(_tempSavePath).ShouldBeFalse();
+		File.Exists(tempSavePath).ShouldBeFalse();
 	}
 }

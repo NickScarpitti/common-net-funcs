@@ -4,11 +4,11 @@ namespace Web.Common.Tests;
 
 public sealed class PascalCaseJsonNamingPolicyTests
 {
-	private readonly PascalCaseJsonNamingPolicy _sut;
+	private readonly PascalCaseJsonNamingPolicy sut;
 
 	public PascalCaseJsonNamingPolicyTests()
 	{
-		_sut = new PascalCaseJsonNamingPolicy();
+		sut = new PascalCaseJsonNamingPolicy();
 	}
 
 	[Theory]
@@ -19,7 +19,7 @@ public sealed class PascalCaseJsonNamingPolicyTests
 	public void ConvertName_WhenGivenLowerCaseStart_ReturnsPascalCase(string input, string expected)
 	{
 		// Act
-		string result = _sut.ConvertName(input);
+		string result = sut.ConvertName(input);
 
 		// Assert
 		result.ShouldBe(expected);
@@ -37,7 +37,7 @@ public sealed class PascalCaseJsonNamingPolicyTests
 	public void ConvertName_WhenGivenPascalCaseOrFirstCharacterNotLetter_ReturnsUnmodified(string input)
 	{
 		// Act
-		string result = _sut.ConvertName(input);
+		string result = sut.ConvertName(input);
 
 		// Assert
 		result.ShouldBe(input);
@@ -49,7 +49,7 @@ public sealed class PascalCaseJsonNamingPolicyTests
 	public void ConvertName_WhenGivenNullOrEmpty_ReturnsUnmodified(string? input)
 	{
 		// Act
-		string result = _sut.ConvertName(input!);
+		string result = sut.ConvertName(input!);
 
 		// Assert
 		result.ShouldBe(input);
@@ -63,7 +63,7 @@ public sealed class PascalCaseJsonNamingPolicyTests
 		const string expected = "A";
 
 		// Act
-		string result = _sut.ConvertName(input);
+		string result = sut.ConvertName(input);
 
 		// Assert
 		result.ShouldBe(expected);

@@ -10,76 +10,76 @@ namespace BenchmarkSuite;
 [RankColumn]
 public class CoreCollectionsBenchmarks
 {
-	private List<int> _intList = null!;
-	private List<string> _stringList = null!;
-	private ConcurrentBag<int> _concurrentBag = null!;
-	private int[] _intArray = null!;
-	private Dictionary<int, string> _dictionary = null!;
+	private List<int> intList = null!;
+	private List<string> stringList = null!;
+	private ConcurrentBag<int> concurrentBag = null!;
+	private int[] intArray = null!;
+	private Dictionary<int, string> dictionary = null!;
 
 	[GlobalSetup]
 	public void Setup()
 	{
-		_intList = Enumerable.Range(0, 100).ToList();
-		_stringList = Enumerable.Range(0, 100).Select(i => $"Item_{i}").ToList();
-		_concurrentBag = new ConcurrentBag<int>(_intList);
-		_intArray = _intList.ToArray();
-		_dictionary = _intList.ToDictionary(i => i, i => $"Value_{i}");
+		intList = Enumerable.Range(0, 100).ToList();
+		stringList = Enumerable.Range(0, 100).Select(i => $"Item_{i}").ToList();
+		concurrentBag = new ConcurrentBag<int>(intList);
+		intArray = intList.ToArray();
+		dictionary = intList.ToDictionary(i => i, i => $"Value_{i}");
 	}
 
 	[Benchmark]
 	public bool AnyFast_List()
 	{
-		return _intList.AnyFast();
+		return intList.AnyFast();
 	}
 
 	[Benchmark]
 	public bool AnyFast_Array()
 	{
-		return _intArray.AnyFast();
+		return intArray.AnyFast();
 	}
 
 	[Benchmark]
 	public bool AnyFast_ConcurrentBag()
 	{
-		return _concurrentBag.AnyFast();
+		return concurrentBag.AnyFast();
 	}
 
 	[Benchmark]
 	public bool AnyFast_Dictionary()
 	{
-		return _dictionary.AnyFast();
+		return dictionary.AnyFast();
 	}
 
 	[Benchmark]
 	public List<string> SelectNonEmpty()
 	{
-		return _stringList.SelectNonEmpty().ToList();
+		return stringList.SelectNonEmpty().ToList();
 	}
 
 	[Benchmark]
 	public List<int> SelectNonNull()
 	{
-		return _intList.SelectNonNull().ToList();
+		return intList.SelectNonNull().ToList();
 	}
 
 	[Benchmark]
 	public void SetValue()
 	{
-		_intList.SetValue(_ => { });
+		intList.SetValue(_ => { });
 	}
 
 	[Benchmark]
 	public void AddRange_ConcurrentBag()
 	{
 		ConcurrentBag<int> bag = new();
-		bag.AddRange(_intList);
+		bag.AddRange(intList);
 	}
 
 	[Benchmark]
 	public void AddRange_HashSet()
 	{
 		HashSet<int> set = new();
-		set.AddRange(_intList);
+		set.AddRange(intList);
 	}
 
 	[Benchmark]

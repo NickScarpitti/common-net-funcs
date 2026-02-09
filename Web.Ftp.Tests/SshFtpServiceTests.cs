@@ -7,35 +7,39 @@ namespace Web.Ftp.Tests;
 public class SshFtpServiceTests
 {
 	private readonly IFixture fixture;
-	private readonly FileTransferConnection _connection;
-	private readonly SftpClient _sftpClient;
-	private readonly SshFtpService _service;
+	private readonly FileTransferConnection connection;
+	private readonly SftpClient sftpClient;
+	private readonly SshFtpService service;
 
 	public SshFtpServiceTests()
 	{
 		fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
-		_connection = fixture.Create<FileTransferConnection>();
-		_sftpClient = A.Fake<SftpClient>(options => options.WithArgumentsForConstructor(() => new SftpClient(
-						_connection.HostName,
-						_connection.Port,
-						_connection.UserName,
-						_connection.Password)));
+		connection = fixture.Create<FileTransferConnection>();
+		sftpClient = A.Fake<SftpClient>(options => options.WithArgumentsForConstructor(() =>
+			new SftpClient
+			(
+				connection.HostName,
+				connection.Port,
+				connection.UserName,
+				connection.Password
+			)
+		));
 
 		// Setup default behaviors
-		A.CallTo(() => _sftpClient.IsConnected).Returns(true);
+		A.CallTo(() => sftpClient.IsConnected).Returns(true);
 
 		//_service = new SshFtpService(_connection);
-		_service = new SshFtpService(_connection, _ => _sftpClient);
+		service = new SshFtpService(connection, _ => sftpClient);
 	}
 
 	[Fact]
 	public void GetHostName_ShouldReturnCorrectHostName()
 	{
 		// Arrange
-		string expectedHostName = _connection.HostName;
+		string expectedHostName = connection.HostName;
 
 		// Act
-		string result = _service.GetHostName();
+		string result = service.GetHostName();
 
 		// Assert
 		result.ShouldBe(expectedHostName);
@@ -45,7 +49,7 @@ public class SshFtpServiceTests
 	public void IsConnected_ShouldReturnClientConnectionState()
 	{
 		// Act
-		bool result = _service.IsConnected();
+		bool result = service.IsConnected();
 
 		// Assert
 		result.ShouldBeTrue();
@@ -55,10 +59,10 @@ public class SshFtpServiceTests
 	public void Connect_WhenAlreadyConnected_ShouldDisconnectFirst()
 	{
 		// Arrange
-		A.CallTo(() => _sftpClient.IsConnected).Returns(true);
+		A.CallTo(() => sftpClient.IsConnected).Returns(true);
 
 		// Act
-		SftpClient result = _service.Connect();
+		SftpClient result = service.Connect();
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -71,7 +75,7 @@ public class SshFtpServiceTests
 		CancellationTokenSource cts = new();
 
 		// Act
-		SftpClient result = await _service.ConnectAsync(cts);
+		SftpClient result = await service.ConnectAsync(cts);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -84,10 +88,10 @@ public class SshFtpServiceTests
 	//{
 	//    // Arrange
 	//    const string path = "/test/path";
-	//    A.CallTo(() => _sftpClient.Exists(path)).Returns(exists);
+	//    A.CallTo(() => sftpClient.Exists(path)).Returns(exists);
 
 	//    // Act
-	//    bool result = _service.DirectoryExists(path);
+	//    bool result = service.DirectoryExists(path);
 
 	//    // Assert
 	//    result.ShouldBe(exists);
@@ -99,10 +103,10 @@ public class SshFtpServiceTests
 	//    // Arrange
 	//    const string path = "/test/path";
 	//    string[] expectedFiles = new[] { "/test/path/file1.txt", "/test/path/file2.txt" };
-	//    A.CallTo(() => _sftpClient.ListDirectory(path, null)).Returns(expectedFiles.Select(f => CreateSftpFile(Path.GetFileName(f), true)));
+	//    A.CallTo(() => sftpClient.ListDirectory(path, null)).Returns(expectedFiles.Select(f => CreateSftpFile(Path.GetFileName(f), true)));
 
 	//    // Act
-	//    List<string> result = _service.GetFileList(path).ToList();
+	//    List<string> result = service.GetFileList(path).ToList();
 
 	//    // Assert
 	//    result.Count.ShouldBe(expectedFiles.Length);
@@ -113,13 +117,13 @@ public class SshFtpServiceTests
 	//public void Dispose_ShouldDisposeClientAndPreventFurtherOperations()
 	//{
 	//    // Act
-	//    _service.Dispose();
+	//    service.Dispose();
 
 	//    // Assert
-	//    A.CallTo(() => _sftpClient.Dispose()).MustHaveHappened();
+	//    A.CallTo(() => sftpClient.Dispose()).MustHaveHappened();
 
 	//    // Verify that operations after dispose throw ObjectDisposedException
-	//    Should.Throw<ObjectDisposedException>(() => _service.GetHostName());
+	//    Should.Throw<ObjectDisposedException>(() => service.GetHostName());
 	//}
 
 	//private static ISftpFile CreateSftpFile(string name, bool isRegularFile)

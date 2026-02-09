@@ -8,13 +8,13 @@ namespace EFCore.Tests;
 public sealed class NavigationPropertiesTests : IDisposable
 {
 	private readonly Fixture fixture;
-	private readonly TestDbContext _context;
+	private readonly TestDbContext context;
 
 	public NavigationPropertiesTests()
 	{
 		fixture = new Fixture();
 		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseInMemoryDatabase(databaseName: fixture.Create<string>()).Options;
-		_context = new TestDbContext(options);
+		context = new TestDbContext(options);
 	}
 
 	private bool disposed;
@@ -31,7 +31,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		{
 			if (disposing)
 			{
-				_context?.Dispose();
+				context?.Dispose();
 				NavigationProperties.NavigationCacheManager.SetUseLimitedCache(true);
 				NavigationProperties.NavigationCacheManager.SetLimitedCacheSize(100);
 				NavigationProperties.NavigationCacheManager.ClearAllCaches();
@@ -59,7 +59,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		NavigationPropertiesOptions options = new(maxNavigationDepth: maxDepth);
 
 		// Act
-		HashSet<string> navigationPaths = NavigationProperties.GetNavigations<TestEntity>(_context, options);
+		HashSet<string> navigationPaths = NavigationProperties.GetNavigations<TestEntity>(context, options);
 
 		// Assert
 		navigationPaths.ShouldNotBeEmpty();
@@ -76,7 +76,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		NavigationPropertiesOptions options = new(maxNavigationDepth: maxDepth);
 
 		// Act
-		HashSet<string> navigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(_context, options);
+		HashSet<string> navigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(context, options);
 
 		// Assert
 		navigationPaths.ShouldNotBeEmpty();
@@ -88,11 +88,11 @@ public sealed class NavigationPropertiesTests : IDisposable
 	{
 		//Get depth of 1, then 3, then 1 again , and ensure the cache is used correctly and extra navigations are left out when depth is less than max cached depth
 		// Arrange
-		HashSet<string> originalNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(_context, new(maxNavigationDepth: 1));
-		HashSet<string> deeperNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(_context, new(maxNavigationDepth: 3));
+		HashSet<string> originalNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(context, new(maxNavigationDepth: 1));
+		HashSet<string> deeperNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(context, new(maxNavigationDepth: 3));
 
 		// Act
-		HashSet<string> testNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(_context, new(maxNavigationDepth: 1));
+		HashSet<string> testNavigationPaths = NavigationProperties.GetNavigations<DeepTestEntity>(context, new(maxNavigationDepth: 1));
 
 		// Assert
 		testNavigationPaths.ShouldNotBeEmpty();
@@ -112,8 +112,8 @@ public sealed class NavigationPropertiesTests : IDisposable
 		NavigationPropertiesOptions options = new(useCaching: true);
 
 		// Act
-		HashSet<string> firstCall = NavigationProperties.GetNavigations<TestEntity>(_context, options);
-		HashSet<string> secondCall = NavigationProperties.GetNavigations<TestEntity>(_context, options);
+		HashSet<string> firstCall = NavigationProperties.GetNavigations<TestEntity>(context, options);
+		HashSet<string> secondCall = NavigationProperties.GetNavigations<TestEntity>(context, options);
 
 		// Assert
 		firstCall.ShouldBe(secondCall);
@@ -123,7 +123,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 	public void GetTopLevelNavigations_ReturnsOnlyDirectNavigations()
 	{
 		// Act
-		List<string> topLevelNavigations = NavigationProperties.GetTopLevelNavigations<TestEntity>(_context);
+		List<string> topLevelNavigations = NavigationProperties.GetTopLevelNavigations<TestEntity>(context);
 
 		// Assert
 		topLevelNavigations.ShouldNotBeEmpty();
@@ -139,7 +139,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		List<Type> ignoreList = [attributeType];
 
 		// Act
-		List<string> topLevelNavigations = NavigationProperties.GetTopLevelNavigations<TestEntityWithIgnores>(_context, ignoreList);
+		List<string> topLevelNavigations = NavigationProperties.GetTopLevelNavigations<TestEntityWithIgnores>(context, ignoreList);
 
 		// Assert
 		topLevelNavigations.ShouldNotContain("IgnoredNavigation");
@@ -149,10 +149,10 @@ public sealed class NavigationPropertiesTests : IDisposable
 	public void IncludeNavigationProperties_AddsIncludeStatementsToQuery()
 	{
 		// Arrange
-		IQueryable<TestEntity> query = _context.TestEntities;
+		IQueryable<TestEntity> query = context.TestEntities;
 
 		// Act
-		IQueryable<TestEntity> result = query.IncludeNavigationProperties(_context);
+		IQueryable<TestEntity> result = query.IncludeNavigationProperties(context);
 
 		// Assert
 		result.Expression.ToString().ShouldContain("Include");
@@ -169,7 +169,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		};
 
 		// Act
-		entity.RemoveNavigationProperties(_context);
+		entity.RemoveNavigationProperties(context);
 
 		// Assert
 		entity.RelatedEntity.ShouldBeNull();
@@ -300,7 +300,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		}
 
 		// Act
-		HashSet<string> navigationPaths = NavigationProperties.GetNavigations<TestEntity>(_context, options);
+		HashSet<string> navigationPaths = NavigationProperties.GetNavigations<TestEntity>(context, options);
 
 		// Assert
 		navigationPaths.ShouldNotBeEmpty();
@@ -341,7 +341,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		}
 
 		// Act
-		List<string> topLevelNavigations = NavigationProperties.GetTopLevelNavigations<TestEntity>(_context);
+		List<string> topLevelNavigations = NavigationProperties.GetTopLevelNavigations<TestEntity>(context);
 
 		// Assert
 		topLevelNavigations.ShouldNotBeEmpty();
@@ -376,8 +376,8 @@ public sealed class NavigationPropertiesTests : IDisposable
 		NavigationPropertiesOptions options1 = new(maxNavigationDepth: 1, useCaching: true);
 		NavigationPropertiesOptions options2 = new(maxNavigationDepth: 2, useCaching: true);
 
-		_ = NavigationProperties.GetNavigations<TestEntity>(_context, options1);
-		_ = NavigationProperties.GetNavigations<TestEntity>(_context, options2);
+		_ = NavigationProperties.GetNavigations<TestEntity>(context, options1);
+		_ = NavigationProperties.GetNavigations<TestEntity>(context, options2);
 
 		// Assert
 		IReadOnlyDictionary<NavigationProperties.NavigationPropertiesCacheKey, NavigationProperties.NavigationPropertiesCacheValue> limitedCache = NavigationProperties.NavigationCacheManager.GetLimitedCache();
@@ -385,7 +385,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 
 		// Add another and check eviction
 		NavigationPropertiesOptions options3 = new(maxNavigationDepth: 3, useCaching: true);
-		_ = NavigationProperties.GetNavigations<TestEntity>(_context, options3);
+		_ = NavigationProperties.GetNavigations<TestEntity>(context, options3);
 		limitedCache.Count.ShouldBe(1); // Still 1 due to limit
 	}
 
@@ -396,15 +396,15 @@ public sealed class NavigationPropertiesTests : IDisposable
 		NavigationProperties.TopLevelNavigationCacheManager.SetLimitedCacheSize(1);
 
 		// Act
-		_ = NavigationProperties.GetTopLevelNavigations<TestEntity>(_context);
-		_ = NavigationProperties.GetTopLevelNavigations<DeepTestEntity>(_context);
+		_ = NavigationProperties.GetTopLevelNavigations<TestEntity>(context);
+		_ = NavigationProperties.GetTopLevelNavigations<DeepTestEntity>(context);
 
 		// Assert
 		IReadOnlyDictionary<Type, List<string>?> limitedCache = NavigationProperties.TopLevelNavigationCacheManager.GetLimitedCache();
 		limitedCache.Count.ShouldBe(1); // Should not exceed limit
 
 		// Add another and check eviction
-		_ = NavigationProperties.GetTopLevelNavigations<TestEntityWithIgnores>(_context);
+		_ = NavigationProperties.GetTopLevelNavigations<TestEntityWithIgnores>(context);
 		limitedCache.Count.ShouldBe(1); // Still 1 due to limit
 	}
 
@@ -675,7 +675,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		TestEntity? entity = null;
 
 		// Act & Assert
-		Should.NotThrow(() => entity.RemoveNavigationProperties(_context));
+		Should.NotThrow(() => entity.RemoveNavigationProperties(context));
 	}
 
 	[Fact]
@@ -685,7 +685,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 		TestEntityWithReadOnlyNav entity = new() { Id = 1 };
 
 		// Act
-		entity.RemoveNavigationProperties(_context);
+		entity.RemoveNavigationProperties(context);
 
 		// Assert - should not throw
 		entity.Id.ShouldBe(1);
@@ -702,8 +702,8 @@ public sealed class NavigationPropertiesTests : IDisposable
 		NavigationPropertiesOptions options = new(useCaching: false);
 
 		// Act
-		HashSet<string> result1 = NavigationProperties.GetNavigations<TestEntity>(_context, options);
-		HashSet<string> result2 = NavigationProperties.GetNavigations<TestEntity>(_context, options);
+		HashSet<string> result1 = NavigationProperties.GetNavigations<TestEntity>(context, options);
+		HashSet<string> result2 = NavigationProperties.GetNavigations<TestEntity>(context, options);
 
 		// Assert
 		result1.ShouldNotBeEmpty();
@@ -716,8 +716,8 @@ public sealed class NavigationPropertiesTests : IDisposable
 	public void GetTopLevelNavigations_WithoutCaching_ReturnsNavigations()
 	{
 		// Arrange & Act
-		List<string> result1 = NavigationProperties.GetTopLevelNavigations<TestEntity>(_context, useCaching: false);
-		List<string> result2 = NavigationProperties.GetTopLevelNavigations<TestEntity>(_context, useCaching: false);
+		List<string> result1 = NavigationProperties.GetTopLevelNavigations<TestEntity>(context, useCaching: false);
+		List<string> result2 = NavigationProperties.GetTopLevelNavigations<TestEntity>(context, useCaching: false);
 
 		// Assert
 		result1.ShouldNotBeEmpty();
@@ -733,11 +733,11 @@ public sealed class NavigationPropertiesTests : IDisposable
 	public void IncludeNavigationProperties_WithCustomOptions_AddsIncludes()
 	{
 		// Arrange
-		IQueryable<TestEntity> query = _context.TestEntities;
+		IQueryable<TestEntity> query = context.TestEntities;
 		NavigationPropertiesOptions options = new(maxNavigationDepth: 1, useCaching: false);
 
 		// Act
-		IQueryable<TestEntity> result = query.IncludeNavigationProperties(_context, options);
+		IQueryable<TestEntity> result = query.IncludeNavigationProperties(context, options);
 
 		// Assert
 		result.Expression.ToString().ShouldContain("Include");

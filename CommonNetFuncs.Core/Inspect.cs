@@ -133,16 +133,16 @@ public static class Inspect
 	// This class is used to track object pairs being compared
 	private sealed class ComparisonContext
 	{
-		private readonly HashSet<(object, object)> _comparingPairs = [];
+		private readonly HashSet<(object, object)> comparingPairs = [];
 
 		public bool TryAddPair(object obj1, object obj2)
 		{
-			return _comparingPairs.Add((obj1, obj2));
+			return comparingPairs.Add((obj1, obj2));
 		}
 
 		public void RemovePair(object obj1, object obj2)
 		{
-			_comparingPairs.Remove((obj1, obj2));
+			comparingPairs.Remove((obj1, obj2));
 		}
 	}
 

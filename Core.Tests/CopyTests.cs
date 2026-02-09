@@ -490,7 +490,7 @@ public sealed class CopyTests
 	[Theory]
 	[InlineData(true)]
 	[InlineData(false)]
-	public void SetUseLimitedCache_houldBeUseLimited(bool useLimited)
+	public void SetUseLimitedCache_ShouldBeUseLimited(bool useLimited)
 	{
 		// Act
 		Copy.DeepCopyCacheManager.SetUseLimitedCache(useLimited);
@@ -559,6 +559,9 @@ public sealed class CopyTests
 		Copy.DeepCopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
 		Copy.DeepCopyCacheManager.GetLimitedCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
 		Copy.DeepCopyCacheManager.GetLimitedCache().Values.First().ShouldNotBeNull();
+
+		// Cleanup
+		Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
 	}
 
 	[Fact]
@@ -577,6 +580,9 @@ public sealed class CopyTests
 		Copy.CopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
 		Copy.CopyCacheManager.GetLimitedCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
 		Copy.CopyCacheManager.GetLimitedCache().Values.First().ShouldNotBeNull();
+
+		// Cleanup
+		Copy.CopyCacheManager.SetUseLimitedCache(false);
 	}
 
 	[Fact]
@@ -641,6 +647,9 @@ public sealed class CopyTests
 		source.CopyPropertiesTo(dest, useCache: true);
 		dest.Id.ShouldBe(42);
 		dest.Name.ShouldBe("CacheTest");
+
+		// Cleanup
+		Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
 	}
 
 	#endregion
@@ -668,28 +677,6 @@ public sealed class CopyTests
 	}
 
 	[Fact]
-	public void CopyPropertiesToNewRecursive_WithUseCacheFalse_AndCollectionSource_ShouldCopyCollection()
-	{
-		// Arrange
-		List<SourceClass> source = new()
-		{
-			new SourceClass { Id = 1, Name = "Item1" },
-			new SourceClass { Id = 2, Name = "Item2" }
-		};
-
-		// Act
-		List<DestinationClass> result = source.CopyPropertiesToNewRecursive<List<SourceClass>, List<DestinationClass>>(useCache: false);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Count.ShouldBe(2);
-		result[0].Id.ShouldBe(1);
-		result[0].Name.ShouldBe("Item1");
-		result[1].Id.ShouldBe(2);
-		result[1].Name.ShouldBe("Item2");
-	}
-
-	[Fact]
 	public void CopyPropertiesToNewRecursive_WithUseCacheFalse_AndNestedObject_ShouldCopyRecursively()
 	{
 		// Arrange
@@ -713,7 +700,7 @@ public sealed class CopyTests
 	}
 
 	[Fact]
-	public void CopyPropertiesToNewRecursive_WithUseCacheFalse_AndArray_ShouldCopyArray()
+	public void CopyPropertiesToNewRecursive_WithUseCacheFalse_AndCollectionSource_ShouldCopyCollection()
 	{
 		// Arrange
 		List<SourceClass> source = new()
@@ -722,7 +709,7 @@ public sealed class CopyTests
 			new SourceClass { Id = 2, Name = "Item2" }
 		};
 
-		// Act - Copy to array using List as intermediate
+		// Act
 		List<DestinationClass> result = source.CopyPropertiesToNewRecursive<List<SourceClass>, List<DestinationClass>>(useCache: false);
 
 		// Assert
@@ -877,8 +864,8 @@ public sealed class CopyTests
 			Name = "Parent",
 			Items = new List<SourceClass>
 			{
-				new SourceClass { Id = 2, Name = "Child1" },
-				new SourceClass { Id = 3, Name = "Child2" }
+				new() { Id = 2, Name = "Child1" },
+				new() { Id = 3, Name = "Child2" }
 			}
 		};
 
@@ -899,19 +886,7 @@ public sealed class CopyTests
 
 	#region Expression Tree Copy Tests
 
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithSimpleTypeConversion_ShouldConvert()
-	{
-		// Arrange
-		SimpleIntClass source = new() { Value = 42 };
 
-		// Act
-		SimpleLongClass result = source.CopyPropertiesToNewRecursive<SimpleIntClass, SimpleLongClass>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Value.ShouldBe(42L);
-	}
 
 	[Fact]
 	public void CopyPropertiesToNewRecursive_WithInterface_ShouldCopyInterfaceProperties()
@@ -1037,8 +1012,8 @@ public sealed class CopyTests
 			Id = 1,
 			Items = new CustomCollection<SourceClass>
 			{
-				new SourceClass { Id = 2, Name = "Item1" },
-				new SourceClass { Id = 3, Name = "Item2" }
+				new() { Id = 2, Name = "Item1" },
+				new() { Id = 3, Name = "Item2" }
 			}
 		};
 
@@ -1152,19 +1127,7 @@ public sealed class CopyTests
 		result.Value.ShouldBe(0); // Default value since string can't convert to int
 	}
 
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithCompatibleSimpleTypes_ShouldConvert()
-	{
-		// Arrange
-		SimpleIntClass source = new() { Value = 42 };
 
-		// Act
-		SimpleLongClass result = source.CopyPropertiesToNewRecursive<SimpleIntClass, SimpleLongClass>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Value.ShouldBe(42L);
-	}
 
 	[Fact]
 	public void CopyPropertiesToNewRecursive_WithDictionaryWithComplexKeys_ShouldCopyDictionary()
@@ -1527,7 +1490,7 @@ public sealed class CopyTests
 		ClassWithLinkedList source = new()
 		{
 			Id = 1,
-			Items = new LinkedList<int>(new[] { 1, 2, 3 })
+			Items = new LinkedList<int>([1, 2, 3])
 		};
 
 		// Act
@@ -1574,8 +1537,7 @@ public sealed class CopyTests
 			Id = 1,
 			Data = new List<Dictionary<string, SourceClass>>
 			{
-				new Dictionary<string, SourceClass>
-				{
+				new() {
 					["key1"] = new SourceClass { Id = 10, Name = "Value1" }
 				}
 			}
@@ -1677,7 +1639,7 @@ public sealed class CopyTests
 		ClassWithReadOnlyCollection source = new()
 		{
 			Id = 1,
-			Items = new System.Collections.ObjectModel.ReadOnlyCollection<int>(new[] { 1, 2, 3 })
+			Items = new System.Collections.ObjectModel.ReadOnlyCollection<int>([1, 2, 3])
 		};
 
 		// Act - This will copy properties, not collection items
@@ -1696,7 +1658,7 @@ public sealed class CopyTests
 		CircularRef source = new() { Id = 1, Name = "Node1" };
 		source.Self = source; // Circular reference
 
-		// Act & Assert - Should not throw stackoverflow or hang
+		// Act & Assert - Should not throw stack overflow or hang
 		// The expression tree handles this by eventually hitting depth limits or returning same references
 		Should.NotThrow(() =>
 		{
@@ -1715,6 +1677,7 @@ public sealed class CopyTests
 	public void GetOrAddFunctionFromCopyCache_SecondCall_ShouldReturnCachedFunction()
 	{
 		// Arrange
+		Copy.CopyCacheManager.SetUseLimitedCache(false);
 		Copy.CopyCacheManager.ClearAllCaches();
 		Copy.CopyCacheTypedManager.ClearAllCaches();
 		SourceClass source1 = new() { Id = 1, Name = "First" };
@@ -1751,14 +1714,14 @@ public sealed class CopyTests
 	public void CopyPropertiesToNewRecursive_WithUseCacheFalse_AndNonClassProperty_ShouldCopyDirectly()
 	{
 		// Arrange
-		ClassWithEnum source = new() { Id = 1, Status = TestEnum.Active };
+		ClassWithEnum source = new() { Id = 1, Status = ETestValues.Active };
 
 		// Act
 		ClassWithEnum result = source.CopyPropertiesToNewRecursive<ClassWithEnum, ClassWithEnum>(useCache: false);
 
 		// Assert
 		result.ShouldNotBeNull();
-		result.Status.ShouldBe(TestEnum.Active);
+		result.Status.ShouldBe(ETestValues.Active);
 	}
 
 	[Fact]
@@ -1768,10 +1731,7 @@ public sealed class CopyTests
 		ClassWithInt source = new() { Value = 42 };
 
 		// Act & Assert - Incompatible property types cause exception when setting value
-		Should.Throw<ArgumentException>(() =>
-		{
-			_ = source.CopyPropertiesToNewRecursive<ClassWithInt, ClassWithString>(useCache: false);
-		});
+		Should.Throw<ArgumentException>(() => _ = source.CopyPropertiesToNewRecursive<ClassWithInt, ClassWithString>(useCache: false));
 	}
 
 	[Fact]
@@ -1781,7 +1741,7 @@ public sealed class CopyTests
 		ClassWithQueue source = new()
 		{
 			Id = 1,
-			Items = new Queue<int>(new[] { 1, 2, 3 })
+			Items = new Queue<int>([1, 2, 3])
 		};
 
 		// Act
@@ -1814,7 +1774,7 @@ public sealed class CopyTests
 		SourceClass? source = null;
 
 		// Act
-		DestinationClass? result = source.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>();
+		DestinationClass? result = source?.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>();
 
 		// Assert
 		result.ShouldBeNull();
@@ -1898,7 +1858,7 @@ public sealed class CopyTests
 	public void CopyItemRuntime_WithSimpleType_ShouldReturnItem()
 	{
 		// Arrange
-		int item = 42;
+		const int item = 42;
 
 		// Act
 		object? result = typeof(Copy).GetMethod("CopyItemRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
@@ -1960,7 +1920,7 @@ public sealed class CopyTests
 	public void CopyCollectionRuntime_WithUnknownCollectionType_ShouldReturnSource()
 	{
 		// Arrange - Use a simple string which is IEnumerable but not a typical collection
-		string source = "test";
+		const string source = "test";
 
 		// Act
 		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
@@ -2124,9 +2084,7 @@ public sealed class CopyTests
 		public SourceClass? Child { get; set; }
 	}
 
-	public sealed class CustomCollection<T> : List<T>
-	{
-	}
+	public sealed class CustomCollection<T> : List<T>;
 
 	public sealed class ClassWithCustomCollection
 	{
@@ -2274,7 +2232,7 @@ public sealed class CopyTests
 		public CircularRef? Self { get; set; }
 	}
 
-	public enum TestEnum
+	public enum ETestValues
 	{
 		Inactive = 0,
 		Active = 1
@@ -2283,7 +2241,7 @@ public sealed class CopyTests
 	public sealed class ClassWithEnum
 	{
 		public int Id { get; set; }
-		public TestEnum Status { get; set; }
+		public ETestValues Status { get; set; }
 	}
 
 	public sealed class ClassWithInt

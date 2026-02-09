@@ -97,7 +97,7 @@ public sealed class ConversionTaskTests : IDisposable
 		const string ffmpegCommand = "-c:v libx264 -preset medium -crf 50";
 
 		// Act
-		//bool result = await RawConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommand, true, _workingDir);
+		//bool result = await RawConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommand, true, workingDir);
 		bool result = await ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, ffmpegCommand, workingDir);
 
 		// Assert
@@ -245,7 +245,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 
 		// Act
 		string command = await RawConversionTask.GetConversionCommandFromXabe(
@@ -274,7 +274,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 
 		// Act
 		string command = await RawConversionTask.GetConversionCommandFromXabe(
@@ -287,8 +287,7 @@ public sealed class ConversionTaskTests : IDisposable
 
 		// Assert
 		// Xabe.FFmpeg may format codec names differently
-		(command.Contains(expectedCodecName, StringComparison.OrdinalIgnoreCase) ||
-		 command.Contains(codec.ToString(), StringComparison.OrdinalIgnoreCase)).ShouldBeTrue();
+		(command.Contains(expectedCodecName, StringComparison.OrdinalIgnoreCase) || command.Contains(codec.ToString(), StringComparison.OrdinalIgnoreCase)).ShouldBeTrue();
 	}
 
 	[RetryTheory(3)]
@@ -304,7 +303,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 
 		// Act
 		string command = await RawConversionTask.GetConversionCommandFromXabe(
@@ -324,7 +323,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 		string customPath = Path.Combine(workingDir, "custom");
 		Directory.CreateDirectory(customPath);
 
@@ -346,7 +345,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 
 		// Act
 		string command = await RawConversionTask.GetConversionCommandFromXabe(
@@ -365,7 +364,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 		IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(fileToConvert.FullName);
 
 		// Act
@@ -391,7 +390,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 
 		// Act
 		string command = await RawConversionTask.GetConversionCommandFromXabe(
@@ -414,7 +413,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 
 		// Act
 		string command = await RawConversionTask.GetConversionCommandFromXabe(
@@ -444,7 +443,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 
 		// Act
 		string command = await RawConversionTask.GetConversionCommandFromXabe(
@@ -472,7 +471,7 @@ public sealed class ConversionTaskTests : IDisposable
 	{
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
-		string outputFileName = "output.mp4";
+		const string outputFileName = "output.mp4";
 		HardwareAccelerationValues hwAccel = new()
 		{
 			hardwareAccelerator = HardwareAccelerator.auto,

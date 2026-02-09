@@ -51,8 +51,9 @@ public static class RunBatches
 	public static Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, Task<bool>> listProcessor, int batchSize = 10000, bool breakOnFail = true,
 			bool logProgress = true, CancellationToken cancellationToken = default)
 	{
-		// Adapt the List processor to work with IReadOnlyList
-		return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor(batch is List<T> l ? l : batch.ToList()).ConfigureAwait(false), batchSize, breakOnFail, logProgress, cancellationToken);
+		ArgumentNullException.ThrowIfNull(listProcessor);
+		// Adapt the List processor to work with IEnumerable - batch from GetRange is always List<T>
+		return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor((List<T>)batch).ConfigureAwait(false), batchSize, breakOnFail, logProgress, cancellationToken);
 	}
 
 	/// <summary>
@@ -97,7 +98,8 @@ public static class RunBatches
 	public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, bool> listProcessor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true,
 			CancellationToken cancellationToken = default)
 	{
-		// Adapt the List processor to work with IReadOnlyList
-		return RunBatchedProcess(itemsToProcess, batch => listProcessor(batch is List<T> l ? l : batch.ToList()), batchSize, breakOnFail, logProgress, cancellationToken);
+		ArgumentNullException.ThrowIfNull(listProcessor);
+		// Adapt the List processor to work with IEnumerable - batch from GetRange is always List<T>
+		return RunBatchedProcess(itemsToProcess, batch => listProcessor((List<T>)batch), batchSize, breakOnFail, logProgress, cancellationToken);
 	}
 }

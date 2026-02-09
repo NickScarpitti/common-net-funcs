@@ -288,7 +288,7 @@ public sealed class FileHelpersTests : IDisposable
 		byte[] dataBytes = Encoding.UTF8.GetBytes(testData);
 
 		PipeReader pipeReader = CreatePipeReaderFromData(dataBytes);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const long maxSize = 1024;
 		const string successValue = "Success!";
 
@@ -321,7 +321,7 @@ public sealed class FileHelpersTests : IDisposable
 		System.Random.Shared.NextBytes(largeData);
 
 		PipeReader pipeReader = CreatePipeReaderFromData(largeData);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const long maxSize = 1024;
 		const string tooLargeValue = "File too large!";
 
@@ -344,7 +344,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		PipeReader pipeReader = CreatePipeReaderFromData(Array.Empty<byte>());
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const long maxSize = 1024;
 		const int successValue = 42;
 
@@ -375,7 +375,7 @@ public sealed class FileHelpersTests : IDisposable
 		byte[] data3 = Encoding.UTF8.GetBytes(part3);
 
 		PipeReader pipeReader = CreatePipeReaderFromMultipleSegments(data1, data2, data3);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const long maxSize = 1024;
 
 		// Act
@@ -401,11 +401,11 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		PipeReader pipeReader = CreateFaultyPipeReader();
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const long maxSize = 1024;
 		const string errorValue = "Error occurred";
 
-		string? ErrorHandler(Exception ex)
+		static string? ErrorHandler(Exception _)
 		{
 			return errorValue;
 		}
@@ -429,7 +429,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		PipeReader pipeReader = CreateFaultyPipeReader();
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const long maxSize = 1024;
 
 		// Act & Assert
@@ -457,7 +457,7 @@ public sealed class FileHelpersTests : IDisposable
 
 		byte[] data = Encoding.UTF8.GetBytes("Test data");
 		PipeReader pipeReader = CreatePipeReaderFromData(data);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const long maxSize = 1024;
 
 		// Act & Assert
@@ -483,7 +483,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		byte[] data = Encoding.UTF8.GetBytes("Stream position test");
 		PipeReader pipeReader = CreatePipeReaderFromData(data);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const long maxSize = 1024;
 
 		// Act
@@ -512,7 +512,7 @@ public sealed class FileHelpersTests : IDisposable
 		byte[] dataBytes = Encoding.UTF8.GetBytes(testData);
 
 		PipeReader pipeReader = CreatePipeReaderFromData(dataBytes);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const string successValue = "Success!";
 
 		// Act
@@ -542,7 +542,7 @@ public sealed class FileHelpersTests : IDisposable
 		System.Random.Shared.NextBytes(largeData);
 
 		PipeReader pipeReader = CreatePipeReaderFromData(largeData);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const int successValue = 1;
 
 		// Act
@@ -563,7 +563,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		PipeReader pipeReader = CreatePipeReaderFromData(Array.Empty<byte>());
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const int successValue = 100;
 
 		// Act
@@ -591,7 +591,7 @@ public sealed class FileHelpersTests : IDisposable
 		byte[] data3 = Encoding.UTF8.GetBytes(part3);
 
 		PipeReader pipeReader = CreatePipeReaderFromMultipleSegments(data1, data2, data3);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 
 		// Act
 		(bool success, string? result) = await pipeReader.ReadFileFromPipe(
@@ -614,10 +614,10 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		PipeReader pipeReader = CreateFaultyPipeReader();
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const string errorValue = "Error occurred during read";
 
-		string? ErrorHandler(Exception ex)
+		static string? ErrorHandler(Exception ex)
 		{
 			ex.ShouldNotBeNull();
 			return errorValue;
@@ -640,7 +640,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		PipeReader pipeReader = CreateFaultyPipeReader();
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 
 		// Act & Assert
 		Exception exception = await Should.ThrowAsync<Exception>(async () =>
@@ -665,7 +665,7 @@ public sealed class FileHelpersTests : IDisposable
 
 		byte[] data = Encoding.UTF8.GetBytes("Test data");
 		PipeReader pipeReader = CreatePipeReaderFromData(data);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 
 		// Act & Assert
 		// Note: The cancellation exception gets wrapped in a generic Exception by the implementation
@@ -688,7 +688,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		byte[] data = Encoding.UTF8.GetBytes("Position reset test");
 		PipeReader pipeReader = CreatePipeReaderFromData(data);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 
 		// Act
 		(bool success, _) = await pipeReader.ReadFileFromPipe<string>(
@@ -708,7 +708,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		byte[] data = Encoding.UTF8.GetBytes("Null return test");
 		PipeReader pipeReader = CreatePipeReaderFromData(data);
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 
 		// Act
 		(bool success, string? result) = await pipeReader.ReadFileFromPipe<string>(
@@ -975,7 +975,7 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetHashFromStream_ReturnsEmptyString_OnException()
 	{
 		// Arrange - Create a stream that will throw when trying to set position
-		using var stream = new NonSeekableStreamThatThrows();
+		await using NonSeekableStreamThatThrows stream = new();
 
 		// Act
 		string hash = await stream.GetHashFromStream();
@@ -1134,7 +1134,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		PipeReader pipeReader = CreateFaultyPipeReader();
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 		const long maxSize = 1024;
 
 		// Act & Assert
@@ -1158,7 +1158,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		PipeReader pipeReader = CreateFaultyPipeReader();
-		using MemoryStream outputStream = new();
+		await using MemoryStream outputStream = new();
 
 		// Act & Assert
 		Exception exception = await Should.ThrowAsync<Exception>(async () =>
@@ -1220,7 +1220,7 @@ public sealed class FileHelpersTests : IDisposable
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
-		string fileName2 = "path_iter_test (0).txt";
+		const string fileName2 = "path_iter_test (0).txt";
 		string filePath2 = Path.Combine(tempDir, fileName2);
 		await File.WriteAllTextAsync(filePath2, "data2", TestContext.Current.CancellationToken);
 
@@ -1411,14 +1411,12 @@ public sealed class FileHelpersTests : IDisposable
 		await File.WriteAllTextAsync(fileName, "content", TestContext.Current.CancellationToken);
 
 		// Act - Open file exclusively to lock it, then try to get hash
-		await using (FileStream lockStream = new(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-		{
-			// Try to get hash while file is locked - this should cause an exception
-			string hash = await fileName.GetHashFromFile();
+		await using FileStream lockStream = new(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+		// Try to get hash while file is locked - this should cause an exception
+		string hash = await fileName.GetHashFromFile();
 
-			// Assert - should return empty string on exception
-			hash.ShouldBe(string.Empty);
-		}
+		// Assert - should return empty string on exception
+		hash.ShouldBe(string.Empty);
 	}
 
 	#endregion
@@ -1457,10 +1455,7 @@ public sealed class FileHelpersTests : IDisposable
 	private static PipeReader CreateFaultyPipeReader()
 	{
 		Pipe pipe = new();
-		Task writeTask = Task.Run(async () =>
-		{
-			await pipe.Writer.CompleteAsync(new InvalidOperationException("Simulated pipe error"));
-		});
+		Task writeTask = Task.Run(async () => await pipe.Writer.CompleteAsync(new InvalidOperationException("Simulated pipe error")));
 
 		return pipe.Reader;
 	}

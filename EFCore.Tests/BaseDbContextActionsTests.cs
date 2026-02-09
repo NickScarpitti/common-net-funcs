@@ -8,7 +8,7 @@ namespace EFCore.Tests;
 
 public sealed class BaseDbContextActionsTests
 {
-	private readonly IServiceProvider _serviceProvider;
+	private readonly IServiceProvider serviceProvider;
 	private readonly Fixture fixture;
 	private readonly TestDbContext context;
 
@@ -21,8 +21,8 @@ public sealed class BaseDbContextActionsTests
 		// Setup in-memory database
 		ServiceCollection services = new();
 		services.AddDbContextPool<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
-		_serviceProvider = services.BuildServiceProvider();
-		context = _serviceProvider.GetRequiredService<TestDbContext>();
+		serviceProvider = services.BuildServiceProvider();
+		context = serviceProvider.GetRequiredService<TestDbContext>();
 	}
 
 	[Theory]
@@ -35,7 +35,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(testEntity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetByKey(full, testEntity.Id, cancellationToken: TestContext.Current.CancellationToken);
@@ -54,7 +54,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(testEntity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetByKey(testEntity.Id, cancellationToken: TestContext.Current.CancellationToken);
@@ -77,7 +77,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		List<TestEntity>? results = await testContext.GetAll(full, trackEntities: trackEntities, cancellationToken: TestContext.Current.CancellationToken);
@@ -100,7 +100,7 @@ public sealed class BaseDbContextActionsTests
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		Expression<Func<TestEntity, bool>> filter = x => x.Name == targetName;
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		List<TestEntity>? results = await testContext.GetWithFilter(full, filter, cancellationToken: TestContext.Current.CancellationToken);
@@ -121,7 +121,7 @@ public sealed class BaseDbContextActionsTests
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		Expression<Func<TestEntity, bool>> filter = x => x.Name == targetName;
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetOneWithFilter(filter, cancellationToken: TestContext.Current.CancellationToken);
@@ -143,7 +143,7 @@ public sealed class BaseDbContextActionsTests
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		Expression<Func<TestEntity, bool>> filter = x => x.Name == targetName;
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetOneWithFilter(full, filter, cancellationToken: TestContext.Current.CancellationToken);
@@ -163,7 +163,7 @@ public sealed class BaseDbContextActionsTests
 
 		Expression<Func<TestEntity, bool>> filter = _ => true;
 		Expression<Func<TestEntity, int>> orderExpression = x => x.Id;
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetMaxByOrder(filter, orderExpression, cancellationToken: TestContext.Current.CancellationToken);
@@ -185,7 +185,7 @@ public sealed class BaseDbContextActionsTests
 
 		Expression<Func<TestEntity, bool>> filter = _ => true;
 		Expression<Func<TestEntity, int>> orderExpression = x => x.Id;
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetMaxByOrder(full, filter, orderExpression, cancellationToken: TestContext.Current.CancellationToken);
@@ -200,7 +200,7 @@ public sealed class BaseDbContextActionsTests
 	{
 		// Arrange
 		TestEntity entity = fixture.Create<TestEntity>();
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		await testContext.Create(entity);
@@ -223,7 +223,7 @@ public sealed class BaseDbContextActionsTests
 		string updatedName = fixture.Create<string>();
 		entity.Name = updatedName;
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		testContext.Update(entity);
@@ -243,7 +243,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		bool result = await testContext.DeleteByKey(entity.Id);
@@ -263,7 +263,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetByKey(new object[] { entity.Id }, cancellationToken: TestContext.Current.CancellationToken);
@@ -283,7 +283,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetByKey(full, new object[] { entity.Id }, cancellationToken: TestContext.Current.CancellationToken);
@@ -300,7 +300,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		TestEntity? result = await testContext.GetByKeyFull(new object[] { entity.Id }, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -318,7 +318,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		List<TestEntity> results = new();
 		IAsyncEnumerable<TestEntity>? stream = testContext.GetAllStreaming(full, cancellationToken: TestContext.Current.CancellationToken);
@@ -338,7 +338,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		List<TestEntity> results = new();
@@ -361,7 +361,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		List<TestEntity> results = new();
@@ -382,7 +382,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		List<TestEntity> results = new();
@@ -404,7 +404,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		List<string>? results = await testContext.GetAll(full, x => x.Name, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -420,7 +420,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		List<string>? results = await testContext.GetAll(x => x.Name, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -436,7 +436,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		List<string>? results = await testContext.GetAllFull(x => x.Name, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -453,7 +453,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		List<string>? results = await testContext.GetWithFilter(filter, x => x.Name, cancellationToken: TestContext.Current.CancellationToken);
@@ -473,7 +473,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		List<string>? results = await testContext.GetWithFilter(full, filter, x => x.Name, cancellationToken: TestContext.Current.CancellationToken);
@@ -491,7 +491,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		List<string>? results = await testContext.GetWithFilterFull(filter, x => x.Name, cancellationToken: TestContext.Current.CancellationToken);
@@ -508,7 +508,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		int count = await testContext.GetCount(_ => true, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -522,7 +522,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		TestEntity? result = await testContext.GetMinByOrder(_ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -539,7 +539,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		TestEntity? result = await testContext.GetMinByOrder(full, _ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -554,7 +554,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		int result = await testContext.GetMax(_ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -570,7 +570,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		int result = await testContext.GetMax(full, _ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -584,7 +584,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		int result = await testContext.GetMin(_ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -600,7 +600,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		int result = await testContext.GetMin(full, _ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -614,7 +614,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		bool result = testContext.DeleteMany(entities);
 
@@ -683,7 +683,7 @@ public sealed class BaseDbContextActionsTests
 			entity.Name = updatedName;
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		bool result = testContext.UpdateMany(entities, false, TestContext.Current.CancellationToken);
 		await testContext.SaveChanges();
@@ -699,7 +699,7 @@ public sealed class BaseDbContextActionsTests
 	public async Task CreateMany_ShouldAddEntities()
 	{
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		await testContext.CreateMany(entities);
 		await testContext.SaveChanges();
@@ -713,7 +713,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public async Task GetByKey_WithInvalidKey_ShouldReturnNull()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		TestEntity? result = await testContext.GetByKey(-1, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -723,7 +723,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public async Task DeleteByKey_WithInvalidKey_ShouldReturnFalse()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		bool result = await testContext.DeleteByKey(-1);
 
@@ -733,7 +733,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public async Task GetByKey_WithCancellation_ShouldThrow()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
@@ -744,7 +744,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public async Task Create_WithNullEntity_ShouldThrow()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		await Should.ThrowAsync<ArgumentNullException>(async () => await testContext.Create(null!));
 	}
@@ -756,7 +756,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		List<TestEntity>? results = await testContext.GetAllFull(cancellationToken: TestContext.Current.CancellationToken);
 
@@ -771,7 +771,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		List<TestEntity> results = new();
 		await foreach (TestEntity item in testContext.GetAllStreaming(cancellationToken: TestContext.Current.CancellationToken)!)
@@ -789,7 +789,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		List<TestEntity> results = new();
 		await foreach (TestEntity item in testContext.GetAllFullStreaming(cancellationToken: TestContext.Current.CancellationToken)!)
@@ -808,7 +808,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Name == targetName;
 
 		List<TestEntity>? results = await testContext.GetWithFilterFull(filter, cancellationToken: TestContext.Current.CancellationToken);
@@ -827,7 +827,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
@@ -847,7 +847,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
@@ -866,7 +866,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, orderByString: nameof(TestEntity.Id), skip: 1, pageSize: 2,
 			cancellationToken: TestContext.Current.CancellationToken);
@@ -884,7 +884,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(full, whereExpression: _ => true, selectExpression: x => x, orderByString: nameof(TestEntity.Id), skip: 1, pageSize: 2,
 			cancellationToken: TestContext.Current.CancellationToken);
@@ -900,7 +900,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, ascendingOrderExpression: x => x.Id, skip: 1, pageSize: 2,
 			cancellationToken: TestContext.Current.CancellationToken);
@@ -918,7 +918,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(full, whereExpression: _ => true, selectExpression: x => x, ascendingOrderExpression: x => x.Id, skip: 1, pageSize: 2,
 			cancellationToken: TestContext.Current.CancellationToken);
@@ -935,7 +935,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		TestEntity? result = await testContext.GetOneWithFilterFull(x => x.Name == targetName, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -950,7 +950,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		TestEntity? result = await testContext.GetMaxByOrderFull(_ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -965,7 +965,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		TestEntity? result = await testContext.GetMinByOrderFull(_ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -980,7 +980,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		int result = await testContext.GetMaxFull(_ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -994,7 +994,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		int result = await testContext.GetMinFull(_ => true, x => x.Id, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -1004,7 +1004,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public void UpdateMany_WhenException_ShouldReturnFalse()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Simulate exception by passing null (will throw in RemoveNavigationProperties)
 		List<TestEntity> entities = new() { null! };
@@ -1017,7 +1017,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public void DeleteByObject_WhenException_ShouldNotThrow()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Simulate exception by passing null (will throw in RemoveNavigationProperties)
 		TestEntity entity = null!;
@@ -1028,7 +1028,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public void DeleteMany_WhenException_ShouldReturnFalse()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Simulate exception by passing null (will throw in RemoveNavigationProperties)
 		List<TestEntity> entities = new() { null! };
@@ -1042,7 +1042,7 @@ public sealed class BaseDbContextActionsTests
 	public async Task Create_WithRemoveNavigationProps_ShouldNotThrow()
 	{
 		TestEntity entity = fixture.Create<TestEntity>();
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		await testContext.Create(entity, removeNavigationProps: true);
 		await testContext.SaveChanges();
@@ -1061,7 +1061,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		List<string> results = new();
@@ -1084,7 +1084,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		List<string> results = new();
@@ -1107,7 +1107,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		List<string> results = new();
@@ -1133,7 +1133,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		// Act
@@ -1157,7 +1157,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		// Act
@@ -1181,7 +1181,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		// Act
@@ -1205,7 +1205,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		string? result = await testContext.GetOneWithFilter(x => x.Id == target.Id, x => x.Name, cancellationToken: TestContext.Current.CancellationToken);
@@ -1226,7 +1226,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		string? result = await testContext.GetOneWithFilter(full, x => x.Id == target.Id, x => x.Name, cancellationToken: TestContext.Current.CancellationToken);
@@ -1245,7 +1245,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		string? result = await testContext.GetOneWithFilterFull(x => x.Id == target.Id, x => x.Name, cancellationToken: TestContext.Current.CancellationToken);
@@ -1264,7 +1264,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
@@ -1289,7 +1289,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
@@ -1312,7 +1312,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
@@ -1341,7 +1341,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
@@ -1368,7 +1368,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
@@ -1394,7 +1394,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = true };
 
 		// Act
@@ -1414,7 +1414,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = true };
 
 		// Act
@@ -1435,7 +1435,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = true };
 
 		// Act
@@ -1459,7 +1459,7 @@ public sealed class BaseDbContextActionsTests
 		entity.Name = updatedName;
 		entity.Details = new List<TestEntityDetail> { new() { Description = "test" } };
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		testContext.Update(entity, removeNavigationProps: true);
@@ -1480,7 +1480,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		testContext.DeleteByObject(entity);
@@ -1495,7 +1495,7 @@ public sealed class BaseDbContextActionsTests
 	public async Task SaveChanges_WithNoChanges_ShouldReturnFalse()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		bool result = await testContext.SaveChanges();
@@ -1508,7 +1508,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAll_WithProjection_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<string> query = testContext.GetQueryAll(x => x.Name);
@@ -1522,7 +1522,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAll_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryAll();
@@ -1536,7 +1536,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAllFull_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryAllFull();
@@ -1550,7 +1550,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilter_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryWithFilter(_ => true);
@@ -1564,7 +1564,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilterFull_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryWithFilterFull(_ => true);
@@ -1578,7 +1578,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAllFull_WithHandlingCircularRef_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryAllFull(handlingCircularRefException: true);
@@ -1592,7 +1592,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilterFull_WithHandlingCircularRef_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryWithFilterFull(_ => true, handlingCircularRefException: true);
@@ -1606,7 +1606,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAllFull_WithProjection_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<string> query = testContext.GetQueryAllFull(x => x.Name);
@@ -1620,7 +1620,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilter_WithProjection_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<string> query = testContext.GetQueryWithFilter(_ => true, x => x.Name);
@@ -1634,7 +1634,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilterFull_WithProjection_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<string> query = testContext.GetQueryWithFilterFull(_ => true, x => x.Name);
@@ -1648,7 +1648,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryNavigationWithFilterFull_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
@@ -1665,7 +1665,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryPagingWithFilterFull_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(_ => true, x => x, nameof(TestEntity.Id));
@@ -1679,7 +1679,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryPagingWithFilterFull_TKey_ShouldReturnQueryable()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(_ => true, x => x, x => x.Id);
@@ -1693,7 +1693,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public async Task GetAll_WithCancelledToken_ShouldReturnNull()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
@@ -1705,7 +1705,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public async Task GetAllFull_WithCancelledToken_ShouldReturnNull()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
@@ -1717,7 +1717,7 @@ public sealed class BaseDbContextActionsTests
 	[Fact]
 	public async Task GetWithFilter_WithCancelledToken_ShouldReturnNull()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
@@ -1928,7 +1928,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -1950,7 +1950,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -1973,7 +1973,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -1996,7 +1996,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -2018,7 +2018,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -2040,7 +2040,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -2062,7 +2062,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -2083,7 +2083,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -2105,7 +2105,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
@@ -2127,7 +2127,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAllFull_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -2145,7 +2145,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilterFull_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -2163,7 +2163,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryNavigationWithFilterFull_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
@@ -2184,7 +2184,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryPagingWithFilterFull_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -2202,7 +2202,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryPagingWithFilterFull_TKey_WithSplitQueryOverride_ShouldReturnQueryable(bool? splitQueryOverride)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		FullQueryOptions options = new() { SplitQueryOverride = splitQueryOverride };
 
 		// Act
@@ -2227,7 +2227,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetOneWithFilter(x => x.Id == entity.Id, trackEntities: trackEntities, cancellationToken: TestContext.Current.CancellationToken);
@@ -2247,7 +2247,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetMaxByOrder(_ => true, x => x.Id, trackEntities: trackEntities, cancellationToken: TestContext.Current.CancellationToken);
@@ -2267,7 +2267,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetMinByOrder(_ => true, x => x.Id, trackEntities: trackEntities, cancellationToken: TestContext.Current.CancellationToken);
@@ -2287,7 +2287,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int result = await testContext.GetMax(_ => true, x => x.Id, trackEntities: trackEntities, cancellationToken: TestContext.Current.CancellationToken);
@@ -2306,7 +2306,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int result = await testContext.GetMin(_ => true, x => x.Id, trackEntities: trackEntities, cancellationToken: TestContext.Current.CancellationToken);
@@ -2326,7 +2326,7 @@ public sealed class BaseDbContextActionsTests
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
 		entities.ForEach(e => e.Details = new List<TestEntityDetail> { new() { Description = "test" } });
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		await testContext.CreateMany(entities, removeNavigationProps: true);
@@ -2349,7 +2349,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		testContext.DeleteByObject(entity, removeNavigationProps: true);
@@ -2370,7 +2370,7 @@ public sealed class BaseDbContextActionsTests
 		context.TestEntities.AddRange(entities);
 		context.SaveChanges();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		bool result = testContext.DeleteMany(entities, removeNavigationProps: true);
@@ -2393,7 +2393,7 @@ public sealed class BaseDbContextActionsTests
 			e.Details = new List<TestEntityDetail> { new() { Description = "test" } };
 		});
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		bool result = testContext.UpdateMany(entities, removeNavigationProps: true, cancellationToken: TestContext.Current.CancellationToken);
@@ -2414,7 +2414,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		TestEntity? result = await testContext.GetByKeyFull(new object[] { entity.Id }, trackEntities: true, cancellationToken: TestContext.Current.CancellationToken);
@@ -2432,7 +2432,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, orderByString: nameof(TestEntity.Id),
@@ -2451,7 +2451,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, ascendingOrderExpression: x => x.Id,
@@ -2472,7 +2472,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAll_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryAll(trackEntities: trackEntities);
@@ -2488,7 +2488,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAll_WithProjectionAndTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<string> query = testContext.GetQueryAll(x => x.Name, trackEntities: trackEntities);
@@ -2504,7 +2504,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilter_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryWithFilter(_ => true, trackEntities: trackEntities);
@@ -2520,7 +2520,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilter_WithProjectionAndTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<string> query = testContext.GetQueryWithFilter(_ => true, x => x.Name, trackEntities: trackEntities);
@@ -2536,7 +2536,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAllFull_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryAllFull(trackEntities: trackEntities);
@@ -2552,7 +2552,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryAllFull_WithProjectionAndTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<string> query = testContext.GetQueryAllFull(x => x.Name, trackEntities: trackEntities);
@@ -2568,7 +2568,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilterFull_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryWithFilterFull(_ => true, trackEntities: trackEntities);
@@ -2584,7 +2584,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryWithFilterFull_WithProjectionAndTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<string> query = testContext.GetQueryWithFilterFull(_ => true, x => x.Name, trackEntities: trackEntities);
@@ -2600,7 +2600,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryNavigationWithFilterFull_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		Expression<Func<TestEntityDetail, bool>> where = d => d.TestEntityId == 1;
 		Expression<Func<TestEntityDetail, TestEntity>> select = d => d.TestEntity!;
@@ -2619,7 +2619,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryPagingWithFilterFull_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(
@@ -2639,7 +2639,7 @@ public sealed class BaseDbContextActionsTests
 	public void GetQueryPagingWithFilterFull_TKey_WithTrackEntities_ShouldReturnQueryable(bool trackEntities)
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(
@@ -2661,7 +2661,7 @@ public sealed class BaseDbContextActionsTests
 	public void ServiceProvider_SetAndGet_ShouldWork()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		ServiceCollection newServices = new();
 		newServices.AddDbContextPool<TestDbContext>(options =>
 			options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
@@ -2686,7 +2686,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, orderByString: nameof(TestEntity.Id),
@@ -2705,7 +2705,7 @@ public sealed class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(

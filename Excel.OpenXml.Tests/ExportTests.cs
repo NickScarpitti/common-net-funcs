@@ -10,12 +10,12 @@ namespace Excel.OpenXml.Tests;
 public sealed class ExportTests : IDisposable
 {
 	private readonly Fixture fixture;
-	private readonly MemoryStream _memoryStream;
+	private readonly MemoryStream memoryStream;
 
 	public ExportTests()
 	{
 		fixture = new Fixture();
-		_memoryStream = new MemoryStream();
+		memoryStream = new MemoryStream();
 	}
 
 	private bool disposed;
@@ -32,7 +32,7 @@ public sealed class ExportTests : IDisposable
 		{
 			if (disposing)
 			{
-				_memoryStream.Dispose();
+				memoryStream.Dispose();
 			}
 			disposed = true;
 		}
@@ -159,7 +159,7 @@ public sealed class ExportTests : IDisposable
 		List<TestModel> testData = fixture.CreateMany<TestModel>(2).ToList();
 		List<string> skipColumns = new() { "Description" };
 
-		using SpreadsheetDocument doc = SpreadsheetDocument.Create(_memoryStream, SpreadsheetDocumentType.Workbook);
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		doc.AddWorkbookPart();
 		uint sheetId = doc.InitializeExcelFile("TestSheet");
 		Worksheet? worksheet = doc.GetWorksheetById(sheetId);
@@ -183,7 +183,7 @@ public sealed class ExportTests : IDisposable
 		// Arrange
 		List<TestModel> testData = fixture.CreateMany<TestModel>(100).ToList();
 		using CancellationTokenSource cts = new();
-		using SpreadsheetDocument doc = SpreadsheetDocument.Create(_memoryStream, SpreadsheetDocumentType.Workbook);
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		doc.AddWorkbookPart();
 		uint sheetId = doc.InitializeExcelFile("TestSheet");
 		Worksheet? worksheet = doc.GetWorksheetById(sheetId);

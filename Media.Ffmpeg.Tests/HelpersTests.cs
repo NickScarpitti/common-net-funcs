@@ -8,8 +8,8 @@ namespace Media.Ffmpeg.Tests;
 public sealed class HelpersTests : IDisposable
 {
 	private readonly Fixture fixture;
-	private readonly string _testVideoPath;
-	private readonly string _tempLogFile;
+	private readonly string testVideoPath;
+	private readonly string tempLogFile;
 
 	public HelpersTests()
 	{
@@ -17,19 +17,19 @@ public sealed class HelpersTests : IDisposable
 		fixture.Customize(new AutoFakeItEasyCustomization());
 
 		string testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
-		_testVideoPath = Path.Combine(testDataDir, "test.mp4");
-		_tempLogFile = Path.Combine(Path.GetTempPath(), $"HelpersTests_{Guid.NewGuid()}.log");
+		testVideoPath = Path.Combine(testDataDir, "test.mp4");
+		tempLogFile = Path.Combine(Path.GetTempPath(), $"HelpersTests_{Guid.NewGuid()}.log");
 	}
 
 	private bool disposed;
 
 	public void Dispose()
 	{
-		if (File.Exists(_tempLogFile))
+		if (File.Exists(tempLogFile))
 		{
 			try
 			{
-				File.Delete(_tempLogFile);
+				File.Delete(tempLogFile);
 			}
 			catch (Exception ex)
 			{
@@ -45,7 +45,7 @@ public sealed class HelpersTests : IDisposable
 		{
 			if (disposing)
 			{
-				File.Delete(_tempLogFile);
+				File.Delete(tempLogFile);
 			}
 			disposed = true;
 		}
@@ -125,12 +125,12 @@ public sealed class HelpersTests : IDisposable
 		const long endSize = 50;
 
 		// Act
-		await Helpers.RecordResults(fileName, success, bag, _tempLogFile, originalSize, endSize);
+		await Helpers.RecordResults(fileName, success, bag, tempLogFile, originalSize, endSize);
 
 		// Assert
 		bag.ShouldContain(x => x.Contains(fileName) && x.Contains("Success=True"));
-		File.Exists(_tempLogFile).ShouldBeTrue();
-		string logContent = await File.ReadAllTextAsync(_tempLogFile);
+		File.Exists(tempLogFile).ShouldBeTrue();
+		string logContent = await File.ReadAllTextAsync(tempLogFile);
 		logContent.ShouldContain(fileName);
 	}
 
@@ -155,7 +155,7 @@ public sealed class HelpersTests : IDisposable
 	public async Task GetVideoMetadata_ShouldReturnNonNullForValidFile()
 	{
 		// Act
-		string? result = await _testVideoPath.GetVideoMetadata(Helpers.EVideoMetadata.Codec_Name);
+		string? result = await testVideoPath.GetVideoMetadata(Helpers.EVideoMetadata.Codec_Name);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -177,7 +177,7 @@ public sealed class HelpersTests : IDisposable
 	public async Task GetFrameRate_ShouldReturnPositiveForValidFile()
 	{
 		// Act
-		decimal result = await _testVideoPath.GetFrameRate();
+		decimal result = await testVideoPath.GetFrameRate();
 
 		// Assert
 		result.ShouldBeGreaterThan(0);
@@ -199,7 +199,7 @@ public sealed class HelpersTests : IDisposable
 	public async Task GetKeyFrameSpacing_WithSamples_ShouldReturnValueOrMinusOne(int numberOfSamples, int sampleLengthSec)
 	{
 		// Act
-		decimal result = await _testVideoPath.GetKeyFrameSpacing(numberOfSamples, sampleLengthSec);
+		decimal result = await testVideoPath.GetKeyFrameSpacing(numberOfSamples, sampleLengthSec);
 
 		// Assert
 		// For a valid file, should be >= -1 (could be -1 if no keyframes found)
@@ -210,7 +210,7 @@ public sealed class HelpersTests : IDisposable
 	public async Task GetKeyFrameSpacing_WithoutSamples_ShouldReturnValueOrMinusOne()
 	{
 		// Act
-		decimal result = await _testVideoPath.GetKeyFrameSpacing();
+		decimal result = await testVideoPath.GetKeyFrameSpacing();
 
 		// Assert
 		// For a valid file, should be >= -1 (could be -1 if no keyframes found)

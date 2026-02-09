@@ -20,6 +20,8 @@ public static partial class Common
 	private static readonly Lock formatCacheLock = new();
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+	private const string WorksheetNotPartOfWorkbookError = "Worksheet is not part of a workbook.";
+
 	/// <summary>
 	/// Populates SpreadsheetDocument with all components needed for a new Excel file including a single new sheet
 	/// </summary>
@@ -147,10 +149,10 @@ public static partial class Common
 		Worksheet worksheet = cell.GetWorksheetFromCell();
 
 		// Get the workbook part
-		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 
 		// Return the workbook
-		return workbookPart.Workbook ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		return workbookPart.Workbook ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 	}
 
 	/// <summary>
@@ -162,10 +164,10 @@ public static partial class Common
 	public static Workbook? GetWorkbookFromWorksheet(this Worksheet worksheet)
 	{
 		// Get the workbook part
-		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 
 		// Return the workbook
-		return workbookPart.Workbook ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		return workbookPart.Workbook ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 	}
 
 	/// <summary>
@@ -177,10 +179,10 @@ public static partial class Common
 	public static Workbook? GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
 	{
 		// Get the workbook part
-		WorkbookPart? workbookPart = worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		WorkbookPart? workbookPart = worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 
 		// Return the workbook
-		return workbookPart.Workbook ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		return workbookPart.Workbook ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 	}
 
 	/// <summary>
@@ -2352,33 +2354,33 @@ public static partial class Common
 		[GeneratedRegex(@"([A-Z]+)(\d+)")]
 		private static partial Regex CellRefRegex();
 
-		private uint _RowIndex;
+		private uint rowIndex;
 
 		public uint RowIndex
 		{
-			get => _RowIndex;
+			get => rowIndex;
 			set
 			{
 				if (value is < 1 or > 1048576)
 				{
 					throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 1048576");
 				}
-				_RowIndex = value;
+				rowIndex = value;
 			}
 		}
 
-		private uint _ColumnIndex;
+		private uint columnIndex;
 
 		public uint ColumnIndex
 		{
-			get => _ColumnIndex;
+			get => columnIndex;
 			set
 			{
 				if (value is < 1 or > 16384)
 				{
 					throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 16384");
 				}
-				_ColumnIndex = value;
+				columnIndex = value;
 			}
 		}
 

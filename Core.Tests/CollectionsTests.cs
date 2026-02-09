@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Core.CollectionClasses;
 using FastExpressionCompiler;
+using static Xunit.TestContext;
 
 namespace Core.Tests;
 
@@ -274,7 +275,7 @@ public sealed class CollectionsTests
 				};
 
 		// Act
-		dict.AddDictionaryItems(pairs, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		dict.ShouldContainKey("test1");
@@ -295,7 +296,7 @@ public sealed class CollectionsTests
 				};
 
 		// Act
-		dict.AddDictionaryItems(pairs, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		dict["test1"].ShouldBe(42);
@@ -314,7 +315,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", null };
 
 		// Act
-		bag.AddRange(items, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		bag.AddRange(items, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		bag.Count.ShouldBe(2);
@@ -330,7 +331,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", null };
 
 		// Act
-		bag.AddRangeParallel(items, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		bag.AddRangeParallel(items, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		bag.Count.ShouldBe(2);
@@ -347,7 +348,7 @@ public sealed class CollectionsTests
 		ParallelOptions options = new() { MaxDegreeOfParallelism = 2 };
 
 		// Act
-		bag.AddRangeParallel(items, options, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		bag.AddRangeParallel(items, options, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		bag.Count.ShouldBe(2);
@@ -363,7 +364,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", null };
 
 		// Act
-		hashSet.AddRange(items, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		hashSet.AddRange(items, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		hashSet.Count.ShouldBe(2);
@@ -382,7 +383,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		items.SetValue(item => item.Name = item.Name?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		items.SetValue(item => item.Name = item.Name?.ToUpper(), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		items.Count.ShouldBe(items.Count);
@@ -399,7 +400,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		IEnumerable<TestClass> result = items.SetValueEnumerate(item => item.Name = item.Name?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		IEnumerable<TestClass> result = items.SetValueEnumerate(item => item.Name = item.Name?.ToUpper(), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count().ShouldBe(items.Count);
@@ -416,7 +417,7 @@ public sealed class CollectionsTests
 		List<string> items = new() { "test1", "test2" };
 
 		// Act
-		items.SetValue(s => s?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		items.SetValue(s => s?.ToUpper(), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		items.Count.ShouldBe(2);
@@ -431,7 +432,7 @@ public sealed class CollectionsTests
 		List<string> items = new() { "test1", "test2" };
 
 		// Act
-		List<string?> result = items.SetValueEnumerate(s => s?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken).ToList();
+		List<string?> result = items.SetValueEnumerate(s => s?.ToUpper(), cancellationToken: Current.CancellationToken).ToList();
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -446,7 +447,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		items.Count.ShouldBe(2);
@@ -461,7 +462,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), 2, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), 2, cancellationToken: Current.CancellationToken);
 		// Assert
 		items.Count.ShouldBe(2);
 		items.ShouldContain(item => item.Name == "TEST1");
@@ -475,7 +476,7 @@ public sealed class CollectionsTests
 		IEnumerable<TestClass>? items = null;
 
 		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => items!.SetValue(item => { }));
+		Should.Throw<ArgumentNullException>(() => items!.SetValue(_ => { }));
 	}
 
 	[Fact]
@@ -515,7 +516,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", "test3" };
 
 		// Act - calls IList path directly
-		items.SetValue(s => s?.ToUpper());
+		items.SetValue(s => s?.ToUpper(), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		items[0].ShouldBe("TEST1");
@@ -547,7 +548,7 @@ public sealed class CollectionsTests
 		IEnumerable<TestClass>? items = null;
 
 		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => items!.SetValueEnumerate(item => { }));
+		Should.Throw<ArgumentNullException>(() => items!.SetValueEnumerate(_ => { }));
 	}
 
 	[Fact]
@@ -587,7 +588,7 @@ public sealed class CollectionsTests
 		IEnumerable<TestClass>? items = null;
 
 		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => items!.SetValueParallel(item => { }));
+		Should.Throw<ArgumentNullException>(() => items!.SetValueParallel(_ => { }));
 	}
 
 	[Fact]
@@ -611,7 +612,7 @@ public sealed class CollectionsTests
 		int[,] array = new int[,] { { 1, 2 }, { 3, 4 } };
 
 		// Act
-		array.SetValue((arr, indices) => arr.SetValue(((int)arr.GetValue(indices)!) * 2, indices), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		array.SetValue((arr, indices) => arr.SetValue(((int)arr.GetValue(indices)!) * 2, indices), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		array[0, 0].ShouldBe(2);
@@ -639,7 +640,7 @@ public sealed class CollectionsTests
 		Array? array = null;
 
 		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => Collections.SetValue(array!, (arr, indices) => { }));
+		Should.Throw<ArgumentNullException>(() => Collections.SetValue(array!, (_, __) => { }));
 	}
 
 	[Fact]
@@ -801,7 +802,7 @@ public sealed class CollectionsTests
 		TestClass partial = new() { Id = 2 };
 
 		// Act
-		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -824,7 +825,7 @@ public sealed class CollectionsTests
 		TestClass partial = new() { Id = 3 };
 
 		// Act
-		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -846,7 +847,7 @@ public sealed class CollectionsTests
 		TestClass partial = new() { Id = 2, Name = "test3" };
 
 		// Act
-		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		if (ignoreDefaultValues)
@@ -880,7 +881,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", false, null);
 
 		// Act
-		List<TestClass> result = dataTable.ToList<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		List<TestClass> result = dataTable.ToList<TestClass>(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -909,7 +910,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", (short)0, DateTime.MaxValue, DateOnly.MaxValue);
 
 		// Act
-		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -940,7 +941,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", (short)0, DateOnly.MaxValue, DateTime.MaxValue);
 
 		// Act
-		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -952,7 +953,7 @@ public sealed class CollectionsTests
 		result[1]!.Id.ShouldBe(2);
 		result[1]!.Name.ShouldBe("test2");
 		result[1]!.IsActive.ShouldBeFalse();
-		result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
+		result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue, DateTimeKind.Unspecified));
 		result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
 	}
 
@@ -976,7 +977,7 @@ public sealed class CollectionsTests
 		if (!badFirstDate && !badSecondDate)
 		{
 			// Act
-			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.Count.ShouldBe(2);
@@ -988,7 +989,7 @@ public sealed class CollectionsTests
 			result[1]!.Id.ShouldBe(2);
 			result[1]!.Name.ShouldBe("test2");
 			result[1]!.IsActive.ShouldBeFalse();
-			result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
+			result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue, DateTimeKind.Unspecified));
 			result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
 		}
 		else
@@ -1018,7 +1019,7 @@ public sealed class CollectionsTests
 		if (!badFirstDate && !badSecondDate)
 		{
 			// Act
-			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.Count.ShouldBe(2);
@@ -1053,7 +1054,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", false);
 
 		// Act
-		List<TestClass> result = dataTable.ToListParallel<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		List<TestClass> result = dataTable.ToListParallel<TestClass>(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -1073,7 +1074,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2");
 
 		// Act
-		List<TestClass> result = dataTable.ToEnumerableParallel<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken).ToList();
+		List<TestClass> result = dataTable.ToEnumerableParallel<TestClass>(cancellationToken: Current.CancellationToken).ToList();
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -1093,7 +1094,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2");
 
 		// Act
-		List<TestClass> result = dataTable.ToEnumerableStreaming<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken).ToList();
+		List<TestClass> result = dataTable.ToEnumerableStreaming<TestClass>(cancellationToken: Current.CancellationToken).ToList();
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -1280,7 +1281,7 @@ public sealed class CollectionsTests
 		};
 
 		// Act
-		DataTable? result = collection.ToDataTable();
+		DataTable? result = collection.ToDataTable(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1295,7 +1296,7 @@ public sealed class CollectionsTests
 	public void ToDataTable_WithNullCollection_ReturnsNull()
 	{
 		// Act
-		DataTable? result = Collections.ToDataTable<TestClass>(null);
+		DataTable? result = Collections.ToDataTable<TestClass>(null, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -1313,7 +1314,7 @@ public sealed class CollectionsTests
 		};
 
 		// Act
-		DataTable? result = collection.ToDataTable(useParallel: true);
+		DataTable? result = collection.ToDataTable(useParallel: true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1333,7 +1334,7 @@ public sealed class CollectionsTests
 			.ToList();
 
 		// Act
-		DataTable? result = collection.ToDataTable(useParallel: true, degreeOfParallelism: 2);
+		DataTable? result = collection.ToDataTable(useParallel: true, degreeOfParallelism: 2, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1353,7 +1354,7 @@ public sealed class CollectionsTests
 		dataTable.Columns.Add("AnotherInvalidColumn", typeof(int));
 
 		// Act
-		DataTable? result = collection.ToDataTable(dataTable);
+		DataTable? result = collection.ToDataTable(dataTable, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1376,7 +1377,7 @@ public sealed class CollectionsTests
 		dataTable.Columns.Add("Name", typeof(string));
 
 		// Act
-		DataTable? result = collection.ToDataTable(dataTable);
+		DataTable? result = collection.ToDataTable(dataTable, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -2661,7 +2662,7 @@ public sealed class CollectionsTests
 		FixedFifoDictionary<int, string> dict = new(10);
 		dict.Add(1, "a");
 		dict.Add(2, "b");
-		Should.NotThrow(() => dict.TrimExcess());
+		Should.NotThrow(dict.TrimExcess);
 		dict.Count.ShouldBe(2);
 	}
 
@@ -2758,7 +2759,7 @@ public sealed class CollectionsTests
 	{
 		FixedFifoDictionary<int, string> dict = new(2);
 		dict.Add(1, "existing");
-		string result = dict.GetOrAdd(1, k => "new");
+		string result = dict.GetOrAdd(1, _ => "new");
 		result.ShouldBe("existing");
 		dict[1].ShouldBe("existing");
 	}
@@ -2769,7 +2770,7 @@ public sealed class CollectionsTests
 		FixedFifoDictionary<int, string> dict = new(2);
 		dict.Add(1, "a");
 		dict.Add(2, "b");
-		string result = dict.GetOrAdd(3, k => "c");
+		string result = dict.GetOrAdd(3, _ => "c");
 		result.ShouldBe("c");
 		dict.ContainsKey(1).ShouldBeFalse();
 		dict.ContainsKey(2).ShouldBeTrue();
@@ -2784,7 +2785,7 @@ public sealed class CollectionsTests
 		FixedLruDictionary<int, string> dict = new(10);
 		dict.Add(1, "a");
 		dict.Add(2, "b");
-		Should.NotThrow(() => dict.TrimExcess());
+		Should.NotThrow(dict.TrimExcess);
 		dict.Count.ShouldBe(2);
 	}
 
@@ -2806,7 +2807,7 @@ public sealed class CollectionsTests
 		dict[3] = "c";
 		dict[2] = "b";
 		dict[1] = "a"; // 1 is now at front
-		string result = dict[1]; // Should return without moving since already at front
+		string result = dict[1]!; // Should return without moving since already at front
 		result.ShouldBe("a");
 		dict.Count.ShouldBe(3);
 	}
@@ -2819,7 +2820,7 @@ public sealed class CollectionsTests
 		dict[2] = "b";
 		dict[3] = "c";
 		// Access 1 to move it to front
-		string result = dict[1];
+		string result = dict[1]!;
 		result.ShouldBe("a");
 		// Add another item, should evict 2 (not 1)
 		dict[4] = "d";
@@ -2855,7 +2856,7 @@ public sealed class CollectionsTests
 		dict[3] = "c";
 		dict[2] = "b";
 		dict[1] = "a"; // 1 is now at front
-		string result = dict.GetOrAdd(1, k => "new");
+		string result = dict.GetOrAdd(1, _ => "new");
 		result.ShouldBe("a");
 	}
 
@@ -2866,7 +2867,7 @@ public sealed class CollectionsTests
 		dict[1] = "a";
 		dict[2] = "b";
 		dict[3] = "c"; // 3 is at front, 1 is at back
-		string result = dict.GetOrAdd(1, k => "new");
+		string result = dict.GetOrAdd(1, _ => "new");
 		result.ShouldBe("a");
 		// Add another item, should evict 2 (not 1 since it was moved to front)
 		dict[4] = "d";
@@ -2889,7 +2890,7 @@ public sealed class CollectionsTests
 		FixedLruDictionary<int, string> dict = new(2);
 		dict.Add(1, "a");
 		dict.Add(2, "b");
-		string result = dict.GetOrAdd(3, k => "c");
+		string result = dict.GetOrAdd(3, _ => "c");
 		result.ShouldBe("c");
 		dict.ContainsKey(1).ShouldBeFalse();
 		dict.ContainsKey(2).ShouldBeTrue();

@@ -9,9 +9,11 @@ public sealed class CacheManagerTests
 	public void Constructor_Should_Initialize_Properties()
 	{
 		// Arrange & Act
+
 		CacheManager<int, string> cacheManager = new(42);
 
 		// Assert
+
 		cacheManager.GetCache().ShouldNotBeNull();
 		cacheManager.GetLimitedCache().ShouldNotBeNull();
 		cacheManager.GetLimitedCacheSize().ShouldBe(42);
@@ -25,14 +27,17 @@ public sealed class CacheManagerTests
 	public void SetLimitedCacheSize_Should_Change_Size_And_Clear_LimitedCache(int newSize)
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(5);
 		cacheManager.TryAddLimitedCache(1, "a");
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 
 		// Act
+
 		cacheManager.SetLimitedCacheSize(newSize);
 
 		// Assert
+
 		cacheManager.GetLimitedCacheSize().ShouldBe(newSize);
 		cacheManager.GetLimitedCache().Count.ShouldBe(0);
 	}
@@ -41,12 +46,15 @@ public sealed class CacheManagerTests
 	public void GetLimitedCache_Should_Return_Readonly_Cache()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(5);
 
 		// Act
+
 		cacheManager.TryAddLimitedCache(1, "a");
 
 		// Assert
+
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 		cacheManager.GetLimitedCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
 		cacheManager.GetLimitedCache().Keys.First().ShouldBe(1);
@@ -57,12 +65,15 @@ public sealed class CacheManagerTests
 	public void GetCache_Should_Return_Readonly_Cache()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(5);
 
 		// Act
+
 		cacheManager.TryAddCache(1, "a");
 
 		// Assert
+
 		cacheManager.GetCache().Count.ShouldBe(1);
 		cacheManager.GetCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
 		cacheManager.GetCache().Keys.First().ShouldBe(1);
@@ -75,14 +86,17 @@ public sealed class CacheManagerTests
 	public void SetUseLimitedCache_Should_Set_UseLimitedCache_And_Clear_Caches(bool useLimited)
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(3);
 		cacheManager.TryAddCache(1, "a");
 		cacheManager.TryAddCache(2, "b");
 
 		// Act
+
 		cacheManager.SetUseLimitedCache(useLimited);
 
 		// Assert
+
 		cacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
 		cacheManager.GetCache().Count.ShouldBe(0);
 		cacheManager.GetLimitedCache().Count.ShouldBe(0);
@@ -100,14 +114,17 @@ public sealed class CacheManagerTests
 	public void ClearCache_Should_Clear_ConcurrentDictionary()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new();
 		cacheManager.TryAddCache(1, "a");
 		cacheManager.GetCache().Count.ShouldBe(1);
 
 		// Act
+
 		cacheManager.ClearCache();
 
 		// Assert
+
 		cacheManager.GetCache().Count.ShouldBe(0);
 	}
 
@@ -115,14 +132,17 @@ public sealed class CacheManagerTests
 	public void ClearLimitedCache_Should_Clear_FixedLRUDictionary()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new();
 		cacheManager.TryAddLimitedCache(1, "a");
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 
 		// Act
+
 		cacheManager.ClearLimitedCache();
 
 		// Assert
+
 		cacheManager.GetLimitedCache().Count.ShouldBe(0);
 	}
 
@@ -130,14 +150,17 @@ public sealed class CacheManagerTests
 	public void ClearAllCaches_Should_Clear_Both_Caches()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new();
 		cacheManager.TryAddCache(1, "a");
 		cacheManager.TryAddCache(2, "b");
 
 		// Act
+
 		cacheManager.ClearAllCaches();
 
 		// Assert
+
 		cacheManager.GetCache().Count.ShouldBe(0);
 		cacheManager.GetLimitedCache().Count.ShouldBe(0);
 	}
@@ -146,12 +169,15 @@ public sealed class CacheManagerTests
 	public void GetLimitedCacheSize_Should_Return_Current_Size()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(7);
 
 		// Act
+
 		int size = cacheManager.GetLimitedCacheSize();
 
 		// Assert
+
 		size.ShouldBe(7);
 	}
 
@@ -159,10 +185,12 @@ public sealed class CacheManagerTests
 	public void IsUsingLimitedCache_Should_Return_UseLimitedCache()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new();
 		cacheManager.SetUseLimitedCache(false);
 
 		// Act & Assert
+
 		cacheManager.IsUsingLimitedCache().ShouldBeFalse();
 		cacheManager.SetUseLimitedCache(true);
 		cacheManager.IsUsingLimitedCache().ShouldBeTrue();
@@ -172,9 +200,11 @@ public sealed class CacheManagerTests
 	public void ThreadSafety_SetLimitedCacheSize_And_SetUseLimitedCache_Should_Not_Throw()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(10);
 
 		// Act & Assert
+
 		Exception? exception1 = Record.Exception(() => Parallel.For(0, 100, i => cacheManager.SetLimitedCacheSize(i + 1)));
 		Exception? exception2 = Record.Exception(() => Parallel.For(0, 100, i => cacheManager.SetUseLimitedCache(i % 2 == 0)));
 
@@ -184,16 +214,20 @@ public sealed class CacheManagerTests
 
 	#region GetOrAdd Tests
 
+
 	[Fact]
 	public void GetOrAddCache_Should_Add_New_Key_And_Return_Value()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new();
 
 		// Act
+
 		string result = cacheManager.GetOrAddCache(1, k => $"Value{k}");
 
 		// Assert
+
 		result.ShouldBe("Value1");
 		cacheManager.GetCache().Count.ShouldBe(1);
 		cacheManager.GetCache()[1].ShouldBe("Value1");
@@ -203,13 +237,16 @@ public sealed class CacheManagerTests
 	public void GetOrAddCache_Should_Return_Existing_Value_When_Key_Exists()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new();
 		cacheManager.TryAddCache(1, "Original");
 
 		// Act
-		string result = cacheManager.GetOrAddCache(1, k => "New");
+
+		string result = cacheManager.GetOrAddCache(1, _ => "New");
 
 		// Assert
+
 		result.ShouldBe("Original");
 		cacheManager.GetCache().Count.ShouldBe(1);
 	}
@@ -218,12 +255,15 @@ public sealed class CacheManagerTests
 	public void GetOrAddLimitedCache_Should_Add_New_Key_And_Return_Value()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(5);
 
 		// Act
+
 		string result = cacheManager.GetOrAddLimitedCache(1, k => $"Value{k}");
 
 		// Assert
+
 		result.ShouldBe("Value1");
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 		cacheManager.GetLimitedCache()[1].ShouldBe("Value1");
@@ -233,13 +273,16 @@ public sealed class CacheManagerTests
 	public void GetOrAddLimitedCache_Should_Return_Existing_Value_When_Key_Exists()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(5);
 		cacheManager.TryAddLimitedCache(1, "Original");
 
 		// Act
-		string result = cacheManager.GetOrAddLimitedCache(1, k => "New");
+
+		string result = cacheManager.GetOrAddLimitedCache(1, _ => "New");
 
 		// Assert
+
 		result.ShouldBe("Original");
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 	}
@@ -248,17 +291,21 @@ public sealed class CacheManagerTests
 
 	#region TryAdd Duplicate Key Tests
 
+
 	[Fact]
 	public void TryAddCache_Should_Return_False_When_Key_Already_Exists()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new();
 		cacheManager.TryAddCache(1, "First");
 
 		// Act
+
 		bool result = cacheManager.TryAddCache(1, "Second");
 
 		// Assert
+
 		result.ShouldBeFalse();
 		cacheManager.GetCache()[1].ShouldBe("First");
 	}
@@ -267,13 +314,16 @@ public sealed class CacheManagerTests
 	public void TryAddLimitedCache_Should_Return_False_When_Key_Already_Exists()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(5);
 		cacheManager.TryAddLimitedCache(1, "First");
 
 		// Act
+
 		bool result = cacheManager.TryAddLimitedCache(1, "Second");
 
 		// Assert
+
 		result.ShouldBeFalse();
 		cacheManager.GetLimitedCache()[1].ShouldBe("First");
 	}
@@ -282,6 +332,7 @@ public sealed class CacheManagerTests
 
 	#region SetLimitedCacheSize Edge Cases
 
+
 	[Theory]
 	[InlineData(0)]
 	[InlineData(-1)]
@@ -289,13 +340,16 @@ public sealed class CacheManagerTests
 	public void SetLimitedCacheSize_WithSizeLessThanOne_ShouldDisableLimitedCache(int size)
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(10);
 		cacheManager.IsUsingLimitedCache().ShouldBeTrue();
 
 		// Act
+
 		cacheManager.SetLimitedCacheSize(size);
 
 		// Assert
+
 		cacheManager.IsUsingLimitedCache().ShouldBeFalse();
 		cacheManager.GetLimitedCacheSize().ShouldBe(size);
 	}
@@ -304,15 +358,18 @@ public sealed class CacheManagerTests
 	public void SetLimitedCacheSize_WhenUseLimitedCacheIsFalse_ShouldNotReinitializeLimitedCache()
 	{
 		// Arrange
+
 		CacheManager<int, string> cacheManager = new(10);
 		cacheManager.SetUseLimitedCache(false);
 		cacheManager.TryAddLimitedCache(1, "a");
 		int countBefore = cacheManager.GetLimitedCache().Count;
 
 		// Act
+
 		cacheManager.SetLimitedCacheSize(20);
 
 		// Assert
+
 		cacheManager.GetLimitedCacheSize().ShouldBe(20);
 		cacheManager.GetLimitedCache().Count.ShouldBe(countBefore);
 	}
@@ -322,15 +379,18 @@ public sealed class CacheManagerTests
 
 #region CacheManagerFifo Tests
 
+
 public sealed class CacheManagerFifoTests
 {
 	[Fact]
 	public void Constructor_Should_Initialize_Properties()
 	{
 		// Arrange & Act
+
 		CacheManagerFifo<int, string> cacheManager = new(42);
 
 		// Assert
+
 		cacheManager.GetCache().ShouldNotBeNull();
 		cacheManager.GetLimitedCache().ShouldNotBeNull();
 		cacheManager.GetLimitedCacheSize().ShouldBe(42);
@@ -344,14 +404,17 @@ public sealed class CacheManagerFifoTests
 	public void SetLimitedCacheSize_Should_Change_Size_And_Clear_LimitedCache(int newSize)
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(5);
 		cacheManager.TryAddLimitedCache(1, "a");
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 
 		// Act
+
 		cacheManager.SetLimitedCacheSize(newSize);
 
 		// Assert
+
 		cacheManager.GetLimitedCacheSize().ShouldBe(newSize);
 		cacheManager.GetLimitedCache().Count.ShouldBe(0);
 	}
@@ -360,12 +423,15 @@ public sealed class CacheManagerFifoTests
 	public void GetLimitedCache_Should_Return_Readonly_Cache()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(5);
 
 		// Act
+
 		cacheManager.TryAddLimitedCache(1, "a");
 
 		// Assert
+
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 		cacheManager.GetLimitedCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
 		cacheManager.GetLimitedCache().Keys.First().ShouldBe(1);
@@ -376,12 +442,15 @@ public sealed class CacheManagerFifoTests
 	public void GetCache_Should_Return_Readonly_Cache()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(5);
 
 		// Act
+
 		cacheManager.TryAddCache(1, "a");
 
 		// Assert
+
 		cacheManager.GetCache().Count.ShouldBe(1);
 		cacheManager.GetCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
 		cacheManager.GetCache().Keys.First().ShouldBe(1);
@@ -394,14 +463,17 @@ public sealed class CacheManagerFifoTests
 	public void SetUseLimitedCache_Should_Set_UseLimitedCache_And_Clear_Caches(bool useLimited)
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(3);
 		cacheManager.TryAddCache(1, "a");
 		cacheManager.TryAddCache(2, "b");
 
 		// Act
+
 		cacheManager.SetUseLimitedCache(useLimited);
 
 		// Assert
+
 		cacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
 		cacheManager.GetCache().Count.ShouldBe(0);
 		cacheManager.GetLimitedCache().Count.ShouldBe(0);
@@ -419,14 +491,17 @@ public sealed class CacheManagerFifoTests
 	public void ClearCache_Should_Clear_ConcurrentDictionary()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new();
 		cacheManager.TryAddCache(1, "a");
 		cacheManager.GetCache().Count.ShouldBe(1);
 
 		// Act
+
 		cacheManager.ClearCache();
 
 		// Assert
+
 		cacheManager.GetCache().Count.ShouldBe(0);
 	}
 
@@ -434,14 +509,17 @@ public sealed class CacheManagerFifoTests
 	public void ClearLimitedCache_Should_Clear_FixedFifoDictionary()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new();
 		cacheManager.TryAddLimitedCache(1, "a");
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 
 		// Act
+
 		cacheManager.ClearLimitedCache();
 
 		// Assert
+
 		cacheManager.GetLimitedCache().Count.ShouldBe(0);
 	}
 
@@ -449,14 +527,17 @@ public sealed class CacheManagerFifoTests
 	public void ClearAllCaches_Should_Clear_Both_Caches()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new();
 		cacheManager.TryAddCache(1, "a");
 		cacheManager.TryAddCache(2, "b");
 
 		// Act
+
 		cacheManager.ClearAllCaches();
 
 		// Assert
+
 		cacheManager.GetCache().Count.ShouldBe(0);
 		cacheManager.GetLimitedCache().Count.ShouldBe(0);
 	}
@@ -465,12 +546,15 @@ public sealed class CacheManagerFifoTests
 	public void GetLimitedCacheSize_Should_Return_Current_Size()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(7);
 
 		// Act
+
 		int size = cacheManager.GetLimitedCacheSize();
 
 		// Assert
+
 		size.ShouldBe(7);
 	}
 
@@ -478,10 +562,12 @@ public sealed class CacheManagerFifoTests
 	public void IsUsingLimitedCache_Should_Return_UseLimitedCache()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new();
 		cacheManager.SetUseLimitedCache(false);
 
 		// Act & Assert
+
 		cacheManager.IsUsingLimitedCache().ShouldBeFalse();
 		cacheManager.SetUseLimitedCache(true);
 		cacheManager.IsUsingLimitedCache().ShouldBeTrue();
@@ -491,9 +577,11 @@ public sealed class CacheManagerFifoTests
 	public void ThreadSafety_SetLimitedCacheSize_And_SetUseLimitedCache_Should_Not_Throw()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(10);
 
 		// Act & Assert
+
 		Exception? exception1 = Record.Exception(() => Parallel.For(0, 100, i => cacheManager.SetLimitedCacheSize(i + 1)));
 		Exception? exception2 = Record.Exception(() => Parallel.For(0, 100, i => cacheManager.SetUseLimitedCache(i % 2 == 0)));
 
@@ -505,12 +593,15 @@ public sealed class CacheManagerFifoTests
 	public void GetOrAddCache_Should_Add_New_Key_And_Return_Value()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new();
 
 		// Act
+
 		string result = cacheManager.GetOrAddCache(1, k => $"Value{k}");
 
 		// Assert
+
 		result.ShouldBe("Value1");
 		cacheManager.GetCache().Count.ShouldBe(1);
 		cacheManager.GetCache()[1].ShouldBe("Value1");
@@ -520,13 +611,16 @@ public sealed class CacheManagerFifoTests
 	public void GetOrAddCache_Should_Return_Existing_Value_When_Key_Exists()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new();
 		cacheManager.TryAddCache(1, "Original");
 
 		// Act
-		string result = cacheManager.GetOrAddCache(1, k => "New");
+
+		string result = cacheManager.GetOrAddCache(1, _ => "New");
 
 		// Assert
+
 		result.ShouldBe("Original");
 		cacheManager.GetCache().Count.ShouldBe(1);
 	}
@@ -535,12 +629,15 @@ public sealed class CacheManagerFifoTests
 	public void GetOrAddLimitedCache_Should_Add_New_Key_And_Return_Value()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(5);
 
 		// Act
+
 		string result = cacheManager.GetOrAddLimitedCache(1, k => $"Value{k}");
 
 		// Assert
+
 		result.ShouldBe("Value1");
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 		cacheManager.GetLimitedCache()[1].ShouldBe("Value1");
@@ -550,13 +647,16 @@ public sealed class CacheManagerFifoTests
 	public void GetOrAddLimitedCache_Should_Return_Existing_Value_When_Key_Exists()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(5);
 		cacheManager.TryAddLimitedCache(1, "Original");
 
 		// Act
-		string result = cacheManager.GetOrAddLimitedCache(1, k => "New");
+
+		string result = cacheManager.GetOrAddLimitedCache(1, _ => "New");
 
 		// Assert
+
 		result.ShouldBe("Original");
 		cacheManager.GetLimitedCache().Count.ShouldBe(1);
 	}
@@ -565,13 +665,16 @@ public sealed class CacheManagerFifoTests
 	public void TryAddCache_Should_Return_False_When_Key_Already_Exists()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new();
 		cacheManager.TryAddCache(1, "First");
 
 		// Act
+
 		bool result = cacheManager.TryAddCache(1, "Second");
 
 		// Assert
+
 		result.ShouldBeFalse();
 		cacheManager.GetCache()[1].ShouldBe("First");
 	}
@@ -580,13 +683,16 @@ public sealed class CacheManagerFifoTests
 	public void TryAddLimitedCache_Should_Return_False_When_Key_Already_Exists()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(5);
 		cacheManager.TryAddLimitedCache(1, "First");
 
 		// Act
+
 		bool result = cacheManager.TryAddLimitedCache(1, "Second");
 
 		// Assert
+
 		result.ShouldBeFalse();
 		cacheManager.GetLimitedCache()[1].ShouldBe("First");
 	}
@@ -598,13 +704,16 @@ public sealed class CacheManagerFifoTests
 	public void SetLimitedCacheSize_WithSizeLessThanOne_ShouldDisableLimitedCache(int size)
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(10);
 		cacheManager.IsUsingLimitedCache().ShouldBeTrue();
 
 		// Act
+
 		cacheManager.SetLimitedCacheSize(size);
 
 		// Assert
+
 		cacheManager.IsUsingLimitedCache().ShouldBeFalse();
 		cacheManager.GetLimitedCacheSize().ShouldBe(size);
 	}
@@ -613,15 +722,18 @@ public sealed class CacheManagerFifoTests
 	public void SetLimitedCacheSize_WhenUseLimitedCacheIsFalse_ShouldNotReinitializeLimitedCache()
 	{
 		// Arrange
+
 		CacheManagerFifo<int, string> cacheManager = new(10);
 		cacheManager.SetUseLimitedCache(false);
 		cacheManager.TryAddLimitedCache(1, "a");
 		int countBefore = cacheManager.GetLimitedCache().Count;
 
 		// Act
+
 		cacheManager.SetLimitedCacheSize(20);
 
 		// Assert
+
 		cacheManager.GetLimitedCacheSize().ShouldBe(20);
 		cacheManager.GetLimitedCache().Count.ShouldBe(countBefore);
 	}

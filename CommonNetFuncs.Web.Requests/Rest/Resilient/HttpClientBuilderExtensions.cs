@@ -161,8 +161,8 @@
 //    // Custom resilience handler that passes logger to context
 //    private class ResilienceHandler(ResiliencePipeline<HttpResponseMessage> pipeline, ILogger? logger) : DelegatingHandler
 //    {
-//        private readonly ResiliencePipeline<HttpResponseMessage> _pipeline = pipeline;
-//        private readonly ILogger? _logger = logger;
+//        private readonly ResiliencePipeline<HttpResponseMessage> pipeline = pipeline;
+//        private readonly ILogger? logger = logger;
 //        private static readonly ResiliencePropertyKey<ILogger> LoggerKey = new("Logger");
 
 //        // Fix for CS0411: Specify type arguments explicitly for ExecuteAsync
@@ -173,13 +173,13 @@
 //            try
 //            {
 //                // Store logger in context for retry callback access
-//                if (_logger != null)
+//                if (logger != null)
 //                {
-//                    context.Properties.Set(LoggerKey, _logger);
+//                    context.Properties.Set(LoggerKey, logger);
 //                }
 
 //                // Specify type arguments explicitly and use ConfigureAwait(false) to fix CRR0029
-//                return await _pipeline.ExecuteAsync<HttpResponseMessage, CancellationToken>(
+//                return await pipeline.ExecuteAsync<HttpResponseMessage, CancellationToken>(
 //                    async (_, token) => await base.SendAsync(request, token).ConfigureAwait(false), context, cancellationToken).ConfigureAwait(false);
 //            }
 //            finally

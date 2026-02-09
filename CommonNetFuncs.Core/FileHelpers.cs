@@ -432,10 +432,8 @@ public static partial class FileHelpers
 	/// Reads a file from a <see cref="PipeReader"/> and writes it to a provided <see cref="Stream"/>
 	/// </summary>
 	/// <param name="reader">PipeReader to read from.</param>
-	/// <param name="fileStream">Stream to write the file to.</param>
-	/// <param name="MaxProfileImageFileSize">Maximum allowed file size.</param>
+	/// <param name="outputStream">Stream to write the file to.</param>
 	/// <param name="successReturn">Optional: Return value on success.</param>
-	/// <param name="fileTooLargeReturn">Optional: Return value if file is too large.</param>
 	/// <param name="errorReturn">Function to handle errors.</param>
 	/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
 	/// <typeparam name="TReturn">Type of the return value.</typeparam>

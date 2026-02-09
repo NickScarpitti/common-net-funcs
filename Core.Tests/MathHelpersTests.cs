@@ -1,4 +1,4 @@
-﻿﻿using System.Globalization;
+﻿using System.Globalization;
 using CommonNetFuncs.Core;
 using static CommonNetFuncs.Core.MathHelpers;
 
@@ -194,19 +194,6 @@ public sealed class MathHelpersTests
 	}
 
 	[Theory]
-	[InlineData(123.0, 0)]              // whole number
-	[InlineData(123.1, 1)]              // one decimal place
-	[InlineData(123.12, 2)]             // two decimal places
-	[InlineData(123.123, 3)]            // three decimal places
-	[InlineData(-123.12, 2)]            // negative number
-	[InlineData(0.0, 0)]                // zero
-	public void GetPrecision_NonNullable_Double_Works(double value, int expected)
-	{
-		int precision = value.GetPrecision();
-		precision.ShouldBe(expected);
-	}
-
-	[Theory]
 	[InlineData(123.0, 0)]
 	[InlineData(123.1, 1)]
 	[InlineData(123.12, 2)]
@@ -262,10 +249,10 @@ public sealed class MathHelpersTests
 		const double b = 10.01;
 
 		// Within custom tolerance
-		MathHelpers.Equals(a, b, 0.1m).ShouldBeTrue();
+		a.Equals(b, 0.1m).ShouldBeTrue();
 
 		// Outside custom tolerance
-		MathHelpers.Equals(a, b, 0.001m).ShouldBeFalse();
+		a.Equals(b, 0.001m).ShouldBeFalse();
 	}
 
 	[Theory]
@@ -277,7 +264,7 @@ public sealed class MathHelpersTests
 	[InlineData(-10.0, -10.0, false)]       // negative equal values
 	public void NotEquals_Double_Works(double a, double b, bool expected)
 	{
-		bool result = MathHelpers.NotEquals(a, b);
+		bool result = a.NotEquals(b);
 		result.ShouldBe(expected);
 	}
 
@@ -291,7 +278,7 @@ public sealed class MathHelpersTests
 	[InlineData(null, 10.0, true)]          // second not null
 	public void NotEquals_NullableDouble_Works(double? a, double? b, bool expected)
 	{
-		bool result = MathHelpers.NotEquals(a, b);
+		bool result = a.NotEquals(b);
 		result.ShouldBe(expected);
 	}
 
@@ -302,17 +289,23 @@ public sealed class MathHelpersTests
 		const double b = 10.01;
 
 		// Within custom tolerance
-		MathHelpers.NotEquals(a, b, 0.1m).ShouldBeFalse();
+		a.NotEquals(b, 0.1m).ShouldBeFalse();
 
 		// Outside custom tolerance
-		MathHelpers.NotEquals(a, b, 0.001m).ShouldBeTrue();
+		a.NotEquals(b, 0.001m).ShouldBeTrue();
 	}
 
 	[Theory]
-	[InlineData(double.NaN, 0)]
-	[InlineData(double.PositiveInfinity, 0)]
-	[InlineData(double.NegativeInfinity, 0)]
-	public void GetPrecision_Double_SpecialValues_Works(double value, int expected)
+	[InlineData(123.0, 0)]                    // Whole number
+	[InlineData(123.1, 1)]                    // One decimal place
+	[InlineData(123.12, 2)]                   // Two decimal places
+	[InlineData(123.123, 3)]                  // Three decimal places
+	[InlineData(-123.12, 2)]                  // Negative number
+	[InlineData(0.0, 0)]                      // Zero
+	[InlineData(double.NaN, 0)]               // NaN value
+	[InlineData(double.PositiveInfinity, 0)]  // Positive infinity
+	[InlineData(double.NegativeInfinity, 0)]  // Negative infinity
+	public void GetPrecision_NonNullable_Double_Works(double value, int expected)
 	{
 		int precision = value.GetPrecision();
 		precision.ShouldBe(expected);

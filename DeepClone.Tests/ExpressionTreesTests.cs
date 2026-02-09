@@ -50,7 +50,7 @@ public sealed class ExpressionTreesTests : IDisposable
 #pragma warning disable RCS1213 // Remove unused member declaration
 #pragma warning disable CS0414 // Remove unused member declaration
 #pragma warning disable S1144 // Unused private types or members should be removed
-		private readonly int _privateReadOnlyField = 42;
+		private readonly int privateReadOnlyField = 42;
 #pragma warning restore S1144 // Unused private types or members should be removed
 #pragma warning restore CS0414 // Remove unused member declaration
 #pragma warning restore RCS1213 // Remove unused member declaration
@@ -222,7 +222,7 @@ public sealed class ExpressionTreesTests : IDisposable
 		result.ReadOnlyField.ShouldBe(source.ReadOnlyField);
 
 		// Use reflection to check private readonly field
-		FieldInfo? fieldInfo = typeof(TestClass).GetField("_privateReadOnlyField", BindingFlags.NonPublic | BindingFlags.Instance);
+		FieldInfo? fieldInfo = typeof(TestClass).GetField("privateReadOnlyField", BindingFlags.NonPublic | BindingFlags.Instance);
 		fieldInfo.ShouldNotBeNull();
 		fieldInfo.GetValue(result).ShouldBe(fieldInfo.GetValue(source));
 	}

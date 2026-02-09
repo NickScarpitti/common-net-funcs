@@ -166,7 +166,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 			try
 			{
 				TResult? result = await operation(true, cancellationToken).ConfigureAwait(false);
-				logger.Warn(AddCircularRefTemplate, typeof(TEntity).Name);
+				logger.Warn(ioEx, AddCircularRefTemplate, typeof(TEntity).Name);
 				circularReferencingEntities.TryAdd(typeof(TEntity), true);
 				return result;
 			}
@@ -200,7 +200,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 			try
 			{
 				enumeratedReader = queryBuilder(true).AsAsyncEnumerable();
-				logger.Warn(AddCircularRefTemplate, typeof(TEntity).Name);
+				logger.Warn(ioEx, AddCircularRefTemplate, typeof(TEntity).Name);
 				circularReferencingEntities.TryAdd(typeof(TEntity), true);
 			}
 			catch (Exception ex2)

@@ -185,10 +185,10 @@ public sealed class DimensionScaleTests
 	public void ScaleDimensionsToConstraint_Int2D_NoScaleUp_WhenLargerThanMax_ScalesDown()
 	{
 		// Arrange
-		int originalWidth = 200;
-		int originalHeight = 200;
-		int maxWidth = 100;
-		int maxHeight = 100;
+		const int originalWidth = 200;
+		const int originalHeight = 200;
+		const int maxWidth = 100;
+		const int maxHeight = 100;
 
 		// Act
 		(int newWidth, int newHeight) = DimensionScale.ScaleDimensionsToConstraint(originalWidth, originalHeight, maxWidth, maxHeight, scaleUpToFit: false);
@@ -202,10 +202,10 @@ public sealed class DimensionScaleTests
 	public void ScaleDimensionsToConstraint_Decimal2D_NoScaleUp_WhenLargerThanMax_ScalesDown()
 	{
 		// Arrange
-		decimal originalWidth = 200.0m;
-		decimal originalHeight = 200.0m;
-		decimal maxWidth = 100.0m;
-		decimal maxHeight = 100.0m;
+		const decimal originalWidth = 200.0m;
+		const decimal originalHeight = 200.0m;
+		const decimal maxWidth = 100.0m;
+		const decimal maxHeight = 100.0m;
 
 		// Act
 		(decimal newWidth, decimal newHeight) = DimensionScale.ScaleDimensionsToConstraint(originalWidth, originalHeight, maxWidth, maxHeight, scaleUpToFit: false);
@@ -219,12 +219,12 @@ public sealed class DimensionScaleTests
 	public void ScaleDimensionsToConstraint_Int3D_NoScaleUp_WhenLargerThanMax_ScalesDown()
 	{
 		// Arrange
-		int originalWidth = 200;
-		int originalHeight = 200;
-		int originalDepth = 200;
-		int maxWidth = 100;
-		int maxHeight = 100;
-		int maxDepth = 100;
+		const int originalWidth = 200;
+		const int originalHeight = 200;
+		const int originalDepth = 200;
+		const int maxWidth = 100;
+		const int maxHeight = 100;
+		const int maxDepth = 100;
 
 		// Act
 		(int newWidth, int newHeight, int newDepth) = DimensionScale.ScaleDimensionsToConstraint(originalWidth, originalHeight, originalDepth, maxWidth, maxHeight, maxDepth, scaleUpToFit: false);
@@ -239,12 +239,12 @@ public sealed class DimensionScaleTests
 	public void ScaleDimensionsToConstraint_Decimal3D_NoScaleUp_WhenLargerThanMax_ScalesDown()
 	{
 		// Arrange
-		decimal originalWidth = 200.0m;
-		decimal originalHeight = 200.0m;
-		decimal originalDepth = 200.0m;
-		decimal maxWidth = 100.0m;
-		decimal maxHeight = 100.0m;
-		decimal maxDepth = 100.0m;
+		const decimal originalWidth = 200.0m;
+		const decimal originalHeight = 200.0m;
+		const decimal originalDepth = 200.0m;
+		const decimal maxWidth = 100.0m;
+		const decimal maxHeight = 100.0m;
+		const decimal maxDepth = 100.0m;
 
 		// Act
 		(decimal newWidth, decimal newHeight, decimal newDepth) = DimensionScale.ScaleDimensionsToConstraint(originalWidth, originalHeight, originalDepth, maxWidth, maxHeight, maxDepth, scaleUpToFit: false);
@@ -278,10 +278,10 @@ public sealed class DimensionScaleTests
 	public void ScaleDimensionsToConstraint_Int2D_WithOddRatio_RoundsToZero()
 	{
 		// Arrange - 300x150 scaled to 100x100 will have rounding
-		int originalWidth = 300;
-		int originalHeight = 150;
-		int maxWidth = 100;
-		int maxHeight = 100;
+		const int originalWidth = 300;
+		const int originalHeight = 150;
+		const int maxWidth = 100;
+		const int maxHeight = 100;
 
 		// Act
 		(int newWidth, int newHeight) = DimensionScale.ScaleDimensionsToConstraint(originalWidth, originalHeight, maxWidth, maxHeight, scaleUpToFit: true);
@@ -293,7 +293,7 @@ public sealed class DimensionScaleTests
 		newHeight.ShouldBeLessThanOrEqualTo(maxHeight);
 
 		// Verify aspect ratio is maintained
-		decimal originalRatio = (decimal)originalWidth / originalHeight;
+		const decimal originalRatio = (decimal)originalWidth / originalHeight;
 		decimal newRatio = (decimal)newWidth / newHeight;
 		Math.Abs(originalRatio - newRatio).ShouldBeLessThan(0.1m);
 	}
@@ -321,10 +321,10 @@ public sealed class DimensionScaleTests
 	public void ScaleDimensionsToConstraint_Decimal2D_WithOddRatio_MaintainsAspectRatio()
 	{
 		// Arrange - 300x150 scaled to 100x100
-		decimal originalWidth = 300.0m;
-		decimal originalHeight = 150.0m;
-		decimal maxWidth = 100.0m;
-		decimal maxHeight = 100.0m;
+		const decimal originalWidth = 300.0m;
+		const decimal originalHeight = 150.0m;
+		const decimal maxWidth = 100.0m;
+		const decimal maxHeight = 100.0m;
 
 		// Act
 		(decimal newWidth, decimal newHeight) = DimensionScale.ScaleDimensionsToConstraint(originalWidth, originalHeight, maxWidth, maxHeight, scaleUpToFit: true);
@@ -334,7 +334,7 @@ public sealed class DimensionScaleTests
 		newHeight.ShouldBeLessThanOrEqualTo(maxHeight);
 
 		// Verify aspect ratio is maintained perfectly with decimals
-		decimal originalRatio = originalWidth / originalHeight;
+		const decimal originalRatio = originalWidth / originalHeight;
 		decimal newRatio = newWidth / newHeight;
 		originalRatio.ShouldBe(newRatio);
 	}
@@ -394,10 +394,10 @@ public sealed class DimensionScaleTests
 	public void ScaleDimensionsToConstraint_Decimal2D_WithDecimalPlaces_RoundsCorrectly()
 	{
 		// Arrange
-		decimal originalWidth = 333.333m;
-		decimal originalHeight = 222.222m;
-		decimal maxWidth = 100.0m;
-		decimal maxHeight = 100.0m;
+		const decimal originalWidth = 333.333m;
+		const decimal originalHeight = 222.222m;
+		const decimal maxWidth = 100.0m;
+		const decimal maxHeight = 100.0m;
 
 		// Act
 		(decimal newWidth, decimal newHeight) = DimensionScale.ScaleDimensionsToConstraint(originalWidth, originalHeight, maxWidth, maxHeight, scaleUpToFit: true, resultDecimalPlaces: 2);
@@ -415,12 +415,12 @@ public sealed class DimensionScaleTests
 	public void ScaleDimensionsToConstraint_Decimal3D_WithDecimalPlaces_RoundsCorrectly()
 	{
 		// Arrange
-		decimal originalWidth = 333.333m;
-		decimal originalHeight = 222.222m;
-		decimal originalDepth = 111.111m;
-		decimal maxWidth = 100.0m;
-		decimal maxHeight = 100.0m;
-		decimal maxDepth = 100.0m;
+		const decimal originalWidth = 333.333m;
+		const decimal originalHeight = 222.222m;
+		const decimal originalDepth = 111.111m;
+		const decimal maxWidth = 100.0m;
+		const decimal maxHeight = 100.0m;
+		const decimal maxDepth = 100.0m;
 
 		// Act
 		(decimal newWidth, decimal newHeight, decimal newDepth) = DimensionScale.ScaleDimensionsToConstraint(originalWidth, originalHeight, originalDepth, maxWidth, maxHeight, maxDepth, scaleUpToFit: true, resultDecimalPlaces: 2);

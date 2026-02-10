@@ -1257,15 +1257,15 @@ public sealed class FileHelpersTests : IDisposable
 		string emptyDir1 = Path.Combine(tempDir, "empty1");
 		string emptyDir2 = Path.Combine(tempDir, "empty2");
 		string dirWithFiles = Path.Combine(tempDir, "withFiles");
-		
+
 		Directory.CreateDirectory(emptyDir1);
 		Directory.CreateDirectory(emptyDir2);
 		Directory.CreateDirectory(dirWithFiles);
-		
+
 		// Create subdirectory under empty directory
 		string subEmptyDir = Path.Combine(emptyDir1, "subEmpty");
 		Directory.CreateDirectory(subEmptyDir);
-		
+
 		// Only add files to one directory
 		string file1 = Path.Combine(dirWithFiles, "file1.txt");
 		await File.WriteAllTextAsync(file1, "content", TestContext.Current.CancellationToken);
@@ -1287,17 +1287,17 @@ public sealed class FileHelpersTests : IDisposable
 		string level2Empty = Path.Combine(level1, "level2Empty");
 		string level2WithFile = Path.Combine(level1, "level2WithFile");
 		string level3 = Path.Combine(level2WithFile, "level3");
-		
+
 		Directory.CreateDirectory(level1);
 		Directory.CreateDirectory(level2Empty);
 		Directory.CreateDirectory(level2WithFile);
 		Directory.CreateDirectory(level3);
-		
+
 		// Add files at different levels
 		string file1 = Path.Combine(level1, "file1.txt");
 		string file2 = Path.Combine(level2WithFile, "file2.txt");
 		string file3 = Path.Combine(level3, "file3.txt");
-		
+
 		await File.WriteAllTextAsync(file1, "1", TestContext.Current.CancellationToken);
 		await File.WriteAllTextAsync(file2, "2", TestContext.Current.CancellationToken);
 		await File.WriteAllTextAsync(file3, "3", TestContext.Current.CancellationToken);
@@ -1319,18 +1319,18 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange - Combine search pattern with empty directories
 		string emptyDir = Path.Combine(tempDir, "empty");
 		string dirWithFiles = Path.Combine(tempDir, "files");
-		
+
 		Directory.CreateDirectory(emptyDir);
 		Directory.CreateDirectory(dirWithFiles);
-		
+
 		// Create subdirectory under empty
 		string subDir = Path.Combine(emptyDir, "sub");
 		Directory.CreateDirectory(subDir);
-		
+
 		// Add both .txt and .doc files
 		string txtFile = Path.Combine(dirWithFiles, "document.txt");
 		string docFile = Path.Combine(dirWithFiles, "document.doc");
-		
+
 		await File.WriteAllTextAsync(txtFile, "text", TestContext.Current.CancellationToken);
 		await File.WriteAllTextAsync(docFile, "doc", TestContext.Current.CancellationToken);
 
@@ -1351,7 +1351,7 @@ public sealed class FileHelpersTests : IDisposable
 		string empty1 = Path.Combine(tempDir, "empty1");
 		string empty2 = Path.Combine(empty1, "empty2");
 		string empty3 = Path.Combine(empty1, "empty3");
-		
+
 		Directory.CreateDirectory(empty1);
 		Directory.CreateDirectory(empty2);
 		Directory.CreateDirectory(empty3);

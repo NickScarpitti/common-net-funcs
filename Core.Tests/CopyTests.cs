@@ -1,4 +1,5 @@
 ﻿using CommonNetFuncs.Core;
+using System.Reflection;
 
 namespace Core.Tests;
 
@@ -193,7 +194,7 @@ public sealed class CopyTests
 		SourceClass? source = null;
 
 		// Act
-		DestinationClass? result = source?.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: useCache);
+		DestinationClass? result = source.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: useCache);
 
 		// Assert
 		result.ShouldBeNull();
@@ -264,10 +265,10 @@ public sealed class CopyTests
 			Id = 1,
 			Name = "Test",
 			Items = new List<SourceClass>
-								{
-										new() { Id = 2, Name = "Item 1" },
-										new() { Id = 3, Name = "Item 2" }
-								}
+			{
+				new() { Id = 2, Name = "Item 1" },
+				new() { Id = 3, Name = "Item 2" }
+			}
 		};
 
 		// Act
@@ -372,7 +373,7 @@ public sealed class CopyTests
 		ComplexSourceClass? source = null;
 
 		// Act
-		ComplexDestinationClass? result = source?.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>(useCache: useCache);
+		ComplexDestinationClass? result = source!.CopyPropertiesToNewRecursive<ComplexSourceClass, ComplexDestinationClass>(useCache: useCache);
 
 		// Assert
 		result.ShouldBeNull();
@@ -1671,6 +1672,404 @@ public sealed class CopyTests
 
 	#endregion
 
+	#region CopyCollection Coverage Tests
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithListToArrayConversion_ShouldConvertToArray(bool useCache)
+	{
+		// Arrange - Testing destType.IsArray branch
+		ClassWithListOfInts source = new()
+		{
+			Values = new List<int> { 1, 2, 3, 4, 5 }
+		};
+
+		// Act
+		ClassWithIntArray result = source.CopyPropertiesToNewRecursive<ClassWithListOfInts, ClassWithIntArray>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Values.ShouldNotBeNull();
+		result.Values.Length.ShouldBe(5);
+		result.Values[0].ShouldBe(1);
+		result.Values[4].ShouldBe(5);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithListToHashSetType_ShouldUseAddMethod(bool useCache)
+	{
+		// Arrange - Testing non-interface, non-array collection with Add method
+		ClassWithListOfInts source = new()
+		{
+			Values = new List<int> { 10, 20, 30 }
+		};
+
+		// Act
+		ClassWithHashSetOfInts result = source.CopyPropertiesToNewRecursive<ClassWithListOfInts, ClassWithHashSetOfInts>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Values.ShouldNotBeNull();
+		result.Values.Count.ShouldBe(3);
+		result.Values.ShouldContain(10);
+		result.Values.ShouldContain(20);
+		result.Values.ShouldContain(30);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithEmptyDictionaryWithComplexValues_ShouldHandleEmpty(bool useCache)
+	{
+		// Arrange - Testing dictionary copy with empty source
+		ClassWithDictionaryOfComplexValues source = new()
+		{
+			Data = new Dictionary<string, SourceClass>()
+		};
+
+		// Act
+		ClassWithDictionaryOfComplexValues result = source.CopyPropertiesToNewRecursive<ClassWithDictionaryOfComplexValues, ClassWithDictionaryOfComplexValues>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Data.ShouldNotBeNull();
+		result.Data.Count.ShouldBe(0);
+	}
+
+	#endregion
+
+	#region CreateCopyFunction Coverage Tests
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithUnmatchedProperties_ShouldSkipThem(bool useCache)
+	{
+		// Arrange - Source has properties that don't exist in destination
+		ClassWithExtraProperties source = new()
+		{
+			Id = 100,
+			Name = "Test",
+			ExtraProperty1 = "Extra1",
+			ExtraProperty2 = 999
+		};
+
+		// Act
+		ClassWithBasicProperties result = source.CopyPropertiesToNewRecursive<ClassWithExtraProperties, ClassWithBasicProperties>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(100);
+		result.Name.ShouldBe("Test");
+		// ExtraProperty1 and ExtraProperty2 don't exist in destination, so they're skipped
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithNullReferenceTypeProperty_ShouldHandleNull(bool useCache)
+	{
+		// Arrange - Testing null check branch for reference types
+		ClassWithNullableReferenceProperty source = new()
+		{
+			Id = 50,
+			Name = null  // null reference type
+		};
+
+		// Act
+		ClassWithNullableReferenceProperty result = source.CopyPropertiesToNewRecursive<ClassWithNullableReferenceProperty, ClassWithNullableReferenceProperty>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(50);
+		result.Name.ShouldBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithIncompatibleComplexTypes_ShouldSkipIncompatibleProperties(bool useCache)
+	{
+		// Arrange - Properties with incompatible complex types that can't be converted
+		ClassWithIncompatibleComplexType source = new()
+		{
+			Id = 200,
+			ComplexProp = new SourceClass { Id = 1, Name = "Source" }
+		};
+
+		// Act
+		ClassWithDifferentComplexType result = source.CopyPropertiesToNewRecursive<ClassWithIncompatibleComplexType, ClassWithDifferentComplexType>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(200);
+		// ComplexProp has different types (SourceClass vs UnrelatedClass), but CreateValueCopyExpression handles it
+		result.ComplexProp.ShouldNotBeNull();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithValueTypeProperties_ShouldCopyValueTypes(bool useCache)
+	{
+		// Arrange - Testing value type branch (line 656)
+		ClassWithValueTypeProperties source = new()
+		{
+			Id = 123,
+			IntValue = 456,
+			DoubleValue = 78.9,
+			BoolValue = true
+		};
+
+		// Act
+		ClassWithValueTypeProperties result = source.CopyPropertiesToNewRecursive<ClassWithValueTypeProperties, ClassWithValueTypeProperties>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(123);
+		result.IntValue.ShouldBe(456);
+		result.DoubleValue.ShouldBe(78.9);
+		result.BoolValue.ShouldBeTrue();
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithIncompatibleStructTypes_ShouldSkipIncompatibleProperties(bool useCache)
+	{
+		// Arrange - Properties with incompatible struct types that CreateValueCopyExpression returns null for
+		ClassWithIncompatibleStruct source = new()
+		{
+			Id = 300,
+			StructProp = new CustomStruct { Value1 = 10, Value2 = "Test" }
+		};
+
+		// Act
+		ClassWithDifferentStruct result = source.CopyPropertiesToNewRecursive<ClassWithIncompatibleStruct, ClassWithDifferentStruct>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(300);
+		// StructProp has incompatible types, CreateValueCopyExpression returns null, property not copied
+		result.StructProp.OtherValue.ShouldBe(0);
+	}
+
+	#endregion
+
+	#region Simple Type Destination Tests (Expression Tree Coverage)
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithSameSimpleTypeProperty_ShouldCopyValue(bool useCache)
+	{
+		// Arrange - Test sourceType == destType branch in CreateCopyFunction
+		ClassWithInt source = new() { Value = 123 };
+
+		// Act
+		ClassWithInt result = source.CopyPropertiesToNewRecursive<ClassWithInt, ClassWithInt>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Value.ShouldBe(123);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithConvertibleSimpleTypeProperty_ShouldConvert(bool useCache)
+	{
+		// Arrange - Test CanConvertTypes branch in CreateCopyFunction
+		SimpleIntClass source = new() { Value = 42 };
+
+		// Act
+		SimpleLongClass result = source.CopyPropertiesToNewRecursive<SimpleIntClass, SimpleLongClass>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Value.ShouldBe(42L);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithMatchingPropertyNames_ShouldCopyAll(bool useCache)
+	{
+		// Arrange - Both source and dest have IntValue and StringValue properties
+		ClassWithIncompatibleTypes source = new() { IntValue = 999, StringValue = "test" };
+
+		// Act
+		ClassWithIncompatibleDestTypes result = source.CopyPropertiesToNewRecursive<ClassWithIncompatibleTypes, ClassWithIncompatibleDestTypes>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		// Both properties match by name and type, so both should be copied
+		result.StringValue.ShouldBe("test");
+		result.IntValue.ShouldBe(999);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithMultipleSimpleTypeProperties_ShouldCopyAll(bool useCache)
+	{
+		// Arrange
+		ClassWithMultipleSimpleTypes source = new()
+		{
+			IntValue = 100,
+			StringValue = "hello",
+			DoubleValue = 3.14,
+			BoolValue = true,
+			DateValue = new DateTime(2024, 1, 1)
+		};
+
+		// Act
+		ClassWithMultipleSimpleTypes result = source.CopyPropertiesToNewRecursive<ClassWithMultipleSimpleTypes, ClassWithMultipleSimpleTypes>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.IntValue.ShouldBe(100);
+		result.StringValue.ShouldBe("hello");
+		result.DoubleValue.ShouldBe(3.14);
+		result.BoolValue.ShouldBeTrue();
+		result.DateValue.ShouldBe(new DateTime(2024, 1, 1));
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithNullableSimpleTypes_ShouldHandleNullAndValue(bool useCache)
+	{
+		// Arrange
+		ClassWithNullableSimpleTypes source = new()
+		{
+			NullableInt = 42,
+			NullableBool = null,
+			NullableDouble = 2.5
+		};
+
+		// Act
+		ClassWithNullableSimpleTypes result = source.CopyPropertiesToNewRecursive<ClassWithNullableSimpleTypes, ClassWithNullableSimpleTypes>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.NullableInt.ShouldBe(42);
+		result.NullableBool.ShouldBeNull();
+		result.NullableDouble.ShouldBe(2.5);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithEnumProperty_ShouldCopyEnum(bool useCache)
+	{
+		// Arrange - Enums are simple types
+		ClassWithEnum source = new()
+		{
+			Id = 1,
+			Status = ETestValues.Active
+		};
+
+		// Act
+		ClassWithEnum result = source.CopyPropertiesToNewRecursive<ClassWithEnum, ClassWithEnum>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(1);
+		result.Status.ShouldBe(ETestValues.Active);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithFloatToDoubleConversion_ShouldConvert(bool useCache)
+	{
+		// Arrange
+		ClassWithFloat source = new() { Value = 1.5f };
+
+		// Act
+		ClassWithDouble result = source.CopyPropertiesToNewRecursive<ClassWithFloat, ClassWithDouble>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Value.ShouldBe(1.5, 0.0001);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithByteToIntConversion_ShouldConvert(bool useCache)
+	{
+		// Arrange
+		ClassWithByte source = new() { Value = 255 };
+
+		// Act
+		ClassWithInt result = source.CopyPropertiesToNewRecursive<ClassWithByte, ClassWithInt>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Value.ShouldBe(255);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithNestedSimpleTypeInCollection_ShouldCopyRuntime(bool useCache)
+	{
+		// Arrange - This triggers CopyItemRuntime which could call GetOrCreateCopyFunction with simple types
+		ClassWithListOfSimpleType source = new()
+		{
+			Values = new List<SimpleWrapper>
+			{
+				new SimpleWrapper { Value = 10 },
+				new SimpleWrapper { Value = 20 },
+				new SimpleWrapper { Value = 30 }
+			}
+		};
+
+		// Act
+		ClassWithListOfSimpleType result = source.CopyPropertiesToNewRecursive<ClassWithListOfSimpleType, ClassWithListOfSimpleType>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Values.ShouldNotBeNull();
+		result.Values.Count.ShouldBe(3);
+		result.Values[0].Value.ShouldBe(10);
+		result.Values[1].Value.ShouldBe(20);
+		result.Values[2].Value.ShouldBe(30);
+	}
+
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void CopyPropertiesToNewRecursive_WithDictionaryOfSimpleTypeWrappers_ShouldCopyRuntime(bool useCache)
+	{
+		// Arrange - Dictionary values might trigger runtime copy with simple types
+		ClassWithDictionaryOfWrappers source = new()
+		{
+			Data = new Dictionary<string, SimpleWrapper>
+			{
+				{ "first", new SimpleWrapper { Value = 100 } },
+				{ "second", new SimpleWrapper { Value = 200 } }
+			}
+		};
+
+		// Act
+		ClassWithDictionaryOfWrappers result = source.CopyPropertiesToNewRecursive<ClassWithDictionaryOfWrappers, ClassWithDictionaryOfWrappers>(useCache: useCache);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Data.ShouldNotBeNull();
+		result.Data.Count.ShouldBe(2);
+		result.Data["first"].Value.ShouldBe(100);
+		result.Data["second"].Value.ShouldBe(200);
+	}
+
+	#endregion
+
 	#region Cache Hit Path Tests
 
 	[Fact]
@@ -1774,7 +2173,7 @@ public sealed class CopyTests
 		SourceClass? source = null;
 
 		// Act
-		DestinationClass? result = source?.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>();
+		DestinationClass? result = source!.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>();
 
 		// Assert
 		result.ShouldBeNull();
@@ -1928,6 +2327,152 @@ public sealed class CopyTests
 
 		// Assert
 		result.ShouldBe(source); // Should return source for unknown types
+	}
+
+	#endregion
+
+	#region CreateCopyFunction Direct Tests (Simple Type Destinations)
+
+	[Fact]
+	public void CreateCopyFunction_WithSimpleDestType_SameAsSource_ShouldReturnDirectCopy()
+	{
+		// Arrange - Test the sourceType == destType branch when destType.IsSimpleType() is true (line 608-609)
+		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
+		createCopyFunctionMethod.ShouldNotBeNull();
+
+		// Act - Call CreateCopyFunction(typeof(int), typeof(int))
+		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
+			createCopyFunctionMethod.Invoke(null, new object[] { typeof(int), typeof(int) })!;
+
+		object? result = copyFunc(42, null, 0, -1);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldBe(42);
+	}
+
+	[Fact]
+	public void CreateCopyFunction_WithConvertibleSimpleTypes_ShouldConvert()
+	{
+		// Arrange - Test the CanConvertTypes branch when destType.IsSimpleType() is true (line 612-613)
+		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
+		createCopyFunctionMethod.ShouldNotBeNull();
+
+		// Act - Call CreateCopyFunction(typeof(int), typeof(long)) - convertible types
+		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
+			createCopyFunctionMethod.Invoke(null, new object[] { typeof(int), typeof(long) })!;
+
+		object? result = copyFunc(42, null, 0, -1);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldBe(42L);
+	}
+
+	[Fact]
+	public void CreateCopyFunction_WithInconvertibleSimpleTypes_ShouldReturnDefault()
+	{
+		// Arrange - Test the else branch (default value) when destType.IsSimpleType() is true (line 617-618)
+		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
+		createCopyFunctionMethod.ShouldNotBeNull();
+
+		// Act - Call CreateCopyFunction(typeof(string), typeof(int)) - inconvertible types
+		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
+			createCopyFunctionMethod.Invoke(null, new object[] { typeof(string), typeof(int) })!;
+
+		object? result = copyFunc("hello", null, 0, -1);
+
+		// Assert
+		result.ShouldBe(0); // Default value for int
+	}
+
+	[Fact]
+	public void CreateCopyFunction_WithSimpleDestType_StringToString_ShouldCopy()
+	{
+		// Arrange - Test simple type path with reference type (string) - line 680-684
+		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
+		createCopyFunctionMethod.ShouldNotBeNull();
+
+		// Act - Call CreateCopyFunction(typeof(string), typeof(string))
+		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
+			createCopyFunctionMethod.Invoke(null, new object[] { typeof(string), typeof(string) })!;
+
+		object? result = copyFunc("test string", null, 0, -1);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldBe("test string");
+	}
+
+	[Fact]
+	public void CreateCopyFunction_WithSimpleDestType_StringToNullableString_ShouldReturnNull()
+	{
+		// Arrange - Test the else branch returning null for reference type (line 617-618)
+		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
+		createCopyFunctionMethod.ShouldNotBeNull();
+
+		// Act - Call CreateCopyFunction(typeof(int), typeof(string)) - incompatible
+		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
+			createCopyFunctionMethod.Invoke(null, new object[] { typeof(int), typeof(string) })!;
+
+		object? result = copyFunc(123, null, 0, -1);
+
+		// Assert
+		result.ShouldBeNull(); // Default value for reference type (string)
+	}
+
+	[Fact]
+	public void CreateCopyFunction_WithSimpleDestType_DoubleToDouble_ShouldCopy()
+	{
+		// Arrange - Test simple type path with another value type - covers line 680-684
+		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
+		createCopyFunctionMethod.ShouldNotBeNull();
+
+		// Act - Call CreateCopyFunction(typeof(double), typeof(double))
+		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
+			createCopyFunctionMethod.Invoke(null, new object[] { typeof(double), typeof(double) })!;
+
+		object? result = copyFunc(3.14, null, 0, -1);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldBe(3.14);
+	}
+
+	[Fact]
+	public void CreateCopyFunction_WithSimpleDestType_ByteToShort_ShouldConvert()
+	{
+		// Arrange - Test conversion between numeric types - covers line 612-613 and 680-684
+		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
+		createCopyFunctionMethod.ShouldNotBeNull();
+
+		// Act - Call CreateCopyFunction(typeof(byte), typeof(short))
+		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
+			createCopyFunctionMethod.Invoke(null, new object[] { typeof(byte), typeof(short) })!;
+
+		object? result = copyFunc((byte)200, null, 0, -1);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldBe((short)200);
+	}
+
+	[Fact]
+	public void CreateCopyFunction_WithSimpleDestType_BoolToBool_ShouldCopy()
+	{
+		// Arrange - Additional coverage for bool type
+		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
+		createCopyFunctionMethod.ShouldNotBeNull();
+
+		// Act - Call CreateCopyFunction(typeof(bool), typeof(bool))
+		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
+			createCopyFunctionMethod.Invoke(null, new object[] { typeof(bool), typeof(bool) })!;
+
+		object? result = copyFunc(true, null, 0, -1);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldBe(true);
 	}
 
 	#endregion
@@ -2253,6 +2798,150 @@ public sealed class CopyTests
 	{
 		public int Id { get; set; }
 		public Queue<int>? Items { get; set; }
+	}
+
+	// Classes for simple type destination tests
+	public sealed class ClassWithIncompatibleTypes
+	{
+		public int IntValue { get; set; }
+		public string? StringValue { get; set; }
+	}
+
+	public sealed class ClassWithIncompatibleDestTypes
+	{
+		public string? StringValue { get; set; }
+		public int IntValue { get; set; }
+	}
+
+	public sealed class ClassWithMultipleSimpleTypes
+	{
+		public int IntValue { get; set; }
+		public string? StringValue { get; set; }
+		public double DoubleValue { get; set; }
+		public bool BoolValue { get; set; }
+		public DateTime DateValue { get; set; }
+	}
+
+	public sealed class ClassWithNullableSimpleTypes
+	{
+		public int? NullableInt { get; set; }
+		public bool? NullableBool { get; set; }
+		public double? NullableDouble { get; set; }
+	}
+
+	public sealed class ClassWithFloat
+	{
+		public float Value { get; set; }
+	}
+
+	public sealed class ClassWithDouble
+	{
+		public double Value { get; set; }
+	}
+
+	public sealed class ClassWithByte
+	{
+		public byte Value { get; set; }
+	}
+
+	public sealed class SimpleWrapper
+	{
+		public int Value { get; set; }
+	}
+
+	public sealed class ClassWithListOfSimpleType
+	{
+		public List<SimpleWrapper>? Values { get; set; }
+	}
+
+	public sealed class ClassWithDictionaryOfWrappers
+	{
+		public Dictionary<string, SimpleWrapper>? Data { get; set; }
+	}
+
+	// Classes for CopyCollection coverage tests
+	public sealed class ClassWithListOfInts
+	{
+		public List<int>? Values { get; set; }
+	}
+
+	public sealed class ClassWithIntArray
+	{
+		public int[]? Values { get; set; }
+	}
+
+	public sealed class ClassWithHashSetOfInts
+	{
+		public HashSet<int>? Values { get; set; }
+	}
+
+	public sealed class ClassWithDictionaryOfComplexValues
+	{
+		public Dictionary<string, SourceClass>? Data { get; set; }
+	}
+
+	// Classes for CreateCopyFunction coverage tests
+	public sealed class ClassWithExtraProperties
+	{
+		public int Id { get; set; }
+		public string? Name { get; set; }
+		public string? ExtraProperty1 { get; set; }
+		public int ExtraProperty2 { get; set; }
+	}
+
+	public sealed class ClassWithBasicProperties
+	{
+		public int Id { get; set; }
+		public string? Name { get; set; }
+	}
+
+	public sealed class ClassWithNullableReferenceProperty
+	{
+		public int Id { get; set; }
+		public string? Name { get; set; }
+	}
+
+	public sealed class ClassWithIncompatibleComplexType
+	{
+		public int Id { get; set; }
+		public SourceClass? ComplexProp { get; set; }
+	}
+
+	public sealed class UnrelatedClass
+	{
+		public int Value { get; set; }
+		public string? Text { get; set; }
+	}
+
+	public sealed class ClassWithDifferentComplexType
+	{
+		public int Id { get; set; }
+		public UnrelatedClass? ComplexProp { get; set; }
+	}
+
+	public sealed class ClassWithValueTypeProperties
+	{
+		public int Id { get; set; }
+		public int IntValue { get; set; }
+		public double DoubleValue { get; set; }
+		public bool BoolValue { get; set; }
+	}
+
+	public struct OtherStruct
+	{
+		public int OtherValue { get; set; }
+	}
+
+	public sealed class ClassWithIncompatibleStruct
+	{
+		public int Id { get; set; }
+		public CustomStruct StructProp { get; set; }
+	}
+
+	public sealed class ClassWithDifferentStruct
+	{
+		public int Id { get; set; }
+		public OtherStruct StructProp { get; set; }
 	}
 
 	#endregion

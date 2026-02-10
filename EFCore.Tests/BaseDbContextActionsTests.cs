@@ -2722,5 +2722,127 @@ public sealed class BaseDbContextActionsTests
 	}
 
 	#endregion
+
+	#region GlobalFilterOptions Tests
+
+	[Fact]
+	public async Task GetAll_WithDisableAllFiltersTrue_ShouldDisableAllFilters()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		List<TestEntity>? results = await testContext.GetAll(true, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(entities.Count);
+	}
+
+	[Fact]
+	public async Task GetAll_WithFilterNamesToDisable_ShouldDisableSpecificFilters()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = ["TestFilter"] };
+
+		// Act
+		List<TestEntity>? results = await testContext.GetAll(true, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(entities.Count);
+	}
+
+	[Fact]
+	public async Task GetAll_WithEmptyFilterNamesToDisableAndDisableAllFiltersFalse_ShouldNotDisableFilters()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false, FilterNamesToDisable = [] };
+
+		// Act
+		List<TestEntity>? results = await testContext.GetAll(true, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(entities.Count);
+	}
+
+	[Fact]
+	public async Task GetAll_WithNullFilterNamesToDisableAndDisableAllFiltersTrue_ShouldDisableAllFilters()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true, FilterNamesToDisable = null };
+
+		// Act
+		List<TestEntity>? results = await testContext.GetAll(true, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(entities.Count);
+	}
+
+	[Fact]
+	public async Task GetWithFilter_WithDisableAllFiltersTrue_ShouldDisableAllFilters()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		string targetName = entities[0].Name;
+		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		List<TestEntity>? results = await testContext.GetWithFilter(true, x => x.Name == targetName, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(1);
+		results[0].Name.ShouldBe(targetName);
+	}
+
+	[Fact]
+	public async Task GetWithFilter_WithFilterNamesToDisable_ShouldDisableSpecificFilters()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		string targetName = entities[0].Name;
+		await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
+		await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = ["TestFilter", "AnotherFilter"] };
+
+		// Act
+		List<TestEntity>? results = await testContext.GetWithFilter(true, x => x.Name == targetName, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(1);
+		results[0].Name.ShouldBe(targetName);
+	}
+
+	#endregion
 }
 

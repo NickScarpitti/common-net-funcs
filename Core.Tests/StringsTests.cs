@@ -907,6 +907,7 @@ public sealed class StringsTests
 
 		// Act & Assert
 		Should.Throw<ArgumentException>(() => input.HasNoLessThanNumberOfChars('t', -1));
+		Should.Throw<ArgumentException>(() => input.HasNoLessThanNumberOfChars("t", -1));
 		Should.Throw<InvalidDataException>(() => input.HasNoLessThanNumberOfChars("tt", 1));
 	}
 
@@ -3522,6 +3523,29 @@ public sealed class StringsTests
 		result.ShouldBe("12345");
 	}
 
+	[Theory]
+	[InlineData("abcd", true, "ab cd")]
+	[InlineData("ab\ncd", true, "ab  cd")]
+	[InlineData("ab\rcd", true, "ab  cd")]
+	[InlineData("ab\n\rcd", true, "ab   cd")]
+	[InlineData("abcd", false, "abcd")]
+	[InlineData("ab\ncd", false, "ab cd")]
+	[InlineData("ab\rcd", false, "ab cd")]
+	[InlineData("ab\n\rcd", false, "ab  cd")]
+	public void SanitizeForLog_ShouldWork(string s, bool insertNewLine, string expected)
+	{
+		// Arrange
+		if (insertNewLine)
+		{
+			s = $"{s[..2]}{Environment.NewLine}{s[2..]}";
+		}
+
+		// Act
+		string? result = s.SanitizeForLog();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
 }
 
 	#endregion

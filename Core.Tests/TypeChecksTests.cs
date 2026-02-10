@@ -180,4 +180,160 @@ public sealed class TypeChecksTests
 			return GetEnumerator();
 		}
 	}
+
+	// Test enum for IsSimpleType tests
+	private enum TestEnum
+	{
+		Value1,
+		Value2
+	}
+
+	[Fact]
+	public void ClearTypeCheckCaches_ShouldClearAllCaches()
+	{
+		// Arrange - populate caches by calling methods
+		typeof(int).IsSimpleType();
+		typeof(List<int>).IsReadOnlyCollectionType();
+		typeof(double).IsNumericType();
+		typeof(int[]).IsEnumerable();
+
+		// Act
+		TypeChecks.ClearTypeCheckCaches();
+
+		// Assert - verify caches were cleared by calling methods again
+		// (they should still work correctly)
+		typeof(int).IsSimpleType().ShouldBeTrue();
+		typeof(List<int>).IsReadOnlyCollectionType().ShouldBeFalse();
+		typeof(double).IsNumericType().ShouldBeTrue();
+		typeof(int[]).IsEnumerable().ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ClearSimpleTypeCache_ShouldClearSimpleTypeCache()
+	{
+		// Arrange
+		typeof(int).IsSimpleType();
+		typeof(string).IsSimpleType();
+
+		// Act
+		TypeChecks.ClearSimpleTypeCache();
+
+		// Assert - verify cache was cleared by calling method again
+		typeof(int).IsSimpleType().ShouldBeTrue();
+		typeof(string).IsSimpleType().ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ClearReadOnlyCollectionTypeCache_ShouldClearReadOnlyCollectionTypeCache()
+	{
+		// Arrange
+		typeof(IReadOnlyCollection<int>).IsReadOnlyCollectionType();
+		typeof(List<int>).IsReadOnlyCollectionType();
+
+		// Act
+		TypeChecks.ClearReadOnlyCollectionTypeCache();
+
+		// Assert - verify cache was cleared by calling method again
+		typeof(IReadOnlyCollection<int>).IsReadOnlyCollectionType().ShouldBeTrue();
+		typeof(List<int>).IsReadOnlyCollectionType().ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ClearNumericTypeCache_ShouldClearNumericTypeCache()
+	{
+		// Arrange
+		typeof(int).IsNumericType();
+		typeof(double).IsNumericType();
+
+		// Act
+		TypeChecks.ClearNumericTypeCache();
+
+		// Assert - verify cache was cleared by calling method again
+		typeof(int).IsNumericType().ShouldBeTrue();
+		typeof(double).IsNumericType().ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ClearEnumerableTypeCache_ShouldClearEnumerableTypeCache()
+	{
+		// Arrange
+		typeof(List<int>).IsEnumerable();
+		typeof(int[]).IsEnumerable();
+
+		// Act
+		TypeChecks.ClearEnumerableTypeCache();
+
+		// Assert - verify cache was cleared by calling method again
+		typeof(List<int>).IsEnumerable().ShouldBeTrue();
+		typeof(int[]).IsEnumerable().ShouldBeTrue();
+	}
+
+	[Theory]
+	[InlineData(typeof(int?), true)]
+	[InlineData(typeof(DateTime?), true)]
+	[InlineData(typeof(DateTimeOffset?), true)]
+	[InlineData(typeof(TimeSpan?), true)]
+	[InlineData(typeof(Guid?), true)]
+	[InlineData(typeof(decimal?), true)]
+	public void IsSimpleType_ShouldIdentifyNullableSimpleTypes(Type type, bool expected)
+	{
+		// Act
+		bool result = type.IsSimpleType();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(typeof(TestEnum), true)]
+	[InlineData(typeof(DateTimeOffset), true)]
+	[InlineData(typeof(TimeSpan), true)]
+	public void IsSimpleType_ShouldIdentifyAdditionalSimpleTypes(Type type, bool expected)
+	{
+		// Act
+		bool result = type.IsSimpleType();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(typeof(byte), true)]
+	[InlineData(typeof(sbyte), true)]
+	[InlineData(typeof(short), true)]
+	[InlineData(typeof(ushort), true)]
+	[InlineData(typeof(uint), true)]
+	[InlineData(typeof(ulong), true)]
+	[InlineData(typeof(float), true)]
+	[InlineData(typeof(long), true)]
+	[InlineData(typeof(byte?), true)]
+	[InlineData(typeof(sbyte?), true)]
+	[InlineData(typeof(short?), true)]
+	[InlineData(typeof(ushort?), true)]
+	[InlineData(typeof(uint?), true)]
+	[InlineData(typeof(ulong?), true)]
+	[InlineData(typeof(float?), true)]
+	[InlineData(typeof(long?), true)]
+	[InlineData(typeof(decimal?), true)]
+	public void IsNumericType_ShouldIdentifyAllNumericTypes(Type type, bool expected)
+	{
+		// Act
+		bool result = type.IsNumericType();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Fact]
+	public void IsReadOnlyCollectionType_ShouldIdentifyReadOnlyDictionary()
+	{
+		// Arrange
+		var type = typeof(ReadOnlyDictionary<int, string>);
+
+		// Act
+		bool result = type.IsReadOnlyCollectionType();
+
+		// Assert
+		result.ShouldBeTrue();
+	}
 }

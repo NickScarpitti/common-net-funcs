@@ -58,8 +58,7 @@ public static partial class FileHelpers
 			string ext = Path.GetExtension(originalFullFileName);
 			string fileNameWithoutExt = Path.GetFileNameWithoutExtension(originalFullFileName);
 			string incrementingPattern = @$"\(([0-9]+)\)\{ext}";
-			int i = 0;
-			string? lastTestPath = null;
+			long i = 0;
 
 			if (!startFromZero)
 			{
@@ -83,7 +82,7 @@ public static partial class FileHelpers
 
 				if (hasIterator)
 				{
-					testPath = Path.GetFullPath(Regex.Replace(cleanFileName, incrementingPattern, $"({i}){ext}"));
+					testPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(originalFullFileName) ?? string.Empty, Regex.Replace(cleanFileName, incrementingPattern, $"({i}){ext}")));
 				}
 				else
 				{
@@ -91,22 +90,6 @@ public static partial class FileHelpers
 					testPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(originalFullFileName) ?? string.Empty, $"{fileNameWithoutExtension} ({i}){ext}"));
 				}
 
-				if (!suppressLogging)
-				{
-					logger.Info("[{testPath}] exists, checking with iterator [{i}]", testPath, i);
-				}
-
-				// Prevent infinite loop if file name isn't changing
-				if (string.Equals(lastTestPath, testPath, StringComparison.Ordinal))
-				{
-					if (!suppressLogging)
-					{
-						logger.Warn("[{testPath}] not changing, breaking out of loop.", testPath);
-					}
-					break;
-				}
-
-				lastTestPath = testPath;
 				i++;
 			}
 		}
@@ -152,10 +135,9 @@ public static partial class FileHelpers
 
 		if (File.Exists(testPath))
 		{
-			int i = 0;
+			long i = 0;
 			string ext = Path.GetExtension(fileName);
 			string incrementingPattern = @$"\(([0-9]+)\)\{ext}";
-			string? lastTestPath = null;
 
 			if (!startFromZero)
 			{
@@ -187,17 +169,6 @@ public static partial class FileHelpers
 					logger.Info("Checking new testPath [{testPath}] with iterator [{i}]", testPath, i);
 				}
 
-				// Prevent infinite loop if file name isn't changing
-				if (string.Equals(lastTestPath, testPath, StringComparison.Ordinal))
-				{
-					if (!suppressLogging)
-					{
-						logger.Warn("File name [{testPath}] not changing, breaking out of loop.", testPath);
-					}
-					break;
-				}
-
-				lastTestPath = testPath;
 				i++;
 			}
 		}

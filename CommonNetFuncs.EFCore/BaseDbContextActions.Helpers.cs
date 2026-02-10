@@ -1,7 +1,7 @@
-﻿using System.Runtime.CompilerServices;
-using CommonNetFuncs.Core;
+﻿using CommonNetFuncs.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.CompilerServices;
 using static CommonNetFuncs.Core.ExceptionLocation;
 
 namespace CommonNetFuncs.EFCore;

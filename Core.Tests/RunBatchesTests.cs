@@ -305,7 +305,7 @@ public sealed class RunBatchesTests
 	{
 		// Arrange
 		IEnumerable<int> items = null!;
-		async Task<bool> BatchProcessor(IEnumerable<int> batch)
+		static async Task<bool> BatchProcessor(IEnumerable<int> batch)
 		{
 			await Task.Delay(1);
 			return true;
@@ -333,7 +333,7 @@ public sealed class RunBatchesTests
 	{
 		// Arrange
 		List<int> items = Enumerable.Range(1, 10).ToList();
-		async Task<bool> BatchProcessor(IEnumerable<int> batch)
+		static async Task<bool> BatchProcessor(IEnumerable<int> batch)
 		{
 			await Task.Delay(1);
 			return true;
@@ -349,7 +349,7 @@ public sealed class RunBatchesTests
 	{
 		// Arrange
 		List<int> items = Enumerable.Range(1, 10).ToList();
-		async Task<bool> BatchProcessor(IEnumerable<int> batch)
+		static async Task<bool> BatchProcessor(IEnumerable<int> batch)
 		{
 			await Task.Delay(1);
 			return true;
@@ -395,7 +395,7 @@ public sealed class RunBatchesTests
 		using CancellationTokenSource cts = new();
 		cts.Cancel();
 
-		async Task<bool> BatchProcessor(IEnumerable<int> batch)
+		static async Task<bool> BatchProcessor(IEnumerable<int> batch)
 		{
 			await Task.Delay(1);
 			return true;
@@ -411,7 +411,7 @@ public sealed class RunBatchesTests
 	{
 		// Arrange
 		IEnumerable<int> items = null!;
-		bool BatchProcessor(IEnumerable<int> batch) => true;
+		static bool BatchProcessor(IEnumerable<int> batch) => true;
 
 		// Act & Assert
 		Should.Throw<ArgumentNullException>(() =>
@@ -435,7 +435,7 @@ public sealed class RunBatchesTests
 	{
 		// Arrange
 		List<int> items = Enumerable.Range(1, 10).ToList();
-		bool BatchProcessor(IEnumerable<int> batch) => true;
+		static bool BatchProcessor(IEnumerable<int> batch) => true;
 
 		// Act & Assert
 		Should.Throw<ArgumentOutOfRangeException>(() =>
@@ -447,7 +447,7 @@ public sealed class RunBatchesTests
 	{
 		// Arrange
 		List<int> items = Enumerable.Range(1, 10).ToList();
-		bool BatchProcessor(IEnumerable<int> batch) => true;
+		static bool BatchProcessor(IEnumerable<int> batch) => true;
 
 		// Act & Assert
 		Should.Throw<ArgumentOutOfRangeException>(() =>
@@ -489,7 +489,7 @@ public sealed class RunBatchesTests
 		using CancellationTokenSource cts = new();
 		cts.Cancel();
 
-		bool BatchProcessor(IEnumerable<int> batch) => true;
+		static bool BatchProcessor(IEnumerable<int> batch) => true;
 
 		// Act & Assert
 		Should.Throw<OperationCanceledException>(() =>

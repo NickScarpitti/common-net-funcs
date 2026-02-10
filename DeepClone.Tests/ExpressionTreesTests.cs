@@ -394,4 +394,129 @@ public sealed class ExpressionTreesTests : IDisposable
 			CacheManager.GetLimitedCache().ContainsKey(type).ShouldBeFalse();
 		}
 	}
+
+	[Fact]
+	public void DeepClone_WhenInputIsPlainObjectType_ShouldCreateNewObject()
+	{
+		// Arrange
+		object source = new();
+
+		// Act
+		object result = source.DeepClone();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldNotBeSameAs(source);
+		result.GetType().ShouldBe(typeof(object));
+	}
+
+	// Test helper classes for readonly reference fields
+	public class ClassWithReadonlyReferenceField
+	{
+		public readonly TestClass ReadonlyChild;
+
+		public ClassWithReadonlyReferenceField(TestClass child)
+		{
+			ReadonlyChild = child;
+		}
+	}
+
+	// Test helper classes for delegate fields
+	public class ClassWithDelegateFields
+	{
+		public readonly TestDelegate? ReadonlyDelegateField;
+		public TestDelegate? WritableDelegateField;
+
+		public ClassWithDelegateFields(TestDelegate? readonlyDelegate, TestDelegate? writableDelegate)
+		{
+			ReadonlyDelegateField = readonlyDelegate;
+			WritableDelegateField = writableDelegate;
+		}
+	}
+
+	// Test helper structs for complex nested scenarios
+	public struct InnerStructWithClass
+	{
+		public int Value { get; set; }
+		public TestClass? ClassField { get; set; }
+	}
+
+	public struct OuterStructWithInnerStruct
+	{
+		public string Name { get; set; }
+		public InnerStructWithClass InnerStruct { get; set; }
+	}
+
+	[Fact]
+	public void DeepClone_WhenInputHasReadonlyReferenceField_ShouldCreateDeepCopyWithBoxing()
+	{
+		// Arrange
+		TestClass child = new() { Number = 100, Text = "child" };
+		ClassWithReadonlyReferenceField source = new(child);
+
+		// Act
+		ClassWithReadonlyReferenceField result = source.DeepClone();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldNotBeSameAs(source);
+		result.ReadonlyChild.ShouldNotBeNull();
+		result.ReadonlyChild.ShouldNotBeSameAs(source.ReadonlyChild);
+		result.ReadonlyChild.Number.ShouldBe(100);
+		result.ReadonlyChild.Text.ShouldBe("child");
+	}
+
+	[Fact]
+	public void DeepClone_WhenInputHasReadonlyDelegateField_ShouldSetToNull()
+	{
+		// Arrange
+		TestDelegate readonlyDelegate = () => { };
+		TestDelegate writableDelegate = () => { };
+		ClassWithDelegateFields source = new(readonlyDelegate, writableDelegate);
+
+		// Act
+		ClassWithDelegateFields result = source.DeepClone();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldNotBeSameAs(source);
+		result.ReadonlyDelegateField.ShouldBeNull();
+		result.WritableDelegateField.ShouldBeNull();
+	}
+
+	[Fact]
+	public void DeepClone_WhenInputHasWritableDelegateField_ShouldSetToNull()
+	{
+		// Arrange
+		ClassWithDelegateFields source = new(null, () => { });
+
+		// Act
+		ClassWithDelegateFields result = source.DeepClone();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldNotBeSameAs(source);
+		result.ReadonlyDelegateField.ShouldBeNull();
+		result.WritableDelegateField.ShouldBeNull();
+	}
+
+	[Fact]
+	public void DeepClone_WhenInputIsNestedStructWithClass_ShouldCreateDeepCopy()
+	{
+		// Arrange
+		TestClass innerClass = new() { Number = 50, Text = "nested" };
+		InnerStructWithClass innerStruct = new() { Value = 10, ClassField = innerClass };
+		OuterStructWithInnerStruct source = new() { Name = "outer", InnerStruct = innerStruct };
+
+		// Act
+		OuterStructWithInnerStruct result = source.DeepClone();
+
+		// Assert
+		result.Name.ShouldBe("outer");
+		result.InnerStruct.Value.ShouldBe(10);
+		result.InnerStruct.ClassField.ShouldNotBeNull();
+		result.InnerStruct.ClassField.ShouldNotBeSameAs(source.InnerStruct.ClassField);
+		result.InnerStruct.ClassField!.Number.ShouldBe(50);
+		result.InnerStruct.ClassField.Text.ShouldBe("nested");
+	}
 }

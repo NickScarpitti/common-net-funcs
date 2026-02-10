@@ -278,6 +278,234 @@ public sealed class FileHelpersTests : IDisposable
 		safeName.ShouldEndWith(".txt");
 	}
 
+	[Fact]
+	public async Task GetSafeSaveName_String_WithIteratorInName_IncrementsCorrectly()
+	{
+		// Arrange - Test the hasIterator branch with proper directory path
+		string fileName = Path.Combine(tempDir, "file (0).txt");
+		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+
+		// Act
+		string safeName = fileName.GetSafeSaveName();
+
+		// Assert
+		safeName.ShouldNotBe(fileName);
+		Path.GetFileName(safeName).ShouldBe("file (1).txt");
+		Path.GetDirectoryName(safeName).ShouldBe(tempDir);
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_String_AvoidInfiniteLoop_WhenRegexPatternFails()
+	{
+		// Arrange - Create a file with malformed pattern that could cause issues
+		string fileName = Path.Combine(tempDir, "test(broken).txt");
+		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+
+		// Act - Should not hang, should complete quickly
+		string safeName = fileName.GetSafeSaveName();
+
+		// Assert
+		safeName.ShouldNotBeNullOrWhiteSpace();
+		File.Exists(safeName).ShouldBeFalse();
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_PathAndFileName_AvoidInfiniteLoop_WithMultipleExistingFiles()
+	{
+		// Arrange - Create multiple sequential numbered files
+		const string baseName = "document";
+		for (int i = 0; i < 5; i++)
+		{
+			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).txt");
+			await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		}
+
+		// Act - Should find next available number without infinite loop
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, $"{baseName} (0).txt");
+
+		// Assert
+		safeName.ShouldBe($"{baseName} (5).txt");
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_String_HandlesComplexIteratorPattern()
+	{
+		// Arrange - File with iterator at the end
+		string fileName = Path.Combine(tempDir, "report (99).pdf");
+		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+
+		// Act - Set startFromZero = false to continue from existing number
+		string safeName = fileName.GetSafeSaveName(startFromZero: false);
+
+		// Assert - Should increment from 99 to 100
+		Path.GetFileName(safeName).ShouldBe("report (100).pdf");
+		Path.GetDirectoryName(safeName).ShouldBe(tempDir);
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_String_InfiniteLoopProtection_WithLogging()
+	{
+		// Arrange - Create a file and test with logging enabled to cover the infinite loop protection logging branch
+		string fileName = Path.Combine(tempDir, "LogTest.txt");
+		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+
+		// Act - With suppressLogging = false to cover the logging branch in infinite loop protection
+		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
+
+		// Assert - Should complete without hanging and return a unique name
+		safeName.ShouldNotBe(fileName);
+		Path.GetFileName(safeName).ShouldBe("LogTest (0).txt");
+		File.Exists(safeName).ShouldBeFalse();
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_PathAndFileName_InfiniteLoopProtection_WithLogging()
+	{
+		// Arrange - Create file and test with logging to cover infinite loop protection logging
+		const string fileName = "test_file.dat";
+		string filePath = Path.Combine(tempDir, fileName);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+
+		// Act - With suppressLogging = false to ensure infinite loop protection logging is covered
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
+
+		// Assert - Should complete and return a name
+		safeName.ShouldNotBeNullOrWhiteSpace();
+		safeName.ShouldBe("test_file (0).dat");
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_String_TerminatesWithManySequentialFiles()
+	{
+		// Arrange - Create many sequential files to stress test the loop termination
+		string baseName = "stress_test";
+		for (int i = 0; i < 100; i++)
+		{
+			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).log");
+			await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		}
+
+		// Act - Should find the next available number and not loop infinitely
+		string existingFile = Path.Combine(tempDir, $"{baseName} (0).log");
+		string safeName = existingFile.GetSafeSaveName();
+
+		// Assert
+		Path.GetFileName(safeName).ShouldBe($"{baseName} (100).log");
+		File.Exists(safeName).ShouldBeFalse();
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_PathAndFileName_TerminatesWithManySequentialFiles()
+	{
+		// Arrange - Create many sequential files
+		string baseName = "batch_file";
+		for (int i = 0; i < 50; i++)
+		{
+			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).dat");
+			await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		}
+
+		// Act - Should handle many existing files without infinite loop
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, $"{baseName} (0).dat");
+
+		// Assert
+		safeName.ShouldBe($"{baseName} (50).dat");
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_String_WithVeryLongFilename_DoesNotInfiniteLoop()
+	{
+		// Arrange - File with very long name to test edge case
+		string longName = new string('a', 200);
+		string fileName = Path.Combine(tempDir, $"{longName}.txt");
+		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+
+		// Act - Should handle long filenames without infinite loop
+		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
+
+		// Assert
+		safeName.ShouldNotBe(fileName);
+		File.Exists(safeName).ShouldBeFalse();
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_PathAndFileName_WithVeryLongFilename_DoesNotInfiniteLoop()
+	{
+		// Arrange - Very long filename
+		string longName = new('b', 150);
+		string fileName = $"{longName}.log";
+		string filePath = Path.Combine(tempDir, fileName);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+
+		// Act
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
+
+		// Assert - Should complete without infinite loop
+		safeName.ShouldNotBeNullOrWhiteSpace();
+		safeName.ShouldContain("(0)");
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_String_WithSpecialCharsInIterator_DoesNotInfiniteLoop()
+	{
+		// Arrange - File with pattern that won't match the numeric iterator pattern
+		string fileName = Path.Combine(tempDir, "file (abc).txt");
+		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+
+		// Act - Should not loop infinitely even though pattern doesn't match [0-9]+
+		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
+
+		// Assert
+		safeName.ShouldNotBe(fileName);
+		// Should add " (0)" since the (abc) doesn't match the numeric pattern
+		Path.GetFileName(safeName).ShouldBe("file (abc) (0).txt");
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_PathAndFileName_WithSpecialCharsInIterator_DoesNotInfiniteLoop()
+	{
+		// Arrange
+		const string fileName = "document (xyz).pdf";
+		string filePath = Path.Combine(tempDir, fileName);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+
+		// Act
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
+
+		// Assert
+		safeName.ShouldContain("(0)");
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_String_WithMultipleParentheses_TerminatesCorrectly()
+	{
+		// Arrange - File with multiple parentheses groups - regex matches last numeric group before extension
+		string fileName = Path.Combine(tempDir, "file (old) (1).txt");
+		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+
+		// Act - Use startFromZero=false to continue from existing number
+		string safeName = fileName.GetSafeSaveName(startFromZero: false, suppressLogging: false);
+
+		// Assert - The regex pattern matches (1) at the end, so next should be (2)
+		safeName.ShouldNotBe(fileName);
+		Path.GetFileName(safeName).ShouldBe("file (old) (2).txt");
+	}
+
+	[Fact]
+	public async Task GetSafeSaveName_PathAndFileName_WithMultipleParentheses_TerminatesCorrectly()
+	{
+		// Arrange - The regex matches the last numeric group before extension
+		const string fileName = "report (2023) (5).xlsx";
+		string filePath = Path.Combine(tempDir, fileName);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+
+		// Act - Use startFromZero=false to continue from existing number
+		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false, suppressLogging: false);
+
+		// Assert - Pattern matches (5), so next is (6)
+		safeName.ShouldBe("report (2023) (6).xlsx");
+	}
+
 	#region ReadFileFromPipe tests with size limit
 
 	[Fact]
@@ -1019,6 +1247,121 @@ public sealed class FileHelpersTests : IDisposable
 			// Force enumeration
 			_ = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: cts.Token).ToList();
 		});
+	}
+
+	[Fact]
+	public async Task GetAllFilesRecursive_HandlesEmptyDirectoriesWithSubdirectories()
+	{
+		// Arrange - Create a directory structure where some directories have no files
+		// This tests the "if (files.Count == 0) continue" branch
+		string emptyDir1 = Path.Combine(tempDir, "empty1");
+		string emptyDir2 = Path.Combine(tempDir, "empty2");
+		string dirWithFiles = Path.Combine(tempDir, "withFiles");
+		
+		Directory.CreateDirectory(emptyDir1);
+		Directory.CreateDirectory(emptyDir2);
+		Directory.CreateDirectory(dirWithFiles);
+		
+		// Create subdirectory under empty directory
+		string subEmptyDir = Path.Combine(emptyDir1, "subEmpty");
+		Directory.CreateDirectory(subEmptyDir);
+		
+		// Only add files to one directory
+		string file1 = Path.Combine(dirWithFiles, "file1.txt");
+		await File.WriteAllTextAsync(file1, "content", TestContext.Current.CancellationToken);
+
+		// Act
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: TestContext.Current.CancellationToken);
+		List<string> fileList = files.ToList();
+
+		// Assert - Should only find files in dirWithFiles, not count empty directories
+		fileList.Count.ShouldBe(1);
+		fileList.ShouldContain(file1);
+	}
+
+	[Fact]
+	public async Task GetAllFilesRecursive_DeepNestedStructureWithMixedEmptyDirs()
+	{
+		// Arrange - Create a deep structure with mixed empty and non-empty directories
+		string level1 = Path.Combine(tempDir, "level1");
+		string level2Empty = Path.Combine(level1, "level2Empty");
+		string level2WithFile = Path.Combine(level1, "level2WithFile");
+		string level3 = Path.Combine(level2WithFile, "level3");
+		
+		Directory.CreateDirectory(level1);
+		Directory.CreateDirectory(level2Empty);
+		Directory.CreateDirectory(level2WithFile);
+		Directory.CreateDirectory(level3);
+		
+		// Add files at different levels
+		string file1 = Path.Combine(level1, "file1.txt");
+		string file2 = Path.Combine(level2WithFile, "file2.txt");
+		string file3 = Path.Combine(level3, "file3.txt");
+		
+		await File.WriteAllTextAsync(file1, "1", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file2, "2", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file3, "3", TestContext.Current.CancellationToken);
+
+		// Act
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: TestContext.Current.CancellationToken);
+		List<string> fileList = files.ToList();
+
+		// Assert - Should find all files regardless of nesting and empty sibling directories
+		fileList.Count.ShouldBe(3);
+		fileList.ShouldContain(file1);
+		fileList.ShouldContain(file2);
+		fileList.ShouldContain(file3);
+	}
+
+	[Fact]
+	public async Task GetAllFilesRecursive_SearchPatternWithEmptyDirectories()
+	{
+		// Arrange - Combine search pattern with empty directories
+		string emptyDir = Path.Combine(tempDir, "empty");
+		string dirWithFiles = Path.Combine(tempDir, "files");
+		
+		Directory.CreateDirectory(emptyDir);
+		Directory.CreateDirectory(dirWithFiles);
+		
+		// Create subdirectory under empty
+		string subDir = Path.Combine(emptyDir, "sub");
+		Directory.CreateDirectory(subDir);
+		
+		// Add both .txt and .doc files
+		string txtFile = Path.Combine(dirWithFiles, "document.txt");
+		string docFile = Path.Combine(dirWithFiles, "document.doc");
+		
+		await File.WriteAllTextAsync(txtFile, "text", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(docFile, "doc", TestContext.Current.CancellationToken);
+
+		// Act - Search only for .txt files
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, "*.txt", TestContext.Current.CancellationToken);
+		List<string> fileList = files.ToList();
+
+		// Assert - Should only find .txt file, ignoring empty directories
+		fileList.Count.ShouldBe(1);
+		fileList.ShouldContain(txtFile);
+		fileList.ShouldNotContain(docFile);
+	}
+
+	[Fact]
+	public void GetAllFilesRecursive_OnlyEmptyDirectories_ReturnsEmpty()
+	{
+		// Arrange - Create only empty directories with subdirectories but no files
+		string empty1 = Path.Combine(tempDir, "empty1");
+		string empty2 = Path.Combine(empty1, "empty2");
+		string empty3 = Path.Combine(empty1, "empty3");
+		
+		Directory.CreateDirectory(empty1);
+		Directory.CreateDirectory(empty2);
+		Directory.CreateDirectory(empty3);
+
+		// Act
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: TestContext.Current.CancellationToken);
+		List<string> fileList = files.ToList();
+
+		// Assert - Should return empty list since no files exist
+		fileList.ShouldBeEmpty();
 	}
 
 	[Fact]

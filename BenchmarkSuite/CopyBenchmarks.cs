@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
@@ -13,16 +13,16 @@ namespace BenchmarkSuite;
 [SimpleJob(RuntimeMoniker.Net10_0)]
 public class CopyBenchmarks
 {
-	private SimpleClass? _simpleSource;
-	private ComplexClass? _complexSource;
-	private NestedClass? _nestedSource;
-	private List<SimpleClass>? _listSource;
-	private Dictionary<string, SimpleClass>? _dictSource;
+	private SimpleClass? simpleSource;
+	private ComplexClass? complexSource;
+	private NestedClass? nestedSource;
+	private List<SimpleClass>? listSource;
+	private Dictionary<string, SimpleClass>? dictSource;
 
 	[GlobalSetup]
 	public void Setup()
 	{
-		_simpleSource = new SimpleClass
+		simpleSource = new SimpleClass
 		{
 			Id = 1,
 			Name = "Test",
@@ -31,7 +31,7 @@ public class CopyBenchmarks
 			CreatedDate = DateTime.Now
 		};
 
-		_complexSource = new ComplexClass
+		complexSource = new ComplexClass
 		{
 			Id = 1,
 			Title = "Complex Test",
@@ -43,7 +43,7 @@ public class CopyBenchmarks
 			Metadata = new Dictionary<string, string> { { "key1", "value1" }, { "key2", "value2" } }
 		};
 
-		_nestedSource = new NestedClass
+		nestedSource = new NestedClass
 		{
 			Id = 1,
 			Name = "Nested Test",
@@ -62,10 +62,10 @@ public class CopyBenchmarks
 			}
 		};
 
-		_listSource = new List<SimpleClass>();
+		listSource = new List<SimpleClass>();
 		for (int i = 0; i < 100; i++)
 		{
-			_listSource.Add(new SimpleClass
+			listSource.Add(new SimpleClass
 			{
 				Id = i,
 				Name = $"Item{i}",
@@ -75,10 +75,10 @@ public class CopyBenchmarks
 			});
 		}
 
-		_dictSource = new Dictionary<string, SimpleClass>();
+		dictSource = new Dictionary<string, SimpleClass>();
 		for (int i = 0; i < 50; i++)
 		{
-			_dictSource[$"key{i}"] = new SimpleClass
+			dictSource[$"key{i}"] = new SimpleClass
 			{
 				Id = i,
 				Name = $"DictItem{i}",
@@ -93,87 +93,87 @@ public class CopyBenchmarks
 	[Benchmark]
 	public SimpleClass ShallowCopy_Simple_Cached()
 	{
-		return _simpleSource!.CopyPropertiesToNew(useCache: true);
+		return simpleSource!.CopyPropertiesToNew(useCache: true);
 	}
 
 	[Benchmark]
 	public SimpleClass ShallowCopy_Simple_Uncached()
 	{
-		return _simpleSource!.CopyPropertiesToNew(useCache: false);
+		return simpleSource!.CopyPropertiesToNew(useCache: false);
 	}
 
 	[Benchmark]
 	public ComplexClass ShallowCopy_Complex_Cached()
 	{
-		return _complexSource!.CopyPropertiesToNew(useCache: true);
+		return complexSource!.CopyPropertiesToNew(useCache: true);
 	}
 
 	[Benchmark]
 	public ComplexClass ShallowCopy_Complex_Uncached()
 	{
-		return _complexSource!.CopyPropertiesToNew(useCache: false);
+		return complexSource!.CopyPropertiesToNew(useCache: false);
 	}
 
 	[Benchmark]
 	public SimpleClassDto ShallowCopyDifferentType_Cached()
 	{
-		return _simpleSource!.CopyPropertiesToNew<SimpleClass, SimpleClassDto>(useCache: true);
+		return simpleSource!.CopyPropertiesToNew<SimpleClass, SimpleClassDto>(useCache: true);
 	}
 
 	[Benchmark]
 	public SimpleClassDto ShallowCopyDifferentType_Uncached()
 	{
-		return _simpleSource!.CopyPropertiesToNew<SimpleClass, SimpleClassDto>(useCache: false);
+		return simpleSource!.CopyPropertiesToNew<SimpleClass, SimpleClassDto>(useCache: false);
 	}
 
 	// Recursive Copy Benchmarks
 	[Benchmark]
 	public NestedClass RecursiveCopy_Nested_Cached()
 	{
-		return _nestedSource!.CopyPropertiesToNewRecursive<NestedClass, NestedClass>(maxDepth: -1, useCache: true);
+		return nestedSource!.CopyPropertiesToNewRecursive<NestedClass, NestedClass>(maxDepth: -1, useCache: true);
 	}
 
 	[Benchmark]
 	public NestedClass RecursiveCopy_Nested_Uncached()
 	{
-		return _nestedSource!.CopyPropertiesToNewRecursive<NestedClass, NestedClass>(maxDepth: -1, useCache: false);
+		return nestedSource!.CopyPropertiesToNewRecursive<NestedClass, NestedClass>(maxDepth: -1, useCache: false);
 	}
 
 	[Benchmark]
 	public NestedClass RecursiveCopy_Nested_Depth1_Cached()
 	{
-		return _nestedSource!.CopyPropertiesToNewRecursive<NestedClass, NestedClass>(maxDepth: 1, useCache: true);
+		return nestedSource!.CopyPropertiesToNewRecursive<NestedClass, NestedClass>(maxDepth: 1, useCache: true);
 	}
 
 	[Benchmark]
 	public NestedClass RecursiveCopy_Nested_Depth1_Uncached()
 	{
-		return _nestedSource!.CopyPropertiesToNewRecursive<NestedClass, NestedClass>(maxDepth: 1, useCache: false);
+		return nestedSource!.CopyPropertiesToNewRecursive<NestedClass, NestedClass>(maxDepth: 1, useCache: false);
 	}
 
 	// Collection Copy Benchmarks
 	[Benchmark]
 	public List<SimpleClass> RecursiveCopy_List_Cached()
 	{
-		return _listSource!.CopyPropertiesToNewRecursive<List<SimpleClass>, List<SimpleClass>>(maxDepth: -1, useCache: true);
+		return listSource!.CopyPropertiesToNewRecursive<List<SimpleClass>, List<SimpleClass>>(maxDepth: -1, useCache: true);
 	}
 
 	[Benchmark]
 	public List<SimpleClass> RecursiveCopy_List_Uncached()
 	{
-		return _listSource!.CopyPropertiesToNewRecursive<List<SimpleClass>, List<SimpleClass>>(maxDepth: -1, useCache: false);
+		return listSource!.CopyPropertiesToNewRecursive<List<SimpleClass>, List<SimpleClass>>(maxDepth: -1, useCache: false);
 	}
 
 	[Benchmark]
 	public Dictionary<string, SimpleClass> RecursiveCopy_Dictionary_Cached()
 	{
-		return _dictSource!.CopyPropertiesToNewRecursive<Dictionary<string, SimpleClass>, Dictionary<string, SimpleClass>>(maxDepth: -1, useCache: true);
+		return dictSource!.CopyPropertiesToNewRecursive<Dictionary<string, SimpleClass>, Dictionary<string, SimpleClass>>(maxDepth: -1, useCache: true);
 	}
 
 	[Benchmark]
 	public Dictionary<string, SimpleClass> RecursiveCopy_Dictionary_Uncached()
 	{
-		return _dictSource!.CopyPropertiesToNewRecursive<Dictionary<string, SimpleClass>, Dictionary<string, SimpleClass>>(maxDepth: -1, useCache: false);
+		return dictSource!.CopyPropertiesToNewRecursive<Dictionary<string, SimpleClass>, Dictionary<string, SimpleClass>>(maxDepth: -1, useCache: false);
 	}
 
 	// CopyPropertiesTo Benchmarks
@@ -181,13 +181,13 @@ public class CopyBenchmarks
 	public void CopyPropertiesTo_Simple_Cached()
 	{
 		SimpleClass dest = new();
-		_simpleSource!.CopyPropertiesTo(dest, useCache: true);
+		simpleSource!.CopyPropertiesTo(dest, useCache: true);
 	}
 
 	[Benchmark]
 	public void CopyPropertiesTo_Simple_Uncached()
 	{
 		SimpleClass dest = new();
-		_simpleSource!.CopyPropertiesTo(dest, useCache: false);
+		simpleSource!.CopyPropertiesTo(dest, useCache: false);
 	}
 }

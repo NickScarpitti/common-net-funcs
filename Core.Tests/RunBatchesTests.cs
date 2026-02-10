@@ -154,6 +154,36 @@ public sealed class RunBatchesTests
 		processedItems.Order().SequenceEqual(items).ShouldBeTrue();
 	}
 
+	[Theory]
+	[InlineData(true)]   // Break on fail
+	[InlineData(false)]  // Continue on fail
+	public void RunBatchedProcess_Sync_BreakOnFail_BehavesCorrectly(bool breakOnFail)
+	{
+		// Arrange
+		List<int> processedItems = [];
+		List<int> items = Enumerable.Range(1, 100).ToList();
+		int expectedCount = breakOnFail ? 30 : 100; // If breaking, only first batch processed
+
+		bool BatchProcessor(IEnumerable<int> batch)
+		{
+			foreach (int item in batch)
+			{
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				using MemoryStream stream = new(data);
+				_ = stream.ToArray();
+				processedItems.Add(item);
+			}
+			return false; // Always fail
+		}
+
+		// Act
+		bool result = items.RunBatchedProcess(BatchProcessor, 30, breakOnFail, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBeFalse();
+		processedItems.Count.ShouldBe(expectedCount);
+	}
+
 	[Fact]
 	public async Task RunBatchedProcess_HandlesDistinctItems()
 	{
@@ -268,6 +298,226 @@ public sealed class RunBatchesTests
 		result.ShouldBeTrue();
 		processedItems.Count.ShouldBe(100);
 		processedItems.SequenceEqual(items).ShouldBeTrue();
+	}
+
+	[Fact]
+	public async Task RunBatchedProcess_NullItemsToProcess_ThrowsArgumentNullException()
+	{
+		// Arrange
+		IEnumerable<int> items = null!;
+		static async Task<bool> BatchProcessor(IEnumerable<int> batch)
+		{
+			await Task.Delay(1);
+			return true;
+		}
+
+		// Act & Assert
+		await Should.ThrowAsync<ArgumentNullException>(async () =>
+			await items.RunBatchedProcessAsync(BatchProcessor, 10));
+	}
+
+	[Fact]
+	public async Task RunBatchedProcess_NullProcessor_ThrowsArgumentNullException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 10).ToList();
+		Func<IEnumerable<int>, Task<bool>> processor = null!;
+
+		// Act & Assert
+		await Should.ThrowAsync<ArgumentNullException>(async () =>
+			await items.RunBatchedProcessAsync(processor, 10));
+	}
+
+	[Fact]
+	public async Task RunBatchedProcess_ZeroBatchSize_ThrowsArgumentOutOfRangeException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 10).ToList();
+		static async Task<bool> BatchProcessor(IEnumerable<int> batch)
+		{
+			await Task.Delay(1);
+			return true;
+		}
+
+		// Act & Assert
+		await Should.ThrowAsync<ArgumentOutOfRangeException>(async () =>
+			await items.RunBatchedProcessAsync(BatchProcessor, 0));
+	}
+
+	[Fact]
+	public async Task RunBatchedProcess_NegativeBatchSize_ThrowsArgumentOutOfRangeException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 10).ToList();
+		static async Task<bool> BatchProcessor(IEnumerable<int> batch)
+		{
+			await Task.Delay(1);
+			return true;
+		}
+
+		// Act & Assert
+		await Should.ThrowAsync<ArgumentOutOfRangeException>(async () =>
+			await items.RunBatchedProcessAsync(BatchProcessor, -5));
+	}
+
+	[Fact]
+	public async Task RunBatchedProcess_LogProgressFalse_DoesNotLog()
+	{
+		// Arrange
+		List<int> processedItems = [];
+		List<int> items = Enumerable.Range(1, 100).ToList();
+
+		async Task<bool> BatchProcessor(IEnumerable<int> batch)
+		{
+			foreach (int item in batch)
+			{
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				await using MemoryStream stream = new(data);
+				_ = await stream.ReadStreamAsync();
+				processedItems.Add(item);
+			}
+			return true;
+		}
+
+		// Act
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, logProgress: false, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBeTrue();
+		processedItems.Count.ShouldBe(100);
+	}
+
+	[Fact]
+	public async Task RunBatchedProcess_CancellationRequested_ThrowsOperationCanceledException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 1000).ToList();
+		using CancellationTokenSource cts = new();
+		cts.Cancel();
+
+		static async Task<bool> BatchProcessor(IEnumerable<int> batch)
+		{
+			await Task.Delay(1);
+			return true;
+		}
+
+		// Act & Assert
+		await Should.ThrowAsync<OperationCanceledException>(async () =>
+			await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: cts.Token));
+	}
+
+	[Fact]
+	public void RunBatchedProcess_Sync_NullItemsToProcess_ThrowsArgumentNullException()
+	{
+		// Arrange
+		IEnumerable<int> items = null!;
+		static bool BatchProcessor(IEnumerable<int> batch) => true;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() =>
+			items.RunBatchedProcess(BatchProcessor, 10));
+	}
+
+	[Fact]
+	public void RunBatchedProcess_Sync_NullProcessor_ThrowsArgumentNullException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 10).ToList();
+		Func<IEnumerable<int>, bool> processor = null!;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() =>
+			items.RunBatchedProcess(processor, 10));
+	}
+
+	[Fact]
+	public void RunBatchedProcess_Sync_ZeroBatchSize_ThrowsArgumentOutOfRangeException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 10).ToList();
+		static bool BatchProcessor(IEnumerable<int> batch) => true;
+
+		// Act & Assert
+		Should.Throw<ArgumentOutOfRangeException>(() =>
+			items.RunBatchedProcess(BatchProcessor, 0));
+	}
+
+	[Fact]
+	public void RunBatchedProcess_Sync_NegativeBatchSize_ThrowsArgumentOutOfRangeException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 10).ToList();
+		static bool BatchProcessor(IEnumerable<int> batch) => true;
+
+		// Act & Assert
+		Should.Throw<ArgumentOutOfRangeException>(() =>
+			items.RunBatchedProcess(BatchProcessor, -5));
+	}
+
+	[Fact]
+	public void RunBatchedProcess_Sync_LogProgressFalse_DoesNotLog()
+	{
+		// Arrange
+		List<int> processedItems = [];
+		List<int> items = Enumerable.Range(1, 100).ToList();
+
+		bool BatchProcessor(List<int> batch)
+		{
+			foreach (int item in batch)
+			{
+				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				using MemoryStream stream = new(data);
+				_ = stream.ToArray();
+				processedItems.Add(item);
+			}
+			return true;
+		}
+
+		// Act
+		bool result = items.RunBatchedProcess(BatchProcessor, 30, logProgress: false, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBeTrue();
+		processedItems.Count.ShouldBe(100);
+	}
+
+	[Fact]
+	public void RunBatchedProcess_Sync_CancellationRequested_ThrowsOperationCanceledException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 1000).ToList();
+		using CancellationTokenSource cts = new();
+		cts.Cancel();
+
+		static bool BatchProcessor(IEnumerable<int> batch) => true;
+
+		// Act & Assert
+		Should.Throw<OperationCanceledException>(() =>
+			items.RunBatchedProcess(BatchProcessor, 30, cancellationToken: cts.Token));
+	}
+
+	[Fact]
+	public async Task RunBatchedProcess_ListProcessor_NullProcessor_ThrowsArgumentNullException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 10).ToList();
+		Func<List<int>, Task<bool>> processor = null!;
+
+		// Act & Assert
+		await Should.ThrowAsync<ArgumentNullException>(async () =>
+			await items.RunBatchedProcessAsync(processor, 10));
+	}
+
+	[Fact]
+	public void RunBatchedProcess_Sync_ListProcessor_NullProcessor_ThrowsArgumentNullException()
+	{
+		// Arrange
+		List<int> items = Enumerable.Range(1, 10).ToList();
+		Func<List<int>, bool> processor = null!;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() =>
+			items.RunBatchedProcess(processor, 10));
 	}
 
 #pragma warning disable S1144 // Unused private types or members should be removed

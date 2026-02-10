@@ -23,27 +23,30 @@ namespace BenchmarkSuite;
 [EventPipeProfiler(EventPipeProfile.CpuSampling)]
 public class RestHelpersStaticBenchmarks
 {
-	private byte[] _jsonData = null!;
-	private byte[] _compressedJsonDataGzip = null!;
-	private byte[] _compressedJsonDataBrotli = null!;
-	private byte[] _textData = null!;
-	private byte[] _compressedTextDataGzip = null!;
-	private byte[] _largeJsonData = null!;
-	private byte[] _compressedLargeJsonDataGzip = null!;
-	private byte[] _memoryPackData = null!;
-	private byte[] _compressedMemoryPackDataGzip = null!;
-	private byte[] _compressedMemoryPackDataBrotli = null!;
-	private TestModel _testModel = null!;
-	private Dictionary<string, string> _headers = null!;
-	private Dictionary<string, string> _headersWithContentType = null!;
+	private byte[] jsonData = null!;
+	private byte[] compressedJsonDataGzip = null!;
+	private byte[] compressedJsonDataBrotli = null!;
+	private byte[] textData = null!;
+	private byte[] compressedTextDataGzip = null!;
+	private byte[] largeJsonData = null!;
+	private byte[] compressedLargeJsonDataGzip = null!;
+	private byte[] memoryPackData = null!;
+	private byte[] compressedMemoryPackDataGzip = null!;
+	private byte[] compressedMemoryPackDataBrotli = null!;
+	private TestModel testModel = null!;
+	private Dictionary<string, string> headers = null!;
+	private Dictionary<string, string> headersWithContentType = null!;
+
+#pragma warning disable S1075 // URIs should not be hardcoded
 	const string TestUrl = "http://test";
+#pragma warning restore S1075 // URIs should not be hardcoded
 
 	[GlobalSetup]
 	public void Setup()
 	{
-		_testModel = new TestModel { Name = "Test User", Value = 12345, Description = "This is a test description with some content to make it more realistic" };
-		string jsonString = JsonSerializer.Serialize(_testModel);
-		_jsonData = Encoding.UTF8.GetBytes(jsonString);
+		testModel = new TestModel { Name = "Test User", Value = 12345, Description = "This is a test description with some content to make it more realistic" };
+		string jsonString = JsonSerializer.Serialize(testModel);
+		jsonData = Encoding.UTF8.GetBytes(jsonString);
 
 		// Create a large list for more realistic testing
 		List<TestModel> largeTestModelList = new();
@@ -57,20 +60,20 @@ public class RestHelpersStaticBenchmarks
 			});
 		}
 		string largeJsonString = JsonSerializer.Serialize(largeTestModelList);
-		_largeJsonData = Encoding.UTF8.GetBytes(largeJsonString);
+		largeJsonData = Encoding.UTF8.GetBytes(largeJsonString);
 
 		const string textString = "This is a plain text response that would typically be returned as an error message from an API endpoint.";
-		_textData = Encoding.UTF8.GetBytes(textString);
+		textData = Encoding.UTF8.GetBytes(textString);
 
 		// Setup headers
-		_headers = new Dictionary<string, string>
+		headers = new Dictionary<string, string>
 		{
 			{ "Accept", Json },
 			{ "User-Agent", "TestAgent/1.0" },
 			{ "X-Custom-Header", "CustomValue" }
 		};
 
-		_headersWithContentType = new Dictionary<string, string>(_headers)
+		headersWithContentType = new Dictionary<string, string>(headers)
 		{
 			{ "Content-Type", Json }
 		};
@@ -80,9 +83,9 @@ public class RestHelpersStaticBenchmarks
 		{
 			using (GZipStream gzipStream = new(compressedStream, CompressionLevel.Optimal, true))
 			{
-				gzipStream.Write(_jsonData, 0, _jsonData.Length);
+				gzipStream.Write(jsonData, 0, jsonData.Length);
 			}
-			_compressedJsonDataGzip = compressedStream.ToArray();
+			compressedJsonDataGzip = compressedStream.ToArray();
 		}
 
 		// Create Brotli compressed JSON
@@ -90,9 +93,9 @@ public class RestHelpersStaticBenchmarks
 		{
 			using (BrotliStream brotliStream = new(compressedStream, CompressionLevel.Optimal, true))
 			{
-				brotliStream.Write(_jsonData, 0, _jsonData.Length);
+				brotliStream.Write(jsonData, 0, jsonData.Length);
 			}
-			_compressedJsonDataBrotli = compressedStream.ToArray();
+			compressedJsonDataBrotli = compressedStream.ToArray();
 		}
 
 		// Create GZip compressed text
@@ -100,9 +103,9 @@ public class RestHelpersStaticBenchmarks
 		{
 			using (GZipStream gzipStream = new(compressedStream, CompressionLevel.Optimal, true))
 			{
-				gzipStream.Write(_textData, 0, _textData.Length);
+				gzipStream.Write(textData, 0, textData.Length);
 			}
-			_compressedTextDataGzip = compressedStream.ToArray();
+			compressedTextDataGzip = compressedStream.ToArray();
 		}
 
 		// Create GZip compressed large JSON
@@ -110,22 +113,22 @@ public class RestHelpersStaticBenchmarks
 		{
 			using (GZipStream gzipStream = new(compressedStream, CompressionLevel.Optimal, true))
 			{
-				gzipStream.Write(_largeJsonData, 0, _largeJsonData.Length);
+				gzipStream.Write(largeJsonData, 0, largeJsonData.Length);
 			}
-			_compressedLargeJsonDataGzip = compressedStream.ToArray();
+			compressedLargeJsonDataGzip = compressedStream.ToArray();
 		}
 
 		// Create MemoryPack data
-		_memoryPackData = MemoryPackSerializer.Serialize(_testModel);
+		memoryPackData = MemoryPackSerializer.Serialize(testModel);
 
 		// Create GZip compressed MemoryPack
 		using (MemoryStream compressedStream = new())
 		{
 			using (GZipStream gzipStream = new(compressedStream, CompressionLevel.Optimal, true))
 			{
-				gzipStream.Write(_memoryPackData, 0, _memoryPackData.Length);
+				gzipStream.Write(memoryPackData, 0, memoryPackData.Length);
 			}
-			_compressedMemoryPackDataGzip = compressedStream.ToArray();
+			compressedMemoryPackDataGzip = compressedStream.ToArray();
 		}
 
 		// Create Brotli compressed MemoryPack
@@ -133,79 +136,79 @@ public class RestHelpersStaticBenchmarks
 		{
 			using (BrotliStream brotliStream = new(compressedStream, CompressionLevel.Optimal, true))
 			{
-				brotliStream.Write(_memoryPackData, 0, _memoryPackData.Length);
+				brotliStream.Write(memoryPackData, 0, memoryPackData.Length);
 			}
-			_compressedMemoryPackDataBrotli = compressedStream.ToArray();
+			compressedMemoryPackDataBrotli = compressedStream.ToArray();
 		}
 	}
 
 	[Benchmark(Baseline = true)]
 	public async Task<TestModel?> ReadResponseStream_Json_NoCompression()
 	{
-		await using MemoryStream stream = new(_jsonData);
+		await using MemoryStream stream = new(jsonData);
 		return await stream.ReadResponseStream<TestModel>(Json, null, false);
 	}
 
 	[Benchmark]
 	public async Task<TestModel?> ReadResponseStream_Json_GZip()
 	{
-		await using MemoryStream stream = new(_compressedJsonDataGzip);
+		await using MemoryStream stream = new(compressedJsonDataGzip);
 		return await stream.ReadResponseStream<TestModel>(Json, "gzip", false);
 	}
 
 	[Benchmark]
 	public async Task<TestModel?> ReadResponseStream_Json_Brotli()
 	{
-		await using MemoryStream stream = new(_compressedJsonDataBrotli);
+		await using MemoryStream stream = new(compressedJsonDataBrotli);
 		return await stream.ReadResponseStream<TestModel>(Json, "br", false);
 	}
 
 	[Benchmark]
 	public async Task<List<TestModel>?> ReadResponseStream_LargeJson_NoCompression()
 	{
-		await using MemoryStream stream = new(_largeJsonData);
+		await using MemoryStream stream = new(largeJsonData);
 		return await stream.ReadResponseStream<List<TestModel>>(Json, null, false);
 	}
 
 	[Benchmark]
 	public async Task<List<TestModel>?> ReadResponseStream_LargeJson_GZip()
 	{
-		await using MemoryStream stream = new(_compressedLargeJsonDataGzip);
+		await using MemoryStream stream = new(compressedLargeJsonDataGzip);
 		return await stream.ReadResponseStream<List<TestModel>>(Json, "gzip", false);
 	}
 
 	[Benchmark]
 	public async Task<string?> ReadResponseStream_Text_NoCompression()
 	{
-		await using MemoryStream stream = new(_textData);
+		await using MemoryStream stream = new(textData);
 		return await stream.ReadResponseStream<string>("text/plain", null, false);
 	}
 
 	[Benchmark]
 	public async Task<string?> ReadResponseStream_Text_GZip()
 	{
-		await using MemoryStream stream = new(_compressedTextDataGzip);
+		await using MemoryStream stream = new(compressedTextDataGzip);
 		return await stream.ReadResponseStream<string>("text/plain", "gzip", false);
 	}
 
 	[Benchmark]
 	public async Task<TestModel?> ReadResponseStream_MemoryPack_NoCompression()
 	{
-		await using MemoryStream stream = new(_memoryPackData);
+		await using MemoryStream stream = new(memoryPackData);
 		return await stream.ReadResponseStream<TestModel>(MemPack, null, false);
 	}
 
 	[Benchmark]
 	public async Task<TestModel?> ReadResponseStream_MemoryPack_GZip()
 	{
-		await using MemoryStream stream = new(_compressedMemoryPackDataGzip);
+		await using MemoryStream stream = new(compressedMemoryPackDataGzip);
 		return await stream.ReadResponseStream<TestModel>(MemPack, "gzip", false);
 	}
 
 	[Benchmark]
 	public async Task<TestModel?> ReadResponseStream_MemoryPack_Brotli()
 	{
-		await using MemoryStream stream = new(_compressedMemoryPackDataBrotli);
+		await using MemoryStream stream = new(compressedMemoryPackDataBrotli);
 		return await stream.ReadResponseStream<TestModel>(MemPack, "br", false);
 	}
 
@@ -213,7 +216,7 @@ public class RestHelpersStaticBenchmarks
 	public void AddContent_Json()
 	{
 		HttpRequestMessage request = new(HttpMethod.Post, TestUrl);
-		request.AddContent(HttpMethod.Post, null, _testModel, null);
+		request.AddContent(HttpMethod.Post, null, testModel, null);
 		request.Dispose();
 	}
 
@@ -221,7 +224,7 @@ public class RestHelpersStaticBenchmarks
 	public void AddContent_Json_WithHeaders()
 	{
 		HttpRequestMessage request = new(HttpMethod.Post, TestUrl);
-		request.AddContent(HttpMethod.Post, _headersWithContentType, _testModel, null);
+		request.AddContent(HttpMethod.Post, headersWithContentType, testModel, null);
 		request.Dispose();
 	}
 
@@ -231,7 +234,7 @@ public class RestHelpersStaticBenchmarks
 		HttpRequestMessage request = new(HttpMethod.Post, TestUrl);
 		Dictionary<string, string> headers = new()
 		{ { "Content-Type", "application/x-memorypack" } };
-		request.AddContent(HttpMethod.Post, headers, _testModel, null);
+		request.AddContent(HttpMethod.Post, headers, testModel, null);
 		request.Dispose();
 	}
 
@@ -241,7 +244,7 @@ public class RestHelpersStaticBenchmarks
 		HttpRequestMessage request = new(HttpMethod.Post, TestUrl);
 		Dictionary<string, string> headers = new()
 		{ { "Content-Type", "application/x-msgpack" } };
-		request.AddContent(HttpMethod.Post, headers, _testModel, null);
+		request.AddContent(HttpMethod.Post, headers, testModel, null);
 		request.Dispose();
 	}
 
@@ -249,7 +252,7 @@ public class RestHelpersStaticBenchmarks
 	public void AttachHeaders_WithBearer()
 	{
 		HttpRequestMessage request = new(HttpMethod.Get, TestUrl);
-		request.AttachHeaders("test-bearer-token-12345", _headers);
+		request.AttachHeaders("test-bearer-token-12345", headers);
 		request.Dispose();
 	}
 
@@ -257,7 +260,7 @@ public class RestHelpersStaticBenchmarks
 	public void AttachHeaders_WithoutBearer()
 	{
 		HttpRequestMessage request = new(HttpMethod.Get, TestUrl);
-		request.AttachHeaders(null, _headers);
+		request.AttachHeaders(null, headers);
 		request.Dispose();
 	}
 

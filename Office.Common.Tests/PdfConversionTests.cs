@@ -27,21 +27,21 @@ public sealed class PdfConversionTests //: IDisposable
 	public async Task ConvertToPdf_WithValidExtension_ShouldCreatePdfFile(string fileName)
 	{
 		// Arrange
-		string _tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
-		Directory.CreateDirectory(_tempPath);
+		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
+		Directory.CreateDirectory(tempPath);
 
 		string sourceFile = Combine(testDataPath, fileName);
-		string outputFile = Combine(_tempPath, $"{GetFileNameWithoutExtension(fileName)}.pdf");
+		string outputFile = Combine(tempPath, $"{GetFileNameWithoutExtension(fileName)}.pdf");
 		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 
 		// Act
 #pragma warning disable S6966 // Awaitable method should be used
-		ConvertToPdf(libreOfficePath, sourceFile, _tempPath);
+		ConvertToPdf(libreOfficePath, sourceFile, tempPath);
 #pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		File.Exists(outputFile).ShouldBeTrue();
-		Directory.Delete(_tempPath, true); // Cleanup
+		Directory.Delete(tempPath, true); // Cleanup
 	}
 
 	[Theory]
@@ -84,16 +84,16 @@ public sealed class PdfConversionTests //: IDisposable
 	public async Task ConvertToPdf_WithTimeout_ShouldRespectTimeout()
 	{
 		// Arrange
-		string _tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
-		Directory.CreateDirectory(_tempPath);
+		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
+		Directory.CreateDirectory(tempPath);
 
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
 		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		TimeSpan timeout = TimeSpan.FromMilliseconds(1); // Very short timeout
 
 		// Act & Assert
-		Should.Throw<LibreOfficeFailedException>(() => ConvertToPdf(libreOfficePath, sourceFile, _tempPath, timeout));
-		Directory.Delete(_tempPath, true); // Cleanup
+		Should.Throw<LibreOfficeFailedException>(() => ConvertToPdf(libreOfficePath, sourceFile, tempPath, timeout));
+		Directory.Delete(tempPath, true); // Cleanup
 	}
 
 	[Fact]

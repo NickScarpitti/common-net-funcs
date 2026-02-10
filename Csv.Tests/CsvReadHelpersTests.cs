@@ -7,12 +7,12 @@ namespace Csv.Tests;
 public sealed class CsvReadHelpersTests
 {
 	private readonly Fixture fixture;
-	private readonly string _testFilePath;
+	private readonly string testFilePath;
 
 	public CsvReadHelpersTests()
 	{
 		fixture = new Fixture();
-		_testFilePath = Path.GetTempFileName();
+		testFilePath = Path.GetTempFileName();
 	}
 
 	private sealed record TestRecord(string Name, int Age, DateTime BirthDate);
@@ -137,13 +137,13 @@ public sealed class CsvReadHelpersTests
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
 			// Act
 #pragma warning disable S6966 // Awaitable method should be used
-			List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(_testFilePath, hasHeader, cultureInfo);
+			List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(testFilePath, hasHeader, cultureInfo);
 #pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
@@ -158,7 +158,7 @@ public sealed class CsvReadHelpersTests
 		}
 		finally
 		{
-			File.Delete(_testFilePath);
+			File.Delete(testFilePath);
 		}
 	}
 
@@ -231,12 +231,12 @@ public sealed class CsvReadHelpersTests
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
 			// Act
-			List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(_testFilePath, hasHeader, cultureInfo, cancellationToken: TestContext.Current.CancellationToken);
+			List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(testFilePath, hasHeader, cultureInfo, cancellationToken: TestContext.Current.CancellationToken);
 
 			// Assert
 			result.ShouldNotBeNull();
@@ -250,7 +250,7 @@ public sealed class CsvReadHelpersTests
 		}
 		finally
 		{
-			File.Delete(_testFilePath);
+			File.Delete(testFilePath);
 		}
 	}
 
@@ -323,13 +323,13 @@ public sealed class CsvReadHelpersTests
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
 			// Act
 			List<TestRecord> result = new();
-			await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(_testFilePath, hasHeader, cultureInfo, cancellationToken: TestContext.Current.CancellationToken))
+			await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(testFilePath, hasHeader, cultureInfo, cancellationToken: TestContext.Current.CancellationToken))
 			{
 				result.Add(record);
 			}
@@ -346,7 +346,7 @@ public sealed class CsvReadHelpersTests
 		}
 		finally
 		{
-			File.Delete(_testFilePath);
+			File.Delete(testFilePath);
 		}
 	}
 
@@ -439,12 +439,12 @@ public sealed class CsvReadHelpersTests
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
 			// Act
-			using DataTable dataTable = CsvReadHelpers.ReadCsvToDataTable(_testFilePath, hasHeader, cultureInfo);
+			using DataTable dataTable = CsvReadHelpers.ReadCsvToDataTable(testFilePath, hasHeader, cultureInfo);
 
 			// Assert
 			dataTable.ShouldNotBeNull();
@@ -458,7 +458,7 @@ public sealed class CsvReadHelpersTests
 		}
 		finally
 		{
-			File.Delete(_testFilePath);
+			File.Delete(testFilePath);
 		}
 	}
 
@@ -483,12 +483,12 @@ public sealed class CsvReadHelpersTests
 		CultureInfo? cultureInfo = cultureName is null ? null : new CultureInfo(cultureName);
 
 		string csvContent = GenerateCsvContent(expectedRecords, hasHeader);
-		await File.WriteAllTextAsync(_testFilePath, csvContent, TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(testFilePath, csvContent, TestContext.Current.CancellationToken);
 
 		try
 		{
 			// Act
-			using DataTable dataTable = CsvReadHelpers.ReadCsvToDataTable(_testFilePath, typeof(TestRecord), hasHeader, cultureInfo);
+			using DataTable dataTable = CsvReadHelpers.ReadCsvToDataTable(testFilePath, typeof(TestRecord), hasHeader, cultureInfo);
 
 			// Assert
 			dataTable.ShouldNotBeNull();
@@ -499,7 +499,7 @@ public sealed class CsvReadHelpersTests
 		}
 		finally
 		{
-			File.Delete(_testFilePath);
+			File.Delete(testFilePath);
 		}
 	}
 

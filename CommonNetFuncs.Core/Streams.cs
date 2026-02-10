@@ -77,24 +77,24 @@ public static class Streams
 
 public sealed class CountingStream(Stream innerStream) : Stream
 {
-	private readonly Stream _innerStream = innerStream ?? throw new ArgumentNullException(nameof(innerStream));
-	private long _bytesWritten;
-	private bool _disposed;
+	private readonly Stream innerStream = innerStream ?? throw new ArgumentNullException(nameof(innerStream));
+	private long bytesWritten;
+	private bool disposed;
 
 	// Consider adding a buffer size constant if you want to optimize buffer operations
 	//private const int DefaultBufferSize = 81920; // Same as StreamReader's default
 
-	public long BytesWritten => Interlocked.Read(ref _bytesWritten);
+	public long BytesWritten => Interlocked.Read(ref bytesWritten);
 
-	public override bool CanRead => _innerStream.CanRead;
+	public override bool CanRead => innerStream.CanRead;
 
-	public override bool CanSeek => _innerStream.CanSeek;
+	public override bool CanSeek => innerStream.CanSeek;
 
-	public override bool CanWrite => _innerStream.CanWrite;
+	public override bool CanWrite => innerStream.CanWrite;
 
-	public override long Length => _innerStream.Length;
+	public override long Length => innerStream.Length;
 
-	public override long Position { get => _innerStream.Position; set => _innerStream.Position = value; }
+	public override long Position { get => innerStream.Position; set => innerStream.Position = value; }
 
 	// Implement CopyToAsync for better performance when copying streams
 	public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
@@ -113,7 +113,7 @@ public sealed class CountingStream(Stream innerStream) : Stream
 	public override async Task FlushAsync(CancellationToken cancellationToken)
 	{
 		ThrowIfDisposed();
-		await _innerStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+		await innerStream.FlushAsync(cancellationToken).ConfigureAwait(false);
 	}
 
 	public override void Flush()
@@ -131,25 +131,25 @@ public sealed class CountingStream(Stream innerStream) : Stream
 	public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
 	{
 		ThrowIfDisposed();
-		return await _innerStream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+		return await innerStream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
 	}
 
 	public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
 	{
 		ThrowIfDisposed();
-		return _innerStream.ReadAsync(buffer, cancellationToken);
+		return innerStream.ReadAsync(buffer, cancellationToken);
 	}
 
 	public override long Seek(long offset, SeekOrigin origin)
 	{
 		ThrowIfDisposed();
-		return _innerStream.Seek(offset, origin);
+		return innerStream.Seek(offset, origin);
 	}
 
 	public override void SetLength(long value)
 	{
 		ThrowIfDisposed();
-		_innerStream.SetLength(value);
+		innerStream.SetLength(value);
 	}
 
 	public override void Write(byte[] buffer, int offset, int count)
@@ -161,25 +161,25 @@ public sealed class CountingStream(Stream innerStream) : Stream
 	public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
 	{
 		ThrowIfDisposed();
-		await _innerStream.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
-		Interlocked.Add(ref _bytesWritten, count);
+		await innerStream.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+		Interlocked.Add(ref bytesWritten, count);
 	}
 
 	public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
 	{
 		ThrowIfDisposed();
-		await _innerStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
-		Interlocked.Add(ref _bytesWritten, buffer.Length);
+		await innerStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+		Interlocked.Add(ref bytesWritten, buffer.Length);
 	}
 
 	protected override void Dispose(bool disposing)
 	{
-		if (!_disposed)
+		if (!disposed)
 		{
 			if (disposing)
 			{
 				// Don't dispose the inner stream as it's managed by ASP.NET Core
-				_disposed = true;
+				disposed = true;
 			}
 			base.Dispose(disposing);
 		}
@@ -187,9 +187,9 @@ public sealed class CountingStream(Stream innerStream) : Stream
 
 	public override async ValueTask DisposeAsync()
 	{
-		if (!_disposed)
+		if (!disposed)
 		{
-			_disposed = true;
+			disposed = true;
 			// Don't dispose the inner stream as it's managed by ASP.NET Core
 			GC.SuppressFinalize(this);
 			await base.DisposeAsync().ConfigureAwait(false);
@@ -198,7 +198,7 @@ public sealed class CountingStream(Stream innerStream) : Stream
 
 	private void ThrowIfDisposed()
 	{
-		ObjectDisposedException.ThrowIf(_disposed, this);
+		ObjectDisposedException.ThrowIf(disposed, this);
 	}
 
 	~CountingStream()

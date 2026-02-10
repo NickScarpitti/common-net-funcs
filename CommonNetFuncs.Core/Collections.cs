@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using FastExpressionCompiler;
-
 using static System.Convert;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
@@ -428,7 +427,11 @@ public static partial class Collections
 
 		if (forceGc)
 		{
+
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
 			GC.Collect(2, GCCollectionMode.Optimized, false);
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
+
 		}
 	}
 
@@ -448,7 +451,9 @@ public static partial class Collections
 
 		if (forceGc)
 		{
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
 			GC.Collect(2, GCCollectionMode.Optimized, false);
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
 		}
 	}
 
@@ -468,7 +473,9 @@ public static partial class Collections
 
 		if (forceGc)
 		{
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
 			GC.Collect(2, GCCollectionMode.Optimized, false);
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
 		}
 	}
 
@@ -488,7 +495,9 @@ public static partial class Collections
 
 		if (forceGc)
 		{
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
 			GC.Collect(2, GCCollectionMode.Optimized, false);
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
 		}
 	}
 
@@ -508,7 +517,9 @@ public static partial class Collections
 
 		if (forceGc)
 		{
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
 			GC.Collect(2, GCCollectionMode.Optimized, false);
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
 		}
 	}
 
@@ -1267,12 +1278,12 @@ public static partial class Collections
 /// <param name="newParameter">New parameter to replace the <paramref name="oldParameter"/>.</param>
 public sealed class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor
 {
-	private readonly ParameterExpression _oldParameter = oldParameter;
-	private readonly ParameterExpression _newParameter = newParameter;
+	private readonly ParameterExpression oldParameter = oldParameter;
+	private readonly ParameterExpression newParameter = newParameter;
 
 	protected override Expression VisitParameter(ParameterExpression node)
 	{
-		return (node == _oldParameter) ? _newParameter : node;
+		return (node == oldParameter) ? newParameter : node;
 	}
 }
 

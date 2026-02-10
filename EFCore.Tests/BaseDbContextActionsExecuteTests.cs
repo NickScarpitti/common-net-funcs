@@ -11,10 +11,10 @@ namespace EFCore.Tests;
 /// </summary>
 public sealed class BaseDbContextActionsExecuteTests : IDisposable
 {
-	private readonly SqliteConnection _connection;
-	private readonly IServiceProvider _serviceProvider;
+	private readonly SqliteConnection connection;
+	private readonly IServiceProvider serviceProvider;
 	private readonly Fixture fixture;
-	private bool _disposed;
+	private bool disposed;
 
 	public BaseDbContextActionsExecuteTests()
 	{
@@ -26,15 +26,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		SQLitePCL.Batteries.Init();
 
 		// Setup SQLite in-memory database (supports ExecuteUpdateAsync unlike InMemoryDatabase)
-		_connection = new SqliteConnection("DataSource=:memory:");
-		_connection.Open();
+		connection = new SqliteConnection("DataSource=:memory:");
+		connection.Open();
 
 		ServiceCollection services = new();
-		services.AddDbContext<TestDbContext>(options => options.UseSqlite(_connection), ServiceLifetime.Transient);
-		_serviceProvider = services.BuildServiceProvider();
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection), ServiceLifetime.Transient);
+		serviceProvider = services.BuildServiceProvider();
 
 		// Ensure database is created
-		using IServiceScope scope = _serviceProvider.CreateScope();
+		using IServiceScope scope = serviceProvider.CreateScope();
 		TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 		context.Database.EnsureCreated();
 	}
@@ -47,14 +47,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 
 	private void Dispose(bool disposing)
 	{
-		if (!_disposed)
+		if (!disposed)
 		{
 			if (disposing)
 			{
-				_connection?.Dispose();
-				(_serviceProvider as IDisposable)?.Dispose();
+				connection?.Dispose();
+				(serviceProvider as IDisposable)?.Dispose();
 			}
-			_disposed = true;
+			disposed = true;
 		}
 	}
 
@@ -65,7 +65,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 	{
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -73,7 +73,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		}
 
 		const string newName = "UpdatedName";
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: TestContext.Current.CancellationToken);
@@ -81,7 +81,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(3);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
@@ -95,7 +95,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
 		int targetId;
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -104,7 +104,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		}
 
 		const string newName = "UpdatedName";
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.UpdateMany(whereExpression: x => x.Id == targetId, updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: TestContext.Current.CancellationToken);
@@ -112,7 +112,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(1);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			TestEntity? updatedEntity = await context.TestEntities.FindAsync(new object?[] { targetId }, TestContext.Current.CancellationToken);
@@ -130,7 +130,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 	{
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -139,7 +139,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 
 		const string newName = "NewName";
 		DateTime newDate = DateTime.UtcNow;
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, newName)
@@ -148,7 +148,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(2);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
@@ -166,13 +166,13 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		if (entityCount > 0)
 		{
 			List<TestEntity> entities = fixture.CreateMany<TestEntity>(entityCount).ToList();
-			using IServiceScope scope = _serviceProvider.CreateScope();
+			using IServiceScope scope = serviceProvider.CreateScope();
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.UpdateMany(whereExpression: x => x.Id == targetId, updateSetters: s => s.SetProperty(x => x.Name, "NewName"), cancellationToken: TestContext.Current.CancellationToken);
@@ -187,14 +187,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 	{
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		TimeSpan timeout = TimeSpan.FromSeconds(30);
 
 		// Act
@@ -210,14 +210,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 	{
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
@@ -241,14 +241,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		{
 			entities[i].Name = i % 2 == 0 ? "EvenName" : "OddName";
 		}
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.UpdateMany(whereExpression: x => x.Name == "EvenName", updateSetters: s => s.SetProperty(x => x.Name, "UpdatedEvenName"), cancellationToken: TestContext.Current.CancellationToken);
@@ -256,7 +256,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(5);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> updatedEntities = await context.TestEntities.Where(x => x.Name == "UpdatedEvenName").ToListAsync(TestContext.Current.CancellationToken);
@@ -276,14 +276,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		{
 			entities[i].Name = $"Name{i}";
 		}
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, x => x.Name + "_Updated"), cancellationToken: TestContext.Current.CancellationToken);
@@ -291,7 +291,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(3);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
@@ -309,7 +309,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		{
 			entity.CreatedDate = originalDate;
 		}
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -317,7 +317,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		}
 
 		DateTime newDate = DateTime.UtcNow;
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.CreatedDate, newDate), cancellationToken: TestContext.Current.CancellationToken);
@@ -325,7 +325,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(2);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
@@ -338,7 +338,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 	{
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(100).ToList();
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -346,7 +346,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		}
 
 		const string newName = "BulkUpdatedName";
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: TestContext.Current.CancellationToken);
@@ -354,7 +354,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(100);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			int updatedCount = await context.TestEntities.CountAsync(x => x.Name == newName, TestContext.Current.CancellationToken);
@@ -374,7 +374,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			entity.Name = originalName;
 			entity.CreatedDate = originalDate;
 		}
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -382,7 +382,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		}
 
 		DateTime newDate = DateTime.UtcNow.AddDays(1);
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act - Only update CreatedDate, not Name
 		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.CreatedDate, newDate), cancellationToken: TestContext.Current.CancellationToken);
@@ -390,7 +390,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(2);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
@@ -405,7 +405,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
 		List<int> targetIds;
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -414,7 +414,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		}
 
 		const string newName = "SelectedUpdate";
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.UpdateMany(whereExpression: x => targetIds.Contains(x.Id), updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: TestContext.Current.CancellationToken);
@@ -422,7 +422,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(3);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> updatedEntities = await context.TestEntities.Where(x => targetIds.Contains(x.Id)).ToListAsync(TestContext.Current.CancellationToken);
@@ -436,14 +436,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 	{
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
 
 		// Act
@@ -456,7 +456,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(3);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
@@ -478,13 +478,13 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		if (initialCount > 0)
 		{
 			List<TestEntity> entities = fixture.CreateMany<TestEntity>(initialCount).ToList();
-			using IServiceScope scope = _serviceProvider.CreateScope();
+			using IServiceScope scope = serviceProvider.CreateScope();
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = targetId == 0
@@ -493,7 +493,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 
 		// Assert
 		result.ShouldNotBeNull();
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
@@ -522,14 +522,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			entities[i].Name = i < 5 ? "ToDelete" : "ToKeep";
 		}
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.DeleteMany(x => x.Name == "ToDelete", cancellationToken: TestContext.Current.CancellationToken);
@@ -537,7 +537,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(5);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
@@ -561,14 +561,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			entities[i].CreatedDate = i < 5 ? cutoffDate.AddDays(-1) : cutoffDate.AddDays(1);
 		}
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act - Delete entities with EvenName AND CreatedDate before cutoff
 		int? result = await testContext.DeleteMany(x => x.Name == "EvenName" && x.CreatedDate < cutoffDate, cancellationToken: TestContext.Current.CancellationToken);
@@ -576,7 +576,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.Value.ShouldBeGreaterThan(0);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			int deletedCount = 15 - await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
@@ -594,7 +594,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(10).ToList();
 		List<int> idsToDelete;
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -602,7 +602,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			idsToDelete = [entities[0].Id, entities[2].Id, entities[5].Id];
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.DeleteMany(x => idsToDelete.Contains(x.Id), cancellationToken: TestContext.Current.CancellationToken);
@@ -610,7 +610,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(3);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
@@ -637,14 +637,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 				: (method == "EndsWith" ? $"Name{keepPattern}" : $"{keepPattern}{i}");
 		}
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = method switch
@@ -658,7 +658,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(matchCount);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
@@ -690,7 +690,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			entities[i].CreatedDate = now.AddDays(-i);
 		}
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -698,7 +698,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		}
 
 		DateTime cutoffDate = now.AddDays(-3);
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.DeleteMany(x => x.CreatedDate < cutoffDate, cancellationToken: TestContext.Current.CancellationToken);
@@ -706,7 +706,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.Value.ShouldBeGreaterThan(0);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
@@ -725,14 +725,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			entities[i].Name = i < 4 ? "Group1" : i < 8 ? "Group2" : "Group3";
 		}
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.DeleteMany(x => x.Name == "Group1" || x.Name == "Group3", cancellationToken: TestContext.Current.CancellationToken);
@@ -740,7 +740,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(8); // 4 from Group1 + 4 from Group3
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
@@ -759,14 +759,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			entities[i].Name = i < 4 ? "Keep" : "Delete";
 		}
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.DeleteMany(x => x.Name != "Keep", cancellationToken: TestContext.Current.CancellationToken);
@@ -774,7 +774,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(4);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
@@ -798,14 +798,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 				: "Group1";
 		}
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = targetName == "None"
@@ -815,7 +815,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(totalCount - expectedRemaining);
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
@@ -828,14 +828,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 	{
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
@@ -860,7 +860,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(20).ToList();
 		int[] idsToCheck;
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
@@ -870,7 +870,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 
 		int minId = idsToCheck[5];
 		int maxId = idsToCheck[14];
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act
 		int? result = await testContext.DeleteMany(x => x.Id >= minId && x.Id <= maxId, cancellationToken: TestContext.Current.CancellationToken);
@@ -878,7 +878,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// Assert
 		result.ShouldNotBeNull();
 		result.ShouldBe(10); // IDs from index 5 to 14 inclusive
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
@@ -897,14 +897,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			entities[i].Name = i < 5 ? "Batch1" : i < 10 ? "Batch2" : "Batch3";
 		}
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
 			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(_serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Act - Delete in multiple batches
 		int? result1 = await testContext.DeleteMany(x => x.Name == "Batch1", cancellationToken: TestContext.Current.CancellationToken);
@@ -916,7 +916,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		result2.ShouldNotBeNull();
 		result2.ShouldBe(5);
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);

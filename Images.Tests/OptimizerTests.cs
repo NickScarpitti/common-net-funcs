@@ -30,10 +30,10 @@ public sealed class OptimizerTests : IDisposable
 	}
 
 	private readonly Fixture fixture;
-	private readonly string _testPngPath;
-	private readonly string _testJpgPath;
-	private readonly string _testGifPath;
-	private readonly string _testInvalidPath;
+	private readonly string testPngPath;
+	private readonly string testJpgPath;
+	private readonly string testGifPath;
+	private readonly string testInvalidPath;
 
 	public OptimizerTests()
 	{
@@ -42,10 +42,10 @@ public sealed class OptimizerTests : IDisposable
 
 		// Setup test file paths
 		string testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
-		_testPngPath = Path.Combine(testDataDir, "test.png");
-		_testJpgPath = Path.Combine(testDataDir, "test.jpg");
-		_testGifPath = Path.Combine(testDataDir, "test.gif");
-		_testInvalidPath = Path.Combine(testDataDir, "nonexistent.png");
+		testPngPath = Path.Combine(testDataDir, "test.png");
+		testJpgPath = Path.Combine(testDataDir, "test.jpg");
+		testGifPath = Path.Combine(testDataDir, "test.gif");
+		testInvalidPath = Path.Combine(testDataDir, "nonexistent.png");
 	}
 
 	[RetryTheory(3)]
@@ -75,7 +75,7 @@ public sealed class OptimizerTests : IDisposable
 	public async Task OptimizeImage_ShouldAcceptCustomArguments(string[]? gifsicleArgs, string[]? jpegoptimArgs, string[]? optipngArgs)
 	{
 		// Arrange
-		string[] testFiles = { _testGifPath, _testJpgPath, _testPngPath };
+		string[] testFiles = { testGifPath, testJpgPath, testPngPath };
 
 		foreach (string file in testFiles)
 		{
@@ -88,7 +88,7 @@ public sealed class OptimizerTests : IDisposable
 	public async Task OptimizeImage_ShouldHandleNonExistentFile()
 	{
 		// Act & Assert
-		await Should.ThrowAsync<FileNotFoundException>(async () => await Optimizer.OptimizeImage(_testInvalidPath));
+		await Should.ThrowAsync<FileNotFoundException>(async () => await Optimizer.OptimizeImage(testInvalidPath));
 	}
 
 	[RetryTheory(3)]
@@ -116,7 +116,7 @@ public sealed class OptimizerTests : IDisposable
 		await cts.CancelAsync();
 
 		// Act & Assert
-		await Should.ThrowAsync<OperationCanceledException>(async () => await Optimizer.OptimizeImage(_testPngPath, cancellationToken: cts.Token));
+		await Should.ThrowAsync<OperationCanceledException>(async () => await Optimizer.OptimizeImage(testPngPath, cancellationToken: cts.Token));
 	}
 
 	[RetryTheory(3)]

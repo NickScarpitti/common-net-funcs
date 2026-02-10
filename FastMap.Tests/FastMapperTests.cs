@@ -130,16 +130,16 @@ public sealed class FastMapperTests
 
 	public sealed class CustomCollection<T> : IEnumerable<T>
 	{
-		private readonly List<T> _items = [];
+		private readonly List<T> items = [];
 
 		public void Add(T item)
 		{
-			_items.Add(item);
+			items.Add(item);
 		}
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			return _items.GetEnumerator();
+			return items.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -217,12 +217,14 @@ public sealed class FastMapperTests
 	public void FasterMap_WithSimpleProperties_MapsCorrectly(string stringProp, int intProp, string dateProp)
 	{
 		// Arrange
+#pragma warning disable S6580 // Use a format provider when parsing date and time.
 		SimpleSource source = new()
 		{
 			StringProp = stringProp,
 			IntProp = intProp,
 			DateProp = DateTime.Parse(dateProp)
 		};
+#pragma warning restore S6580 // Use a format provider when parsing date and time.
 
 		// Act
 		SimpleDestination result = source.FastMap<SimpleSource, SimpleDestination>();

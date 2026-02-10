@@ -3,12 +3,12 @@
 public sealed class ReferenceEqualityComparerTests
 {
     private readonly Fixture fixture;
-    private readonly CommonNetFuncs.DeepClone.ReferenceEqualityComparer _comparer;
+    private readonly CommonNetFuncs.DeepClone.ReferenceEqualityComparer comparer;
 
     public ReferenceEqualityComparerTests()
     {
         fixture = new Fixture();
-        _comparer = new CommonNetFuncs.DeepClone.ReferenceEqualityComparer();
+        comparer = new CommonNetFuncs.DeepClone.ReferenceEqualityComparer();
     }
 
     [Theory]
@@ -16,7 +16,7 @@ public sealed class ReferenceEqualityComparerTests
     public void Equals_WhenBothParametersAreNull_ShouldReturnTrue(object? x, object? y, bool expected)
     {
         // Act
-        bool result = _comparer.Equals(x, y);
+        bool result = comparer.Equals(x, y);
 
         // Assert
         result.ShouldBe(expected);
@@ -29,7 +29,7 @@ public sealed class ReferenceEqualityComparerTests
         object obj = new();
 
         // Act
-        bool result = _comparer.Equals(obj, obj);
+        bool result = comparer.Equals(obj, obj);
 
         // Assert
         result.ShouldBeTrue();
@@ -43,7 +43,7 @@ public sealed class ReferenceEqualityComparerTests
         string str2 = new(str1.ToCharArray());
 
         // Act
-        bool result = _comparer.Equals(str1, str2);
+        bool result = comparer.Equals(str1, str2);
 
         // Assert
         result.ShouldBeFalse();
@@ -54,7 +54,7 @@ public sealed class ReferenceEqualityComparerTests
     public void GetHashCode_WhenObjectIsNull_ShouldReturnZero(object? obj, int expected)
     {
         // Act
-        int result = _comparer.GetHashCode(obj!);
+        int result = comparer.GetHashCode(obj!);
 
         // Assert
         result.ShouldBe(expected);
@@ -68,7 +68,7 @@ public sealed class ReferenceEqualityComparerTests
         int expected = obj.GetHashCode();
 
         // Act
-        int result = _comparer.GetHashCode(obj);
+        int result = comparer.GetHashCode(obj);
 
         // Assert
         result.ShouldBe(expected);
@@ -81,8 +81,8 @@ public sealed class ReferenceEqualityComparerTests
         object obj = new();
 
         // Act
-        int firstCall = _comparer.GetHashCode(obj);
-        int secondCall = _comparer.GetHashCode(obj);
+        int firstCall = comparer.GetHashCode(obj);
+        int secondCall = comparer.GetHashCode(obj);
 
         // Assert
         firstCall.ShouldBe(secondCall);

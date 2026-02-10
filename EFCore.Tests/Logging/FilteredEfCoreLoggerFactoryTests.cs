@@ -5,17 +5,17 @@ namespace EFCore.Tests.Logging;
 
 public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 {
-	private readonly ILoggerFactory _innerFactory;
-	private readonly Dictionary<string, LogLevel> _stringFilters;
-	private readonly List<string> _logMessages;
+	private readonly ILoggerFactory innerFactoryProp;
+	private readonly Dictionary<string, LogLevel> stringFiltersProp;
+	private readonly List<string> logMessagesProp;
 
 	public FilteredEfCoreLoggerFactoryTests()
 	{
-		_logMessages = [];
-		_stringFilters = new Dictionary<string, LogLevel>();
-		_innerFactory = LoggerFactory.Create(builder =>
+		logMessagesProp = [];
+		stringFiltersProp = new Dictionary<string, LogLevel>();
+		innerFactoryProp = LoggerFactory.Create(builder =>
 		{
-			builder.AddProvider(new TestLoggerProvider(_logMessages));
+			builder.AddProvider(new TestLoggerProvider(logMessagesProp));
 			builder.SetMinimumLevel(LogLevel.Trace);
 		});
 	}
@@ -26,8 +26,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void CreateLogger_WithMatchingFilter_ReturnsFilteredLogger()
 	{
 		// Arrange
-		_stringFilters["Database.Command"] = LogLevel.Warning;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["Database.Command"] = LogLevel.Warning;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 
 		// Act
 		ILogger logger = factory.CreateLogger("Microsoft.EntityFrameworkCore.Database.Command");
@@ -41,8 +41,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void CreateLogger_WithPartialMatch_ReturnsFilteredLogger()
 	{
 		// Arrange
-		_stringFilters["Database"] = LogLevel.Error;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["Database"] = LogLevel.Error;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 
 		// Act
 		ILogger logger = factory.CreateLogger("Microsoft.EntityFrameworkCore.Database.Command.Executed");
@@ -56,9 +56,9 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void CreateLogger_WithMultipleFilters_UsesFirstMatch()
 	{
 		// Arrange
-		_stringFilters["Database"] = LogLevel.Warning;
-		_stringFilters["Database.Command"] = LogLevel.Error;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["Database"] = LogLevel.Warning;
+		stringFiltersProp["Database.Command"] = LogLevel.Error;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 
 		// Act
 		ILogger logger = factory.CreateLogger("Microsoft.EntityFrameworkCore.Database.Command");
@@ -76,8 +76,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void CreateLogger_WithDifferentCategories_CreatesMultipleLoggers()
 	{
 		// Arrange
-		_stringFilters["Database"] = LogLevel.Warning;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["Database"] = LogLevel.Warning;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 
 		// Act
 		ILogger logger1 = factory.CreateLogger("Category1");
@@ -93,8 +93,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void CreateLogger_WithEmptyCategoryName_HandlesGracefully()
 	{
 		// Arrange
-		_stringFilters["Test"] = LogLevel.Warning;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["Test"] = LogLevel.Warning;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 
 		// Act
 		ILogger logger = factory.CreateLogger(string.Empty);
@@ -111,8 +111,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void FilteredLogger_WithLogLevelBelowMinimum_FiltersOutLogs()
 	{
 		// Arrange
-		_stringFilters["TestCategory"] = LogLevel.Warning;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["TestCategory"] = LogLevel.Warning;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 		ILogger logger = factory.CreateLogger("TestCategory");
 
 		// Act
@@ -120,8 +120,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		logger.LogWarning("This should be logged");
 
 		// Assert
-		_logMessages.ShouldNotContain(m => m.Contains("filtered out"));
-		_logMessages.ShouldContain(m => m.Contains("This should be logged"));
+		logMessagesProp.ShouldNotContain(m => m.Contains("filtered out"));
+		logMessagesProp.ShouldContain(m => m.Contains("This should be logged"));
 	}
 
 	[Theory]
@@ -134,8 +134,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void FilteredLogger_WithVariousLogLevels_RespectsMinimumLevel(LogLevel minLevel)
 	{
 		// Arrange
-		_stringFilters["TestCategory"] = minLevel;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["TestCategory"] = minLevel;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 		ILogger logger = factory.CreateLogger("TestCategory");
 
 		// Act & Assert
@@ -151,8 +151,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void FilteredLogger_LogsAtAndAboveMinLevel_PassesThroughToInnerLogger()
 	{
 		// Arrange
-		_stringFilters["TestCategory"] = LogLevel.Information;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["TestCategory"] = LogLevel.Information;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 		ILogger logger = factory.CreateLogger("TestCategory");
 
 		// Act
@@ -164,12 +164,12 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		logger.LogCritical("Critical message");
 
 		// Assert
-		_logMessages.ShouldNotContain(m => m.Contains("Trace message"));
-		_logMessages.ShouldNotContain(m => m.Contains("Debug message"));
-		_logMessages.ShouldContain(m => m.Contains("Info message"));
-		_logMessages.ShouldContain(m => m.Contains("Warning message"));
-		_logMessages.ShouldContain(m => m.Contains("Error message"));
-		_logMessages.ShouldContain(m => m.Contains("Critical message"));
+		logMessagesProp.ShouldNotContain(m => m.Contains("Trace message"));
+		logMessagesProp.ShouldNotContain(m => m.Contains("Debug message"));
+		logMessagesProp.ShouldContain(m => m.Contains("Info message"));
+		logMessagesProp.ShouldContain(m => m.Contains("Warning message"));
+		logMessagesProp.ShouldContain(m => m.Contains("Error message"));
+		logMessagesProp.ShouldContain(m => m.Contains("Critical message"));
 	}
 
 	#endregion
@@ -180,7 +180,7 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void AddProvider_AddsProviderToInnerFactory()
 	{
 		// Arrange
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 		List<string> newLogMessages = [];
 		TestLoggerProvider newProvider = new(newLogMessages);
 
@@ -203,7 +203,7 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		// Arrange
 		List<string> logMessages = [];
 		ILoggerFactory innerFactory = LoggerFactory.Create(builder => builder.AddProvider(new TestLoggerProvider(logMessages)));
-		FilteredEfCoreLoggerFactory factory = new(innerFactory, _stringFilters);
+		FilteredEfCoreLoggerFactory factory = new(innerFactory, stringFiltersProp);
 
 		// Act
 		factory.Dispose();
@@ -217,7 +217,7 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void Dispose_CalledMultipleTimes_DoesNotThrow()
 	{
 		// Arrange
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 
 		// Act & Assert
 		Should.NotThrow(() =>
@@ -234,16 +234,18 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		// Arrange - Create factory in a separate method to ensure it goes out of scope
 		WeakReference CreateAndAbandonFactory()
 		{
-			FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+			FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 			return new WeakReference(factory);
 		}
 
 		WeakReference weakRef = CreateAndAbandonFactory();
 
 		// Act - Force garbage collection
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
 		GC.Collect();
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
 
 		// Assert - The factory should be collected
 		weakRef.IsAlive.ShouldBeFalse();
@@ -257,8 +259,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void CreateLogger_WithCaseVariations_StillMatches()
 	{
 		// Arrange
-		_stringFilters["database"] = LogLevel.Warning;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["database"] = LogLevel.Warning;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 
 		// Act
 		ILogger logger = factory.CreateLogger("Microsoft.EntityFrameworkCore.Database.Command");
@@ -271,8 +273,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void CreateLogger_WithSpecialCharacters_HandlesCorrectly()
 	{
 		// Arrange
-		_stringFilters["Database.Command"] = LogLevel.Error;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["Database.Command"] = LogLevel.Error;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 
 		// Act
 		ILogger logger = factory.CreateLogger("Microsoft.EntityFrameworkCore.Database.Command.Special$Characters");
@@ -285,8 +287,8 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 	public void FilteredLogger_WithExceptions_PassesThroughToInnerLogger()
 	{
 		// Arrange
-		_stringFilters["TestCategory"] = LogLevel.Warning;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["TestCategory"] = LogLevel.Warning;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 		ILogger logger = factory.CreateLogger("TestCategory");
 		Exception testException = new("Test exception");
 
@@ -294,15 +296,15 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		logger.LogError(testException, "Error with exception");
 
 		// Assert
-		_logMessages.ShouldContain(m => m.Contains("Error with exception") && m.Contains("Test exception"));
+		logMessagesProp.ShouldContain(m => m.Contains("Error with exception") && m.Contains("Test exception"));
 	}
 
 	[Fact]
 	public void FilteredLogger_WithScopes_PassesThroughToInnerLogger()
 	{
 		// Arrange
-		_stringFilters["TestCategory"] = LogLevel.Information;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["TestCategory"] = LogLevel.Information;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 		ILogger logger = factory.CreateLogger("TestCategory");
 
 		// Act
@@ -312,15 +314,15 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		}
 
 		// Assert
-		_logMessages.ShouldContain(m => m.Contains("Message in scope"));
+		logMessagesProp.ShouldContain(m => m.Contains("Message in scope"));
 	}
 
 	[Fact]
 	public void FilteredLogger_WithLogLevelNone_NeverLogs()
 	{
 		// Arrange
-		_stringFilters["TestCategory"] = LogLevel.None;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["TestCategory"] = LogLevel.None;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 		ILogger logger = factory.CreateLogger("TestCategory");
 
 		// Act
@@ -332,16 +334,16 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		logger.LogCritical("Critical");
 
 		// Assert
-		_logMessages.ShouldBeEmpty();
+		logMessagesProp.ShouldBeEmpty();
 	}
 
 	[Fact]
 	public void RealWorldScenario_EFCoreCommandLogging_FiltersCorrectly()
 	{
 		// Arrange - Simulate EF Core logging scenario
-		_stringFilters["Database.Command"] = LogLevel.Warning;
-		_stringFilters["Database.Connection"] = LogLevel.Error;
-		FilteredEfCoreLoggerFactory factory = new(_innerFactory, _stringFilters);
+		stringFiltersProp["Database.Command"] = LogLevel.Warning;
+		stringFiltersProp["Database.Connection"] = LogLevel.Error;
+		FilteredEfCoreLoggerFactory factory = new(innerFactoryProp, stringFiltersProp);
 
 		ILogger commandLogger = factory.CreateLogger("Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted");
 		ILogger connectionLogger = factory.CreateLogger("Microsoft.EntityFrameworkCore.Database.Connection");
@@ -355,12 +357,12 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		queryLogger.LogInformation("Compiling query expression");
 
 		// Assert
-		_logMessages.ShouldNotContain(m => m.Contains("Executing SQL"));
-		_logMessages.ShouldContain(m => m.Contains("Slow query detected"));
-		_logMessages.ShouldNotContain(m => m.Contains("Opening connection"));
-		_logMessages.ShouldContain(m => m.Contains("Connection failed"));
+		logMessagesProp.ShouldNotContain(m => m.Contains("Executing SQL"));
+		logMessagesProp.ShouldContain(m => m.Contains("Slow query detected"));
+		logMessagesProp.ShouldNotContain(m => m.Contains("Opening connection"));
+		logMessagesProp.ShouldContain(m => m.Contains("Connection failed"));
 		// Query logger gets default filter behavior (logs everything at Trace level since FirstOrDefault returns default)
-		_logMessages.ShouldContain(m => m.Contains("Compiling query expression"));
+		logMessagesProp.ShouldContain(m => m.Contains("Compiling query expression"));
 	}
 
 	#endregion
@@ -381,7 +383,7 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 		{
 			if (disposing)
 			{
-				_innerFactory?.Dispose();
+				innerFactoryProp?.Dispose();
 			}
 			disposed = true;
 		}
@@ -399,11 +401,11 @@ public sealed class FilteredEfCoreLoggerFactoryTests : IDisposable
 
 internal sealed class TestLoggerProvider(List<string> logMessages) : ILoggerProvider
 {
-	private readonly List<string> _logMessages = logMessages;
+	private readonly List<string> logMessages = logMessages;
 
 	public ILogger CreateLogger(string categoryName)
 	{
-		return new TestLogger(_logMessages, categoryName);
+		return new TestLogger(logMessages, categoryName);
 	}
 
 	public void Dispose()
@@ -414,8 +416,8 @@ internal sealed class TestLoggerProvider(List<string> logMessages) : ILoggerProv
 
 internal sealed class TestLogger(List<string> logMessages, string categoryName) : ILogger
 {
-	private readonly List<string> _logMessages = logMessages;
-	private readonly string _categoryName = categoryName;
+	private readonly List<string> logMessages = logMessages;
+	private readonly string categoryName = categoryName;
 
 	public IDisposable? BeginScope<TState>(TState state) where TState : notnull
 	{
@@ -430,12 +432,12 @@ internal sealed class TestLogger(List<string> logMessages, string categoryName) 
 	public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
 	{
 		string message = formatter(state, exception);
-		string logEntry = $"[{logLevel}] {_categoryName}: {message}";
+		string logEntry = $"[{logLevel}] {categoryName}: {message}";
 		if (exception != null)
 		{
 			logEntry += $" | Exception: {exception.Message}";
 		}
-		_logMessages.Add(logEntry);
+		logMessages.Add(logEntry);
 	}
 
 	private sealed class TestScope : IDisposable

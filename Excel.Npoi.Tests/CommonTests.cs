@@ -14,15 +14,15 @@ namespace Excel.Npoi.Tests;
 
 public sealed class CommonTests : IDisposable
 {
-	private readonly XSSFWorkbook _xlsxWorkbook;
-	private readonly HSSFWorkbook _xlsWorkbook;
-	private readonly ISheet _sheet;
+	private readonly XSSFWorkbook xlsxWorkbookProp;
+	private readonly HSSFWorkbook xlsWorkbookProp;
+	private readonly ISheet sheetProp;
 
 	public CommonTests()
 	{
-		_xlsxWorkbook = new XSSFWorkbook();
-		_xlsWorkbook = new HSSFWorkbook();
-		_sheet = _xlsxWorkbook.CreateSheet("Test");
+		xlsxWorkbookProp = new XSSFWorkbook();
+		xlsWorkbookProp = new HSSFWorkbook();
+		sheetProp = xlsxWorkbookProp.CreateSheet("Test");
 	}
 
 	private bool disposed;
@@ -39,8 +39,8 @@ public sealed class CommonTests : IDisposable
 		{
 			if (disposing)
 			{
-				_xlsxWorkbook?.Dispose();
-				_xlsWorkbook?.Dispose();
+				xlsxWorkbookProp?.Dispose();
+				xlsWorkbookProp?.Dispose();
 			}
 			disposed = true;
 		}
@@ -60,7 +60,7 @@ public sealed class CommonTests : IDisposable
 	public void IsCellEmpty_WithEmptyValues_ReturnsTrue(string? value)
 	{
 		// Arrange
-		IRow row = _sheet.CreateRow(0);
+		IRow row = sheetProp.CreateRow(0);
 		ICell cell = row.CreateCell(0);
 		if (value != null)
 		{
@@ -80,7 +80,7 @@ public sealed class CommonTests : IDisposable
 	public void IsCellEmpty_WithNonEmptyValues_ReturnsFalse(string value)
 	{
 		// Arrange
-		IRow row = _sheet.CreateRow(0);
+		IRow row = sheetProp.CreateRow(0);
 		ICell cell = row.CreateCell(0);
 		cell.SetCellValue(value);
 
@@ -98,7 +98,7 @@ public sealed class CommonTests : IDisposable
 		const string cellReference = "B2";
 
 		// Act
-		ICell? cell = _sheet.GetCellFromReference(cellReference);
+		ICell? cell = sheetProp.GetCellFromReference(cellReference);
 
 		// Assert
 		cell.ShouldNotBeNull();
@@ -114,7 +114,7 @@ public sealed class CommonTests : IDisposable
 	public void GetCellOffset_WithValidOffsets_ReturnsCorrectCell(int colOffset, int rowOffset)
 	{
 		// Arrange
-		IRow row = _sheet.CreateRow(1);
+		IRow row = sheetProp.CreateRow(1);
 		ICell startCell = row.CreateCell(1); // B2
 
 		// Act
@@ -133,7 +133,7 @@ public sealed class CommonTests : IDisposable
 	public void GetCellFromCoordinates_ReturnsCorrectCell(int colIndex, int rowIndex)
 	{
 		// Act
-		ICell? cell = _sheet.GetCellFromCoordinates(colIndex, rowIndex);
+		ICell? cell = sheetProp.GetCellFromCoordinates(colIndex, rowIndex);
 
 		// Assert
 		cell.ShouldNotBeNull();
@@ -147,17 +147,17 @@ public sealed class CommonTests : IDisposable
 		// Arrange
 		for (int i = 0; i < 3; i++)
 		{
-			IRow row = _sheet.CreateRow(i);
+			IRow row = sheetProp.CreateRow(i);
 			ICell cell = row.CreateCell(0);
 			cell.SetCellValue($"Value {i}");
 		}
 
 		// Add an empty cell
-		IRow emptyRow = _sheet.CreateRow(3);
+		IRow emptyRow = sheetProp.CreateRow(3);
 		emptyRow.CreateCell(0);
 
 		// Act
-		int lastPopulatedRow = _sheet.GetLastPopulatedRowInColumn(0);
+		int lastPopulatedRow = sheetProp.GetLastPopulatedRowInColumn(0);
 
 		// Assert
 		lastPopulatedRow.ShouldBe(2); // Zero-based index of last populated row
@@ -173,13 +173,13 @@ public sealed class CommonTests : IDisposable
 		int colIndex = columnName.ColumnNameToNumber();
 		for (int i = 0; i < 3; i++)
 		{
-			IRow row = _sheet.CreateRow(i);
+			IRow row = sheetProp.CreateRow(i);
 			ICell cell = row.CreateCell(colIndex);
 			cell.SetCellValue($"Value {i}");
 		}
 
 		// Act
-		int lastPopulatedRow = _sheet.GetLastPopulatedRowInColumn(columnName);
+		int lastPopulatedRow = sheetProp.GetLastPopulatedRowInColumn(columnName);
 
 		// Assert
 		lastPopulatedRow.ShouldBe(2);
@@ -189,12 +189,12 @@ public sealed class CommonTests : IDisposable
 	public void GetCellFromName_WithValidName_ReturnsCellFromNamedRange()
 	{
 		// Arrange
-		IName name = _xlsxWorkbook.CreateName();
+		IName name = xlsxWorkbookProp.CreateName();
 		name.NameName = "TestRange";
 		name.RefersToFormula = "Test!$B$2";
 
 		// Act
-		ICell? cell = _xlsxWorkbook.GetCellFromName("TestRange");
+		ICell? cell = xlsxWorkbookProp.GetCellFromName("TestRange");
 
 		// Assert
 		cell.ShouldNotBeNull();
@@ -213,7 +213,7 @@ public sealed class CommonTests : IDisposable
 	public void CreateCell_WithValidColumnIndex_ReturnsNewCell(int columnIndex)
 	{
 		// Arrange
-		IRow row = _sheet.CreateRow(0);
+		IRow row = sheetProp.CreateRow(0);
 
 		// Act
 		ICell cell = row.CreateCell(columnIndex);
@@ -228,7 +228,7 @@ public sealed class CommonTests : IDisposable
 	public void CreateCell_WithExistingCell_OverwritesCell()
 	{
 		// Arrange
-		IRow row = _sheet.CreateRow(0);
+		IRow row = sheetProp.CreateRow(0);
 		ICell existingCell = row.CreateCell(0);
 		existingCell.SetCellValue("Original");
 
@@ -246,7 +246,7 @@ public sealed class CommonTests : IDisposable
 	public void CreateCell_MultipleCellsInRow_MaintainsCorrectIndices()
 	{
 		// Arrange
-		IRow row = _sheet.CreateRow(0);
+		IRow row = sheetProp.CreateRow(0);
 
 		// Act
 		ICell cell1 = row.CreateCell(0);
@@ -264,7 +264,7 @@ public sealed class CommonTests : IDisposable
 	public void CreateCell_Extension_CreatesCellAtSpecifiedIndex()
 	{
 		// Arrange
-		IRow row = _sheet.CreateRow(0);
+		IRow row = sheetProp.CreateRow(0);
 		const int columnIndex = 2;
 
 		// Act
@@ -286,15 +286,15 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		await using MemoryStream ms = new();
-		IRow headerRow = _sheet.CreateRow(0);
+		IRow headerRow = sheetProp.CreateRow(0);
 		headerRow.CreateCell(0).SetCellValue("Column1");
 		headerRow.CreateCell(1).SetCellValue("Column2");
 
-		IRow dataRow = _sheet.CreateRow(1);
+		IRow dataRow = sheetProp.CreateRow(1);
 		dataRow.CreateCell(0).SetCellValue("Value1");
 		dataRow.CreateCell(1).SetCellValue("Value2");
 
-		_xlsxWorkbook.Write(ms, true);
+		xlsxWorkbookProp.Write(ms, true);
 		ms.Position = 0;
 
 		// Act
@@ -317,10 +317,10 @@ public sealed class CommonTests : IDisposable
 		CellRangeAddressList addressList = new(0, 1, 0, 0); // A1:A2
 
 		// Act
-		_sheet.AddDataValidation(addressList, options);
+		sheetProp.AddDataValidation(addressList, options);
 
 		// Assert
-		IDataValidation? validation = _sheet.GetDataValidations()[0];
+		IDataValidation? validation = sheetProp.GetDataValidations()[0];
 		validation.ShouldNotBeNull();
 		validation.ShowErrorBox.ShouldBeTrue();
 		validation.ErrorStyle.ShouldBe(0);
@@ -330,12 +330,12 @@ public sealed class CommonTests : IDisposable
 	public async Task WriteFileToMemoryStreamAsync_WritesWorkbookCorrectly()
 	{
 		// Arrange
-		IRow row = _sheet.CreateRow(0);
+		IRow row = sheetProp.CreateRow(0);
 		row.CreateCell(0).SetCellValue("Test");
 		await using MemoryStream ms = new();
 
 		// Act
-		await ms.WriteFileToMemoryStreamAsync(_xlsxWorkbook);
+		await ms.WriteFileToMemoryStreamAsync(xlsxWorkbookProp);
 
 		// Assert
 		ms.Length.ShouldBeGreaterThan(0);
@@ -353,7 +353,7 @@ public sealed class CommonTests : IDisposable
 	public void GetStandardCellStyle_ReturnsCorrectStyle(EStyle style)
 	{
 		// Act
-		ICellStyle cellStyle = _xlsxWorkbook.GetStandardCellStyle(style);
+		ICellStyle cellStyle = xlsxWorkbookProp.GetStandardCellStyle(style);
 
 		// Assert
 		cellStyle.ShouldNotBeNull();
@@ -382,7 +382,7 @@ public sealed class CommonTests : IDisposable
 	public void GetFont_ReturnsCorrectFont(EFont font)
 	{
 		// Act
-		IFont cellFont = _xlsxWorkbook.GetFont(font);
+		IFont cellFont = xlsxWorkbookProp.GetFont(font);
 
 		// Assert
 		cellFont.ShouldNotBeNull();
@@ -414,7 +414,7 @@ public sealed class CommonTests : IDisposable
 		const string hexColor = "#FF0000"; // Red
 
 		// Act
-		ICellStyle style = _xlsxWorkbook.GetCustomStyle(hexColor);
+		ICellStyle style = xlsxWorkbookProp.GetCustomStyle(hexColor);
 
 		// Assert
 		style.ShouldNotBeNull();
@@ -461,7 +461,7 @@ public sealed class CommonTests : IDisposable
 	public void IsXlsx_WithXlsxWorkbook_ReturnsTrue()
 	{
 		// Act
-		bool result = _xlsxWorkbook.IsXlsx();
+		bool result = xlsxWorkbookProp.IsXlsx();
 
 		// Assert
 		result.ShouldBeTrue();
@@ -471,7 +471,7 @@ public sealed class CommonTests : IDisposable
 	public void IsXlsx_WithXlsWorkbook_ReturnsFalse()
 	{
 		// Act
-		bool result = _xlsWorkbook.IsXlsx();
+		bool result = xlsWorkbookProp.IsXlsx();
 
 		// Assert
 		result.ShouldBeFalse();
@@ -485,21 +485,21 @@ public sealed class CommonTests : IDisposable
 	public void ClearAllFromName_WithValidName_ClearsCells()
 	{
 		// Arrange
-		IName name = _xlsxWorkbook.CreateName();
+		IName name = xlsxWorkbookProp.CreateName();
 		name.NameName = "TestRange";
 		name.RefersToFormula = "Test!$B$2:$B$3";
 
-		ICell? cell1 = _sheet.GetCellFromReference("B2");
-		ICell? cell2 = _sheet.GetCellFromReference("B3");
+		ICell? cell1 = sheetProp.GetCellFromReference("B2");
+		ICell? cell2 = sheetProp.GetCellFromReference("B3");
 		cell1?.SetCellValue("Test1");
 		cell2?.SetCellValue("Test2");
 
 		// Act
-		_xlsxWorkbook.ClearAllFromName("TestRange");
+		xlsxWorkbookProp.ClearAllFromName("TestRange");
 
 		// Assert
-		_sheet.GetRow(1).GetCell(1).ShouldBeNull();
-		_sheet.GetRow(2).GetCell(1).ShouldBeNull();
+		sheetProp.GetRow(1).GetCell(1).ShouldBeNull();
+		sheetProp.GetRow(2).GetCell(1).ShouldBeNull();
 	}
 
 	[RetryFact(3)]
@@ -509,10 +509,10 @@ public sealed class CommonTests : IDisposable
 		List<string> columnNames = ["Col1", "Col2"];
 
 		// Act
-		_xlsxWorkbook.CreateTable("Test", "TestTable", 0, 1, 0, 2, columnNames);
+		xlsxWorkbookProp.CreateTable("Test", "TestTable", 0, 1, 0, 2, columnNames);
 
 		// Assert
-		XSSFSheet sheet = (XSSFSheet)_xlsxWorkbook.GetSheet("Test");
+		XSSFSheet sheet = (XSSFSheet)xlsxWorkbookProp.GetSheet("Test");
 		XSSFTable? table = sheet.GetTables().FirstOrDefault();
 		table.ShouldNotBeNull();
 		table.Name.ShouldBe("TestTable");
@@ -527,10 +527,10 @@ public sealed class CommonTests : IDisposable
 	public void GetRange_ReturnsCorrectCellArray()
 	{
 		// Arrange
-		ICell? cell1 = _sheet.GetCellFromReference("A1");
-		ICell? cell2 = _sheet.GetCellFromReference("B1");
-		ICell? cell3 = _sheet.GetCellFromReference("A2");
-		ICell? cell4 = _sheet.GetCellFromReference("B2");
+		ICell? cell1 = sheetProp.GetCellFromReference("A1");
+		ICell? cell2 = sheetProp.GetCellFromReference("B1");
+		ICell? cell3 = sheetProp.GetCellFromReference("A2");
+		ICell? cell4 = sheetProp.GetCellFromReference("B2");
 
 		cell1?.SetCellValue("1");
 		cell2?.SetCellValue("2");
@@ -538,7 +538,7 @@ public sealed class CommonTests : IDisposable
 		cell4?.SetCellValue("4");
 
 		// Act
-		ICell[,] range = _sheet.GetRange("A1:B2");
+		ICell[,] range = sheetProp.GetRange("A1:B2");
 
 		// Assert
 		range.GetLength(0).ShouldBe(2); // Rows
@@ -554,8 +554,8 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		CellRangeAddress mergedRange = new(0, 1, 0, 1); // A1:B2
-		_sheet.AddMergedRegion(mergedRange);
-		ICell? cell = _sheet.GetCellFromReference("A1");
+		sheetProp.AddMergedRegion(mergedRange);
+		ICell? cell = sheetProp.GetCellFromReference("A1");
 
 		// Act
 		CellRangeAddress? result = cell.GetRangeOfMergedCells();
@@ -572,11 +572,11 @@ public sealed class CommonTests : IDisposable
 	public void GetRangeWidthInPx_ReturnsCorrectWidth()
 	{
 		// Arrange
-		_sheet.SetColumnWidth(0, 20 * 256); // 20 characters width
-		_sheet.SetColumnWidth(1, 15 * 256); // 15 characters width
+		sheetProp.SetColumnWidth(0, 20 * 256); // 20 characters width
+		sheetProp.SetColumnWidth(1, 15 * 256); // 15 characters width
 
 		// Act
-		int width = _sheet.GetRangeWidthInPx(0, 1);
+		int width = sheetProp.GetRangeWidthInPx(0, 1);
 
 		// Assert
 		width.ShouldBeGreaterThan(0);
@@ -586,13 +586,13 @@ public sealed class CommonTests : IDisposable
 	public void GetRangeHeightInPx_ReturnsCorrectHeight()
 	{
 		// Arrange
-		IRow row1 = _sheet.CreateRow(0);
-		IRow row2 = _sheet.CreateRow(1);
+		IRow row1 = sheetProp.CreateRow(0);
+		IRow row2 = sheetProp.CreateRow(1);
 		row1.Height = 20 * 20; // 20 points
 		row2.Height = 15 * 20; // 15 points
 
 		// Act
-		int height = _sheet.GetRangeHeightInPx(0, 1);
+		int height = sheetProp.GetRangeHeightInPx(0, 1);
 
 		// Assert
 		height.ShouldBeGreaterThan(0);
@@ -606,7 +606,7 @@ public sealed class CommonTests : IDisposable
 	public void GetStringValue_ReturnsCorrectString(CellType cellType, object? value, string expected)
 	{
 		// Arrange
-		ICell cell = _sheet.CreateRow(0).CreateCell(0);
+		ICell cell = sheetProp.CreateRow(0).CreateCell(0);
 		switch (cellType)
 		{
 			case CellType.Numeric:
@@ -662,15 +662,15 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		List<string> columnNames = ["Col1", "Col2"];
-		_xlsxWorkbook.CreateTable("Test", "TestTable", 0, 1, 0, 2, columnNames);
+		xlsxWorkbookProp.CreateTable("Test", "TestTable", 0, 1, 0, 2, columnNames);
 
-		ICell? cell1 = _sheet.GetCellFromReference("A2");
-		ICell? cell2 = _sheet.GetCellFromReference("B2");
+		ICell? cell1 = sheetProp.GetCellFromReference("A2");
+		ICell? cell2 = sheetProp.GetCellFromReference("B2");
 		cell1?.SetCellValue("Value1");
 		cell2?.SetCellValue("Value2");
 
 		await using MemoryStream ms = new();
-		_xlsxWorkbook.Write(ms, true);
+		xlsxWorkbookProp.Write(ms, true);
 		ms.Position = 0;
 
 		// Act
@@ -793,7 +793,7 @@ public sealed class CommonTests : IDisposable
 		};
 
 		// Act
-		ICellStyle style = _xlsxWorkbook.GetCustomStyle(borderStyles: borderStyles);
+		ICellStyle style = xlsxWorkbookProp.GetCustomStyle(borderStyles: borderStyles);
 
 		// Assert
 		style.ShouldNotBeNull();
@@ -814,7 +814,7 @@ public sealed class CommonTests : IDisposable
 		const string hexColor = "#FF0000";
 
 		// Act
-		ICellStyle style = _xlsWorkbook.GetCustomStyle(hexColor);
+		ICellStyle style = xlsWorkbookProp.GetCustomStyle(hexColor);
 
 		// Assert
 		style.ShouldNotBeNull();
@@ -829,7 +829,7 @@ public sealed class CommonTests : IDisposable
 		const short colorIndex = HSSFColor.Red.Index;
 
 		// Act
-		ICellStyle style = _xlsxWorkbook.GetCustomStyle(hssfColor: colorIndex);
+		ICellStyle style = xlsxWorkbookProp.GetCustomStyle(hssfColor: colorIndex);
 
 		// Assert
 		style.ShouldNotBeNull();
@@ -844,7 +844,7 @@ public sealed class CommonTests : IDisposable
 	public void GetStandardCellStyle_WithSpecialStyles_ReturnsCorrectStyle(EStyle style)
 	{
 		// Act
-		ICellStyle cellStyle = _xlsxWorkbook.GetStandardCellStyle(style);
+		ICellStyle cellStyle = xlsxWorkbookProp.GetStandardCellStyle(style);
 
 		// Assert
 		cellStyle.ShouldNotBeNull();
@@ -872,7 +872,7 @@ public sealed class CommonTests : IDisposable
 	public void GetFont_WithImageBackground_ReturnsCorrectFont()
 	{
 		// Act
-		IFont font = _xlsxWorkbook.GetFont(EFont.ImageBackground);
+		IFont font = xlsxWorkbookProp.GetFont(EFont.ImageBackground);
 
 		// Assert
 		font.ShouldNotBeNull();
@@ -922,12 +922,12 @@ public sealed class CommonTests : IDisposable
 
 		for (int i = Math.Min(startRow, endRow); i <= Math.Max(startRow, endRow); i++)
 		{
-			IRow row = _sheet.CreateRow(i);
+			IRow row = sheetProp.CreateRow(i);
 			row.Height = 20 * 20; // 20 points
 		}
 
 		// Act
-		int height = _sheet.GetRangeHeightInPx(startRow, endRow);
+		int height = sheetProp.GetRangeHeightInPx(startRow, endRow);
 
 		// Assert
 		height.ShouldBeGreaterThan(0);
@@ -942,11 +942,11 @@ public sealed class CommonTests : IDisposable
 
 		for (int i = Math.Min(startCol, endCol); i <= Math.Max(startCol, endCol); i++)
 		{
-			_sheet.SetColumnWidth(i, .0001); // Set to effectively 0 to test warning path (actual 0 does not work)
+			sheetProp.SetColumnWidth(i, .0001); // Set to effectively 0 to test warning path (actual 0 does not work)
 		}
 
 		// Act
-		int width = _sheet.GetRangeWidthInPx(startCol, endCol);
+		int width = sheetProp.GetRangeWidthInPx(startCol, endCol);
 
 		// Assert
 		width.ShouldBe(0);
@@ -972,7 +972,7 @@ public sealed class CommonTests : IDisposable
 	public void GetRangeOfMergedCells_WithNonMergedCell_ReturnsSingleCellRange()
 	{
 		// Arrange
-		ICell cell = _sheet.CreateRow(0).CreateCell(0);
+		ICell cell = sheetProp.CreateRow(0).CreateCell(0);
 		cell.SetCellValue("Test");
 
 		// Act
@@ -994,16 +994,16 @@ public sealed class CommonTests : IDisposable
 	public void AddImage_WithNamedRange_AddsImageCorrectly()
 	{
 		// Arrange
-		IName name = _xlsxWorkbook.CreateName();
+		IName name = xlsxWorkbookProp.CreateName();
 		name.NameName = "ImageCell";
 		name.RefersToFormula = "Test!$B$2";
 		byte[] imageData = File.ReadAllBytes("TestData/test.png");
 
 		// Act
-		_xlsxWorkbook.AddImage(imageData, "ImageCell");
+		xlsxWorkbookProp.AddImage(imageData, "ImageCell");
 
 		// Assert
-		XSSFSheet sheet = (XSSFSheet)_sheet;
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
 		((XSSFDrawing)sheet.CreateDrawingPatriarch()).GetShapes().Count.ShouldBe(1);
 	}
 
@@ -1016,16 +1016,16 @@ public sealed class CommonTests : IDisposable
 
 		foreach ((string name, int i) in cellNames.Select((n, i) => (n, i)))
 		{
-			IName namedRange = _xlsxWorkbook.CreateName();
+			IName namedRange = xlsxWorkbookProp.CreateName();
 			namedRange.NameName = name;
 			namedRange.RefersToFormula = $"Test!$B${2 + i}";
 		}
 
 		// Act
-		_xlsxWorkbook.AddImages(imageData, cellNames);
+		xlsxWorkbookProp.AddImages(imageData, cellNames);
 
 		// Assert
-		XSSFSheet sheet = (XSSFSheet)_sheet;
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
 		((XSSFDrawing)sheet.CreateDrawingPatriarch()).GetShapes().Count.ShouldBe(2);
 	}
 
@@ -1037,10 +1037,10 @@ public sealed class CommonTests : IDisposable
 		const string range = "B2:C3";
 
 		// Act
-		_xlsxWorkbook.AddImage(_sheet, imageData, range);
+		xlsxWorkbookProp.AddImage(sheetProp, imageData, range);
 
 		// Assert
-		XSSFSheet sheet = (XSSFSheet)_sheet;
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
 		XSSFDrawing drawings = (XSSFDrawing)sheet.CreateDrawingPatriarch();
 		drawings.GetShapes().Count.ShouldBe(1);
 	}
@@ -1053,10 +1053,10 @@ public sealed class CommonTests : IDisposable
 		CellRangeAddress range = new(1, 2, 1, 2); // B2:C3
 
 		// Act
-		_xlsxWorkbook.AddImage(_sheet, imageData, range);
+		xlsxWorkbookProp.AddImage(sheetProp, imageData, range);
 
 		// Assert
-		XSSFSheet sheet = (XSSFSheet)_sheet;
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
 		XSSFDrawing drawings = (XSSFDrawing)sheet.CreateDrawingPatriarch();
 		drawings.GetShapes().Count.ShouldBe(1);
 	}
@@ -1066,13 +1066,13 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		byte[] imageData = File.ReadAllBytes("TestData/test.png");
-		ICell cell = _sheet.CreateRow(1).CreateCell(1); // B2
+		ICell cell = sheetProp.CreateRow(1).CreateCell(1); // B2
 
 		// Act
-		_xlsxWorkbook.AddImage(_sheet, imageData, cell);
+		xlsxWorkbookProp.AddImage(sheetProp, imageData, cell);
 
 		// Assert
-		XSSFSheet sheet = (XSSFSheet)_sheet;
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
 		XSSFDrawing drawings = (XSSFDrawing)sheet.CreateDrawingPatriarch();
 		drawings.GetShapes().Count.ShouldBe(1);
 	}
@@ -1088,10 +1088,10 @@ public sealed class CommonTests : IDisposable
         ];
 
 		// Act
-		_xlsxWorkbook.AddImages(_sheet, imageData, ranges);
+		xlsxWorkbookProp.AddImages(sheetProp, imageData, ranges);
 
 		// Assert
-		XSSFSheet sheet = (XSSFSheet)_sheet;
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
 		XSSFDrawing drawings = (XSSFDrawing)sheet.CreateDrawingPatriarch();
 		drawings.GetShapes().Count.ShouldBe(2);
 	}
@@ -1102,13 +1102,13 @@ public sealed class CommonTests : IDisposable
 		// Arrange
 		byte[] imageData = File.ReadAllBytes("TestData/test.png");
 		CellRangeAddress area = new(1, 2, 1, 2); // B2:C3
-		IDrawing<IShape> drawing = _sheet.CreateDrawingPatriarch();
+		IDrawing<IShape> drawing = sheetProp.CreateDrawingPatriarch();
 
 		// Act
-		_xlsxWorkbook.AddPicture(_sheet, area, imageData, drawing);
+		xlsxWorkbookProp.AddPicture(sheetProp, area, imageData, drawing);
 
 		// Assert
-		XSSFSheet sheet = (XSSFSheet)_sheet;
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
 		object picture = ((XSSFDrawing)sheet.CreateDrawingPatriarch()).GetShapes()[0];
 		picture.ShouldNotBeNull();
 	}
@@ -1122,10 +1122,10 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		await using MemoryStream ms = new();
-		IRow headerRow = _xlsWorkbook.CreateSheet("Test").CreateRow(0);
+		IRow headerRow = xlsWorkbookProp.CreateSheet("Test").CreateRow(0);
 		headerRow.CreateCell(0).SetCellValue("Column1");
 		headerRow.CreateCell(1).SetCellValue("Column2");
-		_xlsWorkbook.Write(ms, true);
+		xlsWorkbookProp.Write(ms, true);
 		ms.Position = 0;
 
 		// Act
@@ -1142,11 +1142,11 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		await using MemoryStream ms = new();
-		_xlsxWorkbook.CreateSheet("Sheet1");
-		ISheet sheet2 = _xlsxWorkbook.CreateSheet("Sheet2");
+		xlsxWorkbookProp.CreateSheet("Sheet1");
+		ISheet sheet2 = xlsxWorkbookProp.CreateSheet("Sheet2");
 		IRow headerRow = sheet2.CreateRow(0);
 		headerRow.CreateCell(0).SetCellValue("SpecialColumn");
-		_xlsxWorkbook.Write(ms, true);
+		xlsxWorkbookProp.Write(ms, true);
 		ms.Position = 0;
 
 		// Act
@@ -1161,12 +1161,12 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		await using MemoryStream ms = new();
-		IRow headerRow = _sheet.CreateRow(0);
+		IRow headerRow = sheetProp.CreateRow(0);
 		for (int i = 0; i < 5; i++)
 		{
 			headerRow.CreateCell(i).SetCellValue($"Column{i + 1}");
 		}
-		_xlsxWorkbook.Write(ms, true);
+		xlsxWorkbookProp.Write(ms, true);
 		ms.Position = 0;
 
 		// Act
@@ -1181,10 +1181,10 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		await using MemoryStream ms = new();
-		IRow dataRow = _sheet.CreateRow(0);
+		IRow dataRow = sheetProp.CreateRow(0);
 		dataRow.CreateCell(0).SetCellValue("Value1");
 		dataRow.CreateCell(1).SetCellValue("Value2");
-		_xlsxWorkbook.Write(ms, true);
+		xlsxWorkbookProp.Write(ms, true);
 		ms.Position = 0;
 
 		// Act
@@ -1201,9 +1201,9 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		await using MemoryStream ms = new();
-		_xlsxWorkbook.CreateTable("Test", "FirstTable", 0, 1, 0, 2, ["Col1", "Col2"]);
-		_xlsxWorkbook.CreateTable("Test", "SecondTable", 0, 1, 3, 5, ["Col3", "Col4"]);
-		_xlsxWorkbook.Write(ms, true);
+		xlsxWorkbookProp.CreateTable("Test", "FirstTable", 0, 1, 0, 2, ["Col1", "Col2"]);
+		xlsxWorkbookProp.CreateTable("Test", "SecondTable", 0, 1, 3, 5, ["Col3", "Col4"]);
+		xlsxWorkbookProp.Write(ms, true);
 		ms.Position = 0;
 
 		// Act

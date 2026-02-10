@@ -7,22 +7,22 @@ namespace Web.Middleware.Tests;
 
 public sealed class ResponseSizeLoggingMiddlewareExtensionTests
 {
-	private readonly IApplicationBuilder _builder;
+	private readonly IApplicationBuilder builder;
 
 	public ResponseSizeLoggingMiddlewareExtensionTests()
 	{
-		_builder = A.Fake<IApplicationBuilder>();
+		builder = A.Fake<IApplicationBuilder>();
 		// Setup UseMiddleware to return the builder for fluent chaining
-		A.CallTo(() => _builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(_builder);
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(builder);
 	}
 
 	[RetryFact(3)]
 	public void UseResponseSizeLogging_RegistersMiddleware()
 	{
 		// Act
-		IApplicationBuilder result = _builder.UseResponseSizeLogging();
+		IApplicationBuilder result = builder.UseResponseSizeLogging();
 
 		// Assert
-		result.ShouldBe(_builder);
+		result.ShouldBe(builder);
 	}
 }

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using CommonNetFuncs.DeepClone;
@@ -9,18 +9,18 @@ namespace BenchmarkSuite;
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 public class DeepCloneBenchmarks
 {
-	private SimpleClass? _simpleObject;
-	private ComplexClass? _complexObject;
-	private NestedClass? _nestedObject;
-	private int[]? _intArray;
-	private List<string>? _stringList;
-	private Dictionary<string, object>? _dictionary;
+	private SimpleClass? simpleObject;
+	private ComplexClass? complexObject;
+	private NestedClass? nestedObject;
+	private int[]? intArray;
+	private List<string>? stringList;
+	private Dictionary<string, object>? dictionary;
 
 	[GlobalSetup]
 	public void Setup()
 	{
 		// Simple object with basic types
-		_simpleObject = new SimpleClass
+		simpleObject = new SimpleClass
 		{
 			Id = 42,
 			Name = "Test Object",
@@ -29,7 +29,7 @@ public class DeepCloneBenchmarks
 		};
 
 		// Complex object with various field types
-		_complexObject = new ComplexClass
+		complexObject = new ComplexClass
 		{
 			Id = 100,
 			Name = "Complex Test",
@@ -44,7 +44,7 @@ public class DeepCloneBenchmarks
 		};
 
 		// Deeply nested object
-		_nestedObject = new NestedClass
+		nestedObject = new NestedClass
 		{
 			Level = 1,
 			Child2 = new NestedClass
@@ -63,60 +63,60 @@ public class DeepCloneBenchmarks
 		};
 
 		// Array
-		_intArray = Enumerable.Range(0, 100).ToArray();
+		intArray = Enumerable.Range(0, 100).ToArray();
 
 		// List
-		_stringList = Enumerable.Range(0, 50).Select(i => $"Item_{i}").ToList();
+		stringList = Enumerable.Range(0, 50).Select(i => $"Item_{i}").ToList();
 
 		// Dictionary
-		_dictionary = Enumerable.Range(0, 20).ToDictionary(i => $"key_{i}", i => (object)i);
+		dictionary = Enumerable.Range(0, 20).ToDictionary(i => $"key_{i}", i => (object)i);
 	}
 
 	[Benchmark]
 	public SimpleClass? CloneSimpleObject()
 	{
-		return _simpleObject.DeepClone();
+		return simpleObject.DeepClone();
 	}
 
 	[Benchmark]
 	public SimpleClass? CloneSimpleObjectNoCache()
 	{
-		return _simpleObject.DeepClone(useCache: false);
+		return simpleObject.DeepClone(useCache: false);
 	}
 
 	[Benchmark]
 	public ComplexClass? CloneComplexObject()
 	{
-		return _complexObject.DeepClone();
+		return complexObject.DeepClone();
 	}
 
 	[Benchmark]
 	public ComplexClass? CloneComplexObjectNoCache()
 	{
-		return _complexObject.DeepClone(useCache: false);
+		return complexObject.DeepClone(useCache: false);
 	}
 
 	[Benchmark]
 	public NestedClass? CloneNestedObject()
 	{
-		return _nestedObject.DeepClone();
+		return nestedObject.DeepClone();
 	}
 
 	[Benchmark]
 	public int[]? CloneArray()
 	{
-		return _intArray.DeepClone();
+		return intArray.DeepClone();
 	}
 
 	[Benchmark]
 	public List<string>? CloneList()
 	{
-		return _stringList.DeepClone();
+		return stringList.DeepClone();
 	}
 
 	[Benchmark]
 	public Dictionary<string, object>? CloneDictionary()
 	{
-		return _dictionary.DeepClone();
+		return dictionary.DeepClone();
 	}
 }

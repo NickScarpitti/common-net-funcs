@@ -304,7 +304,7 @@ public sealed class StreamsTests
 		long originalPosition = stream.Position;
 
 		// Act
-		ECompressionType detectedType = await Streams.DetectCompressionTypeSeekable(stream);
+		ECompressionType detectedType = await DetectCompressionTypeSeekable(stream);
 
 		// Assert
 		detectedType.ShouldBe(ECompressionType.None);
@@ -363,7 +363,7 @@ public sealed class StreamsTests
 	public void AnalyzeHeader_Should_Return_None_For_Invalid_ZLib_Headers(byte[] header, int bytesRead, ECompressionType expected)
 	{
 		// Act
-		ECompressionType result = Streams.AnalyzeHeader(header, bytesRead);
+		ECompressionType result = AnalyzeHeader(header, bytesRead);
 
 		// Assert
 		result.ShouldBe(expected);
@@ -540,7 +540,7 @@ public sealed class StreamsTests
 		byte[] compressedData = await originalData.Compress(ECompressionType.Deflate, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Act
-		bool isDeflate = await Streams.IsDeflateCompressed(compressedData);
+		bool isDeflate = await IsDeflateCompressed(compressedData);
 
 		// Assert
 		isDeflate.ShouldBeTrue();
@@ -553,7 +553,7 @@ public sealed class StreamsTests
 		byte[] originalData = "Hello, World! This is not compressed data."u8.ToArray();
 
 		// Act
-		bool isDeflate = await Streams.IsDeflateCompressed(originalData);
+		bool isDeflate = await IsDeflateCompressed(originalData);
 
 		// Assert
 		isDeflate.ShouldBeFalse();
@@ -566,7 +566,7 @@ public sealed class StreamsTests
 		byte[] emptyData = [];
 
 		// Act
-		bool isDeflate = await Streams.IsDeflateCompressed(emptyData);
+		bool isDeflate = await IsDeflateCompressed(emptyData);
 
 		// Assert
 		isDeflate.ShouldBeFalse();
@@ -584,7 +584,7 @@ public sealed class StreamsTests
 		await using MemoryStream compressedStream = new(compressedData);
 
 		// Act
-		(ECompressionType detectedType, Stream resultStream) = await Streams.DetectCompressionTypeAndReset(compressedStream);
+		(ECompressionType detectedType, Stream resultStream) = await DetectCompressionTypeAndReset(compressedStream);
 
 		// Assert
 		detectedType.ShouldBe(compressionType);
@@ -605,7 +605,7 @@ public sealed class StreamsTests
 		await using NonSeekableStream nonSeekableStream = new(compressedData);
 
 		// Act
-		(ECompressionType detectedType, Stream resultStream) = await Streams.DetectCompressionTypeAndReset(nonSeekableStream);
+		(ECompressionType detectedType, Stream resultStream) = await DetectCompressionTypeAndReset(nonSeekableStream);
 
 		// Assert
 		detectedType.ShouldBe(compressionType);

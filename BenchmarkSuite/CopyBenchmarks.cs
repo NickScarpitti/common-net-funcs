@@ -115,13 +115,13 @@ public class CopyBenchmarks
 	}
 
 	[Benchmark]
-	public SimpleClassDto ShallowCopyDifferentType_Cached()
+	public SimpleClassDto? ShallowCopyDifferentType_Cached()
 	{
 		return simpleSource!.CopyPropertiesToNew<SimpleClass, SimpleClassDto>(useCache: true);
 	}
 
 	[Benchmark]
-	public SimpleClassDto ShallowCopyDifferentType_Uncached()
+	public SimpleClassDto? ShallowCopyDifferentType_Uncached()
 	{
 		return simpleSource!.CopyPropertiesToNew<SimpleClass, SimpleClassDto>(useCache: false);
 	}

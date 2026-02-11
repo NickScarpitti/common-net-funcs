@@ -1625,7 +1625,7 @@ public sealed class CopyTests
 		{
 			// Force using the reflection path which has cancellation support
 			Dictionary<int, SourceClass> dict = largeSource.ToDictionary(x => x.Id);
-			_ = typeof(Copy).GetMethod("CopyCollection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+			_ = typeof(Copy).GetMethod("CopyCollection", BindingFlags.NonPublic | BindingFlags.Static)!
 				.Invoke(null, new object[] { dict, typeof(Dictionary<int, DestinationClass>), -1, cts.Token });
 		});
 
@@ -2207,7 +2207,7 @@ public sealed class CopyTests
 	public void CopyCollectionRuntime_WithNullSource_ShouldReturnNull()
 	{
 		// Arrange & Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
 			.Invoke(null, new object?[] { null, typeof(List<int>), 0, -1 });
 
 		// Assert
@@ -2218,7 +2218,7 @@ public sealed class CopyTests
 	public void CopyItemRuntime_WithNullItem_ShouldReturnNull()
 	{
 		// Arrange & Act
-		object? result = typeof(Copy).GetMethod("CopyItemRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+		object? result = typeof(Copy).GetMethod("CopyItemRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
 			.Invoke(null, new object?[] { null, typeof(int), 0, -1 });
 
 		// Assert
@@ -2229,7 +2229,7 @@ public sealed class CopyTests
 	public void CopyObjectRuntime_WithNullSource_ShouldReturnNull()
 	{
 		// Arrange & Act
-		object? result = typeof(Copy).GetMethod("CopyObjectRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+		object? result = typeof(Copy).GetMethod("CopyObjectRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
 			.Invoke(null, new object?[] { null, typeof(DestinationClass), 0, -1 });
 
 		// Assert
@@ -2243,7 +2243,7 @@ public sealed class CopyTests
 		SourceClass source = new() { Id = 42, Name = "Test" };
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyObjectRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+		object? result = typeof(Copy).GetMethod("CopyObjectRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
 			.Invoke(null, new object[] { source, typeof(DestinationClass), 0, -1 });
 
 		// Assert
@@ -2260,7 +2260,7 @@ public sealed class CopyTests
 		const int item = 42;
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyItemRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+		object? result = typeof(Copy).GetMethod("CopyItemRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
 			.Invoke(null, new object[] { item, typeof(int), 0, -1 });
 
 		// Assert
@@ -2274,7 +2274,7 @@ public sealed class CopyTests
 		int[] source = new[] { 1, 2, 3 };
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
 			.Invoke(null, new object[] { source, typeof(int[]), 0, -1 });
 
 		// Assert
@@ -2290,7 +2290,7 @@ public sealed class CopyTests
 		Dictionary<string, int> source = new() { ["key1"] = 1, ["key2"] = 2 };
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
 			.Invoke(null, new object[] { source, typeof(Dictionary<string, int>), 0, -1 });
 
 		// Assert
@@ -2306,7 +2306,7 @@ public sealed class CopyTests
 		List<int> source = new() { 1, 2, 3 };
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
 			.Invoke(null, new object[] { source, typeof(List<int>), 0, -1 });
 
 		// Assert
@@ -2322,7 +2322,7 @@ public sealed class CopyTests
 		const string source = "test";
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
 			.Invoke(null, new object[] { source, typeof(string), 0, -1 });
 
 		// Assert

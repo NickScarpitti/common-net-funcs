@@ -60,3 +60,46 @@ public class TestEntityWithCompoundKey
 
 	public required string Name { get; set; }
 }
+
+// Circular reference test types
+public class CircularRefDbContext(DbContextOptions<CircularRefDbContext> options) : DbContext(options)
+{
+	public DbSet<ParentEntity> Parents => Set<ParentEntity>();
+
+	public DbSet<ChildEntity> Children => Set<ChildEntity>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<ParentEntity>()
+			.HasKey(e => e.Id);
+
+		modelBuilder.Entity<ChildEntity>()
+			.HasKey(e => e.Id);
+
+		modelBuilder.Entity<ChildEntity>()
+			.HasOne(c => c.Parent)
+			.WithMany(p => p.Children)
+			.HasForeignKey(c => c.ParentId)
+			.OnDelete(DeleteBehavior.Cascade);
+	}
+}
+
+public class ParentEntity
+{
+	public int Id { get; set; }
+
+	public required string Name { get; set; }
+
+	public ICollection<ChildEntity> Children { get; set; } = new List<ChildEntity>();
+}
+
+public class ChildEntity
+{
+	public int Id { get; set; }
+
+	public required string Name { get; set; }
+
+	public int ParentId { get; set; }
+
+	public ParentEntity? Parent { get; set; }
+}

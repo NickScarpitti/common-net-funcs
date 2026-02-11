@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using CommonNetFuncs.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.DependencyInjection;
 using Z.EntityFramework.Plus;
@@ -109,7 +110,56 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 			if (globalFilterOptions?.DisableAllFilters == true || (globalFilterOptions?.FilterNamesToDisable.AnyFast() ?? false))
 			{
 				// Need to apply global filter options to the query in order to find the entity to delete, since Find/FindAsync does not allow for ignoring filters
-				deleteItem = await GetByKey(false, key, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
+				// Build query directly in this context to avoid cross-context issues
+
+				// Get or create an expression builder for this entity type
+				Func<object, Expression<Func<TEntity, bool>>> expressionBuilder = singleKeyExpressionBuilder.GetOrAdd(typeof(TEntity), type =>
+				{
+					// Get cached entity metadata or retrieve and cache it
+					EntityKeyMetadata keyMetadata = entityKeyCache.GetOrAdd(type, t =>
+					{
+						IEntityType? entityType = context.Model.FindEntityType(t);
+						IKey? primaryKey_Property = entityType?.FindPrimaryKey();
+
+						if (primaryKey_Property == null || primaryKey_Property.Properties.Count != 1)
+						{
+							throw new InvalidOperationException($"Entity {t.Name} does not have a single-field primary key. Use the array overload instead.");
+						}
+
+						return new EntityKeyMetadata
+						{
+							KeyPropertyName = primaryKey_Property.Properties[0].Name,
+							KeyPropertyType = primaryKey_Property.Properties[0].ClrType
+						};
+					});
+
+					// Return a function that builds an expression tree with the actual key value
+					return (keyValue) =>
+					{
+						ParameterExpression parameter = Expression.Parameter(typeof(TEntity), "x");
+						MemberExpression property = Expression.Property(parameter, keyMetadata.KeyPropertyName!);
+						ConstantExpression constant = Expression.Constant(keyValue, keyMetadata.KeyPropertyType!);
+						BinaryExpression equality = Expression.Equal(property, constant);
+						return Expression.Lambda<Func<TEntity, bool>>(equality, parameter);
+					};
+				});
+
+				// Build the expression with the actual primary key value
+				Expression<Func<TEntity, bool>> lambda = expressionBuilder(key);
+
+				IQueryable<TEntity> query = table.Where(lambda);
+
+				// Apply filter disabling
+				if (globalFilterOptions.FilterNamesToDisable.AnyFast())
+				{
+					query = query.IgnoreQueryFilters(globalFilterOptions.FilterNamesToDisable);
+				}
+				else if (globalFilterOptions.DisableAllFilters)
+				{
+					query = query.IgnoreQueryFilters();
+				}
+
+				deleteItem = await query.FirstOrDefaultAsync().ConfigureAwait(false);
 			}
 			else
 			{

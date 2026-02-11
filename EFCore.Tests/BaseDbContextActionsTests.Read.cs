@@ -4280,6 +4280,686 @@ public sealed partial class BaseDbContextActionsTests
 	#endregion
 
 	#region Additional Read Tests
+
+	[Fact]
+	public async Task GetByKey_Array_WithGlobalFilterOptions_DisableAllFilters_ShouldWork()
+	{
+		// Arrange
+		TestEntity entity = fixture.Create<TestEntity>();
+		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		TestEntity? result = await testContext.GetByKey(new object[] { entity.Id }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Fact]
+	public async Task GetByKey_Array_WithGlobalFilterOptions_FilterNamesToDisable_ShouldWork()
+	{
+		// Arrange
+		TestEntity entity = fixture.Create<TestEntity>();
+		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = ["TestFilter"] };
+
+		// Act
+		TestEntity? result = await testContext.GetByKey(new object[] { entity.Id }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Fact]
+	public async Task GetByKeyFull_Array_WithGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		TestEntity entity = fixture.Create<TestEntity>();
+		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		TestEntity? result = await testContext.GetByKeyFull(new object[] { entity.Id }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Fact]
+	public async Task GetAll_WithGlobalFilterOptions_AndProjection_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		List<string>? results = await testContext.GetAll(e => e.Name, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public void GetAllStreaming_WithGlobalFilterOptions_ShouldReturnStreamedResults()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		context.TestEntities.AddRange(entities);
+		context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false, FilterNamesToDisable = [] };
+
+		// Act
+		IAsyncEnumerable<TestEntity>? stream = testContext.GetAllStreaming(globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		stream.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public void GetAllStreaming_WithProjection_AndGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		context.TestEntities.AddRange(entities);
+		context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		IAsyncEnumerable<string>? stream = testContext.GetAllStreaming(e => e.Name, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		stream.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task GetWithFilter_WithGlobalFilterOptions_AndProjection_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		List<string>? results = await testContext.GetWithFilter(e => e.Id > 0, e => e.Name, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task GetOneWithFilter_WithGlobalFilterOptions_AndProjection_ShouldWork()
+	{
+		// Arrange
+		TestEntity entity = fixture.Create<TestEntity>();
+		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		string? result = await testContext.GetOneWithFilter(e => e.Id == entity.Id, e => e.Name, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ShouldBe(entity.Name);
+	}
+
+	[Fact]
+	public async Task GetMaxByOrder_WithWhereExpression_AndGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		TestEntity? result = await testContext.GetMaxByOrder(e => e.Id > 0, e => e.Id, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task GetMinByOrder_WithWhereExpression_AndGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		TestEntity? result = await testContext.GetMinByOrder(e => e.Id > 0, e => e.Id, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task GetMax_WithGlobalFilterOptions_AndWhereExpression_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		int result = await testContext.GetMax(e => e.Id > 0, e => e.Id, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldBeGreaterThan(0);
+	}
+
+	[Fact]
+	public async Task GetMin_WithGlobalFilterOptions_AndWhereExpression_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		int result = await testContext.GetMin(e => e.Id > 0, e => e.Id, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldBeGreaterThan(0);
+	}
+
+	[Fact]
+	public async Task GetWithPagingFilter_WithOrderByString_AndGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(e => e.Id > 0, e => e, "Id", 0, 2, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Entities.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task GetWithPagingFilter_WithAscendingOrderExpression_AndGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+
+		// Act
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(e => e.Id > 0, e => e, e => e.Id, 0, 2, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Entities.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public void GetQueryPagingWithFilterFull_WithOrderByString_AndGlobalFilterOptions_ShouldReturnQueryable()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		context.TestEntities.AddRange(entities);
+		context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(e => e.Id > 0, e => e, "Id", fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions);
+
+		// Assert
+		query.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task GetAllFull_WithProjection_WithGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		List<string>? results = await testContext.GetAllFull(e => e.Name, fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public void GetAllFullStreaming_WithProjection_AndGlobalFilterOptions_ShouldReturnStream()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		context.TestEntities.AddRange(entities);
+		context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = true };
+
+		// Act
+		IAsyncEnumerable<string>? stream = testContext.GetAllFullStreaming(e => e.Name, fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		stream.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public void GetAllFullStreaming_WithGlobalFilterOptions_ShouldReturnStream()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		context.TestEntities.AddRange(entities);
+		context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false, FilterNamesToDisable = [] };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		IAsyncEnumerable<TestEntity>? stream = testContext.GetAllFullStreaming(fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		stream.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task GetWithFilterFull_WithProjection_WithGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = null };
+
+		// Act
+		List<string>? results = await testContext.GetWithFilterFull(e => e.Id > 0, e => e.Name, fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		results.ShouldNotBeNull();
+		results.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public void GetWithFilterFullStreaming_WithProjection_WithGlobalFilterOptions_ShouldReturnStream()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		context.TestEntities.AddRange(entities);
+		context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = null };
+
+		// Act
+		IAsyncEnumerable<string>? stream = testContext.GetWithFilterFullStreaming(e => e.Id > 0, e => e.Name, fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		stream.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task GetWithPagingFilterFull_WithProjection_WithGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(e => e.Id > 0, e => e, "Id", 0, 2, fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Entities.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task GetWithPagingFilterFull_WithAscendingOrderExpression_WithGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = true };
+
+		// Act
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(e => e.Id > 0, e => e, e => e.Id, 0, 2, fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Entities.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public void GetQueryAllFull_WithProjection_AndGlobalFilterOptions_ShouldWork()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		context.TestEntities.AddRange(entities);
+		context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = null };
+
+		// Act
+		IQueryable<string> query = testContext.GetQueryAllFull(e => e.Name, fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Count().ShouldBe(3);
+	}
+
+	[Fact]
+	public void GetQueryWithFilterFull_WithProjection_WithGlobalFilterOptions_ShouldReturnQueryable()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		context.TestEntities.AddRange(entities);
+		context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = null };
+
+		// Act
+		IQueryable<string> query = testContext.GetQueryWithFilterFull(e => e.Id > 0, e => e.Name, fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions);
+
+		// Assert
+		query.ShouldNotBeNull();
+		query.Count().ShouldBe(3);
+	}
+
+	[Fact]
+	public void GetQueryPagingWithFilterFull_WithAscendingOrderExpression_AndGlobalFilterOptions_ShouldReturnQueryable()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		context.TestEntities.AddRange(entities);
+		context.SaveChanges();
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullQueryOptions = new() { SplitQueryOverride = null };
+
+		// Act
+		IQueryable<TestEntity> query = testContext.GetQueryPagingWithFilterFull(e => e.Id > 0, e => e, e => e.Id, fullQueryOptions: fullQueryOptions, globalFilterOptions: filterOptions);
+
+		// Assert
+		query.ShouldNotBeNull();
+	}
+
+	#endregion
+
+	#region Error Path and Edge Case Tests
+
+	[Fact]
+	public async Task GetByKeyFull_CompoundKey_WithGlobalFilterOptions_DisableAllFilters_ShouldWork()
+	{
+		// Arrange
+		TestEntityWithCompoundKey entity = fixture.Create<TestEntityWithCompoundKey>();
+		await context.TestEntitiesWithCompoundKey.AddAsync(entity, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntityWithCompoundKey, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		TestEntityWithCompoundKey? result = await testContext.GetByKeyFull(new object[] { entity.Key1, entity.Key2 }, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Key1.ShouldBe(entity.Key1);
+		result.Key2.ShouldBe(entity.Key2);
+	}
+
+	[Fact]
+	public async Task GetAllFull_WithGlobalFilterOptions_AndFullQueryOptions_ShouldReturnEntities()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = true };
+
+		// Act
+		List<TestEntity>? result = await testContext.GetAllFull(globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task GetAllFull_WithProjection_WithGlobalFilterOptions_AndFullQueryOptions_ShouldReturnProjectedEntities()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = true };
+
+		// Act
+		List<string>? result = await testContext.GetAllFull(e => e.Name, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task GetWithFilterFull_WithGlobalFilterOptions_DisableAllFilters_ShouldReturnFilteredEntities()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		List<TestEntity>? result = await testContext.GetWithFilterFull(e => e.Id > 0, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(5);
+	}
+
+	[Fact]
+	public async Task GetWithFilterFull_WithProjection_WithGlobalFilterOptions_DisableAllFilters_ShouldReturnProjectedEntities()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		List<string>? result = await testContext.GetWithFilterFull(e => e.Id > 0, e => e.Name, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(5);
+	}
+
+	[Fact]
+	public async Task GetOneWithFilterFull_WithGlobalFilterOptions_ShouldReturnFirstMatch()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		TestEntity? result = await testContext.GetOneWithFilterFull(e => e.Id > 0, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task GetOneWithFilterFull_WithProjection_WithGlobalFilterOptions_ShouldReturnProjectedMatch()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		string? result = await testContext.GetOneWithFilterFull(e => e.Id > 0, e => e.Name, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task GetMaxByOrderFull_WithGlobalFilterOptions_ShouldReturnMaxEntity()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(5).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		TestEntity? result = await testContext.GetMaxByOrderFull<int>(e => e.Id > 0, e => e.Id, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task GetWithPagingFilterFull_WithGlobalFilterOptions_ShouldReturnPagedResults()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(10).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
+
+		// Act - use orderByString instead of null
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(e => e.Id > 0, e => e, orderByString: "Id", skip: 0, pageSize: 5, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Entities.Count.ShouldBe(5);
+		result.TotalRecords.ShouldBe(10);
+	}
+
+	[Fact]
+	public async Task GetWithPagingFilterFull_WithOrderExpression_WithGlobalFilterOptions_ShouldReturnOrderedPagedResults()
+	{
+		// Arrange
+		List<TestEntity> entities = fixture.CreateMany<TestEntity>(10).ToList();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
+		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
+
+		// Act
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull<TestEntity, int>(e => e.Id > 0, e => e, e => e.Id, skip: 0, pageSize: 5, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Entities.Count.ShouldBe(5);
+		result.TotalRecords.ShouldBe(10);
+	}
+
 	#endregion
 
 	#region Helper Methods

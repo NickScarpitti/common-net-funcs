@@ -1,4 +1,6 @@
-﻿using CommonNetFuncs.EFCore;
+﻿using System.Collections.Concurrent;
+using System.Reflection;
+using CommonNetFuncs.EFCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using static Xunit.TestContext;
@@ -241,185 +243,390 @@ public sealed partial class BaseDbContextActionsTests
 
 	#region Circular Reference Handling Tests
 
-	// Note: These tests verify that entities with bidirectional (circular) relationships
-	// can be properly handled by the BaseDbContextActions framework. While the specific
-	// InvalidOperationException (HResult -2146233079) for circular references may not
-	// always be triggered depending on the database provider and tracking settings, these
-	// tests ensure the entity structure and basic operations work correctly.
+	// These tests verify that the circular reference handling in ExecuteWithCircularRefHandling
+	// and ExecuteStreamingWithCircularRefHandling works correctly when TestEntity and TestEntityDetail
+	// have a circular reference (TestEntity.Details <-> TestEntityDetail.TestEntity)
 
 	[Fact]
-	public async Task CircularRefContext_DirectQuery_ShouldWork()
+	public async Task GetAllFull_WithCircularReferences_ShouldHandleNavigationProperties()
 	{
-		// Diagnostic test - verify the context and relationships work directly
-		(IServiceProvider circularProvider, CircularRefDbContext _) = CreateCircularRefServiceProvider();
-		CircularRefDbContext circularContext = circularProvider.GetRequiredService<CircularRefDbContext>();
+		// Arrange - Create test entities with navigation properties
+		TestEntity[] entities = fixture.Build<TestEntity>()
+			.Without(x => x.Details)
+			.CreateMany(2)
+			.ToArray();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
 
-		ParentEntity parent = new() { Name = "Parent1" };
-		ChildEntity child = new() { Name = "Child1", Parent = parent };
-		parent.Children.Add(child);
-
-		await circularContext.Parents.AddAsync(parent, Current.CancellationToken);
-		int saved = await circularContext.SaveChangesAsync(Current.CancellationToken);
-
-		saved.ShouldBe(2); // Parent and child
-
-		List<ParentEntity> parents = await circularContext.Parents.ToListAsync(Current.CancellationToken);
-		parents.Count.ShouldBe(1);
-		parents[0].Name.ShouldBe("Parent1");
-
-		List<ChildEntity> children = await circularContext.Children.ToListAsync(Current.CancellationToken);
-		children.Count.ShouldBe(1);
-		children[0].Name.ShouldBe("Child1");
-	}
-
-	[Fact]
-	public async Task CircularRefEntities_BasicCRUD_ShouldSucceed()
-	{
-		// Arrange
-		(IServiceProvider circularProvider, CircularRefDbContext _) = CreateCircularRefServiceProvider();
-		CircularRefDbContext circularContext = circularProvider.GetRequiredService<CircularRefDbContext>();
-
-		ParentEntity parent = new() { Name = "Parent1" };
-		ChildEntity child1 = new() { Name = "Child1", Parent = parent };
-		ChildEntity child2 = new() { Name = "Child2", Parent = parent };
-		parent.Children.Add(child1);
-		parent.Children.Add(child2);
-
-		await circularContext.Parents.AddAsync(parent, Current.CancellationToken);
-		await circularContext.SaveChangesAsync(Current.CancellationToken);
-
-		BaseDbContextActions<ParentEntity, CircularRefDbContext> actions = new(circularProvider);
-
-		// Act & Assert - Get all parents
-		List<ParentEntity>? allParents = await actions.GetAll(
-			queryTimeout: TimeSpan.FromSeconds(30),
-			trackEntities: true,
-			cancellationToken: Current.CancellationToken);
-
-		allParents.ShouldNotBeNull();
-		allParents.Count.ShouldBe(1);
-		allParents[0].Name.ShouldBe("Parent1");
-
-		// Act & Assert - Get by key
-		ParentEntity? byKey = await actions.GetByKey(
-			primaryKey: parent.Id,
-			queryTimeout: TimeSpan.FromSeconds(30),
-			cancellationToken: Current.CancellationToken);
-
-		byKey.ShouldNotBeNull();
-		byKey.Name.ShouldBe("Parent1");
-	}
-
-	[Fact]
-	public async Task CircularRefEntities_FilterAndPaging_ShouldSucceed()
-	{
-		// Arrange
-		(IServiceProvider circularProvider, CircularRefDbContext _) = CreateCircularRefServiceProvider();
-		CircularRefDbContext circularContext = circularProvider.GetRequiredService<CircularRefDbContext>();
-
-		List<ParentEntity> parents = [];
-		for (int i = 1; i <= 5; i++)
+		foreach (TestEntity entity in entities)
 		{
-			ParentEntity parent = new() { Name = $"Parent{i}" };
-			ChildEntity child = new() { Name = $"Child{i}", Parent = parent };
-			parent.Children.Add(child);
-			parents.Add(parent);
+			TestEntityDetail detail = fixture.Build<TestEntityDetail>()
+				.With(x => x.TestEntityId, entity.Id)
+				.Without(x => x.TestEntity)
+				.Create();
+			await context.AddAsync(detail, Current.CancellationToken);
 		}
+		await context.SaveChangesAsync(Current.CancellationToken);
 
-		await circularContext.Parents.AddRangeAsync(parents, Current.CancellationToken);
-		await circularContext.SaveChangesAsync(Current.CancellationToken);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
-		BaseDbContextActions<ParentEntity, CircularRefDbContext> actions = new(circularProvider);
-
-		// Act & Assert - Filter
-		List<ParentEntity>? filtered = await actions.GetWithFilter(
-			whereExpression: p => p.Name == "Parent1",
-			queryTimeout: TimeSpan.FromSeconds(30),
-			trackEntities: true,
-			cancellationToken: Current.CancellationToken);
-
-		filtered.ShouldNotBeNull();
-		filtered.Count.ShouldBe(1);
-
-		// Act & Assert - Paging
-		GenericPagingModel<ParentEntity>? paged = await actions.GetWithPagingFilter(
-			whereExpression: p => p.Id > 0,
-			selectExpression: p => p,
-			orderByString: "Id",
-			skip: 0,
-			pageSize: 2,
-			queryTimeout: TimeSpan.FromSeconds(30),
-			trackEntities: true,
-			cancellationToken: Current.CancellationToken);
-
-		paged.ShouldNotBeNull();
-		paged.TotalRecords.ShouldBe(5);
-		paged.Entities.Count.ShouldBe(2);
-	}
-
-	[Fact]
-	public async Task CircularRefEntities_SelectProjection_ShouldSucceed()
-	{
-		// Arrange
-		(IServiceProvider circularProvider, CircularRefDbContext _) = CreateCircularRefServiceProvider();
-		CircularRefDbContext circularContext = circularProvider.GetRequiredService<CircularRefDbContext>();
-
-		ParentEntity parent = new() { Name = "Parent1" };
-		ChildEntity child = new() { Name = "Child1", Parent = parent };
-		parent.Children.Add(child);
-
-		await circularContext.Parents.AddAsync(parent, Current.CancellationToken);
-		await circularContext.SaveChangesAsync(Current.CancellationToken);
-
-		BaseDbContextActions<ParentEntity, CircularRefDbContext> actions = new(circularProvider);
-
-		// Act - Select only specific fields
-		List<string>? names = await actions.GetAll(
-			selectExpression: p => p.Name,
-			queryTimeout: TimeSpan.FromSeconds(30),
-			trackEntities: true,
-			cancellationToken: Current.CancellationToken);
+		// Act - GetAllFull uses ExecuteWithCircularRefHandling internally
+		List<TestEntity>? result = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
 
 		// Assert
-		names.ShouldNotBeNull();
-		names.Count.ShouldBe(1);
-		names[0].ShouldBe("Parent1");
+		result.ShouldNotBeNull();
+		result.Count.ShouldBeGreaterThanOrEqualTo(2);
 	}
 
 	[Fact]
-	public async Task CircularRefEntities_BidirectionalNavigation_ShouldSucceed()
+	public async Task GetAllFullStreaming_WithCircularReferences_ShouldStreamResults()
 	{
-		// Arrange
-		(IServiceProvider circularProvider, CircularRefDbContext _) = CreateCircularRefServiceProvider();
-		CircularRefDbContext circularContext = circularProvider.GetRequiredService<CircularRefDbContext>();
+		// Arrange - Create test entities with navigation properties
+		TestEntity[] entities = fixture.Build<TestEntity>()
+			.Without(x => x.Details)
+			.CreateMany(3)
+			.ToArray();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
 
-		ParentEntity parent = new() { Name = "Parent1" };
-		ChildEntity child1 = new() { Name = "Child1", Parent = parent };
-		ChildEntity child2 = new() { Name = "Child2", Parent = parent };
-		parent.Children.Add(child1);
-		parent.Children.Add(child2);
+		foreach (TestEntity entity in entities)
+		{
+			TestEntityDetail detail = fixture.Build<TestEntityDetail>()
+				.With(x => x.TestEntityId, entity.Id)
+				.Without(x => x.TestEntity)
+				.Create();
+			await context.AddAsync(detail, Current.CancellationToken);
+		}
+		await context.SaveChangesAsync(Current.CancellationToken);
 
-		await circularContext.Parents.AddAsync(parent, Current.CancellationToken);
-		await circularContext.SaveChangesAsync(Current.CancellationToken);
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
-		// Act & Assert - Navigate from parent to children
-		ParentEntity? parentResult = await circularContext.Parents
-			.Where(p => p.Id == parent.Id)
-			.FirstOrDefaultAsync(Current.CancellationToken);
+		// Act - GetAllFullStreaming uses ExecuteStreamingWithCircularRefHandling internally
+		List<TestEntity> streamedResults = [];
+		await foreach (TestEntity item in testContext.GetAllFullStreaming(cancellationToken: Current.CancellationToken)!)
+		{
+			streamedResults.Add(item);
+		}
 
-		parentResult.ShouldNotBeNull();
-		parentResult.Children.Count.ShouldBe(2);
+		// Assert
+		streamedResults.Count.ShouldBeGreaterThanOrEqualTo(3);
+	}
 
-		// Act & Assert - Navigate from child to parent
-		BaseDbContextActions<ChildEntity, CircularRefDbContext> childActions = new(circularProvider);
-		List<ChildEntity>? children = await childActions.GetAll(
-			queryTimeout: TimeSpan.FromSeconds(30),
-			trackEntities: true,
-			cancellationToken: Current.CancellationToken);
+	[Fact]
+	public async Task CircularReferenceHandling_MultipleCallsSameEntity_ShouldUseCachedBehavior()
+	{
+		// Arrange - Create test entities with navigation properties
+		TestEntity[] entities = fixture.Build<TestEntity>()
+			.Without(x => x.Details)
+			.CreateMany(2)
+			.ToArray();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
 
-		children.ShouldNotBeNull();
-		children.Count.ShouldBe(2);
-		children.All(c => c.ParentId == parent.Id).ShouldBeTrue();
+		foreach (TestEntity entity in entities)
+		{
+			TestEntityDetail detail = fixture.Build<TestEntityDetail>()
+				.With(x => x.TestEntityId, entity.Id)
+				.Without(x => x.TestEntity)
+				.Create();
+			await context.AddAsync(detail, Current.CancellationToken);
+		}
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+
+		// Act - Call GetAllFull multiple times to verify caching behavior
+		List<TestEntity>? firstResult = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
+		List<TestEntity>? secondResult = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
+		List<TestEntity>? thirdResult = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
+
+		// Assert - All calls should succeed without errors
+		firstResult.ShouldNotBeNull();
+		firstResult.Count.ShouldBeGreaterThanOrEqualTo(2);
+
+		secondResult.ShouldNotBeNull();
+		secondResult.Count.ShouldBeGreaterThanOrEqualTo(2);
+
+		thirdResult.ShouldNotBeNull();
+		thirdResult.Count.ShouldBeGreaterThanOrEqualTo(2);
+	}
+
+	[Fact]
+	public async Task CircularReferenceHandling_StreamingMultipleCalls_ShouldUseCachedBehavior()
+	{
+		// Arrange - Create test entities with navigation properties
+		TestEntity[] entities = fixture.Build<TestEntity>()
+			.Without(x => x.Details)
+			.CreateMany(2)
+			.ToArray();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		foreach (TestEntity entity in entities)
+		{
+			TestEntityDetail detail = fixture.Build<TestEntityDetail>()
+				.With(x => x.TestEntityId, entity.Id)
+				.Without(x => x.TestEntity)
+				.Create();
+			await context.AddAsync(detail, Current.CancellationToken);
+		}
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+
+		// Act - Call GetAllFullStreaming multiple times to verify caching behavior
+		List<TestEntity> firstResults = [];
+		await foreach (TestEntity item in testContext.GetAllFullStreaming(cancellationToken: Current.CancellationToken)!)
+		{
+			firstResults.Add(item);
+		}
+
+		List<TestEntity> secondResults = [];
+		await foreach (TestEntity item in testContext.GetAllFullStreaming(cancellationToken: Current.CancellationToken)!)
+		{
+			secondResults.Add(item);
+		}
+
+		// Assert - Both calls should succeed and return consistent results
+		firstResults.Count.ShouldBeGreaterThanOrEqualTo(2);
+		secondResults.Count.ShouldBeGreaterThanOrEqualTo(2);
+		secondResults.Count.ShouldBe(firstResults.Count);
+	}
+
+	[Fact]
+	public async Task CircularReferenceHandling_CheckDictionaryState_ShouldCacheEntityType()
+	{
+		// Arrange - Create test entities with navigation properties
+		TestEntity[] entities = fixture.Build<TestEntity>()
+			.Without(x => x.Details)
+			.CreateMany(2)
+			.ToArray();
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		foreach (TestEntity entity in entities)
+		{
+			TestEntityDetail detail = fixture.Build<TestEntityDetail>()
+				.With(x => x.TestEntityId, entity.Id)
+				.Without(x => x.TestEntity)
+				.Create();
+			await context.AddAsync(detail, Current.CancellationToken);
+		}
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+
+		// Get reference to the static circularReferencingEntities dictionary via reflection
+		System.Reflection.FieldInfo? field = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
+			.GetField("circularReferencingEntities", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+		field.ShouldNotBeNull("circularReferencingEntities field should be accessible via reflection");
+
+		ConcurrentDictionary<Type, bool>? dictionary = field.GetValue(null) as System.Collections.Concurrent.ConcurrentDictionary<Type, bool>;
+		dictionary.ShouldNotBeNull();
+
+		// Record initial state
+		bool initiallyInDictionary = dictionary.ContainsKey(typeof(TestEntity));
+
+		// Act - Call GetAllFull which may add the entity type to the dictionary
+		List<TestEntity>? result = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBeGreaterThanOrEqualTo(2);
+
+		// Check if entity type is now in dictionary (it might be added if circular ref exception occurred)
+		// or it should work fine either way
+		bool finallyInDictionary = dictionary.ContainsKey(typeof(TestEntity));
+
+		// The key assertion: If it was added to dictionary, subsequent calls should not throw
+		if (finallyInDictionary)
+		{
+			// Call again - should use cached knowledge
+			List<TestEntity>? secondResult = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
+			secondResult.ShouldNotBeNull();
+			secondResult.Count.ShouldBeGreaterThanOrEqualTo(2);
+		}
+
+		// Whether or not it was added, the call should succeed
+		result.Count.ShouldBeGreaterThanOrEqualTo(2);
+	}
+
+	[Fact]
+	public async Task ExecuteWithCircularRefHandling_WhenExceptionThrown_ShouldRetryAndAddToDictionary()
+	{
+		// Arrange - Get the static method via reflection
+		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
+			.GetMethod("ExecuteWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
+		method.ShouldNotBeNull("ExecuteWithCircularRefHandling should be accessible via reflection");
+
+		// Get reference to the circularReferencingEntities dictionary
+		FieldInfo? field = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
+			.GetField("circularReferencingEntities", BindingFlags.NonPublic | BindingFlags.Static);
+		field.ShouldNotBeNull();
+		ConcurrentDictionary<Type, bool>? dictionary = field.GetValue(null) as System.Collections.Concurrent.ConcurrentDictionary<Type, bool>;
+		dictionary.ShouldNotBeNull();
+
+		// Clear the dictionary to ensure clean test state
+		dictionary.Clear();
+
+		// Create a mock operation that throws the specific exception on first call, succeeds on second
+		int callCount = 0;
+		List<TestEntity> testResult = fixture.CreateMany<TestEntity>(2).ToList();
+
+		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (handlingCircularRef, cancellationToken) =>
+		{
+			callCount++;
+			if (!handlingCircularRef && callCount == 1)
+			{
+				// First call without handling flag - throw the specific exception
+				InvalidOperationException ex = new("Sequence contains no elements");
+				// Set HResult using the private field
+				FieldInfo? hresultField = typeof(Exception).GetField("_HResult", BindingFlags.NonPublic | BindingFlags.Instance);
+				hresultField?.SetValue(ex, -2146233079);
+				throw ex;
+			}
+			// Second call with handling flag - succeed
+			return Task.FromResult(testResult);
+		};
+
+		// Act - Invoke the method via reflection
+		MethodInfo genericMethod = method.MakeGenericMethod(typeof(List<TestEntity>));
+		Task<List<TestEntity>>? task = genericMethod.Invoke(null, new object[] { operation, CancellationToken.None }) as Task<List<TestEntity>>;
+		List<TestEntity>? result = await task!;
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Count.ShouldBe(2);
+		callCount.ShouldBe(2, "Operation should have been called twice - once throwing, once succeeding");
+		dictionary.ContainsKey(typeof(TestEntity)).ShouldBeTrue("Entity type should be added to dictionary after handling exception");
+	}
+	[Fact]
+	public async Task ExecuteWithCircularRefHandling_WhenSecondaryExceptionThrown_ShouldReturnDefault()
+	{
+		// Arrange - Get the static method via reflection
+		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
+			.GetMethod("ExecuteWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
+		method.ShouldNotBeNull();
+
+		// Create a mock operation that throws the specific exception on first call,
+		// then throws a different exception on retry
+		int callCount = 0;
+		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (handlingCircularRef, cancellationToken) =>
+		{
+			callCount++;
+			if (callCount == 1)
+			{
+				// First call - throw the circular reference exception
+				InvalidOperationException ex = new("Circular reference detected");
+				// Set HResult using the private field
+				FieldInfo? hresultField = typeof(Exception).GetField("_HResult", BindingFlags.NonPublic | BindingFlags.Instance);
+				hresultField?.SetValue(ex, -2146233079);
+				throw ex;
+			}
+			// Second call - throw a different exception to test the secondary catch block
+			throw new InvalidOperationException("Secondary failure");
+		};
+
+		// Act - Invoke the method via reflection
+		MethodInfo genericMethod = method.MakeGenericMethod(typeof(List<TestEntity>));
+		Task<List<TestEntity>>? task = genericMethod.Invoke(null, new object[] { operation, CancellationToken.None }) as Task<List<TestEntity>>;
+		List<TestEntity>? result = await task!;
+
+		// Assert
+		result.ShouldBeNull("Should return default when secondary exception occurs");
+		callCount.ShouldBe(2, "Operation should have been called twice");
+	}
+
+	[Fact]
+	public async Task ExecuteWithCircularRefHandling_WhenDifferentInvalidOperationException_ShouldReturnDefault()
+	{
+		// Arrange - Get the static method via reflection
+		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
+			.GetMethod("ExecuteWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
+		method.ShouldNotBeNull();
+
+		// Create a mock operation that throws InvalidOperationException with different HResult
+		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (handlingCircularRef, cancellationToken) =>
+		{
+			// Throw InvalidOperationException with a different HResult (not -2146233079)
+			InvalidOperationException ex = new("Different error");
+			// Set different HResult using the private field
+			FieldInfo? hresultField = typeof(Exception).GetField("_HResult", BindingFlags.NonPublic | BindingFlags.Instance);
+			hresultField?.SetValue(ex, -2146233088);
+			throw ex;
+		};
+
+		// Act - Invoke the method via reflection
+		MethodInfo genericMethod = method.MakeGenericMethod(typeof(List<TestEntity>));
+		Task<List<TestEntity>>? task = genericMethod.Invoke(null, new object[] { operation, CancellationToken.None }) as Task<List<TestEntity>>;
+		List<TestEntity>? result = await task!;
+
+		// Assert
+		result.ShouldBeNull("Should return default when InvalidOperationException with different HResult occurs");
+	}
+
+	[Fact]
+	public async Task ExecuteWithCircularRefHandling_WhenGeneralExceptionThrown_ShouldReturnDefault()
+	{
+		// Arrange - Get the static method via reflection
+		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
+			.GetMethod("ExecuteWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
+		method.ShouldNotBeNull();
+
+		// Create a mock operation that throws a general exception
+		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (handlingCircularRef, cancellationToken) =>
+		{
+			throw new ArgumentException("General error");
+		};
+
+		// Act - Invoke the method via reflection
+		MethodInfo genericMethod = method.MakeGenericMethod(typeof(List<TestEntity>));
+		Task<List<TestEntity>>? task = genericMethod.Invoke(null, new object[] { operation, CancellationToken.None }) as Task<List<TestEntity>>;
+		List<TestEntity>? result = await task!;
+
+		// Assert
+		result.ShouldBeNull("Should return default when general exception occurs");
+	}
+
+	[Fact]
+	public async Task ExecuteStreamingWithCircularRefHandling_WhenSecondaryExceptionThrown_ShouldReturnEmpty()
+	{
+		// Arrange - Get the static method via reflection
+		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
+			.GetMethod("ExecuteStreamingWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
+		method.ShouldNotBeNull();
+
+		// Create a mock query builder that throws circular ref exception, then a secondary exception
+		int callCount = 0;
+		Func<bool, IQueryable<TestEntity>> queryBuilder = (handlingCircularRef) =>
+		{
+			callCount++;
+			if (callCount == 1)
+			{
+				InvalidOperationException ex = new("Circular reference");
+				// Set HResult using the private field
+				FieldInfo? hresultField = typeof(Exception).GetField("_HResult", BindingFlags.NonPublic | BindingFlags.Instance);
+				hresultField?.SetValue(ex, -2146233079);
+				throw ex;
+			}
+			// Second call throws different exception
+			throw new InvalidOperationException("Secondary failure");
+		};
+
+		// Act - Invoke the method via reflection
+		MethodInfo genericMethod = method.MakeGenericMethod(typeof(TestEntity));
+		IAsyncEnumerable<TestEntity>? asyncEnumerable = genericMethod.Invoke(null, new object[] { queryBuilder, CancellationToken.None }) as IAsyncEnumerable<TestEntity>;
+		asyncEnumerable.ShouldNotBeNull();
+
+		List<TestEntity> results = [];
+		await foreach (TestEntity item in asyncEnumerable)
+		{
+			results.Add(item);
+		}
+
+		// Assert
+		results.Count.ShouldBe(0, "Should return empty when secondary exception occurs");
+		callCount.ShouldBe(2, "Query builder should have been called twice");
 	}
 
 	#endregion

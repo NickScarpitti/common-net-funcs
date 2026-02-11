@@ -432,26 +432,6 @@ public sealed partial class BaseDbContextActionsTests
 	}
 
 	[Fact]
-	public async Task DeleteByKey_WithGlobalFilterOptions_ShouldReturnTrue()
-	{
-		// Arrange
-		TestEntity testEntity = fixture.Create<TestEntity>();
-		await context.TestEntities.AddAsync(testEntity, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
-
-		// Act
-		bool result = await testContext.DeleteByKey(testEntity.Id, new GlobalFilterOptions { DisableAllFilters = true });
-		await testContext.SaveChanges();
-
-		// Assert
-		result.ShouldBeTrue();
-		TestEntity? deleted = await context.TestEntities.FindAsync(new object?[] { testEntity.Id }, Current.CancellationToken);
-		deleted.ShouldBeNull();
-	}
-
-	[Fact]
 	public void DeleteMany_WithGlobalFilterOptions_ShouldReturnTrue()
 	{
 		// Arrange

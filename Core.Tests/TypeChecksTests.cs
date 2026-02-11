@@ -328,7 +328,7 @@ public sealed class TypeChecksTests
 	public void IsReadOnlyCollectionType_ShouldIdentifyReadOnlyDictionary()
 	{
 		// Arrange
-		var type = typeof(ReadOnlyDictionary<int, string>);
+		Type type = typeof(ReadOnlyDictionary<int, string>);
 
 		// Act
 		bool result = type.IsReadOnlyCollectionType();

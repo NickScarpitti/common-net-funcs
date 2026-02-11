@@ -2024,9 +2024,9 @@ public sealed class CopyTests
 		{
 			Values = new List<SimpleWrapper>
 			{
-				new SimpleWrapper { Value = 10 },
-				new SimpleWrapper { Value = 20 },
-				new SimpleWrapper { Value = 30 }
+				new() { Value = 10 },
+				new() { Value = 20 },
+				new() { Value = 30 }
 			}
 		};
 

@@ -700,7 +700,7 @@ public sealed class StreamsTests
 	public void CompressionLimitExceededException_Should_Have_Parameterless_Constructor()
 	{
 		// Act
-		var exception = new Streams.CompressionLimitExceededException();
+		CompressionLimitExceededException exception = new();
 
 		// Assert
 		exception.ShouldNotBeNull();
@@ -713,7 +713,7 @@ public sealed class StreamsTests
 		string message = "Test exception message";
 
 		// Act
-		var exception = new Streams.CompressionLimitExceededException(message);
+		CompressionLimitExceededException exception = new(message);
 
 		// Assert
 		exception.Message.ShouldBe(message);
@@ -727,7 +727,7 @@ public sealed class StreamsTests
 		Exception innerException = new InvalidOperationException("Inner exception");
 
 		// Act
-		var exception = new Streams.CompressionLimitExceededException(message, innerException);
+		CompressionLimitExceededException exception = new(message, innerException);
 
 		// Assert
 		exception.Message.ShouldBe(message);

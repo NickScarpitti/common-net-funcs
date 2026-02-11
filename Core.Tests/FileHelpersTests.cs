@@ -416,7 +416,7 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetSafeSaveName_String_WithVeryLongFilename_DoesNotInfiniteLoop()
 	{
 		// Arrange - File with very long name to test edge case
-		string longName = new string('a', 200);
+		string longName = new('a', 200);
 		string fileName = Path.Combine(tempDir, $"{longName}.txt");
 		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
 

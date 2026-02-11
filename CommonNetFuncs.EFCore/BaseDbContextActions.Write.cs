@@ -71,6 +71,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 	/// </summary>
 	/// <param name="model">Record of type <typeparamref name="TEntity"/> to delete.</param>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
+	/// <param name="globalFilterOptions">Optional: Global filter options (not applicable to this operation as it works with loaded entities).</param>
 	public void DeleteByObject(TEntity model, bool removeNavigationProps = false, GlobalFilterOptions? globalFilterOptions = null)
 	{
 		using DbContext context = ServiceProvider.GetRequiredService<TContext>()!;
@@ -82,7 +83,8 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 				model.RemoveNavigationProperties(context);
 			}
 
-			DbSet<TEntity> table = ApplyGlobalFilters(context, globalFilterOptions);
+			// Note: Global filters don't apply to Remove operations on already-loaded entities
+			DbSet<TEntity> table = context.Set<TEntity>();
 			table.Remove(model);
 		}
 		catch (Exception ex)
@@ -95,14 +97,25 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 	/// Delete record in the table corresponding to type <typeparamref name="TEntity"/> matching the primary key passed in.
 	/// </summary>
 	/// <param name="key">Key of the record of type <typeparamref name="TEntity"/> to delete.</param>
+	/// <param name="globalFilterOptions">Optional: Options for controlling global query filters.</param>
 	/// <returns><see langword="bool"/> indicating success.</returns>
 	public async Task<bool> DeleteByKey(object key, GlobalFilterOptions? globalFilterOptions = null)
 	{
 		await using DbContext context = ServiceProvider.GetRequiredService<TContext>()!;
-		DbSet<TEntity> table = ApplyGlobalFilters(context, globalFilterOptions);
+		DbSet<TEntity> table = context.Set<TEntity>();
 		try
 		{
-			TEntity? deleteItem = await table.FindAsync(key).ConfigureAwait(false);
+			TEntity? deleteItem = null;
+			if (globalFilterOptions?.DisableAllFilters == true || (globalFilterOptions?.FilterNamesToDisable.AnyFast() ?? false))
+			{
+				// Need to apply global filter options to the query in order to find the entity to delete, since Find/FindAsync does not allow for ignoring filters
+				deleteItem = await GetByKey(false, key, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
+			}
+			else
+			{
+				deleteItem = await table.FindAsync(key).ConfigureAwait(false);
+			}
+
 			if (deleteItem != null)
 			{
 				table.Remove(deleteItem);
@@ -122,6 +135,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 	/// </summary>
 	/// <param name="models">Records of type <typeparamref name="TEntity"/> to delete.</param>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
+	/// <param name="globalFilterOptions">Optional: Global filter options (not applicable to this operation as it works with loaded entities).</param>
 	/// <returns><see langword="bool"/> indicating success.</returns>
 	public bool DeleteMany(IEnumerable<TEntity> models, bool removeNavigationProps = false, GlobalFilterOptions? globalFilterOptions = null)
 	{
@@ -133,7 +147,8 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 				models.SetValue(x => x.RemoveNavigationProperties(context));
 			}
 
-			DbSet<TEntity> table = ApplyGlobalFilters(context, globalFilterOptions);
+			// Note: Global filters don't apply to RemoveRange operations on already-loaded entities
+			DbSet<TEntity> table = context.Set<TEntity>();
 			table.RemoveRange(models); //Requires separate save
 			return true;
 		}
@@ -155,8 +170,9 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 		await using DbContext context = ServiceProvider.GetRequiredService<TContext>()!;
 		try
 		{
-			DbSet<TEntity> table = ApplyGlobalFilters(context, globalFilterOptions);
-			return await table.AsNoTracking().Where(whereExpression).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+			DbSet<TEntity> table = context.Set<TEntity>();
+			IQueryable<TEntity> query = ApplyGlobalFilters(table, globalFilterOptions);
+			return await query.AsNoTracking().Where(whereExpression).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
 		}
 		catch (Exception ex)
 		{
@@ -170,6 +186,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 	/// </summary>
 	/// <param name="models">Records of type <typeparamref name="TEntity"/> to delete.</param>
 	/// <param name="removeNavigationProps">Optional: If true, all navigation properties / related entities will be removed from the main entity. Default is false.</param>
+	/// <param name="globalFilterOptions">Optional: Global filter options (not applicable to this operation as it works with loaded entities).</param>
 	/// <returns><see langword="bool"/> indicating success.</returns>
 	public async Task<bool> DeleteManyTracked(IEnumerable<TEntity> models, bool removeNavigationProps = false, GlobalFilterOptions? globalFilterOptions = null)
 	{
@@ -181,7 +198,8 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 				models.SetValue(x => x.RemoveNavigationProperties(context));
 			}
 
-			DbSet<TEntity> table = ApplyGlobalFilters(context, globalFilterOptions);
+			// Note: Global filters don't apply to DeleteRangeByKeyAsync operations
+			DbSet<TEntity> table = context.Set<TEntity>();
 			await table.DeleteRangeByKeyAsync(models).ConfigureAwait(false); //EF Core +, Does not require separate save
 			return true;
 		}
@@ -196,13 +214,15 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 	/// Delete records in the table corresponding to type <typeparamref name="TEntity"/> matching the enumerable objects of type <typeparamref name="TEntity"/> passed in.
 	/// </summary>
 	/// <param name="keys">Keys of type <typeparamref name="TEntity"/> to delete.</param>
+	/// <param name="globalFilterOptions">Optional: Global filter options (not applicable to this operation).</param>
 	/// <returns><see langword="bool"/> indicating success.</returns>
 	public async Task<bool> DeleteManyByKeys(IEnumerable<object> keys, GlobalFilterOptions? globalFilterOptions = null) //Does not work with PostgreSQL, not testable
 	{
 		await using DbContext context = ServiceProvider.GetRequiredService<TContext>()!;
 		try
 		{
-			DbSet<TEntity> table = ApplyGlobalFilters(context, globalFilterOptions);
+			// Note: Global filters don't apply to DeleteRangeByKeyAsync operations
+			DbSet<TEntity> table = context.Set<TEntity>();
 			await table.DeleteRangeByKeyAsync(keys).ConfigureAwait(false); //EF Core +, Does not require separate save
 			return true;
 		}
@@ -278,8 +298,9 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 				context.Database.SetCommandTimeout((TimeSpan)queryTimeout);
 			}
 
-			DbSet<TEntity> table = ApplyGlobalFilters(context, globalFilterOptions);
-			return await table.AsNoTracking().Where(whereExpression).ExecuteUpdateAsync(updateSetters, cancellationToken).ConfigureAwait(false);
+			DbSet<TEntity> table = context.Set<TEntity>();
+			IQueryable<TEntity> query = ApplyGlobalFilters(table, globalFilterOptions);
+			return await query.AsNoTracking().Where(whereExpression).ExecuteUpdateAsync(updateSetters, cancellationToken).ConfigureAwait(false);
 		}
 		catch (DbUpdateException duex)
 		{

@@ -1610,13 +1610,18 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 	/// </summary>
 	/// <param name="whereExpression">A linq expression used to filter query results.</param>
 	/// <param name="queryTimeout">Optional: Override the database default for query timeout. Default is <see langword="null"/>.</param>
+	/// <param name="globalFilterOptions">Optional: Options for controlling global query filters.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>The number of records that satisfy the where expression.</returns>
 	public async Task<int> GetCount(Expression<Func<TEntity, bool>> whereExpression, TimeSpan? queryTimeout = null, GlobalFilterOptions? globalFilterOptions = null, CancellationToken cancellationToken = default)
 	{
 		await using DbContext context = InitializeContext(queryTimeout);
 		return await ExecuteQueryWithErrorLogging(async () =>
-			await GetDbSetWithFilters(context, globalFilterOptions).Where(whereExpression).CountAsync(cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
+		{
+			IQueryable<TEntity> query = context.Set<TEntity>();
+			query = ApplyGlobalFilters(query, globalFilterOptions);
+			return await query.Where(whereExpression).CountAsync(cancellationToken).ConfigureAwait(false);
+		}).ConfigureAwait(false);
 	}
 
 	#endregion Read

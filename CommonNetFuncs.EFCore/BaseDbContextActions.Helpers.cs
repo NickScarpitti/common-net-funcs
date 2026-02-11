@@ -19,27 +19,6 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 		return query;
 	}
 
-	private static DbSet<TEntity> ApplyGlobalFilters(DbContext context, GlobalFilterOptions? globalFilterOptions)
-	{
-		DbSet<TEntity> table;
-		if (globalFilterOptions?.DisableAllFilters == true || (globalFilterOptions?.FilterNamesToDisable.AnyFast() ?? false))
-		{
-			if (globalFilterOptions.FilterNamesToDisable.AnyFast())
-			{
-				table = (DbSet<TEntity>)context.Set<TEntity>().IgnoreQueryFilters(globalFilterOptions.FilterNamesToDisable);
-			}
-			else
-			{
-				table = (DbSet<TEntity>)context.Set<TEntity>().IgnoreQueryFilters();
-			}
-		}
-		else
-		{
-			table = context.Set<TEntity>();
-		}
-		return table;
-	}
-
 	private static IQueryable<TEntity> ApplyTrackingAndFilters(DbContext context, bool trackEntities, GlobalFilterOptions? globalFilterOptions)
 	{
 		IQueryable<TEntity> query = !trackEntities ? context.Set<TEntity>().AsNoTracking() : context.Set<TEntity>();
@@ -100,19 +79,6 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 		}
 
 		return query;
-	}
-
-	private static DbSet<TEntity> GetDbSetWithFilters(DbContext context, GlobalFilterOptions? globalFilterOptions)
-	{
-		if (globalFilterOptions?.DisableAllFilters == true || (globalFilterOptions?.FilterNamesToDisable.AnyFast() ?? false))
-		{
-			if (globalFilterOptions.FilterNamesToDisable.AnyFast())
-			{
-				return (DbSet<TEntity>)context.Set<TEntity>().IgnoreQueryFilters(globalFilterOptions.FilterNamesToDisable);
-			}
-			return (DbSet<TEntity>)context.Set<TEntity>().IgnoreQueryFilters();
-		}
-		return context.Set<TEntity>();
 	}
 
 	private DbContext InitializeContext(TimeSpan? queryTimeout = null)
@@ -236,7 +202,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 		catch (Exception ex)
 		{
 			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-			return default;
 		}
+		return default;
 	}
 }

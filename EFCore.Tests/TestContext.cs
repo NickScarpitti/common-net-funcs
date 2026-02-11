@@ -9,6 +9,8 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
 {
 	public DbSet<TestEntity> TestEntities => Set<TestEntity>();
 
+	public DbSet<TestEntityWithCompoundKey> TestEntitiesWithCompoundKey => Set<TestEntityWithCompoundKey>();
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		modelBuilder.Entity<TestEntity>()
@@ -21,6 +23,9 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
 			.HasOne(e => e.TestEntity)
 			.WithMany(e => e.Details)
 			.HasForeignKey(e => e.TestEntityId);
+
+		modelBuilder.Entity<TestEntityWithCompoundKey>()
+			.HasKey(e => new { e.Key1, e.Key2 });
 	}
 }
 
@@ -45,4 +50,13 @@ public class TestEntityDetail
 
 	[JsonIgnore]
 	public TestEntity? TestEntity { get; set; }
+}
+
+public class TestEntityWithCompoundKey
+{
+	public int Key1 { get; set; }
+
+	public int Key2 { get; set; }
+
+	public required string Name { get; set; }
 }

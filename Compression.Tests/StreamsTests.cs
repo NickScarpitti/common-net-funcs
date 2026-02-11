@@ -630,7 +630,7 @@ public sealed class StreamsTests
 		long maxBytes = data.Length;
 
 		// Act
-		source.CopyWithLimit(destination, maxBytes);
+		source.CopyWithLimit(destination, maxBytes, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		destination.ToArray().ShouldBe(data);
@@ -653,12 +653,12 @@ public sealed class StreamsTests
 	public void CopyWithLimit_Should_Respect_Cancellation_Token()
 	{
 		// Arrange
-		byte[] largeData = fixture.CreateMany<byte>(5 * 1024 * 1024).ToArray(); // 5 MB
-		using MemoryStream source = new(largeData);
+		byte[] reallyLargeData = fixture.CreateMany<byte>(5 * 1024 * 1024).ToArray(); // 5 MB
+		using MemoryStream source = new(reallyLargeData);
 		using MemoryStream destination = new();
 		using CancellationTokenSource cts = new();
 		cts.Cancel();
-		long maxBytes = largeData.Length;
+		long maxBytes = reallyLargeData.Length;
 
 		// Act & Assert
 		Should.Throw<OperationCanceledException>(() => source.CopyWithLimit(destination, maxBytes, cts.Token));
@@ -936,7 +936,7 @@ public sealed class StreamsTests
 			Should.Throw<ObjectDisposedException>(() => uncompressedStream.ReadByte());
 		}
 
-		uncompressedStream.Dispose();
+		await uncompressedStream.DisposeAsync();
 	}
 
 	[Theory]
@@ -965,7 +965,7 @@ public sealed class StreamsTests
 			Should.Throw<ObjectDisposedException>(() => compressedStream.ReadByte());
 		}
 
-		compressedStream.Dispose();
+		await compressedStream.DisposeAsync();
 	}
 }
 

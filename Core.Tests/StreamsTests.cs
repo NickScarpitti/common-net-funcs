@@ -609,8 +609,10 @@ public sealed class StreamsTests
 		await counting.DisposeAsync();
 
 		// Act & Assert
+#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
 		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.ReadAsync(new byte[1], 0, 1));
 		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.ReadAsync(new Memory<byte>(new byte[1]), CancellationToken.None));
+#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
 	}
 
 	[Fact]

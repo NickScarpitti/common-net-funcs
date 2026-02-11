@@ -174,7 +174,7 @@ public sealed class CopyTests
 		};
 
 		// Act
-		DestinationClass result = source.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: useCache);
+		DestinationClass? result = source.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: useCache);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1206,7 +1206,7 @@ public sealed class CopyTests
 		SourceClass source = new() { Id = 1, Name = "Test" };
 
 		// Act
-		DestinationClass result = source.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: true);
+		DestinationClass? result = source.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: true);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1221,7 +1221,7 @@ public sealed class CopyTests
 		SourceClass source = new() { Id = 1, Name = "Test" };
 
 		// Act
-		DestinationClass result = source.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: false);
+		DestinationClass? result = source.CopyPropertiesToNew<SourceClass, DestinationClass>(useCache: false);
 
 		// Assert
 		result.ShouldNotBeNull();

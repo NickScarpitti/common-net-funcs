@@ -608,7 +608,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 	/// <param name="fullQueryOptions">Optional: Configures how the query is run and how the navigation properties are retrieved.</param>
 	/// <returns>All records from the table corresponding to class <typeparamref name="TOutput"/>.</returns>
 	public IQueryable<TOutput> GetQueryAllFull<TOutput>(Expression<Func<TEntity, TOutput>> selectExpression, TimeSpan? queryTimeout = null, bool handlingCircularRefException = false,
-				bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, GlobalFilterOptions? globalFilterOptions = null)
+			bool trackEntities = false, FullQueryOptions? fullQueryOptions = null, GlobalFilterOptions? globalFilterOptions = null)
 	{
 		fullQueryOptions ??= new FullQueryOptions();
 		using DbContext context = InitializeContext(queryTimeout);

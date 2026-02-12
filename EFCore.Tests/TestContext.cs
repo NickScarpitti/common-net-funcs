@@ -11,6 +11,8 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
 
 	public DbSet<TestEntityWithCompoundKey> TestEntitiesWithCompoundKey => Set<TestEntityWithCompoundKey>();
 
+	public DbSet<TestEntityWithDateTimeOffset> TestEntitiesWithDateTimeOffset => Set<TestEntityWithDateTimeOffset>();
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		modelBuilder.Entity<TestEntity>()
@@ -26,6 +28,9 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
 
 		modelBuilder.Entity<TestEntityWithCompoundKey>()
 			.HasKey(e => new { e.Key1, e.Key2 });
+
+		modelBuilder.Entity<TestEntityWithDateTimeOffset>()
+			.HasKey(e => e.Id);
 	}
 }
 
@@ -34,6 +39,10 @@ public class TestEntity
 	public int Id { get; set; }
 
 	public required string Name { get; set; }
+
+	public int Value { get; set; }
+
+	public string? Description { get; set; }
 
 	public DateTime CreatedDate { get; set; }
 
@@ -59,6 +68,15 @@ public class TestEntityWithCompoundKey
 	public int Key2 { get; set; }
 
 	public required string Name { get; set; }
+}
+
+public class TestEntityWithDateTimeOffset
+{
+	public int Id { get; set; }
+
+	public required string Name { get; set; }
+
+	public DateTimeOffset CreatedDate { get; set; }
 }
 
 // Circular reference test types

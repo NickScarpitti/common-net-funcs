@@ -17,7 +17,6 @@ public sealed partial class BaseDbContextActionsTests
 		fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList().ForEach(x => fixture.Behaviors.Remove(x));
 		fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
-		// Setup in-memory database
 		ServiceCollection services = new();
 		services.AddDbContextPool<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
 		serviceProvider = services.BuildServiceProvider();

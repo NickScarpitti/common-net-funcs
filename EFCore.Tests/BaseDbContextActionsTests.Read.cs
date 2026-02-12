@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using CommonNetFuncs.EFCore;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using static Xunit.TestContext;
@@ -1337,11 +1338,15 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetWithFilter_WithError_ShouldReturnNull()
 	{
 		// Arrange
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
 		ServiceCollection services = new();
-		services.AddDbContext<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection));
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 		await ctx.DisposeAsync();
+		await connection.DisposeAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
 
@@ -1356,11 +1361,15 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetWithFilterStreaming_WithError_ShouldHandleGracefully()
 	{
 		// Arrange
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
 		ServiceCollection services = new();
-		services.AddDbContext<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection));
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 		await ctx.DisposeAsync();
+		await connection.DisposeAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
 
@@ -1384,6 +1393,7 @@ public sealed partial class BaseDbContextActionsTests
 		services.AddDbContextPool<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: dbName));
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 
 		TestEntity parent = fixture.Build<TestEntity>()
 			.Without(x => x.Details)
@@ -1414,6 +1424,7 @@ public sealed partial class BaseDbContextActionsTests
 		results.Count.ShouldBe(1);
 		results[0].Details.ShouldNotBeNull();
 		results[0].Details!.Count.ShouldBe(1);
+		await ctx.DisposeAsync();
 	}
 
 	[Fact]
@@ -1426,6 +1437,7 @@ public sealed partial class BaseDbContextActionsTests
 		IServiceProvider provider = services.BuildServiceProvider();
 		IServiceScope scope = provider.CreateScope();
 		TestDbContext ctx = scope.ServiceProvider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 
 		TestEntity parent = fixture.Build<TestEntity>()
 			.Without(x => x.Details)
@@ -1468,7 +1480,9 @@ public sealed partial class BaseDbContextActionsTests
 		results[0].Details!.Count.ShouldBe(2);
 
 		// Cleanup
+		await ctx.DisposeAsync();
 		scope.Dispose();
+
 	}
 
 	#endregion
@@ -1753,11 +1767,15 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetOneWithFilter_WithError_ShouldReturnNull()
 	{
 		// Arrange
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
 		ServiceCollection services = new();
-		services.AddDbContext<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection));
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 		await ctx.DisposeAsync();
+		await connection.DisposeAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
 
@@ -1772,11 +1790,13 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetOneWithFilterFull_WithCircularReferences_ShouldHandleGracefully()
 	{
 		// Arrange
-		string dbName = nameof(GetOneWithFilterFull_WithCircularReferences_ShouldHandleGracefully);
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
 		ServiceCollection services = new();
-		services.AddDbContextPool<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: dbName));
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection), ServiceLifetime.Transient);
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 
 		TestEntity parent = fixture.Build<TestEntity>()
 			.Without(x => x.Details)
@@ -1806,6 +1826,9 @@ public sealed partial class BaseDbContextActionsTests
 		result.ShouldNotBeNull();
 		result.Details.ShouldNotBeNull();
 		result.Details.Count.ShouldBe(1);
+
+		await ctx.DisposeAsync();
+		await connection.DisposeAsync();
 	}
 
 	#endregion
@@ -2102,11 +2125,13 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetMinByOrderFull_WithCircularReferences_ShouldHandleGracefully()
 	{
 		// Arrange
-		string dbName = nameof(GetMinByOrderFull_WithCircularReferences_ShouldHandleGracefully);
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
 		ServiceCollection services = new();
-		services.AddDbContextPool<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: dbName));
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection), ServiceLifetime.Transient);
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 
 		TestEntity[] entities = fixture.Build<TestEntity>()
 			.Without(x => x.Details)
@@ -2141,6 +2166,9 @@ public sealed partial class BaseDbContextActionsTests
 		result.ShouldNotBeNull();
 		result.Details.ShouldNotBeNull();
 		result.Details.Count.ShouldBe(1);
+
+		await ctx.DisposeAsync();
+		await connection.DisposeAsync();
 	}
 
 	#endregion
@@ -2293,11 +2321,15 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetMax_WithError_ShouldReturnZero()
 	{
 		// Arrange
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
 		ServiceCollection services = new();
-		services.AddDbContext<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection));
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 		await ctx.DisposeAsync();
+		await connection.DisposeAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
 
@@ -2458,11 +2490,15 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetMin_WithError_ShouldReturnZero()
 	{
 		// Arrange
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
 		ServiceCollection services = new();
-		services.AddDbContext<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection));
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 		await ctx.DisposeAsync();
+		await connection.DisposeAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
 
@@ -2542,11 +2578,15 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetCount_WithError_ShouldReturnZero()
 	{
 		// Arrange
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
 		ServiceCollection services = new();
-		services.AddDbContext<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection));
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 		await ctx.DisposeAsync();
+		await connection.DisposeAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
 
@@ -3390,11 +3430,15 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetWithPagingFilter_WithError_ShouldThrow()
 	{
 		// Arrange
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
 		ServiceCollection services = new();
-		services.AddDbContext<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite(connection));
 		IServiceProvider provider = services.BuildServiceProvider();
 		TestDbContext ctx = provider.GetRequiredService<TestDbContext>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 		await ctx.DisposeAsync();
+		await connection.DisposeAsync();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
 
@@ -3406,32 +3450,26 @@ public sealed partial class BaseDbContextActionsTests
 	[Fact]
 	public async Task GetWithPagingFilterFull_WithNavigationProperties_ShouldSucceed()
 	{
-		// Arrange
-		string dbName = nameof(GetWithPagingFilterFull_WithNavigationProperties_ShouldSucceed);
-		ServiceCollection services = new();
-		services.AddDbContextPool<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: dbName));
-		IServiceProvider provider = services.BuildServiceProvider();
-		IServiceScope scope = provider.CreateScope();
-		TestDbContext ctx = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-
+		// Arrange - Test GetWithPagingFilterFull with navigation properties (circular reference handling)
 		TestEntity[] entities = fixture.Build<TestEntity>()
 			.Without(x => x.Details)
 			.CreateMany(5)
 			.ToArray();
-		await ctx.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
-		await ctx.SaveChangesAsync(Current.CancellationToken);
 
 		foreach (TestEntity entity in entities)
 		{
-			TestEntityDetail detail = fixture.Build<TestEntityDetail>()
-				.With(x => x.TestEntityId, entity.Id)
-				.Without(x => x.TestEntity)
-				.Create();
-			await ctx.AddAsync(detail, Current.CancellationToken);
+			entity.Details = new List<TestEntityDetail>
+			{
+				fixture.Build<TestEntityDetail>()
+					.Without(x => x.TestEntity)
+					.Create()
+			};
 		}
-		await ctx.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(scope.ServiceProvider);
+		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+		await context.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		FullQueryOptions fullQueryOptions = new();
 
@@ -4284,58 +4322,87 @@ public sealed partial class BaseDbContextActionsTests
 	[Fact]
 	public async Task GetByKey_Array_WithGlobalFilterOptions_DisableAllFilters_ShouldWork()
 	{
-		// Arrange
-		TestEntity entity = fixture.Create<TestEntity>();
-		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
+		// Arrange - Using separate entity type to avoid cache interference
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
+		ServiceCollection services = new();
+		services.AddDbContext<TestDbContextForFilters>(options => options.UseSqlite(connection));
+		IServiceProvider provider = services.BuildServiceProvider();
+		TestDbContextForFilters ctx = provider.GetRequiredService<TestDbContextForFilters>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		TestEntityForFilters entity = fixture.Create<TestEntityForFilters>();
+		await ctx.TestEntities.AddAsync(entity, Current.CancellationToken);
+		await ctx.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntityForFilters, TestDbContextForFilters> testContext = new(provider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntity? result = await testContext.GetByKey(new object[] { entity.Id }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityForFilters? result = await testContext.GetByKey(new object[] { entity.Id }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Id.ShouldBe(entity.Id);
+		await connection.DisposeAsync();
 	}
 
 	[Fact]
 	public async Task GetByKey_Array_WithGlobalFilterOptions_FilterNamesToDisable_ShouldWork()
 	{
-		// Arrange
-		TestEntity entity = fixture.Create<TestEntity>();
-		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
+		// Arrange - Using separate entity type to avoid cache interference
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
+		ServiceCollection services = new();
+		services.AddDbContext<TestDbContextForFilters>(options => options.UseSqlite(connection));
+		IServiceProvider provider = services.BuildServiceProvider();
+		TestDbContextForFilters ctx = provider.GetRequiredService<TestDbContextForFilters>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		TestEntityForFilters entity = fixture.Create<TestEntityForFilters>();
+		await ctx.TestEntities.AddAsync(entity, Current.CancellationToken);
+		await ctx.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntityForFilters, TestDbContextForFilters> testContext = new(provider);
 		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = ["TestFilter"] };
 
 		// Act
-		TestEntity? result = await testContext.GetByKey(new object[] { entity.Id }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityForFilters? result = await testContext.GetByKey(new object[] { entity.Id }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Id.ShouldBe(entity.Id);
+		await connection.DisposeAsync();
 	}
 
 	[Fact]
 	public async Task GetByKeyFull_Array_WithGlobalFilterOptions_ShouldWork()
 	{
-		// Arrange
-		TestEntity entity = fixture.Create<TestEntity>();
-		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
+		// Arrange - Using separate entity type to avoid cache interference
+		SqliteConnection connection = new("DataSource=:memory:");
+		await connection.OpenAsync(Current.CancellationToken);
+		ServiceCollection services = new();
+		services.AddDbContext<TestDbContextForFilters>(options => options.UseSqlite(connection));
+		IServiceProvider provider = services.BuildServiceProvider();
+		TestDbContextForFilters ctx = provider.GetRequiredService<TestDbContextForFilters>();
+		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		TestEntityForFilters entity = fixture.Build<TestEntityForFilters>()
+			.With(x => x.CreatedDate, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+			.Create();
+		await ctx.TestEntities.AddAsync(entity, Current.CancellationToken);
+		await ctx.SaveChangesAsync(Current.CancellationToken);
+
+		BaseDbContextActions<TestEntityForFilters, TestDbContextForFilters> testContext = new(provider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntity? result = await testContext.GetByKeyFull(new object[] { entity.Id }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityForFilters? result = await testContext.GetByKeyFull(new object[] { entity.Id }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Id.ShouldBe(entity.Id);
+		await connection.DisposeAsync();
 	}
 
 	[Fact]

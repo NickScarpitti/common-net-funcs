@@ -121,3 +121,75 @@ public class ChildEntity
 
 	public ParentEntity? Parent { get; set; }
 }
+
+// Context and entity for GlobalFilterOptions tests to avoid cache interference
+public class TestDbContextForFilters(DbContextOptions<TestDbContextForFilters> options) : DbContext(options)
+{
+	public DbSet<TestEntityForFilters> TestEntities => Set<TestEntityForFilters>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<TestEntityForFilters>()
+			.HasKey(e => e.Id);
+	}
+}
+
+public class TestEntityForFilters
+{
+	public int Id { get; set; }
+
+	public required string Name { get; set; }
+
+	public int Value { get; set; }
+
+	public string? Description { get; set; }
+
+	public DateTime CreatedDate { get; set; }
+}
+
+// Context and entities for navigation property tests to avoid cache interference
+public class TestDbContextForNavigation(DbContextOptions<TestDbContextForNavigation> options) : DbContext(options)
+{
+	public DbSet<TestEntityForNavigation> TestEntities => Set<TestEntityForNavigation>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<TestEntityForNavigation>()
+			.HasKey(e => e.Id);
+
+		modelBuilder.Entity<TestEntityDetailForNavigation>()
+			.HasKey(e => e.Id);
+
+		modelBuilder.Entity<TestEntityDetailForNavigation>()
+			.HasOne(e => e.TestEntity)
+			.WithMany(e => e.Details)
+			.HasForeignKey(e => e.TestEntityId);
+	}
+}
+
+public class TestEntityForNavigation
+{
+	public int Id { get; set; }
+
+	public required string Name { get; set; }
+
+	public int Value { get; set; }
+
+	public string? Description { get; set; }
+
+	public DateTime CreatedDate { get; set; }
+
+	public ICollection<TestEntityDetailForNavigation>? Details { get; set; }
+}
+
+public class TestEntityDetailForNavigation
+{
+	public int Id { get; set; }
+
+	public required string Description { get; set; }
+
+	public int TestEntityId { get; set; }
+
+	[JsonIgnore]
+	public TestEntityForNavigation? TestEntity { get; set; }
+}

@@ -1,20 +1,23 @@
 ﻿using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using CommonNetFuncs.EFCore;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace EFCore.Tests;
 
 public sealed class NavigationPropertiesTests : IDisposable
 {
-	private readonly Fixture fixture;
+	private readonly SqliteConnection connection;
 	private readonly TestDbContext context;
 
 	public NavigationPropertiesTests()
 	{
-		fixture = new Fixture();
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseInMemoryDatabase(databaseName: fixture.Create<string>()).Options;
+		connection = new SqliteConnection("DataSource=:memory:");
+		connection.Open();
+		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseSqlite(connection).Options;
 		context = new TestDbContext(options);
+		context.Database.EnsureCreated();
 	}
 
 	private bool disposed;

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
 using CommonNetFuncs.EFCore;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using static Xunit.TestContext;
@@ -418,7 +419,7 @@ public sealed partial class BaseDbContextActionsTests
 
 		// Get reference to the static circularReferencingEntities dictionary via reflection
 		System.Reflection.FieldInfo? field = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
-			.GetField("circularReferencingEntities", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+			.GetField("circularReferencingEntities", BindingFlags.NonPublic | BindingFlags.Static);
 		field.ShouldNotBeNull("circularReferencingEntities field should be accessible via reflection");
 
 		ConcurrentDictionary<Type, bool>? dictionary = field.GetValue(null) as System.Collections.Concurrent.ConcurrentDictionary<Type, bool>;

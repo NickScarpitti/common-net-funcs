@@ -646,7 +646,7 @@ public sealed class StreamsTests
 		long maxBytes = data.Length - 10;
 
 		// Act & Assert
-		Should.Throw<Streams.CompressionLimitExceededException>(() => source.CopyWithLimit(destination, maxBytes));
+		Should.Throw<CompressionLimitExceededException>(() => source.CopyWithLimit(destination, maxBytes));
 	}
 
 	[Fact]
@@ -691,7 +691,7 @@ public sealed class StreamsTests
 		long maxBytes = data.Length - 10;
 
 		// Act & Assert
-		await Should.ThrowAsync<Streams.CompressionLimitExceededException>(
+		await Should.ThrowAsync<CompressionLimitExceededException>(
 			source.CopyWithLimitAsync(destination, maxBytes, TestContext.Current.CancellationToken));
 	}
 
@@ -710,7 +710,7 @@ public sealed class StreamsTests
 	public void CompressionLimitExceededException_Should_Have_Message_Constructor()
 	{
 		// Arrange
-		string message = "Test exception message";
+		const string message = "Test exception message";
 
 		// Act
 		CompressionLimitExceededException exception = new(message);
@@ -723,7 +723,7 @@ public sealed class StreamsTests
 	public void CompressionLimitExceededException_Should_Have_Message_And_InnerException_Constructor()
 	{
 		// Arrange
-		string message = "Test exception message";
+		const string message = "Test exception message";
 		Exception innerException = new InvalidOperationException("Inner exception");
 
 		// Act
@@ -747,31 +747,13 @@ public sealed class StreamsTests
 
 		// Act
 		byte[] buffer = new byte[10];
-		int bytesRead = await concatenatedStream.ReadAsync(buffer, 0, 10, TestContext.Current.CancellationToken);
-
-		// Assert
-		bytesRead.ShouldBe(10);
-		buffer.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-	}
-
-	[Fact]
-	public async Task ConcatenatedStream_Should_Read_From_Both_Streams_Using_Memory()
-	{
-		// Arrange
-		byte[] firstData = [1, 2, 3, 4, 5];
-		byte[] secondData = [6, 7, 8, 9, 10];
-		await using MemoryStream firstStream = new(firstData);
-		await using MemoryStream secondStream = new(secondData);
-		await using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
-
-		// Act
-		byte[] buffer = new byte[10];
 		int bytesRead = await concatenatedStream.ReadAsync(buffer.AsMemory(0, 10), TestContext.Current.CancellationToken);
 
 		// Assert
 		bytesRead.ShouldBe(10);
 		buffer.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 	}
+
 
 	[Fact]
 	public void ConcatenatedStream_Should_Read_From_Both_Streams_Synchronously()
@@ -834,7 +816,7 @@ public sealed class StreamsTests
 		using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
 
 		// Act & Assert
-		Should.NotThrow(() => concatenatedStream.Flush());
+		Should.NotThrow(concatenatedStream.Flush);
 	}
 
 	[Fact]
@@ -970,14 +952,9 @@ public sealed class StreamsTests
 }
 
 // Helper class to create a non-seekable stream
-internal class NonSeekableStream : Stream
+internal class NonSeekableStream(byte[] data) : Stream
 {
-	private readonly MemoryStream innerStream;
-
-	public NonSeekableStream(byte[] data)
-	{
-		innerStream = new MemoryStream(data);
-	}
+	private readonly MemoryStream innerStream = new(data);
 
 	public override bool CanRead => true;
 	public override bool CanSeek => false;
@@ -989,15 +966,41 @@ internal class NonSeekableStream : Stream
 		set => throw new NotSupportedException();
 	}
 
-	public override void Flush() => innerStream.Flush();
-	public override int Read(byte[] buffer, int offset, int count) => innerStream.Read(buffer, offset, count);
-	public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
-		innerStream.ReadAsync(buffer, offset, count, cancellationToken);
-	public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
-		innerStream.ReadAsync(buffer, cancellationToken);
-	public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-	public override void SetLength(long value) => throw new NotSupportedException();
-	public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+	public override void Flush()
+	{
+		innerStream.Flush();
+	}
+
+	public override int Read(byte[] buffer, int offset, int count)
+	{
+		return innerStream.Read(buffer, offset, count);
+	}
+
+	public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+	{
+		return innerStream.ReadAsync(buffer, offset, count, cancellationToken);
+	}
+
+	public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+	{
+		return innerStream.ReadAsync(buffer, cancellationToken);
+	}
+
+	public override long Seek(long offset, SeekOrigin origin)
+	{
+		throw new NotSupportedException();
+	}
+
+	public override void SetLength(long value)
+	{
+		throw new NotSupportedException();
+	}
+
+	public override void Write(byte[] buffer, int offset, int count)
+	{
+		throw new NotSupportedException();
+	}
+
 	protected override void Dispose(bool disposing)
 	{
 		if (disposing)

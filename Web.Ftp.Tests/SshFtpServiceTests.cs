@@ -72,7 +72,7 @@ public class SshFtpServiceTests
 	public async Task ConnectAsync_ShouldConnectClient()
 	{
 		// Arrange
-		CancellationTokenSource cts = new();
+		using CancellationTokenSource cts = new();
 
 		// Act
 		SftpClient result = await service.ConnectAsync(cts);

@@ -1621,7 +1621,7 @@ public sealed class CopyTests
 		cts.Cancel();
 
 		// Assert - The cancellation exception will be wrapped in TargetInvocationException
-		System.Reflection.TargetInvocationException ex = Should.Throw<System.Reflection.TargetInvocationException>(() =>
+		TargetInvocationException ex = Should.Throw<TargetInvocationException>(() =>
 		{
 			// Force using the reflection path which has cancellation support
 			Dictionary<int, SourceClass> dict = largeSource.ToDictionary(x => x.Id);

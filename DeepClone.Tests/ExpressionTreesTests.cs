@@ -411,27 +411,16 @@ public sealed class ExpressionTreesTests : IDisposable
 	}
 
 	// Test helper classes for readonly reference fields
-	public class ClassWithReadonlyReferenceField
+	public class ClassWithReadonlyReferenceField(TestClass child)
 	{
-		public readonly TestClass ReadonlyChild;
-
-		public ClassWithReadonlyReferenceField(TestClass child)
-		{
-			ReadonlyChild = child;
-		}
+		public readonly TestClass ReadonlyChild = child;
 	}
 
 	// Test helper classes for delegate fields
-	public class ClassWithDelegateFields
+	public class ClassWithDelegateFields(TestDelegate? readonlyDelegate, TestDelegate? writableDelegate)
 	{
-		public readonly TestDelegate? ReadonlyDelegateField;
-		public TestDelegate? WritableDelegateField;
-
-		public ClassWithDelegateFields(TestDelegate? readonlyDelegate, TestDelegate? writableDelegate)
-		{
-			ReadonlyDelegateField = readonlyDelegate;
-			WritableDelegateField = writableDelegate;
-		}
+		public readonly TestDelegate? ReadonlyDelegateField = readonlyDelegate;
+		public TestDelegate? WritableDelegateField = writableDelegate;
 	}
 
 	// Test helper structs for complex nested scenarios
@@ -470,9 +459,7 @@ public sealed class ExpressionTreesTests : IDisposable
 	public void DeepClone_WhenInputHasReadonlyDelegateField_ShouldSetToNull()
 	{
 		// Arrange
-		TestDelegate readonlyDelegate = () => { };
-		TestDelegate writableDelegate = () => { };
-		ClassWithDelegateFields source = new(readonlyDelegate, writableDelegate);
+		ClassWithDelegateFields source = new(() => { }, () => { });
 
 		// Act
 		ClassWithDelegateFields result = source.DeepClone();

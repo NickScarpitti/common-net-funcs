@@ -33,7 +33,7 @@ public class JsonPatchFormatterTests
 
 		serializerSettingsProperty.ShouldNotBeNull();
 
-		JsonSerializerSettings? serializerSettings = serializerSettingsProperty.GetValue(formatter) as Newtonsoft.Json.JsonSerializerSettings;
+		JsonSerializerSettings? serializerSettings = serializerSettingsProperty.GetValue(formatter) as JsonSerializerSettings;
 		serializerSettings.ShouldNotBeNull();
 
 		serializerSettings.ContractResolver.ShouldBeOfType<DefaultContractResolver>();
@@ -47,7 +47,7 @@ public class JsonPatchFormatterTests
 
 		PropertyInfo? serializerSettingsProperty = formatter.GetType().GetProperty("SerializerSettings", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
-		JsonSerializerSettings? serializerSettings = serializerSettingsProperty?.GetValue(formatter) as Newtonsoft.Json.JsonSerializerSettings;
+		JsonSerializerSettings? serializerSettings = serializerSettingsProperty?.GetValue(formatter) as JsonSerializerSettings;
 		serializerSettings.ShouldNotBeNull();
 
 		serializerSettings.ReferenceLoopHandling.ShouldBe(ReferenceLoopHandling.Ignore);
@@ -61,7 +61,7 @@ public class JsonPatchFormatterTests
 
 		PropertyInfo? serializerSettingsProperty = formatter.GetType().GetProperty("SerializerSettings", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
-		JsonSerializerSettings? serializerSettings = serializerSettingsProperty?.GetValue(formatter) as Newtonsoft.Json.JsonSerializerSettings;
+		JsonSerializerSettings? serializerSettings = serializerSettingsProperty?.GetValue(formatter) as JsonSerializerSettings;
 		serializerSettings.ShouldNotBeNull();
 
 		serializerSettings.NullValueHandling.ShouldBe(NullValueHandling.Ignore);

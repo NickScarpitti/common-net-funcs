@@ -114,6 +114,15 @@ public sealed class TypeChecksTests
 	[InlineData(typeof(DateTime), true)]
 	[InlineData(typeof(Guid), true)]
 	[InlineData(typeof(List<int>), false)]
+	[InlineData(typeof(int?), true)]
+	[InlineData(typeof(DateTime?), true)]
+	[InlineData(typeof(DateTimeOffset?), true)]
+	[InlineData(typeof(TimeSpan?), true)]
+	[InlineData(typeof(Guid?), true)]
+	[InlineData(typeof(decimal?), true)]
+	[InlineData(typeof(ETestEnum), true)]
+	[InlineData(typeof(DateTimeOffset), true)]
+	[InlineData(typeof(TimeSpan), true)]
 	public void IsSimpleType_ShouldIdentifySimpleTypes(Type type, bool expected)
 	{
 		// Act
@@ -182,7 +191,7 @@ public sealed class TypeChecksTests
 	}
 
 	// Test enum for IsSimpleType tests
-	private enum TestEnum
+	private enum ETestEnum
 	{
 		Value1,
 		Value2
@@ -268,34 +277,6 @@ public sealed class TypeChecksTests
 		typeof(int[]).IsEnumerable().ShouldBeTrue();
 	}
 
-	[Theory]
-	[InlineData(typeof(int?), true)]
-	[InlineData(typeof(DateTime?), true)]
-	[InlineData(typeof(DateTimeOffset?), true)]
-	[InlineData(typeof(TimeSpan?), true)]
-	[InlineData(typeof(Guid?), true)]
-	[InlineData(typeof(decimal?), true)]
-	public void IsSimpleType_ShouldIdentifyNullableSimpleTypes(Type type, bool expected)
-	{
-		// Act
-		bool result = type.IsSimpleType();
-
-		// Assert
-		result.ShouldBe(expected);
-	}
-
-	[Theory]
-	[InlineData(typeof(TestEnum), true)]
-	[InlineData(typeof(DateTimeOffset), true)]
-	[InlineData(typeof(TimeSpan), true)]
-	public void IsSimpleType_ShouldIdentifyAdditionalSimpleTypes(Type type, bool expected)
-	{
-		// Act
-		bool result = type.IsSimpleType();
-
-		// Assert
-		result.ShouldBe(expected);
-	}
 
 	[Theory]
 	[InlineData(typeof(byte), true)]

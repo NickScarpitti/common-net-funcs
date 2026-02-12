@@ -243,7 +243,7 @@ public sealed partial class BaseDbContextActionsTests
 			// Act
 			int? result = await testContext.UpdateMany(
 				x => x.Id > 0,
-				s => s.SetProperty(e => e.Name, e => "Updated"),
+				s => s.SetProperty(e => e.Name, _ => "Updated"),
 				globalFilterOptions: new GlobalFilterOptions { DisableAllFilters = true },
 				cancellationToken: Current.CancellationToken);
 
@@ -628,7 +628,7 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task SaveChanges_WhenDbUpdateException_ShouldReturnFalse()
 	{
 		// Arrange: Use SQLite to test DbUpdateException handling
-		(IServiceProvider sqliteProvider, TestDbContext sqliteContext, IDisposable scope) = CreateSqliteServiceProvider();
+		(IServiceProvider sqliteProvider, TestDbContext _, IDisposable scope) = CreateSqliteServiceProvider();
 		try
 		{
 			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
@@ -675,10 +675,7 @@ public sealed partial class BaseDbContextActionsTests
 			// Act & Assert - Just verify the operation doesn't throw
 			// Note: IgnoreQueryFilters from Z.EntityFramework.Plus may not work with SQLite in-memory
 			// so we can't reliably assert the actual deletion behavior
-			await Should.NotThrowAsync(async () =>
-			{
-				await testContext.DeleteByKey(entityId, new GlobalFilterOptions { DisableAllFilters = true });
-			});
+			await Should.NotThrowAsync(async () => await testContext.DeleteByKey(entityId, new GlobalFilterOptions { DisableAllFilters = true }));
 		}
 		finally
 		{
@@ -703,10 +700,7 @@ public sealed partial class BaseDbContextActionsTests
 			// Act & Assert - Just verify the operation doesn't throw
 			// Note: IgnoreQueryFilters from Z.EntityFramework.Plus may not work with SQLite in-memory
 			// so we can't reliably assert the actual deletion behavior
-			await Should.NotThrowAsync(async () =>
-			{
-				await testContext.DeleteByKey(entityId, new GlobalFilterOptions { FilterNamesToDisable = ["Filter1", "Filter2"] });
-			});
+			await Should.NotThrowAsync(async () => await testContext.DeleteByKey(entityId, new GlobalFilterOptions { FilterNamesToDisable = ["Filter1", "Filter2"] }));
 		}
 		finally
 		{
@@ -721,7 +715,7 @@ public sealed partial class BaseDbContextActionsTests
 		ServiceCollection services = new();
 		TestDbContext fakeContext = Substitute.For<TestDbContext>(new DbContextOptions<TestDbContext>());
 		fakeContext.Model.Returns((Microsoft.EntityFrameworkCore.Metadata.IModel)null!);
-		services.AddSingleton<TestDbContext>(_ => fakeContext);
+		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
@@ -769,7 +763,7 @@ public sealed partial class BaseDbContextActionsTests
 		ServiceCollection services = new();
 		TestDbContext fakeContext = Substitute.For<TestDbContext>(new DbContextOptions<TestDbContext>());
 		fakeContext.When(x => x.Set<TestEntity>()).Do(_ => throw new Exception("Test exception"));
-		services.AddSingleton<TestDbContext>(_ => fakeContext);
+		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
@@ -850,7 +844,7 @@ public sealed partial class BaseDbContextActionsTests
 		ServiceCollection services = new();
 		TestDbContext fakeContext = Substitute.For<TestDbContext>(new DbContextOptions<TestDbContext>());
 		fakeContext.When(x => x.Set<TestEntity>()).Do(_ => throw new Exception("Test exception"));
-		services.AddSingleton<TestDbContext>(_ => fakeContext);
+		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
@@ -878,7 +872,7 @@ public sealed partial class BaseDbContextActionsTests
 			// Act
 			int? result = await testContext.UpdateMany(
 				x => x.Id > 0,
-				s => s.SetProperty(e => e.Name, e => "Updated"),
+				s => s.SetProperty(e => e.Name, _ => "Updated"),
 				queryTimeout: TimeSpan.FromSeconds(30),
 				cancellationToken: Current.CancellationToken);
 
@@ -896,7 +890,7 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task UpdateMany_WithExpression_WhenDbUpdateException_ShouldReturnNull()
 	{
 		// Arrange - Use SQLite for realistic behavior
-		(IServiceProvider sqliteProvider, TestDbContext sqliteContext, IDisposable scope) = CreateSqliteServiceProvider();
+		(IServiceProvider sqliteProvider, TestDbContext _, IDisposable scope) = CreateSqliteServiceProvider();
 		try
 		{
 			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
@@ -905,7 +899,7 @@ public sealed partial class BaseDbContextActionsTests
 			// This is tricky to trigger, so we'll create a scenario where the update fails
 			int? result = await testContext.UpdateMany(
 				x => x.Id == -999, // Non-existent entity
-				s => s.SetProperty(e => e.Name, e => "Updated"),
+				s => s.SetProperty(e => e.Name, _ => "Updated"),
 				cancellationToken: Current.CancellationToken);
 
 			// Assert - Should return 0 for no records affected, not null
@@ -925,7 +919,7 @@ public sealed partial class BaseDbContextActionsTests
 		ServiceCollection services = new();
 		TestDbContext fakeContext = Substitute.For<TestDbContext>(new DbContextOptions<TestDbContext>());
 		fakeContext.When(x => x.Set<TestEntity>()).Do(_ => throw new Exception("Test exception"));
-		services.AddSingleton<TestDbContext>(_ => fakeContext);
+		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
@@ -933,7 +927,7 @@ public sealed partial class BaseDbContextActionsTests
 		// Act
 		int? result = await testContext.UpdateMany(
 			x => x.Id > 0,
-			s => s.SetProperty(e => e.Name, e => "Updated"),
+			s => s.SetProperty(e => e.Name, _ => "Updated"),
 			cancellationToken: Current.CancellationToken);
 
 		// Assert
@@ -947,7 +941,7 @@ public sealed partial class BaseDbContextActionsTests
 		ServiceCollection services = new();
 		TestDbContext fakeContext = Substitute.For<TestDbContext>(new DbContextOptions<TestDbContext>());
 		fakeContext.When(x => x.Set<TestEntity>()).Do(_ => throw new Exception("Test exception"));
-		services.AddSingleton<TestDbContext>(_ => fakeContext);
+		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
@@ -964,7 +958,7 @@ public sealed partial class BaseDbContextActionsTests
 		ServiceCollection services = new();
 		TestDbContext fakeContext = Substitute.For<TestDbContext>(new DbContextOptions<TestDbContext>());
 		fakeContext.When(x => x.Set<TestEntity>()).Do(_ => throw new Exception("Test exception"));
-		services.AddSingleton<TestDbContext>(_ => fakeContext);
+		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);

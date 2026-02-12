@@ -2109,7 +2109,7 @@ public sealed class CollectionsTests
 		List<Expression<Func<TestClass, bool>>> expressions = new() { expr1, expr2 };
 
 		// Act
-		Expression<Func<TestClass, bool>>? combinedExpr = Collections.CombineExpressions<TestClass>(expressions);
+		Expression<Func<TestClass, bool>>? combinedExpr = Collections.CombineExpressions(expressions);
 		Func<TestClass, bool>? func = combinedExpr?.CompileFast();
 
 		// Assert
@@ -2158,7 +2158,7 @@ public sealed class CollectionsTests
 		List<Expression<Func<TestClass, bool>>> expressions = new();
 
 		// Act
-		Expression<Func<TestClass, bool>>? result = Collections.CombineExpressions<TestClass>(expressions);
+		Expression<Func<TestClass, bool>>? result = Collections.CombineExpressions(expressions);
 
 		// Assert
 		result.ShouldBeNull();

@@ -23,6 +23,7 @@ public class GetByKeyBenchmarks
 	private BaseDbContextActions<BenchmarkEntity, BenchmarkDbContext> dbActions = null!;
 	private int existingEntityId;
 	private const int RecordCount = 1000;
+
 	[GlobalSetup]
 	public async Task GlobalSetup()
 	{
@@ -31,8 +32,8 @@ public class GetByKeyBenchmarks
 		services.AddDbContext<BenchmarkDbContext>(options => options.UseInMemoryDatabase("GetByKeyBenchmarkDb"));
 		serviceProvider = services.BuildServiceProvider();
 		// Seed database with test data once
-		using IServiceScope scope = serviceProvider.CreateScope();
-		BenchmarkDbContext context = scope.ServiceProvider.GetRequiredService<BenchmarkDbContext>();
+		using IServiceScope localScope = serviceProvider.CreateScope();
+		BenchmarkDbContext context = localScope.ServiceProvider.GetRequiredService<BenchmarkDbContext>();
 		List<BenchmarkEntity> entities = Enumerable.Range(1, RecordCount).Select(i => new BenchmarkEntity { Id = i, Name = $"Entity_{i}", Value = i * 10, CreatedDate = DateTime.UtcNow.AddDays(-i), IsActive = i % 2 == 0 }).ToList();
 		context.BenchmarkEntities.AddRange(entities);
 		await context.SaveChangesAsync();

@@ -1,10 +1,10 @@
-﻿using CommonNetFuncs.EFCore;
+﻿using System.Reflection;
+using CommonNetFuncs.EFCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using NSubstitute;
-using System.Reflection;
 using static Xunit.TestContext;
 
 namespace EFCore.Tests;
@@ -215,7 +215,7 @@ public sealed class CollectionsTests : IDisposable
 	{
 		// Arrange
 		// Set a specific CreatedDate to avoid default DateTime comparison issues
-		DateTime specificDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		DateTime specificDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
 		context.TestEntities.Add(entity);
 		context.SaveChanges();
@@ -238,8 +238,8 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithMultipleMatches_ReturnsFirst(bool ignoreDefaultValues)
 	{
 		// Arrange
-		DateTime specificDate1 = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		DateTime specificDate2 = new DateTime(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc);
+		DateTime specificDate1 = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		DateTime specificDate2 = new(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc);
 		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = specificDate1 };
 		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 200, CreatedDate = specificDate2 };
 		context.TestEntities.AddRange(entity1, entity2);
@@ -535,7 +535,7 @@ public sealed class CollectionsTests : IDisposable
 	{
 		// Arrange
 		// Set a specific CreatedDate to avoid default DateTime comparison issues
-		DateTime specificDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		DateTime specificDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
 		context.TestEntities.Add(entity);
 		await context.SaveChangesAsync(Current.CancellationToken);
@@ -558,8 +558,8 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartialAsync_WithMultipleMatches_ReturnsFirst(bool ignoreDefaultValues)
 	{
 		// Arrange
-		DateTime specificDate1 = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		DateTime specificDate2 = new DateTime(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc);
+		DateTime specificDate1 = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		DateTime specificDate2 = new(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc);
 		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = specificDate1 };
 		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 200, CreatedDate = specificDate2 };
 		context.TestEntities.AddRange(entity1, entity2);
@@ -833,14 +833,19 @@ public sealed class CollectionsTests : IDisposable
 
 		// Act - This will fail to connect but will test the normalization logic
 		// The provider name check and GetColumnType() logic gets exercised
+		Exception? caughtException = null;
 		try
 		{
-			TestEntity? result = sqlContext.TestEntities.GetObjectByPartial(sqlContext, partialObject, true, Current.CancellationToken);
+			TestEntity? _ = sqlContext.TestEntities.GetObjectByPartial(sqlContext, partialObject, true, Current.CancellationToken);
 		}
 		catch (Exception ex) when (ex is Microsoft.Data.SqlClient.SqlException || ex.InnerException is Microsoft.Data.SqlClient.SqlException)
 		{
 			// Expected - can't actually connect to SQL Server, but the normalization code was exercised
+			caughtException = ex;
 		}
+
+		// Assert
+		caughtException.ShouldNotBeNull("Expected a SqlException when connecting to unavailable SQL Server");
 	}
 
 	[Fact]
@@ -920,7 +925,7 @@ public sealed class CollectionsTests : IDisposable
 			.UseSqlite("Data Source=:memory:")
 			.Options;
 
-		using TestDbContext sqliteContext = new(options);
+		await using TestDbContext sqliteContext = new(options);
 		await sqliteContext.Database.OpenConnectionAsync(Current.CancellationToken);
 		await sqliteContext.Database.EnsureCreatedAsync(Current.CancellationToken);
 
@@ -1296,6 +1301,7 @@ public sealed class CollectionsTests : IDisposable
 		public DateTimeOffset CreatedDate { get; set; }
 	}
 
+#pragma warning disable S1144 // Unused private types or members should be removed
 	private sealed class TestEntityNotInModel
 	{
 		public int Id { get; set; }
@@ -1304,4 +1310,5 @@ public sealed class CollectionsTests : IDisposable
 		public string? Description { get; set; }
 		public DateTime CreatedDate { get; set; }
 	}
+#pragma warning restore S1144 // Unused private types or members should be removed
 }

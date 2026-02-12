@@ -1883,7 +1883,7 @@ public sealed class AsyncTests
 	public async Task RunAll_WithTaskExceptionAndBreakOnError_ShouldStopExecution()
 	{
 		int executedTasks = 0;
-		CancellationTokenSource cts = new();
+		using CancellationTokenSource cts = new();
 
 		List<Func<Task<int>>> tasks =
 		[

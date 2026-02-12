@@ -215,8 +215,8 @@ public sealed class CommonTests : IDisposable
 		// Arrange
 		IRow row = sheetProp.CreateRow(0);
 
-		// Act
-		ICell cell = row.CreateCell(columnIndex);
+		// Act - Explicitly call the extension method
+		ICell cell = Common.CreateCell(row, columnIndex);
 
 		// Assert
 		cell.ShouldNotBeNull();
@@ -229,11 +229,11 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		IRow row = sheetProp.CreateRow(0);
-		ICell existingCell = row.CreateCell(0);
+		ICell existingCell = Common.CreateCell(row, 0);
 		existingCell.SetCellValue("Original");
 
-		// Act
-		ICell newCell = row.CreateCell(0);
+		// Act - Explicitly call the extension method
+		ICell newCell = Common.CreateCell(row, 0);
 		newCell.SetCellValue("New");
 
 		// Assert
@@ -248,10 +248,10 @@ public sealed class CommonTests : IDisposable
 		// Arrange
 		IRow row = sheetProp.CreateRow(0);
 
-		// Act
-		ICell cell1 = row.CreateCell(0);
-		ICell cell2 = row.CreateCell(1);
-		ICell cell3 = row.CreateCell(2);
+		// Act - Explicitly call the extension method
+		ICell cell1 = Common.CreateCell(row, 0);
+		ICell cell2 = Common.CreateCell(row, 1);
+		ICell cell3 = Common.CreateCell(row, 2);
 
 		// Assert
 		cell1.ColumnIndex.ShouldBe(0);
@@ -267,14 +267,47 @@ public sealed class CommonTests : IDisposable
 		IRow row = sheetProp.CreateRow(0);
 		const int columnIndex = 2;
 
-		// Act
-		ICell cell = row.CreateCell(columnIndex);
+		// Act - Explicitly call the extension method
+		ICell cell = Common.CreateCell(row, columnIndex);
 
 		// Assert
 		cell.ShouldNotBeNull();
 		cell.ColumnIndex.ShouldBe(columnIndex);
 		cell.RowIndex.ShouldBe(0);
 		row.GetCell(columnIndex).ShouldBeSameAs(cell);
+	}
+
+	[RetryFact(3)]
+	public void CreateCell_ExtensionMethod_WithHSSFWorkbook_CreatesCell()
+	{
+		// Arrange
+		ISheet sheet = xlsWorkbookProp.CreateSheet("TestSheet");
+		IRow row = sheet.CreateRow(0);
+
+		// Act - Explicitly call the extension method
+		ICell cell = Common.CreateCell(row, 3);
+
+		// Assert
+		cell.ShouldNotBeNull();
+		cell.ColumnIndex.ShouldBe(3);
+		cell.RowIndex.ShouldBe(0);
+	}
+
+	[RetryFact(3)]
+	public void CreateCell_ExtensionMethod_WithSXSSFWorkbook_CreatesCell()
+	{
+		// Arrange
+		using SXSSFWorkbook sxssfWorkbook = new();
+		ISheet sheet = sxssfWorkbook.CreateSheet("TestSheet");
+		IRow row = sheet.CreateRow(0);
+
+		// Act - Explicitly call the extension method
+		ICell cell = Common.CreateCell(row, 5);
+
+		// Assert
+		cell.ShouldNotBeNull();
+		cell.ColumnIndex.ShouldBe(5);
+		cell.RowIndex.ShouldBe(0);
 	}
 
 	#endregion
@@ -1213,6 +1246,1471 @@ public sealed class CommonTests : IDisposable
 		result.Columns.Count.ShouldBe(2);
 		result.Columns[0].ColumnName.ShouldBe("Col1");
 		result.Columns[1].ColumnName.ShouldBe("Col2");
+	}
+
+	#endregion
+
+	#region CellStyle Tests
+
+	[RetryFact(3)]
+	public void CellStyle_CloneStyleFrom_CopiesAllProperties()
+	{
+		// Arrange
+		CellStyle source = new()
+		{
+			Alignment = HorizontalAlignment.Center,
+			WrapText = true,
+			IsLocked = true
+		};
+		CellStyle target = new();
+
+		// Act
+		target.CloneStyleFrom(source);
+
+		// Assert
+		target.Alignment.ShouldBe(HorizontalAlignment.Center);
+		target.WrapText.ShouldBe(true);
+		target.IsLocked.ShouldBe(true);
+	}
+
+	[RetryFact(3)]
+	public void CellStyle_GetDataFormatString_ThrowsNotImplementedException()
+	{
+		// Arrange
+		CellStyle cellStyle = new();
+
+		// Act & Assert
+		Should.Throw<NotImplementedException>(cellStyle.GetDataFormatString);
+	}
+
+	[RetryFact(3)]
+	public void CellStyle_GetFont_ReturnsCorrectFont()
+	{
+		// Arrange
+		IFont font = xlsxWorkbookProp.CreateFont();
+		font.FontName = "Arial";
+		font.IsBold = true;
+
+		CellStyle cellStyle = new();
+		cellStyle.SetFont(font);
+
+		// Act
+		IFont retrievedFont = cellStyle.GetFont(xlsxWorkbookProp);
+
+		// Assert
+		retrievedFont.Index.ShouldBe(font.Index);
+	}
+
+	[RetryFact(3)]
+	public void CellStyle_SetFont_StoresFontIndex()
+	{
+		// Arrange
+		IFont font = xlsxWorkbookProp.CreateFont();
+		font.FontName = "Times New Roman";
+		CellStyle cellStyle = new();
+
+		// Act
+		cellStyle.SetFont(font);
+
+		// Assert
+		cellStyle.FontIndex.ShouldBe(font.Index);
+	}
+
+	#endregion
+
+	#region CellFont Tests
+
+	[RetryFact(3)]
+	public void CellFont_CloneStyleFrom_CopiesAllProperties()
+	{
+		// Arrange
+		IFont source = xlsxWorkbookProp.CreateFont();
+		source.FontName = "Courier New";
+		source.IsBold = true;
+		source.IsItalic = true;
+		source.FontHeightInPoints = 14;
+
+		CellFont target = new();
+
+		// Act
+		target.CloneStyleFrom(source);
+
+		// Assert
+		target.FontName.ShouldBe("Courier New");
+		target.IsBold.ShouldBe(true);
+		target.IsItalic.ShouldBe(true);
+	}
+
+	[RetryFact(3)]
+	public void CellFont_CopyProperties_WithFontHeight_CopiesHeight()
+	{
+		// Arrange
+		CellFont source = new()
+		{
+			FontName = "Verdana",
+			FontHeight = 200,
+			IsBold = true,
+			IsItalic = true,
+			Color = 1,
+			TypeOffset = FontSuperScript.Super,
+			Underline = FontUnderlineType.Single,
+			Charset = 0
+		};
+		IFont dest = xlsxWorkbookProp.CreateFont();
+
+		// Act
+		source.CopyProperties(dest);
+
+		// Assert
+		dest.FontName.ShouldBe("Verdana");
+		dest.FontHeight.ShouldBe(200);
+		dest.IsBold.ShouldBe(true);
+		dest.IsItalic.ShouldBe(true);
+		dest.Color.ShouldBe((short)1);
+		dest.TypeOffset.ShouldBe(FontSuperScript.Super);
+		dest.Underline.ShouldBe(FontUnderlineType.Single);
+		dest.Charset.ShouldBe((short)0);
+	}
+
+	[RetryFact(3)]
+	public void CellFont_CopyProperties_WithFontHeightInPoints_CopiesHeightInPoints()
+	{
+		// Arrange
+		CellFont source = new()
+		{
+			FontName = "Tahoma",
+			FontHeightInPoints = 14,
+			IsStrikeout = true
+		};
+		IFont dest = xlsxWorkbookProp.CreateFont();
+
+		// Act
+		source.CopyProperties(dest);
+
+		// Assert
+		dest.FontName.ShouldBe("Tahoma");
+		dest.FontHeightInPoints.ShouldBe(14);
+		dest.IsStrikeout.ShouldBe(true);
+	}
+
+	#endregion
+
+	#region NpoiBorderStyles Tests
+
+	[RetryFact(3)]
+	public void NpoiBorderStyles_ConstructorWithCellStyle_ExtractsBorderProperties()
+	{
+		// Arrange
+		ICellStyle cellStyle = xlsxWorkbookProp.CreateCellStyle();
+		cellStyle.BorderTop = BorderStyle.Thin;
+		cellStyle.BorderLeft = BorderStyle.Medium;
+		cellStyle.BorderRight = BorderStyle.Thick;
+		cellStyle.BorderBottom = BorderStyle.Double;
+		cellStyle.TopBorderColor = 1;
+		cellStyle.LeftBorderColor = 2;
+		cellStyle.RightBorderColor = 3;
+		cellStyle.BottomBorderColor = 4;
+
+		// Act
+		NpoiBorderStyles borderStyles = new(cellStyle);
+
+		// Assert
+		borderStyles.BorderTop.ShouldBe(BorderStyle.Thin);
+		borderStyles.BorderLeft.ShouldBe(BorderStyle.Medium);
+		borderStyles.BorderRight.ShouldBe(BorderStyle.Thick);
+		borderStyles.BorderBottom.ShouldBe(BorderStyle.Double);
+		borderStyles.BorderTopColor.ShouldBe((short)1);
+		borderStyles.BorderLeftColor.ShouldBe((short)2);
+		borderStyles.BorderRightColor.ShouldBe((short)3);
+		borderStyles.BorderBottomColor.ShouldBe((short)4);
+	}
+
+	[RetryFact(3)]
+	public void NpoiBorderStyles_ConstructorWithNullCellStyle_DoesNotThrow()
+	{
+		// Act & Assert
+		Should.NotThrow(() => new NpoiBorderStyles(null));
+	}
+
+	[RetryFact(3)]
+	public void NpoiBorderStyles_ExtractBorderStyles_UpdatesAllProperties()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new();
+		ICellStyle cellStyle = xlsxWorkbookProp.CreateCellStyle();
+		cellStyle.BorderTop = BorderStyle.DashDot;
+		cellStyle.BorderLeft = BorderStyle.DashDotDot;
+		cellStyle.BorderRight = BorderStyle.Dashed;
+		cellStyle.BorderBottom = BorderStyle.Dotted;
+		cellStyle.TopBorderColor = 10;
+		cellStyle.LeftBorderColor = 11;
+		cellStyle.RightBorderColor = 12;
+		cellStyle.BottomBorderColor = 13;
+
+		// Act
+		borderStyles.ExtractBorderStyles(cellStyle);
+
+		// Assert
+		borderStyles.BorderTop.ShouldBe(BorderStyle.DashDot);
+		borderStyles.BorderLeft.ShouldBe(BorderStyle.DashDotDot);
+		borderStyles.BorderRight.ShouldBe(BorderStyle.Dashed);
+		borderStyles.BorderBottom.ShouldBe(BorderStyle.Dotted);
+		borderStyles.BorderTopColor.ShouldBe((short)10);
+		borderStyles.BorderLeftColor.ShouldBe((short)11);
+		borderStyles.BorderRightColor.ShouldBe((short)12);
+		borderStyles.BorderBottomColor.ShouldBe((short)13);
+	}
+
+	#endregion
+
+	#region Error Handling Tests
+
+	[RetryTheory(3)]
+	[InlineData("#GGGGGG")]  // Invalid hex characters
+	[InlineData("#12345")]   // Invalid length
+	[InlineData("FF0000")]   // Missing #
+	[InlineData("#12345678")] // Too long
+	public void GetCustomStyle_WithInvalidHexColor_ThrowsArgumentException(string invalidHexColor)
+	{
+		// Act & Assert
+		Should.Throw<ArgumentException>(() => xlsxWorkbookProp.GetCustomStyle(invalidHexColor));
+	}
+
+	[RetryFact(3)]
+	public void WriteExcelFile_SXSSFWorkbook_WithInvalidPath_ReturnsFalse()
+	{
+		// Arrange
+		using SXSSFWorkbook wb = new();
+		const string invalidPath = "Z:\\NonExistentFolder\\test.xlsx";
+
+		// Act
+		bool result = wb.WriteExcelFile(invalidPath);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
+	public void WriteExcelFile_HSSFWorkbook_WithInvalidPath_ReturnsFalse()
+	{
+		// Arrange
+		using HSSFWorkbook wb = new();
+		const string invalidPath = "Z:\\NonExistentFolder\\test.xls";
+
+		// Act
+		bool result = wb.WriteExcelFile(invalidPath);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromName_WithInvalidNamedRange_ReturnsNull()
+	{
+		// Act
+		ICell? cell = xlsxWorkbookProp.GetCellFromName("NonExistentName");
+
+		// Assert
+		cell.ShouldBeNull();
+	}
+
+	[RetryFact(3)]
+	public void ClearAllFromName_WithInvalidNamedRange_DoesNotThrow()
+	{
+		// Act & Assert
+		Should.NotThrow(() => xlsxWorkbookProp.ClearAllFromName("NonExistentName"));
+	}
+
+	[RetryFact(3)]
+	public void CreateTable_WithTableNameLongerThan255_ThrowsArgumentOutOfRangeException()
+	{
+		// Arrange
+		string longTableName = new('A', 300);
+
+		// Act & Assert
+		ArgumentOutOfRangeException ex = Should.Throw<ArgumentOutOfRangeException>(() =>
+			xlsxWorkbookProp.CreateTable("Test", longTableName, 0, 1, 0, 2, ["Col1", "Col2"]));
+		ex.ParamName.ShouldBe("tableName");
+	}
+
+	#endregion
+
+	#region Additional Coverage Tests
+
+	[RetryFact(3)]
+	public void GetCustomStyle_WithFillPattern_AppliesPattern()
+	{
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetCustomStyle(fillPattern: FillPattern.SolidForeground);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.FillPattern.ShouldBe(FillPattern.SolidForeground);
+	}
+
+	[RetryFact(3)]
+	public void GetCustomStyle_WithFontParameter_CreatesStyle()
+	{
+		// Arrange
+		IFont customFont = xlsxWorkbookProp.CreateFont();
+		customFont.IsBold = true;
+		customFont.FontName = "Arial";
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetCustomStyle(font: customFont);
+
+		// Assert
+		style.ShouldNotBeNull();
+		// The font is applied via SetFont which sets FontIndex
+		// Verify the style was created successfully
+		style.Index.ShouldBeGreaterThanOrEqualTo((short)0);
+	}
+
+	[RetryFact(3)]
+	public void GetCustomStyle_WithAlignment_AppliesAlignment()
+	{
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetCustomStyle(alignment: HorizontalAlignment.Right);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.Alignment.ShouldBe(HorizontalAlignment.Right);
+	}
+
+	[RetryFact(3)]
+	public void GetCustomStyle_WithCellLocked_LocksCells()
+	{
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetCustomStyle(cellLocked: true);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.IsLocked.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void GetCustomStyle_WithWrapText_EnablesWrapText()
+	{
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetCustomStyle(wrapText: true);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.WrapText.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WithWrapText_EnablesWrapText()
+	{
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Body, wrapText: true);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.WrapText.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WithCellLocked_LocksCells()
+	{
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Header, cellLocked: true);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.IsLocked.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void IsXlsx_WithXlsxStream_ReturnsTrue()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		xlsxWorkbookProp.Write(ms, true);
+		ms.Position = 0;
+
+		// Act
+		bool result = ms.IsXlsx();
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void IsXlsx_WithXlsStream_ReturnsFalse()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		xlsWorkbookProp.Write(ms, true);
+		ms.Position = 0;
+
+		// Act
+		bool result = ms.IsXlsx();
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
+	public void GetStringValue_WithNullCell_ReturnsNull()
+	{
+		// Arrange
+		ICell? cell = null;
+
+		// Act
+		string? result = cell.GetStringValue();
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromName_WithNamedRangeAndOffset_ReturnsOffsetCell()
+	{
+		// Arrange
+		IName name = xlsxWorkbookProp.CreateName();
+		name.NameName = "OffsetTest";
+		name.RefersToFormula = "Test!$B$2";
+
+		// Populate cells
+		sheetProp.GetCellFromReference("B2")?.SetCellValue("Original");
+		sheetProp.GetCellFromReference("C3")?.SetCellValue("Offset");
+
+		// Act
+		ICell? cell = xlsxWorkbookProp.GetCellFromName("OffsetTest", colOffset: 1, rowOffset: 1);
+
+		// Assert
+		cell.ShouldNotBeNull();
+		cell.ColumnIndex.ShouldBe(2); // C
+		cell.RowIndex.ShouldBe(2); // 3 (0-based)
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromReference_WithRangeReference_ReturnsTopLeftCell()
+	{
+		// Arrange
+		const string rangeReference = "B2:D4";
+
+		// Act
+		ICell? cell = sheetProp.GetCellFromReference(rangeReference);
+
+		// Assert
+		cell.ShouldNotBeNull();
+		cell.ColumnIndex.ShouldBe(1); // B
+		cell.RowIndex.ShouldBe(1); // 2 (0-based)
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromReference_WithOffsets_ReturnsCorrectCell()
+	{
+		// Arrange
+		const string cellReference = "B2";
+
+		// Act
+		ICell? cell = sheetProp.GetCellFromReference(cellReference, colOffset: 2, rowOffset: 3);
+
+		// Assert
+		cell.ShouldNotBeNull();
+		cell.ColumnIndex.ShouldBe(3); // D (B=1 + 2)
+		cell.RowIndex.ShouldBe(4); // 5 (2-1=1 + 3)
+	}
+
+	[RetryFact(3)]
+	public void GetLastPopulatedRowInColumn_WithNoPopulatedCells_ReturnsNegative()
+	{
+		// Arrange
+		using XSSFWorkbook emptyWorkbook = new();
+		ISheet emptySheet = emptyWorkbook.CreateSheet("Empty");
+
+		// Act
+		int lastRow = emptySheet.GetLastPopulatedRowInColumn(0);
+
+		// Assert
+		lastRow.ShouldBeLessThan(0);
+	}
+
+	[RetryFact(3)]
+	public void AddPicture_WithNullCell_LogsWarning()
+	{
+		// Arrange
+		byte[] imageData = File.ReadAllBytes("TestData/test.png");
+		CellRangeAddress area = new(100, 101, 100, 101); // Area far beyond populated cells
+		IDrawing<IShape> drawing = sheetProp.CreateDrawingPatriarch();
+
+		// Act - should not throw, but log a warning
+		Should.NotThrow(() => xlsxWorkbookProp.AddPicture(sheetProp, area, imageData, drawing));
+	}
+
+	[RetryFact(3)]
+	public void GetRangeOfMergedCells_WithNullCell_ReturnsNull()
+	{
+		// Arrange
+		ICell? cell = null;
+
+		// Act
+		CellRangeAddress? range = cell.GetRangeOfMergedCells();
+
+		// Assert
+		range.ShouldBeNull();
+	}
+
+	[RetryFact(3)]
+	public void AddImages_WithEmptyLists_DoesNotThrow()
+	{
+		// Arrange
+		List<byte[]> emptyImageData = [];
+		List<string> emptyCellNames = [];
+
+		// Act & Assert
+		Should.NotThrow(() => xlsxWorkbookProp.AddImages(emptyImageData, emptyCellNames));
+	}
+
+	[RetryFact(3)]
+	public void AddImages_WithMismatchedListSizes_DoesNotAddImages()
+	{
+		// Arrange
+		List<byte[]> imageData = [File.ReadAllBytes("TestData/test.png")];
+		List<string> cellNames = ["Name1", "Name2"]; // Different size
+
+		// Act
+		xlsxWorkbookProp.AddImages(imageData, cellNames);
+
+		// Assert
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
+		// Should not add any images due to size mismatch
+		((XSSFDrawing)sheet.CreateDrawingPatriarch()).GetShapes().Count.ShouldBe(0);
+	}
+
+	[RetryFact(3)]
+	public void AddImages_WithCellRanges_WithMismatchedListSizes_DoesNotAddImages()
+	{
+		// Arrange
+		List<byte[]> imageData = [File.ReadAllBytes("TestData/test.png")];
+		List<CellRangeAddress> ranges = [
+						new CellRangeAddress(1, 2, 1, 2),
+						new CellRangeAddress(3, 4, 1, 2)
+				]; // Different size
+
+		// Act
+		xlsxWorkbookProp.AddImages(sheetProp, imageData, ranges);
+
+		// Assert
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
+		// Should not add any images due to size mismatch
+		((XSSFDrawing)sheet.CreateDrawingPatriarch()).GetShapes().Count.ShouldBe(0);
+	}
+
+	[RetryFact(3)]
+	public void GetCustomStyle_CacheTest_ReturnsSameStyleForSameParameters()
+	{
+		// Act
+		ICellStyle style1 = xlsxWorkbookProp.GetCustomStyle("#FF0000");
+		ICellStyle style2 = xlsxWorkbookProp.GetCustomStyle("#FF0000");
+
+		// Assert
+		style1.ShouldBeSameAs(style2);
+	}
+
+	[RetryFact(3)]
+	public void GetFont_CacheTest_ReturnsSameFontForSameParameters()
+	{
+		// Act
+		IFont font1 = xlsxWorkbookProp.GetFont(EFont.Header);
+		IFont font2 = xlsxWorkbookProp.GetFont(EFont.Header);
+
+		// Assert
+		font1.ShouldBeSameAs(font2);
+	}
+
+	[RetryFact(3)]
+	public void CreateTable_WithDefaultColumnNames_GeneratesColumnNames()
+	{
+		// Act
+		xlsxWorkbookProp.CreateTable("Test", "AutoNameTable", 0, 2, 0, 1);
+
+		// Assert
+		XSSFSheet sheet = (XSSFSheet)xlsxWorkbookProp.GetSheet("Test");
+		XSSFTable? table = sheet.GetTables().FirstOrDefault(t => t.Name == "AutoNameTable");
+		table.ShouldNotBeNull();
+	}
+
+	[RetryFact(3)]
+	public void CreateTable_WithPartialColumnNames_UsesMixOfProvidedAndDefaultNames()
+	{
+		// Arrange
+		List<string> partialNames = ["FirstCol"]; // Only one name for three columns
+
+		// Act
+		xlsxWorkbookProp.CreateTable("Test", "PartialNameTable", 0, 2, 0, 1, partialNames);
+
+		// Assert
+		XSSFSheet sheet = (XSSFSheet)xlsxWorkbookProp.GetSheet("Test");
+		XSSFTable? table = sheet.GetTables().FirstOrDefault(t => t.Name == "PartialNameTable");
+		table.ShouldNotBeNull();
+	}
+
+	[RetryFact(3)]
+	public void GetRange_WithInvalidRange_ThrowsException()
+	{
+		// Act & Assert
+		Should.Throw<Exception>(() => sheetProp.GetRange("INVALID"));
+	}
+
+	[RetryFact(3)]
+	public void GetClosestHssfColor_WithShortHexFormat_ThrowsArgumentException()
+	{
+		// Arrange - Use short hex format #RGB instead of #RRGGBB
+		const string shortHex = "#F00"; // Short format for red
+
+		// Act & Assert - Short hex format is not supported
+		ArgumentException ex = Should.Throw<ArgumentException>(() => GetClosestHssfColor(shortHex));
+		ex.ParamName.ShouldBe("hexColor");
+	}
+
+	#endregion
+
+	#region Exception Handling and Edge Cases Tests
+
+	[RetryFact(3)]
+	public void GetCellFromReference_WithInvalidReference_ReturnsNull()
+	{
+		// Arrange
+		const string invalidReference = "INVALID_REF";
+
+		// Act
+		ICell? cell = sheetProp.GetCellFromReference(invalidReference);
+
+		// Assert
+		cell.ShouldBeNull();
+	}
+
+	[RetryFact(3)]
+	public void GetCellOffset_WithExceptionThrown_ReturnsNull()
+	{
+		// Arrange
+		IRow row = sheetProp.CreateRow(0);
+		ICell cell = row.CreateCell(0);
+
+		// Act - Try with extremely large offset that could cause issues
+		ICell? result = cell.GetCellOffset(int.MaxValue, int.MaxValue);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromCoordinates_WithExceptionThrown_ReturnsNull()
+	{
+		// Act - Try with negative coordinates that could cause issues
+		ICell? result = sheetProp.GetCellFromCoordinates(-1, -1);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromName_WithException_ReturnsNull()
+	{
+		// Arrange
+		IName name = xlsxWorkbookProp.CreateName();
+		name.NameName = "InvalidName";
+		name.RefersToFormula = "INVALID!FORMULA";
+
+		// Act
+		ICell? cell = xlsxWorkbookProp.GetCellFromName("InvalidName");
+
+		// Assert
+		cell.ShouldBeNull();
+	}
+
+	[RetryFact(3)]
+	public void ClearAllFromName_WithNullWorksheet_DoesNotThrow()
+	{
+		// Arrange
+		IName name = xlsxWorkbookProp.CreateName();
+		name.NameName = "TestName";
+		name.RefersToFormula = "NonExistentSheet!$A$1";
+
+		// Act & Assert
+		Should.NotThrow(() => xlsxWorkbookProp.ClearAllFromName("TestName"));
+	}
+
+	[RetryFact(3)]
+	public void ClearAllFromName_WithException_CatchesAndHandles()
+	{
+		// Arrange
+		IName name = xlsxWorkbookProp.CreateName();
+		name.NameName = "ExceptionTest";
+		name.RefersToFormula = "Test!$A$1";
+
+		// Act - Try to clear a valid name, then test exception handling path through code
+		// The actual exception handling is tested by ensuring the method doesn't throw
+		Should.NotThrow(() => xlsxWorkbookProp.ClearAllFromName("ExceptionTest"));
+	}
+
+	[RetryFact(3)]
+	public void ColumnNameToNumber_WithNullOrEmpty_ThrowsArgumentException()
+	{
+		// Act & Assert
+		Should.Throw<ArgumentException>(() => ((string?)null).ColumnNameToNumber());
+		Should.Throw<ArgumentException>(() => string.Empty.ColumnNameToNumber());
+	}
+
+	[RetryFact(3)]
+	public void ColumnIndexToName_WithNegativeInt_ThrowsArgumentException()
+	{
+		// Arrange
+		const int negativeIndex = -1;
+
+		// Act & Assert
+		Should.Throw<ArgumentException>(() => negativeIndex.ColumnIndexToName());
+	}
+
+	[RetryFact(3)]
+	public void GetClosestHssfColor_ExceedsCacheLimit_RemovesOldestEntries()
+	{
+		// Arrange
+		const int cacheLimit = 5;
+		List<string> colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF"];
+
+		// Act - Add more colors than cache limit
+		foreach (string color in colors)
+		{
+			GetClosestHssfColor(color, cacheLimit);
+		}
+
+		// Assert - Should not throw, cache should be managed
+		HSSFColor lastColor = GetClosestHssfColor("#FFFFFF", cacheLimit);
+		lastColor.ShouldNotBeNull();
+	}
+
+	#endregion
+
+	#region HSSFWorkbook (XLS) Tests
+
+	[RetryFact(3)]
+	public void GetCustomStyle_WithHSSFWorkbook_CreatesStyle()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = BorderStyle.Thin,
+			BorderLeft = BorderStyle.Medium
+		};
+
+		// Act
+		ICellStyle style = xlsWorkbookProp.GetCustomStyle(borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.ShouldBeOfType<HSSFCellStyle>();
+	}
+
+	[RetryFact(3)]
+	public void GetCustomStyle_WithHSSFWorkbook_WithAllParameters_CreatesStyle()
+	{
+		// Arrange
+		IFont font = xlsWorkbookProp.CreateFont();
+		font.FontName = "Arial";
+
+		// Act
+		ICellStyle style = xlsWorkbookProp.GetCustomStyle(
+			cellLocked: true,
+			font: font,
+			alignment: HorizontalAlignment.Left,
+			fillPattern: FillPattern.SolidForeground,
+			wrapText: true);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.IsLocked.ShouldBeTrue();
+		style.Alignment.ShouldBe(HorizontalAlignment.Left);
+		style.FillPattern.ShouldBe(FillPattern.SolidForeground);
+		style.WrapText.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public async Task ReadExcelFileToDataTable_WithHSSFWorkbook_ReadsData()
+	{
+		// Arrange
+		await using MemoryStream ms = new();
+		ISheet hssfSheet = xlsWorkbookProp.CreateSheet("TestSheet");
+		IRow headerRow = hssfSheet.CreateRow(0);
+		headerRow.CreateCell(0).SetCellValue("Col1");
+		headerRow.CreateCell(1).SetCellValue("Col2");
+
+		IRow dataRow = hssfSheet.CreateRow(1);
+		dataRow.CreateCell(0).SetCellValue("Data1");
+		dataRow.CreateCell(1).SetCellValue("Data2");
+
+		xlsWorkbookProp.Write(ms, true);
+		ms.Position = 0;
+
+		// Act
+		DataTable result = ms.ReadExcelFileToDataTable(hasHeaders: true);
+
+		// Assert
+		result.Columns.Count.ShouldBe(2);
+		result.Rows.Count.ShouldBe(1);
+		result.Rows[0]["Col1"].ToString().ShouldBe("Data1");
+		result.Rows[0]["Col2"].ToString().ShouldBe("Data2");
+	}
+
+	[RetryFact(3)]
+	public async Task ReadExcelFileToDataTable_WithHSSFWorkbook_WithSpecificSheet_ReadsCorrectSheet()
+	{
+		// Arrange
+		await using MemoryStream ms = new();
+		xlsWorkbookProp.CreateSheet("Sheet1");
+		ISheet sheet2 = xlsWorkbookProp.CreateSheet("Sheet2");
+		IRow headerRow = sheet2.CreateRow(0);
+		headerRow.CreateCell(0).SetCellValue("CorrectColumn");
+		xlsWorkbookProp.Write(ms, true);
+		ms.Position = 0;
+
+		// Act
+		DataTable result = ms.ReadExcelFileToDataTable(hasHeaders: true, sheetName: "Sheet2");
+
+		// Assert
+		result.Columns[0].ColumnName.ShouldBe("CorrectColumn");
+	}
+
+	[RetryFact(3)]
+	public async Task ReadExcelFileToDataTable_WithStartAndEndReferences_ReadsSpecificRange()
+	{
+		// Arrange
+		await using MemoryStream ms = new();
+		IRow headerRow = sheetProp.CreateRow(0);
+		for (int i = 0; i < 10; i++)
+		{
+			headerRow.CreateCell(i).SetCellValue($"Col{i}");
+		}
+
+		IRow dataRow = sheetProp.CreateRow(1);
+		for (int i = 0; i < 10; i++)
+		{
+			dataRow.CreateCell(i).SetCellValue($"Data{i}");
+		}
+
+		xlsxWorkbookProp.Write(ms, true);
+		ms.Position = 0;
+
+		// Act
+		DataTable result = ms.ReadExcelFileToDataTable(
+			hasHeaders: true,
+			startCellReference: "B1",
+			endCellReference: "D2");
+
+		// Assert
+		result.Columns.Count.ShouldBe(3); // B, C, D
+		result.Rows.Count.ShouldBe(1);
+	}
+
+	[RetryFact(3)]
+	public async Task ReadExcelTableToDataTable_WithHSSFWorkbook_ReturnsEmptyDataTable()
+	{
+		// Arrange
+		await using MemoryStream ms = new();
+		xlsWorkbookProp.CreateSheet("Test");
+		xlsWorkbookProp.Write(ms, true);
+		ms.Position = 0;
+
+		// Act - HSSFWorkbook doesn't support tables, should return empty DataTable
+		DataTable result = ms.ReadExcelTableToDataTable();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Rows.Count.ShouldBe(0);
+	}
+
+	#endregion
+
+	#region GetStringValue Additional Tests
+
+	[RetryFact(3)]
+	public void GetStringValue_WithFormulaCellNumericResult_ReturnsNumericString()
+	{
+		// Arrange
+		ICell cell = sheetProp.CreateRow(0).CreateCell(0);
+		cell.SetCellFormula("1+1");
+		xlsxWorkbookProp.GetCreationHelper().CreateFormulaEvaluator().EvaluateFormulaCell(cell);
+
+		// Act
+		string result = cell.GetStringValue();
+
+		// Assert
+		result.ShouldNotBeEmpty();
+	}
+
+	[RetryFact(3)]
+	public void GetStringValue_WithFormulaCellStringResult_ReturnsString()
+	{
+		// Arrange
+		ICell cell = sheetProp.CreateRow(0).CreateCell(0);
+		ICell cell2 = sheetProp.GetRow(0).CreateCell(1);
+		cell2.SetCellValue("Test");
+		cell.SetCellFormula("B1");
+		xlsxWorkbookProp.GetCreationHelper().CreateFormulaEvaluator().EvaluateFormulaCell(cell);
+
+		// Act
+		string result = cell.GetStringValue();
+
+		// Assert
+		result.ShouldBe("Test");
+	}
+
+	[RetryFact(3)]
+	public void GetStringValue_WithFormulaCellBooleanResult_ReturnsBooleanString()
+	{
+		// Arrange
+		ICell cell = sheetProp.CreateRow(0).CreateCell(0);
+		cell.SetCellFormula("TRUE");
+		xlsxWorkbookProp.GetCreationHelper().CreateFormulaEvaluator().EvaluateFormulaCell(cell);
+
+		// Act
+		string result = cell.GetStringValue();
+
+		// Assert
+		result.ShouldBe("True");
+	}
+
+	[RetryFact(3)]
+	public void GetStringValue_WithFormulaCellBlankResult_ReturnsEmpty()
+	{
+		// Arrange
+		ICell cell = sheetProp.CreateRow(0).CreateCell(0);
+		ICell cell2 = sheetProp.GetRow(0).CreateCell(1);
+		cell2.SetCellValue("");
+		cell.SetCellFormula("B1");
+		xlsxWorkbookProp.GetCreationHelper().CreateFormulaEvaluator().EvaluateFormulaCell(cell);
+
+		// Act
+		string result = cell.GetStringValue();
+
+		// Assert
+		result.ShouldBe(string.Empty);
+	}
+
+	[RetryFact(3)]
+	public void GetStringValue_WithFormulaCellErrorResult_ReturnsEmpty()
+	{
+		// Arrange
+		ICell cell = sheetProp.CreateRow(0).CreateCell(0);
+		cell.SetCellFormula("1/0"); // Division by zero error
+		xlsxWorkbookProp.GetCreationHelper().CreateFormulaEvaluator().EvaluateFormulaCell(cell);
+
+		// Act
+		string result = cell.GetStringValue();
+
+		// Assert
+		result.ShouldBe(string.Empty);
+	}
+
+	#endregion
+
+	#region AddImage Additional Tests
+
+	[RetryFact(3)]
+	public void AddImage_WithValidUnmergedRange_AddsImage()
+	{
+		// Arrange
+		byte[] imageData = File.ReadAllBytes("TestData/test.png");
+		const string range = "B2:C3";
+
+		// Act
+		xlsxWorkbookProp.AddImage(sheetProp, imageData, range);
+
+		// Assert
+		XSSFSheet sheet = (XSSFSheet)sheetProp;
+		XSSFDrawing drawings = (XSSFDrawing)sheet.CreateDrawingPatriarch();
+		drawings.GetShapes().Count.ShouldBeGreaterThanOrEqualTo(1);
+	}
+
+	[RetryFact(3)]
+	public void AddImages_WithNullWorkbook_DoesNotThrow()
+	{
+		// Arrange
+		List<byte[]> emptyList = [];
+		List<string> emptyNames = [];
+
+		// Act & Assert - When count is 0, should not throw
+		Should.NotThrow(() => xlsxWorkbookProp.AddImages(emptyList, emptyNames));
+	}
+
+	#endregion
+
+	#region Complex Scenario Tests
+
+	[RetryFact(3)]
+	public void GetLastPopulatedRowInColumn_WithMixedEmptyAndPopulatedCells_ReturnsCorrectIndex()
+	{
+		// Arrange
+		sheetProp.CreateRow(0).CreateCell(0).SetCellValue("Value1");
+		sheetProp.CreateRow(1).CreateCell(0).SetCellValue(""); // Empty
+		sheetProp.CreateRow(2).CreateCell(0).SetCellValue("Value2");
+		sheetProp.CreateRow(3).CreateCell(0).SetCellValue("Value3");
+
+		// Act
+		int lastPopulatedRow = sheetProp.GetLastPopulatedRowInColumn(0);
+
+		// Assert
+		lastPopulatedRow.ShouldBe(3);
+	}
+
+	[RetryFact(3)]
+	public void CreateTable_WithNoColumnNames_GeneratesDefaultNames()
+	{
+		// Act
+		xlsxWorkbookProp.CreateTable("Test", "DefaultNamesTable", 0, 1, 0, 2);
+
+		// Assert
+		XSSFSheet sheet = (XSSFSheet)xlsxWorkbookProp.GetSheet("Test");
+		XSSFTable? table = sheet.GetTables().FirstOrDefault(t => t.Name == "DefaultNamesTable");
+		table.ShouldNotBeNull();
+		table.GetCTTable().tableColumns.tableColumn.Count.ShouldBe(2);
+	}
+
+	[RetryFact(3)]
+	public void CreateTable_WithCustomTableStyle_AppliesStyle()
+	{
+		// Act
+		xlsxWorkbookProp.CreateTable("Test", "StyledTable", 0, 1, 0, 2, ["Col1", "Col2"],
+			tableStyle: ETableStyle.TableStyleMedium2, showRowStripes: false, showColStripes: true);
+
+		// Assert
+		XSSFSheet sheet = (XSSFSheet)xlsxWorkbookProp.GetSheet("Test");
+		XSSFTable? table = sheet.GetTables().FirstOrDefault(t => t.Name == "StyledTable");
+		table.ShouldNotBeNull();
+	}
+
+	[RetryFact(3)]
+	public void GetRangeHeightInPx_WithNullRows_HandlesGracefully()
+	{
+		// Arrange - Don't create all rows in range
+		sheetProp.CreateRow(0).Height = 20 * 20;
+		// Row 1 not created
+		sheetProp.CreateRow(2).Height = 20 * 20;
+
+		// Act
+		int height = sheetProp.GetRangeHeightInPx(0, 2);
+
+		// Assert
+		height.ShouldBeGreaterThanOrEqualTo(0); // Should handle null row
+	}
+
+	[RetryFact(3)]
+	public void GetRangeWidthInPx_WithDifferentColumnWidths_CalculatesCorrectly()
+	{
+		// Arrange
+		sheetProp.SetColumnWidth(0, 10 * 256);
+		sheetProp.SetColumnWidth(1, 20 * 256);
+		sheetProp.SetColumnWidth(2, 15 * 256);
+
+		// Act
+		int width = sheetProp.GetRangeWidthInPx(0, 2);
+
+		// Assert
+		width.ShouldBeGreaterThan(0);
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromName_WithMultipleCellRange_ReturnsTopLeftCell()
+	{
+		// Arrange
+		IName name = xlsxWorkbookProp.CreateName();
+		name.NameName = "MultiCellRange";
+		name.RefersToFormula = "Test!$B$2:$D$4";
+
+		// Populate cells
+		for (int row = 1; row <= 3; row++)
+		{
+			for (int col = 1; col <= 3; col++)
+			{
+				sheetProp.GetCellFromCoordinates(col, row)?.SetCellValue($"R{row}C{col}");
+			}
+		}
+
+		// Act
+		ICell? cell = xlsxWorkbookProp.GetCellFromName("MultiCellRange");
+
+		// Assert
+		cell.ShouldNotBeNull();
+		cell.ColumnIndex.ShouldBe(1); // B
+		cell.RowIndex.ShouldBe(1); // 2 (0-based)
+	}
+
+	[RetryFact(3)]
+	public void ClearAllFromName_WithMultipleCells_ClearsAllCells()
+	{
+		// Arrange
+		IName name = xlsxWorkbookProp.CreateName();
+		name.NameName = "ClearRange";
+		name.RefersToFormula = "Test!$B$2:$C$3";
+
+		sheetProp.GetCellFromReference("B2")?.SetCellValue("Value1");
+		sheetProp.GetCellFromReference("C2")?.SetCellValue("Value2");
+		sheetProp.GetCellFromReference("B3")?.SetCellValue("Value3");
+		sheetProp.GetCellFromReference("C3")?.SetCellValue("Value4");
+
+		// Act
+		xlsxWorkbookProp.ClearAllFromName("ClearRange");
+
+		// Assert
+		sheetProp.GetCellFromReference("B2")?.IsCellEmpty().ShouldBeTrue();
+		sheetProp.GetCellFromReference("C2")?.IsCellEmpty().ShouldBeTrue();
+		sheetProp.GetCellFromReference("B3")?.IsCellEmpty().ShouldBeTrue();
+		sheetProp.GetCellFromReference("C3")?.IsCellEmpty().ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void ColumnNameToNumber_WithLowercaseInput_WorksCorrectly()
+	{
+		// Arrange
+		const string columnName = "abc";
+
+		// Act
+		int result = columnName.ColumnNameToNumber();
+
+		// Assert
+		result.ShouldBe(730); // ABC column
+	}
+
+	[RetryFact(3)]
+	public void GetCustomStyle_CachingWithDifferentParameters_ReturnsDifferentStyles()
+	{
+		// Act
+		ICellStyle style1 = xlsxWorkbookProp.GetCustomStyle("#FF0000", cellLocked: true);
+		ICellStyle style2 = xlsxWorkbookProp.GetCustomStyle("#FF0000", cellLocked: false);
+
+		// Assert
+		style1.ShouldNotBeSameAs(style2); // Different locked status = different style
+	}
+
+	#endregion
+
+	#region GetStandardCellStyle Border Color Tests
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WithBorderBottomColor_AppliesColor()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderBottomColor = HSSFColor.Red.Index
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Header, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BottomBorderColor.ShouldBe(HSSFColor.Red.Index);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WithBorderLeftColor_AppliesColor()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderLeftColor = HSSFColor.Blue.Index
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Body, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.LeftBorderColor.ShouldBe(HSSFColor.Blue.Index);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WithBorderRightColor_AppliesColor()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderRightColor = HSSFColor.Green.Index
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.HeaderThickTop, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.RightBorderColor.ShouldBe(HSSFColor.Green.Index);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WithBorderTopColor_AppliesColor()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTopColor = HSSFColor.Yellow.Index
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Error, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.TopBorderColor.ShouldBe(HSSFColor.Yellow.Index);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WithAllBorderColors_AppliesAllColors()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTopColor = HSSFColor.Red.Index,
+			BorderLeftColor = HSSFColor.Blue.Index,
+			BorderRightColor = HSSFColor.Green.Index,
+			BorderBottomColor = HSSFColor.Yellow.Index
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Body, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.TopBorderColor.ShouldBe(HSSFColor.Red.Index);
+		style.LeftBorderColor.ShouldBe(HSSFColor.Blue.Index);
+		style.RightBorderColor.ShouldBe(HSSFColor.Green.Index);
+		style.BottomBorderColor.ShouldBe(HSSFColor.Yellow.Index);
+	}
+
+	#endregion
+
+	#region GetStandardCellStyle BorderStyles Paths Tests
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_BodyStyle_WithBorderTop_AppliesBorderTop()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = BorderStyle.Thick
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Body, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BorderTop.ShouldBe(BorderStyle.Thick);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_ErrorStyle_WithAllBorders_AppliesAllBorders()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = BorderStyle.Thick,
+			BorderBottom = BorderStyle.Medium,
+			BorderLeft = BorderStyle.Thin,
+			BorderRight = BorderStyle.Double
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Error, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BorderTop.ShouldBe(BorderStyle.Thick);
+		style.BorderBottom.ShouldBe(BorderStyle.Medium);
+		style.BorderLeft.ShouldBe(BorderStyle.Thin);
+		style.BorderRight.ShouldBe(BorderStyle.Double);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_BlackoutStyle_WithAllBorders_AppliesAllBorders()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = BorderStyle.Thick,
+			BorderBottom = BorderStyle.Medium,
+			BorderLeft = BorderStyle.Thin,
+			BorderRight = BorderStyle.Double
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Blackout, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BorderTop.ShouldBe(BorderStyle.Thick);
+		style.BorderBottom.ShouldBe(BorderStyle.Medium);
+		style.BorderLeft.ShouldBe(BorderStyle.Thin);
+		style.BorderRight.ShouldBe(BorderStyle.Double);
+		style.FillForegroundColor.ShouldBe(HSSFColor.Black.Index);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WhiteoutStyle_WithAllBorders_AppliesAllBorders()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = BorderStyle.Thick,
+			BorderBottom = BorderStyle.Medium,
+			BorderLeft = BorderStyle.Thin,
+			BorderRight = BorderStyle.Double
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Whiteout, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BorderTop.ShouldBe(BorderStyle.Thick);
+		style.BorderBottom.ShouldBe(BorderStyle.Medium);
+		style.BorderLeft.ShouldBe(BorderStyle.Thin);
+		style.BorderRight.ShouldBe(BorderStyle.Double);
+		style.FillForegroundColor.ShouldBe(HSSFColor.White.Index);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_ImageBackgroundStyle_WithAllBorders_AppliesAllBorders()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = BorderStyle.Thick,
+			BorderBottom = BorderStyle.Medium,
+			BorderLeft = BorderStyle.Thin,
+			BorderRight = BorderStyle.Double
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.ImageBackground, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BorderTop.ShouldBe(BorderStyle.Thick);
+		style.BorderBottom.ShouldBe(BorderStyle.Medium);
+		style.BorderLeft.ShouldBe(BorderStyle.Thin);
+		style.BorderRight.ShouldBe(BorderStyle.Double);
+		style.Alignment.ShouldBe(HorizontalAlignment.Center);
+		style.VerticalAlignment.ShouldBe(VerticalAlignment.Center);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_ErrorStyle_WithPartialBorders_AppliesOnlySetBorders()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = BorderStyle.Thick,
+			BorderBottom = null,
+			BorderLeft = BorderStyle.Thin,
+			BorderRight = null
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Error, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BorderTop.ShouldBe(BorderStyle.Thick);
+		style.BorderLeft.ShouldBe(BorderStyle.Thin);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_BlackoutStyle_WithPartialBorders_AppliesOnlySetBorders()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = null,
+			BorderBottom = BorderStyle.Medium,
+			BorderLeft = null,
+			BorderRight = BorderStyle.Double
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Blackout, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BorderBottom.ShouldBe(BorderStyle.Medium);
+		style.BorderRight.ShouldBe(BorderStyle.Double);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WhiteoutStyle_WithPartialBorders_AppliesOnlySetBorders()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = BorderStyle.Thick,
+			BorderBottom = null,
+			BorderLeft = null,
+			BorderRight = BorderStyle.Thin
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.Whiteout, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BorderTop.ShouldBe(BorderStyle.Thick);
+		style.BorderRight.ShouldBe(BorderStyle.Thin);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_ImageBackgroundStyle_WithPartialBorders_AppliesOnlySetBorders()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = null,
+			BorderBottom = BorderStyle.Thin,
+			BorderLeft = BorderStyle.Medium,
+			BorderRight = null
+		};
+
+		// Act
+		ICellStyle style = xlsxWorkbookProp.GetStandardCellStyle(EStyle.ImageBackground, borderStyles: borderStyles);
+
+		// Assert
+		style.ShouldNotBeNull();
+		style.BorderBottom.ShouldBe(BorderStyle.Thin);
+		style.BorderLeft.ShouldBe(BorderStyle.Medium);
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_AllStyles_WithBordersAndColors_AppliesCorrectly()
+	{
+		// Arrange
+		NpoiBorderStyles borderStyles = new()
+		{
+			BorderTop = BorderStyle.Thick,
+			BorderBottom = BorderStyle.Medium,
+			BorderLeft = BorderStyle.Thin,
+			BorderRight = BorderStyle.Double,
+			BorderTopColor = HSSFColor.Red.Index,
+			BorderBottomColor = HSSFColor.Blue.Index,
+			BorderLeftColor = HSSFColor.Green.Index,
+			BorderRightColor = HSSFColor.Yellow.Index
+		};
+
+		// Test each style
+		foreach (EStyle style in Enum.GetValues<EStyle>())
+		{
+			// Act
+			ICellStyle cellStyle = xlsxWorkbookProp.GetStandardCellStyle(style, borderStyles: borderStyles);
+
+			// Assert
+			cellStyle.ShouldNotBeNull();
+			cellStyle.TopBorderColor.ShouldBe(HSSFColor.Red.Index);
+			cellStyle.BottomBorderColor.ShouldBe(HSSFColor.Blue.Index);
+			cellStyle.LeftBorderColor.ShouldBe(HSSFColor.Green.Index);
+			cellStyle.RightBorderColor.ShouldBe(HSSFColor.Yellow.Index);
+		}
 	}
 
 	#endregion

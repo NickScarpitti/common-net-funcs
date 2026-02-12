@@ -441,7 +441,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 	public void Constructor_WithAttributesList_SetsCorrectValue()
 	{
 		// Arrange
-		List<Type> attributes = [typeof(System.Text.Json.Serialization.JsonIgnoreAttribute)];
+		List<Type> attributes = [typeof(JsonIgnoreAttribute)];
 
 		// Act
 		NavigationPropertiesOptions options = new(navPropAttributesToIgnore: attributes);
@@ -468,7 +468,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 	{
 		// Arrange
 		const int maxDepth = 5;
-		List<Type> attributes = [typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), typeof(Newtonsoft.Json.JsonIgnoreAttribute)];
+		List<Type> attributes = [typeof(JsonIgnoreAttribute), typeof(Newtonsoft.Json.JsonIgnoreAttribute)];
 		const bool useCaching = false;
 
 		// Act
@@ -500,7 +500,7 @@ public sealed class NavigationPropertiesTests : IDisposable
 	{
 		// Arrange
 		NavigationPropertiesOptions options = new();
-		List<Type> attributes = [typeof(System.Xml.Serialization.XmlIgnoreAttribute)];
+		List<Type> attributes = [typeof(XmlIgnoreAttribute)];
 
 		// Act
 		options.NavPropAttributesToIgnore = attributes;

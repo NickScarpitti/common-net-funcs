@@ -82,9 +82,15 @@ public sealed class StreamsTests
 			set => throw new NotSupportedException();
 		}
 
-		public override long Seek(long offset, SeekOrigin loc) => throw new NotSupportedException();
+		public override long Seek(long offset, SeekOrigin loc)
+		{
+			throw new NotSupportedException();
+		}
 
-		public override void SetLength(long value) => throw new NotSupportedException();
+		public override void SetLength(long value)
+		{
+			throw new NotSupportedException();
+		}
 	}
 
 	[Fact]
@@ -610,8 +616,10 @@ public sealed class StreamsTests
 
 		// Act & Assert
 #pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
+#pragma warning disable CA1835 // Prefer the 'Memory'-based overloads for 'ReadAsync' and 'WriteAsync'
 		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.ReadAsync(new byte[1], 0, 1));
 		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.ReadAsync(new Memory<byte>(new byte[1]), CancellationToken.None));
+#pragma warning restore CA1835 // Prefer the 'Memory'-based overloads for 'ReadAsync' and 'WriteAsync'
 #pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
 	}
 
@@ -641,7 +649,7 @@ public sealed class StreamsTests
 		await counting.DisposeAsync();
 
 		// Act & Assert
-		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.WriteAsync(new byte[1], 0, 1));
+		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.WriteAsync((new byte[1]).AsMemory(0, 1)));
 	}
 
 	[Fact]

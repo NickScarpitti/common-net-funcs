@@ -1,7 +1,5 @@
-﻿using CommonNetFuncs.EFCore;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using static Xunit.TestContext;
 
 namespace EFCore.Tests;
 

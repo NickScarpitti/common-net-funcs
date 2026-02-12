@@ -65,7 +65,7 @@ public class RestHelpersStaticBenchmarks
 		const string textString = "This is a plain text response that would typically be returned as an error message from an API endpoint.";
 		textData = Encoding.UTF8.GetBytes(textString);
 
-		// Setup headers
+		// Setup localHeaders
 		headers = new Dictionary<string, string>
 		{
 			{ "Accept", Json },
@@ -232,9 +232,9 @@ public class RestHelpersStaticBenchmarks
 	public void AddContent_MemoryPack()
 	{
 		HttpRequestMessage request = new(HttpMethod.Post, TestUrl);
-		Dictionary<string, string> headers = new()
+		Dictionary<string, string> localHeaders = new()
 		{ { "Content-Type", "application/x-memorypack" } };
-		request.AddContent(HttpMethod.Post, headers, testModel, null);
+		request.AddContent(HttpMethod.Post, localHeaders, testModel, null);
 		request.Dispose();
 	}
 
@@ -242,9 +242,9 @@ public class RestHelpersStaticBenchmarks
 	public void AddContent_MessagePack()
 	{
 		HttpRequestMessage request = new(HttpMethod.Post, TestUrl);
-		Dictionary<string, string> headers = new()
+		Dictionary<string, string> localHeader = new()
 		{ { "Content-Type", "application/x-msgpack" } };
-		request.AddContent(HttpMethod.Post, headers, testModel, null);
+		request.AddContent(HttpMethod.Post, localHeader, testModel, null);
 		request.Dispose();
 	}
 

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
 using CommonNetFuncs.EFCore;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using static Xunit.TestContext;
@@ -226,7 +225,7 @@ public sealed partial class BaseDbContextActionsTests
 			// Act
 			int? result = await testContext.UpdateMany(
 				x => x.Id > 0,
-				s => s.SetProperty(e => e.Name, e => "Updated"),
+				s => s.SetProperty(e => e.Name, _ => "Updated"),
 				queryTimeout: TimeSpan.FromSeconds(30),
 				cancellationToken: Current.CancellationToken);
 
@@ -418,15 +417,15 @@ public sealed partial class BaseDbContextActionsTests
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
 
 		// Get reference to the static circularReferencingEntities dictionary via reflection
-		System.Reflection.FieldInfo? field = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
+		FieldInfo? field = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
 			.GetField("circularReferencingEntities", BindingFlags.NonPublic | BindingFlags.Static);
 		field.ShouldNotBeNull("circularReferencingEntities field should be accessible via reflection");
 
-		ConcurrentDictionary<Type, bool>? dictionary = field.GetValue(null) as System.Collections.Concurrent.ConcurrentDictionary<Type, bool>;
+		ConcurrentDictionary<Type, bool>? dictionary = field.GetValue(null) as ConcurrentDictionary<Type, bool>;
 		dictionary.ShouldNotBeNull();
 
 		// Record initial state
-		bool initiallyInDictionary = dictionary.ContainsKey(typeof(TestEntity));
+		bool _ = dictionary.ContainsKey(typeof(TestEntity));
 
 		// Act - Call GetAllFull which may add the entity type to the dictionary
 		List<TestEntity>? result = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
@@ -464,7 +463,7 @@ public sealed partial class BaseDbContextActionsTests
 		FieldInfo? field = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
 			.GetField("circularReferencingEntities", BindingFlags.NonPublic | BindingFlags.Static);
 		field.ShouldNotBeNull();
-		ConcurrentDictionary<Type, bool>? dictionary = field.GetValue(null) as System.Collections.Concurrent.ConcurrentDictionary<Type, bool>;
+		ConcurrentDictionary<Type, bool>? dictionary = field.GetValue(null) as ConcurrentDictionary<Type, bool>;
 		dictionary.ShouldNotBeNull();
 
 		// Clear the dictionary to ensure clean test state
@@ -474,7 +473,7 @@ public sealed partial class BaseDbContextActionsTests
 		int callCount = 0;
 		List<TestEntity> testResult = fixture.CreateMany<TestEntity>(2).ToList();
 
-		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (handlingCircularRef, cancellationToken) =>
+		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (handlingCircularRef, _) =>
 		{
 			callCount++;
 			if (!handlingCircularRef && callCount == 1)
@@ -512,7 +511,7 @@ public sealed partial class BaseDbContextActionsTests
 		// Create a mock operation that throws the specific exception on first call,
 		// then throws a different exception on retry
 		int callCount = 0;
-		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (handlingCircularRef, cancellationToken) =>
+		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (__, _) =>
 		{
 			callCount++;
 			if (callCount == 1)
@@ -547,7 +546,7 @@ public sealed partial class BaseDbContextActionsTests
 		method.ShouldNotBeNull();
 
 		// Create a mock operation that throws InvalidOperationException with different HResult
-		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (handlingCircularRef, cancellationToken) =>
+		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (__, _) =>
 		{
 			// Throw InvalidOperationException with a different HResult (not -2146233079)
 			InvalidOperationException ex = new("Different error");
@@ -575,10 +574,7 @@ public sealed partial class BaseDbContextActionsTests
 		method.ShouldNotBeNull();
 
 		// Create a mock operation that throws a general exception
-		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (handlingCircularRef, cancellationToken) =>
-		{
-			throw new ArgumentException("General error");
-		};
+		Func<bool, CancellationToken, Task<List<TestEntity>>> operation = (__, _) => throw new ArgumentException("General error");
 
 		// Act - Invoke the method via reflection
 		MethodInfo genericMethod = method.MakeGenericMethod(typeof(List<TestEntity>));
@@ -599,7 +595,7 @@ public sealed partial class BaseDbContextActionsTests
 
 		// Create a mock query builder that throws circular ref exception, then a secondary exception
 		int callCount = 0;
-		Func<bool, IQueryable<TestEntity>> queryBuilder = (handlingCircularRef) =>
+		Func<bool, IQueryable<TestEntity>> queryBuilder = (_) =>
 		{
 			callCount++;
 			if (callCount == 1)

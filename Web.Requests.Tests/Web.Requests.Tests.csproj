@@ -10,6 +10,7 @@
 
 	<ItemGroup>
 		<CoverletExclude Include="[*.Tests]*" />
+		<CoverletExclude Include="[*]System.Text.RegularExpressions.Generated.*" />
 		<CoverletExcludeByFile Include="**/*.g.cs" />
 		<CoverletExcludeByFile Include="**/obj/**" />
 		<CoverletExcludeByFile Include="**/bin/**" />
@@ -20,7 +21,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.3" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
 		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" />
 		<PackageReference Include="xunit.v3" Version="3.2.2" />

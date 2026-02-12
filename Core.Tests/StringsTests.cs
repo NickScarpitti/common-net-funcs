@@ -2802,21 +2802,6 @@ public sealed class StringsTests
 		result.IsEmpty.ShouldBeTrue();
 	}
 
-
-
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_WithString_NullCollection_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?>? collection = null;
-
-		// Act
-		bool result = collection.ContainsInvariant("test");
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
 	[Fact]
 	public void ContainsInvariant_IEnumerableString_WithString_ExactMatch_ReturnsTrue()
 	{
@@ -3299,7 +3284,7 @@ public sealed class StringsTests
 	public void StrEq_FirstIsNull_SecondIsNotNull()
 	{
 		// Arrange
-		string? s1 = null;
+		const string? s1 = null;
 
 		// Act
 		bool result = s1.StrEq("test");

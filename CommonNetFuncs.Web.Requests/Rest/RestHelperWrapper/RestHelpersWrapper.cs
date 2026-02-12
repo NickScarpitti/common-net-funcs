@@ -203,7 +203,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TBody> baseRequestOptions = GetRequestOptions<TBody>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.RestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -272,7 +272,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TBody> baseRequestOptions = GetRequestOptions<TBody>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.StreamingRestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -420,7 +420,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TBody> baseRequestOptions = GetRequestOptions<TBody>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.StreamingRestObjectRequest<TResponse, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -497,7 +497,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TBody> baseRequestOptions = GetRequestOptions<TBody>(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.RestObjectRequest<string?, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -645,7 +645,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions<TEntity>(options, client.BaseAddress, headers, HttpMethod.Put, bearerToken, replacementModel);
+				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Put, bearerToken, replacementModel);
 
 				result = await client.RestObjectRequest<TEntity, TEntity>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 

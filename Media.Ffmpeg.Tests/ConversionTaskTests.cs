@@ -144,7 +144,7 @@ public sealed class ConversionTaskTests : IDisposable
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
 		string outputFileName = $"output_{Guid.NewGuid()}.mp4";
-		CancellationTokenSource cts = new();
+		using CancellationTokenSource cts = new();
 
 		// Act
 		Task<bool> conversionTask = ConversionTask.FfmpegConversionTask(fileToConvert, outputFileName, VideoCodec.h264, conversionPreset: ConversionPreset.UltraFast, workingPath: workingDir, cancellationTokenSource: cts);
@@ -626,7 +626,7 @@ public sealed class ConversionTaskTests : IDisposable
 		// Arrange
 		FileInfo fileToConvert = new(testVideoPath);
 		string outputFileName = $"output_{Guid.NewGuid()}.mp4";
-		CancellationTokenSource cts = new();
+		using CancellationTokenSource cts = new();
 
 		// Act
 		Task<bool> conversionTask = RawConversionTask.FfmpegConversionTaskFromXabe(

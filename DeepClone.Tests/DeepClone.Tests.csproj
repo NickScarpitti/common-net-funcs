@@ -9,6 +9,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<CoverletExclude Include="[*.Tests]*" />
+		<CoverletExclude Include="[*]System.Text.RegularExpressions.Generated.*" />
 		<CoverletExcludeByFile Include="**/*.g.cs" />
 		<CoverletExcludeByFile Include="**/obj/**" />
 		<CoverletExcludeByFile Include="**/bin/**" />

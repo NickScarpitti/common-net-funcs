@@ -1388,7 +1388,7 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetWithFilterFull_WithNavigationProperties_ShouldSucceed()
 	{
 		// Arrange
-		string dbName = nameof(GetWithFilterFull_WithNavigationProperties_ShouldSucceed);
+		const string dbName = nameof(GetWithFilterFull_WithNavigationProperties_ShouldSucceed);
 		ServiceCollection services = new();
 		services.AddDbContextPool<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: dbName));
 		IServiceProvider provider = services.BuildServiceProvider();
@@ -1431,7 +1431,7 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task GetWithFilterStreamingFull_WithNavigationProperties_ShouldSucceed()
 	{
 		// Arrange
-		string dbName = nameof(GetWithFilterStreamingFull_WithNavigationProperties_ShouldSucceed);
+		const string dbName = nameof(GetWithFilterStreamingFull_WithNavigationProperties_ShouldSucceed);
 		ServiceCollection services = new();
 		services.AddDbContextPool<TestDbContext>(options => options.UseInMemoryDatabase(databaseName: dbName));
 		IServiceProvider provider = services.BuildServiceProvider();
@@ -2817,7 +2817,7 @@ public sealed partial class BaseDbContextActionsTests
 		};
 
 		// Act
-		List<TestEntity>? results = await testContext.GetNavigationWithFilterFull<TestEntity>(whereExpression, selectExpression, globalFilterOptions: options, cancellationToken: Current.CancellationToken);
+		List<TestEntity>? results = await testContext.GetNavigationWithFilterFull(whereExpression, selectExpression, globalFilterOptions: options, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		results.ShouldNotBeNull();
@@ -2841,7 +2841,7 @@ public sealed partial class BaseDbContextActionsTests
 		};
 
 		// Act
-		List<TestEntity>? results = await testContext.GetNavigationWithFilterFull<TestEntity>(whereExpression, selectExpression, globalFilterOptions: options, cancellationToken: Current.CancellationToken);
+		List<TestEntity>? results = await testContext.GetNavigationWithFilterFull(whereExpression, selectExpression, globalFilterOptions: options, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		results.ShouldNotBeNull();
@@ -4041,7 +4041,7 @@ public sealed partial class BaseDbContextActionsTests
 		};
 
 		// Act
-		IQueryable<TestEntity> result = testContext.GetQueryNavigationWithFilterFull<TestEntity>(whereExpression, selectExpression, globalFilterOptions: options);
+		IQueryable<TestEntity> result = testContext.GetQueryNavigationWithFilterFull(whereExpression, selectExpression, globalFilterOptions: options);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -4312,9 +4312,6 @@ public sealed partial class BaseDbContextActionsTests
 		query.ShouldNotBeNull();
 	}
 
-	#endregion
-
-	#region Streaming Tests
 	#endregion
 
 	#region Additional Read Tests
@@ -4840,7 +4837,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
 
 		// Act
-		TestEntityWithCompoundKey? result = await testContext.GetByKeyFull(new object[] { entity.Key1, entity.Key2 }, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithCompoundKey? result = await testContext.GetByKeyFull(new object[] { entity.Key1, entity.Key2 }, fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -4861,7 +4858,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = true };
 
 		// Act
-		List<TestEntity>? result = await testContext.GetAllFull(globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		List<TestEntity>? result = await testContext.GetAllFull(fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -4881,7 +4878,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = true };
 
 		// Act
-		List<string>? result = await testContext.GetAllFull(e => e.Name, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		List<string>? result = await testContext.GetAllFull(e => e.Name, fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -4901,7 +4898,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
 
 		// Act
-		List<TestEntity>? result = await testContext.GetWithFilterFull(e => e.Id > 0, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		List<TestEntity>? result = await testContext.GetWithFilterFull(e => e.Id > 0, fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -4921,7 +4918,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
 
 		// Act
-		List<string>? result = await testContext.GetWithFilterFull(e => e.Id > 0, e => e.Name, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		List<string>? result = await testContext.GetWithFilterFull(e => e.Id > 0, e => e.Name, fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -4941,7 +4938,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
 
 		// Act
-		TestEntity? result = await testContext.GetOneWithFilterFull(e => e.Id > 0, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		TestEntity? result = await testContext.GetOneWithFilterFull(e => e.Id > 0, fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -4960,7 +4957,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
 
 		// Act
-		string? result = await testContext.GetOneWithFilterFull(e => e.Id > 0, e => e.Name, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		string? result = await testContext.GetOneWithFilterFull(e => e.Id > 0, e => e.Name, fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -4979,7 +4976,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
 
 		// Act
-		TestEntity? result = await testContext.GetMaxByOrderFull<int>(e => e.Id > 0, e => e.Id, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		TestEntity? result = await testContext.GetMaxByOrderFull(e => e.Id > 0, e => e.Id, fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -4998,7 +4995,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
 
 		// Act - use orderByString instead of null
-		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(e => e.Id > 0, e => e, orderByString: "Id", skip: 0, pageSize: 5, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(e => e.Id > 0, e => e, orderByString: "Id", skip: 0, pageSize: 5, fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -5019,7 +5016,7 @@ public sealed partial class BaseDbContextActionsTests
 		FullQueryOptions fullOptions = new() { SplitQueryOverride = false };
 
 		// Act
-		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull<TestEntity, int>(e => e.Id > 0, e => e, e => e.Id, skip: 0, pageSize: 5, globalFilterOptions: filterOptions, fullQueryOptions: fullOptions, cancellationToken: Current.CancellationToken);
+		GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilterFull(e => e.Id > 0, e => e, e => e.Id, skip: 0, pageSize: 5, fullQueryOptions: fullOptions, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -5027,8 +5024,5 @@ public sealed partial class BaseDbContextActionsTests
 		result.TotalRecords.ShouldBe(10);
 	}
 
-	#endregion
-
-	#region Helper Methods
 	#endregion
 }

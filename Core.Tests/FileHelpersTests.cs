@@ -378,7 +378,7 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetSafeSaveName_String_TerminatesWithManySequentialFiles()
 	{
 		// Arrange - Create many sequential files to stress test the loop termination
-		string baseName = "stress_test";
+		const string baseName = "stress_test";
 		for (int i = 0; i < 100; i++)
 		{
 			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).log");
@@ -398,7 +398,7 @@ public sealed class FileHelpersTests : IDisposable
 	public async Task GetSafeSaveName_PathAndFileName_TerminatesWithManySequentialFiles()
 	{
 		// Arrange - Create many sequential files
-		string baseName = "batch_file";
+		const string baseName = "batch_file";
 		for (int i = 0; i < 50; i++)
 		{
 			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).dat");

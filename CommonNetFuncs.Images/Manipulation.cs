@@ -55,7 +55,7 @@ public static class Manipulation
 	}
 
 	internal static bool ResizeImageBase(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-			IImageEncoder? imageEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+		IImageEncoder? imageEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
 	{
 		Image? image = null;
 		try

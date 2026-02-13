@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using FastExpressionCompiler;
-
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
@@ -285,8 +284,7 @@ public static class Inspect
 
 		Expression andAlsoExpression = comparisons.Aggregate(Expression.And);
 
-		Expression<Func<object, object, IEnumerable<string>, bool>> lambda = Expression.Lambda<Func<object, object, IEnumerable<string>, bool>>(
-						andAlsoExpression, obj1Param, obj2Param, exemptPropsParam);
+		Expression<Func<object, object, IEnumerable<string>, bool>> lambda = Expression.Lambda<Func<object, object, IEnumerable<string>, bool>>(andAlsoExpression, obj1Param, obj2Param, exemptPropsParam);
 
 		return lambda.CompileFast();
 	}

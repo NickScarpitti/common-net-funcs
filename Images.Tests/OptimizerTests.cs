@@ -135,4 +135,24 @@ public sealed class OptimizerTests : IDisposable
 		// Act & Assert
 		await Should.NotThrowAsync(async () => await Optimizer.OptimizeImage(testPath, gifsicleArgs, jpegoptimArgs, optipngArgs));
 	}
+
+	[RetryTheory(3)]
+	[InlineData(new[] { "--invalid-flag-that-does-not-exist" }, null, null, "test.gif")]     // Gifsicle with invalid flag
+	[InlineData(null, new[] { "--invalid-flag-that-does-not-exist" }, null, "test.jpg")]    // Jpegoptim with invalid flag
+	[InlineData(null, null, new[] { "--invalid-flag-that-does-not-exist" }, "test.png")]   // Optipng with invalid flag
+	public async Task OptimizeImage_ShouldHandleCommandFailure_WithInvalidArguments(
+			string[]? gifsicleArgs,
+			string[]? jpegoptimArgs,
+			string[]? optipngArgs,
+			string fileName)
+	{
+		// Arrange
+		string testPath = Path.Combine(AppContext.BaseDirectory, "TestData", fileName);
+
+		// Act - pass invalid arguments to trigger command failure (result.IsSuccess == false)
+		await Optimizer.OptimizeImage(testPath, gifsicleArgs, jpegoptimArgs, optipngArgs);
+
+		// Assert - original file should remain unchanged when optimization fails
+		File.Exists(testPath).ShouldBeTrue();
+	}
 }

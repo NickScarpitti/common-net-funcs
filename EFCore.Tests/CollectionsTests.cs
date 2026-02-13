@@ -1218,7 +1218,7 @@ public sealed class CollectionsTests : IDisposable
 
 		// Create mocks
 		IProperty efProperty = Substitute.For<IProperty>();
-		efProperty.GetColumnType().Returns("sometype");
+		efProperty.GetColumnType().Returns("SomeType");
 
 		IEntityType entityTypeMetadata = Substitute.For<IEntityType>();
 		entityTypeMetadata.FindProperty(Arg.Any<string>()).Returns(efProperty);

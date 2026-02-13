@@ -3184,7 +3184,7 @@ public sealed class EmailTests
 				SmtpServer = "127.0.0.1",
 				SmtpPort = 9995,
 				SmtpUser = "validuser@example.com",
-				SmtpPassword = "validpassword"
+				SmtpPassword = "ValidPassword"
 			},
 			EmailAddresses = new EmailAddresses
 			{

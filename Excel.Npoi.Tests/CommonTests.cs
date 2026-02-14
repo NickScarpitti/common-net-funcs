@@ -1481,7 +1481,8 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		using SXSSFWorkbook wb = new();
-		const string invalidPath = "Z:\\NonExistentFolder\\test.xlsx";
+
+		string invalidPath = Path.Combine(Path.GetTempPath(), "NonExistentFolder", "test.xlsx");
 
 		// Act
 		bool result = wb.WriteExcelFile(invalidPath);
@@ -1495,7 +1496,8 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		using HSSFWorkbook wb = new();
-		const string invalidPath = "Z:\\NonExistentFolder\\test.xls";
+
+		string invalidPath = Path.Combine(Path.GetTempPath(), "NonExistentFolder", "test.xls");
 
 		// Act
 		bool result = wb.WriteExcelFile(invalidPath);

@@ -21,6 +21,7 @@
 		<None Remove="TestData\test-with-audio.mp4" />
 		<None Remove="TestData\test-with-subtitles.mp4" />
 		<None Remove="TestData\test-corrupted.mp4" />
+		<None Remove="TestData\test-audio-only.mp3" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,6 +35,9 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<Content Include="TestData\test-corrupted.mp4">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="TestData\test-audio-only.mp3">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>

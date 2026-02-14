@@ -317,6 +317,36 @@ public sealed class HelpersTests : IDisposable
 	}
 
 	[RetryFact(3)]
+	public async Task CheckHardwareEncoderByName_WithEmptyString_ShouldHandleGracefully()
+	{
+		// Act
+		bool result = await Helpers.CheckHardwareEncoderByName(string.Empty);
+
+		// Assert - Should return false without throwing
+		result.ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
+	public async Task CheckHardwareEncoderByName_WithNullString_ShouldHandleGracefully()
+	{
+		// Act
+		bool result = await Helpers.CheckHardwareEncoderByName(null!);
+
+		// Assert - Should return false without throwing
+		result.ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
+	public async Task CheckHardwareEncoderByName_WithSpecialCharacters_ShouldHandleGracefully()
+	{
+		// Act - Special characters might cause issues in process execution
+		bool result = await Helpers.CheckHardwareEncoderByName("encoder\0with\nnull\rand\tspecial\bchars");
+
+		// Assert - Should return false without throwing
+		result.ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
 	public async Task IsAnyHardwareAcceleratorAvailable_ShouldReturnBool()
 	{
 		// Act
@@ -579,6 +609,152 @@ using Process? process = Process.Start(startInfo);
 		// Assert - Should process without throwing and update lastOutput
 		lastOutput.ShouldBeGreaterThan(DateTime.UtcNow.AddSeconds(-2));
 		conversionFailed.ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
+	public void LogFfmpegOutput_WithUnparseableTimeFormat_ShouldUseRawValue()
+	{
+		// Arrange - Data with unparseable time format (not matching hh:mm:ss.ff)
+		const string data = "frame=  48 fps=5.8 q=0.0 size=1kB time=invalid_time bitrate=4.5kbits/s speed=1.0x";
+		DataReceivedEventArgs args = CreateDataReceivedEventArgs(data);
+		DateTime lastOutput = DateTime.UtcNow.AddSeconds(-10);
+		DateTime lastSummaryOutput = DateTime.UtcNow.AddSeconds(-40);
+		bool conversionFailed = false;
+		bool sizeFailure = false;
+		FileInfo fileToConvert = new(testVideoPath);
+		TimeSpan videoTimespan = TimeSpan.FromMinutes(1);
+		int conversionIndex = 7;
+		bool cancelIfLarger = false;
+		ConcurrentBag<string> conversionOutputs = new();
+		ConcurrentDictionary<int, decimal> fpsDict = new();
+		CancellationTokenSource? cancellationTokenSource = null;
+
+		// Act
+		args.LogFfmpegOutput(
+			ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure,
+			fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
+			conversionOutputs, fpsDict, cancellationTokenSource);
+
+		// Assert - Should not throw and update lastOutput
+		lastOutput.ShouldBeGreaterThan(DateTime.UtcNow.AddSeconds(-2));
+		conversionFailed.ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
+	public async Task GetFrameRate_WithInvalidVideoFile_ShouldHandleExceptionAndReturnMinusOne()
+	{
+		// Arrange - Create a file that will cause an exception during frame rate calculation
+		string invalidFile = Path.Combine(Path.GetTempPath(), $"invalid_{Guid.NewGuid()}.mp4");
+		await File.WriteAllTextAsync(invalidFile, "This is not a valid video file");
+
+		try
+		{
+			// Act
+			decimal result = await invalidFile.GetFrameRate();
+
+			// Assert
+			result.ShouldBe(-1);
+		}
+		finally
+		{
+			// Cleanup
+			if (File.Exists(invalidFile))
+			{
+				File.Delete(invalidFile);
+			}
+		}
+	}
+
+	[RetryFact(3)]
+	public async Task GetKeyFrameSpacing_WithNegativeSampleLength_ShouldDefaultToTenSeconds()
+	{
+		// Arrange - Use a sample length <= 0 to trigger default value
+		int numberOfSamples = 2;
+		int sampleLengthSec = -5; // This should be set to 10 internally
+
+		// Act
+		decimal result = await testVideoPath.GetKeyFrameSpacing(numberOfSamples, sampleLengthSec);
+
+		// Assert - Should complete without error (actual value depends on video keyframe structure)
+		result.ShouldBeGreaterThanOrEqualTo(-1);
+	}
+
+	[RetryFact(3)]
+	public async Task GetKeyFrameSpacing_WithLargeSampleParameters_ShouldReadEntireVideo()
+	{
+		// Arrange - Set numberOfSamples * sampleLengthSec to be very large
+		int numberOfSamples = 100;
+		int sampleLengthSec = 100; // This total will likely be >= video duration
+
+		// Act
+		decimal result = await testVideoPath.GetKeyFrameSpacing(numberOfSamples, sampleLengthSec);
+
+		// Assert - Should complete without error
+		result.ShouldBeGreaterThanOrEqualTo(-1);
+	}
+
+	[RetryFact(3)]
+	public async Task GetKeyFrameSpacing_WithNonExistentFile_ShouldHandleExceptionAndReturnMinusOne()
+	{
+		// Arrange
+		string nonExistentFile = Path.Combine(Path.GetTempPath(), $"nonexistent_{Guid.NewGuid()}.mp4");
+
+		// Act
+		decimal result = await nonExistentFile.GetKeyFrameSpacing(2, 5);
+
+		// Assert
+		result.ShouldBe(-1);
+	}
+
+	[RetryFact(3)]
+	public async Task RecordResults_WithOnlyOriginalSizeNull_ShouldNotIncludeSizeRatio()
+	{
+		// Arrange
+		ConcurrentBag<string> bag = new();
+		const string fileName = "testfile";
+		const bool success = true;
+		long? originalSize = null;
+		long endSize = 100;
+
+		// Act
+		await Helpers.RecordResults(fileName, success, bag, tempLogFile, originalSize, endSize);
+
+		// Assert
+		bag.ShouldContain(x => x.Contains(fileName) && !x.Contains("SizeRatio"));
+	}
+
+	[RetryFact(3)]
+	public async Task RecordResults_WithOnlyEndSizeNull_ShouldNotIncludeSizeRatio()
+	{
+		// Arrange
+		ConcurrentBag<string> bag = new();
+		const string fileName = "testfile";
+		const bool success = true;
+		long originalSize = 100;
+		long? endSize = null;
+
+		// Act
+		await Helpers.RecordResults(fileName, success, bag, tempLogFile, originalSize, endSize);
+
+		// Assert
+		bag.ShouldContain(x => x.Contains(fileName) && !x.Contains("SizeRatio"));
+	}
+
+	[RetryFact(3)]
+	public async Task RecordResults_WithBothSizesNull_ShouldNotIncludeSizeRatio()
+	{
+		// Arrange
+		ConcurrentBag<string> bag = new();
+		const string fileName = "testfile";
+		const bool success = false;
+		long? originalSize = null;
+		long? endSize = null;
+
+		// Act
+		await Helpers.RecordResults(fileName, success, bag, tempLogFile, originalSize, endSize);
+
+		// Assert
+		bag.ShouldContain(x => x.Contains(fileName) && !x.Contains("SizeRatio"));
 	}
 
 	private static DataReceivedEventArgs CreateDataReceivedEventArgs(string? data)

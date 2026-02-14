@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Xabe.FFmpeg;
 
 namespace CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
@@ -25,7 +24,6 @@ public static partial class RawConversionTask
 	/// <param name="cancelIfLarger">Optional: Cancel the conversion task if the output becomes larger than the original file</param>
 	/// <param name="taskDescription">Optional: Description to use in logging</param>
 	/// <param name="strict">Optional: Use strict flag for conversion</param>
-	/// <param name="overwriteOutput">Optional: Allows for overwriting a file with the same name as the conversion output</param>
 	/// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
 	/// <param name="hardwareAccelerationValues">Optional: Parameters for hardware acceleration</param>
 	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>

@@ -1092,11 +1092,11 @@ public sealed class RestHelpersStaticTests
 
 	private sealed class FakeContent(bool throwOnRead) : HttpContent
 	{
-		private readonly bool _throwOnRead = throwOnRead;
+		private readonly bool throwOnRead = throwOnRead;
 
 		protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
 		{
-			if (_throwOnRead)
+			if (throwOnRead)
 			{
 				throw new InvalidOperationException("Fake error");
 			}

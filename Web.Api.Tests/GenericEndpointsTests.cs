@@ -17,8 +17,7 @@ public sealed class GenericEndpointsTests
 
 	public GenericEndpointsTests()
 	{
-		fixture = new Fixture()
-				.Customize(new AutoFakeItEasyCustomization());
+		fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
 		sut = new GenericEndpoints();
 	}
 

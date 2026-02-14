@@ -99,9 +99,8 @@ jobs:
         working-directory: ./${{ matrix.test-suite }}
 
       - name: Test
-        run: dotnet test --verbosity normal -p:TestTfmsInParallel=false --collect:"XPlat Code Coverage" --results-directory ./coverage -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/*.g.cs,**/obj/**"
+        run: dotnet test --verbosity normal -p:TestTfmsInParallel=false --collect:"XPlat Code Coverage" --results-directory ./coverage -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/*.g.cs;**/obj/**;**/bin/**"
         working-directory: ./${{ matrix.test-suite }}
-
       - name: Coveralls Parallel
         uses: coverallsapp/github-action@v2.3.6
         with:

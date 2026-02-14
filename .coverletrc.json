@@ -1,0 +1,16 @@
+{
+	"include": ["[CommonNetFuncs.*]*"],
+	"exclude": ["[*.Tests]*", "[xunit.*]*", "[Microsoft.*]*"],
+	"excludebyfile": [
+		"**/obj/**/*.cs",
+		"**/bin/**/*.cs",
+		"**/*.g.cs",
+		"**/*.Designer.cs"
+	],
+	"excludebyattribute": [
+		"Obsolete",
+		"GeneratedCodeAttribute",
+		"CompilerGeneratedAttribute",
+		"ExcludeFromCodeCoverageAttribute"
+	]
+}

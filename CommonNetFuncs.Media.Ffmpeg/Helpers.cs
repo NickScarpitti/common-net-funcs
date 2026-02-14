@@ -457,6 +457,12 @@ public static class Helpers
 	{
 		try
 		{
+			// Guard against null or empty encoder names
+			if (string.IsNullOrWhiteSpace(encoderName))
+			{
+				return false;
+			}
+
 			// Run FFmpeg to check if encoder is available
 			ProcessStartInfo psi = new()
 			{

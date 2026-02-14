@@ -227,8 +227,7 @@ public sealed class HangfireJobExceptionTests
 		const string operationName = "UpdateUser";
 
 		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
-			HangfireJobException.ThrowEntityNotFound(entityType, entityId, operationName, allowRetry));
+		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowEntityNotFound(entityType, entityId, operationName, allowRetry));
 
 		Assert.Contains("User with ID 123 not found", exception.Message);
 		Assert.Equal(operationName, exception.OperationName);
@@ -247,8 +246,7 @@ public sealed class HangfireJobExceptionTests
 		const string operationName = "ProcessDocument";
 
 		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
-			HangfireJobException.ThrowEntityNotFound(entityType, entityId, operationName, allowRetry));
+		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowEntityNotFound(entityType, entityId, operationName, allowRetry));
 
 		Assert.Contains("Document with ID 'doc-12345' not found", exception.Message);
 		Assert.Equal(operationName, exception.OperationName);
@@ -267,8 +265,7 @@ public sealed class HangfireJobExceptionTests
 		const string operationName = "ProcessTransaction";
 
 		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
-			HangfireJobException.ThrowEntityNotFound(entityType, entityId, operationName, allowRetry));
+		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowEntityNotFound(entityType, entityId, operationName, allowRetry));
 
 		Assert.Contains("Transaction with ID 9876543210 not found", exception.Message);
 		Assert.Equal(operationName, exception.OperationName);
@@ -287,8 +284,7 @@ public sealed class HangfireJobExceptionTests
 		const int entityId = 456;
 
 		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
-			HangfireJobException.ThrowValidationFailed(validationMessage, operationName, entityId, allowRetry));
+		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowValidationFailed(validationMessage, operationName, entityId, allowRetry));
 
 		Assert.Contains("Validation failed: Email format is invalid", exception.Message);
 		Assert.Equal(operationName, exception.OperationName);
@@ -306,8 +302,7 @@ public sealed class HangfireJobExceptionTests
 		const string operationName = "ProcessPayment";
 
 		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
-			HangfireJobException.ThrowDependencyUnavailable(dependencyName, operationName, allowRetry));
+		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowDependencyUnavailable(dependencyName, operationName, allowRetry));
 
 		Assert.Contains("Required dependency 'PaymentGateway' is unavailable", exception.Message);
 		Assert.Equal(operationName, exception.OperationName);
@@ -324,8 +319,7 @@ public sealed class HangfireJobExceptionTests
 		const string operationName = "ProcessOrder";
 
 		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
-			HangfireJobException.ThrowEntityNotFound(entityType, entityId, operationName));
+		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowEntityNotFound(entityType, entityId, operationName));
 
 		Assert.True(exception.AllowRetry);
 	}
@@ -339,8 +333,7 @@ public sealed class HangfireJobExceptionTests
 		const int entityId = 999;
 
 		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
-			HangfireJobException.ThrowValidationFailed(validationMessage, operationName, entityId));
+		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowValidationFailed(validationMessage, operationName, entityId));
 
 		Assert.True(exception.AllowRetry);
 	}
@@ -353,8 +346,7 @@ public sealed class HangfireJobExceptionTests
 		const string operationName = "SaveData";
 
 		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() =>
-			HangfireJobException.ThrowDependencyUnavailable(dependencyName, operationName));
+		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowDependencyUnavailable(dependencyName, operationName));
 
 		Assert.True(exception.AllowRetry);
 	}

@@ -9,16 +9,16 @@ namespace BenchmarkSuite;
 [RankColumn]
 public class CoreDateTimeHelpersBenchmarks
 {
-	private DateTime _startDate;
-	private DateTime _endDate;
-	private List<DateTime> _holidays = null!;
+	private DateTime startDate;
+	private DateTime endDate;
+	private List<DateTime> holidays = null!;
 
 	[GlobalSetup]
 	public void Setup()
 	{
-		_startDate = new DateTime(2025, 1, 1);
-		_endDate = new DateTime(2025, 12, 31);
-		_holidays = new List<DateTime>
+		startDate = new DateTime(2025, 1, 1);
+		endDate = new DateTime(2025, 12, 31);
+		holidays = new List<DateTime>
 			{
 				new(2025, 1, 1),
 				new(2025, 7, 4),
@@ -29,37 +29,37 @@ public class CoreDateTimeHelpersBenchmarks
 	[Benchmark]
 	public int GetBusinessDays()
 	{
-		return DateTimeHelpers.GetBusinessDays(_startDate, _endDate);
+		return DateTimeHelpers.GetBusinessDays(startDate, endDate);
 	}
 
 	[Benchmark]
 	public int GetBusinessDays_WithHolidays()
 	{
-		return DateTimeHelpers.GetBusinessDays(_startDate, _endDate, _holidays);
+		return DateTimeHelpers.GetBusinessDays(startDate, endDate, holidays);
 	}
 
 	[Benchmark]
 	public DateTime GetDayOfWeek()
 	{
-		return _startDate.GetDayOfWeek(DayOfWeek.Monday);
+		return startDate.GetDayOfWeek(DayOfWeek.Monday);
 	}
 
 	[Benchmark]
 	public (DateTime firstDay, DateTime lastDay) GetMonthBoundaries()
 	{
-		return _startDate.GetMonthBoundaries();
+		return startDate.GetMonthBoundaries();
 	}
 
 	[Benchmark]
 	public DateTime GetFirstDayOfMonth()
 	{
-		return _startDate.GetFirstDayOfMonth();
+		return startDate.GetFirstDayOfMonth();
 	}
 
 	[Benchmark]
 	public DateTime GetLastDayOfMonth()
 	{
-		return _startDate.GetLastDayOfMonth();
+		return startDate.GetLastDayOfMonth();
 	}
 
 	[Benchmark]

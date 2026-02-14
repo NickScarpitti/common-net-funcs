@@ -4,8 +4,8 @@ namespace CommonNetFuncs.EFCore.Logging;
 
 public sealed class FilteredEfCoreLogger(ILogger innerLogger, LogLevel minLogLevel) : ILogger
 {
-	private readonly ILogger _innerLogger = innerLogger;
-	private readonly LogLevel _minLogLevel = minLogLevel;
+	private readonly ILogger innerLogger = innerLogger;
+	private readonly LogLevel minLogLevel = minLogLevel;
 
 	/// <summary>
 	/// Begins a logical operation scope for the inner <see cref="ILogger"/>.
@@ -15,7 +15,7 @@ public sealed class FilteredEfCoreLogger(ILogger innerLogger, LogLevel minLogLev
 	/// <returns><see cref="IDisposable"/> that can be used to end the scope.</returns>"/>
 	public IDisposable? BeginScope<TState>(TState state) where TState : notnull
 	{
-		return _innerLogger.BeginScope(state);
+		return innerLogger.BeginScope(state);
 	}
 
 	/// <summary>
@@ -27,7 +27,7 @@ public sealed class FilteredEfCoreLogger(ILogger innerLogger, LogLevel minLogLev
 	/// <returns><see langword="true"/> if logging is enabled for the specified <paramref name="logLevel"/>, otherwise <see langword="false"/>.</returns>
 	public bool IsEnabled(LogLevel logLevel)
 	{
-		return logLevel >= _minLogLevel && _innerLogger.IsEnabled(logLevel);
+		return logLevel >= minLogLevel && innerLogger.IsEnabled(logLevel);
 	}
 
 	/// <summary>
@@ -44,7 +44,7 @@ public sealed class FilteredEfCoreLogger(ILogger innerLogger, LogLevel minLogLev
 	{
 		if (IsEnabled(logLevel))
 		{
-			_innerLogger.Log(logLevel, eventId, state, exception, formatter);
+			innerLogger.Log(logLevel, eventId, state, exception, formatter);
 		}
 	}
 }

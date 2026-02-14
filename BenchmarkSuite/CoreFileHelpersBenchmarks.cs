@@ -7,10 +7,13 @@ namespace BenchmarkSuite;
 [MemoryDiagnoser]
 public class CoreFileHelpersBenchmarks
 {
-	private readonly string _testFileName1 = "test/file:with<invalid>chars|?.txt";
-	private readonly string _testFileName2 = @"C:\Users\test\file\with\path:chars.doc";
-	private readonly string _testFileName3 = "NormalFile.txt";
-	private readonly string _testFileName4 = @"complex|file<name>with:many/invalid\chars?.pdf";
+#pragma warning disable S1075 // URIs should not be hardcoded
+	private readonly string testFileName2 = @"C:\Users\test\file\with\path:chars.doc";
+#pragma warning restore S1075 // URIs should not be hardcoded
+
+	private readonly string testFileName1 = "test/file:with<invalid>chars|?.txt";
+	private readonly string testFileName3 = "NormalFile.txt";
+	private readonly string testFileName4 = @"complex|file<name>with:many/invalid\chars?.pdf";
 
 	private const string CleanFileNameMethodName = nameof(FileHelpers.CleanFileName);
 
@@ -20,7 +23,7 @@ public class CoreFileHelpersBenchmarks
 		// Access private method via reflection for benchmarking
 		MethodInfo? method = typeof(FileHelpers).GetMethod(CleanFileNameMethodName,
 			BindingFlags.NonPublic | BindingFlags.Static);
-		return (string)method!.Invoke(null, new object[] { _testFileName1 })!;
+		return (string)method!.Invoke(null, new object[] { testFileName1 })!;
 	}
 
 	[Benchmark(Description = "CleanFileName - path with invalid chars")]
@@ -28,7 +31,7 @@ public class CoreFileHelpersBenchmarks
 	{
 		MethodInfo? method = typeof(FileHelpers).GetMethod(CleanFileNameMethodName,
 			BindingFlags.NonPublic | BindingFlags.Static);
-		return (string)method!.Invoke(null, new object[] { _testFileName2 })!;
+		return (string)method!.Invoke(null, new object[] { testFileName2 })!;
 	}
 
 	[Benchmark(Description = "CleanFileName - no invalid chars")]
@@ -36,7 +39,7 @@ public class CoreFileHelpersBenchmarks
 	{
 		MethodInfo? method = typeof(FileHelpers).GetMethod(CleanFileNameMethodName,
 			BindingFlags.NonPublic | BindingFlags.Static);
-		return (string)method!.Invoke(null, new object[] { _testFileName3 })!;
+		return (string)method!.Invoke(null, new object[] { testFileName3 })!;
 	}
 
 	[Benchmark(Description = "CleanFileName - complex name")]
@@ -44,6 +47,6 @@ public class CoreFileHelpersBenchmarks
 	{
 		MethodInfo? method = typeof(FileHelpers).GetMethod(CleanFileNameMethodName,
 			BindingFlags.NonPublic | BindingFlags.Static);
-		return (string)method!.Invoke(null, new object[] { _testFileName4 })!;
+		return (string)method!.Invoke(null, new object[] { testFileName4 })!;
 	}
 }

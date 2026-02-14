@@ -1,24 +1,28 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
-using CommonNetFuncs.Core;
+﻿using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SixLabors.ImageSharp;
+using System.Collections.Concurrent;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using static CommonNetFuncs.Core.ExceptionLocation;
-using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
 //Aliased to prevent issue with DocumentFormat.OpenXml.Spreadsheet.Color
 using Dwg = DocumentFormat.OpenXml.Drawing;
 using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
+using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
+
 namespace CommonNetFuncs.Excel.OpenXml;
+
 #pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
 public static partial class Common
 {
 	private static readonly Lock formatCacheLock = new();
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+	private const string WorksheetNotPartOfWorkbookError = "Worksheet is not part of a workbook.";
 
 	/// <summary>
 	/// Populates SpreadsheetDocument with all components needed for a new Excel file including a single new sheet
@@ -147,10 +151,10 @@ public static partial class Common
 		Worksheet worksheet = cell.GetWorksheetFromCell();
 
 		// Get the workbook part
-		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 
 		// Return the workbook
-		return workbookPart.Workbook ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		return workbookPart.Workbook ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 	}
 
 	/// <summary>
@@ -162,10 +166,10 @@ public static partial class Common
 	public static Workbook? GetWorkbookFromWorksheet(this Worksheet worksheet)
 	{
 		// Get the workbook part
-		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		WorkbookPart? workbookPart = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 
 		// Return the workbook
-		return workbookPart.Workbook ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		return workbookPart.Workbook ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 	}
 
 	/// <summary>
@@ -177,10 +181,10 @@ public static partial class Common
 	public static Workbook? GetWorkbookFromWorksheet(this WorksheetPart worksheetPart)
 	{
 		// Get the workbook part
-		WorkbookPart? workbookPart = worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		WorkbookPart? workbookPart = worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault() ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 
 		// Return the workbook
-		return workbookPart.Workbook ?? throw new InvalidOperationException("Worksheet is not part of a workbook.");
+		return workbookPart.Workbook ?? throw new InvalidOperationException(WorksheetNotPartOfWorkbookError);
 	}
 
 	/// <summary>
@@ -301,18 +305,11 @@ public static partial class Common
 	/// <returns>The offset Cell, or null if not found</returns>
 	public static Cell? GetCellOffset(this Cell startCell, int colOffset = 0, int rowOffset = 0)
 	{
-		try
+		if ((startCell.Parent is Row row) && (row.Parent is SheetData) && (startCell.CellReference != null))
 		{
-			if ((startCell.Parent is Row row) && (row.Parent is SheetData) && (startCell.CellReference != null))
-			{
-				Worksheet worksheet = startCell.GetWorksheetFromCell();
-				CellReference startCellReference = new(startCell.CellReference!);
-				return worksheet.GetCellFromCoordinates(((int)startCellReference.ColumnIndex) + colOffset, ((int)startCellReference.RowIndex) + rowOffset);
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+			Worksheet worksheet = startCell.GetWorksheetFromCell();
+			CellReference startCellReference = new(startCell.CellReference!);
+			return worksheet.GetCellFromCoordinates(((int)startCellReference.ColumnIndex) + colOffset, ((int)startCellReference.RowIndex) + rowOffset);
 		}
 		return null;
 	}
@@ -361,16 +358,8 @@ public static partial class Common
 	/// <returns>The Cell object, or null if not found</returns>
 	public static Cell? GetCellFromName(this SpreadsheetDocument document, string cellName, int colOffset = 0, int rowOffset = 0)
 	{
-		try
-		{
-			WorkbookPart workbookPart = document.WorkbookPart ?? document.AddWorkbookPart();
-			return workbookPart.GetCellFromName(cellName, colOffset, rowOffset);
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-			return null;
-		}
+		WorkbookPart workbookPart = document.WorkbookPart ?? document.AddWorkbookPart();
+		return workbookPart.GetCellFromName(cellName, colOffset, rowOffset);
 	}
 
 	/// <summary>
@@ -419,16 +408,8 @@ public static partial class Common
 	/// <returns>The CellReference for the named cell, null if not found</returns>
 	public static CellReference? GetCellReferenceFromName(this SpreadsheetDocument document, string cellName, int colOffset = 0, int rowOffset = 0)
 	{
-		try
-		{
-			WorkbookPart workbookPart = document.WorkbookPart ?? document.AddWorkbookPart();
-			return workbookPart.GetCellReferenceFromName(cellName, colOffset, rowOffset);
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-			return null;
-		}
+		WorkbookPart workbookPart = document.WorkbookPart ?? document.AddWorkbookPart();
+		return workbookPart.GetCellReferenceFromName(cellName, colOffset, rowOffset);
 	}
 
 	/// <summary>
@@ -523,6 +504,7 @@ public static partial class Common
 	/// <param name="document">The SpreadsheetDocument to get the Stylesheet from</param>
 	/// <param name="createIfMissing">If <see langword="true"/>, creates Stylesheet (and parent elements if necessary) if missing.</param>
 	/// <returns>The Stylesheet from the document or null if not found and createIfMissing is false</returns>
+	/// <remarks>When <paramref name="createIfMissing"/> is <see langword="true"/> (the default), this method is guaranteed to return a non-null <see cref="Stylesheet"/>.</remarks>
 	public static Stylesheet? GetStylesheet(this SpreadsheetDocument document, bool createIfMissing = true)
 	{
 		WorkbookPart? workbookPart = document.WorkbookPart;
@@ -544,7 +526,7 @@ public static partial class Common
 			stylesPart = workbookPart.AddNewPart<WorkbookStylesPart>();
 			stylesPart.Stylesheet = new();
 		}
-		return stylesPart?.Stylesheet;
+		return createIfMissing ? stylesPart!.Stylesheet : stylesPart?.Stylesheet;
 	}
 
 	/// <summary>
@@ -1015,12 +997,8 @@ public static partial class Common
 	public static uint? GetCustomStyle(this SpreadsheetDocument document, bool cellLocked = false, Font? font = null,
 			HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null, bool wrapText = false)
 	{
-		Stylesheet? stylesheet = document.GetStylesheet();
-
-		if (stylesheet == null)
-		{
-			return null;
-		}
+		// GetStylesheet with default createIfMissing=true always returns non-null
+		Stylesheet stylesheet = document.GetStylesheet()!;
 
 		string workbookId = GetWorkbookId(document);
 		WorkbookStyleCache cache = WorkbookCustomFormatCaches.GetOrAdd(workbookId, _ => new WorkbookStyleCache());
@@ -1259,18 +1237,11 @@ public static partial class Common
 				foreach (Cell existingCell in row.Elements<Cell>())
 				{
 					CellReference existingCellReference = new(existingCell.CellReference!);
-					if ((existingCellReference.ColumnIndex > cellReference.ColumnIndex) && (existingCellReference.RowIndex > cellReference.RowIndex))
+					if (existingCellReference.ColumnIndex > cellReference.ColumnIndex) //&& (existingCellReference.RowIndex > cellReference.RowIndex))
 					{
-						refCell = existingCell; //existingCell; //cell
+						refCell = existingCell;
 						break;
 					}
-
-					// Only works until column AA
-					// if (string.Compare(existingCell.CellReference?.Value, cellRef, true) > 0)
-					// {
-					// refCell = existingCell; //existingCell; //cell
-					// break;
-					// }
 				}
 
 				Cell newCell = new() { CellReference = cellRef, StyleIndex = styleIndex };
@@ -2352,33 +2323,33 @@ public static partial class Common
 		[GeneratedRegex(@"([A-Z]+)(\d+)")]
 		private static partial Regex CellRefRegex();
 
-		private uint _RowIndex;
+		private uint rowIndex;
 
 		public uint RowIndex
 		{
-			get => _RowIndex;
+			get => rowIndex;
 			set
 			{
 				if (value is < 1 or > 1048576)
 				{
 					throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 1048576");
 				}
-				_RowIndex = value;
+				rowIndex = value;
 			}
 		}
 
-		private uint _ColumnIndex;
+		private uint columnIndex;
 
 		public uint ColumnIndex
 		{
-			get => _ColumnIndex;
+			get => columnIndex;
 			set
 			{
 				if (value is < 1 or > 16384)
 				{
 					throw new ArgumentOutOfRangeException(nameof(value), "RowIndex must be between 1 and 16384");
 				}
-				_ColumnIndex = value;
+				columnIndex = value;
 			}
 		}
 

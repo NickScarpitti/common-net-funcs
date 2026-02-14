@@ -5,12 +5,12 @@
 /// </summary>
 public sealed class RestClientFactory(IHttpClientFactory httpClientFactory) : IRestClientFactory
 {
-	private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+	private readonly IHttpClientFactory httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
 	/// <inheritdoc/>
 	public IRestClient CreateClient(string apiName)
 	{
-		HttpClient httpClient = _httpClientFactory.CreateClient(apiName);
+		HttpClient httpClient = httpClientFactory.CreateClient(apiName);
 		return new RestClient(httpClient);
 	}
 }

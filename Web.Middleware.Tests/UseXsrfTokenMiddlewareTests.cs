@@ -9,14 +9,14 @@ namespace Web.Middleware.Tests;
 public sealed class UseXsrfTokenMiddlewareTests
 {
 	private readonly IFixture fixture;
-	private readonly IApplicationBuilder _builder;
+	private readonly IApplicationBuilder builder;
 
 	public UseXsrfTokenMiddlewareTests()
 	{
 		fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
-		_builder = A.Fake<IApplicationBuilder>();
+		builder = A.Fake<IApplicationBuilder>();
 		// Setup UseMiddleware to return the builder for fluent chaining
-		A.CallTo(() => _builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(_builder);
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(builder);
 	}
 
 	[RetryTheory(3)]
@@ -64,10 +64,10 @@ public sealed class UseXsrfTokenMiddlewareTests
 	public void UseXsrfToken_Extension_ShouldAddMiddleware(bool httpOnly)
 	{
 		// Act
-		IApplicationBuilder result = _builder.UseMiddleware<UseXsrfTokenMiddleware>(httpOnly);
+		IApplicationBuilder result = builder.UseMiddleware<UseXsrfTokenMiddleware>(httpOnly);
 
 		// Assert
-		result.ShouldBe(_builder);
+		result.ShouldBe(builder);
 	}
 
 	[RetryFact(3)]

@@ -136,10 +136,20 @@ public static class Random
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if numberToGenerate is less than or equal to 0.</exception>
 	public static IEnumerable<double> GetRandomDoubles(int numberToGenerate, int decimalPlaces = 15, CancellationToken cancellationToken = default)
 	{
-		for (int i = 0; i < numberToGenerate; i++)
+		if (numberToGenerate <= 0)
 		{
-			cancellationToken.ThrowIfCancellationRequested();
-			yield return GetRandomDouble(decimalPlaces);
+			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), "Number to generate must be greater than 0.");
+		}
+
+		return Enumerate();
+
+		IEnumerable<double> Enumerate()
+		{
+			for (int i = 0; i < numberToGenerate; i++)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				yield return GetRandomDouble(decimalPlaces);
+			}
 		}
 	}
 
@@ -187,10 +197,20 @@ public static class Random
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if numberToGenerate or is less than or equal to 0.</exception>
 	public static IEnumerable<decimal> GetRandomDecimals(int numberToGenerate, int decimalPlaces = 28, CancellationToken cancellationToken = default)
 	{
-		for (int i = 0; i < numberToGenerate; i++)
+		if (numberToGenerate <= 0)
 		{
-			cancellationToken.ThrowIfCancellationRequested();
-			yield return GetRandomDecimal(decimalPlaces);
+			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), "Number to generate must be greater than 0.");
+		}
+
+		return Enumerate();
+
+		IEnumerable<decimal> Enumerate()
+		{
+			for (int i = 0; i < numberToGenerate; i++)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				yield return GetRandomDecimal(decimalPlaces);
+			}
 		}
 	}
 
@@ -405,11 +425,6 @@ public static class Random
 				}
 				allowedChars[allowedIndex] = (char)i;
 				allowedIndex++;
-			}
-
-			if (allowedChars.Length == 0)
-			{
-				throw new ArgumentException("No available characters to use after applying blacklist.", nameof(blacklistedCharacters));
 			}
 
 			for (int i = 0; i < length; i++)

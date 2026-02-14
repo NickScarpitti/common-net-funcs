@@ -13,31 +13,10 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 		if (globalFilterOptions?.DisableAllFilters == true || (globalFilterOptions?.FilterNamesToDisable.AnyFast() ?? false))
 		{
 			return (globalFilterOptions.FilterNamesToDisable?.Length > 0)
-					? query.IgnoreQueryFilters(globalFilterOptions.FilterNamesToDisable)
-					: query.IgnoreQueryFilters();
+				? query.IgnoreQueryFilters(globalFilterOptions.FilterNamesToDisable)
+				: query.IgnoreQueryFilters();
 		}
 		return query;
-	}
-
-	private static DbSet<TEntity> ApplyGlobalFilters(DbContext context, GlobalFilterOptions? globalFilterOptions)
-	{
-		DbSet<TEntity> table;
-		if (globalFilterOptions?.DisableAllFilters == true || (globalFilterOptions?.FilterNamesToDisable.AnyFast() ?? false))
-		{
-			if (globalFilterOptions.FilterNamesToDisable.AnyFast())
-			{
-				table = (DbSet<TEntity>)context.Set<TEntity>().IgnoreQueryFilters(globalFilterOptions.FilterNamesToDisable);
-			}
-			else
-			{
-				table = (DbSet<TEntity>)context.Set<TEntity>().IgnoreQueryFilters();
-			}
-		}
-		else
-		{
-			table = context.Set<TEntity>();
-		}
-		return table;
 	}
 
 	private static IQueryable<TEntity> ApplyTrackingAndFilters(DbContext context, bool trackEntities, GlobalFilterOptions? globalFilterOptions)
@@ -102,19 +81,6 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 		return query;
 	}
 
-	private static DbSet<TEntity> GetDbSetWithFilters(DbContext context, GlobalFilterOptions? globalFilterOptions)
-	{
-		if (globalFilterOptions?.DisableAllFilters == true || (globalFilterOptions?.FilterNamesToDisable.AnyFast() ?? false))
-		{
-			if (globalFilterOptions.FilterNamesToDisable.AnyFast())
-			{
-				return (DbSet<TEntity>)context.Set<TEntity>().IgnoreQueryFilters(globalFilterOptions.FilterNamesToDisable);
-			}
-			return (DbSet<TEntity>)context.Set<TEntity>().IgnoreQueryFilters();
-		}
-		return context.Set<TEntity>();
-	}
-
 	private DbContext InitializeContext(TimeSpan? queryTimeout = null)
 	{
 		DbContext context = ServiceProvider.GetRequiredService<TContext>()!;
@@ -166,7 +132,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 			try
 			{
 				TResult? result = await operation(true, cancellationToken).ConfigureAwait(false);
-				logger.Warn(AddCircularRefTemplate, typeof(TEntity).Name);
+				logger.Warn(ioEx, AddCircularRefTemplate, typeof(TEntity).Name);
 				circularReferencingEntities.TryAdd(typeof(TEntity), true);
 				return result;
 			}
@@ -200,7 +166,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 			try
 			{
 				enumeratedReader = queryBuilder(true).AsAsyncEnumerable();
-				logger.Warn(AddCircularRefTemplate, typeof(TEntity).Name);
+				logger.Warn(ioEx, AddCircularRefTemplate, typeof(TEntity).Name);
 				circularReferencingEntities.TryAdd(typeof(TEntity), true);
 			}
 			catch (Exception ex2)
@@ -236,7 +202,7 @@ public partial class BaseDbContextActions<TEntity, TContext> : IBaseDbContextAct
 		catch (Exception ex)
 		{
 			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-			return default;
 		}
+		return default;
 	}
 }

@@ -4,12 +4,12 @@ namespace Web.Jwt.Tests;
 
 public sealed class JwtManagerTests
 {
-    private readonly JwtManager _jwtManager;
+    private readonly JwtManager jwtManager;
     private readonly IFixture fixture;
 
     public JwtManagerTests()
     {
-        _jwtManager = new JwtManager();
+        jwtManager = new JwtManager();
         fixture = new Fixture();
     }
 
@@ -29,7 +29,7 @@ public sealed class JwtManagerTests
         TimeSpan stdSpan = TimeSpan.FromHours(1);
 
         // Act
-        JwtToken? result = _jwtManager.Authenticate(username, password, actualUsername, actualPassword,
+        JwtToken? result = jwtManager.Authenticate(username, password, actualUsername, actualPassword,
             environment, key, devSpan, stdSpan);
 
         // Assert
@@ -60,7 +60,7 @@ public sealed class JwtManagerTests
         TimeSpan stdSpan = TimeSpan.FromHours(1);
 
         // Act
-        JwtToken? result = _jwtManager.Authenticate(username, password, username, password,
+        JwtToken? result = jwtManager.Authenticate(username, password, username, password,
             environment, key, devSpan, stdSpan);
 
         // Assert
@@ -82,7 +82,7 @@ public sealed class JwtManagerTests
         TimeSpan span = TimeSpan.FromHours(1);
 
         // Act
-        JwtToken? result = _jwtManager.Authenticate(username, password, username, password,
+        JwtToken? result = jwtManager.Authenticate(username, password, username, password,
             "Production", key, span, span, issuer, email, audience);
 
         // Assert
@@ -105,7 +105,7 @@ public sealed class JwtManagerTests
         TimeSpan span = TimeSpan.FromHours(1);
 
         // Act
-        JwtToken? result = _jwtManager.Authenticate(username, password, username, password,
+        JwtToken? result = jwtManager.Authenticate(username, password, username, password,
             "Production", key, span, span);
 
         // Assert

@@ -10,19 +10,19 @@ namespace Web.Middleware.Tests.CachingMiddleware;
 
 public sealed class CacheKeyGenerationTests
 {
-	private readonly IMemoryCache _cache;
-	private readonly CacheOptions _options;
-	private readonly CacheMetrics _metrics;
-	private readonly CacheTracker _tracker;
-	private readonly HttpContext _context;
+	private readonly IMemoryCache cache;
+	private readonly CacheOptions options;
+	private readonly CacheMetrics metrics;
+	private readonly CacheTracker tracker;
+	private readonly HttpContext context;
 
 	public CacheKeyGenerationTests()
 	{
-		_cache = A.Fake<IMemoryCache>();
-		_options = new CacheOptions();
-		_metrics = new CacheMetrics();
-		_tracker = new CacheTracker();
-		_context = new DefaultHttpContext();
+		cache = A.Fake<IMemoryCache>();
+		options = new CacheOptions();
+		metrics = new CacheMetrics();
+		tracker = new CacheTracker();
+		context = new DefaultHttpContext();
 	}
 
 	[RetryTheory(3)]
@@ -32,13 +32,13 @@ public sealed class CacheKeyGenerationTests
 	public async Task GenerateCacheKey_WithVariousRequests_GeneratesUniqueKeys(string path, string queryString, string method)
 	{
 		// Arrange
-		_context.Request.Method = method;
-		_context.Request.Path = path;
+		context.Request.Method = method;
+		context.Request.Path = path;
 
 		// Combine all query parameters
 		Dictionary<string, StringValues> queryParams = new()
 			{
-				{ _options.UseCacheQueryParam, "true" }
+				{ options.UseCacheQueryParam, "true" }
 			};
 
 		if (!string.IsNullOrEmpty(queryString))
@@ -50,43 +50,43 @@ public sealed class CacheKeyGenerationTests
 			}
 		}
 
-		_context.Request.Query = new QueryCollection(queryParams);
+		context.Request.Query = new QueryCollection(queryParams);
 
-		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: _cache, cacheOptions: _options, cacheMetrics: _metrics, cacheTracker: _tracker);
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		A.CallTo(() => _cache.CreateEntry(A<string>.That.Matches(key => key.Contains(path) &&
-				key.Contains(_options.UseCacheQueryParam) &&
-				(string.IsNullOrEmpty(queryString) || queryString.Split('&', StringSplitOptions.None).All(param => key.Contains(param)))))).MustHaveHappened();
+		A.CallTo(() => cache.CreateEntry(A<string>.That.Matches(key => key.Contains(path) &&
+			key.Contains(options.UseCacheQueryParam) &&
+			(string.IsNullOrEmpty(queryString) || queryString.Split('&', StringSplitOptions.None).All(param => key.Contains(param)))))).MustHaveHappened();
 	}
 
 	[RetryFact(3)]
 	public async Task GenerateCacheKey_WithPostRequest_IncludesBodyHash()
 	{
 		// Arrange
-		_context.Request.Method = "POST";
-		_context.Request.Path = "/api/test";
+		context.Request.Method = "POST";
+		context.Request.Path = "/api/test";
 		const string body = "test body content";
 		byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
-		_context.Request.Body = new MemoryStream(bodyBytes);
+		context.Request.Body = new MemoryStream(bodyBytes);
 
 		Dictionary<string, StringValues> queryDict = new()
 				{
-						{ _options.UseCacheQueryParam, "true" }
+						{ options.UseCacheQueryParam, "true" }
 				};
 
-		_context.Request.Query = new QueryCollection(queryDict);
+		context.Request.Query = new QueryCollection(queryDict);
 
-		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: _cache, cacheOptions: _options, cacheMetrics: _metrics, cacheTracker: _tracker);
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		A.CallTo(() => _cache.CreateEntry(A<string>.That.Contains("|"))).MustHaveHappened();
-		_context.Request.Body.Position.ShouldBe(0); // Verify body position is reset
+		A.CallTo(() => cache.CreateEntry(A<string>.That.Contains("|"))).MustHaveHappened();
+		context.Request.Body.Position.ShouldBe(0); // Verify body position is reset
 	}
 }

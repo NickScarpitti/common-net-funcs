@@ -50,6 +50,28 @@ public sealed class RandomTests
 		Should.Throw<ArgumentOutOfRangeException>(() => GetRandomInt(maxValue: maxValue));
 	}
 
+	[Fact]
+	public void GetRandomInt_WhenMinValueGreaterThanMaxValue_ThrowsException()
+	{
+		// Arrange & Act & Assert
+		ArgumentException exception = Should.Throw<ArgumentException>(() => GetRandomInt(10, 5));
+		exception.Message.ShouldContain("minValue must be less than or equal to maxValue");
+		exception.ParamName.ShouldBe("minValue");
+	}
+
+	[Theory]
+	[InlineData(5, 5)]
+	[InlineData(100, 100)]
+	[InlineData(1, 1)]
+	public void GetRandomInt_WhenMinValueEqualsMaxValue_ReturnsTheValue(int minValue, int maxValue)
+	{
+		// Act
+		int result = GetRandomInt(minValue, maxValue);
+
+		// Assert
+		result.ShouldBe(minValue);
+	}
+
 	[Theory]
 	[InlineData(5, 0, 100)]
 	[InlineData(10, -50, 50)]
@@ -61,6 +83,18 @@ public sealed class RandomTests
 		// Assert
 		results.Count().ShouldBe(count);
 		results.All(x => x >= min && x < max).ShouldBeTrue();
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(-10)]
+	public void GetRandomInts_WhenNumberToGenerateIsZeroOrNegative_ThrowsException(int numberToGenerate)
+	{
+		// Act & Assert
+		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomInts(numberToGenerate).ToList());
+		exception.Message.ShouldContain("Number to generate must be greater than 0");
+		exception.ParamName.ShouldBe("numberToGenerate");
 	}
 
 	[Theory]
@@ -76,6 +110,30 @@ public sealed class RandomTests
 		result.ShouldBeGreaterThanOrEqualTo(0);
 		result.ShouldBeLessThanOrEqualTo(1);
 		result.GetPrecision().ShouldBeLessThanOrEqualTo(precision);
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(-5)]
+	public void GetRandomDouble_WithInvalidPrecision_ThrowsException(int precision)
+	{
+		// Act & Assert
+		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDouble(precision));
+		exception.Message.ShouldContain("decimalPlaces must be greater than 0");
+		exception.ParamName.ShouldBe("decimalPlaces");
+	}
+
+	[Fact]
+	public void GetRandomDouble_WithPrecisionGreaterThan15_CapsAt15()
+	{
+		// Act
+		double result = GetRandomDouble(20);
+
+		// Assert
+		result.ShouldBeGreaterThanOrEqualTo(0);
+		result.ShouldBeLessThan(1);
+		result.GetPrecision().ShouldBeLessThanOrEqualTo(15);
 	}
 
 	[Fact]
@@ -101,6 +159,18 @@ public sealed class RandomTests
 	}
 
 	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(-10)]
+	public void GetRandomDoubles_WhenNumberToGenerateIsZeroOrNegative_ThrowsException(int numberToGenerate)
+	{
+		// Act & Assert
+		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDoubles(numberToGenerate).ToList());
+		exception.Message.ShouldContain("Number to generate must be greater than 0");
+		exception.ParamName.ShouldBe("numberToGenerate");
+	}
+
+	[Theory]
 	[InlineData(1)]
 	[InlineData(5)]
 	[InlineData(28)]
@@ -113,6 +183,30 @@ public sealed class RandomTests
 		result.ShouldBeGreaterThanOrEqualTo(0);
 		result.ShouldBeLessThanOrEqualTo(1);
 		result.GetPrecision().ShouldBeLessThanOrEqualTo(precision);
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(-5)]
+	public void GetRandomDecimal_WithInvalidPrecision_ThrowsException(int precision)
+	{
+		// Act & Assert
+		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDecimal(precision));
+		exception.Message.ShouldContain("decimalPlaces must be greater than 0");
+		exception.ParamName.ShouldBe("decimalPlaces");
+	}
+
+	[Fact]
+	public void GetRandomDecimal_WithPrecisionGreaterThan28_CapsAt28()
+	{
+		// Act
+		decimal result = GetRandomDecimal(35);
+
+		// Assert
+		result.ShouldBeGreaterThanOrEqualTo(0);
+		result.ShouldBeLessThan(1);
+		result.GetPrecision().ShouldBeLessThanOrEqualTo(28);
 	}
 
 	[Fact]
@@ -137,6 +231,18 @@ public sealed class RandomTests
 		results.All(x => x.GetPrecision() <= precision).ShouldBeTrue();
 	}
 
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(-10)]
+	public void GetRandomDecimals_WhenNumberToGenerateIsZeroOrNegative_ThrowsException(int numberToGenerate)
+	{
+		// Act & Assert
+		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDecimals(numberToGenerate).ToList());
+		exception.Message.ShouldContain("Number to generate must be greater than 0");
+		exception.ParamName.ShouldBe("numberToGenerate");
+	}
+
 	[Fact]
 	public void ShuffleListInPlace_ModifiesOriginalList()
 	{
@@ -154,6 +260,33 @@ public sealed class RandomTests
 	}
 
 	[Fact]
+	public void ShuffleListInPlace_WithEmptyList_ReturnsEmptyList()
+	{
+		// Arrange
+		List<int> emptyList = new();
+
+		// Act
+		IList<int> result = emptyList.ShuffleListInPlace(cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void ShuffleListInPlace_WithSingleElement_ReturnsSameElement()
+	{
+		// Arrange
+		List<int> singleItem = new() { 42 };
+
+		// Act
+		IList<int> result = singleItem.ShuffleListInPlace(cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.Count.ShouldBe(1);
+		result[0].ShouldBe(42);
+	}
+
+	[Fact]
 	public void Shuffle_ReturnsNewCollection()
 	{
 		// Arrange
@@ -168,6 +301,93 @@ public sealed class RandomTests
 		shuffled.Length.ShouldBe(original.Length);
 		shuffled.Order().SequenceEqual(original.Order()).ShouldBeTrue();
 		shuffled.SequenceEqual(original).ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ShuffleLinq_ShufflesCollection()
+	{
+		// Arrange
+		int[] original = Enumerable.Range(1, 100).ToArray();
+
+		// Act
+		int[] shuffled = original.ShuffleLinq().ToArray();
+
+		// Assert
+		shuffled.Length.ShouldBe(original.Length);
+		shuffled.Order().SequenceEqual(original.Order()).ShouldBeTrue();
+		shuffled.SequenceEqual(original).ShouldBeFalse();
+	}
+
+	[Fact]
+	public void Shuffle_WithEmptyEnumerable_ReturnsEmpty()
+	{
+		// Arrange
+		List<int> empty = new();
+
+		// Act
+		IEnumerable<int> result = empty.Shuffle();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void Shuffle_IList_WithEmptyList_ReturnsEmpty()
+	{
+		// Arrange
+		List<int> empty = new();
+
+		// Act
+		List<int> result = empty.Shuffle();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void Shuffle_Array_WithEmptyArray_RemainsEmpty()
+	{
+		// Arrange
+		int[] empty = Array.Empty<int>();
+
+		// Act
+		empty.Shuffle();
+
+		// Assert
+		empty.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void Shuffle_Array_ShufflesInPlace()
+	{
+		// Arrange
+		int[] original = Enumerable.Range(1, 50).ToArray();
+		int[] copy = original.ToArray();
+
+		// Act
+		original.Shuffle();
+
+		// Assert
+		original.Length.ShouldBe(copy.Length);
+		original.Order().SequenceEqual(copy.Order()).ShouldBeTrue();
+		original.SequenceEqual(copy).ShouldBeFalse();
+	}
+
+	[Fact]
+	public void Shuffle_Span_ShufflesInPlace()
+	{
+		// Arrange
+		int[] original = Enumerable.Range(1, 50).ToArray();
+		int[] copy = original.ToArray();
+		Span<int> span = original.AsSpan();
+
+		// Act
+		span.Shuffle();
+
+		// Assert
+		original.Length.ShouldBe(copy.Length);
+		original.Order().SequenceEqual(copy.Order()).ShouldBeTrue();
+		original.SequenceEqual(copy).ShouldBeFalse();
 	}
 
 	[Theory]
@@ -255,6 +475,20 @@ public sealed class RandomTests
 	}
 
 	[Fact]
+	public void GenerateRandomStringByCharSet_WithEmptyCharSet_UsesDefaultCharSet()
+	{
+		// Arrange
+		HashSet<char> emptyCharSet = new();
+
+		// Act
+		string result = GenerateRandomStringByCharSet(10, emptyCharSet, TestContext.Current.CancellationToken);
+
+		// Assert
+		result.Length.ShouldBe(10);
+		result.All(DefaultCharSet.Contains).ShouldBeTrue();
+	}
+
+	[Fact]
 	public void GetRandomElement_ReturnsValidElement()
 	{
 		// Arrange
@@ -266,6 +500,19 @@ public sealed class RandomTests
 		// Assert
 		result.ShouldNotBeNull();
 		items.ShouldContain(result.Value);
+	}
+
+	[Fact]
+	public void GetRandomElement_WithSingleElement_ReturnsThatElement()
+	{
+		// Arrange
+		List<int> items = new() { 42 };
+
+		// Act
+		int? result = items.GetRandomElement();
+
+		// Assert
+		result.ShouldBe(42);
 	}
 
 	[Theory]
@@ -285,6 +532,16 @@ public sealed class RandomTests
 		results.All(items.Contains).ShouldBeTrue();
 	}
 
+	[Fact]
+	public void GetRandomElements_WithEmptyCollection_ThrowsException()
+	{
+		// Arrange
+		List<int> empty = new();
+
+		// Act & Assert
+		Should.Throw<ArgumentException>(() => empty.GetRandomElements(5));
+	}
+
 	[Theory]
 	[InlineData(-1)]
 	[InlineData(0)]
@@ -299,6 +556,66 @@ public sealed class RandomTests
 	public void GenerateRandomString_WithInvalidLengthRange_ThrowsException(int minLength, int maxLength)
 	{
 		Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength, minLength));
+	}
+
+	[Fact]
+	public void GenerateRandomString_WhenBlacklistContainsAllAvailableCharacters_ThrowsException()
+	{
+		// Arrange
+		HashSet<char> blacklist = new();
+		for (int i = 65; i <= 90; i++) // A-Z
+		{
+			blacklist.Add((char)i);
+		}
+
+		// Act & Assert
+		ArgumentException exception = Should.Throw<ArgumentException>(() =>
+			GenerateRandomString(10, lowerAsciiBound: 65, upperAsciiBound: 90, blacklistedCharacters: blacklist));
+		exception.Message.ShouldContain("Black list contains all available values");
+		exception.ParamName.ShouldBe("blacklistedCharacters");
+	}
+
+	// [Fact]
+	// public void GenerateRandomString_WhenBlacklistHasCharsOutsideRange_ThrowsNoAvailableCharsException()
+	// {
+	// 	// Arrange - Blacklist contains all chars IN the range plus extras OUTSIDE
+	// 	// This tests the defensive check that counts only blacklisted chars within the actual range
+	// 	HashSet<char> blacklist = new();
+	// 	blacklist.Add((char)65); // 'A' - in range
+	// 	blacklist.Add((char)66); // 'B' - in range
+	// 	blacklist.Add((char)97); // 'a' - outside range
+	// 	blacklist.Add((char)98); // 'b' - outside range
+
+	// 	// Act & Assert - With range 65-66 (2 chars 'A', 'B') and blacklist {65, 66, 97, 98}:
+	// 	// availableCharCount = 2 - 2 = 0 (only counts blacklist chars within range)
+	// 	// This hits the defensive check!
+	// 	ArgumentException exception = Should.Throw<ArgumentException>(() =>
+	// 		GenerateRandomString(10, lowerAsciiBound: 65, upperAsciiBound: 66, blacklistedCharacters: blacklist));
+	// 	exception.Message.ShouldContain("No available characters to use after applying blacklist");
+	// 	exception.ParamName.ShouldBe("blacklistedCharacters");
+	// }
+
+	[Theory]
+	[InlineData(-1, 126)]
+	[InlineData(0, 128)]
+	[InlineData(100, 50)]
+	public void GenerateRandomString_WithInvalidAsciiBounds_ThrowsException(int lower, int upper)
+	{
+		// Act & Assert
+		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() =>
+			GenerateRandomString(10, lowerAsciiBound: lower, upperAsciiBound: upper));
+		exception.Message.ShouldContain("Bounds must be between 0 and 127, and lowerBound must be less than upperBound");
+		exception.ParamName.ShouldBe("upperAsciiBound");
+	}
+
+	[Fact]
+	public void GenerateRandomString_WhenMinLengthEqualsMaxLength_ReturnsExactLength()
+	{
+		// Act
+		string result = GenerateRandomString(10, 10, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.Length.ShouldBe(10);
 	}
 
 	[Theory]

@@ -473,6 +473,7 @@ public static class ExpressionTrees
 		// Check struct types that need deep inspection
 		// return distinctFieldTypes.Any(fieldType => fieldType.IsStructOtherThanBasicValueTypes() && !alreadyCheckedTypes.Contains(fieldType) && fieldType.HasInItsHierarchyFieldsWithClasses(alreadyCheckedTypes));
 
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 		foreach (Type fieldType in distinctFieldTypes)
 		{
 			if (fieldType.IsStructOtherThanBasicValueTypes() && !alreadyCheckedTypes.Contains(fieldType) && fieldType.HasInItsHierarchyFieldsWithClasses(alreadyCheckedTypes))
@@ -480,6 +481,7 @@ public static class ExpressionTrees
 				return true;
 			}
 		}
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 
 		return false;
 	}

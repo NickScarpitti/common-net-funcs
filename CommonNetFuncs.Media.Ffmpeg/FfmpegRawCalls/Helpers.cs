@@ -1,6 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using CommonNetFuncs.Core;
+
+[assembly: InternalsVisibleTo("Media.Ffmpeg.Tests")]
 
 namespace CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
 

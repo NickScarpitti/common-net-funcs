@@ -2,6 +2,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using static Xunit.TestContext;
 
 namespace EFCore.Tests;
 
@@ -83,8 +84,8 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
@@ -99,7 +100,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			foreach (TestEntity entity in entities)
 			{
-				TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id }, TestContext.Current.CancellationToken);
+				TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id }, Current.CancellationToken);
 				deletedEntity.ShouldBeNull();
 			}
 		}
@@ -127,8 +128,8 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
@@ -141,7 +142,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id }, TestContext.Current.CancellationToken);
+			TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id }, Current.CancellationToken);
 			deletedEntity.ShouldBeNull();
 		}
 	}
@@ -154,8 +155,8 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
@@ -168,7 +169,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			int remainingCount = await context.TestEntities.CountAsync(cancellationToken: TestContext.Current.CancellationToken);
+			int remainingCount = await context.TestEntities.CountAsync(cancellationToken: Current.CancellationToken);
 			remainingCount.ShouldBe(0);
 		}
 	}
@@ -183,8 +184,8 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
@@ -197,7 +198,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id }, TestContext.Current.CancellationToken);
+			TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id }, Current.CancellationToken);
 			deletedEntity.ShouldBeNull();
 		}
 	}
@@ -228,8 +229,8 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddAsync(existingEntity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddAsync(existingEntity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
@@ -242,10 +243,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { existingEntity.Id }, TestContext.Current.CancellationToken);
+			TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { existingEntity.Id }, Current.CancellationToken);
 			deletedEntity.ShouldBeNull();
 
-			TestEntity? nonExistent = await context.TestEntities.FindAsync(new object?[] { nonExistingEntity.Id }, TestContext.Current.CancellationToken);
+			TestEntity? nonExistent = await context.TestEntities.FindAsync(new object?[] { nonExistingEntity.Id }, Current.CancellationToken);
 			nonExistent.ShouldBeNull();
 		}
 	}
@@ -260,9 +261,9 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(firstBatch, TestContext.Current.CancellationToken);
-			await context.TestEntities.AddRangeAsync(secondBatch, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(firstBatch, Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(secondBatch, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
@@ -278,7 +279,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			int remainingCount = await context.TestEntities.CountAsync(cancellationToken: TestContext.Current.CancellationToken);
+			int remainingCount = await context.TestEntities.CountAsync(cancellationToken: Current.CancellationToken);
 			remainingCount.ShouldBe(0);
 		}
 	}
@@ -297,8 +298,8 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 			keys = entities.ConvertAll(e => (object)e.Id);
 		}
 
@@ -336,8 +337,8 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
@@ -373,8 +374,8 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddAsync(entity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		List<object> keys = [entity.Id, 999, 1000];
@@ -403,14 +404,14 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
 			await context.TestEntitiesWithFilter.AddRangeAsync(activeEntity, inactiveEntity);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
 
 		// Act
-		TestEntityWithFilter? activeResult = await testContext.GetByKey(1, cancellationToken: TestContext.Current.CancellationToken);
-		TestEntityWithFilter? inactiveResult = await testContext.GetByKey(2, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithFilter? activeResult = await testContext.GetByKey(1, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? inactiveResult = await testContext.GetByKey(2, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		activeResult.ShouldNotBeNull();
@@ -429,15 +430,15 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
 			await context.TestEntitiesWithFilter.AddRangeAsync(activeEntity, inactiveEntity);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithFilter? activeResult = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
-		TestEntityWithFilter? inactiveResult = await testContext.GetByKey(2, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithFilter? activeResult = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? inactiveResult = await testContext.GetByKey(2, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		activeResult.ShouldNotBeNull();
@@ -455,15 +456,15 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
-			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = ["IsActiveFilter"] };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		// Note: EF Core's IgnoreQueryFilters() disables all filters, not specific ones
@@ -483,14 +484,14 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
 			await context.TestEntitiesWithCompoundKeyAndFilter.AddRangeAsync(activeEntity, inactiveEntity);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
 
 		// Act
-		TestEntityWithCompoundKeyAndFilter? activeResult = await testContext.GetByKey(new object[] { 1, 1 }, cancellationToken: TestContext.Current.CancellationToken);
-		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testContext.GetByKey(new object[] { 1, 2 }, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? activeResult = await testContext.GetByKey(new object[] { 1, 1 }, cancellationToken: Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testContext.GetByKey(new object[] { 1, 2 }, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		activeResult.ShouldNotBeNull();
@@ -510,15 +511,15 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
 			await context.TestEntitiesWithCompoundKeyAndFilter.AddRangeAsync(activeEntity, inactiveEntity);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithCompoundKeyAndFilter? activeResult = await testContext.GetByKey(new object[] { 1, 1 }, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
-		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testContext.GetByKey(new object[] { 1, 2 }, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? activeResult = await testContext.GetByKey(new object[] { 1, 1 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testContext.GetByKey(new object[] { 1, 2 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		activeResult.ShouldNotBeNull();
@@ -538,14 +539,14 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
-			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: null, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: null, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull(); // Filter should still apply with null options
@@ -560,15 +561,15 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
-			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = [] };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull(); // Filter should still apply with empty array
@@ -583,15 +584,15 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
-			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull(); // Filter should still apply
@@ -605,7 +606,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(999, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithFilter? result = await testContext.GetByKey(999, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -619,7 +620,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithCompoundKeyAndFilter? result = await testContext.GetByKey(new object[] { 999, 999 }, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? result = await testContext.GetByKey(new object[] { 999, 999 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -634,15 +635,15 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
-			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, queryTimeout: TimeSpan.FromSeconds(30), globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithFilter? result = await testContext.GetByKey(1, queryTimeout: TimeSpan.FromSeconds(30), globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -674,8 +675,8 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
-			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
@@ -686,12 +687,257 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		};
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: TestContext.Current.CancellationToken);
+		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		// FilterNamesToDisable takes priority, so filters should be disabled
 		result.ShouldNotBeNull();
 		result.Id.ShouldBe(1);
+	}
+
+	#endregion
+
+	#region GetByKeyFull with GlobalFilterOptions Tests
+
+	[Fact]
+	public async Task GetByKeyFull_WithoutGlobalFilterOptions_ShouldApplyFilters()
+	{
+		// Arrange
+		TestEntityWithFilter activeEntity = new() { Id = 1, Name = "Active", IsActive = true };
+		TestEntityWithFilter inactiveEntity = new() { Id = 2, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddRangeAsync(activeEntity, inactiveEntity);
+			await context.SaveChangesAsync(Current.CancellationToken);
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+
+		// Act
+		TestEntityWithFilter? activeResult = await testContext.GetByKeyFull(1, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? inactiveResult = await testContext.GetByKeyFull(2, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		activeResult.ShouldNotBeNull();
+		activeResult.Id.ShouldBe(1);
+		inactiveResult.ShouldBeNull(); // Filter should exclude inactive entities
+	}
+
+	#endregion
+
+	#region DeleteByKey with GlobalFilterOptions Tests
+
+	[Fact]
+	public async Task DeleteByKey_WithoutGlobalFilterOptions_ShouldApplyFilters()
+	{
+		// Arrange
+		TestEntityWithFilter activeEntity = new() { Id = 1, Name = "Active", IsActive = true };
+		TestEntityWithFilter inactiveEntity = new() { Id = 2, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddRangeAsync(activeEntity, inactiveEntity);
+			await context.SaveChangesAsync(Current.CancellationToken);
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+
+		// Act
+		bool activeResult = await testContext.DeleteByKey(1);
+		bool inactiveResult = await testContext.DeleteByKey(2);
+
+		// Assert
+		activeResult.ShouldBeTrue(); // Active entity should be found and deleted
+		inactiveResult.ShouldBeFalse(); // Inactive entity should not be found due to filter
+	}
+
+	[Fact]
+	public async Task DeleteByKey_WithGlobalFilterOptions_DisableAllFilters_ShouldIgnoreFilters()
+	{
+		// Arrange
+		TestEntityWithFilter inactiveEntity = new() { Id = 1, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		bool result = await testContext.DeleteByKey(1, globalFilterOptions: filterOptions);
+
+		// Assert
+		result.ShouldBeTrue(); // Should find and delete inactive entity with filters disabled
+	}
+
+	[Fact]
+	public async Task DeleteByKey_WithGlobalFilterOptions_FilterNamesToDisable_ShouldDisableSpecifiedFilters()
+	{
+		// Arrange
+		TestEntityWithFilter inactiveEntity = new() { Id = 1, Name = "Inactive", IsActive = false };
+
+		using (IServiceScope scope = serviceProvider.CreateScope())
+		{
+			TestDbContextWithFilters context = scope.ServiceProvider.GetRequiredService<TestDbContextWithFilters>();
+			await context.TestEntitiesWithFilter.AddAsync(inactiveEntity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
+		}
+
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = ["IsActiveFilter"] };
+
+		// Act
+		bool result = await testContext.DeleteByKey(1, globalFilterOptions: filterOptions);
+
+		// Assert
+		result.ShouldBeTrue(); // Should find and delete inactive entity with specified filter disabled
+	}
+
+	#endregion
+
+	#region Error Path Tests
+
+	// Note: The following error path tests validate error handling behavior.
+	// Each test uses unique entity types to avoid expression builder caching issues.
+	// The implementation handles invalid key scenarios gracefully rather than throwing exceptions.
+
+	[Fact]
+	public async Task GetByKey_SingleKey_OnCompoundKeyEntity_WithGlobalFilterOptions_ShouldReturnNull()
+	{
+		// Arrange - Use unique entity type to avoid caching
+		SqliteConnection testConnection = new("DataSource=:memory:");
+		await testConnection.OpenAsync(Current.CancellationToken);
+
+		ServiceCollection services = new();
+		services.AddDbContext<TestDbContextForGetSingleKey>(options => options.UseSqlite(testConnection));
+		IServiceProvider provider = services.BuildServiceProvider();
+
+		using (IServiceScope scope = provider.CreateScope())
+		{
+			TestDbContextForGetSingleKey context = scope.ServiceProvider.GetRequiredService<TestDbContextForGetSingleKey>();
+			await context.Database.EnsureCreatedAsync(Current.CancellationToken);
+
+			TestEntityCompoundKeyForGetSingleKey entity = new() { Id1 = 1, Id2 = 1, Name = "Test", IsActive = true };
+			await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
+		}
+
+		BaseDbContextActions<TestEntityCompoundKeyForGetSingleKey, TestDbContextForGetSingleKey> testContext = new(provider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		TestEntityCompoundKeyForGetSingleKey? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert - Should return null gracefully when single key is provided for compound key entity
+		result.ShouldBeNull();
+
+		await testConnection.DisposeAsync();
+	}
+
+	[Fact]
+	public async Task GetByKey_CompoundKey_WithWrongKeyCount_WithGlobalFilterOptions_ShouldReturnNull()
+	{
+		// Arrange - Use unique entity type to avoid caching
+		SqliteConnection testConnection = new("DataSource=:memory:");
+		await testConnection.OpenAsync(Current.CancellationToken);
+
+		ServiceCollection services = new();
+		services.AddDbContext<TestDbContextForGetWrongCount>(options => options.UseSqlite(testConnection));
+		IServiceProvider provider = services.BuildServiceProvider();
+
+		using (IServiceScope scope = provider.CreateScope())
+		{
+			TestDbContextForGetWrongCount context = scope.ServiceProvider.GetRequiredService<TestDbContextForGetWrongCount>();
+			await context.Database.EnsureCreatedAsync(Current.CancellationToken);
+
+			TestEntityCompoundKeyForGetWrongCount entity = new() { Id1 = 1, Id2 = 1, Name = "Test", IsActive = true };
+			await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
+		}
+
+		BaseDbContextActions<TestEntityCompoundKeyForGetWrongCount, TestDbContextForGetWrongCount> testContext = new(provider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act - providing only 1 key when 2 are needed
+		TestEntityCompoundKeyForGetWrongCount? result = await testContext.GetByKey(new object[] { 1 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+
+		// Assert - Should return null gracefully when wrong key count is provided
+		result.ShouldBeNull();
+
+		await testConnection.DisposeAsync();
+	}
+
+	[Fact]
+	public async Task DeleteByKey_SingleKey_OnCompoundKeyEntity_WithGlobalFilterOptions_ShouldReturnFalse()
+	{
+		// Arrange - Use unique entity type to avoid caching
+		SqliteConnection testConnection = new("DataSource=:memory:");
+		await testConnection.OpenAsync(Current.CancellationToken);
+
+		ServiceCollection services = new();
+		services.AddDbContext<TestDbContextForDeleteSingleKey>(options => options.UseSqlite(testConnection));
+		IServiceProvider provider = services.BuildServiceProvider();
+
+		using (IServiceScope scope = provider.CreateScope())
+		{
+			TestDbContextForDeleteSingleKey context = scope.ServiceProvider.GetRequiredService<TestDbContextForDeleteSingleKey>();
+			await context.Database.EnsureCreatedAsync(Current.CancellationToken);
+
+			TestEntityCompoundKeyForDeleteSingleKey entity = new() { Id1 = 1, Id2 = 1, Name = "Test", IsActive = true };
+			await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
+		}
+
+		BaseDbContextActions<TestEntityCompoundKeyForDeleteSingleKey, TestDbContextForDeleteSingleKey> testContext = new(provider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act
+		bool result = await testContext.DeleteByKey(1, globalFilterOptions: filterOptions);
+
+		// Assert - Should return false gracefully when single key is provided for compound key entity
+		result.ShouldBeFalse();
+
+		await testConnection.DisposeAsync();
+	}
+
+	[Fact]
+	public async Task DeleteByKey_CompoundKey_WithWrongKeyCount_WithGlobalFilterOptions_ShouldReturnFalse()
+	{
+		// Arrange - Use unique entity type to avoid caching
+		SqliteConnection testConnection = new("DataSource=:memory:");
+		await testConnection.OpenAsync(Current.CancellationToken);
+
+		ServiceCollection services = new();
+		services.AddDbContext<TestDbContextForDeleteWrongCount>(options => options.UseSqlite(testConnection));
+		IServiceProvider provider = services.BuildServiceProvider();
+
+		using (IServiceScope scope = provider.CreateScope())
+		{
+			TestDbContextForDeleteWrongCount context = scope.ServiceProvider.GetRequiredService<TestDbContextForDeleteWrongCount>();
+			await context.Database.EnsureCreatedAsync(Current.CancellationToken);
+
+			TestEntityCompoundKeyForDeleteWrongCount entity = new() { Id1 = 1, Id2 = 1, Name = "Test", IsActive = true };
+			await context.TestEntities.AddAsync(entity, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
+		}
+
+		BaseDbContextActions<TestEntityCompoundKeyForDeleteWrongCount, TestDbContextForDeleteWrongCount> testContext = new(provider);
+		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
+
+		// Act - providing only 1 key when 2 are needed
+		bool result = await testContext.DeleteByKey(new object[] { 1 }, globalFilterOptions: filterOptions);
+
+		// Assert - Should return false gracefully when wrong key count is provided
+		result.ShouldBeFalse();
+
+		await testConnection.DisposeAsync();
 	}
 
 	#endregion
@@ -733,4 +979,89 @@ public class TestEntityWithCompoundKeyAndFilter
 	public int Id2 { get; set; }
 	public required string Name { get; set; }
 	public bool IsActive { get; set; }
+}
+
+// Unique entity types for error path tests to avoid expression builder caching
+public class TestEntityCompoundKeyForGetSingleKey
+{
+	public int Id1 { get; set; }
+	public int Id2 { get; set; }
+	public required string Name { get; set; }
+	public bool IsActive { get; set; }
+}
+
+public class TestDbContextForGetSingleKey(DbContextOptions<TestDbContextForGetSingleKey> options) : DbContext(options)
+{
+	public DbSet<TestEntityCompoundKeyForGetSingleKey> TestEntities => Set<TestEntityCompoundKeyForGetSingleKey>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<TestEntityCompoundKeyForGetSingleKey>()
+			.HasKey(e => new { e.Id1, e.Id2 });
+		modelBuilder.Entity<TestEntityCompoundKeyForGetSingleKey>()
+			.HasQueryFilter("IsActiveFilter", e => e.IsActive);
+	}
+}
+
+public class TestEntityCompoundKeyForGetWrongCount
+{
+	public int Id1 { get; set; }
+	public int Id2 { get; set; }
+	public required string Name { get; set; }
+	public bool IsActive { get; set; }
+}
+
+public class TestDbContextForGetWrongCount(DbContextOptions<TestDbContextForGetWrongCount> options) : DbContext(options)
+{
+	public DbSet<TestEntityCompoundKeyForGetWrongCount> TestEntities => Set<TestEntityCompoundKeyForGetWrongCount>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<TestEntityCompoundKeyForGetWrongCount>()
+			.HasKey(e => new { e.Id1, e.Id2 });
+		modelBuilder.Entity<TestEntityCompoundKeyForGetWrongCount>()
+			.HasQueryFilter("IsActiveFilter", e => e.IsActive);
+	}
+}
+
+public class TestEntityCompoundKeyForDeleteSingleKey
+{
+	public int Id1 { get; set; }
+	public int Id2 { get; set; }
+	public required string Name { get; set; }
+	public bool IsActive { get; set; }
+}
+
+public class TestDbContextForDeleteSingleKey(DbContextOptions<TestDbContextForDeleteSingleKey> options) : DbContext(options)
+{
+	public DbSet<TestEntityCompoundKeyForDeleteSingleKey> TestEntities => Set<TestEntityCompoundKeyForDeleteSingleKey>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<TestEntityCompoundKeyForDeleteSingleKey>()
+			.HasKey(e => new { e.Id1, e.Id2 });
+		modelBuilder.Entity<TestEntityCompoundKeyForDeleteSingleKey>()
+			.HasQueryFilter("IsActiveFilter", e => e.IsActive);
+	}
+}
+
+public class TestEntityCompoundKeyForDeleteWrongCount
+{
+	public int Id1 { get; set; }
+	public int Id2 { get; set; }
+	public required string Name { get; set; }
+	public bool IsActive { get; set; }
+}
+
+public class TestDbContextForDeleteWrongCount(DbContextOptions<TestDbContextForDeleteWrongCount> options) : DbContext(options)
+{
+	public DbSet<TestEntityCompoundKeyForDeleteWrongCount> TestEntities => Set<TestEntityCompoundKeyForDeleteWrongCount>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<TestEntityCompoundKeyForDeleteWrongCount>()
+			.HasKey(e => new { e.Id1, e.Id2 });
+		modelBuilder.Entity<TestEntityCompoundKeyForDeleteWrongCount>()
+			.HasQueryFilter("IsActiveFilter", e => e.IsActive);
+	}
 }

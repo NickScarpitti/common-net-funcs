@@ -6,9 +6,9 @@ namespace Word.OpenXml.Tests;
 
 public sealed class ChangeUrlTests : IDisposable
 {
-	private readonly string _testDocPath;
-	private readonly string _tempDocPath;
-	private readonly FileStream? _tempFileStream;
+	private readonly string testDocPath;
+	private readonly string tempDocPath;
+	private readonly FileStream? tempFileStream;
 
 	private bool disposed;
 
@@ -24,13 +24,13 @@ public sealed class ChangeUrlTests : IDisposable
 		{
 			if (disposing)
 			{
-				_tempFileStream?.Dispose();
+				tempFileStream?.Dispose();
 			}
 			disposed = true;
 		}
-		if (File.Exists(_tempDocPath))
+		if (File.Exists(tempDocPath))
 		{
-			File.Delete(_tempDocPath);
+			File.Delete(tempDocPath);
 		}
 	}
 
@@ -42,12 +42,12 @@ public sealed class ChangeUrlTests : IDisposable
 	public ChangeUrlTests()
 	{
 		// Set up test paths
-		_testDocPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData", "TestDocument.docx");
-		_tempDocPath = Path.GetTempFileName();
+		testDocPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData", "TestDocument.docx");
+		tempDocPath = Path.GetTempFileName();
 
 		// Copy test doc to temp location for each test
-		File.Copy(_testDocPath, _tempDocPath, true);
-		_tempFileStream = new FileStream(_tempDocPath, FileMode.Open, FileAccess.ReadWrite);
+		File.Copy(testDocPath, tempDocPath, true);
+		tempFileStream = new FileStream(tempDocPath, FileMode.Open, FileAccess.ReadWrite);
 	}
 
 	private static List<HyperlinkRelationship> GetHyperlinks(Stream docStream)
@@ -62,12 +62,12 @@ public sealed class ChangeUrlTests : IDisposable
 	public void ChangeUrlsInWordDoc_SingleUrl_ReplacesCorrectly(string urlToReplace, string newUrl, bool replaceAll)
 	{
 		// Act
-		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDoc(_tempFileStream!, newUrl, urlToReplace, replaceAll);
-		_tempFileStream!.Position = 0;
+		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDoc(tempFileStream!, newUrl, urlToReplace, replaceAll);
+		tempFileStream!.Position = 0;
 
 		// Assert
 		result.ShouldBeTrue();
-		List<HyperlinkRelationship> hyperlinks = GetHyperlinks(_tempFileStream);
+		List<HyperlinkRelationship> hyperlinks = GetHyperlinks(tempFileStream);
 
 		// Verify the URL was replaced
 		hyperlinks.Count(h => h.Uri.ToString().Equals(urlToReplace, StringComparison.InvariantCultureIgnoreCase))
@@ -95,12 +95,12 @@ public sealed class ChangeUrlTests : IDisposable
 			};
 
 		// Act
-		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDoc(_tempFileStream!, urlsToUpdate);
-		_tempFileStream!.Position = 0;
+		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDoc(tempFileStream!, urlsToUpdate);
+		tempFileStream!.Position = 0;
 
 		// Assert
 		result.ShouldBeTrue();
-		IEnumerable<HyperlinkRelationship> hyperlinks = GetHyperlinks(_tempFileStream);
+		IEnumerable<HyperlinkRelationship> hyperlinks = GetHyperlinks(tempFileStream);
 
 		// Verify all test URLs were replaced
 		foreach (KeyValuePair<string, string> kvp in urlsToUpdate)
@@ -121,12 +121,12 @@ public sealed class ChangeUrlTests : IDisposable
 	public void ChangeUrlsInWordDocRegex_SinglePattern_ReplacesCorrectly(string pattern, string replacement, bool replaceAll)
 	{
 		// Act
-		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDocRegex(_tempFileStream!, pattern, replacement, replaceAll, RegexOptions.IgnoreCase);
-		_tempFileStream!.Position = 0;
+		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDocRegex(tempFileStream!, pattern, replacement, replaceAll, RegexOptions.IgnoreCase);
+		tempFileStream!.Position = 0;
 
 		// Assert
 		result.ShouldBeTrue();
-		IEnumerable<HyperlinkRelationship> hyperlinks = GetHyperlinks(_tempFileStream);
+		IEnumerable<HyperlinkRelationship> hyperlinks = GetHyperlinks(tempFileStream);
 
 		// Verify the pattern matches were replaced
 		Regex regex = new(pattern, RegexOptions.IgnoreCase);
@@ -144,7 +144,7 @@ public sealed class ChangeUrlTests : IDisposable
 	[InlineData("TestUrl", false, true)]
 	[InlineData("testurl", true, true)]
 	[InlineData("testurl", false, true)]
-	public void ChangeUrlsInWordDocRegex_Dictionary_ReplacesMultiplePatterns(string regexPattern, bool caseSensitive, bool shoudSucceed)
+	public void ChangeUrlsInWordDocRegex_Dictionary_ReplacesMultiplePatterns(string regexPattern, bool caseSensitive, bool shouldSucceed)
 	{
 		// Arrange
 		Dictionary<string, string> patternsToUpdate = new()
@@ -155,15 +155,15 @@ public sealed class ChangeUrlTests : IDisposable
 				};
 
 		// Act
-		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDocRegex(_tempFileStream!, patternsToUpdate, regexOptions: caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
-		_tempFileStream!.Position = 0;
+		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDocRegex(tempFileStream!, patternsToUpdate, regexOptions: caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
+		tempFileStream!.Position = 0;
 
 		// Assert
 		result.ShouldBeTrue();
-		IEnumerable<HyperlinkRelationship> hyperlinks = GetHyperlinks(_tempFileStream);
+		IEnumerable<HyperlinkRelationship> hyperlinks = GetHyperlinks(tempFileStream);
 
 		// Verify all patterns were replaced
-		if (shoudSucceed)
+		if (shouldSucceed)
 		{
 			foreach (KeyValuePair<string, string> kvp in patternsToUpdate)
 			{
@@ -206,7 +206,7 @@ public sealed class ChangeUrlTests : IDisposable
 		const string invalidPattern = "["; // Invalid regex pattern
 
 		// Act
-		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDocRegex(_tempFileStream!, invalidPattern, "replacement");
+		bool result = CommonNetFuncs.Word.OpenXml.ChangeUrls.ChangeUrlsInWordDocRegex(tempFileStream!, invalidPattern, "replacement");
 
 		// Assert
 		result.ShouldBeFalse();

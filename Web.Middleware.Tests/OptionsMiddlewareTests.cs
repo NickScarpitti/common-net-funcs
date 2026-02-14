@@ -7,13 +7,13 @@ namespace Web.Middleware.Tests;
 
 public sealed class OptionsMiddlewareTests
 {
-	private readonly HttpContext _context;
-	private readonly RequestDelegate _next;
+	private readonly HttpContext context;
+	private readonly RequestDelegate next;
 
 	public OptionsMiddlewareTests()
 	{
-		_context = new DefaultHttpContext();
-		_next = A.Fake<RequestDelegate>();
+		context = new DefaultHttpContext();
+		next = A.Fake<RequestDelegate>();
 	}
 
 	[RetryTheory(3)]
@@ -23,26 +23,29 @@ public sealed class OptionsMiddlewareTests
 	public async Task InvokeAsync_OptionsRequest_SetsCorrectHeaders(string method, string? originHeader, string expectedOrigin)
 	{
 		// Arrange
-		_context.Request.Method = method;
+
+		context.Request.Method = method;
 		if (originHeader != null)
 		{
-			_context.Request.Headers.Origin = originHeader;
+			context.Request.Headers.Origin = originHeader;
 		}
 
-		OptionsMiddleware middleware = new(_next, "*", ["Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN"], ["GET, POST, PUT, DELETE, OPTIONS"], true, 3600, HttpStatusCode.OK);
+		OptionsMiddleware middleware = new(next, "*", ["Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN"], ["GET, POST, PUT, DELETE, OPTIONS"], true, 3600, HttpStatusCode.OK);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		_context.Response.Headers.AccessControlAllowOrigin.ToString().ShouldBe(expectedOrigin);
-		_context.Response.Headers.AccessControlAllowHeaders.ToString().ShouldBe("Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN");
-		_context.Response.Headers.AccessControlAllowMethods.ToString().ShouldBe("GET, POST, PUT, DELETE, OPTIONS");
-		_context.Response.Headers.AccessControlAllowCredentials.ToString().ShouldBe("true");
-		_context.Response.Headers.AccessControlMaxAge.ToString().ShouldBe("3600");
-		_context.Response.StatusCode.ShouldBe(200);
 
-		A.CallTo(() => _next(_context)).MustNotHaveHappened();
+		context.Response.Headers.AccessControlAllowOrigin.ToString().ShouldBe(expectedOrigin);
+		context.Response.Headers.AccessControlAllowHeaders.ToString().ShouldBe("Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN");
+		context.Response.Headers.AccessControlAllowMethods.ToString().ShouldBe("GET, POST, PUT, DELETE, OPTIONS");
+		context.Response.Headers.AccessControlAllowCredentials.ToString().ShouldBe("true");
+		context.Response.Headers.AccessControlMaxAge.ToString().ShouldBe("3600");
+		context.Response.StatusCode.ShouldBe(200);
+
+		A.CallTo(() => next(context)).MustNotHaveHappened();
 	}
 
 	[RetryTheory(3)]
@@ -52,29 +55,32 @@ public sealed class OptionsMiddlewareTests
 	public async Task InvokeAsync_NonOptionsRequest_ProcessesNormallyWithHeaders(string method, string? originHeader)
 	{
 		// Arrange
-		_context.Request.Method = method;
+
+		context.Request.Method = method;
 		if (originHeader != null)
 		{
-			_context.Request.Headers.Origin = originHeader;
+			context.Request.Headers.Origin = originHeader;
 		}
 
-		OptionsMiddleware middleware = new(_next, "*", [], [], true, 3600, HttpStatusCode.OK);
+		OptionsMiddleware middleware = new(next, "*", [], [], true, 3600, HttpStatusCode.OK);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
+
+		A.CallTo(() => next(context)).MustHaveHappenedOnceExactly();
 
 		if (!string.IsNullOrWhiteSpace(originHeader))
 		{
-			_context.Response.Headers.AccessControlAllowOrigin.ToString().ShouldBe(originHeader);
-			_context.Response.Headers.AccessControlAllowCredentials.ToString().ShouldBe("true");
+			context.Response.Headers.AccessControlAllowOrigin.ToString().ShouldBe(originHeader);
+			context.Response.Headers.AccessControlAllowCredentials.ToString().ShouldBe("true");
 		}
 		else
 		{
-			_context.Response.Headers.AccessControlAllowOrigin.ToString().ShouldBeEmpty();
-			_context.Response.Headers.AccessControlAllowCredentials.ToString().ShouldBeEmpty();
+			context.Response.Headers.AccessControlAllowOrigin.ToString().ShouldBeEmpty();
+			context.Response.Headers.AccessControlAllowCredentials.ToString().ShouldBeEmpty();
 		}
 	}
 
@@ -82,20 +88,24 @@ public sealed class OptionsMiddlewareTests
 	public async Task InvokeAsync_NonOptionsRequest_CallsNextMiddleware()
 	{
 		// Arrange
-		_context.Request.Method = "GET";
-		OptionsMiddleware middleware = new(_next, "*", [], [], true, 3600, HttpStatusCode.OK);
+
+		context.Request.Method = "GET";
+		OptionsMiddleware middleware = new(next, "*", [], [], true, 3600, HttpStatusCode.OK);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
+
+		A.CallTo(() => next(context)).MustHaveHappenedOnceExactly();
 	}
 
 	[RetryFact(3)]
 	public void Constructor_NullNext_ThrowsArgumentNullException()
 	{
 		// Act & Assert
+
 		Should.Throw<ArgumentNullException>(() => new OptionsMiddleware(null!, "*", [], [], true, 3600, HttpStatusCode.OK));
 	}
 }

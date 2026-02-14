@@ -236,7 +236,7 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 			else
 			{
 				// Add new item
-				if (dictionary.Count >= capacity)
+				if (dictionary.Count > capacity)
 				{
 					// Remove oldest item
 					TKey oldestKey = dictionary.GetAt(0).Key;

@@ -16,7 +16,6 @@ public class BaseDbContextActionsReadBenchmarks : IDisposable
 {
 	private IServiceProvider? serviceProvider;
 	private BaseDbContextActions<TestEntity, TestDbContext>? actions;
-	private List<TestEntity> entities = null!;
 	private bool disposed;
 
 	[GlobalSetup]
@@ -34,7 +33,7 @@ public class BaseDbContextActionsReadBenchmarks : IDisposable
 			context.Database.EnsureCreated();
 
 			// Seed data - 100 records for realistic performance testing
-			entities = Enumerable.Range(1, 100)
+			List<TestEntity> entities = Enumerable.Range(1, 100)
 				.Select(i => new TestEntity
 				{
 					Id = i,
@@ -174,9 +173,9 @@ public class BaseDbContextActionsReadBenchmarks : IDisposable
 [RankColumn]
 public class BaseDbContextActionsScaleBenchmarks : IDisposable
 {
-	private IServiceProvider? _serviceProvider;
-	private BaseDbContextActions<TestEntity, TestDbContext>? _actions;
-	private bool _disposed;
+	private IServiceProvider? serviceProvider;
+	private BaseDbContextActions<TestEntity, TestDbContext>? actions;
+	private bool disposed;
 	private const int ScaleIterations = 10000;
 
 	[GlobalSetup]
@@ -186,9 +185,9 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 		services.AddDbContext<TestDbContext>(
 			options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()),
 			ServiceLifetime.Transient);
-		_serviceProvider = services.BuildServiceProvider();
+		serviceProvider = services.BuildServiceProvider();
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			context.Database.EnsureCreated();
@@ -207,7 +206,7 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 			context.SaveChanges();
 		}
 
-		_actions = new BaseDbContextActions<TestEntity, TestDbContext>(_serviceProvider);
+		actions = new BaseDbContextActions<TestEntity, TestDbContext>(serviceProvider);
 	}
 
 	[Benchmark(Description = "Scale: 10k GetByKey - FindAsync path")]
@@ -216,7 +215,7 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 		for (int i = 0; i < ScaleIterations; i++)
 		{
 			int id = (i % 1000) + 1;
-			await _actions!.GetByKey(id);
+			await actions!.GetByKey(id);
 		}
 	}
 
@@ -227,7 +226,7 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 		for (int i = 0; i < ScaleIterations; i++)
 		{
 			int id = (i % 1000) + 1;
-			await _actions!.GetByKey(id, globalFilterOptions: filterOptions);
+			await actions!.GetByKey(id, globalFilterOptions: filterOptions);
 		}
 	}
 
@@ -237,7 +236,7 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 		for (int i = 0; i < ScaleIterations; i++)
 		{
 			int id = (i % 1000) + 1;
-			await _actions!.GetByKey(new object[] { id });
+			await actions!.GetByKey(new object[] { id });
 		}
 	}
 
@@ -248,7 +247,7 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 		for (int i = 0; i < ScaleIterations; i++)
 		{
 			int id = (i % 1000) + 1;
-			await _actions!.GetByKey(new object[] { id }, globalFilterOptions: filterOptions);
+			await actions!.GetByKey(new object[] { id }, globalFilterOptions: filterOptions);
 		}
 	}
 
@@ -260,13 +259,13 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 
 	protected virtual void Dispose(bool disposing)
 	{
-		if (!_disposed)
+		if (!disposed)
 		{
 			if (disposing)
 			{
-				(_serviceProvider as IDisposable)?.Dispose();
+				(serviceProvider as IDisposable)?.Dispose();
 			}
-			_disposed = true;
+			disposed = true;
 		}
 	}
 
@@ -284,9 +283,9 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 [RankColumn]
 public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 {
-	private IServiceProvider? _serviceProvider;
-	private BaseDbContextActions<TestEntity, TestDbContext>? _actions;
-	private bool _disposed;
+	private IServiceProvider? serviceProvider;
+	private BaseDbContextActions<TestEntity, TestDbContext>? actions;
+	private bool disposed;
 
 	[GlobalSetup]
 	public void Setup()
@@ -295,9 +294,9 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 		services.AddDbContext<TestDbContext>(
 			options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()),
 			ServiceLifetime.Transient);
-		_serviceProvider = services.BuildServiceProvider();
+		serviceProvider = services.BuildServiceProvider();
 
-		using (IServiceScope scope = _serviceProvider.CreateScope())
+		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
 			context.Database.EnsureCreated();
@@ -315,33 +314,33 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 			context.SaveChanges();
 		}
 
-		_actions = new BaseDbContextActions<TestEntity, TestDbContext>(_serviceProvider);
+		actions = new BaseDbContextActions<TestEntity, TestDbContext>(serviceProvider);
 	}
 
 	[Benchmark(Description = "Memory: GetByKey FindAsync")]
 	public async Task<TestEntity?> Memory_GetByKey_FindAsync()
 	{
-		return await _actions!.GetByKey(50);
+		return await actions!.GetByKey(50);
 	}
 
 	[Benchmark(Description = "Memory: GetByKey Expression")]
 	public async Task<TestEntity?> Memory_GetByKey_Expression()
 	{
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
-		return await _actions!.GetByKey(50, globalFilterOptions: filterOptions);
+		return await actions!.GetByKey(50, globalFilterOptions: filterOptions);
 	}
 
 	[Benchmark(Description = "Memory: GetByKey compound FindAsync")]
 	public async Task<TestEntity?> Memory_GetByKey_Compound_FindAsync()
 	{
-		return await _actions!.GetByKey(new object[] { 50 });
+		return await actions!.GetByKey(new object[] { 50 });
 	}
 
 	[Benchmark(Description = "Memory: GetByKey compound Expression")]
 	public async Task<TestEntity?> Memory_GetByKey_Compound_Expression()
 	{
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
-		return await _actions!.GetByKey(new object[] { 50 }, globalFilterOptions: filterOptions);
+		return await actions!.GetByKey(new object[] { 50 }, globalFilterOptions: filterOptions);
 	}
 
 	[Benchmark(Description = "Memory: Expression building overhead")]
@@ -385,13 +384,13 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 
 	protected virtual void Dispose(bool disposing)
 	{
-		if (!_disposed)
+		if (!disposed)
 		{
 			if (disposing)
 			{
-				(_serviceProvider as IDisposable)?.Dispose();
+				(serviceProvider as IDisposable)?.Dispose();
 			}
-			_disposed = true;
+			disposed = true;
 		}
 	}
 

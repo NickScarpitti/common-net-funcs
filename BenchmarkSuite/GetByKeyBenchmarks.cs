@@ -18,51 +18,52 @@ namespace BenchmarkSuite;
 [MemoryDiagnoser]
 public class GetByKeyBenchmarks
 {
-	private ServiceProvider _serviceProvider = null!;
-	private IServiceScope _scope = null!;
-	private BaseDbContextActions<BenchmarkEntity, BenchmarkDbContext> _dbActions = null!;
-	private int _existingEntityId;
+	private ServiceProvider serviceProvider = null!;
+	private IServiceScope scope = null!;
+	private BaseDbContextActions<BenchmarkEntity, BenchmarkDbContext> dbActions = null!;
+	private int existingEntityId;
 	private const int RecordCount = 1000;
+
 	[GlobalSetup]
 	public async Task GlobalSetup()
 	{
 		ServiceCollection services = new();
 		// Configure in-memory database
 		services.AddDbContext<BenchmarkDbContext>(options => options.UseInMemoryDatabase("GetByKeyBenchmarkDb"));
-		_serviceProvider = services.BuildServiceProvider();
+		serviceProvider = services.BuildServiceProvider();
 		// Seed database with test data once
-		using IServiceScope scope = _serviceProvider.CreateScope();
-		BenchmarkDbContext context = scope.ServiceProvider.GetRequiredService<BenchmarkDbContext>();
+		using IServiceScope localScope = serviceProvider.CreateScope();
+		BenchmarkDbContext context = localScope.ServiceProvider.GetRequiredService<BenchmarkDbContext>();
 		List<BenchmarkEntity> entities = Enumerable.Range(1, RecordCount).Select(i => new BenchmarkEntity { Id = i, Name = $"Entity_{i}", Value = i * 10, CreatedDate = DateTime.UtcNow.AddDays(-i), IsActive = i % 2 == 0 }).ToList();
 		context.BenchmarkEntities.AddRange(entities);
 		await context.SaveChangesAsync();
-		_existingEntityId = entities[RecordCount / 2].Id; // Middle entity
+		existingEntityId = entities[RecordCount / 2].Id; // Middle entity
 	}
 
 	[IterationSetup]
 	public void IterationSetup()
 	{
 		// Create a new scope for each iteration to get a fresh DbContext
-		_scope = _serviceProvider.CreateScope();
-		_dbActions = new BaseDbContextActions<BenchmarkEntity, BenchmarkDbContext>(_scope.ServiceProvider);
+		scope = serviceProvider.CreateScope();
+		dbActions = new BaseDbContextActions<BenchmarkEntity, BenchmarkDbContext>(scope.ServiceProvider);
 	}
 
 	[IterationCleanup]
 	public void IterationCleanup()
 	{
-		_scope?.Dispose();
+		scope?.Dispose();
 	}
 
 	[GlobalCleanup]
 	public void GlobalCleanup()
 	{
-		_serviceProvider?.Dispose();
+		serviceProvider?.Dispose();
 	}
 
 	[Benchmark(Baseline = true)]
 	public async Task<BenchmarkEntity?> GetByKey_NoFilters()
 	{
-		return await _dbActions.GetByKey(_existingEntityId);
+		return await dbActions.GetByKey(existingEntityId);
 	}
 
 	[Benchmark]
@@ -72,7 +73,7 @@ public class GetByKeyBenchmarks
 		{
 			DisableAllFilters = true
 		};
-		return await _dbActions.GetByKey(_existingEntityId, globalFilterOptions: filterOptions);
+		return await dbActions.GetByKey(existingEntityId, globalFilterOptions: filterOptions);
 	}
 
 	[Benchmark]
@@ -85,13 +86,13 @@ public class GetByKeyBenchmarks
 								"TestFilter"
 						}
 		};
-		return await _dbActions.GetByKey(_existingEntityId, globalFilterOptions: filterOptions);
+		return await dbActions.GetByKey(existingEntityId, globalFilterOptions: filterOptions);
 	}
 
 	[Benchmark]
 	public async Task<BenchmarkEntity?> GetByKey_WithTimeout()
 	{
-		return await _dbActions.GetByKey(_existingEntityId, queryTimeout: TimeSpan.FromSeconds(30));
+		return await dbActions.GetByKey(existingEntityId, queryTimeout: TimeSpan.FromSeconds(30));
 	}
 }
 

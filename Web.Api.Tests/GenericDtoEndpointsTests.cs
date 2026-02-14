@@ -11,13 +11,13 @@ namespace Web.Api.Tests;
 public sealed class GenericDtoEndpointsTests
 {
 	private readonly IFixture fixture;
-	private readonly GenericDotEndpoints _sut;
+	private readonly GenericDotEndpoints sut;
 
 	public GenericDtoEndpointsTests()
 	{
 		fixture = new Fixture()
 				.Customize(new AutoFakeItEasyCustomization());
-		_sut = new GenericDotEndpoints();
+		sut = new GenericDotEndpoints();
 	}
 
 	public sealed class TestEntity
@@ -67,7 +67,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions, removeNavigationProps);
+		ActionResult<List<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -85,7 +85,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -101,7 +101,7 @@ public sealed class GenericDtoEndpointsTests
 				.Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -122,7 +122,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Delete<TestEntity, TestDbContext, TestInDto, TestOutDto>(model, dbContextActions, removeNavigationProps);
+		ActionResult<TestOutDto> result = await sut.Delete<TestEntity, TestDbContext, TestInDto, TestOutDto>(model, dbContextActions, removeNavigationProps);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -140,7 +140,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Delete<TestEntity, TestDbContext, TestInDto, TestOutDto>(model, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Delete<TestEntity, TestDbContext, TestInDto, TestOutDto>(model, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -156,7 +156,7 @@ public sealed class GenericDtoEndpointsTests
 				.Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Delete<TestEntity, TestDbContext, TestInDto, TestOutDto>(model, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Delete<TestEntity, TestDbContext, TestInDto, TestOutDto>(model, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -178,7 +178,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions, removeNavigationProps);
+		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -195,7 +195,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Returns(false);
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -211,7 +211,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -225,7 +225,7 @@ public sealed class GenericDtoEndpointsTests
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -241,7 +241,7 @@ public sealed class GenericDtoEndpointsTests
 				.Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -260,7 +260,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys)).Returns(true);
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -277,7 +277,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys)).Returns(false);
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -291,7 +291,7 @@ public sealed class GenericDtoEndpointsTests
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -307,7 +307,7 @@ public sealed class GenericDtoEndpointsTests
 				.Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<List<TestOutDto>> result = await _sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
+		ActionResult<List<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -330,7 +330,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -349,7 +349,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(Task.FromResult<TestEntity?>(null));
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -367,7 +367,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(model);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<ObjectResult>();
@@ -385,7 +385,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(model);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -406,7 +406,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -426,7 +426,7 @@ public sealed class GenericDtoEndpointsTests
 				.Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(1, patch, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -449,7 +449,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -468,7 +468,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object[]>.Ignored, null, default)).Returns(Task.FromResult<TestEntity?>(null));
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -486,7 +486,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object[]>.Ignored, null, default)).Returns(model);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<ObjectResult>();
@@ -506,7 +506,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Patch<TestEntity, TestDbContext, TestOutDto>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Patch<TestEntity, TestDbContext, TestOutDto>(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -529,7 +529,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -548,7 +548,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(Task.FromResult<TestEntity?>(null));
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -566,7 +566,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(dbModel);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<ObjectResult>();
@@ -585,7 +585,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -602,7 +602,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -625,7 +625,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(new object[] { 1, 2 }, inDto, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(new object[] { 1, 2 }, inDto, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -644,7 +644,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object[]>.Ignored, null, default)).Returns(Task.FromResult<TestEntity?>(null));
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(new object[] { 1, 2 }, inDto, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(new object[] { 1, 2 }, inDto, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -662,7 +662,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.GetByKey(A<object[]>.Ignored, null, default)).Returns(dbModel);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(new object[] { 1, 2 }, inDto, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(new object[] { 1, 2 }, inDto, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<ObjectResult>();
@@ -681,7 +681,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
 		// Act
-		ActionResult<TestOutDto> result = await _sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(new object[] { 1, 2 }, inDto, dbContextActions);
+		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(new object[] { 1, 2 }, inDto, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();

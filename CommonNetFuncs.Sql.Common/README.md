@@ -43,7 +43,7 @@ Helper methods for executing SQL queries and commands directly against a databas
 Executes a SELECT query asynchronously and returns the results as a DataTable.
 
 ```cs
-await using SqliteCommand cmd = _connection.CreateCommand();
+await using SqliteCommand cmd = connection.CreateCommand();
 cmd.CommandText = "SELECT * FROM TestTable";
 using DataTable queryResultsTable = await DirectQuery.GetDataTable(connString, cmd); // queryResultsTable will contain the results of the query
 ```
@@ -53,9 +53,9 @@ using DataTable queryResultsTable = await DirectQuery.GetDataTable(connString, c
 Executes a SELECT query synchronously and returns the results as a DataTable.
 
 ```cs
-using SqliteCommand cmd = _connection.CreateCommand();
+using SqliteCommand cmd = connection.CreateCommand();
 cmd.CommandText = "SELECT * FROM TestTable";
-using DataTable queryResultsTable = DirectQuery.GetDataTable(_connection, cmd); // queryResultsTable will contain the results of the query
+using DataTable queryResultsTable = DirectQuery.GetDataTable(connection, cmd); // queryResultsTable will contain the results of the query
 ```
 
 #### RunUpdateQuery
@@ -63,9 +63,9 @@ using DataTable queryResultsTable = DirectQuery.GetDataTable(_connection, cmd); 
 Executes an UPDATE, INSERT, or DELETE query asynchronously and returns an UpdateResult containing the number of affected rows and a boolean indicating success.
 
 ```cs
-await using SqliteCommand cmd = _connection.CreateCommand();
+await using SqliteCommand cmd = connection.CreateCommand();
 cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
-UpdateResult updateResult = await DirectQuery.RunUpdateQuery(_connection, cmd); // { RecordsChanged = 1, Success = true }
+UpdateResult updateResult = await DirectQuery.RunUpdateQuery(connection, cmd); // { RecordsChanged = 1, Success = true }
 ```
 
 #### RunUpdateQuerySynchronous
@@ -73,9 +73,9 @@ UpdateResult updateResult = await DirectQuery.RunUpdateQuery(_connection, cmd); 
 Executes an UPDATE, INSERT, or DELETE query synchronously and returns an UpdateResult containing the number of affected rows and a boolean indicating success.
 
 ```cs
-using SqliteCommand cmd = _connection.CreateCommand();
+using SqliteCommand cmd = connection.CreateCommand();
 cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
-UpdateResult updateResult = DirectQuery.RunUpdateQuery(_connection, cmd); // { RecordsChanged = 1, Success = true }
+UpdateResult updateResult = DirectQuery.RunUpdateQuery(connection, cmd); // { RecordsChanged = 1, Success = true }
 ```
 
 #### GetDataStreamSynchronous
@@ -83,9 +83,9 @@ UpdateResult updateResult = DirectQuery.RunUpdateQuery(_connection, cmd); // { R
 Gets a data from a query synchronously and returns an IEnumerable of the query result type.
 
 ```cs
-using SqliteCommand cmd = _connection.CreateCommand();
+using SqliteCommand cmd = connection.CreateCommand();
 cmd.CommandText = "SELECT * FROM TestTable";
-IEnumerable<TestEntity> queryResults = DirectQuery.GetDataStream(_connection, cmd); // queryResults will contain the results of the query as TestEntity objects
+IEnumerable<TestEntity> queryResults = DirectQuery.GetDataStream(connection, cmd); // queryResults will contain the results of the query as TestEntity objects
 ```
 
 #### GetDataStreamAsync
@@ -94,9 +94,9 @@ Gets a data from a query asynchronously and returns an IAsyncEnumerable of the q
 
 ```cs
 List<TestModel> results = new();
-using SqliteCommand cmd = _connection.CreateCommand();
+using SqliteCommand cmd = connection.CreateCommand();
 cmd.CommandText = "SELECT * FROM TestTable";
-await foreach (TestModel item in DirectQuery.GetDataStreamAsync<TestModel>(_connection, cmd))
+await foreach (TestModel item in DirectQuery.GetDataStreamAsync<TestModel>(connection, cmd))
 {
     results.Add(item); // Results will contain all items returned by the query
 }
@@ -107,9 +107,9 @@ await foreach (TestModel item in DirectQuery.GetDataStreamAsync<TestModel>(_conn
 Gets a data from a query asynchronously and returns an IEnumerable of the query result type.
 
 ```cs
-using SqliteCommand cmd = _connection.CreateCommand();
+using SqliteCommand cmd = connection.CreateCommand();
 cmd.CommandText = "SELECT * FROM TestTable";
-IEnumerable<TestEntity> queryResults = await DirectQuery.GetDataDirectAsync(_connection, cmd); // queryResults will contain the results of the query as TestEntity objects
+IEnumerable<TestEntity> queryResults = await DirectQuery.GetDataDirectAsync(connection, cmd); // queryResults will contain the results of the query as TestEntity objects
 ```
 
 </details>

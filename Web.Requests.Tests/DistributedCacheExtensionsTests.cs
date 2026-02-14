@@ -63,7 +63,7 @@ public class DistributedCacheExtensionsTests
 		A.CallTo(() => cache.Get(key)).Returns(bytes);
 
 		// Act
-		bool result = cache.TryGetValue<T>(key, out T? actual);
+		bool result = cache.TryGetValue(key, out T? actual);
 
 		// Assert
 		result.ShouldBeTrue();

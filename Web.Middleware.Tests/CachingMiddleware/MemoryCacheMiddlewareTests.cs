@@ -10,34 +10,34 @@ namespace Web.Middleware.Tests.CachingMiddleware;
 
 public sealed class MemoryCacheMiddlewareTests
 {
-	private readonly IMemoryCache _cache;
-	private readonly CacheOptions _options;
-	private readonly CacheMetrics _metrics;
-	private readonly CacheTracker _tracker;
-	private readonly RequestDelegate _next;
-	private readonly HttpContext _context;
+	private readonly IMemoryCache cache;
+	private readonly CacheOptions options;
+	private readonly CacheMetrics metrics;
+	private readonly CacheTracker tracker;
+	private readonly RequestDelegate next;
+	private readonly HttpContext context;
 
 	public MemoryCacheMiddlewareTests()
 	{
-		_cache = A.Fake<IMemoryCache>();
-		_options = new CacheOptions();
-		_metrics = new CacheMetrics();
-		_tracker = new CacheTracker();
-		_next = A.Fake<RequestDelegate>();
-		_context = new DefaultHttpContext();
+		cache = A.Fake<IMemoryCache>();
+		options = new CacheOptions();
+		metrics = new CacheMetrics();
+		tracker = new CacheTracker();
+		next = A.Fake<RequestDelegate>();
+		context = new DefaultHttpContext();
 	}
 
 	[RetryFact(3)]
 	public async Task InvokeAsync_WithoutCacheParams_CallsNextDelegate()
 	{
 		// Arrange
-		MemoryCacheMiddleware middleware = new(_next, _cache, _options, _metrics, _tracker);
+		MemoryCacheMiddleware middleware = new(next, cache, options, metrics, tracker);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
+		A.CallTo(() => next(context)).MustHaveHappenedOnceExactly();
 	}
 
 	[RetryTheory(3)]
@@ -47,11 +47,11 @@ public sealed class MemoryCacheMiddlewareTests
 	{
 		// Arrange
 		Dictionary<string, StringValues> queryDict = new()
-				{
-						{ _options.UseCacheQueryParam, useCache.ToString() },
-						{ _options.EvictionQueryParam, evictCache.ToString() }
-				};
-		_context.Request.Query = new QueryCollection(queryDict);
+			{
+				{ options.UseCacheQueryParam, useCache.ToString() },
+				{ options.EvictionQueryParam, evictCache.ToString() }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
 
 		// Setup TryGetValue to return true and a dummy entry if eviction is expected
 		if (evictCache)
@@ -61,22 +61,22 @@ public sealed class MemoryCacheMiddlewareTests
 				Data = Encoding.UTF8.GetBytes("dummy"),
 				Headers = new Dictionary<string, string>()
 			};
-			A.CallTo(() => _cache.TryGetValue(A<object>._, out outValue)).Returns(true);
+			A.CallTo(() => cache.TryGetValue(A<object>._, out outValue)).Returns(true);
 		}
 
-		MemoryCacheMiddleware middleware = new(_next, _cache, _options, _metrics, _tracker);
+		MemoryCacheMiddleware middleware = new(next, cache, options, metrics, tracker);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
 		if (evictCache)
 		{
-			A.CallTo(() => _cache.Remove(A<string>._)).MustHaveHappened();
+			A.CallTo(() => cache.Remove(A<string>._)).MustHaveHappened();
 		}
 		if (!useCache)
 		{
-			A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
+			A.CallTo(() => next(context)).MustHaveHappenedOnceExactly();
 		}
 	}
 
@@ -85,10 +85,10 @@ public sealed class MemoryCacheMiddlewareTests
 	{
 		// Arrange
 		Dictionary<string, StringValues> queryDict = new()
-				{
-						{ _options.UseCacheQueryParam, "true" }
-				};
-		_context.Request.Query = new QueryCollection(queryDict);
+			{
+				{ options.UseCacheQueryParam, "true" }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
 
 		byte[] cachedData = Encoding.UTF8.GetBytes("cached response");
 		object? outValue = new CacheEntry()
@@ -98,22 +98,22 @@ public sealed class MemoryCacheMiddlewareTests
 		};
 
 		// Mock the interface method instead of the extension method
-		A.CallTo(() => _cache.TryGetValue(A<object>._, out outValue)).Returns(true);
+		A.CallTo(() => cache.TryGetValue(A<object>._, out outValue)).Returns(true);
 
 		MemoryStream responseStream = new();
-		_context.Response.Body = responseStream;
+		context.Response.Body = responseStream;
 
-		MemoryCacheMiddleware middleware = new(_next, _cache, _options, _metrics, _tracker);
+		MemoryCacheMiddleware middleware = new(next, cache, options, metrics, tracker);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
 		responseStream.Position = 0;
 		string result = await new StreamReader(responseStream).ReadToEndAsync();
 		result.ShouldBe("cached response");
-		_metrics.CacheHits().ShouldBe(1);
-		A.CallTo(() => _next(_context)).MustNotHaveHappened();
+		metrics.CacheHits().ShouldBe(1);
+		A.CallTo(() => next(context)).MustNotHaveHappened();
 	}
 
 	[RetryTheory(3)]
@@ -124,35 +124,35 @@ public sealed class MemoryCacheMiddlewareTests
 	{
 		// Arrange
 		Dictionary<string, StringValues> queryDict = new()
-				{
-						{ _options.UseCacheQueryParam, "true" }
-				};
+			{
+				{ options.UseCacheQueryParam, "true" }
+			};
 
 		if (seconds != null)
 		{
-			queryDict.Add(_options.CacheSecondsQueryParam, seconds);
+			queryDict.Add(options.CacheSecondsQueryParam, seconds);
 		}
 
 		if (minutes != null)
 		{
-			queryDict.Add(_options.CacheMinutesQueryParam, minutes);
+			queryDict.Add(options.CacheMinutesQueryParam, minutes);
 		}
 
 		if (hours != null)
 		{
-			queryDict.Add(_options.CacheHoursQueryParam, hours);
+			queryDict.Add(options.CacheHoursQueryParam, hours);
 		}
 
-		_context.Request.Query = new QueryCollection(queryDict);
-		_context.Response.StatusCode = StatusCodes.Status200OK;
+		context.Request.Query = new QueryCollection(queryDict);
+		context.Response.StatusCode = StatusCodes.Status200OK;
 
-		MemoryCacheMiddleware middleware = new(_next, _cache, _options, _metrics, _tracker);
+		MemoryCacheMiddleware middleware = new(next, cache, options, metrics, tracker);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		_metrics.CacheMisses().ShouldBe(1);
-		A.CallTo(() => _cache.CreateEntry(A<object>._)).MustHaveHappened();
+		metrics.CacheMisses().ShouldBe(1);
+		A.CallTo(() => cache.CreateEntry(A<object>._)).MustHaveHappened();
 	}
 }

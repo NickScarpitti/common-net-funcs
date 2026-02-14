@@ -1,9 +1,8 @@
-﻿using System.Collections;
+﻿using FastExpressionCompiler;
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using FastExpressionCompiler;
-
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
@@ -154,8 +153,13 @@ public static class Copy
 	/// <param name="source">Object to copy common properties from</param>
 	/// <param name="useCache">Optional: If <see langword="true"/>, will use cached property mappings. Default is <see langword="true"/></param>
 	/// <returns>A new instance of TDest with properties copied from <paramref name="source"/></returns>
-	public static TDest CopyPropertiesToNew<TSource, TDest>(this TSource source, bool useCache = true) where TSource : class where TDest : class, new()
+	public static TDest? CopyPropertiesToNew<TSource, TDest>(this TSource? source, bool useCache = true) where TSource : class where TDest : class, new()
 	{
+		if (source == null)
+		{
+			return default;
+		}
+
 		TDest dest = new();
 		if (useCache)
 		{

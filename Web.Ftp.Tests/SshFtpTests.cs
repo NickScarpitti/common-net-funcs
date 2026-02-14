@@ -20,8 +20,8 @@ public class SshFtpTests
 		FileTransferConnection connection = new()
 		{
 			HostName = "test.server.com",
-			UserName = "testuser",
-			Password = "testpass",
+			UserName = "TestUser",
+			Password = "TestPass",
 			Port = 22
 		};
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Frozen;
 using CliWrap;
 using CliWrap.Buffered;
+
 namespace CommonNetFuncs.Images;
 
 /// <summary>
@@ -56,7 +57,7 @@ public static class Optimizer
 				{
 					gifsicleArgs = gifsicleArgs.Append(workingFile);
 				}
-				result = await Cli.Wrap(commandType).WithArguments(gifsicleArgs).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+				result = await Cli.Wrap(commandType).WithArguments(gifsicleArgs).WithValidation(CommandResultValidation.None).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 			}
 			else if (JpegoptimExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase))
 			{
@@ -70,7 +71,7 @@ public static class Optimizer
 				{
 					jpegoptimArgs = jpegoptimArgs.Append(workingFile);
 				}
-				result = await Cli.Wrap(commandType).WithArguments(jpegoptimArgs).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+				result = await Cli.Wrap(commandType).WithArguments(jpegoptimArgs).WithValidation(CommandResultValidation.None).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 			}
 			else if (OptipngExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase))
 			{
@@ -84,7 +85,7 @@ public static class Optimizer
 				{
 					optipngArgs = optipngArgs.Append(workingFile);
 				}
-				result = await Cli.Wrap(commandType).WithArguments(optipngArgs).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+				result = await Cli.Wrap(commandType).WithArguments(optipngArgs).WithValidation(CommandResultValidation.None).ExecuteBufferedAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 			}
 			else
 			{

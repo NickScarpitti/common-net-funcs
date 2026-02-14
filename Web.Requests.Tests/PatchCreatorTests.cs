@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Globalization;
+using System.Reflection;
 using CommonNetFuncs.Web.Requests;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
@@ -97,8 +98,8 @@ public class PatchCreatorTests
 	[Fact]
 	public void CreatePatch_ShouldDetectDateChange()
 	{
-		DateTime originalDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		DateTime modifiedDate = new(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		DateTime originalDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+		DateTime modifiedDate = new(2025, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 		TestModel original = new() { Id = 1, DateTime = originalDate, DateOnly = DateOnly.FromDateTime(originalDate), DateTimeOffset = new(originalDate) };
 		TestModel modified = new() { Id = 1, DateTime = modifiedDate, DateOnly = DateOnly.FromDateTime(modifiedDate), DateTimeOffset = new(modifiedDate) };
 
@@ -115,7 +116,7 @@ public class PatchCreatorTests
 		patch.Operations[2].path.ShouldBe("/DateTimeOffset");
 		patch.Operations[2].value.ShouldBeOfType<JValue>();
 		((JValue)patch.Operations[0].value).Value.ShouldBe(modified.DateTime);
-		DateOnly.TryParse(((JValue)patch.Operations[1].value).Value?.ToString(), out DateOnly dateOnlyResult).ShouldBeTrue();
+		DateOnly.TryParse(((JValue)patch.Operations[1].value).Value?.ToString(), new CultureInfo("en-US"), out DateOnly dateOnlyResult).ShouldBeTrue();
 		DateOnly? nullableDateOnlyResult = dateOnlyResult;
 		nullableDateOnlyResult.ShouldBe(modified.DateOnly);
 		((DateTimeOffset?)((JValue)patch.Operations[2].value).Value).ShouldBe(modified.DateTimeOffset);

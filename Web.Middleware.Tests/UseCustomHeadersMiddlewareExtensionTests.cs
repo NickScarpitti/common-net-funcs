@@ -7,13 +7,13 @@ namespace Web.Middleware.Tests;
 
 public sealed class UseCustomHeadersMiddlewareExtensionTests
 {
-	private readonly IApplicationBuilder _builder;
+	private readonly IApplicationBuilder builder;
 
 	public UseCustomHeadersMiddlewareExtensionTests()
 	{
-		_builder = A.Fake<IApplicationBuilder>();
+		builder = A.Fake<IApplicationBuilder>();
 		// Setup UseMiddleware to return the builder for fluent chaining
-		A.CallTo(() => _builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(_builder);
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(builder);
 	}
 
 	[RetryFact(3)]
@@ -24,19 +24,19 @@ public sealed class UseCustomHeadersMiddlewareExtensionTests
 		string[] removeHeaders = new[] { "X-Remove" };
 
 		// Act
-		IApplicationBuilder result = _builder.UseCustomHeaders(addHeaders, removeHeaders);
+		IApplicationBuilder result = builder.UseCustomHeaders(addHeaders, removeHeaders);
 
 		// Assert
-		result.ShouldBe(_builder);
+		result.ShouldBe(builder);
 	}
 
 	[RetryFact(3)]
 	public void UseCustomHeaders_WithNoParameters_ReturnsBuilder()
 	{
 		// Act
-		IApplicationBuilder result = _builder.UseCustomHeaders();
+		IApplicationBuilder result = builder.UseCustomHeaders();
 
 		// Assert
-		result.ShouldBe(_builder);
+		result.ShouldBe(builder);
 	}
 }

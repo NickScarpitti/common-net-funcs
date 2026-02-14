@@ -16,12 +16,12 @@ public sealed class ListStringLengthAttribute(int maximumLength) : ValidationAtt
 		get;
 	} = maximumLength >= 0 ? maximumLength : throw new ArgumentOutOfRangeException(nameof(maximumLength), "Maximum length must be >= 0");
 
-	private int _minimumLength;
+	private int minimumLength;
 
 	public int MinimumLength
 	{
-		get => _minimumLength;
-		set => _minimumLength = value >= 0 ? value : throw new ArgumentOutOfRangeException(nameof(MinimumLength), "Minimum length must be >= 0");
+		get => minimumLength;
+		set => minimumLength = value >= 0 ? value : throw new ArgumentOutOfRangeException(nameof(MinimumLength), "Minimum length must be >= 0");
 	}
 
 	protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)

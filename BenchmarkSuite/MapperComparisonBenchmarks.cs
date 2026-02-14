@@ -22,10 +22,10 @@ namespace BenchmarkSuite;
 [CPUUsageDiagnoser] // Only works on Windows
 public class MapperComparisonBenchmarks
 {
-	private SimpleSource _simpleSource = null!;
-	private ComplexSource _complexSource = null!;
-	private List<SimpleSource> _simpleList = null!;
-	private NestedSource _deeplyNestedSource = null!;
+	private SimpleSource simpleSource = null!;
+	private ComplexSource complexSource = null!;
+	private List<SimpleSource> simpleList = null!;
+	private NestedSource deeplyNestedSource = null!;
 
 	[GlobalSetup]
 	public void Setup()
@@ -40,7 +40,7 @@ public class MapperComparisonBenchmarks
 		TypeAdapterConfig.GlobalSettings.Compile();
 
 		// Initialize test data
-		_simpleSource = new SimpleSource
+		simpleSource = new SimpleSource
 		{
 			StringProp = "Test String Value",
 			IntProp = 42,
@@ -50,7 +50,7 @@ public class MapperComparisonBenchmarks
 			GuidProp = Guid.NewGuid()
 		};
 
-		_complexSource = new ComplexSource
+		complexSource = new ComplexSource
 		{
 			Name = "Complex Object",
 			StringList = Enumerable.Range(0, 10).Select(i => $"Item {i}").ToList(),
@@ -69,7 +69,7 @@ public class MapperComparisonBenchmarks
 			DoubleStack = new Stack<double>(Enumerable.Range(0, 10).Select(i => (double)i))
 		};
 
-		_simpleList = Enumerable.Range(0, 100).Select(i => new SimpleSource
+		simpleList = Enumerable.Range(0, 100).Select(i => new SimpleSource
 		{
 			StringProp = $"String {i}",
 			IntProp = i,
@@ -79,7 +79,7 @@ public class MapperComparisonBenchmarks
 			GuidProp = Guid.NewGuid()
 		}).ToList();
 
-		_deeplyNestedSource = new NestedSource
+		deeplyNestedSource = new NestedSource
 		{
 			Level1 = new Level1
 			{
@@ -113,25 +113,25 @@ public class MapperComparisonBenchmarks
 	[Benchmark(Description = "Simple - FastMapper")]
 	public SimpleDestination SimpleMapping_FastMapper()
 	{
-		return _simpleSource.FastMap<SimpleSource, SimpleDestination>(true);
+		return simpleSource.FastMap<SimpleSource, SimpleDestination>(true);
 	}
 
 	[Benchmark(Description = "Simple - FasterMapper")]
 	public SimpleDestination SimpleMapping_FasterMapper()
 	{
-		return _simpleSource.FastMap<SimpleSource, SimpleDestination>();
+		return simpleSource.FastMap<SimpleSource, SimpleDestination>();
 	}
 
 	[Benchmark(Description = "Simple - Mapster")]
 	public SimpleDestination SimpleMapping_Mapster()
 	{
-		return _simpleSource.Adapt<SimpleDestination>();
+		return simpleSource.Adapt<SimpleDestination>();
 	}
 
 	[Benchmark(Description = "Simple - Mapperly")]
 	public SimpleDestination SimpleMapping_Mapperly()
 	{
-		return MapperlyMappers.MapSimpleSourceToDestination(_simpleSource);
+		return MapperlyMappers.MapSimpleSourceToDestination(simpleSource);
 	}
 
 	[Benchmark(Description = "Simple - Manual")]
@@ -139,12 +139,12 @@ public class MapperComparisonBenchmarks
 	{
 		return new SimpleDestination
 		{
-			StringProp = _simpleSource.StringProp,
-			IntProp = _simpleSource.IntProp,
-			DateProp = _simpleSource.DateProp,
-			DoubleProp = _simpleSource.DoubleProp,
-			BoolProp = _simpleSource.BoolProp,
-			GuidProp = _simpleSource.GuidProp
+			StringProp = simpleSource.StringProp,
+			IntProp = simpleSource.IntProp,
+			DateProp = simpleSource.DateProp,
+			DoubleProp = simpleSource.DoubleProp,
+			BoolProp = simpleSource.BoolProp,
+			GuidProp = simpleSource.GuidProp
 		};
 	}
 
@@ -155,25 +155,25 @@ public class MapperComparisonBenchmarks
 	[Benchmark(Description = "Complex - FastMapper")]
 	public ComplexDestination ComplexMapping_FastMapper()
 	{
-		return _complexSource.FastMap<ComplexSource, ComplexDestination>(true);
+		return complexSource.FastMap<ComplexSource, ComplexDestination>(true);
 	}
 
 	[Benchmark(Description = "Complex - FasterMapper")]
 	public ComplexDestination ComplexMapping_FasterMapper()
 	{
-		return _complexSource.FastMap<ComplexSource, ComplexDestination>();
+		return complexSource.FastMap<ComplexSource, ComplexDestination>();
 	}
 
 	[Benchmark(Description = "Complex - Mapster")]
 	public ComplexDestination ComplexMapping_Mapster()
 	{
-		return _complexSource.Adapt<ComplexDestination>();
+		return complexSource.Adapt<ComplexDestination>();
 	}
 
 	[Benchmark(Description = "Complex - Mapperly")]
 	public ComplexDestination ComplexMapping_Mapperly()
 	{
-		return MapperlyMappers.MapComplexSourceToDestination(_complexSource);
+		return MapperlyMappers.MapComplexSourceToDestination(complexSource);
 	}
 
 	#endregion
@@ -183,25 +183,25 @@ public class MapperComparisonBenchmarks
 	[Benchmark(Description = "List - FastMapper")]
 	public List<SimpleDestination> ListMapping_FastMapper()
 	{
-		return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(true);
+		return simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(true);
 	}
 
 	[Benchmark(Description = "List - FasterMapper")]
 	public List<SimpleDestination> ListMapping_FasterMapper()
 	{
-		return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>();
+		return simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>();
 	}
 
 	[Benchmark(Description = "List - Mapster")]
 	public List<SimpleDestination> ListMapping_Mapster()
 	{
-		return _simpleList.Adapt<List<SimpleDestination>>();
+		return simpleList.Adapt<List<SimpleDestination>>();
 	}
 
 	[Benchmark(Description = "List - Mapperly")]
 	public List<SimpleDestination> ListMapping_Mapperly()
 	{
-		return MapperlyMappers.MapSimpleSourceList(_simpleList);
+		return MapperlyMappers.MapSimpleSourceList(simpleList);
 	}
 
 	#endregion
@@ -211,25 +211,25 @@ public class MapperComparisonBenchmarks
 	[Benchmark(Description = "Nested - FastMapper")]
 	public NestedDestination NestedMapping_FastMapper()
 	{
-		return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>(true);
+		return deeplyNestedSource.FastMap<NestedSource, NestedDestination>(true);
 	}
 
 	[Benchmark(Description = "Nested - FasterMapper")]
 	public NestedDestination NestedMapping_FasterMapper()
 	{
-		return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>();
+		return deeplyNestedSource.FastMap<NestedSource, NestedDestination>();
 	}
 
 	[Benchmark(Description = "Nested - Mapster")]
 	public NestedDestination NestedMapping_Mapster()
 	{
-		return _deeplyNestedSource.Adapt<NestedDestination>();
+		return deeplyNestedSource.Adapt<NestedDestination>();
 	}
 
 	[Benchmark(Description = "Nested - Mapperly")]
 	public NestedDestination NestedMapping_Mapperly()
 	{
-		return MapperlyMappers.MapNestedSourceToDestination(_deeplyNestedSource);
+		return MapperlyMappers.MapNestedSourceToDestination(deeplyNestedSource);
 	}
 
 	#endregion

@@ -18,20 +18,20 @@ namespace BenchmarkSuite;
 [MemoryDiagnoser]
 public class FastMapperBenchmarks
 {
-	private SimpleSource _simpleSource = null!;
-	private ComplexSource _complexSource = null!;
-	private List<SimpleSource> _simpleList = null!;
-	private SimpleSource[] _simpleArray = null!;
-	private Dictionary<string, SimpleSource> _complexDictionary = null!;
-	private NestedSource _deeplyNestedSource = null!;
+	private SimpleSource simpleSource = null!;
+	private ComplexSource complexSource = null!;
+	private List<SimpleSource> simpleList = null!;
+	private SimpleSource[] simpleArray = null!;
+	private Dictionary<string, SimpleSource> complexDictionary = null!;
+	private NestedSource deeplyNestedSource = null!;
 	private int[] largeArray = null!;
 	private List<ComplexSource> largeComplexList = null!;
-	private IReadOnlyCollection<SimpleSource> _readOnlyCollection = null!;
+	private IReadOnlyCollection<SimpleSource> readOnlyCollection = null!;
 	[GlobalSetup]
 	public void Setup()
 	{
 		// Simple source for basic property mapping
-		_simpleSource = new SimpleSource
+		simpleSource = new SimpleSource
 		{
 			StringProp = "Test String Value",
 			IntProp = 42,
@@ -41,7 +41,7 @@ public class FastMapperBenchmarks
 			GuidProp = Guid.NewGuid()
 		};
 		// Complex source with nested objects and collections
-		_complexSource = new ComplexSource
+		complexSource = new ComplexSource
 		{
 			Name = "Complex Object",
 			StringList = Enumerable.Range(0, 10).Select(i => $"Item {i}").ToList(),
@@ -60,15 +60,15 @@ public class FastMapperBenchmarks
 			DoubleStack = new Stack<double>(Enumerable.Range(0, 10).Select(i => (double)i))
 		};
 		// Simple list for collection mapping
-		_simpleList = Enumerable.Range(0, 100).Select(i => new SimpleSource { StringProp = $"String {i}", IntProp = i, DateProp = DateTime.Now.AddDays(i), DoubleProp = i * 1.5, BoolProp = i % 2 == 0, GuidProp = Guid.NewGuid() }).ToList();
+		simpleList = Enumerable.Range(0, 100).Select(i => new SimpleSource { StringProp = $"String {i}", IntProp = i, DateProp = DateTime.Now.AddDays(i), DoubleProp = i * 1.5, BoolProp = i % 2 == 0, GuidProp = Guid.NewGuid() }).ToList();
 		// Initialize array from list
-		_simpleArray = _simpleList.ToArray();
+		simpleArray = simpleList.ToArray();
 		// Initialize readonly collection
-		_readOnlyCollection = _simpleList.AsReadOnly();
+		readOnlyCollection = simpleList.AsReadOnly();
 		// Complex dictionary with nested objects
-		_complexDictionary = Enumerable.Range(0, 50).ToDictionary(i => $"Key{i}", i => new SimpleSource { StringProp = $"Dict String {i}", IntProp = i, DateProp = DateTime.Now, DoubleProp = i * 2.0, BoolProp = i % 3 == 0, GuidProp = Guid.NewGuid() });
+		complexDictionary = Enumerable.Range(0, 50).ToDictionary(i => $"Key{i}", i => new SimpleSource { StringProp = $"Dict String {i}", IntProp = i, DateProp = DateTime.Now, DoubleProp = i * 2.0, BoolProp = i % 3 == 0, GuidProp = Guid.NewGuid() });
 		// Deeply nested source
-		_deeplyNestedSource = new NestedSource
+		deeplyNestedSource = new NestedSource
 		{
 			Level1 = new Level1
 			{
@@ -102,85 +102,85 @@ public class FastMapperBenchmarks
 	[Benchmark(Baseline = true)]
 	public SimpleDestination SimplePropertyMapping_Cached()
 	{
-		return _simpleSource.FastMap<SimpleSource, SimpleDestination>(useCache: true);
+		return simpleSource.FastMap<SimpleSource, SimpleDestination>(useCache: true);
 	}
 
 	[Benchmark]
 	public SimpleDestination SimplePropertyMapping_Uncached()
 	{
-		return _simpleSource.FastMap<SimpleSource, SimpleDestination>(useCache: false);
+		return simpleSource.FastMap<SimpleSource, SimpleDestination>(useCache: false);
 	}
 
 	[Benchmark]
 	public ComplexDestination ComplexObjectMapping_Cached()
 	{
-		return _complexSource.FastMap<ComplexSource, ComplexDestination>(useCache: true);
+		return complexSource.FastMap<ComplexSource, ComplexDestination>(useCache: true);
 	}
 
 	[Benchmark]
 	public ComplexDestination ComplexObjectMapping_Uncached()
 	{
-		return _complexSource.FastMap<ComplexSource, ComplexDestination>(useCache: false);
+		return complexSource.FastMap<ComplexSource, ComplexDestination>(useCache: false);
 	}
 
 	[Benchmark]
 	public List<SimpleDestination> ListMapping_Cached()
 	{
-		return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(useCache: true);
+		return simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(useCache: true);
 	}
 
 	[Benchmark]
 	public List<SimpleDestination> ListMapping_Uncached()
 	{
-		return _simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(useCache: false);
+		return simpleList.FastMap<List<SimpleSource>, List<SimpleDestination>>(useCache: false);
 	}
 
 	[Benchmark]
 	public SimpleDestination[] ArrayMapping_Cached()
 	{
-		return _simpleArray.FastMap<SimpleSource[], SimpleDestination[]>(useCache: true);
+		return simpleArray.FastMap<SimpleSource[], SimpleDestination[]>(useCache: true);
 	}
 
 	[Benchmark]
 	public SimpleDestination[] ArrayMapping_Uncached()
 	{
-		return _simpleArray.FastMap<SimpleSource[], SimpleDestination[]>(useCache: false);
+		return simpleArray.FastMap<SimpleSource[], SimpleDestination[]>(useCache: false);
 	}
 
 	[Benchmark]
 	public HashSet<int> HashSetMapping_Cached()
 	{
-		return _complexSource.NumberSet.FastMap<HashSet<int>, HashSet<int>>(useCache: true);
+		return complexSource.NumberSet.FastMap<HashSet<int>, HashSet<int>>(useCache: true);
 	}
 
 	[Benchmark]
 	public HashSet<int> HashSetMapping_Uncached()
 	{
-		return _complexSource.NumberSet.FastMap<HashSet<int>, HashSet<int>>(useCache: false);
+		return complexSource.NumberSet.FastMap<HashSet<int>, HashSet<int>>(useCache: false);
 	}
 
 	[Benchmark]
 	public Dictionary<string, SimpleDestination> DictionaryMapping_Cached()
 	{
-		return _complexDictionary.FastMap<Dictionary<string, SimpleSource>, Dictionary<string, SimpleDestination>>(useCache: true);
+		return complexDictionary.FastMap<Dictionary<string, SimpleSource>, Dictionary<string, SimpleDestination>>(useCache: true);
 	}
 
 	[Benchmark]
 	public Dictionary<string, SimpleDestination> DictionaryMapping_Uncached()
 	{
-		return _complexDictionary.FastMap<Dictionary<string, SimpleSource>, Dictionary<string, SimpleDestination>>(useCache: false);
+		return complexDictionary.FastMap<Dictionary<string, SimpleSource>, Dictionary<string, SimpleDestination>>(useCache: false);
 	}
 
 	[Benchmark]
 	public NestedDestination DeeplyNestedMapping_Cached()
 	{
-		return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>(useCache: true);
+		return deeplyNestedSource.FastMap<NestedSource, NestedDestination>(useCache: true);
 	}
 
 	[Benchmark]
 	public NestedDestination DeeplyNestedMapping_Uncached()
 	{
-		return _deeplyNestedSource.FastMap<NestedSource, NestedDestination>(useCache: false);
+		return deeplyNestedSource.FastMap<NestedSource, NestedDestination>(useCache: false);
 	}
 
 	[Benchmark]
@@ -210,37 +210,37 @@ public class FastMapperBenchmarks
 	[Benchmark]
 	public ReadOnlyCollection<SimpleDestination> ReadOnlyCollectionMapping_Cached()
 	{
-		return _readOnlyCollection.FastMap<IReadOnlyCollection<SimpleSource>, ReadOnlyCollection<SimpleDestination>>(useCache: true);
+		return readOnlyCollection.FastMap<IReadOnlyCollection<SimpleSource>, ReadOnlyCollection<SimpleDestination>>(useCache: true);
 	}
 
 	[Benchmark]
 	public ReadOnlyCollection<SimpleDestination> ReadOnlyCollectionMapping_Uncached()
 	{
-		return _readOnlyCollection.FastMap<IReadOnlyCollection<SimpleSource>, ReadOnlyCollection<SimpleDestination>>(useCache: false);
+		return readOnlyCollection.FastMap<IReadOnlyCollection<SimpleSource>, ReadOnlyCollection<SimpleDestination>>(useCache: false);
 	}
 
 	[Benchmark]
 	public Queue<string> QueueMapping_Cached()
 	{
-		return _complexSource.StringQueue.FastMap<Queue<string>, Queue<string>>(useCache: true);
+		return complexSource.StringQueue.FastMap<Queue<string>, Queue<string>>(useCache: true);
 	}
 
 	[Benchmark]
 	public Queue<string> QueueMapping_Uncached()
 	{
-		return _complexSource.StringQueue.FastMap<Queue<string>, Queue<string>>(useCache: false);
+		return complexSource.StringQueue.FastMap<Queue<string>, Queue<string>>(useCache: false);
 	}
 
 	[Benchmark]
 	public Stack<double> StackMapping_Cached()
 	{
-		return _complexSource.DoubleStack.FastMap<Stack<double>, Stack<double>>(useCache: true);
+		return complexSource.DoubleStack.FastMap<Stack<double>, Stack<double>>(useCache: true);
 	}
 
 	[Benchmark]
 	public Stack<double> StackMapping_Uncached()
 	{
-		return _complexSource.DoubleStack.FastMap<Stack<double>, Stack<double>>(useCache: false);
+		return complexSource.DoubleStack.FastMap<Stack<double>, Stack<double>>(useCache: false);
 	}
 }
 

@@ -219,9 +219,9 @@ public class PrioritizedEndpointQueue : IDisposable
 
 				logger.Debug("Completed task {TaskId} with priority {Priority} for endpoint {EndpointKey} in {Duration}ms", currentTask.Id, currentTask.Priority, EndpointKey, stopwatch.ElapsedMilliseconds);
 			}
-			catch (OperationCanceledException ocex) when (currentTask.IsCancelled)
+			catch (OperationCanceledException cancelEx) when (currentTask.IsCancelled)
 			{
-				logger.Debug(ocex, "Task {TaskId} was cancelled for endpoint {EndpointKey}", currentTask.Id, EndpointKey);
+				logger.Debug(cancelEx, "Task {TaskId} was cancelled for endpoint {EndpointKey}", currentTask.Id, EndpointKey);
 				// Task was already marked as cancelled, no need to update stats
 			}
 			catch (Exception ex)

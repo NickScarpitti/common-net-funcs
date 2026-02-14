@@ -7,8 +7,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using FastExpressionCompiler;
-
-
 using static System.Convert;
 using static System.Web.HttpUtility;
 using static CommonNetFuncs.Core.MathHelpers;
@@ -43,6 +41,7 @@ public enum TitleCaseUppercaseWordHandling
 	ConvertAllUppercase,
 	ConvertByLength
 }
+
 
 /// <summary>
 /// Methods for complex string manipulation
@@ -109,6 +108,7 @@ public static partial class Strings
 	[GeneratedRegex(@"\w")]
 	private static partial Regex TitleCaseWordRegex();
 
+
 	/// <summary>
 	/// Clone of VBA Left() function that gets n characters from the left side of the string
 	/// </summary>
@@ -136,6 +136,7 @@ public static partial class Strings
 		}
 	}
 
+
 	/// <summary>
 	/// Clone of VBA Left() function that gets n characters from the left side of the string
 	/// </summary>
@@ -158,6 +159,7 @@ public static partial class Strings
 			return s;
 		}
 	}
+
 
 	/// <summary>
 	/// Clone of VBA Right() function that gets n characters from the right side of the string
@@ -186,6 +188,7 @@ public static partial class Strings
 		}
 	}
 
+
 	/// <summary>
 	/// Clone of VBA Right() function that gets n characters from the right side of the string
 	/// </summary>
@@ -209,6 +212,7 @@ public static partial class Strings
 		}
 	}
 
+
 	/// <summary>
 	/// Extract the string between two string values
 	/// </summary>
@@ -223,17 +227,23 @@ public static partial class Strings
 		if (s != null)
 		{
 			int sStartStartIndex = s.IndexOf(sStart);//Find the beginning index of the word1
+
 			int sStartEndIndex = sStartStartIndex + sStart.Length;//Add the length of the word1 to starting index to find the end of the word1
+
 			int sEndStartIndex = s.LastIndexOf(sEnd);//Find the beginning index of word2
+
 			int length = sEndStartIndex - sStartEndIndex;//Length of the sub string by subtracting index beginning of word2 from the end of word1
+
 			if (sStartStartIndex != -1 && sEndStartIndex != -1 && length > 0 && sStartEndIndex + length <= s.Length - 1)
 			{
 				ReadOnlySpan<char> textToSlice = s.AsSpan();
 				result = textToSlice.Slice(sStartEndIndex, length).ToString();//Get the substring based on the end of word1 and length
+
 			}
 		}
 		return result;
 	}
+
 
 	/// <summary>
 	/// Extract the string between two string values
@@ -249,16 +259,22 @@ public static partial class Strings
 		if (!s.IsEmpty)
 		{
 			int sStartStartIndex = s.IndexOf(sStart);//Find the beginning index of the word1
+
 			int sStartEndIndex = sStartStartIndex + sStart.Length;//Add the length of the word1 to starting index to find the end of the word1
+
 			int sEndStartIndex = s.LastIndexOf(sEnd);//Find the beginning index of word2
+
 			int length = sEndStartIndex - sStartEndIndex;//Length of the sub string by subtracting index beginning of word2 from the end of word1
+
 			if (sStartStartIndex != -1 && sEndStartIndex != -1 && length > 0 && sStartEndIndex + length <= s.Length - 1)
 			{
 				result = s.Slice(sStartEndIndex, length).ToString();//Get the substring based on the end of word1 and length
+
 			}
 		}
 		return result;
 	}
+
 
 	/// <summary>
 	/// Makes a string with the word "null" into a null value
@@ -267,8 +283,13 @@ public static partial class Strings
 	/// <returns>Null if the string passed in is null or is the word null with no other text characters other than whitespace</returns>
 	public static string? MakeNullNull(this string? s)
 	{
-		return !s.IsNullOrWhiteSpace() && (s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0 || s.Trim().StrEq("Null")) ? null : s;
+		if (!s.IsNullOrWhiteSpace() && (s?.StrEq("Null") != false || s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0))
+		{
+			return null;
+		}
+		return s;
 	}
+
 
 	/// <summary>
 	/// Parses a string that is using pascal casing (works with camel case as well) so that each word is separated by a space
@@ -284,6 +305,7 @@ public static partial class Strings
 		}
 
 		StringBuilder result = new(s.Length + 10); // Pre-allocate with buffer
+
 		bool first = true;
 
 		foreach (char c in s.AsSpan())
@@ -300,6 +322,7 @@ public static partial class Strings
 		return result.ToString();
 	}
 
+
 	/// <summary>
 	/// Parses a string that is using pascal casing (works with camel case as well) so that each word is separated by a space
 	/// </summary>
@@ -314,6 +337,7 @@ public static partial class Strings
 		}
 
 		StringBuilder result = new(s.Length + 10); // Pre-allocate with buffer
+
 		bool first = true;
 
 		foreach (char c in s)
@@ -329,6 +353,7 @@ public static partial class Strings
 
 		return result.ToString();
 	}
+
 
 	/// <summary>
 	/// Converts a string to title case with options for handling uppercase words.
@@ -346,6 +371,7 @@ public static partial class Strings
 		}
 
 		// Use TextInfo for culture-aware title casing
+
 		TextInfo textInfo = new CultureInfo(cultureString, false).TextInfo;
 
 		if (uppercaseHandling == TitleCaseUppercaseWordHandling.IgnoreUppercase)
@@ -354,6 +380,7 @@ public static partial class Strings
 		}
 
 		// Split the input by word boundaries
+
 		string[] words = TitleCaseSplitRegex().Split(input);
 		StringBuilder result = new();
 
@@ -381,6 +408,7 @@ public static partial class Strings
 						else
 						{
 							result.Append(word); // Leave casing as is
+
 						}
 						break;
 				}
@@ -388,6 +416,7 @@ public static partial class Strings
 			else
 			{
 				// For non-uppercase words, always convert to title case
+
 				if (TitleCaseWordRegex().IsMatch(word))
 				{
 					result.Append(textInfo.ToTitleCase(word.ToLower()));
@@ -395,6 +424,7 @@ public static partial class Strings
 				else
 				{
 					// Preserve non-word characters
+
 					result.Append(word);
 				}
 			}
@@ -402,6 +432,7 @@ public static partial class Strings
 
 		return result.ToString();
 	}
+
 
 	/// <summary>
 	/// Trims a string removing all extra leading and trailing spaces as well as reducing multiple consecutive spaces to only 1 space
@@ -418,6 +449,7 @@ public static partial class Strings
 		return s?.Trim();
 	}
 
+
 	/// <summary>
 	/// Indicates whether a specified string is null, a zero length string, or consists only of white-space characters
 	/// </summary>
@@ -427,6 +459,7 @@ public static partial class Strings
 	{
 		return string.IsNullOrWhiteSpace(s);
 	}
+
 
 	/// <summary>
 	/// Indicates whether a specified string is null or a zero length string
@@ -438,6 +471,7 @@ public static partial class Strings
 		return string.IsNullOrEmpty(s);
 	}
 
+
 	/// <summary>
 	/// Indicates whether a specified string is null or a zero length string
 	/// </summary>
@@ -447,6 +481,7 @@ public static partial class Strings
 	{
 		return enumerable?.Any() != true;
 	}
+
 
 	/// <summary>
 	/// Checks if the given string contains a specific string regardless of culture or case
@@ -459,6 +494,7 @@ public static partial class Strings
 		return textToFind != null && (s?.Contains(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
 	}
 
+
 	/// <summary>
 	/// Checks if the given string contains a specific string regardless of culture or case
 	/// </summary>
@@ -470,6 +506,7 @@ public static partial class Strings
 		return !s.IsEmpty && !textToFind.IsEmpty && s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) >= 0;
 	}
 
+
 	/// <summary>
 	/// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
 	/// </summary>
@@ -480,6 +517,7 @@ public static partial class Strings
 	{
 		return s?.Contains(textToFind, StringComparer.InvariantCultureIgnoreCase) ?? false;
 	}
+
 
 	/// <summary>
 	/// Checks if the any of the values in a collection of strings contains a specific string regardless of culture or case
@@ -494,6 +532,8 @@ public static partial class Strings
 			return false;
 		}
 
+
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 		foreach (ReadOnlySpan<char> item in s)
 		{
 			if (item.ContainsInvariant(textToFind))
@@ -501,9 +541,12 @@ public static partial class Strings
 				return true;
 			}
 		}
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
+
 
 		return false;
 	}
+
 
 	/// <summary>
 	/// Checks if the given string contains a specific string regardless of culture or case
@@ -534,6 +577,7 @@ public static partial class Strings
 		}
 	}
 
+
 	/// <summary>
 	/// Checks if the given string contains a specific string regardless of culture or case
 	/// </summary>
@@ -553,6 +597,8 @@ public static partial class Strings
 			return false;
 		}
 
+
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 		if (useOrComparison)
 		{
 			foreach (ReadOnlySpan<char> textToFind in textsToFind)
@@ -577,7 +623,9 @@ public static partial class Strings
 
 			return true;
 		}
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 	}
+
 
 	/// <summary>
 	/// Checks if the given string begins with a specific string regardless of culture or case
@@ -590,6 +638,7 @@ public static partial class Strings
 		return textToFind != null && (s?.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
 	}
 
+
 	/// <summary>
 	/// Checks if the given string begins with a specific string regardless of culture or case
 	/// </summary>
@@ -600,6 +649,7 @@ public static partial class Strings
 	{
 		return !textToFind.IsEmpty && s.StartsWith(textToFind, StringComparison.InvariantCultureIgnoreCase);
 	}
+
 
 	/// <summary>
 	/// Checks if the given string contains a specific string regardless of culture or case
@@ -612,6 +662,7 @@ public static partial class Strings
 		return textToFind != null && (s?.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? false);
 	}
 
+
 	/// <summary>
 	/// Checks if the given <see cref="ReadOnlySpan{T}"/> contains a specific <see cref="ReadOnlySpan{T}"/> regardless of culture or case.
 	/// </summary>
@@ -622,6 +673,7 @@ public static partial class Strings
 	{
 		return !textToFind.IsEmpty && s.EndsWith(textToFind, StringComparison.InvariantCultureIgnoreCase);
 	}
+
 
 	/// <summary>
 	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invariant of culture or case and returns its index if found.
@@ -634,6 +686,7 @@ public static partial class Strings
 		return textToFind != null ? s?.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) ?? -1 : -1;
 	}
 
+
 	/// <summary>
 	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
@@ -644,6 +697,7 @@ public static partial class Strings
 	{
 		return charToFind != null ? s?.IndexOf((char)charToFind, StringComparison.InvariantCultureIgnoreCase) ?? -1 : -1;
 	}
+
 
 	/// <summary>
 	/// Searches <paramref name="s"/> for <paramref name="textToFind"/> invariant of culture or case and returns its index if found.
@@ -656,6 +710,7 @@ public static partial class Strings
 		return !textToFind.IsEmpty ? s.IndexOf(textToFind, StringComparison.InvariantCultureIgnoreCase) : -1;
 	}
 
+
 	/// <summary>
 	/// Searches <paramref name="s"/> for <paramref name="charToFind"/> invariant of culture or case and returns its index if found.
 	/// </summary>
@@ -666,6 +721,7 @@ public static partial class Strings
 	{
 		return charToFind != null ? s.IndexOf((char)charToFind) : -1;
 	}
+
 
 	/// <summary>
 	/// Checks if the given string contains at least one or all of the strings in a collection of strings, regardless of culture or case.
@@ -697,6 +753,7 @@ public static partial class Strings
 		}
 	}
 
+
 	/// <summary>
 	/// Checks if the given string contains at least one or all of the strings in a collection of strings, regardless of culture or case.
 	/// </summary>
@@ -717,6 +774,8 @@ public static partial class Strings
 			return false;
 		}
 
+
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
 		if (useOrComparison)
 		{
 			foreach (ReadOnlySpan<char> textToFind in stringsToFind)
@@ -741,6 +800,7 @@ public static partial class Strings
 
 			return true;
 		}
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
 	}
 
 	/// <summary>
@@ -759,6 +819,7 @@ public static partial class Strings
 		return s.AsSpan().ContainsAnyCharacter(characters);
 	}
 
+
 	/// <summary>
 	/// Checks if a string contains any character from a specified set of characters.
 	/// </summary>
@@ -775,6 +836,7 @@ public static partial class Strings
 		return s.IndexOfAny(characters) >= 0;
 	}
 
+
 	/// <summary>
 	/// Replace a substring with another string, ignoring the case and culture when finding the substring to replace
 	/// </summary>
@@ -787,6 +849,7 @@ public static partial class Strings
 	{
 		return s.ReplaceInvariant([oldValue], newValue, replaceAllInstances, cancellationToken);
 	}
+
 
 	/// <summary>
 	/// Replace multiple substrings with another string, ignoring the case and culture when finding the substrings to replace.
@@ -824,6 +887,7 @@ public static partial class Strings
 			else
 			{
 				// For multiple replacements, use StringBuilder but minimize ToString() calls
+
 				int startIndex = 0;
 				int index = result.IndexOf(oldValue, startIndex, StringComparison.InvariantCultureIgnoreCase);
 
@@ -850,6 +914,7 @@ public static partial class Strings
 		return result;
 	}
 
+
 	/// <summary>
 	/// Compare two strings ignoring culture and case
 	/// </summary>
@@ -859,10 +924,12 @@ public static partial class Strings
 	public static bool StrEq(this string? s1, string? s2)
 	{
 		// return string.Equals(s1?.Trim() ?? string.Empty, s2?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
+
 		if (s1 == null && s2 == null) return true;
 		if (s1 == null || s2 == null) return string.Equals(string.Empty, (s1 ?? s2)?.Trim(), StringComparison.InvariantCultureIgnoreCase);
 		return string.Equals(s1.Trim(), s2.Trim(), StringComparison.InvariantCultureIgnoreCase);
 	}
+
 
 	/// <summary>
 	/// Compare two strings for string equality
@@ -873,11 +940,13 @@ public static partial class Strings
 	public static bool StrComp(this string? s1, string? s2)
 	{
 		// return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty);
+
 		if (s1 == null && s2 == null) return true;
 		if (s1 == null) return s2!.Length == 0;
 		if (s2 == null) return s1.Length == 0;
 		return string.Equals(s1, s2);
 	}
+
 
 	/// <summary>
 	/// Compare two strings with optional stringComparison parameter
@@ -888,11 +957,13 @@ public static partial class Strings
 	public static bool StrComp(this string? s1, string? s2, StringComparison stringComparison)
 	{
 		//		return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison);
+
 		if (s1 == null && s2 == null) return true;
 		if (s1 == null) return s2!.Length == 0;
 		if (s2 == null) return s1.Length == 0;
 		return string.Equals(s1, s2, stringComparison);
 	}
+
 
 	/// <summary>
 	/// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
@@ -905,6 +976,7 @@ public static partial class Strings
 		return testString != null && (!allowSpaces ? AlphanumericRegex().IsMatch(testString) : AlphanumericWithSpacesRegex().IsMatch(testString));
 	}
 
+
 	/// <summary>
 	/// Check string to see if a string only contains letters and numbers (a-Z A-Z 0-9). Null returns false.
 	/// </summary>
@@ -915,6 +987,7 @@ public static partial class Strings
 	{
 		return !testString.IsEmpty && (!allowSpaces ? AlphanumericRegex().IsMatch(testString) : AlphanumericWithSpacesRegex().IsMatch(testString));
 	}
+
 
 	/// <summary>
 	/// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
@@ -927,6 +1000,7 @@ public static partial class Strings
 		return testString != null && (!allowSpaces ? AlphaOnlyRegex().IsMatch(testString) : AlphaOnlyWithSpacesRegex().IsMatch(testString));
 	}
 
+
 	/// <summary>
 	/// Check string to see if a string only contains letters (a-z A-Z). Null returns false.
 	/// </summary>
@@ -937,6 +1011,7 @@ public static partial class Strings
 	{
 		return !testString.IsEmpty && (!allowSpaces ? AlphaOnlyRegex().IsMatch(testString) : AlphaOnlyWithSpacesRegex().IsMatch(testString));
 	}
+
 
 	/// <summary>
 	/// Check string to see if a string only contains numbers (0-9). Null returns false.
@@ -949,6 +1024,7 @@ public static partial class Strings
 		return !testString.IsNullOrWhiteSpace() && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
 	}
 
+
 	/// <summary>
 	/// Check string to see if a string only contains numbers (0-9). Null returns false.
 	/// </summary>
@@ -959,6 +1035,7 @@ public static partial class Strings
 	{
 		return !testString.IsEmpty && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
 	}
+
 
 	/// <summary>
 	/// Gets string up until before the last instance of a character (exclusive)
@@ -977,6 +1054,7 @@ public static partial class Strings
 		return lastIndex != -1 ? s[..lastIndex] : s;
 	}
 
+
 	/// <summary>
 	/// Gets string up until before the last instance of a character (exclusive)
 	/// </summary>
@@ -994,6 +1072,7 @@ public static partial class Strings
 		return lastIndex != -1 ? s[..lastIndex] : s;
 	}
 
+
 	/// <summary>
 	/// Gets string remaining after the last instance of a character (exclusive)
 	/// </summary>
@@ -1010,6 +1089,7 @@ public static partial class Strings
 		int lastIndex = s.LastIndexOf(charToFind);
 		return lastIndex != -1 ? s[(lastIndex + 1)..] : s;
 	}
+
 
 	/// <summary>
 	/// Gets string remaining after the last instance of a character (exclusive)
@@ -1055,7 +1135,9 @@ public static partial class Strings
 	//	return obj;
 	//}
 
+
 	private static readonly ConcurrentDictionary<(Type, bool), Delegate> trimObjectStringsCache = new();
+
 
 	/// <summary>
 	/// Removes excess spaces in string properties inside of an object
@@ -1087,6 +1169,7 @@ public static partial class Strings
 		List<ParameterExpression> variables = [];
 
 		//foreach (PropertyInfo prop in typeof(TObj).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.PropertyType == typeof(string) || (recursive && x.PropertyType.IsClass)))
+
 		foreach (PropertyInfo prop in GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => x.PropertyType == typeof(string) || (recursive && x.PropertyType.IsClass)))
 		{
 			if (prop.PropertyType == typeof(string))
@@ -1140,9 +1223,11 @@ public static partial class Strings
 
 	#region Caching
 
+
 	private static readonly CacheManager<(Type, bool, NormalizationForm, bool), Delegate> NormalizeObjectStringsCache = new();
 
 	public static ICacheManagerApi<(Type, bool, NormalizationForm, bool), Delegate> CacheManager => NormalizeObjectStringsCache;
+
 
 	/// <summary>
 	/// Gets or adds a function from the deep copy cache based on the source and destination types.
@@ -1172,6 +1257,7 @@ public static partial class Strings
 
 	#endregion
 
+
 	/// <summary>
 	/// Removes excess spaces in string properties inside of an object with the option to also trim them
 	/// </summary>
@@ -1198,6 +1284,7 @@ public static partial class Strings
 		return obj;
 	}
 
+
 	/// <summary>
 	/// Creates an <see cref="Expression{TDelegate}"/> for normalizing <see cref="string"/> properties in an object.
 	/// </summary>
@@ -1220,11 +1307,13 @@ public static partial class Strings
 				MemberExpression propExpr = Expression.Property(objParam, prop);
 
 				// Create a local variable to store the property value
+
 				ParameterExpression localVar = Expression.Variable(typeof(string), prop.Name);
 				variables.Add(localVar);
 				expressions.Add(Expression.Assign(localVar, propExpr));
 
 				// Create the null check
+
 				Expression nullCheck = Expression.NotEqual(localVar, Expression.Constant(null, typeof(string)));
 
 				Expression stringOperations;
@@ -1242,9 +1331,11 @@ public static partial class Strings
 				}
 
 				// Combine the null check with the string operations
+
 				Expression conditionalOperation = Expression.Condition(nullCheck, stringOperations, localVar);
 
 				// Assign the result back to the property
+
 				expressions.Add(Expression.Assign(propExpr, conditionalOperation));
 			}
 			else if (recursive && prop.PropertyType.IsClass)
@@ -1255,6 +1346,7 @@ public static partial class Strings
 				MethodCallExpression callMakeObjectNullNull = Expression.Call(genericMethod, propExpr, Expression.Constant(enableTrim), Expression.Constant(normalizationForm), Expression.Constant(true), Expression.Constant(useCache));
 
 				// Add null check for recursive call
+
 				Expression nullCheck = Expression.NotEqual(propExpr, Expression.Constant(null));
 				Expression conditionalCall = Expression.IfThen(nullCheck, callMakeObjectNullNull);
 				expressions.Add(conditionalCall);
@@ -1264,6 +1356,7 @@ public static partial class Strings
 		BlockExpression body = Expression.Block(variables, expressions);
 		return Expression.Lambda<Action<T>>(body, objParam);
 	}
+
 
 	/// <summary>
 	/// Makes string properties in an object with the word "null" into a null value
@@ -1289,6 +1382,7 @@ public static partial class Strings
 	}
 
 	private static readonly ConcurrentDictionary<(Type, bool), Delegate> makeObjectNullNullCache = new();
+
 
 	/// <summary>
 	/// Makes string properties in an object with the word "null" into a null value
@@ -1328,6 +1422,7 @@ public static partial class Strings
 				expressions.Add(Expression.Assign(propExpr, callMakeNullNull));
 			}
 			else //if (recursive && prop.PropertyType.IsClass) //Can use else here since property filter means only valid properties that are not strings will make it here
+
 			{
 				MemberExpression propExpr = Expression.Property(objParam, prop);
 				MethodInfo makeObjectNullNullMethod = typeof(Strings).GetMethod(nameof(MakeObjectNullNull))!;
@@ -1340,6 +1435,7 @@ public static partial class Strings
 		BlockExpression body = Expression.Block(expressions);
 		return Expression.Lambda<Action<T>>(body, objParam);
 	}
+
 
 	/// <summary>
 	/// Converts Nullable DateTime to string using the passed in formatting
@@ -1359,6 +1455,7 @@ public static partial class Strings
 		return output;
 	}
 
+
 	/// <summary>
 	/// Converts Nullable DateTime to string using the passed in formatting
 	/// </summary>
@@ -1376,6 +1473,7 @@ public static partial class Strings
 		}
 		return output;
 	}
+
 
 	/// <summary>
 	/// Converts Nullable DateTime to string using the passed in formatting
@@ -1395,6 +1493,7 @@ public static partial class Strings
 		return output;
 	}
 
+
 	/// <summary>
 	/// Converts nullable int to string
 	/// </summary>
@@ -1405,6 +1504,7 @@ public static partial class Strings
 	{
 		return value?.ToString();
 	}
+
 
 	/// <summary>
 	/// Converts nullable long to string
@@ -1417,6 +1517,7 @@ public static partial class Strings
 		return value?.ToString();
 	}
 
+
 	/// <summary>
 	/// Converts nullable double to string
 	/// </summary>
@@ -1427,6 +1528,7 @@ public static partial class Strings
 	{
 		return value?.ToString();
 	}
+
 
 	/// <summary>
 	/// Converts nullable decimal to string
@@ -1439,6 +1541,7 @@ public static partial class Strings
 		return value?.ToString();
 	}
 
+
 	/// <summary>
 	/// Converts nullable object to string
 	/// </summary>
@@ -1450,6 +1553,7 @@ public static partial class Strings
 		return value?.ToString();
 	}
 
+
 	/// <summary>
 	/// Converts nullable object to string
 	/// </summary>
@@ -1460,6 +1564,7 @@ public static partial class Strings
 	{
 		return value?.ToString();
 	}
+
 
 	/// <summary>
 	/// Converts list of string representations of integers into list of integers
@@ -1491,6 +1596,7 @@ public static partial class Strings
 		return !string.IsNullOrWhiteSpace(value) && int.TryParse(value, out int i) ? i : null;
 	}
 
+
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable integers
 	/// </summary>
@@ -1500,6 +1606,7 @@ public static partial class Strings
 	{
 		return !value.IsEmpty && int.TryParse(value, out int i) ? i : null;
 	}
+
 
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable doubles
@@ -1511,6 +1618,7 @@ public static partial class Strings
 		return !string.IsNullOrWhiteSpace(value) && double.TryParse(value, out double i) ? i : null;
 	}
 
+
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable doubles
 	/// </summary>
@@ -1520,6 +1628,7 @@ public static partial class Strings
 	{
 		return !value.IsEmpty && double.TryParse(value, out double i) ? i : null;
 	}
+
 
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable decimals
@@ -1531,6 +1640,7 @@ public static partial class Strings
 		return !string.IsNullOrWhiteSpace(value) && decimal.TryParse(value, out decimal i) ? i : null;
 	}
 
+
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable decimals
 	/// </summary>
@@ -1540,6 +1650,7 @@ public static partial class Strings
 	{
 		return !value.IsEmpty && decimal.TryParse(value, out decimal i) ? i : null;
 	}
+
 
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable DateTimes
@@ -1560,6 +1671,7 @@ public static partial class Strings
 		return dtn;
 	}
 
+
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable DateTimes
 	/// </summary>
@@ -1578,6 +1690,7 @@ public static partial class Strings
 		}
 		return dtn;
 	}
+
 
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable DateOnly
@@ -1598,6 +1711,7 @@ public static partial class Strings
 		return dtn;
 	}
 
+
 	/// <summary>
 	/// Used to reduce boilerplate code for parsing strings into nullable DateOnly
 	/// </summary>
@@ -1617,6 +1731,7 @@ public static partial class Strings
 		return dtn;
 	}
 
+
 	/// <summary>
 	/// Convert string "Yes"/"No" value into bool
 	/// </summary>
@@ -1626,6 +1741,7 @@ public static partial class Strings
 	{
 		return string.Equals(value?.Trim() ?? string.Empty, nameof(EYesNo.Yes), StringComparison.InvariantCultureIgnoreCase);
 	}
+
 
 	/// <summary>
 	/// Convert string "Y"/"N" value into bool
@@ -1637,6 +1753,7 @@ public static partial class Strings
 		return string.Equals(value?.Trim() ?? string.Empty, "Y", StringComparison.InvariantCultureIgnoreCase);
 	}
 
+
 	/// <summary>
 	/// Convert bool to "Yes" or "No"
 	/// </summary>
@@ -1646,6 +1763,7 @@ public static partial class Strings
 	{
 		return value ? nameof(EYesNo.Yes) : nameof(EYesNo.No);
 	}
+
 
 	/// <summary>
 	/// Convert bool to "Y" or "N"
@@ -1657,6 +1775,7 @@ public static partial class Strings
 		return value ? "Y" : "N";
 	}
 
+
 	/// <summary>
 	/// Convert bool to 1 or 0
 	/// </summary>
@@ -1666,6 +1785,7 @@ public static partial class Strings
 	{
 		return ToInt32(value);
 	}
+
 
 	/// <summary>
 	/// Get file name safe date in the chosen format
@@ -1677,6 +1797,7 @@ public static partial class Strings
 		return DateTime.Today.ToString(dateFormat).Replace("/", "-");
 	}
 
+
 	/// <summary>
 	/// Get file name safe date in the chosen format
 	/// </summary>
@@ -1687,6 +1808,7 @@ public static partial class Strings
 		return (date ?? DateTime.Today).ToString(dateFormat).Replace("/", "-");
 	}
 
+
 	/// <summary>
 	/// Get file name safe date in the chosen format
 	/// </summary>
@@ -1696,6 +1818,7 @@ public static partial class Strings
 	{
 		return (date ?? DateOnly.FromDateTime(DateTime.Today)).ToString(dateFormat).Replace("/", "-");
 	}
+
 
 	/// <summary>
 	/// Adds number in () at the end of a file name if it would create a duplicate in the savePath
@@ -1717,6 +1840,7 @@ public static partial class Strings
 		return outputName;
 	}
 
+
 	/// <summary>
 	/// Remove unnecessary characters and components of a timespan to make it more readable
 	/// </summary>
@@ -1732,6 +1856,7 @@ public static partial class Strings
 		return shortForm;
 	}
 
+
 	/// <summary>
 	/// Remove unnecessary characters and components of a timespan to make it more readable
 	/// </summary>
@@ -1744,6 +1869,7 @@ public static partial class Strings
 		if (t.Milliseconds > 0)
 		{
 			stringForm = stringForm.Replace($".{stringForm.Split(".")[^1]}", string.Empty); //Remove milliseconds component
+
 		}
 
 		stringForm = stringForm.Split(".")[^1];
@@ -1762,15 +1888,18 @@ public static partial class Strings
 			if (stringForm[..3].StrComp("00:"))
 			{
 				stringForm = stringForm[3..];  //Remove hours if there aren't any
+
 				if (stringForm[..1].StrComp("0"))
 				{
 					stringForm = stringForm[1..]; //Remove leading 0 in minutes
+
 				}
 			}
 		}
 
 		return string.IsNullOrWhiteSpace(days) ? stringForm : $"{days}:{stringForm}";
 	}
+
 
 	/// <summary>
 	/// Takes in a string and returns the hashed value of it using the passed in hashing algorithm
@@ -1795,6 +1924,7 @@ public static partial class Strings
 		}
 		return builder.ToString();
 	}
+
 
 	/// <summary>
 	/// Remove extra whitespace from a string preserving inner whitespace as a single space
@@ -1868,6 +1998,7 @@ public static partial class Strings
 
 	private const string DefaultDateFormat = "MM/dd/yyyy";
 
+
 	/// <summary>
 	/// Take any format of a date time string and convert it to a different format
 	/// </summary>
@@ -1881,6 +2012,7 @@ public static partial class Strings
 		return dateString == null ? null : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? DefaultDateFormat : outputFormat);
 	}
 
+
 	/// <summary>
 	/// Take any format of a date time string and convert it to a different format
 	/// </summary>
@@ -1893,6 +2025,7 @@ public static partial class Strings
 	{
 		return dateString.IsEmpty ? ReadOnlySpan<char>.Empty : DateTime.ParseExact(dateString, sourceFormat, CultureInfo.InvariantCulture).ToString(string.IsNullOrWhiteSpace(outputFormat) ? DefaultDateFormat : outputFormat);
 	}
+
 
 	/// <summary>
 	/// Replaces any characters that don't match the provided regexPattern with specified replacement string.
@@ -1914,6 +2047,7 @@ public static partial class Strings
 		return regex.ReplaceInverse(input, replacement, matchFirstOnly);
 	}
 
+
 	/// <summary>
 	/// Replaces any characters that don't match the provided regexPattern with specified replacement string.
 	/// </summary>
@@ -1933,17 +2067,20 @@ public static partial class Strings
 		replacement ??= string.Empty;
 
 		// Use StringBuilder to build the result
+
 		StringBuilder result = new();
 		int lastMatchEnd = 0;
 
 		foreach (Match match in regex.Matches(input))
 		{
 			// Append non-matching parts before the current match
+
 			if (match.Index > lastMatchEnd && replacement.Length > 0)
 			{
 				result.Append(replacement);
 			}
 			// Append the matched value
+
 			result.Append(match.Value);
 			lastMatchEnd = match.Index + match.Length;
 
@@ -1954,6 +2091,7 @@ public static partial class Strings
 		}
 
 		// Append any remaining non-matching characters after the last match
+
 		if (lastMatchEnd < input.Length && replacement.Length > 0)
 		{
 			result.Append(replacement);
@@ -1961,6 +2099,7 @@ public static partial class Strings
 
 		return result.ToString();
 	}
+
 
 	/// <summary>
 	/// URL Encodes a string but then replaces specific escape sequences with their decoded character. This method is mainly for logging user defined values in a safe manner.
@@ -2001,6 +2140,7 @@ public static partial class Strings
 
 		return output;
 	}
+
 
 	/// <summary>
 	/// Formats a string as a phone number
@@ -2061,6 +2201,7 @@ public static partial class Strings
 		return input;
 	}
 
+
 	/// <summary>
 	/// Splits a string into lines based on line breaks, yielding each line as an individual string.
 	/// </summary>
@@ -2082,6 +2223,7 @@ public static partial class Strings
 			yield return line;
 		}
 	}
+
 
 	/// <summary>
 	/// Converts a nullable numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
@@ -2105,6 +2247,7 @@ public static partial class Strings
 		return $"{wholeNumberPart} {numerator}/{denominator}";
 	}
 
+
 	/// <summary>
 	/// Converts a numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
 	/// </summary>
@@ -2121,6 +2264,7 @@ public static partial class Strings
 		GreatestCommonDenominator(ref numerator, ref denominator, out long _);
 		return $"{wholeNumberPart} {numerator}/{denominator}";
 	}
+
 
 	/// <summary>
 	/// Converts a nullable numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
@@ -2144,6 +2288,7 @@ public static partial class Strings
 		return $"{wholeNumberPart} {numerator}/{denominator}";
 	}
 
+
 	/// <summary>
 	/// Converts a numeric value to a string representation in fractional format reduced to simplest form using greatest common denominator.
 	/// </summary>
@@ -2162,6 +2307,7 @@ public static partial class Strings
 	}
 
 	private static readonly char[] FractionSplitChars = new[] { ' ', '/' };
+
 
 	/// <summary>
 	/// Converts a string representation of a fraction or decimal value into a decimal value.
@@ -2206,6 +2352,7 @@ public static partial class Strings
 		throw new FormatException("Not a valid fraction.");
 	}
 
+
 	/// <summary>
 	/// Attempts to convert a fraction represented as a string into its decimal equivalent.
 	/// </summary>
@@ -2231,6 +2378,7 @@ public static partial class Strings
 		}
 		return success;
 	}
+
 
 	/// <summary>
 	/// Attempts to convert a fraction represented as a string into its decimal equivalent.
@@ -2258,6 +2406,7 @@ public static partial class Strings
 		return success;
 	}
 
+
 	/// <summary>
 	/// Attempts to convert the specified string to a decimal value.
 	/// </summary>
@@ -2276,6 +2425,7 @@ public static partial class Strings
 		try
 		{
 			//Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
+
 			result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
 				decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
 				null;
@@ -2288,6 +2438,7 @@ public static partial class Strings
 		}
 		return success;
 	}
+
 
 	/// <summary>
 	/// Attempts to convert the specified string to a decimal value.
@@ -2307,6 +2458,7 @@ public static partial class Strings
 		try
 		{
 			//Try reading fraction value first as decimal.TryParse as decimal.TryParse will just give numerator if there is a fraction
+
 			result = inputString.GetOnlyNumbers(true).TryFractionToDecimal(out decimal fractionValue) ? fractionValue :
 				decimal.TryParse(inputString.GetOnlyNumbers(), out decimal value) ? value :
 				default;
@@ -2319,6 +2471,7 @@ public static partial class Strings
 		}
 		return success;
 	}
+
 
 	/// <summary>
 	/// Converts a string representation of a fraction or decimal value into a double value.
@@ -2363,6 +2516,7 @@ public static partial class Strings
 		throw new FormatException("Not a valid fraction.");
 	}
 
+
 	/// <summary>
 	/// Attempts to convert a fraction represented as a string into its double equivalent.
 	/// </summary>
@@ -2391,6 +2545,7 @@ public static partial class Strings
 		return success;
 	}
 
+
 	/// <summary>
 	/// Attempts to convert a fraction represented as a string into its double equivalent.
 	/// </summary>
@@ -2417,6 +2572,7 @@ public static partial class Strings
 		return success;
 	}
 
+
 	/// <summary>
 	/// Attempts to convert the specified string to a double value.
 	/// </summary>
@@ -2435,6 +2591,7 @@ public static partial class Strings
 		try
 		{
 			//Try reading fraction value first as double.TryParse as double.TryParse will just give numerator if there is a fraction
+
 			result = inputString.GetOnlyNumbers(true).TryFractionToDouble(out double fractionValue) ? fractionValue :
 				double.TryParse(inputString.GetOnlyNumbers(), out double value) ? value :
 				null;
@@ -2447,6 +2604,7 @@ public static partial class Strings
 		}
 		return success;
 	}
+
 
 	/// <summary>
 	/// Attempts to convert the specified string to a double value.
@@ -2466,6 +2624,7 @@ public static partial class Strings
 		try
 		{
 			//Try reading fraction value first as double.TryParse as double.TryParse will just give numerator if there is a fraction
+
 			result = inputString.GetOnlyNumbers(true).TryFractionToDouble(out double fractionValue) ? fractionValue :
 				double.TryParse(inputString.GetOnlyNumbers(), out double value) ? value :
 				default;
@@ -2478,6 +2637,7 @@ public static partial class Strings
 		}
 		return success;
 	}
+
 
 	/// <summary>
 	/// Remove all letters from <paramref name="value"/>.
@@ -2495,6 +2655,7 @@ public static partial class Strings
 		return RemoveLettersRegex().Replace(value, string.Empty);
 	}
 
+
 	/// <summary>
 	/// Removes all numbers from a string, leaving only letters and other non-numeric characters.
 	/// </summary>
@@ -2511,6 +2672,7 @@ public static partial class Strings
 		return RemoveNumbersRegex().Replace(value, string.Empty);
 	}
 
+
 	/// <summary>
 	/// Gets only the letters and spaces from a string, removing all numbers and other non-letter characters.
 	/// </summary>
@@ -2525,6 +2687,7 @@ public static partial class Strings
 		}
 		return string.Concat(LettersOnlyRegex().Matches(value.Trim())).Trim();
 	}
+
 
 	/// <summary>
 	/// Gets only the numbers from a string, removing all letters and other non-numeric characters.
@@ -2542,6 +2705,7 @@ public static partial class Strings
 
 		return string.Concat(!allowFractions ? NumbersOnlyRegex().Matches(value.Trim()) : NumbersWithFractionsOnlyRegex().Matches(value.Trim())).Trim();
 	}
+
 
 	/// <summary>
 	/// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
@@ -2566,6 +2730,7 @@ public static partial class Strings
 		return input[index..];
 	}
 
+
 	/// <summary>
 	/// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
 	/// </summary>
@@ -2587,6 +2752,7 @@ public static partial class Strings
 
 		return input[index..];
 	}
+
 
 	/// <summary>
 	/// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
@@ -2611,6 +2777,7 @@ public static partial class Strings
 		return input[..(index + 1)];
 	}
 
+
 	/// <summary>
 	/// Removes all non-alphanumeric characters from the beginning of a string until the first alphanumeric character is reached.
 	/// </summary>
@@ -2633,6 +2800,7 @@ public static partial class Strings
 		return input[..(index + 1)];
 	}
 
+
 	/// <summary>
 	/// Removes all non-alphanumeric characters from the beginning and ending of a string until the first alphanumeric character is reached.
 	/// </summary>
@@ -2643,6 +2811,7 @@ public static partial class Strings
 	{
 		return input.RemoveLeadingNonAlphanumeric().RemoveTrailingNonAlphanumeric();
 	}
+
 
 	/// <summary>
 	/// Counts the occurrences of a specific character in the given string.
@@ -2668,6 +2837,7 @@ public static partial class Strings
 		return count;
 	}
 
+
 	/// <summary>
 	/// Counts the occurrences of a specific character in the given string.
 	/// </summary>
@@ -2684,6 +2854,7 @@ public static partial class Strings
 		return input.AsSpan().CountChars(charToFind);
 	}
 
+
 	/// <summary>
 	/// Counts the occurrences of a specific character in the given string.
 	/// </summary>
@@ -2698,6 +2869,7 @@ public static partial class Strings
 		}
 		return input.CountChars(charToFind[0]);
 	}
+
 
 	/// <summary>
 	/// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
@@ -2733,6 +2905,7 @@ public static partial class Strings
 		return true;
 	}
 
+
 	/// <summary>
 	/// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
 	/// </summary>
@@ -2753,6 +2926,7 @@ public static partial class Strings
 		return input.AsSpan().HasNoMoreThanNumberOfChars(charToFind, maxNumberOfChars);
 	}
 
+
 	/// <summary>
 	/// Checks to see if the input string has a maximum number of occurrences of a specific character or fewer.
 	/// </summary>
@@ -2772,6 +2946,7 @@ public static partial class Strings
 		}
 		return input.HasNoMoreThanNumberOfChars(charToFind[0], maxNumberOfChars);
 	}
+
 
 	/// <summary>
 	/// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
@@ -2812,6 +2987,7 @@ public static partial class Strings
 		return false;
 	}
 
+
 	/// <summary>
 	/// Checks to see if the input string has a minimum number of occurrences of a specific character or more.
 	/// </summary>
@@ -2833,6 +3009,7 @@ public static partial class Strings
 
 		return input.AsSpan().HasNoLessThanNumberOfChars(charToFind, minNumberOfChars);
 	}
+
 
 	/// <summary>
 	/// Checks to see if the input string has a minimum number of occurrences of a specific character or more.

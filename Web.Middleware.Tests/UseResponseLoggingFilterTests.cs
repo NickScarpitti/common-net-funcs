@@ -13,20 +13,20 @@ namespace Web.Middleware.Tests;
 
 public sealed class UseResponseLoggingFilterTests
 {
-	private readonly ILogger<UseResponseLoggingFilter> _logger;
-	private readonly IResponseLoggingConfig _config;
+	private readonly ILogger<UseResponseLoggingFilter> logger;
+	private readonly IResponseLoggingConfig config;
 
 	public UseResponseLoggingFilterTests()
 	{
-		_logger = A.Fake<ILogger<UseResponseLoggingFilter>>();
-		_config = A.Fake<IResponseLoggingConfig>();
+		logger = A.Fake<ILogger<UseResponseLoggingFilter>>();
+		config = A.Fake<IResponseLoggingConfig>();
 	}
 
 	[RetryFact(3)]
 	public void Constructor_ValidParameters_CreatesInstance()
 	{
 		// Act
-		UseResponseLoggingFilter filter = new(_logger, _config);
+		UseResponseLoggingFilter filter = new(logger, config);
 
 		// Assert
 		filter.ShouldNotBeNull();
@@ -38,9 +38,9 @@ public sealed class UseResponseLoggingFilterTests
 	public async Task OnActionExecuted_LogsWarningWhenThresholdExceeded(double thresholdSeconds, double delaySeconds)
 	{
 		// Arrange
-		A.CallTo(() => _config.ThresholdInSeconds).Returns(thresholdSeconds);
-		A.CallTo(() => _logger.IsEnabled(LogLevel.Warning)).Returns(true);
-		UseResponseLoggingFilter filter = new(_logger, _config);
+		A.CallTo(() => config.ThresholdInSeconds).Returns(thresholdSeconds);
+		A.CallTo(() => logger.IsEnabled(LogLevel.Warning)).Returns(true);
+		UseResponseLoggingFilter filter = new(logger, config);
 
 		object controller = new();
 		DefaultHttpContext httpContext = new();
@@ -65,7 +65,7 @@ public sealed class UseResponseLoggingFilterTests
 		// Assert
 		if (delaySeconds >= thresholdSeconds)
 		{
-			A.CallTo(() => _logger.Log(
+			A.CallTo(() => logger.Log(
 					LogLevel.Warning,
 					A<EventId>.Ignored,
 					A<It.IsAnyType>.That.Matches(msg => msg.ToString()!.Contains("Method") &&
@@ -77,7 +77,7 @@ public sealed class UseResponseLoggingFilterTests
 		}
 		else
 		{
-			A.CallTo(() => _logger.Log(LogLevel.Warning, A<EventId>.Ignored, A<It.IsAnyType>.Ignored, null, A<Func<It.IsAnyType, Exception?, string>>.Ignored)).MustNotHaveHappened();
+			A.CallTo(() => logger.Log(LogLevel.Warning, A<EventId>.Ignored, A<It.IsAnyType>.Ignored, null, A<Func<It.IsAnyType, Exception?, string>>.Ignored)).MustNotHaveHappened();
 		}
 	}
 
@@ -85,7 +85,7 @@ public sealed class UseResponseLoggingFilterTests
 	public async Task OnActionExecuting_StartsNewMeasurement()
 	{
 		// Arrange
-		UseResponseLoggingFilter filter = new(_logger, _config);
+		UseResponseLoggingFilter filter = new(logger, config);
 		object controller = new();
 		DefaultHttpContext httpContext = new();
 		ActionContext actionContext = new(httpContext, new RouteData(), new ActionDescriptor());
@@ -101,7 +101,7 @@ public sealed class UseResponseLoggingFilterTests
 		filter.OnActionExecuted(executedContext);
 
 		// Assert - Verify the stopwatch was reset and captured time
-		A.CallTo(() => _config.ThresholdInSeconds).MustHaveHappened();
+		A.CallTo(() => config.ThresholdInSeconds).MustHaveHappened();
 	}
 
 	[RetryTheory(3)]
@@ -110,9 +110,9 @@ public sealed class UseResponseLoggingFilterTests
 	public async Task OnActionExecuted_HandlesEdgeCaseThresholds(double thresholdSeconds)
 	{
 		// Arrange
-		A.CallTo(() => _config.ThresholdInSeconds).Returns(thresholdSeconds);
-		A.CallTo(() => _logger.IsEnabled(LogLevel.Warning)).Returns(true);
-		UseResponseLoggingFilter filter = new(_logger, _config);
+		A.CallTo(() => config.ThresholdInSeconds).Returns(thresholdSeconds);
+		A.CallTo(() => logger.IsEnabled(LogLevel.Warning)).Returns(true);
+		UseResponseLoggingFilter filter = new(logger, config);
 
 		object controller = new();
 		DefaultHttpContext httpContext = new();
@@ -133,7 +133,7 @@ public sealed class UseResponseLoggingFilterTests
 		filter.OnActionExecuted(executedContext);
 
 		// Assert - Should log warning for any elapsed time when threshold is zero or negative
-		IFakeObjectCall call = Fake.GetCalls(_logger).Single(c => c.Method.Name == "Log");
+		IFakeObjectCall call = Fake.GetCalls(logger).Single(c => c.Method.Name == "Log");
 		call.Arguments[0].ShouldBe(LogLevel.Warning);
 
 		object? state = call.Arguments[2];

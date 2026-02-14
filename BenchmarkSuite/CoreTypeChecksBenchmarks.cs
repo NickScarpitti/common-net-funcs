@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using CommonNetFuncs.Core;
@@ -9,83 +9,83 @@ namespace BenchmarkSuite;
 [RankColumn]
 public class CoreTypeChecksBenchmarks
 {
-	private Type _stringType = null!;
-	private Type _intType = null!;
-	private Type _dateTimeType = null!;
-	private Type _listType = null!;
-	private Type _arrayType = null!;
-	private Type _dictionaryType = null!;
-	private Type _delegateType = null!;
+	private Type stringType = null!;
+	private Type intType = null!;
+	private Type dateTimeType = null!;
+	private Type listType = null!;
+	private Type arrayType = null!;
+	private Type dictionaryType = null!;
+	private Type delegateType = null!;
 
 	[GlobalSetup]
 	public void Setup()
 	{
-		_stringType = typeof(string);
-		_intType = typeof(int);
-		_dateTimeType = typeof(DateTime);
-		_listType = typeof(List<int>);
-		_arrayType = typeof(int[]);
-		_dictionaryType = typeof(Dictionary<int, string>);
-		_delegateType = typeof(Action);
+		stringType = typeof(string);
+		intType = typeof(int);
+		dateTimeType = typeof(DateTime);
+		listType = typeof(List<int>);
+		arrayType = typeof(int[]);
+		dictionaryType = typeof(Dictionary<int, string>);
+		delegateType = typeof(Action);
 	}
 
 	[Benchmark]
 	public bool IsSimpleType_String()
 	{
-		return _stringType.IsSimpleType();
+		return stringType.IsSimpleType();
 	}
 
 	[Benchmark]
 	public bool IsSimpleType_Int()
 	{
-		return _intType.IsSimpleType();
+		return intType.IsSimpleType();
 	}
 
 	[Benchmark]
 	public bool IsSimpleType_DateTime()
 	{
-		return _dateTimeType.IsSimpleType();
+		return dateTimeType.IsSimpleType();
 	}
 
 	[Benchmark]
 	public bool IsNumericType_Int()
 	{
-		return _intType.IsNumericType();
+		return intType.IsNumericType();
 	}
 
 	[Benchmark]
 	public bool IsNumericType_String()
 	{
-		return _stringType.IsNumericType();
+		return stringType.IsNumericType();
 	}
 
 	[Benchmark]
 	public bool IsEnumerable_List()
 	{
-		return _listType.IsEnumerable();
+		return listType.IsEnumerable();
 	}
 
 	[Benchmark]
 	public bool IsEnumerable_Array()
 	{
-		return _arrayType.IsEnumerable();
+		return arrayType.IsEnumerable();
 	}
 
 	[Benchmark]
 	public bool IsDictionary()
 	{
-		return _dictionaryType.IsDictionary();
+		return dictionaryType.IsDictionary();
 	}
 
 	[Benchmark]
 	public bool IsDelegate()
 	{
-		return _delegateType.IsDelegate();
+		return delegateType.IsDelegate();
 	}
 
 	[Benchmark]
 	public bool IsReadOnlyCollectionType_List()
 	{
-		return _listType.IsReadOnlyCollectionType();
+		return listType.IsReadOnlyCollectionType();
 	}
 }

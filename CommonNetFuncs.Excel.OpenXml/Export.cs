@@ -1,11 +1,11 @@
-﻿using System.Data;
-using System.IO.Packaging;
-using System.Reflection;
-using CommonNetFuncs.Core;
+﻿using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using System.Data;
+using System.IO.Packaging;
+using System.Reflection;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.ReflectionCaches;
 using static CommonNetFuncs.Excel.OpenXml.Common;
@@ -133,14 +133,15 @@ public static class Export
 	/// <param name="createTable">If <see langword="true"/>, will format the inserted data into an Excel table.</param>
 	/// <param name="tableName">Name of the table in Excel</param>
 	/// <returns><see langword="true"/> if data was successfully added to the workbook</returns>
-	private static bool AddGenericTableInternal<T>(this SpreadsheetDocument document, object? data, Type dataType, string sheetName, bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
+	private static bool AddGenericTableInternal<T>(this SpreadsheetDocument document, object? data, Type dataType, string sheetName, bool createTable = false,
+		string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
 	{
 		bool success = false;
 		try
 		{
 			int i = 1;
 			string actualSheetName = sheetName;
-			while (document.GetWorksheetByName(actualSheetName) != null)
+			while (document.GetWorksheetByName(actualSheetName, false) != null)
 			{
 				actualSheetName = $"{sheetName} ({i})"; //Get safe new sheet name
 				i++;
@@ -157,10 +158,10 @@ public static class Export
 				{
 					success = ExportFromTable(document, worksheet, (DataTable)data, createTable, tableName, skipColumnNames, wrapText);
 				}
-				else
-				{
-					throw new ArgumentException("Invalid type for data parameter. Parameter must be either an IEnumerable or DataTable class", nameof(data));
-				}
+				// else
+				// {
+				// 	throw new ArgumentException("Invalid type for data parameter. Parameter must be either an IEnumerable or DataTable class", nameof(data));
+				// }
 			}
 		}
 		catch (Exception ex)

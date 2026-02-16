@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
-using System.Threading.Channels;
-using CommonNetFuncs.Core;
+﻿using CommonNetFuncs.Core;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Threading.Channels;
 
 namespace CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 

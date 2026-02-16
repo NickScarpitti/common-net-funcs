@@ -2,10 +2,10 @@
 using CommonNetFuncs.Images;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Bmp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Gif;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Tiff;
 using SixLabors.ImageSharp.Metadata;
 using SixLabors.ImageSharp.PixelFormats;
@@ -1231,9 +1231,8 @@ public sealed class ManipulationTests : IDisposable
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 
-		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
 		using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-
+		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
 		bool isInverted = IsInvertedVersion(orig, imgClone);
 
 		isInverted.ShouldBeTrue();
@@ -1337,9 +1336,8 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
 		using Image orig = await Image.LoadAsync(input);
-		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-
+		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		bool isInverted = IsInvertedVersion(origClone, imgClone);
 		isInverted.ShouldBeTrue();
 	}
@@ -1367,9 +1365,8 @@ public sealed class ManipulationTests : IDisposable
 		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
 
 		using Image orig = Image.Load(bytes);
-		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-
+		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
 		bool isInverted = IsInvertedVersion(origClone, imgClone);
 		isInverted.ShouldBeTrue();
 	}
@@ -1795,7 +1792,7 @@ public sealed class ManipulationTests : IDisposable
 
 		// Act
 		bool result = !useResizeOptions ? Manipulation.ResizeImage(bytes, output, width, height, new JpegEncoder(), useDimsAsMax: useDimsAsMax) :
-				 Manipulation.ResizeImage(bytes, output, new() { Size = new(width, height) }, new JpegEncoder(), useDimsAsMax: useDimsAsMax);
+				Manipulation.ResizeImage(bytes, output, new() { Size = new(width, height) }, new JpegEncoder(), useDimsAsMax: useDimsAsMax);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -2131,7 +2128,7 @@ public sealed class ManipulationTests : IDisposable
 		try
 		{
 			// Act & Assert
-			Should.Throw<ArgumentException>(() => 
+			Should.Throw<ArgumentException>(() =>
 				Manipulation.ReduceImageQuality(inputPath, outputPath, invalidQuality, -1, -1));
 		}
 		finally
@@ -2156,7 +2153,7 @@ public sealed class ManipulationTests : IDisposable
 		using MemoryStream outputStream = new();
 
 		// Act & Assert
-		Should.Throw<ArgumentException>(() => 
+		Should.Throw<ArgumentException>(() =>
 			Manipulation.ReduceImageQuality(inputStream, outputStream, invalidQuality, -1, -1));
 	}
 
@@ -2173,7 +2170,7 @@ public sealed class ManipulationTests : IDisposable
 		using MemoryStream outputStream = new();
 
 		// Act & Assert
-		Should.Throw<ArgumentException>(() => 
+		Should.Throw<ArgumentException>(() =>
 			Manipulation.ReduceImageQuality(new ReadOnlySpan<byte>(inputBytes), outputStream, invalidQuality, -1, -1));
 	}
 
@@ -2191,7 +2188,7 @@ public sealed class ManipulationTests : IDisposable
 		try
 		{
 			// Act & Assert
-			await Should.ThrowAsync<ArgumentException>(async () => 
+			await Should.ThrowAsync<ArgumentException>(async () =>
 				await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, invalidQuality, -1, -1));
 		}
 		finally
@@ -2212,11 +2209,11 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		using MemoryStream inputStream = new(File.ReadAllBytes(inputPath));
-		using MemoryStream outputStream = new();
+		await using MemoryStream inputStream = new(await File.ReadAllBytesAsync(inputPath));
+		await using MemoryStream outputStream = new();
 
 		// Act & Assert
-		await Should.ThrowAsync<ArgumentException>(async () => 
+		await Should.ThrowAsync<ArgumentException>(async () =>
 			await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, invalidQuality, -1, -1));
 	}
 
@@ -2255,8 +2252,8 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		using MemoryStream inputStream = new(File.ReadAllBytes(inputPath));
-		using MemoryStream outputStream = new();
+		await using MemoryStream inputStream = new(await File.ReadAllBytesAsync(inputPath));
+		await using MemoryStream outputStream = new();
 
 		// Act - This returns false because neither encoder nor format is provided
 		bool result = await Manipulation.ResizeImageBaseAsync(inputStream, outputStream, null, 100, 100, null, null, null, false, null);
@@ -2302,8 +2299,8 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		using MemoryStream inputStream = new(File.ReadAllBytes(inputPath));
-		using MemoryStream outputStream = new();
+		await using MemoryStream inputStream = new(await File.ReadAllBytesAsync(inputPath));
+		await using MemoryStream outputStream = new();
 
 		// Act - This should use imageFormat path (encoder is null, format is not null)
 		bool result = await Manipulation.ResizeImageBaseAsync(inputStream, outputStream, null, 100, 100, null, null, PngFormat.Instance, false, null);
@@ -2427,8 +2424,8 @@ public sealed class ManipulationTests : IDisposable
 	public async Task ResizeImageAsync_Stream_WithCorruptedData_ReturnsFalse()
 	{
 		// Arrange - create a stream with non-image data
-		using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
-		using MemoryStream outputStream = new();
+		await using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
+		await using MemoryStream outputStream = new();
 
 		// Act
 		bool result = await Manipulation.ResizeImageAsync(inputStream, outputStream, 100, 100, new PngEncoder());
@@ -2455,8 +2452,8 @@ public sealed class ManipulationTests : IDisposable
 	public async Task ReduceImageQualityAsync_Stream_WithCorruptedData_ReturnsFalse()
 	{
 		// Arrange - create a stream with non-image data
-		using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
-		using MemoryStream outputStream = new();
+		await using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
+		await using MemoryStream outputStream = new();
 
 		// Act
 		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, 75, null, null, false, null);
@@ -2640,8 +2637,8 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		using FileStream inputStream = File.OpenRead(inputPath);
-		using MemoryStream outputStream = new();
+		await using FileStream inputStream = File.OpenRead(inputPath);
+		await using MemoryStream outputStream = new();
 
 		// Act
 		bool result = await Manipulation.ResizeImageAsync(inputStream, outputStream, 100, 100, PngFormat.Instance);
@@ -2658,8 +2655,8 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		using FileStream inputStream = File.OpenRead(inputPath);
-		using MemoryStream outputStream = new();
+		await using FileStream inputStream = File.OpenRead(inputPath);
+		await using MemoryStream outputStream = new();
 		ResizeOptions options = new() { Size = new Size(150, 150), Mode = ResizeMode.Crop };
 
 		// Act
@@ -2726,8 +2723,8 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		using FileStream inputStream = File.OpenRead(inputPath);
-		using MemoryStream outputStream = new();
+		await using FileStream inputStream = File.OpenRead(inputPath);
+		await using MemoryStream outputStream = new();
 
 		// Act
 		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, PngFormat.Instance, 90, null, null);
@@ -2870,8 +2867,8 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		using FileStream inputStream = File.OpenRead(inputPath);
-		using MemoryStream outputStream = new();
+		await using FileStream inputStream = File.OpenRead(inputPath);
+		await using MemoryStream outputStream = new();
 
 		// Act
 		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, PngFormat.Instance, 95, 160, 160);
@@ -2919,9 +2916,13 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(invalidPath))
+			{
 				File.Delete(invalidPath);
+			}
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
 		}
 	}
 
@@ -2966,7 +2967,7 @@ public sealed class ManipulationTests : IDisposable
 			corruptedJpeg[1] = 0xD8; // JPEG SOI marker
 			corruptedJpeg[2] = 0xFF;
 			corruptedJpeg[3] = 0xE0; // JFIF marker
-			// Rest is zeros/garbage
+															 // Rest is zeros/garbage
 			File.WriteAllBytes(corruptedPath, corruptedJpeg);
 
 			// Act
@@ -3030,7 +3031,7 @@ public sealed class ManipulationTests : IDisposable
 
 		try
 		{
-			File.WriteAllBytes(invalidPath, new byte[] { 0x00, 0x01, 0x02, 0x03 });
+			await File.WriteAllBytesAsync(invalidPath, new byte[] { 0x00, 0x01, 0x02, 0x03 });
 
 			// Act
 			bool result = await Manipulation.ResizeImageAsync(invalidPath, outputPath, 100, 100);
@@ -3082,7 +3083,7 @@ public sealed class ManipulationTests : IDisposable
 		try
 		{
 			// Write invalid data
-			File.WriteAllBytes(filePath, new byte[] { 0xDE, 0xAD, 0xBE, 0xEF });
+			await File.WriteAllBytesAsync(filePath, new byte[] { 0xDE, 0xAD, 0xBE, 0xEF });
 
 			// Act - same input/output triggers temp file, with output format for more coverage
 			bool result = await Manipulation.ReduceImageQualityAsync(filePath, filePath, BmpFormat.Instance, 75, -1, -1, null);
@@ -3151,7 +3152,7 @@ public sealed class ManipulationTests : IDisposable
 			File.WriteAllBytes(corruptedPath, new byte[] { 0x47, 0x49, 0x46, 0x38, 0x00 }); // Incomplete GIF
 
 			// Act
-			bool result = Manipulation.TryGetMetadata(corruptedPath, out ImageMetadata metadata);
+			bool result = Manipulation.TryGetMetadata(corruptedPath, out ImageMetadata _);
 
 			// Assert
 			result.ShouldBeFalse();
@@ -3159,7 +3160,9 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(corruptedPath))
+			{
 				File.Delete(corruptedPath);
+			}
 		}
 	}
 
@@ -3184,7 +3187,7 @@ public sealed class ManipulationTests : IDisposable
 		using MemoryStream stream = new(new byte[] { 0xFF, 0xD8, 0x00 }); // Incomplete JPEG
 
 		// Act
-		bool result = Manipulation.TryGetMetadata(stream, out ImageMetadata metadata);
+		bool result = Manipulation.TryGetMetadata(stream, out ImageMetadata _);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -3211,7 +3214,7 @@ public sealed class ManipulationTests : IDisposable
 		ReadOnlySpan<byte> span = new byte[] { 0x00, 0x01, 0x02 };
 
 		// Act
-		bool result = Manipulation.TryGetMetadata(span, out ImageMetadata metadata);
+		bool result = Manipulation.TryGetMetadata(span, out ImageMetadata _);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -3349,8 +3352,8 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange - create a stream with invalid image data
 		byte[] invalidData = new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 };
-		using MemoryStream inputStream = new MemoryStream(invalidData);
-		using MemoryStream outputStream = new MemoryStream();
+		await using MemoryStream inputStream = new(invalidData);
+		await using MemoryStream outputStream = new();
 
 		// Act
 		bool result = await Manipulation.ConvertImageFormatAsync(inputStream, outputStream, PngFormat.Instance);
@@ -3369,7 +3372,7 @@ public sealed class ManipulationTests : IDisposable
 		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		using FileStream input = File.OpenRead(inputPath);
-		using MemoryStream output = new MemoryStream();
+		using MemoryStream output = new();
 
 		// Act
 		bool result = Manipulation.ReduceImageQuality(input, output, 80, 100, 100);
@@ -3385,7 +3388,7 @@ public sealed class ManipulationTests : IDisposable
 		// Arrange
 		byte[] imageData = GetTestImageBytes("test.png");
 		ReadOnlySpan<byte> inputSpan = imageData;
-		using MemoryStream output = new MemoryStream();
+		using MemoryStream output = new();
 
 		// Act
 		bool result = Manipulation.ReduceImageQuality(inputSpan, output, 80, 100, 100);
@@ -3518,7 +3521,7 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange - stream with less than 4 bytes
 		byte[] shortData = new byte[] { 0x01, 0x02 };
-		using MemoryStream stream = new MemoryStream(shortData);
+		await using MemoryStream stream = new(shortData);
 
 		// Act
 		IImageFormat? format = await Manipulation.TryDetectImageTypeAsync(stream);
@@ -3532,7 +3535,7 @@ public sealed class ManipulationTests : IDisposable
 	{
 		// Arrange - stream with less than 4 bytes
 		byte[] shortData = new byte[] { 0xFF, 0xFE, 0xFD };
-		using MemoryStream stream = new MemoryStream(shortData);
+		await using MemoryStream stream = new(shortData);
 
 		// Act
 		ImageMetadata? metadata = await Manipulation.TryGetMetadataAsync(stream);

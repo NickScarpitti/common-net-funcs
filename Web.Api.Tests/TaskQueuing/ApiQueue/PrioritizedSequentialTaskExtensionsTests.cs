@@ -1,6 +1,7 @@
 ﻿using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing;
 using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
+using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -8,7 +9,7 @@ using Moq;
 
 namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 
-public class SequentialTaskExtensionsTests
+public class PrioritizedSequentialTaskExtensionsTests
 {
 	#region EndpointQueueMetrics Tests
 
@@ -26,7 +27,7 @@ public class SequentialTaskExtensionsTests
 			.Returns(Mock.Of<IApplicationBuilder>());
 
 		// Act
-		IEndpointRouteBuilder result = SequentialTaskExtensions.EndpointQueueMetrics(endpointsMock.Object);
+		IEndpointRouteBuilder result = PrioritizedSequentialTaskExtensions.EndpointQueueMetrics(endpointsMock.Object);
 
 		// Assert
 		result.ShouldBe(endpointsMock.Object);
@@ -46,14 +47,14 @@ public class SequentialTaskExtensionsTests
 			.Returns(Mock.Of<IApplicationBuilder>());
 
 		// Act & Assert
-		Should.NotThrow(() => SequentialTaskExtensions.EndpointQueueMetrics(endpointsMock.Object));
+		Should.NotThrow(() => PrioritizedSequentialTaskExtensions.EndpointQueueMetrics(endpointsMock.Object));
 	}
 
 	[Fact]
 	public void EndpointQueueMetrics_Should_Handle_Null_Builder_With_ArgumentNullException()
 	{
 		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => SequentialTaskExtensions.EndpointQueueMetrics(null!));
+		Should.Throw<ArgumentNullException>(() => PrioritizedSequentialTaskExtensions.EndpointQueueMetrics(null!));
 	}
 
 	[Fact]
@@ -61,10 +62,10 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act
-		QueueStats stats = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
 
 		// Assert
 		stats.ShouldNotBeNull();
@@ -76,42 +77,74 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act
-		QueueStats stats = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
 
 		// Assert
-		stats.QueuedTasks.ShouldBe(0);
-		stats.ProcessedTasks.ShouldBe(0);
-		stats.FailedTasks.ShouldBe(0);
+		stats.TotalQueuedTasks.ShouldBe(0);
+		stats.TotalProcessedTasks.ShouldBe(0);
+		stats.TotalFailedTasks.ShouldBe(0);
+		stats.TotalCancelledTasks.ShouldBe(0);
+		stats.CurrentQueueDepth.ShouldBe(0);
 	}
 
 	[Fact]
-	public async Task Processor_GetAllQueueStatsAsync_Should_Have_Null_LastProcessedAt_When_Idle()
+	public async Task Processor_GetAllQueueStatsAsync_Should_Have_Priority_Breakdown()
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act
-		QueueStats stats = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
 
 		// Assert
-		stats.LastProcessedAt.ShouldBeNull();
-		stats.AverageProcessingTime.ShouldBeNull();
+		stats.PriorityBreakdown.ShouldNotBeNull();
+		stats.PriorityBreakdown.Count.ShouldBeGreaterThan(0);
 	}
 
+	[Fact]
+	public async Task Processor_GetAllQueueStatsAsync_Should_Have_Null_CurrentProcessingPriority_When_Idle()
+	{
+		// Arrange
+		BoundedChannelOptions options = new(10);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
+		// Act
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
+
+		// Assert
+		stats.CurrentProcessingPriority.ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task Processor_GetAllQueueStatsAsync_Should_Contain_All_Priority_Levels()
+	{
+		// Arrange
+		BoundedChannelOptions options = new(10);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
+
+		// Act
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
+
+		// Assert
+		stats.PriorityBreakdown.ContainsKey(TaskPriority.Low).ShouldBeTrue();
+		stats.PriorityBreakdown.ContainsKey(TaskPriority.Normal).ShouldBeTrue();
+		stats.PriorityBreakdown.ContainsKey(TaskPriority.High).ShouldBeTrue();
+		stats.PriorityBreakdown.ContainsKey(TaskPriority.Critical).ShouldBeTrue();
+		stats.PriorityBreakdown.ContainsKey(TaskPriority.Emergency).ShouldBeTrue();
+	}
 
 	[Fact]
 	public async Task Results_Ok_Should_Create_Result_For_Stats()
 	{
 		// Arrange
-		QueueStats stats = new("Test")
+		PrioritizedQueueStats stats = new("Test")
 		{
-			QueuedTasks = 5,
-			ProcessedTasks = 3
+			TotalQueuedTasks = 5,
+			TotalProcessedTasks = 3
 		};
 
 		// Act
@@ -171,16 +204,16 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act
-		QueueStats stats1 = await processor.GetAllQueueStatsAsync();
-		QueueStats stats2 = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats1 = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats2 = await processor.GetAllQueueStatsAsync();
 
 		// Assert
 		stats1.EndpointKey.ShouldBe(stats2.EndpointKey);
-		stats1.QueuedTasks.ShouldBe(stats2.QueuedTasks);
-		stats1.ProcessedTasks.ShouldBe(stats2.ProcessedTasks);
+		stats1.TotalQueuedTasks.ShouldBe(stats2.TotalQueuedTasks);
+		stats1.TotalProcessedTasks.ShouldBe(stats2.TotalProcessedTasks);
 	}
 
 	[Fact]
@@ -188,11 +221,11 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 		System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
 		// Act
-		QueueStats stats = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
 		stopwatch.Stop();
 
 		// Assert
@@ -212,10 +245,10 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		UnboundedChannelOptions options = new();
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act
-		QueueStats stats = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
 
 		// Assert
 		stats.ShouldNotBeNull();
@@ -227,10 +260,10 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act
-		QueueStats stats = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
 
 		// Assert
 		stats.EndpointKey.ShouldNotBeNull();
@@ -239,16 +272,37 @@ public class SequentialTaskExtensionsTests
 	}
 
 	[Fact]
+	public async Task Processor_Priority_Stats_Should_Be_Initialized()
+	{
+		// Arrange
+		BoundedChannelOptions options = new(10);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
+
+		// Act
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
+
+		// Assert
+		foreach (TaskPriority priority in Enum.GetValues<TaskPriority>())
+		{
+			stats.PriorityBreakdown.ShouldContainKey(priority);
+			PriorityStats priorityStats = stats.PriorityBreakdown[priority];
+			priorityStats.ShouldNotBeNull();
+			priorityStats.QueuedTasks.ShouldBe(0);
+			priorityStats.ProcessedTasks.ShouldBe(0);
+		}
+	}
+
+	[Fact]
 	public async Task Endpoint_Handler_Logic_Success_Path_Should_Work()
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act - Simulate the endpoint handler logic
 		try
 		{
-			QueueStats stats = await processor.GetAllQueueStatsAsync();
+			PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
 			IResult result = Results.Ok(stats);
 
 			// Assert
@@ -283,11 +337,11 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act
-		QueueStats stats1 = await processor.GetAllQueueStatsAsync();
-		QueueStats stats2 = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats1 = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats2 = await processor.GetAllQueueStatsAsync();
 
 		// Assert - Both should reference the same stats object
 		stats1.ShouldBe(stats2);
@@ -298,21 +352,19 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		using SequentialTaskProcessor processor = new(options);
+		using PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act
-		QueueStats stats = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
 
 		// Assert - Verify all properties are accessible
 		stats.EndpointKey.ShouldNotBeNull();
-		stats.QueuedTasks.ShouldBeGreaterThanOrEqualTo(0);
-		stats.ProcessedTasks.ShouldBeGreaterThanOrEqualTo(0);
-		stats.FailedTasks.ShouldBeGreaterThanOrEqualTo(0);
-		// AverageProcessingTime is nullable
-		if (stats.AverageProcessingTime.HasValue)
-		{
-			stats.AverageProcessingTime.Value.ShouldBeGreaterThanOrEqualTo(TimeSpan.Zero);
-		}
+		stats.TotalQueuedTasks.ShouldBeGreaterThanOrEqualTo(0);
+		stats.TotalProcessedTasks.ShouldBeGreaterThanOrEqualTo(0);
+		stats.TotalFailedTasks.ShouldBeGreaterThanOrEqualTo(0);
+		stats.TotalCancelledTasks.ShouldBeGreaterThanOrEqualTo(0);
+		stats.CurrentQueueDepth.ShouldBeGreaterThanOrEqualTo(0);
+		stats.PriorityBreakdown.ShouldNotBeNull();
 	}
 
 	[Fact]
@@ -331,10 +383,10 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		BoundedChannelOptions options = new(10);
-		SequentialTaskProcessor processor = new(options);
+		PrioritizedSequentialTaskProcessor processor = new(options);
 
 		// Act
-		QueueStats stats = await processor.GetAllQueueStatsAsync();
+		PrioritizedQueueStats stats = await processor.GetAllQueueStatsAsync();
 		processor.Dispose();
 
 		// Assert

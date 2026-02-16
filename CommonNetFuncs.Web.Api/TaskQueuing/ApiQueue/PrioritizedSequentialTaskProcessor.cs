@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
-using System.Threading.Channels;
-using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
+﻿using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Threading.Channels;
 
 namespace CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 
@@ -10,6 +10,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+	private readonly ChannelWriter<PrioritizedQueuedTask> writer;
 	private readonly ChannelReader<PrioritizedQueuedTask> reader;
 	private readonly PriorityQueue<PrioritizedQueuedTask, int> priorityQueue = new();
 	private readonly SemaphoreSlim semaphore = new(1, 1);
@@ -31,6 +32,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 			processingTimesByPriority[priority] = new List<TimeSpan>();
 		}
 
+		writer = queue.Writer;
 		reader = queue.Reader;
 	}
 
@@ -45,6 +47,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 			processingTimesByPriority[priority] = new List<TimeSpan>();
 		}
 
+		writer = queue.Writer;
 		reader = queue.Reader;
 	}
 
@@ -68,6 +71,12 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 				stats.PriorityBreakdown[priorityLevel].QueuedTasks++;
 				stats.CurrentQueueDepth = priorityQueue.Count;
 			}
+
+			// Transfer highest priority item from priority queue to channel
+			if (priorityQueue.TryDequeue(out PrioritizedQueuedTask? highestPriorityTask, out _))
+			{
+				await writer.WriteAsync(highestPriorityTask, cancellationToken).ConfigureAwait(false);
+			}
 		}
 		finally
 		{
@@ -77,7 +86,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 		return (T?)await queuedTask.CompletionSource.Task;
 	}
 
-	protected override async Task ExecuteAsync(CancellationToken stoppingToken) // Stoping token used here to match the BackgroundService base class
+	protected override async Task ExecuteAsync(CancellationToken stoppingToken) // Stopping token used here to match the BackgroundService base class
 	{
 		await foreach (PrioritizedQueuedTask currentTask in reader.ReadAllAsync(stoppingToken).ConfigureAwait(false))
 		{

@@ -238,8 +238,7 @@ public static class DirectQuery
 	private static Delegate GetOrAddPropertiesFromMappingCache<T>(Type key) where T : class, new()
 	{
 		bool isLimitedCache = CacheManager.IsUsingLimitedCache();
-		if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Delegate? function) :
-						CacheManager.GetCache().TryGetValue(key, out function))
+		if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Delegate? function) : CacheManager.GetCache().TryGetValue(key, out function))
 		{
 			return function!;
 		}
@@ -263,8 +262,9 @@ public static class DirectQuery
 	{
 		Type type = typeof(T);
 
-		return useCache ? (Func<IDataReader, T>)GetOrAddPropertiesFromMappingCache<T>(type) :
-						CreateMapperDelegate<T>(type);
+		return useCache ?
+			(Func<IDataReader, T>)GetOrAddPropertiesFromMappingCache<T>(type) :
+			CreateMapperDelegate<T>(type);
 	}
 
 	private static Func<IDataReader, T> CreateMapperDelegate<T>(Type type) where T : class, new()

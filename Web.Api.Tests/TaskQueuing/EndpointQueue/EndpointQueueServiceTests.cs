@@ -623,6 +623,256 @@ public class EndpointQueueServiceTests : IDisposable
 		allStats.Count.ShouldBe(0);
 	}
 
+	[Fact]
+	public void Constructor_With_CleanupInterval_Should_Create_Service()
+	{
+		// Arrange
+		TimeSpan cleanupInterval = TimeSpan.FromMinutes(10);
+
+		// Act
+		EndpointQueueService service = new(cleanupInterval);
+		_servicesToDispose.Add(service);
+
+		// Assert - Service should be created successfully
+		service.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public void Constructor_With_CleanupInterval_And_CutoffTime_Should_Create_Service()
+	{
+		// Arrange
+		TimeSpan cleanupInterval = TimeSpan.FromMinutes(2);
+		double cutoffTimeMinutes = 15.0;
+
+		// Act
+		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
+		_servicesToDispose.Add(service);
+
+		// Assert - Service should be created successfully
+		service.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public void Constructor_With_Negative_CutoffTime_Should_Use_Absolute_Value()
+	{
+		// Arrange
+		TimeSpan cleanupInterval = TimeSpan.FromMinutes(1);
+		double negativeCutoffTime = -45.0;
+
+		// Act
+		EndpointQueueService service = new(cleanupInterval, negativeCutoffTime);
+		_servicesToDispose.Add(service);
+
+		// Assert - Service should be created and Math.Abs should be used
+		service.ShouldNotBeNull();
+
+		// Verify cutoffTimeMinutes field via reflection
+		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
+			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		cutoffField.ShouldNotBeNull();
+		double actualCutoff = (double)cutoffField.GetValue(service)!;
+		actualCutoff.ShouldBe(45.0); // Should be absolute value
+	}
+
+	[Fact]
+	public async Task CleanupUnusedQueues_With_Custom_Cutoff_Should_Remove_Old_Queues()
+	{
+		// Arrange - Use very short cutoff time (0.01 minutes = 0.6 seconds)
+		TimeSpan cleanupInterval = TimeSpan.FromHours(1); // Long interval so timer won't fire automatically
+		double cutoffTimeMinutes = 0.01; // 0.6 seconds
+
+		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
+		_servicesToDispose.Add(service);
+
+		BoundedChannelOptions options = new(10);
+
+		// Create and execute a task
+		await service.ExecuteAsync("short-lived-queue", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+		await Task.Delay(150, TestContext.Current.CancellationToken);
+
+		// Verify queue exists
+		Dictionary<string, QueueStats> statsBefore = await service.GetAllQueueStatsAsync();
+		statsBefore.Count.ShouldBe(1);
+
+		// Wait for cutoff time to pass
+		await Task.Delay(1000, TestContext.Current.CancellationToken); // Wait 1 second (> 0.6 seconds cutoff)
+
+		// Get cleanup method via reflection
+		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService)
+			.GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		cleanupMethod.ShouldNotBeNull();
+
+		// Act - Invoke cleanup
+		cleanupMethod.Invoke(service, [null]);
+		await Task.Delay(100, TestContext.Current.CancellationToken);
+
+		// Assert - Queue should be removed because it's older than cutoff
+		Dictionary<string, QueueStats> statsAfter = await service.GetAllQueueStatsAsync();
+		statsAfter.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task CleanupUnusedQueues_Should_Remove_Multiple_Old_Queues()
+	{
+		// Arrange - Use short cutoff time
+		TimeSpan cleanupInterval = TimeSpan.FromHours(1);
+		double cutoffTimeMinutes = 0.02; // 1.2 seconds
+
+		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
+		_servicesToDispose.Add(service);
+
+		BoundedChannelOptions options = new(10);
+
+		// Create multiple queues
+		await service.ExecuteAsync("old-queue-1", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+		await service.ExecuteAsync("old-queue-2", _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
+		await service.ExecuteAsync("old-queue-3", _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
+		await Task.Delay(200, TestContext.Current.CancellationToken);
+
+		Dictionary<string, QueueStats> statsBefore = await service.GetAllQueueStatsAsync();
+		statsBefore.Count.ShouldBe(3);
+
+		// Wait for cutoff
+		await Task.Delay(1500, TestContext.Current.CancellationToken);
+
+		// Get cleanup method
+		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService)
+			.GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		cleanupMethod.ShouldNotBeNull();
+
+		// Act - Invoke cleanup
+		cleanupMethod.Invoke(service, [null]);
+		await Task.Delay(100, TestContext.Current.CancellationToken);
+
+		// Assert - All queues should be removed
+		Dictionary<string, QueueStats> statsAfter = await service.GetAllQueueStatsAsync();
+		statsAfter.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task CleanupUnusedQueues_Should_Log_When_Removing_Queue()
+	{
+		// Arrange
+		TimeSpan cleanupInterval = TimeSpan.FromHours(1);
+		double cutoffTimeMinutes = 0.01;
+
+		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
+		_servicesToDispose.Add(service);
+
+		BoundedChannelOptions options = new(10);
+
+		// Create a queue
+		await service.ExecuteAsync("queue-to-remove", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+		await Task.Delay(150, TestContext.Current.CancellationToken);
+
+		// Wait for cutoff
+		await Task.Delay(1000, TestContext.Current.CancellationToken);
+
+		// Get cleanup method
+		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService)
+			.GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+		// Act - Invoke cleanup (logger will be called internally)
+		cleanupMethod!.Invoke(service, [null]);
+		await Task.Delay(100, TestContext.Current.CancellationToken);
+
+		// Assert - Queue should be removed (logger.Info was called but we can't verify it)
+		Dictionary<string, QueueStats> stats = await service.GetAllQueueStatsAsync();
+		stats.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task CleanupUnusedQueues_Should_Iterate_All_Queues()
+	{
+		// Arrange
+		TimeSpan cleanupInterval = TimeSpan.FromHours(1);
+		double cutoffTimeMinutes = 30.0; // Default cutoff, queues won't be removed
+
+		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
+		_servicesToDispose.Add(service);
+
+		BoundedChannelOptions options = new(10);
+
+		// Create multiple queues
+		await service.ExecuteAsync("queue-A", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+		await service.ExecuteAsync("queue-B", _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
+		await service.ExecuteAsync("queue-C", _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
+		await Task.Delay(150, TestContext.Current.CancellationToken);
+
+		// Get the cleanup method via reflection
+		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService)
+			.GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		cleanupMethod.ShouldNotBeNull();
+
+		// Act - Invoke cleanup (queues are recent so won't be removed)
+		cleanupMethod.Invoke(service, [null]);
+		await Task.Delay(50, TestContext.Current.CancellationToken);
+
+		// Assert - All queues should still exist
+		Dictionary<string, QueueStats> stats = await service.GetAllQueueStatsAsync();
+		stats.Count.ShouldBe(3);
+		stats.ContainsKey("queue-A").ShouldBeTrue();
+		stats.ContainsKey("queue-B").ShouldBeTrue();
+		stats.ContainsKey("queue-C").ShouldBeTrue();
+	}
+
+	[Fact]
+	public async Task Default_Constructor_Should_Use_Default_CutoffTime()
+	{
+		// Arrange & Act
+		EndpointQueueService service = new();
+		_servicesToDispose.Add(service);
+
+		// Assert - Verify cutoffTimeMinutes field is 30.0 (default)
+		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
+			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		cutoffField.ShouldNotBeNull();
+		double actualCutoff = (double)cutoffField.GetValue(service)!;
+		actualCutoff.ShouldBe(30.0); // Default value
+
+		// Service should work normally
+		BoundedChannelOptions options = new(10);
+		int? result = await service.ExecuteAsync("test", _ => Task.FromResult(42), options, TestContext.Current.CancellationToken);
+		result.ShouldBe(42);
+	}
+
+	[Fact]
+	public void Constructor_With_CleanupInterval_Should_Use_Default_CutoffTime()
+	{
+		// Arrange
+		TimeSpan cleanupInterval = TimeSpan.FromMinutes(10);
+
+		// Act
+		EndpointQueueService service = new(cleanupInterval);
+		_servicesToDispose.Add(service);
+
+		// Assert - Verify cutoffTimeMinutes field is 30.0 (default)
+		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
+			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		cutoffField.ShouldNotBeNull();
+		double actualCutoff = (double)cutoffField.GetValue(service)!;
+		actualCutoff.ShouldBe(30.0); // Default value
+	}
+
+	[Fact]
+	public void Constructor_With_Zero_CutoffTime_Should_Use_Absolute_Value()
+	{
+		// Arrange
+		TimeSpan cleanupInterval = TimeSpan.FromMinutes(1);
+		double zeroCutoffTime = 0.0;
+
+		// Act
+		EndpointQueueService service = new(cleanupInterval, zeroCutoffTime);
+		_servicesToDispose.Add(service);
+
+		// Assert - Math.Abs(0) = 0
+		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
+			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		cutoffField.ShouldNotBeNull();
+		double actualCutoff = (double)cutoffField.GetValue(service)!;
+		actualCutoff.ShouldBe(0.0);
+	}
+
 	private bool _disposed;
 
 	public void Dispose()

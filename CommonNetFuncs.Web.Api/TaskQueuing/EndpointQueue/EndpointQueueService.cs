@@ -20,11 +20,26 @@ public sealed class EndpointQueueService : IEndpointQueueService, IDisposable
 
 	private readonly ConcurrentDictionary<string, EndpointQueue> queues = new();
 	private readonly Timer cleanupTimer;
+	private readonly double cutoffTimeMinutes = 30.0; // Minutes
 
 	public EndpointQueueService()
 	{
 		// Cleanup unused queues every 5 minutes
 		cleanupTimer = new Timer(CleanupUnusedQueues, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+	}
+
+	public EndpointQueueService(TimeSpan cleanupInterval)
+	{
+		// Cleanup unused queues every specified interval
+		cleanupTimer = new Timer(CleanupUnusedQueues, null, cleanupInterval, cleanupInterval);
+	}
+
+	public EndpointQueueService(TimeSpan cleanupInterval, double cutoffTimeMinutes)
+	{
+		this.cutoffTimeMinutes = Math.Abs(cutoffTimeMinutes);
+
+		// Cleanup unused queues every specified interval
+		cleanupTimer = new Timer(CleanupUnusedQueues, null, cleanupInterval, cleanupInterval);
 	}
 
 	public async Task<T?> ExecuteAsync<T>(string endpointKey, Func<CancellationToken, Task<T>> taskFunction, BoundedChannelOptions boundedChannelOptions, CancellationToken cancellationToken = default)
@@ -71,7 +86,7 @@ public sealed class EndpointQueueService : IEndpointQueueService, IDisposable
 
 	private void CleanupUnusedQueues(object? state)
 	{
-		DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-30); // Remove queues unused for 30 minutes
+		DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-cutoffTimeMinutes);
 		List<string> keysToRemove = [];
 
 		foreach (KeyValuePair<string, EndpointQueue> kvp in queues)

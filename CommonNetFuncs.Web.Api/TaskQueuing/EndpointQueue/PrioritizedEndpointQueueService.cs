@@ -23,6 +23,7 @@ public sealed class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueS
 	private readonly ConcurrentDictionary<string, PrioritizedEndpointQueue> queues = new();
 	private readonly IServiceProvider serviceProvider;
 	private readonly Timer cleanupTimer;
+	private readonly double cutoffTimeMinutes = 30.0; // Minutes
 
 	public PrioritizedEndpointQueueService(IServiceProvider serviceProvider)
 	{
@@ -30,6 +31,23 @@ public sealed class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueS
 
 		// Cleanup unused queues every 5 minutes
 		cleanupTimer = new Timer(CleanupUnusedQueues, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+	}
+
+	public PrioritizedEndpointQueueService(IServiceProvider serviceProvider, TimeSpan cleanupInterval)
+	{
+		this.serviceProvider = serviceProvider;
+
+		// Cleanup unused queues every specified interval
+		cleanupTimer = new Timer(CleanupUnusedQueues, null, cleanupInterval, cleanupInterval);
+	}
+
+	public PrioritizedEndpointQueueService(IServiceProvider serviceProvider, TimeSpan cleanupInterval, double cutoffTimeMinutes)
+	{
+		this.serviceProvider = serviceProvider;
+		this.cutoffTimeMinutes = Math.Abs(cutoffTimeMinutes);
+
+		// Cleanup unused queues every specified interval
+		cleanupTimer = new Timer(CleanupUnusedQueues, null, cleanupInterval, cleanupInterval);
 	}
 
 	public async Task<T?> ExecuteAsync<T>(string endpointKey, Func<CancellationToken, Task<T>> taskFunction, TaskPriority priority = TaskPriority.Normal, CancellationToken cancellationToken = default)
@@ -91,7 +109,7 @@ public sealed class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueS
 
 	private void CleanupUnusedQueues(object? state)
 	{
-		DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-30);
+		DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-cutoffTimeMinutes);
 		List<string> keysToRemove = [];
 
 		foreach (KeyValuePair<string, PrioritizedEndpointQueue> kvp in queues)

@@ -129,10 +129,11 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		Mock<ControllerBase> controllerMock = new();
 		Mock<IPrioritizedEndpointQueueService> serviceMock = new();
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<string?>>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-						.ReturnsAsync((string?)null);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<string?>>>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
 
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
 		string? result = await controllerMock.Object.ExecutePrioritizedAsync<string>(serviceMock.Object, _ => Task.FromResult<string?>(null), 1);
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
 
 		result.ShouldBeNull();
 	}

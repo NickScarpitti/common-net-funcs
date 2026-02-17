@@ -11,6 +11,8 @@ namespace CommonNetFuncs.Web.Ftp;
 
 public static class SshFtp
 {
+	private const string NotConnectedMessage = "SFTP client is not connected.";
+
 	/// <summary>
 	/// Gets the host name from the specified file transfer connection.
 	/// </summary>
@@ -99,7 +101,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		return sftpClient?.Exists(path) ?? false;
@@ -115,7 +117,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		return sftpClient != null && await sftpClient.ExistsAsync(path).ConfigureAwait(false);
@@ -132,7 +134,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		if (!sftpClient.Exists(path))
@@ -155,7 +157,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		return GetFileListAsyncInternal(cancellationTokenSource);
@@ -196,7 +198,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		if (!remoteFilePath.EndsWith(".csv") || !await sftpClient.DirectoryOrFileExistsAsync(remoteFilePath).ConfigureAwait(false))
@@ -221,7 +223,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		return GetDataFromCsvAsyncEnumerableInternal(cancellationToken);
@@ -254,7 +256,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		return GetDataFromCsvCopyAsyncEnumerableInternal(cancellationToken);
@@ -287,7 +289,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		if (!remoteFilePath.EndsWith(".csv") || !sftpClient.DirectoryOrFileExists(remoteFilePath))
@@ -309,7 +311,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		if (sftpClient.Exists(remoteFilePath))
@@ -329,7 +331,7 @@ public static class SshFtp
 	{
 		if (sftpClient?.IsConnected() != true)
 		{
-			throw new SshConnectionException("SFTP client is not connected.");
+			throw new SshConnectionException(NotConnectedMessage);
 		}
 
 		if (await sftpClient.ExistsAsync(remoteFilePath).ConfigureAwait(false))

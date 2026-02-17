@@ -484,7 +484,9 @@ public class SequentialTaskProcessorTests
 		var expectedObject = new { Id = 1, Name = "Test" };
 
 		// Act
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
 		var result = await processor.EnqueueAsync(_ => Task.FromResult(expectedObject), cancellationToken: Current.CancellationToken);
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -551,7 +553,7 @@ public class SequentialTaskProcessorTests
 		await processor.StartAsync(CancellationToken.None);
 
 		// Act
-		Task<int?> task = processor.EnqueueAsync<int?>(_ => throw new InvalidOperationException("Test exception"), cancellationToken: Current.CancellationToken);
+		Task<int?> _ = processor.EnqueueAsync<int?>(_ => throw new InvalidOperationException("Test exception"), cancellationToken: Current.CancellationToken);
 
 		await Task.Delay(50, Current.CancellationToken);
 
@@ -566,9 +568,12 @@ public class SequentialTaskProcessorTests
 		WeakReference weakRef = CreateProcessorAndLetItGoOutOfScope();
 
 		// Force garbage collection
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
 		GC.Collect();
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
+
 
 		// Assert - Processor should be garbage collected
 		weakRef.IsAlive.ShouldBeFalse();

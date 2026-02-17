@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Common.ValidationAttributes;
 
@@ -18,6 +18,33 @@ public sealed class DenyCharactersAttributeTests : ValidationTestBase
 	{
 		// Act & Assert
 		Should.Throw<ArgumentException>(() => new DenyCharactersAttribute(string.Empty));
+	}
+
+	[Fact]
+	public void Constructor_WithCharArray_ShouldSetProperties()
+	{
+		// Arrange
+		char[] blacklist = ['<', '>', '"', '\'', '/'];
+
+		// Act
+		DenyCharactersAttribute attribute = new(blacklist);
+
+		// Assert
+		attribute.DenyCharacters.ShouldBe("<>\"'/");
+	}
+
+	[Fact]
+	public void Constructor_WithNullCharArray_ShouldThrow()
+	{
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => new DenyCharactersAttribute((char[])null!));
+	}
+
+	[Fact]
+	public void Constructor_WithEmptyCharArray_ShouldThrow()
+	{
+		// Act & Assert
+		Should.Throw<ArgumentException>(() => new DenyCharactersAttribute(Array.Empty<char>()));
 	}
 
 	[Fact]

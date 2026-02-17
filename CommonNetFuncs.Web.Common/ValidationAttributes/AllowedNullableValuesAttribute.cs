@@ -22,10 +22,7 @@ public sealed class AllowedNullableValuesAttribute : ValidationAttribute
 	// New enum constructor
 	public AllowedNullableValuesAttribute(Type enumType) : this(true, enumType)
 	{
-		if (!enumType.IsEnum)
-		{
-			throw new ArgumentException("Type must be an enum", nameof(enumType));
-		}
+		// Validation is performed in the two-parameter constructor
 	}
 
 	// New enum constructor with null configuration
@@ -52,6 +49,17 @@ public sealed class AllowedNullableValuesAttribute : ValidationAttribute
 		// If this is an enum validation
 		if (enumType != null)
 		{
+			// Handle direct enum values first (before numeric check, as enums have numeric TypeCode)
+			if (value.GetType().IsEnum)
+			{
+				if (!Enum.IsDefined(enumType, value))
+				{
+					string enumValues = string.Join(", ", Enum.GetNames(enumType));
+					return new ValidationResult($"The field {validationContext.DisplayName} must be one of the following values: {enumValues}");
+				}
+				return ValidationResult.Success;
+			}
+
 			// Handle numeric types that should match enum values
 			if (value.GetType().IsNumericType())
 			{
@@ -69,14 +77,6 @@ public sealed class AllowedNullableValuesAttribute : ValidationAttribute
 
 				return new ValidationResult($"The field {validationContext.DisplayName} must be one of the following values: {validValues}");
 			}
-
-			// Handle direct enum values
-			if (!Enum.IsDefined(enumType, value))
-			{
-				string enumValues = string.Join(", ", Enum.GetNames(enumType));
-				return new ValidationResult($"The field {validationContext.DisplayName} must be one of the following values: {enumValues}");
-			}
-			return ValidationResult.Success;
 		}
 
 		// Original validation for non-enum values

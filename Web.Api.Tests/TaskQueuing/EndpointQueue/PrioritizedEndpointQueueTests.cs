@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Web.Api.TaskQueuing;
+﻿using System.Diagnostics;
+using CommonNetFuncs.Web.Api.TaskQueuing;
 using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 using static Xunit.TestContext;
 
@@ -483,29 +484,13 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		// Arrange
 		PrioritizedEndpointQueue queue = CreateQueue();
 		using CancellationTokenSource cts = new();
-		SemaphoreSlim blockEnqueue = new(0, 1);
+		await cts.CancelAsync(); // Cancel before enqueueing
 
-		// Act
-		Task<int?> task = queue.EnqueueAsync<int?>(async ct =>
+		// Act & Assert - Enqueueing with a cancelled token should throw
+		await Should.ThrowAsync<OperationCanceledException>(async () =>
 		{
-			await blockEnqueue.WaitAsync(ct);
-			return 1;
-		}, 1, TaskPriority.Normal, cts.Token);
-
-		await Task.Delay(50, Current.CancellationToken);
-		await cts.CancelAsync();
-
-		// Assert - The enqueue itself should complete but the task execution should be cancelled
-		// Since we're cancelling before the task completes, we expect cancellation
-		try
-		{
-			blockEnqueue.Release();
-			await task;
-		}
-		catch (OperationCanceledException)
-		{
-			// Expected when cancellation happens during execution
-		}
+			await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, cts.Token);
+		});
 	}
 
 	[Fact]
@@ -739,9 +724,8 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 	public async Task Finalizer_Should_Not_Throw()
 	{
 		// Arrange & Act
-		PrioritizedEndpointQueue? queue = new("test");
-
 #pragma warning disable S1854 // Remove this useless assignment to local variable 'queue'
+		PrioritizedEndpointQueue? queue = new("test");
 		queue = null;
 #pragma warning restore S1854 // Remove this useless assignment to local variable 'queue'
 
@@ -940,7 +924,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		finishProcessing.Release();
 		try
 		{
-			await processingTask.WaitAsync(TimeSpan.FromMilliseconds(500));
+			await processingTask.WaitAsync(TimeSpan.FromMilliseconds(500), Current.CancellationToken);
 		}
 		catch
 		{
@@ -1098,6 +1082,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		result.ShouldNotBeNull();
 		result.Id.ShouldBe(123);
 		result.Name.ShouldBe("Test");
+		result.Items.ShouldNotBeNull();
 		result.Items.Count.ShouldBe(3);
 	}
 
@@ -1198,7 +1183,9 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		await highTask1;
 		await highTask2;
 
+#pragma warning disable S108 // Either remove or fill this block of code.
 		try { await normalTask; } catch { }
+#pragma warning restore S108 // Either remove or fill this block of code.
 
 		// Assert - High priority tasks should execute in their priority order
 		// The normal task should not have executed (unless it started before cancellation)
@@ -1220,26 +1207,6 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		{
 			await queue.EnqueueAsync(_ => Task.FromResult(1), 1, TaskPriority.Normal, cts.Token);
 		});
-	}
-
-	[Fact]
-	public async Task ProcessingLoop_Should_Handle_Shutdown_During_Wait()
-	{
-		// Arrange
-		PrioritizedEndpointQueue queue = CreateQueue();
-
-		// Enqueue and process a task to ensure processing task is started
-		await queue.EnqueueAsync(_ => Task.FromResult(1), 1, TaskPriority.Normal, Current.CancellationToken);
-		await Task.Delay(100, Current.CancellationToken);
-
-		// Act - Dispose while processing loop is waiting for new tasks
-		queue.Dispose();
-
-		// Give time for shutdown
-		await Task.Delay(200, Current.CancellationToken);
-
-		// Assert - Should complete without hanging
-		Should.NotThrow(() => queue.Dispose()); // Idempotent
 	}
 
 	[Fact]
@@ -1371,7 +1338,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 			{
 				PrioritizedQueueStats stats = queue.Stats;
 				stats.ShouldNotBeNull();
-			}));
+			}, Current.CancellationToken));
 		}
 
 		await Task.WhenAll(tasks);
@@ -1595,6 +1562,918 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		cancelledCount.ShouldBeGreaterThan(0, "At least some tasks should have been cancelled");
 	}
 
+	[Fact]
+	public async Task Dispose_Should_Handle_AggregateException_From_ProcessingTask_Wait()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		TaskCompletionSource<bool> taskStarted = new();
+		TaskCompletionSource<bool> taskCanComplete = new();
+
+		// Enqueue a task that will start and then wait, simulating a long-running task
+		Task<int?> longRunningTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			taskStarted.SetResult(true);
+			await taskCanComplete.Task; // Wait indefinitely
+			return 42;
+		}, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		// Wait for task to start processing
+		await taskStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), Current.CancellationToken);
+
+		// Act - Dispose will wait for processing task which may throw AggregateException
+		Should.NotThrow(() => queue.Dispose());
+
+		// Complete the task to clean up
+		taskCanComplete.SetResult(true);
+
+		// Assert - Disposal completed without throwing
+		Should.NotThrow(() => queue.Dispose()); // Should be idempotent
+
+		// Clean up the enqueued task
+#pragma warning disable S108 // Either remove or fill this block of code.
+		try { await longRunningTask.WaitAsync(TimeSpan.FromMilliseconds(100), Current.CancellationToken); } catch { }
+#pragma warning restore S108 // Either remove or fill this block of code.
+	}
+
+	[Fact]
+	public async Task Dispose_Should_Handle_Already_Disposed_CancellationTokenSource()
+	{
+		// Arrange - Create a derived class that exposes the cancellation issue
+		DisposableResourceTestQueue queue = new("test");
+		disposables.Add(queue);
+
+		// Start the queue by enqueueing a task
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Pre-dispose the cancellation token source to simulate race condition
+		queue.PreDisposeCancellationToken();
+
+		// Act - Dispose should handle ObjectDisposedException gracefully
+		Should.NotThrow(() => queue.Dispose());
+
+		// Assert
+		Should.NotThrow(() => queue.Dispose()); // Idempotent
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_Should_Continue_After_Wait_Timeout()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Enqueue first task to start the processing loop
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken); // Processing loop is now waiting
+
+		// Wait longer than the 100ms timeout to ensure timeout occurs multiple times
+		await Task.Delay(350, Current.CancellationToken);
+
+		// Act - Enqueue another task after multiple timeout cycles
+		int? result = await queue.EnqueueAsync<int?>(async _ => 2, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		// Give time for stats to update
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe(2);
+		queue.Stats.TotalProcessedTasks.ShouldBeGreaterThanOrEqualTo(2);
+	}
+
+	[Fact]
+	public async Task Dispose_During_ProcessingTask_Wait_Should_Complete_Within_Timeout()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Enqueue a task to start processing
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
+
+		// Act - Dispose and measure time (should complete within 5 second timeout + buffer)
+		Stopwatch sw = Stopwatch.StartNew();
+		queue.Dispose();
+		sw.Stop();
+
+		// Assert - Should complete quickly (much less than 5 seconds since queue is idle)
+		sw.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(6));
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_Should_Handle_Task_With_Cancelled_State_Before_Processing()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		SemaphoreSlim blockProcessing = new(0, 1);
+
+		// Enqueue a blocking task
+		Task<int?> blockingTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			await blockProcessing.WaitAsync(ct);
+			return 1;
+		}, 1, TaskPriority.High, Current.CancellationToken);
+
+		await Task.Delay(50, Current.CancellationToken); // Let blocking task start
+
+		// Enqueue tasks that will be cancelled before processing
+		Task<int?> task1 = queue.EnqueueAsync<int?>(async _ => 2, 1, TaskPriority.Normal, Current.CancellationToken);
+		Task<int?> task2 = queue.EnqueueAsync<int?>(async _ => 3, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		// Cancel the tasks while they're queued
+		await queue.CancelTasksByPriorityAsync(TaskPriority.Normal);
+
+		// Act - Release blocking task so processing continues
+		blockProcessing.Release();
+		await blockingTask;
+
+		// Assert - Cancelled tasks should be handled gracefully
+		await Should.ThrowAsync<TaskCanceledException>(async () => await task1);
+		await Should.ThrowAsync<TaskCanceledException>(async () => await task2);
+
+		// Stats should reflect cancelled tasks
+		queue.Stats.TotalCancelledTasks.ShouldBeGreaterThanOrEqualTo(2);
+	}
+
+	[Fact]
+	public async Task Queue_Should_Handle_Very_High_Priority_Values()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		SemaphoreSlim blockFirst = new(0, 1);
+		List<int> executionOrder = new();
+
+		// Enqueue blocking task
+		Task<int?> firstTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			executionOrder.Add(0);
+			await blockFirst.WaitAsync(ct);
+			return 0;
+		}, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Enqueue tasks with very high priority values
+		Task<int?> task1 = queue.EnqueueAsync<int?>(async _ => { executionOrder.Add(1); return 1; }, int.MaxValue, TaskPriority.Emergency, Current.CancellationToken);
+		Task<int?> task2 = queue.EnqueueAsync<int?>(async _ => { executionOrder.Add(2); return 2; }, int.MaxValue - 1, TaskPriority.Emergency, Current.CancellationToken);
+		Task<int?> task3 = queue.EnqueueAsync<int?>(async _ => { executionOrder.Add(3); return 3; }, 1000000, TaskPriority.Critical, Current.CancellationToken);
+
+		// Act
+		blockFirst.Release();
+		await Task.WhenAll(firstTask, task1, task2, task3);
+
+		// Assert - Should process in priority order
+		executionOrder[0].ShouldBe(0); // Blocking task
+		executionOrder[1].ShouldBe(1); // Highest priority (int.MaxValue)
+		executionOrder[2].ShouldBe(2); // Second highest (int.MaxValue - 1)
+		executionOrder[3].ShouldBe(3); // Third highest (1000000)
+	}
+
+	[Fact]
+	public async Task Finalizer_Should_Cleanup_Resources_When_Queue_Not_Explicitly_Disposed()
+	{
+		// Arrange & Act
+		WeakReference queueRef = CreateQueueForFinalization();
+
+		// Force garbage collection to trigger finalizer
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
+		GC.Collect();
+		GC.WaitForPendingFinalizers();
+		GC.Collect();
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
+
+		await Task.Delay(300, Current.CancellationToken);
+
+		// Assert - Queue should be collected
+		queueRef.IsAlive.ShouldBeFalse();
+	}
+
+	private static WeakReference CreateQueueForFinalization()
+	{
+		// Create a queue in a separate method so it goes out of scope
+		PrioritizedEndpointQueue queue = new("finalizer-test", 1000);
+
+		// DO NOT add to disposables list - we want it to be garbage collected
+
+		return new WeakReference(queue);
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_Should_Exit_Cleanly_On_Shutdown_Signal()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Process a task to ensure processing loop is started
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
+
+		// Act - Dispose sets shutdown flag and cancels processing
+		queue.Dispose();
+
+		// Give processing loop time to exit
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Assert - Queue should be fully disposed
+		PrioritizedQueueStats stats = queue.Stats;
+		stats.TotalProcessedTasks.ShouldBe(1);
+		stats.CurrentProcessingPriority.ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task EnqueueAsync_Should_Handle_Task_That_Completes_Synchronously()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Act - Enqueue a task that completes synchronously
+		int? result = await queue.EnqueueAsync<int?>(ct => Task.FromResult<int?>(42), 1, TaskPriority.Normal, Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe(42);
+	}
+
+	[Fact]
+	public async Task Multiple_Dispose_Calls_Should_Not_Cause_Issues_With_Resource_Cleanup()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Process a task
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Act - Call dispose multiple times rapidly
+		Task dispose1 = Task.Run(() => queue.Dispose(), Current.CancellationToken);
+		Task dispose2 = Task.Run(() => queue.Dispose(), Current.CancellationToken);
+		Task dispose3 = Task.Run(() => queue.Dispose(), Current.CancellationToken);
+
+		await Task.WhenAll(dispose1, dispose2, dispose3);
+
+		// Assert - No exceptions
+		Should.NotThrow(() => queue.Dispose());
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_OperationCanceledException_Should_Be_Caught_And_Handled()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		TaskCompletionSource<bool> taskProcessing = new();
+
+		// Enqueue a task that will be processing when cancellation occurs
+		Task<int?> processingTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			taskProcessing.SetResult(true);
+			// Simulate work that checks cancellation token
+			for (int i = 0; i < 100; i++)
+			{
+				ct.ThrowIfCancellationRequested();
+				await Task.Delay(10, ct);
+			}
+			return 42;
+		}, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		// Wait for task to start processing
+		await taskProcessing.Task;
+
+		// Act - Dispose triggers cancellation
+		queue.Dispose();
+
+		// Assert - Should handle OperationCanceledException
+		await Should.ThrowAsync<OperationCanceledException>(async () => await processingTask);
+	}
+
+	[Fact]
+	public async Task Queue_Should_Process_Tasks_With_Negative_Priority_Values()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		List<int> results = new();
+
+		// Act - Enqueue tasks with negative priorities
+		await queue.EnqueueAsync<int?>(async _ => { results.Add(1); return 1; }, -100, TaskPriority.Low, Current.CancellationToken);
+		await queue.EnqueueAsync<int?>(async _ => { results.Add(2); return 2; }, -50, TaskPriority.Low, Current.CancellationToken);
+		await queue.EnqueueAsync<int?>(async _ => { results.Add(3); return 3; }, -10, TaskPriority.Low, Current.CancellationToken);
+
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Assert - All tasks should process
+		results.Count.ShouldBe(3);
+		queue.Stats.TotalProcessedTasks.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_Should_Catch_OperationCanceledException_When_Task_Cancelled_During_Execution()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		SemaphoreSlim blockProcessing = new(0, 1);
+		SemaphoreSlim taskStarted = new(0, 1);
+
+		// Enqueue a blocking task to hold up processing
+		Task<int?> blockingTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			await blockProcessing.WaitAsync(ct);
+			return 0;
+		}, 1, TaskPriority.High, Current.CancellationToken);
+
+		// Enqueue the task we'll cancel while it's queued
+		Task<int?> taskToCancel = queue.EnqueueAsync<int?>(async ct =>
+		{
+			taskStarted.Release();
+			await Task.Delay(100, ct); // This will throw when cancelled
+			return 42;
+		}, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		await Task.Delay(50, Current.CancellationToken); // Ensure blocking task starts
+
+		// Act - Cancel the queued task
+		bool cancelled = await queue.CancelTasksByPriorityAsync(TaskPriority.Normal);
+
+		// Release blocking task
+		blockProcessing.Release();
+		await blockingTask;
+
+		// Assert
+		cancelled.ShouldBeTrue();
+		await Should.ThrowAsync<TaskCanceledException>(async () => await taskToCancel);
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_Should_Exit_Gracefully_On_Outer_OperationCanceledException()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Start the processing loop by enqueueing a task
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Act - Dispose triggers cancellation which should be caught by outer catch
+		queue.Dispose();
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Assert - Queue should be in a valid state
+		PrioritizedQueueStats stats = queue.Stats;
+		stats.TotalProcessedTasks.ShouldBeGreaterThanOrEqualTo(1);
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_Should_Handle_ObjectDisposedException_In_Wait()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Start processing
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
+
+		// Queue is now idle and waiting for new tasks
+
+		// Act - Dispose while waiting (triggers ObjectDisposedException in newTaskEvent.Wait)
+		queue.Dispose();
+
+		// Give time for processing loop to exit
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Assert - Should exit gracefully
+		Should.NotThrow(() => queue.Dispose()); // Idempotent
+	}
+
+	[Fact]
+	public async Task Task_Cancelled_During_Execution_Should_Trigger_Specific_Catch_Block()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		SemaphoreSlim blockTask = new(0, 1);
+		TaskCompletionSource<bool> taskProcessing = new();
+
+		// Enqueue a blocking task first
+		Task<int?> blockingTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			await blockTask.WaitAsync(ct);
+			return 0;
+		}, 1, TaskPriority.High, Current.CancellationToken);
+
+		// Enqueue the task we'll cancel
+		Task<int?> targetTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			taskProcessing.SetResult(true);
+			// Simulate work that checks cancellation
+			await Task.Delay(5000, ct);
+			return 42;
+		}, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Cancel the specific priority while task is queued
+		await queue.CancelTasksByPriorityAsync(TaskPriority.Normal);
+
+		// Release blocking task
+		blockTask.Release();
+		await blockingTask;
+
+		// Act & Assert - The cancelled task should throw
+		await Should.ThrowAsync<TaskCanceledException>(async () => await targetTask);
+
+		// Stats should reflect cancellation
+		queue.Stats.TotalCancelledTasks.ShouldBeGreaterThan(0);
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_Should_Catch_OperationCanceledException_During_Wait()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		TaskCompletionSource<bool> taskProcessed = new();
+
+		// Enqueue a task to start the processing loop
+		Task<int?> initialTask = queue.EnqueueAsync<int?>(async _ =>
+		{
+			taskProcessed.SetResult(true);
+			return 1;
+		}, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		// Wait for task to complete
+		await taskProcessed.Task;
+		await initialTask;
+
+		// Now the queue is idle and waiting in newTaskEvent.Wait()
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Act - Dispose triggers cancellation which will throw OperationCanceledException in Wait
+		queue.Dispose();
+
+		// Give time for the exception to be caught
+		await Task.Delay(300, Current.CancellationToken);
+
+		// Assert - Queue should be properly disposed without hanging
+		Should.NotThrow(() => queue.Dispose()); // Idempotent
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_Should_Catch_OperationCanceledException_When_Task_Is_Cancelled()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		SemaphoreSlim blockTask = new(0, 1);
+		TaskCompletionSource<bool> taskStarted = new();
+
+		// Enqueue a blocking task
+		Task<int?> blockingTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			await blockTask.WaitAsync(ct);
+			return 0;
+		}, 1, TaskPriority.Critical, Current.CancellationToken);
+
+		// Enqueue a task that will be cancelled and throw OperationCanceledException
+		Task<int?> taskToCancel = queue.EnqueueAsync<int?>(async ct =>
+		{
+			taskStarted.SetResult(true);
+			// This will throw OperationCanceledException when cancelled
+			await Task.Delay(10000, ct);
+			return 42;
+		}, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Cancel the task while it's queued
+		bool cancelled = await queue.CancelTasksByPriorityAsync(TaskPriority.Normal);
+		cancelled.ShouldBeTrue();
+
+		// Release the blocking task so processing continues
+		blockTask.Release();
+		await blockingTask;
+
+		// Act & Assert - Should catch OperationCanceledException with currentTask.IsCancelled filter
+		await Should.ThrowAsync<TaskCanceledException>(async () => await taskToCancel);
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_Should_Exit_On_OperationCanceledException_From_Cancellation()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Process an initial task to ensure processing loop is running
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
+
+		// Act - Dispose triggers cancellation of the processing loop
+		queue.Dispose();
+
+		// Give time for OperationCanceledException to be caught in outer catch block
+		await Task.Delay(300, Current.CancellationToken);
+
+		// Assert - Processing loop should have exited gracefully
+		PrioritizedQueueStats stats = queue.Stats;
+		stats.TotalProcessedTasks.ShouldBe(1);
+		stats.CurrentProcessingPriority.ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task Cancellation_During_Wait_Should_Exit_Processing_Loop_Cleanly()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Start the processing loop with a quick task
+		await queue.EnqueueAsync<int?>(async _ => 42, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
+
+		// Queue is now idle, waiting for new tasks (in newTaskEvent.Wait with 100ms timeout)
+
+		// Act - Dispose while waiting, triggering OperationCanceledException in the Wait call
+		queue.Dispose();
+
+		// Wait for graceful shutdown
+		await Task.Delay(250, Current.CancellationToken);
+
+		// Assert - Should have exited cleanly
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+		Should.NotThrow(() => queue.Stats); // Stats should still be accessible
+	}
+
+	[Fact]
+	public async Task Task_Execution_With_OperationCanceledException_Should_Be_Handled_Properly()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		SemaphoreSlim blockFirst = new(0, 1);
+
+		// Enqueue blocking task
+		Task<int?> blockingTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			await blockFirst.WaitAsync(ct);
+			return 1;
+		}, 1, TaskPriority.High, Current.CancellationToken);
+
+		// Enqueue task that will execute and then be cancelled
+		Task<int?> cancellableTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			// This will throw OperationCanceledException when ct is cancelled
+			await Task.Delay(30000, ct);
+			return 2;
+		}, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Cancel while queued
+		await queue.CancelTasksByPriorityAsync(TaskPriority.Normal);
+
+		// Release blocking task
+		blockFirst.Release();
+		await blockingTask;
+
+		// Act & Assert
+		await Should.ThrowAsync<TaskCanceledException>(async () => await cancellableTask);
+
+		// The specific catch block for OperationCanceledException when currentTask.IsCancelled should have been hit
+		queue.Stats.TotalCancelledTasks.ShouldBeGreaterThan(0);
+	}
+
+	[Fact]
+	public async Task Multiple_Cancellations_Should_Trigger_OperationCanceledException_Handler()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		SemaphoreSlim block = new(0, 1);
+		List<Task<int?>> cancelledTasks = new();
+
+		// Enqueue blocking task
+		Task<int?> blockingTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			await block.WaitAsync(ct);
+			return 0;
+		}, 1, TaskPriority.Critical, Current.CancellationToken);
+
+		// Enqueue multiple tasks that will be cancelled
+		for (int i = 0; i < 5; i++)
+		{
+			int value = i;
+			cancelledTasks.Add(queue.EnqueueAsync<int?>(async ct =>
+			{
+				await Task.Delay(5000, ct);
+				return value;
+			}, 1, TaskPriority.Normal, Current.CancellationToken));
+		}
+
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Act - Cancel all Normal priority tasks
+		bool cancelled = await queue.CancelTasksByPriorityAsync(TaskPriority.Normal);
+
+		// Release blocking task
+		block.Release();
+		await blockingTask;
+
+		// Assert - All tasks should throw TaskCanceledException
+		foreach (Task<int?> task in cancelledTasks)
+		{
+			await Should.ThrowAsync<TaskCanceledException>(async () => await task);
+		}
+
+		cancelled.ShouldBeTrue();
+		queue.Stats.TotalCancelledTasks.ShouldBe(5);
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_OperationCanceledException_Should_Not_Affect_Completed_Stats()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		int tasksCompleted = 0;
+
+		// Process several tasks successfully
+		for (int i = 0; i < 3; i++)
+		{
+			await queue.EnqueueAsync<int?>(async _ =>
+			{
+				Interlocked.Increment(ref tasksCompleted);
+				return i;
+			}, 1, TaskPriority.Normal, Current.CancellationToken);
+		}
+
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Act - Dispose triggers OperationCanceledException in processing loop
+		queue.Dispose();
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Assert - Completed tasks should be counted correctly despite cancellation
+		tasksCompleted.ShouldBe(3);
+		queue.Stats.TotalProcessedTasks.ShouldBe(3);
+		queue.Stats.TotalFailedTasks.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task OperationCanceledException_During_newTaskEvent_Wait_Should_Exit_Loop()
+	{
+		// Arrange
+		DisposalTimingTestQueue queue = new("test");
+		disposables.Add(queue);
+
+		// Start the processing loop with a task
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
+
+		// Queue is now idle, waiting in newTaskEvent.Wait with 100ms timeout
+		// Wait for it to be in the Wait state
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Act - Trigger cancellation while in Wait (before checking isShuttingDown)
+		queue.TriggerCancellationDuringWait();
+
+		// Give time for the catch block to execute
+		await Task.Delay(300, Current.CancellationToken);
+
+		// Assert - Should have exited via OperationCanceledException catch block
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ProcessingLoop_With_Immediate_Cancellation_Should_Catch_OperationCanceledException()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Process one task to start the loop
+		await queue.EnqueueAsync<int?>(async _ => 42, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		// Wait a bit less than the timeout to ensure we're in the Wait call
+		await Task.Delay(80, Current.CancellationToken);
+
+		// Act - Dispose immediately triggers cancellation during Wait
+		Stopwatch sw = Stopwatch.StartNew();
+		queue.Dispose();
+		sw.Stop();
+
+		// Wait for cleanup
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Assert - Should complete quickly (not wait for full 5 second timeout)
+		sw.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(2));
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task OperationCanceledException_In_Task_Execution_Should_Use_Filtered_Catch()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+		SemaphoreSlim blockFirst = new(0, 1);
+		bool executionStarted = false;
+
+		// Block the queue with a high priority task
+		Task<int?> blockingTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			await blockFirst.WaitAsync(ct);
+			return 1;
+		}, 1, TaskPriority.Critical, Current.CancellationToken);
+
+		// Enqueue task that will throw OperationCanceledException during execution
+		Task<int?> cancelledTask = queue.EnqueueAsync<int?>(async ct =>
+		{
+			executionStarted = true;
+			ct.ThrowIfCancellationRequested(); // Will throw if already cancelled
+			await Task.Delay(10000, ct);
+			return 2;
+		}, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Cancel it while queued
+		await queue.CancelTasksByPriorityAsync(TaskPriority.Normal);
+
+		// Release blocking task
+		blockFirst.Release();
+		await blockingTask;
+
+		// Act & Assert - Should catch with the (currentTask.IsCancelled) filter
+		await Should.ThrowAsync<TaskCanceledException>(async () => await cancelledTask);
+
+		// Task should not have started execution since it was cancelled while queued
+		executionStarted.ShouldBeFalse();
+	}
+
+	[Fact]
+	public async Task IsShuttingDown_Flag_Should_Break_Processing_Loop_Before_Wait()
+	{
+		// Arrange
+		ShutdownTestQueue queue = new("test");
+		disposables.Add(queue);
+
+		// Start the processing loop
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
+
+		// Queue is now idle (currentTask == null condition)
+		// Wait a bit to ensure we're past the dequeue
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Act - Set shutdown flag before the wait happens (via Dispose)
+		queue.Dispose();
+
+		// Give time for the loop to check isShuttingDown and break
+		await Task.Delay(300, Current.CancellationToken);
+
+		// Assert - Should have exited via isShuttingDown check
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+		queue.Stats.CurrentProcessingPriority.ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task OperationCanceledException_During_Wait_Should_Break_Loop()
+	{
+		// Arrange
+		CancellationDuringWaitTestQueue queue = new("test");
+		disposables.Add(queue);
+
+		// Start processing with initial task
+		await queue.EnqueueAsync<int?>(async _ => 42, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
+
+		// Queue is now idle and waiting in newTaskEvent.Wait with 100ms timeout
+		// Wait to ensure we're in the Wait call
+		await Task.Delay(30, Current.CancellationToken);
+
+		// Act - Trigger cancellation during Wait (not during shutdown check)
+		queue.TriggerCancellationNow();
+
+		// Give time for OperationCanceledException catch block to execute
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Assert - Should have caught OperationCanceledException and broken out
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task Shutdown_Check_Should_Exit_Loop_When_No_Tasks_Available()
+	{
+		// Arrange
+		IsShuttingDownTestQueue queue = new("test");
+		disposables.Add(queue);
+
+		// Process initial task
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
+
+		// Now the loop is idle, waiting for tasks
+		// currentTask will be null after dequeue
+
+		// Act - Set isShuttingDown flag to true
+		queue.SetShuttingDown();
+
+		// Give time for the loop to check and break
+		await Task.Delay(250, Current.CancellationToken);
+
+		// Assert - Loop should have exited via isShuttingDown break
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task Wait_With_OperationCanceledException_Should_Catch_And_Break()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Process one task to start the loop
+		await queue.EnqueueAsync<int?>(async _ => 99, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken); // Let it complete
+
+		// Queue is now idle in wait state (no tasks, waiting in newTaskEvent.Wait)
+		// Wait less than timeout to be in the Wait call
+		await Task.Delay(40, Current.CancellationToken);
+
+		// Act - Dispose triggers cancellation during Wait
+		queue.Dispose();
+
+		// Wait for the catch block to execute and loop to exit
+		await Task.Delay(250, Current.CancellationToken);
+
+		// Assert - Should have exited cleanly via OperationCanceledException catch
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+		Should.NotThrow(() => queue.Stats);
+	}
+
+	[Fact]
+	public async Task Processing_Loop_Should_Check_Shutdown_Before_Each_Wait()
+	{
+		// Arrange
+		PrioritizedEndpointQueue queue = CreateQueue();
+
+		// Process a quick task
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(80, Current.CancellationToken);
+
+		// Loop is now at the point where currentTask is null (no tasks in queue)
+		// It will check isShuttingDown before calling Wait
+
+		// Act - Dispose sets isShuttingDown = true
+		Stopwatch sw = Stopwatch.StartNew();
+		queue.Dispose();
+		sw.Stop();
+
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Assert - Should exit quickly via isShuttingDown check (not waiting for full timeout)
+		sw.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(2));
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task Exact_IsShuttingDown_Break_Path_Should_Be_Hit()
+	{
+		// Arrange
+		ShutdownFlagTestQueue queue = new("test");
+		disposables.Add(queue);
+
+		// Start and complete a task to get processing loop running
+		await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Now the queue is empty (currentTask will be null after dequeue)
+		// The loop will check isShuttingDown before calling Wait
+
+		// Act - Set the shutdown flag directly before the Wait happens
+		queue.ForceShutdownFlag();
+
+		// Allow time for the loop to check the flag and break
+		await Task.Delay(200, Current.CancellationToken);
+
+		// Assert - Should have exited via isShuttingDown check
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+		queue.IsShutdownFlagSet().ShouldBeTrue();
+	}
+
+	[Fact]
+	public async Task Exact_OperationCanceledException_Catch_During_Wait()
+	{
+		// Arrange
+		WaitCancellationTestQueue queue = new("test");
+		disposables.Add(queue);
+
+		// Process initial task
+		await queue.EnqueueAsync<int?>(async _ => 42, 1, TaskPriority.Normal, Current.CancellationToken);
+
+		// Wait for it to complete and enter wait state
+		await Task.Delay(70, Current.CancellationToken);
+
+		// Queue is idle, in Wait call
+		// Now trigger cancellation during Wait (not shutdown)
+
+		// Act - Cancel the token while in Wait
+		queue.CancelDuringWait();
+
+		// Give time for catch and break
+		await Task.Delay(250, Current.CancellationToken);
+
+		// Assert - Should have caught OperationCanceledException and exited
+		queue.Stats.TotalProcessedTasks.ShouldBe(1);
+	}
+
 	private class TestPrioritizedEndpointQueue : PrioritizedEndpointQueue
 	{
 		public int CancelCallCount { get; private set; }
@@ -1607,6 +2486,131 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		{
 			CancelCallCount++;
 			return await base.CancelTasksByPriorityAsync(priority);
+		}
+	}
+
+	private class DisposableResourceTestQueue : PrioritizedEndpointQueue
+	{
+		private readonly System.Reflection.FieldInfo? cancellationTokenSourceField;
+
+		public DisposableResourceTestQueue(string endpointKey) : base(endpointKey)
+		{
+			// Use reflection to access the private cancellationTokenSource field
+			cancellationTokenSourceField = typeof(PrioritizedEndpointQueue)
+				.GetField("cancellationTokenSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		}
+
+		public void PreDisposeCancellationToken()
+		{
+			if (cancellationTokenSourceField != null)
+			{
+				CancellationTokenSource? cts = cancellationTokenSourceField.GetValue(this) as CancellationTokenSource;
+				cts?.Dispose();
+			}
+		}
+	}
+
+	private class DisposalTimingTestQueue : PrioritizedEndpointQueue
+	{
+		private readonly System.Reflection.FieldInfo? cancellationTokenSourceField;
+
+		public DisposalTimingTestQueue(string endpointKey) : base(endpointKey)
+		{
+			cancellationTokenSourceField = typeof(PrioritizedEndpointQueue)
+				.GetField("cancellationTokenSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		}
+
+		public void TriggerCancellationDuringWait()
+		{
+			if (cancellationTokenSourceField != null)
+			{
+				CancellationTokenSource? cts = cancellationTokenSourceField.GetValue(this) as CancellationTokenSource;
+				cts?.Cancel();
+			}
+		}
+	}
+
+	private class ShutdownTestQueue : PrioritizedEndpointQueue
+	{
+		public ShutdownTestQueue(string endpointKey) : base(endpointKey)
+		{
+		}
+	}
+
+	private class CancellationDuringWaitTestQueue : PrioritizedEndpointQueue
+	{
+		private readonly System.Reflection.FieldInfo? cancellationTokenSourceField;
+
+		public CancellationDuringWaitTestQueue(string endpointKey) : base(endpointKey)
+		{
+			cancellationTokenSourceField = typeof(PrioritizedEndpointQueue)
+				.GetField("cancellationTokenSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		}
+
+		public void TriggerCancellationNow()
+		{
+			if (cancellationTokenSourceField != null)
+			{
+				CancellationTokenSource? cts = cancellationTokenSourceField.GetValue(this) as CancellationTokenSource;
+				cts?.Cancel();
+			}
+		}
+	}
+
+	private class IsShuttingDownTestQueue : PrioritizedEndpointQueue
+	{
+		private readonly System.Reflection.FieldInfo? isShuttingDownField;
+
+		public IsShuttingDownTestQueue(string endpointKey) : base(endpointKey)
+		{
+			isShuttingDownField = typeof(PrioritizedEndpointQueue)
+				.GetField("isShuttingDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		}
+
+		public void SetShuttingDown()
+		{
+			if (isShuttingDownField != null)
+			{
+				isShuttingDownField.SetValue(this, true);
+			}
+		}
+	}
+
+	private class ShutdownFlagTestQueue : PrioritizedEndpointQueue
+	{
+		private readonly System.Reflection.FieldInfo isShuttingDownField;
+
+		public ShutdownFlagTestQueue(string name) : base(name)
+		{
+			isShuttingDownField = typeof(PrioritizedEndpointQueue).GetField("isShuttingDown",
+				System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+		}
+
+		public void ForceShutdownFlag()
+		{
+			isShuttingDownField.SetValue(this, true);
+		}
+
+		public bool IsShutdownFlagSet()
+		{
+			return (bool)isShuttingDownField.GetValue(this)!;
+		}
+	}
+
+	private class WaitCancellationTestQueue : PrioritizedEndpointQueue
+	{
+		private readonly System.Reflection.FieldInfo cancellationTokenSourceField;
+
+		public WaitCancellationTestQueue(string name) : base(name)
+		{
+			cancellationTokenSourceField = typeof(PrioritizedEndpointQueue).GetField("cancellationTokenSource",
+				System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+		}
+
+		public void CancelDuringWait()
+		{
+			CancellationTokenSource? cts = cancellationTokenSourceField.GetValue(this) as CancellationTokenSource;
+			cts?.Cancel();
 		}
 	}
 

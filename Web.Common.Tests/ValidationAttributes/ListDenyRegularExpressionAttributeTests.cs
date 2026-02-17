@@ -626,4 +626,79 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 		// Assert
 		result.ShouldBe(ValidationResult.Success);
 	}
+
+	[Fact]
+	public void Constructor_WithEmptyPattern_ShouldThrowOnValidation()
+	{
+		// Arrange - empty pattern is allowed in constructor but should throw in SetupRegex
+		ListDenyRegularExpressionAttribute attribute = new(string.Empty);
+
+		// Act & Assert
+		Should.Throw<InvalidOperationException>(() => attribute.GetValidationResult(new List<string> { "test" }, DummyValidationContext));
+	}
+
+	[Fact]
+	public void SetupRegex_WithNoTimeout_ShouldCompileRegexWithoutTimeout()
+	{
+		// Arrange - test the MatchTimeoutInMilliseconds == -1 branch
+		ListDenyRegularExpressionAttribute attribute = new(@"^\d+$")
+		{
+			MatchTimeoutInMilliseconds = -1
+		};
+		List<string> items = ["123"];
+
+		// Act
+		ValidationResult? result = attribute.GetValidationResult(items, DummyValidationContext);
+
+		// Assert
+		result.ShouldNotBeNull(); // Should fail because "123" matches the pattern
+	}
+
+	[Fact]
+	public void SetupRegex_WithCustomTimeout_ShouldCompileRegexWithTimeout()
+	{
+		// Arrange - test the MatchTimeoutInMilliseconds != -1 branch
+		ListDenyRegularExpressionAttribute attribute = new(@"^\d+$")
+		{
+			MatchTimeoutInMilliseconds = 5000
+		};
+		List<string> items = ["123"];
+
+		// Act
+		ValidationResult? result = attribute.GetValidationResult(items, DummyValidationContext);
+
+		// Assert
+		result.ShouldNotBeNull(); // Should fail because "123" matches the pattern
+		attribute.MatchTimeout.TotalMilliseconds.ShouldBe(5000);
+	}
+
+	[Fact]
+	public void IsValid_DenyOnlyFullMatch_WithMatchNotAtStartOrNotFullLength_ShouldSucceed()
+	{
+		// Arrange - pattern without anchors finds match but not at index 0 or not full length
+		// This tests the false branch of the condition in line 102
+		ListDenyRegularExpressionAttribute attribute = new(@"\d+", denyOnlyFullMatch: true);
+		List<string> items = ["abc123def"]; // Match "123" is at index 3, not 0
+
+		// Act
+		ValidationResult? result = attribute.GetValidationResult(items, DummyValidationContext);
+
+		// Assert
+		result.ShouldBe(ValidationResult.Success); // Should succeed because match is not at index 0
+	}
+
+	[Fact]
+	public void IsValid_DenyOnlyFullMatch_WithMatchAtStartButNotFullLength_ShouldSucceed()
+	{
+		// Arrange - pattern matches at index 0 but not the full length
+		// This tests the second part of the compound condition: m.Length == item.Length
+		ListDenyRegularExpressionAttribute attribute = new(@"\d+", denyOnlyFullMatch: true);
+		List<string> items = ["123abc"]; // Match "123" is at index 0 with length 3, but item length is 6
+
+		// Act
+		ValidationResult? result = attribute.GetValidationResult(items, DummyValidationContext);
+
+		// Assert
+		result.ShouldBe(ValidationResult.Success); // Should succeed because match length != item length
+	}
 }

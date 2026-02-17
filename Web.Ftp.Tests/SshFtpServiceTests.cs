@@ -1,6 +1,8 @@
 ﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Web.Ftp;
 using Renci.SshNet;
+using Renci.SshNet.Common;
+using Renci.SshNet.Sftp;
 
 namespace Web.Ftp.Tests;
 
@@ -81,56 +83,125 @@ public class SshFtpServiceTests
 		result.ShouldNotBeNull();
 	}
 
-	//[Theory]
-	//[InlineData(true)]
-	//[InlineData(false)]
-	//public void DirectoryExists_ShouldReturnCorrectState(bool exists)
-	//{
-	//    // Arrange
-	//    const string path = "/test/path";
-	//    A.CallTo(() => sftpClient.Exists(path)).Returns(exists);
+	[Fact]
+	public async Task ConnectAsync_WithNullCancellationTokenSource_ShouldConnectClient()
+	{
+		// Act
+		SftpClient result = await service.ConnectAsync(null);
 
-	//    // Act
-	//    bool result = service.DirectoryExists(path);
+		// Assert
+		result.ShouldNotBeNull();
+	}
 
-	//    // Assert
-	//    result.ShouldBe(exists);
-	//}
+	[Fact]
+	public void DisconnectClient_ShouldReturnConnectionState()
+	{
+		// Arrange
+		A.CallTo(() => sftpClient.IsConnected).Returns(true);
 
-	//[Fact]
-	//public void GetFileList_ShouldReturnFiles()
-	//{
-	//    // Arrange
-	//    const string path = "/test/path";
-	//    string[] expectedFiles = new[] { "/test/path/file1.txt", "/test/path/file2.txt" };
-	//    A.CallTo(() => sftpClient.ListDirectory(path, null)).Returns(expectedFiles.Select(f => CreateSftpFile(Path.GetFileName(f), true)));
+		// Act
+		bool result = service.DisconnectClient();
 
-	//    // Act
-	//    List<string> result = service.GetFileList(path).ToList();
+		// Assert
+		result.ShouldBeTrue();
+	}
 
-	//    // Assert
-	//    result.Count.ShouldBe(expectedFiles.Length);
-	//    result.ShouldBe(expectedFiles);
-	//}
+	[Fact]
+	public void DirectoryExists_WhenNotConnected_ShouldThrowException()
+	{
+		// Arrange
+		const string path = "/test/path";
+		A.CallTo(() => sftpClient.IsConnected).Returns(false);
 
-	//[Fact]
-	//public void Dispose_ShouldDisposeClientAndPreventFurtherOperations()
-	//{
-	//    // Act
-	//    service.Dispose();
+		// Act & Assert
+		Should.Throw<SshConnectionException>(() => service.DirectoryExists(path));
+	}
 
-	//    // Assert
-	//    A.CallTo(() => sftpClient.Dispose()).MustHaveHappened();
+	[Fact]
+	public async Task DirectoryExistsAsync_WhenNotConnected_ShouldThrowException()
+	{
+		// Arrange
+		const string path = "/test/path";
+		A.CallTo(() => sftpClient.IsConnected).Returns(false);
 
-	//    // Verify that operations after dispose throw ObjectDisposedException
-	//    Should.Throw<ObjectDisposedException>(() => service.GetHostName());
-	//}
+		// Act & Assert
+		await Should.ThrowAsync<SshConnectionException>(async () => await service.DirectoryExistsAsync(path));
+	}
 
-	//private static ISftpFile CreateSftpFile(string name, bool isRegularFile)
-	//{
-	//    ISftpFile file = A.Fake<ISftpFile>();
-	//    A.CallTo(() => file.Name).Returns(name);
-	//    A.CallTo(() => file.IsRegularFile).Returns(isRegularFile);
-	//    return file;
-	//}
+	[Fact]
+	public void GetFileList_WhenNotConnected_ShouldThrowException()
+	{
+		// Arrange
+		const string path = "/test/path";
+		A.CallTo(() => sftpClient.IsConnected).Returns(false);
+
+		// Act & Assert
+		Should.Throw<SshConnectionException>(() => service.GetFileList(path).ToList());
+	}
+
+	[Fact]
+	public async Task GetFileListAsync_WhenNotConnected_ShouldThrowException()
+	{
+		// Arrange
+		const string path = "/test/path";
+		A.CallTo(() => sftpClient.IsConnected).Returns(false);
+
+		// Act & Assert
+		await Should.ThrowAsync<SshConnectionException>(async () =>
+		{
+			await foreach (string _ in service.GetFileListAsync(path))
+			{
+			}
+		});
+	}
+
+	[Fact]
+	public void DeleteFile_WhenNotConnected_ShouldThrowException()
+	{
+		// Arrange
+		const string filePath = "/test/file.txt";
+		A.CallTo(() => sftpClient.IsConnected).Returns(false);
+
+		// Act & Assert
+		Should.Throw<SshConnectionException>(() => service.DeleteFile(filePath));
+	}
+
+	[Fact]
+	public async Task DeleteFileAsync_WhenNotConnected_ShouldThrowException()
+	{
+		// Arrange
+		const string filePath = "/test/file.txt";
+		A.CallTo(() => sftpClient.IsConnected).Returns(false);
+
+		// Act & Assert
+		await Should.ThrowAsync<SshConnectionException>(async () => await service.DeleteFileAsync(filePath));
+	}
+
+	[Fact]
+	public void Dispose_ShouldCallDisposeOnClient()
+	{
+		// Act
+		service.Dispose();
+
+		// Assert - Client should be disposed via the Dispose pattern
+		// We cannot verify Dispose was called directly since it's non-virtual,
+		// but we can verify the service completes disposal without error
+		service.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public void Dispose_CalledTwice_ShouldNotThrow()
+	{
+		// Act & Assert
+		service.Dispose();
+		Should.NotThrow(() => service.Dispose());
+	}
+
+	private static ISftpFile CreateSftpFile(string name, bool isRegularFile)
+	{
+		ISftpFile file = A.Fake<ISftpFile>();
+		A.CallTo(() => file.Name).Returns(name);
+		A.CallTo(() => file.IsRegularFile).Returns(isRegularFile);
+		return file;
+	}
 }

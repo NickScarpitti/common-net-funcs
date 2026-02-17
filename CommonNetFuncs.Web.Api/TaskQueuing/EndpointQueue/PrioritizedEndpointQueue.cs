@@ -13,11 +13,11 @@ public class PrioritizedEndpointQueue : IDisposable
 	private Task? processingTask;
 	private readonly PrioritizedQueueStats stats;
 	private readonly Dictionary<TaskPriority, List<TimeSpan>> processingTimesByPriority = new();
-	private readonly object statsLock = new();
+	private readonly Lock statsLock = new();
 	private readonly ManualResetEventSlim newTaskEvent = new(false);
 	private readonly int processTimeWindow;
 	private volatile bool isShuttingDown;
-	private readonly object taskStartLock = new();
+	private readonly Lock taskStartLock = new();
 
 	public string EndpointKey { get; }
 
@@ -338,7 +338,7 @@ public class PrioritizedEndpointQueue : IDisposable
 		Dispose(true);
 		GC.SuppressFinalize(this);
 	}
-
+	
 	protected virtual void Dispose(bool disposing)
 	{
 		if (!disposed)
@@ -359,8 +359,20 @@ public class PrioritizedEndpointQueue : IDisposable
 					// Already disposed
 				}
 
-				// Don't wait for the task or dispose resources - this can cause deadlocks in test scenarios
-				// The GC will eventually clean up, and the task will exit when it sees the shutdown signals
+				// Wait briefly for processing task to complete
+				try
+				{
+					processingTask?.Wait(TimeSpan.FromSeconds(5));
+				}
+				catch (AggregateException)
+				{
+					// Task may have been cancelled or faulted
+				}
+
+				// Dispose of resources
+				cancellationTokenSource.Dispose();
+				newTaskEvent.Dispose();
+				queueSemaphore.Dispose();
 			}
 			disposed = true;
 		}

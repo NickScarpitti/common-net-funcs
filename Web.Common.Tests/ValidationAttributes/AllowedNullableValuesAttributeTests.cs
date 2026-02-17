@@ -107,4 +107,81 @@ public sealed class AllowedNullableValuesAttributeTests : ValidationTestBase
 			result.ErrorMessage?.ShouldContain("must be one of the following values");
 		}
 	}
+
+	[Fact]
+	public void Constructor_WithNullAllowedValues_ShouldThrow()
+	{
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => new AllowedNullableValuesAttribute(true, (object[])null!));
+	}
+
+	[Fact]
+	public void Constructor_SimpleWithNullAllowedValues_ShouldThrow()
+	{
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => new AllowedNullableValuesAttribute((object[])null!));
+	}
+
+	[Fact]
+	public void Constructor_SingleParamEnum_WithNonEnum_ShouldThrow()
+	{
+		// Act & Assert
+		Should.Throw<ArgumentException>(() => new AllowedNullableValuesAttribute(typeof(int)));
+	}
+
+	[Fact]
+	public void IsValid_EnumWithUndefinedEnumValue_ShouldReturnError()
+	{
+		// Arrange
+		AllowedNullableValuesAttribute attribute = new(typeof(ETest));
+
+		// Act - cast 99 to the enum type which creates an undefined enum value
+		ValidationResult? result = attribute.GetValidationResult((ETest)99, CreateValidationContext("TestProperty"));
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ErrorMessage?.ShouldContain("must be one of the following values");
+		result.ErrorMessage?.ShouldContain("Value1");
+	}
+
+	[Fact]
+	public void IsValid_EnumWithDefinedEnumValue_ShouldReturnSuccess()
+	{
+		// Arrange
+		AllowedNullableValuesAttribute attribute = new(typeof(ETest));
+
+		// Act - pass actual enum value
+		ValidationResult? result = attribute.GetValidationResult(ETest.Value2, CreateValidationContext("TestProperty"));
+
+		// Assert
+		result.ShouldBe(ValidationResult.Success);
+	}
+
+	[Fact]
+	public void IsValid_WithNonAllowedValue_WithoutEnum_ShouldIncludeNullInErrorMessage()
+	{
+		// Arrange - create attribute with null as one of the allowed values
+		AllowedNullableValuesAttribute attribute = new(true, [1, 2, null!]);
+
+		// Act
+		ValidationResult? result = attribute.GetValidationResult(999, CreateValidationContext("TestProperty"));
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ErrorMessage?.ShouldContain("1, 2, null");
+	}
+
+	[Fact]
+	public void IsValid_EnumAttribute_WithNonEnumNonNumericValue_ShouldReturnError()
+	{
+		// Arrange - create enum-based attribute
+		AllowedNullableValuesAttribute attribute = new(typeof(ETest));
+
+		// Act - pass a string value (not enum, not numeric)
+		ValidationResult? result = attribute.GetValidationResult("invalid", CreateValidationContext("TestProperty"));
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ErrorMessage?.ShouldContain("must be one of the following values");
+	}
 }

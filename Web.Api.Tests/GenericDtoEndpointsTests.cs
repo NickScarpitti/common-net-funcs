@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests;
 
@@ -825,7 +826,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.CreateMany<TestEntity, TestDbContext>(models, dbContextActions, removeNavigationProps);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.CreateMany(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 
@@ -846,7 +847,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.CreateMany<TestEntity, TestDbContext>(models, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.CreateMany(models, dbContextActions);
 
 		// Assert
 
@@ -865,7 +866,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.CreateMany<TestEntity, TestDbContext>(models, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.CreateMany(models, dbContextActions);
 
 		// Assert
 
@@ -890,7 +891,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Delete<TestEntity, TestDbContext>(model, dbContextActions, removeNavigationProps);
+		ActionResult<TestEntity> result = await genericEndpoints.Delete(model, dbContextActions, removeNavigationProps);
 
 		// Assert
 
@@ -911,7 +912,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Delete<TestEntity, TestDbContext>(model, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Delete(model, dbContextActions);
 
 		// Assert
 
@@ -930,7 +931,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Delete<TestEntity, TestDbContext>(model, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Delete(model, dbContextActions);
 
 		// Assert
 
@@ -949,7 +950,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Delete<TestEntity, TestDbContext>(model, dbContextActions, false, filterOptions);
+		ActionResult<TestEntity> result = await genericEndpoints.Delete(model, dbContextActions, false, filterOptions);
 
 		// Assert
 
@@ -976,7 +977,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(models, dbContextActions, removeNavigationProps);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 
@@ -996,7 +997,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(models, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
 
 		// Assert
 
@@ -1015,7 +1016,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(models, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
 
 		// Assert
 
@@ -1032,7 +1033,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(models, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
 
 		// Assert
 
@@ -1051,7 +1052,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(models, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
 
 		// Assert
 
@@ -1071,7 +1072,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(models, dbContextActions, false, filterOptions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions, false, filterOptions);
 
 		// Assert
 
@@ -1095,7 +1096,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<int> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(whereClause, dbContextActions);
+		ActionResult<int> result = await genericEndpoints.DeleteMany(whereClause, dbContextActions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -1115,7 +1116,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<int> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(whereClause, dbContextActions);
+		ActionResult<int> result = await genericEndpoints.DeleteMany(whereClause, dbContextActions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -1134,7 +1135,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<int> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(whereClause, dbContextActions);
+		ActionResult<int> result = await genericEndpoints.DeleteMany(whereClause, dbContextActions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -1154,7 +1155,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<int> result = await genericEndpoints.DeleteMany<TestEntity, TestDbContext>(whereClause, dbContextActions, filterOptions, cancellationToken);
+		ActionResult<int> result = await genericEndpoints.DeleteMany(whereClause, dbContextActions, filterOptions, cancellationToken);
 
 		// Assert
 
@@ -1176,7 +1177,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys, null)).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys<TestEntity, TestDbContext>(keys, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1193,7 +1194,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys, null)).Returns(false);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys<TestEntity, TestDbContext>(keys, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -1207,7 +1208,7 @@ public sealed class GenericDtoEndpointsTests
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys<TestEntity, TestDbContext>(keys, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -1223,7 +1224,7 @@ public sealed class GenericDtoEndpointsTests
 				.Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys<TestEntity, TestDbContext>(keys, dbContextActions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -1239,7 +1240,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys, filterOptions)).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys<TestEntity, TestDbContext>(keys, dbContextActions, filterOptions);
+		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions, filterOptions);
 
 		// Assert
 		result.Result.ShouldBeOfType<OkObjectResult>();
@@ -1263,7 +1264,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<int> result = await genericEndpoints.UpdateMany<TestEntity, TestDbContext>(whereClause, setPropertyCalls, dbContextActions);
+		ActionResult<int> result = await genericEndpoints.UpdateMany(whereClause, setPropertyCalls, dbContextActions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -1284,7 +1285,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<int> result = await genericEndpoints.UpdateMany<TestEntity, TestDbContext>(whereClause, setPropertyCalls, dbContextActions);
+		ActionResult<int> result = await genericEndpoints.UpdateMany(whereClause, setPropertyCalls, dbContextActions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -1306,7 +1307,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<int> result = await genericEndpoints.UpdateMany<TestEntity, TestDbContext>(whereClause, setPropertyCalls, dbContextActions);
+		ActionResult<int> result = await genericEndpoints.UpdateMany(whereClause, setPropertyCalls, dbContextActions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -1327,7 +1328,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<int> result = await genericEndpoints.UpdateMany<TestEntity, TestDbContext>(whereClause, setPropertyCalls, dbContextActions, filterOptions, cancellationToken);
+		ActionResult<int> result = await genericEndpoints.UpdateMany(whereClause, setPropertyCalls, dbContextActions, filterOptions, cancellationToken);
 
 		// Assert
 
@@ -1355,7 +1356,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(1, patch, dbContextActions);
 
 		// Assert
 
@@ -1377,7 +1378,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(1, patch, dbContextActions);
 
 		// Assert
 
@@ -1399,7 +1400,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(1, patch, dbContextActions);
 
 		// Assert
 
@@ -1420,7 +1421,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(1, patch, dbContextActions);
 
 		// Assert
 
@@ -1444,7 +1445,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(1, patch, dbContextActions);
 
 		// Assert
 
@@ -1467,7 +1468,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(1, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(1, patch, dbContextActions);
 
 		// Assert
 
@@ -1490,7 +1491,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(1, patch, dbContextActions, filterOptions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(1, patch, dbContextActions, filterOptions);
 
 		// Assert
 
@@ -1518,7 +1519,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 
@@ -1540,7 +1541,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 
@@ -1562,7 +1563,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 
@@ -1585,7 +1586,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 
@@ -1609,7 +1610,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(keys, patch, dbContextActions, filterOptions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(keys, patch, dbContextActions, filterOptions);
 
 		// Assert
 
@@ -1633,7 +1634,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 
@@ -1653,7 +1654,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<TestEntity> result = await genericEndpoints.Patch<TestEntity, TestDbContext>(new object[] { 1, 2 }, patch, dbContextActions);
+		ActionResult<TestEntity> result = await genericEndpoints.Patch(new object[] { 1, 2 }, patch, dbContextActions);
 
 		// Assert
 

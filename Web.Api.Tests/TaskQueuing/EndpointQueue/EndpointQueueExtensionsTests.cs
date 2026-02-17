@@ -318,7 +318,7 @@ public class EndpointQueueExtensionsTests
 				.ReturnsAsync((string?)null);
 
 		// Act
-		string? result = await controllerMock.Object.ExecuteQueuedAsync<string?>(serviceMock.Object, _ => Task.FromResult<string?>(null), options);
+		string? result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult<string?>(null), options);
 
 		// Assert
 		result.ShouldBeNull();
@@ -336,7 +336,7 @@ public class EndpointQueueExtensionsTests
 				.ReturnsAsync((string?)null);
 
 		// Act
-		string? result = await controllerMock.Object.ExecuteQueuedAsync<string?>(serviceMock.Object, _ => Task.FromResult<string?>(null), options);
+		string? result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult<string?>(null), options);
 
 		// Assert
 		result.ShouldBeNull();

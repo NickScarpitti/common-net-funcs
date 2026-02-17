@@ -910,9 +910,11 @@ public class PrioritizedSequentialTaskProcessorTests
 		WeakReference weakRef = CreateProcessorAndLetItGoOutOfScope();
 
 		// Act - Force garbage collection
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
 		GC.Collect(2, GCCollectionMode.Forced, true);
 		GC.WaitForPendingFinalizers();
 		GC.Collect(2, GCCollectionMode.Forced, true);
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
 
 		// Assert - Object should be collected
 		weakRef.IsAlive.ShouldBeFalse();
@@ -957,7 +959,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		await processor.StartAsync(CancellationToken.None);
 
 		// Act - Enqueue a task that throws an exception
-		Task<int?> resultTask = processor.EnqueueWithPriorityAsync<int?>(_ => Task.FromException<int?>(new InvalidOperationException("Test exception")), cancellationToken: Current.CancellationToken);
+		Task<int?> resultTask = processor.EnqueueWithPriorityAsync(_ => Task.FromException<int?>(new InvalidOperationException("Test exception")), cancellationToken: Current.CancellationToken);
 
 		// Assert - Exception should be propagated
 		await Should.ThrowAsync<InvalidOperationException>(async () => await resultTask);
@@ -1023,10 +1025,10 @@ public class PrioritizedSequentialTaskProcessorTests
 		await processor.StartAsync(CancellationToken.None);
 
 		// Enqueue and capture a task
-		(Task<object?> resultTask, PrioritizedQueuedTask queuedTask) = await processor.EnqueueAndCaptureAsync<int?>(
+		(Task<object?> _, PrioritizedQueuedTask queuedTask) = await processor.EnqueueAndCaptureAsync<int?>(
 			async _ =>
 			{
-				await Task.Delay(100);
+				await Task.Delay(100, _);
 				return 42;
 			},
 			priority: 1,
@@ -1052,7 +1054,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		await processor.StartAsync(CancellationToken.None);
 
 		// Enqueue and capture a task that throws OperationCanceledException
-		(Task<object?> resultTask, PrioritizedQueuedTask queuedTask) = await processor.EnqueueAndCaptureAsync<int?>(
+		(Task<object?> _, PrioritizedQueuedTask queuedTask) = await processor.EnqueueAndCaptureAsync<int?>(
 			async ct =>
 			{
 				ct.ThrowIfCancellationRequested();

@@ -73,7 +73,7 @@ public static class PrioritizedEndpointQueueExtensions
 				return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving endpoint queue metrics");
 			}
 		})
-			 .WithName("GetEndpointQueueMetrics");
+		.WithName("GetEndpointQueueMetrics");
 
 		return endpoints;
 	}

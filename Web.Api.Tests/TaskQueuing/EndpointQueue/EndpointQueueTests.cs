@@ -340,7 +340,7 @@ public class EndpointQueueTests : IDisposable
 		_queuesToDispose.Add(queue);
 
 		// Act
-		string? result = await queue.EnqueueAsync<string?>(_ => Task.FromResult<string?>(null), TestContext.Current.CancellationToken);
+		string? result = await queue.EnqueueAsync(_ => Task.FromResult<string?>(null), TestContext.Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();

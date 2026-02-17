@@ -2,7 +2,7 @@
 
 namespace CommonNetFuncs.Web.Api.TaskQueuing;
 
-public class PrioritizedQueuedTask(Func<CancellationToken, Task<object?>> taskFunction) : QueuedTask(taskFunction)
+public class PrioritizedQueuedTask(Func<CancellationToken, Task<object?>> taskFunction) : QueuedTask(taskFunction), IComparable<PrioritizedQueuedTask>
 {
 	public int Priority { get; set; } // Higher number = higher priority
 

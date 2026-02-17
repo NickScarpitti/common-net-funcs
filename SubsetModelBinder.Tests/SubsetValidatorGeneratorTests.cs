@@ -1,6 +1,7 @@
 ﻿using CommonNetFuncs.SubsetModelBinder;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using static Xunit.TestContext;
 
 namespace SubsetModelBinder.Tests;
 
@@ -131,7 +132,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		Diagnostic diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0003");
+		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0003");
 		diagnostic.ShouldNotBeNull();
 		diagnostic.GetMessage().ShouldContain("must be marked as partial");
 	}
@@ -171,7 +172,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		Diagnostic diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0002");
+		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0002");
 		diagnostic.ShouldNotBeNull();
 		diagnostic.GetMessage().ShouldContain("is not present in the parent class");
 	}
@@ -259,7 +260,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		Diagnostic diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0002");
+		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0002");
 		diagnostic.ShouldNotBeNull();
 		diagnostic.GetMessage().ShouldContain("BaseProperty");
 	}
@@ -415,7 +416,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		Diagnostic diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0001");
+		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0001");
 		diagnostic.ShouldNotBeNull();
 		diagnostic.GetMessage().ShouldContain("has a different type");
 	}
@@ -1759,10 +1760,8 @@ public class SubsetValidatorGeneratorTests
 
 		// Create compilation with System.Runtime reference for interfaces
 		CSharpCompilation compilation = CSharpCompilation.Create("compilation",
-			new[] { CSharpSyntaxTree.ParseText(source), CSharpSyntaxTree.ParseText(AttributeSource) },
-			new[] {
-				MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
-			},
+			new[] { CSharpSyntaxTree.ParseText(source, cancellationToken: Current.CancellationToken), CSharpSyntaxTree.ParseText(AttributeSource, cancellationToken: Current.CancellationToken) },
+			new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
 			new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
 		SubsetValidatorGenerator generator = new();
@@ -2001,10 +2000,8 @@ public class SubsetValidatorGeneratorTests
 
 		// Create compilation with additional references for System.Collections.Generic
 		CSharpCompilation compilation = CSharpCompilation.Create("compilation",
-			new[] { CSharpSyntaxTree.ParseText(source), CSharpSyntaxTree.ParseText(AttributeSource) },
-			new[] {
-				MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-				MetadataReference.CreateFromFile(typeof(System.Collections.Generic.List<>).Assembly.Location)
+			new[] { CSharpSyntaxTree.ParseText(source, cancellationToken: Current.CancellationToken), CSharpSyntaxTree.ParseText(AttributeSource, cancellationToken: Current.CancellationToken) },
+			new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(List<>).Assembly.Location)
 			},
 			new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
@@ -2046,11 +2043,8 @@ public class SubsetValidatorGeneratorTests
 
 		// Create compilation
 		CSharpCompilation compilation = CSharpCompilation.Create("compilation",
-			new[] { CSharpSyntaxTree.ParseText(source), CSharpSyntaxTree.ParseText(AttributeSource) },
-			new[] {
-				MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-				MetadataReference.CreateFromFile(typeof(System.Collections.Generic.List<>).Assembly.Location)
-			},
+			new[] { CSharpSyntaxTree.ParseText(source, cancellationToken: Current.CancellationToken), CSharpSyntaxTree.ParseText(AttributeSource, cancellationToken: Current.CancellationToken) },
+			new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(List<>).Assembly.Location) },
 			new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
 		SubsetValidatorGenerator generator = new();

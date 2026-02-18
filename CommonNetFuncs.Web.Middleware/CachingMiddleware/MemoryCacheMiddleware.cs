@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using CommonNetFuncs.Web.Common.CachingSupportClasses;
+﻿using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +6,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
+using System.Security.Cryptography;
+using System.Text;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Core.UnitConversion;

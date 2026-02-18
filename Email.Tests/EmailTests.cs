@@ -1737,10 +1737,7 @@ public sealed class EmailTests
 	{
 		// Arrange
 		MemoryStream stream = new(new byte[] { 1, 2, 3 });
-		IMailAttachment[] attachments = new[]
-		{
-			new MailAttachment("test.txt", stream)
-		};
+		IMailAttachment[] attachments = new[] { new MailAttachment("test.txt", stream) };
 		SendEmailConfig config = new()
 		{
 			SmtpSettings = new SmtpSettings(smtpServer, smtpPort),
@@ -1757,7 +1754,8 @@ public sealed class EmailTests
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
-														// Stream should still be usable since AutoDisposeAttachments is false
+
+		// Stream should still be usable since AutoDisposeAttachments is false
 		stream.CanRead.ShouldBeTrue();
 		await stream.DisposeAsync();
 	}

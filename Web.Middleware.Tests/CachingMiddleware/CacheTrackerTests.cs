@@ -1,4 +1,5 @@
 ﻿using CommonNetFuncs.Web.Middleware.CachingMiddleware;
+using static Xunit.TestContext;
 
 namespace Web.Middleware.Tests.CachingMiddleware;
 
@@ -35,7 +36,7 @@ public sealed class CacheTrackerTests
 	}
 
 	[Fact]
-	public void TrackEntry_OverwriteExistingEntry_UpdatesMetadata()
+	public async Task TrackEntry_OverwriteExistingEntry_UpdatesMetadata()
 	{
 		// Arrange
 		CacheTracker tracker = new();
@@ -45,7 +46,7 @@ public sealed class CacheTrackerTests
 		tracker.TrackEntry(key, 100);
 		DateTimeOffset firstTime = tracker.GetEntries().First(e => e.Key == key).Value.TimeCreated;
 
-		Thread.Sleep(10); // Small delay to ensure time difference
+		await Task.Delay(10, Current.CancellationToken); // Small delay to ensure time difference
 
 		tracker.TrackEntry(key, 200);
 		IEnumerable<KeyValuePair<string, CacheTracker.CacheEntryMetadata>> entries = tracker.GetEntries();
@@ -139,7 +140,7 @@ public sealed class CacheTrackerTests
 	}
 
 	[Fact]
-	public void CacheTags_SupportsConcurrentAccess()
+	public async Task CacheTags_SupportsConcurrentAccess()
 	{
 		// Arrange
 		CacheTracker tracker = new();
@@ -152,17 +153,17 @@ public sealed class CacheTrackerTests
 			tasks.Add(Task.Run(() =>
 			{
 				tracker.CacheTags[$"tag{capturedI}"] = [$"key{capturedI}"];
-			}));
+			}, Current.CancellationToken));
 		}
 
-		Task.WaitAll([.. tasks]);
+		await Task.WhenAll([.. tasks]);
 
 		// Assert
 		tracker.CacheTags.Count.ShouldBe(10);
 	}
 
 	[Fact]
-	public void TrackEntry_MultipleConcurrentCalls_AllRecorded()
+	public async Task TrackEntry_MultipleConcurrentCalls_AllRecorded()
 	{
 		// Arrange
 		CacheTracker tracker = new();
@@ -175,10 +176,10 @@ public sealed class CacheTrackerTests
 			tasks.Add(Task.Run(() =>
 			{
 				tracker.TrackEntry($"key{capturedI}", capturedI * 100);
-			}));
+			}, Current.CancellationToken));
 		}
 
-		Task.WaitAll([.. tasks]);
+		await Task.WhenAll([.. tasks]);
 
 		// Assert
 		IEnumerable<KeyValuePair<string, CacheTracker.CacheEntryMetadata>> entries = tracker.GetEntries();

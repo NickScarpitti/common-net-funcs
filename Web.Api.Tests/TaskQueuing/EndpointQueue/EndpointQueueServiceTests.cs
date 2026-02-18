@@ -237,21 +237,21 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		var task1 = service.ExecuteAsync(key, async _ =>
+		Task<int> task1 = service.ExecuteAsync(key, async _ =>
 		{
 			await Task.Delay(10, TestContext.Current.CancellationToken);
 			lock (lockObj) { executionOrder.Add(1); }
 			return 1;
 		}, options, TestContext.Current.CancellationToken);
 
-		var task2 = service.ExecuteAsync(key, async _ =>
+		Task<int> task2 = service.ExecuteAsync(key, async _ =>
 		{
 			await Task.Delay(10, TestContext.Current.CancellationToken);
 			lock (lockObj) { executionOrder.Add(2); }
 			return 2;
 		}, options, TestContext.Current.CancellationToken);
 
-		var task3 = service.ExecuteAsync(key, async _ =>
+		Task<int> task3 = service.ExecuteAsync(key, async _ =>
 		{
 			await Task.Delay(10, TestContext.Current.CancellationToken);
 			lock (lockObj) { executionOrder.Add(3); }
@@ -597,7 +597,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Get the queue and its internal stats field
 
-		queuesDict!.TryGetValue("old-queue", out var queue).ShouldBeTrue();
+		queuesDict!.TryGetValue("old-queue", out CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue? queue).ShouldBeTrue();
 		queue.ShouldNotBeNull();
 
 		System.Reflection.FieldInfo? statsField = typeof(CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue).GetField("stats", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

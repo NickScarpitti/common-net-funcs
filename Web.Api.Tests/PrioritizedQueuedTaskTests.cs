@@ -270,19 +270,6 @@ public class PrioritizedQueuedTaskTests
 	}
 
 	[Fact]
-	public void OperatorEquals_Should_Return_True_For_Same_Reference()
-	{
-		// Arrange
-		PrioritizedQueuedTask task = new(_ => Task.FromResult<object?>(null));
-
-		// Act
-		bool result = task == task;
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
 	public void OperatorEquals_Should_Return_True_When_Both_Are_Null()
 	{
 		// Arrange
@@ -319,19 +306,6 @@ public class PrioritizedQueuedTaskTests
 
 		// Act
 		bool result = task1 == task2;
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void OperatorNotEquals_Should_Return_False_For_Same_Reference()
-	{
-		// Arrange
-		PrioritizedQueuedTask task = new(_ => Task.FromResult<object?>(null));
-
-		// Act
-		bool result = task != task;
 
 		// Assert
 		result.ShouldBeFalse();

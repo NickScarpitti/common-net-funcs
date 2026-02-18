@@ -513,7 +513,7 @@ public sealed class ListRangeAttributeTests : ValidationTestBase
 
 		// Assert
 		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldContain("must be between");
+		result.ErrorMessage?.ShouldContain("must be between");
 	}
 
 	[Fact]

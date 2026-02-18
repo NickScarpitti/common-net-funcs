@@ -128,17 +128,15 @@ public static class PatchCreator
 					continue;
 				}
 
-#if NET6_0_OR_GREATER
-				if (origVal is DateOnly origDo && modVal is DateOnly modDo)
-				{
-					if (origDo != modDo)
-					{
-						patch.Replace($"{path}{modProp.Name}", modProp.Value);
-					}
+				// if (origVal is DateOnly origDo && modVal is DateOnly modDo)
+				// {
+				// 	if (origDo != modDo)
+				// 	{
+				// 		patch.Replace($"{path}{modProp.Name}", modProp.Value);
+				// 	}
 
-					continue;
-				}
-#endif
+				// 	continue;
+				// }
 
 				if (origVal is DateTimeOffset origDto && modVal is DateTimeOffset modDto)
 				{
@@ -150,11 +148,11 @@ public static class PatchCreator
 					continue;
 				}
 
-				// Fallback: compare as string if unknown date type
-				if (!Equals(origVal?.ToString(), modVal?.ToString()))
-				{
-					patch.Replace($"{path}{modProp.Name}", modProp.Value);
-				}
+				// // Fallback: compare as string if unknown date type
+				// if (!Equals(origVal?.ToString(), modVal?.ToString()))
+				// {
+				// 	patch.Replace($"{path}{modProp.Name}", modProp.Value);
+				// }
 			}
 		}
 	}

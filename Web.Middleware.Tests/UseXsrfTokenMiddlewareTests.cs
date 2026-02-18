@@ -64,10 +64,22 @@ public sealed class UseXsrfTokenMiddlewareTests
 	public void UseXsrfToken_Extension_ShouldAddMiddleware(bool httpOnly)
 	{
 		// Act
-		IApplicationBuilder result = builder.UseMiddleware<UseXsrfTokenMiddleware>(httpOnly);
+		IApplicationBuilder result = builder.UseXsrfToken(httpOnly);
 
 		// Assert
 		result.ShouldBe(builder);
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).MustHaveHappened();
+	}
+
+	[RetryFact(3)]
+	public void UseXsrfToken_Extension_WithDefaultParameter_ShouldAddMiddleware()
+	{
+		// Act
+		IApplicationBuilder result = builder.UseXsrfToken();
+
+		// Assert
+		result.ShouldBe(builder);
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).MustHaveHappened();
 	}
 
 	[RetryFact(3)]

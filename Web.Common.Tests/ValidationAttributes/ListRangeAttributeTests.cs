@@ -224,7 +224,7 @@ public sealed class ListRangeAttributeTests : ValidationTestBase
 		Should.Throw<InvalidOperationException>(() =>
 		{
 			ListRangeAttribute attribute = new(typeof(object), "a", "b");
-			attribute.GetValidationResult(new List<object> { new object() }, DummyValidationContext);
+			attribute.GetValidationResult(new List<object> { new() }, DummyValidationContext);
 		});
 	}
 

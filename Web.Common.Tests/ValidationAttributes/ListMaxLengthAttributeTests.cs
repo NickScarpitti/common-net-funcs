@@ -220,7 +220,7 @@ public sealed class ListMaxLengthAttributeTests : ValidationTestBase
 		List<string> collection = ["a", "b", "c"];
 
 		// Act
-		bool result = ListMaxLengthAttribute.CountPropertyHelper.TryGetCount(collection, out int count);
+		bool result = CountPropertyHelper.TryGetCount(collection, out int count);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -234,7 +234,7 @@ public sealed class ListMaxLengthAttributeTests : ValidationTestBase
 		CustomCollectionWithCount customObject = new(["a", "b"]);
 
 		// Act
-		bool result = ListMaxLengthAttribute.CountPropertyHelper.TryGetCount(customObject, out int count);
+		bool result = CountPropertyHelper.TryGetCount(customObject, out int count);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -248,7 +248,7 @@ public sealed class ListMaxLengthAttributeTests : ValidationTestBase
 		CustomCollectionNoCount customObject = new(["x"]);
 
 		// Act
-		bool result = ListMaxLengthAttribute.CountPropertyHelper.TryGetCount(customObject, out int count);
+		bool result = CountPropertyHelper.TryGetCount(customObject, out int count);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -262,7 +262,7 @@ public sealed class ListMaxLengthAttributeTests : ValidationTestBase
 		var customObject = new { Count = "three" };
 
 		// Act
-		bool result = ListMaxLengthAttribute.CountPropertyHelper.TryGetCount(customObject, out int count);
+		bool result = CountPropertyHelper.TryGetCount(customObject, out int count);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -276,7 +276,7 @@ public sealed class ListMaxLengthAttributeTests : ValidationTestBase
 		var customObject = new { Name = "test" };
 
 		// Act
-		bool result = ListMaxLengthAttribute.CountPropertyHelper.TryGetCount(customObject, out int count);
+		bool result = CountPropertyHelper.TryGetCount(customObject, out int count);
 
 		// Assert
 		result.ShouldBeFalse();

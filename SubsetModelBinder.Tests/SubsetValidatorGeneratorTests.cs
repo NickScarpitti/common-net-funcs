@@ -48,7 +48,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Use driver to find the generated files
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -87,7 +87,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -126,7 +126,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -166,7 +166,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -211,7 +211,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -254,7 +254,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -293,7 +293,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -333,7 +333,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -373,7 +373,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -410,7 +410,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -460,7 +460,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -498,7 +498,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -536,7 +536,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -586,7 +586,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -624,7 +624,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -662,7 +662,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -706,7 +706,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -747,7 +747,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass multiple times
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -772,7 +772,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -812,7 +812,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -843,7 +843,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -886,7 +886,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get diagnostics
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -915,7 +915,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -952,7 +952,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -997,7 +997,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1040,7 +1040,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1078,7 +1078,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1118,7 +1118,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1155,7 +1155,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1193,7 +1193,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1231,7 +1231,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1269,7 +1269,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1307,7 +1307,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass - should not crash
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1345,7 +1345,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1387,7 +1387,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1426,7 +1426,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1466,7 +1466,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1505,7 +1505,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1545,7 +1545,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1588,7 +1588,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1628,7 +1628,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1684,7 +1684,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1721,7 +1721,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1768,7 +1768,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1803,7 +1803,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1842,7 +1842,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1883,7 +1883,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1928,7 +1928,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -1964,7 +1964,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -2009,7 +2009,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -2051,7 +2051,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -2093,7 +2093,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();
@@ -2132,7 +2132,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
 		// Run the generation pass
-		driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
+		driver = driver.RunGenerators(compilation, Current.CancellationToken);
 
 		// Get results
 		GeneratorDriverRunResult result = driver.GetRunResult();

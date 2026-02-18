@@ -9,6 +9,7 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using static CommonNetFuncs.Compression.Streams;
+using static Xunit.TestContext;
 
 namespace Web.Aws.S3.Tests;
 
@@ -21,10 +22,10 @@ public class AwsS3HelpersStaticTests
 	static AwsS3HelpersStaticTests()
 	{
 		// Configure NLog programmatically to enable Trace and Debug logging for coverage
-		var config = new LoggingConfiguration();
+		LoggingConfiguration config = new();
 
 		// Create a memory target to capture log messages
-		var memoryTarget = new MemoryTarget("memory");
+		MemoryTarget memoryTarget = new("memory");
 
 		// Add rule that enables Trace level for AWS S3 helpers
 		config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget, "CommonNetFuncs.Web.Aws.S3.*");
@@ -38,7 +39,7 @@ public class AwsS3HelpersStaticTests
 		_s3Client = A.Fake<IAmazonS3>();
 	}
 
-	private ConcurrentDictionary<string, bool> CreateValidatedBucketsCache()
+	private static ConcurrentDictionary<string, bool> CreateValidatedBucketsCache()
 	{
 		ConcurrentDictionary<string, bool> cache = new();
 		cache[TestBucketName] = true;
@@ -60,7 +61,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -85,7 +86,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new CompleteMultipartUploadResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -112,7 +113,7 @@ public class AwsS3HelpersStaticTests
 		ConcurrentDictionary<string, bool> validatedBuckets = new();
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, "", fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, "", fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -131,8 +132,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData,
-			validatedBuckets, compressSteam: false);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, compressSteam: false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -151,7 +151,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("AWS Error"));
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -173,7 +173,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -193,7 +193,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.BadRequest });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -212,8 +212,8 @@ public class AwsS3HelpersStaticTests
 			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData,
-			validatedBuckets, compressSteam: true, compressionType: ECompressionType.Deflate);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, compressSteam: true,
+			compressionType: ECompressionType.Deflate, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -228,15 +228,14 @@ public class AwsS3HelpersStaticTests
 	{
 		// Act & Assert
 		await Should.ThrowAsync<ArgumentException>(() =>
-			_s3Client.UploadS3File(TestBucketName, "", "somepath.txt"));
+			_s3Client.UploadS3File(TestBucketName, "", "SomePath.txt"));
 	}
 
 	[Fact]
 	public async Task UploadS3File_FilePath_Should_Throw_For_NonExistent_File()
 	{
 		// Act & Assert
-		await Should.ThrowAsync<FileNotFoundException>(() =>
-			_s3Client.UploadS3File(TestBucketName, TestFileName, "c:\\nonexistent\\file.txt"));
+		await Should.ThrowAsync<FileNotFoundException>(() => _s3Client.UploadS3File(TestBucketName, TestFileName, "c:\\nonexistent\\file.txt", cancellationToken: Current.CancellationToken));
 	}
 
 	[Fact]
@@ -246,7 +245,7 @@ public class AwsS3HelpersStaticTests
 		string tempFile = Path.GetTempFileName();
 		try
 		{
-			await File.WriteAllBytesAsync(tempFile, new byte[1024]);
+			await File.WriteAllBytesAsync(tempFile, new byte[1024], Current.CancellationToken);
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
@@ -255,7 +254,7 @@ public class AwsS3HelpersStaticTests
 				.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 			// Act
-			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.ShouldBeTrue();
@@ -274,7 +273,7 @@ public class AwsS3HelpersStaticTests
 		string tempFile = Path.GetTempFileName();
 		try
 		{
-			await File.WriteAllBytesAsync(tempFile, new byte[15 * 1024 * 1024]);
+			await File.WriteAllBytesAsync(tempFile, new byte[15 * 1024 * 1024], Current.CancellationToken);
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
@@ -287,7 +286,7 @@ public class AwsS3HelpersStaticTests
 				.Returns(new CompleteMultipartUploadResponse { HttpStatusCode = HttpStatusCode.OK });
 
 			// Act
-			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.ShouldBeTrue();
@@ -306,14 +305,14 @@ public class AwsS3HelpersStaticTests
 		string tempFile = Path.GetTempFileName();
 		try
 		{
-			await File.WriteAllBytesAsync(tempFile, new byte[1024]);
+			await File.WriteAllBytesAsync(tempFile, new byte[1024], Current.CancellationToken);
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
 				.ThrowsAsync(new InvalidOperationException("Error"));
 
 			// Act
-			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.ShouldBeFalse();
@@ -344,7 +343,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new CompleteMultipartUploadResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
-		bool result = await _s3Client.UploadMultipartAsync(TestBucketName, TestFileName, stream);
+		bool result = await _s3Client.UploadMultipartAsync(TestBucketName, TestFileName, stream, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -361,7 +360,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Error"));
 
 		// Act
-		bool result = await _s3Client.UploadMultipartAsync(TestBucketName, TestFileName, stream);
+		bool result = await _s3Client.UploadMultipartAsync(TestBucketName, TestFileName, stream, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -382,7 +381,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new AbortMultipartUploadResponse());
 
 		// Act
-		bool result = await _s3Client.UploadMultipartAsync(TestBucketName, TestFileName, stream);
+		bool result = await _s3Client.UploadMultipartAsync(TestBucketName, TestFileName, stream, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -405,7 +404,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new CompleteMultipartUploadResponse { HttpStatusCode = HttpStatusCode.BadRequest });
 
 		// Act
-		bool result = await _s3Client.UploadMultipartAsync(TestBucketName, TestFileName, stream);
+		bool result = await _s3Client.UploadMultipartAsync(TestBucketName, TestFileName, stream, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -428,7 +427,7 @@ public class AwsS3HelpersStaticTests
 
 		// Act
 		PartETag? result = await _s3Client.UploadPartAsync(TestBucketName, TestFileName, "upload-id",
-			stream, 1, 10 * 1024 * 1024, 10 * 1024 * 1024, semaphore);
+			stream, 1, 10 * 1024 * 1024, 10 * 1024 * 1024, semaphore, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -449,7 +448,7 @@ public class AwsS3HelpersStaticTests
 
 		// Act
 		PartETag? result = await _s3Client.UploadPartAsync(TestBucketName, TestFileName, "upload-id",
-			stream, 1, 10 * 1024 * 1024, 10 * 1024 * 1024, semaphore);
+			stream, 1, 10 * 1024 * 1024, 10 * 1024 * 1024, semaphore, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -468,7 +467,7 @@ public class AwsS3HelpersStaticTests
 
 		// Act
 		PartETag? result = await _s3Client.UploadPartAsync(TestBucketName, TestFileName, "upload-id",
-			stream, 1, 10 * 1024 * 1024, 10 * 1024 * 1024, semaphore);
+			stream, 1, 10 * 1024 * 1024, 10 * 1024 * 1024, semaphore, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -498,7 +497,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(response);
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, false);
+		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBeGreaterThan(0);
@@ -512,7 +511,7 @@ public class AwsS3HelpersStaticTests
 		ConcurrentDictionary<string, bool> validatedBuckets = new();
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, "", outputStream, validatedBuckets);
+		await _s3Client.GetS3File(TestBucketName, "", outputStream, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBe(0);
@@ -527,7 +526,7 @@ public class AwsS3HelpersStaticTests
 		validatedBuckets[TestBucketName] = false;
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets);
+		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBe(0);
@@ -544,7 +543,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets);
+		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBe(0);
@@ -561,7 +560,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets);
+		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBe(0);
@@ -578,7 +577,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new InvalidOperationException("Error"));
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets);
+		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBe(0);
@@ -610,7 +609,7 @@ public class AwsS3HelpersStaticTests
 				.Returns(response);
 
 			// Act
-			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			FileInfo fileInfo = new(tempFile);
@@ -634,7 +633,7 @@ public class AwsS3HelpersStaticTests
 			validatedBuckets[TestBucketName] = false;
 
 			// Act
-			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert - Should not throw
 			FileInfo fileInfo = new(tempFile);
@@ -660,7 +659,7 @@ public class AwsS3HelpersStaticTests
 				.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
 
 			// Act
-			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert - Should handle gracefully
 			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
@@ -686,7 +685,7 @@ public class AwsS3HelpersStaticTests
 				.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
 
 			// Act
-			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert - Should handle gracefully
 			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
@@ -712,7 +711,7 @@ public class AwsS3HelpersStaticTests
 				.ThrowsAsync(new InvalidOperationException("Error"));
 
 			// Act
-			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert - Should handle gracefully
 			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
@@ -741,7 +740,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new DeleteObjectResponse { HttpStatusCode = HttpStatusCode.NoContent });
 
 		// Act
-		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets);
+		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -754,7 +753,7 @@ public class AwsS3HelpersStaticTests
 		ConcurrentDictionary<string, bool> validatedBuckets = new();
 
 		// Act
-		bool result = await _s3Client.DeleteS3File(TestBucketName, "", validatedBuckets);
+		bool result = await _s3Client.DeleteS3File(TestBucketName, "", validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -769,7 +768,7 @@ public class AwsS3HelpersStaticTests
 		validatedBuckets[uniqueBucket] = false;
 
 		// Act
-		bool result = await _s3Client.DeleteS3File(uniqueBucket, TestFileName, validatedBuckets);
+		bool result = await _s3Client.DeleteS3File(uniqueBucket, TestFileName, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -785,7 +784,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
 
 		// Act
-		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets);
+		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -803,7 +802,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
 
 		// Act
-		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets);
+		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -821,7 +820,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new GetObjectMetadataResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
-		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName);
+		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -835,7 +834,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
 
 		// Act
-		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName);
+		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -845,7 +844,7 @@ public class AwsS3HelpersStaticTests
 	public async Task S3FileExists_Should_Return_False_For_Empty_FileName()
 	{
 		// Act
-		bool result = await _s3Client.S3FileExists(TestBucketName, "");
+		bool result = await _s3Client.S3FileExists(TestBucketName, "", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -859,7 +858,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new GetObjectMetadataResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
-		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName, "version123");
+		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName, "version123", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -873,7 +872,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
 
 		// Act
-		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName);
+		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -887,7 +886,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new InvalidOperationException("Error"));
 
 		// Act
-		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName);
+		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -916,7 +915,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(response);
 
 		// Act
-		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName);
+		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -956,7 +955,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(response2);
 
 		// Act
-		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName);
+		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -967,7 +966,7 @@ public class AwsS3HelpersStaticTests
 	public async Task GetAllS3BucketFiles_Should_Return_Empty_For_Empty_BucketName()
 	{
 		// Act
-		List<string>? result = await _s3Client.GetAllS3BucketFiles("");
+		List<string>? result = await _s3Client.GetAllS3BucketFiles("", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -982,7 +981,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
 
 		// Act
-		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName);
+		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -997,7 +996,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
 
 		// Act
-		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName);
+		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1012,7 +1011,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new InvalidOperationException("Error"));
 
 		// Act
-		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName);
+		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1036,7 +1035,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(response);
 
 		// Act
-		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName, 500);
+		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName, 500, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1119,7 +1118,8 @@ public class AwsS3HelpersStaticTests
 			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, AwsS3HelpersStatic.MultipartThreshold, true, ECompressionType.Gzip);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, AwsS3HelpersStatic.MultipartThreshold, true,
+			ECompressionType.Gzip, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -1150,7 +1150,8 @@ public class AwsS3HelpersStaticTests
 			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, AwsS3HelpersStatic.MultipartThreshold, true, ECompressionType.Deflate);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, AwsS3HelpersStatic.MultipartThreshold, true,
+			ECompressionType.Deflate, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -1181,7 +1182,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act - compressSteam = false
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, AwsS3HelpersStatic.MultipartThreshold, false);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, AwsS3HelpersStatic.MultipartThreshold, false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -1210,7 +1211,7 @@ public class AwsS3HelpersStaticTests
 		ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, "", fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, "", fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1224,7 +1225,7 @@ public class AwsS3HelpersStaticTests
 		ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, "   ", fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, "   ", fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1247,7 +1248,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new CompleteMultipartUploadResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act - Use 1KB threshold, so 2KB file will use multipart
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, 1024);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, 1024, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -1260,7 +1261,7 @@ public class AwsS3HelpersStaticTests
 		string tempFile = Path.GetTempFileName();
 		try
 		{
-			await File.WriteAllBytesAsync(tempFile, new byte[2 * 1024]); // 2KB
+			await File.WriteAllBytesAsync(tempFile, new byte[2 * 1024], Current.CancellationToken); // 2KB
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
@@ -1273,7 +1274,7 @@ public class AwsS3HelpersStaticTests
 				.Returns(new CompleteMultipartUploadResponse { HttpStatusCode = HttpStatusCode.OK });
 
 			// Act - Use 1KB threshold
-			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, 1024);
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, 1024, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.ShouldBeTrue();
@@ -1302,7 +1303,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new AbortMultipartUploadResponse { HttpStatusCode = HttpStatusCode.NoContent });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1327,7 +1328,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new AbortMultipartUploadResponse { HttpStatusCode = HttpStatusCode.NoContent });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1347,7 +1348,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(response);
 
 		// Act
-		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName);
+		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1358,26 +1359,7 @@ public class AwsS3HelpersStaticTests
 	public async Task S3FileExists_Should_Return_False_For_Whitespace_FileName()
 	{
 		// Act
-		bool result = await _s3Client.S3FileExists(TestBucketName, "   ");
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public async Task UploadS3File_Should_Return_False_On_PutObject_Non_OK_Status()
-	{
-		// Arrange
-		await using MemoryStream fileData = new(new byte[1024]);
-		ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
-
-		A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
-			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
-		A.CallTo(() => _s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._))
-			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.BadRequest });
-
-		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.S3FileExists(TestBucketName, "   ", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1390,7 +1372,7 @@ public class AwsS3HelpersStaticTests
 		string tempFile = Path.GetTempFileName();
 		try
 		{
-			await File.WriteAllBytesAsync(tempFile, new byte[1024]);
+			await File.WriteAllBytesAsync(tempFile, new byte[1024], Current.CancellationToken);
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
@@ -1399,7 +1381,7 @@ public class AwsS3HelpersStaticTests
 				.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.BadRequest });
 
 			// Act
-			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.ShouldBeFalse();
@@ -1428,7 +1410,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new CompleteMultipartUploadResponse { HttpStatusCode = HttpStatusCode.BadRequest });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1442,7 +1424,7 @@ public class AwsS3HelpersStaticTests
 		ConcurrentDictionary<string, bool> validatedBuckets = new();
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, "   ", outputStream, validatedBuckets);
+		await _s3Client.GetS3File(TestBucketName, "   ", outputStream, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBe(0);
@@ -1458,7 +1440,7 @@ public class AwsS3HelpersStaticTests
 			ConcurrentDictionary<string, bool> validatedBuckets = new();
 
 			// Act
-			await _s3Client.GetS3File(TestBucketName, "", tempFile, validatedBuckets);
+			await _s3Client.GetS3File(TestBucketName, "", tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert - Should not throw, file should remain empty
 			FileInfo fileInfo = new(tempFile);
@@ -1478,7 +1460,7 @@ public class AwsS3HelpersStaticTests
 		ConcurrentDictionary<string, bool> validatedBuckets = new();
 
 		// Act
-		bool result = await _s3Client.DeleteS3File(TestBucketName, "   ", validatedBuckets);
+		bool result = await _s3Client.DeleteS3File(TestBucketName, "   ", validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1488,7 +1470,7 @@ public class AwsS3HelpersStaticTests
 	public async Task S3FileExists_Should_Return_False_For_Null_FileName()
 	{
 		// Act
-		bool result = await _s3Client.S3FileExists(TestBucketName, null!);
+		bool result = await _s3Client.S3FileExists(TestBucketName, null!, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1507,9 +1489,9 @@ public class AwsS3HelpersStaticTests
 
 		byte[] uncompressed = new byte[1024];
 		await using MemoryStream compressed = new();
-		await using (var gzipStream = new System.IO.Compression.GZipStream(compressed, System.IO.Compression.CompressionLevel.Optimal, true))
+		await using (GZipStream gzipStream = new(compressed, CompressionLevel.Optimal, true))
 		{
-			await gzipStream.WriteAsync(uncompressed);
+			await gzipStream.WriteAsync(uncompressed, Current.CancellationToken);
 		}
 		compressed.Position = 0;
 
@@ -1524,7 +1506,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(response);
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, decompressGzipData: true);
+		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, decompressGzipData: true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBeGreaterThan(0);
@@ -1539,9 +1521,9 @@ public class AwsS3HelpersStaticTests
 
 		byte[] uncompressed = new byte[1024];
 		await using MemoryStream compressed = new();
-		await using (var deflateStream = new System.IO.Compression.DeflateStream(compressed, System.IO.Compression.CompressionLevel.Optimal, true))
+		await using (DeflateStream deflateStream = new(compressed, CompressionLevel.Optimal, true))
 		{
-			await deflateStream.WriteAsync(uncompressed);
+			await deflateStream.WriteAsync(uncompressed, Current.CancellationToken);
 		}
 		compressed.Position = 0;
 
@@ -1556,7 +1538,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(response);
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, decompressGzipData: true);
+		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, decompressGzipData: true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBeGreaterThan(0);
@@ -1583,7 +1565,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(response);
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, decompressGzipData: false);
+		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, decompressGzipData: false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		outputStream.Length.ShouldBeGreaterThan(0);
@@ -1600,7 +1582,7 @@ public class AwsS3HelpersStaticTests
 		string tempFile = Path.GetTempFileName();
 		try
 		{
-			await File.WriteAllBytesAsync(tempFile, new byte[20 * 1024 * 1024]); // 20MB
+			await File.WriteAllBytesAsync(tempFile, new byte[20 * 1024 * 1024], Current.CancellationToken); // 20MB
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
@@ -1613,7 +1595,7 @@ public class AwsS3HelpersStaticTests
 				.Returns(new CompleteMultipartUploadResponse { HttpStatusCode = HttpStatusCode.OK });
 
 			// Act
-			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.ShouldBeTrue();
@@ -1632,7 +1614,7 @@ public class AwsS3HelpersStaticTests
 		string tempFile = Path.GetTempFileName();
 		try
 		{
-			await File.WriteAllBytesAsync(tempFile, new byte[20 * 1024 * 1024]); // 20MB
+			await File.WriteAllBytesAsync(tempFile, new byte[20 * 1024 * 1024], Current.CancellationToken); // 20MB
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
@@ -1645,7 +1627,7 @@ public class AwsS3HelpersStaticTests
 				.Returns(new AbortMultipartUploadResponse { HttpStatusCode = HttpStatusCode.NoContent });
 
 			// Act
-			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.ShouldBeFalse();
@@ -1672,7 +1654,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("AWS Error") { StatusCode = HttpStatusCode.InternalServerError });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1685,14 +1667,14 @@ public class AwsS3HelpersStaticTests
 		string tempFile = Path.GetTempFileName();
 		try
 		{
-			await File.WriteAllBytesAsync(tempFile, new byte[1024]);
+			await File.WriteAllBytesAsync(tempFile, new byte[1024], Current.CancellationToken);
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
 				.ThrowsAsync(new AmazonS3Exception("AWS Error") { StatusCode = HttpStatusCode.ServiceUnavailable });
 
 			// Act
-			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.ShouldBeFalse();
@@ -1705,87 +1687,6 @@ public class AwsS3HelpersStaticTests
 	}
 
 	[Fact]
-	public async Task GetS3File_FilePath_Should_Handle_NotFound_AmazonS3Exception()
-	{
-		// Arrange
-		string tempFile = Path.GetTempFileName();
-		try
-		{
-			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
-
-			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-				.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
-
-			// Act
-			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
-
-			// Assert - Should handle gracefully with special NotFound logging
-			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-				.MustHaveHappened();
-		}
-		finally
-		{
-			if (File.Exists(tempFile))
-				File.Delete(tempFile);
-		}
-	}
-
-	[Fact]
-	public async Task GetS3File_FilePath_Should_Handle_Non_NotFound_AmazonS3Exception()
-	{
-		// Arrange
-		string tempFile = Path.GetTempFileName();
-		try
-		{
-			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
-
-			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-				.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
-
-			// Act
-			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
-
-			// Assert - Should handle with error logging
-			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-				.MustHaveHappened();
-		}
-		finally
-		{
-			if (File.Exists(tempFile))
-				File.Delete(tempFile);
-		}
-	}
-
-	[Fact]
-	public async Task GetAllS3BucketFiles_Should_Handle_AmazonS3Exception_NotFound()
-	{
-		// Arrange
-		A.CallTo(() => _s3Client.ListObjectsV2Async(A<ListObjectsV2Request>._, A<CancellationToken>._))
-			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
-
-		// Act
-		List<string>? result = await _s3Client.GetAllS3BucketFiles(TestBucketName);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task S3FileExists_Should_Handle_Non_NotFound_AmazonS3Exception()
-	{
-		// Arrange
-		A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._))
-			.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
-
-		// Act
-		bool result = await _s3Client.S3FileExists(TestBucketName, TestFileName);
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
 	public async Task DeleteS3File_Should_Handle_Non_NotFound_AmazonS3Exception_During_Check()
 	{
 		// Arrange
@@ -1795,7 +1696,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
 
 		// Act
-		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets);
+		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1811,7 +1712,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new InvalidOperationException("Error"));
 
 		// Act
-		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets);
+		bool result = await _s3Client.DeleteS3File(TestBucketName, TestFileName, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1828,7 +1729,7 @@ public class AwsS3HelpersStaticTests
 			.ThrowsAsync(new InvalidOperationException("Error"));
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1851,7 +1752,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new AbortMultipartUploadResponse { HttpStatusCode = HttpStatusCode.NoContent });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -1967,7 +1868,7 @@ public class AwsS3HelpersStaticTests
 			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -1982,7 +1883,7 @@ public class AwsS3HelpersStaticTests
 		string tempFile = Path.GetTempFileName();
 		try
 		{
-			await File.WriteAllBytesAsync(tempFile, new byte[1024]);
+			await File.WriteAllBytesAsync(tempFile, new byte[1024], Current.CancellationToken);
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 			// File exists
@@ -1996,7 +1897,7 @@ public class AwsS3HelpersStaticTests
 				.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 			// Act
-			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets);
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.ShouldBeTrue();
@@ -2025,7 +1926,7 @@ public class AwsS3HelpersStaticTests
 		using MemoryStream compressedStream = new();
 		using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Compress, true))
 		{
-			await brotliStream.WriteAsync(testData);
+			await brotliStream.WriteAsync(testData, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
@@ -2042,7 +1943,7 @@ public class AwsS3HelpersStaticTests
 		ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
 		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, decompressGzipData: true);
+		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, decompressGzipData: true, cancellationToken: Current.CancellationToken);
 
 		// Assert - File should be decompressed
 		outputStream.Position = 0;
@@ -2060,7 +1961,7 @@ public class AwsS3HelpersStaticTests
 		await using MemoryStream compressedStream = new();
 		await using (BrotliStream brotliStream = new(compressedStream, CompressionMode.Compress, true))
 		{
-			await brotliStream.WriteAsync(testData);
+			await brotliStream.WriteAsync(testData, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
@@ -2072,7 +1973,8 @@ public class AwsS3HelpersStaticTests
 			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act - Upload with compression, but stream is already Brotli compressed
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, compressedStream, validatedBuckets, compressSteam: true, compressionType: ECompressionType.Gzip);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, compressedStream, validatedBuckets, compressSteam: true,
+			compressionType: ECompressionType.Gzip, cancellationToken: Current.CancellationToken);
 
 		// Assert - Should decompress Brotli first, then recompress with Gzip
 		result.ShouldBeTrue();
@@ -2088,7 +1990,7 @@ public class AwsS3HelpersStaticTests
 		await using MemoryStream compressedStream = new();
 		await using (ZLibStream zlibStream = new(compressedStream, CompressionMode.Compress, true))
 		{
-			await zlibStream.WriteAsync(testData);
+			await zlibStream.WriteAsync(testData, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
@@ -2100,7 +2002,8 @@ public class AwsS3HelpersStaticTests
 			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act - Upload with compression, but stream is already ZLib compressed
-		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, compressedStream, validatedBuckets, compressSteam: true, compressionType: ECompressionType.Gzip);
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, compressedStream, validatedBuckets, compressSteam: true,
+			compressionType: ECompressionType.Gzip, cancellationToken: Current.CancellationToken);
 
 		// Assert - Should decompress ZLib first, then recompress with Gzip
 		result.ShouldBeTrue();

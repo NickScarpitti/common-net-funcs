@@ -89,4 +89,99 @@ public sealed class CacheKeyGenerationTests
 		A.CallTo(() => cache.CreateEntry(A<string>.That.Contains("|"))).MustHaveHappened();
 		context.Request.Body.Position.ShouldBe(0); // Verify body position is reset
 	}
+
+	[RetryFact(3)]
+	public async Task GenerateCacheKey_WithDifferentAcceptHeaders_GeneratesDifferentKeys()
+	{
+		// Arrange
+		context.Request.Method = "GET";
+		context.Request.Path = "/api/test";
+		context.Request.Headers.Accept = "application/json";
+
+		Dictionary<string, StringValues> queryDict = new()
+			{
+				{ options.UseCacheQueryParam, "true" }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
+
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
+
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert
+		A.CallTo(() => cache.CreateEntry(A<string>.That.Contains("application/json"))).MustHaveHappened();
+	}
+
+	[RetryFact(3)]
+	public async Task GenerateCacheKey_WithQueryParameters_OrdersParametersConsistently()
+	{
+		// Arrange
+		context.Request.Method = "GET";
+		context.Request.Path = "/api/test";
+
+		Dictionary<string, StringValues> queryDict = new()
+			{
+				{ "zebra", "last" },
+				{ "alpha", "first" },
+				{ "middle", "value" },
+				{ options.UseCacheQueryParam, "true" }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
+
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
+
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert - Parameters should be ordered alphabetically
+		A.CallTo(() => cache.CreateEntry(A<string>.That.Matches(key =>
+			key.Contains("alpha") && key.Contains("middle") && key.Contains("zebra")))).MustHaveHappened();
+	}
+
+	[RetryFact(3)]
+	public async Task GenerateCacheKey_ExcludesEvictionParam()
+	{
+		// Arrange
+		context.Request.Method = "GET";
+		context.Request.Path = "/api/test";
+
+		Dictionary<string, StringValues> queryDict = new()
+			{
+				{ options.UseCacheQueryParam, "true" },
+				{ options.EvictionQueryParam, "true" }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
+
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
+
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert - eviction param should not be in cache key
+		A.CallTo(() => cache.CreateEntry(A<string>.That.Not.Contains(options.EvictionQueryParam))).MustHaveHappened();
+	}
+
+	[RetryFact(3)]
+	public async Task GenerateCacheKey_WithEmptyPostBody_IncludesBodyHash()
+	{
+		// Arrange
+		context.Request.Method = "POST";
+		context.Request.Path = "/api/test";
+		context.Request.Body = new MemoryStream();
+
+		Dictionary<string, StringValues> queryDict = new()
+			{
+				{ options.UseCacheQueryParam, "true" }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
+
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
+
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert
+		A.CallTo(() => cache.CreateEntry(A<string>._)).MustHaveHappened();
+	}
 }

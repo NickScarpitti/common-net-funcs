@@ -58,7 +58,7 @@ public class SshFtpServiceTests
 	}
 
 	[Fact]
-	public void Connect_WhenAlreadyConnected_ShouldDisconnectFirst()
+	public void Connect_WhenAlreadyConnected_ShouldReturnClient()
 	{
 		// Arrange
 		A.CallTo(() => sftpClient.IsConnected).Returns(true);
@@ -68,19 +68,22 @@ public class SshFtpServiceTests
 
 		// Assert
 		result.ShouldNotBeNull();
+		result.ShouldBe(sftpClient);
 	}
 
 	[Fact]
-	public async Task ConnectAsync_ShouldConnectClient()
+	public async Task ConnectAsync_WhenAlreadyConnected_ShouldReturnClient()
 	{
 		// Arrange
 		using CancellationTokenSource cts = new();
+		A.CallTo(() => sftpClient.IsConnected).Returns(true);
 
 		// Act
 		SftpClient result = await service.ConnectAsync(cts);
 
 		// Assert
 		result.ShouldNotBeNull();
+		result.ShouldBe(sftpClient);
 	}
 
 	[Fact]
@@ -149,9 +152,12 @@ public class SshFtpServiceTests
 		// Act & Assert
 		await Should.ThrowAsync<SshConnectionException>(async () =>
 		{
+#pragma warning disable S108 // Nested blocks of code should not be left empty
 			await foreach (string _ in service.GetFileListAsync(path))
 			{
+				// This block is intentionally empty for the exception test
 			}
+#pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}
 
@@ -197,11 +203,59 @@ public class SshFtpServiceTests
 		Should.NotThrow(() => service.Dispose());
 	}
 
+	[Fact]
+	public void GetDataFromCsv_WhenNotConnected_ShouldThrowException()
+	{
+		// Arrange
+		const string filePath = "/test/file.csv";
+		A.CallTo(() => sftpClient.IsConnected).Returns(false);
+
+		// Act & Assert
+		Should.Throw<SshConnectionException>(() => service.GetDataFromCsv<TestCsvModel>(filePath));
+	}
+
+	[Fact]
+	public async Task GetDataFromCsvAsync_WhenNotConnected_ShouldThrowException()
+	{
+		// Arrange
+		const string filePath = "/test/file.csv";
+		A.CallTo(() => sftpClient.IsConnected).Returns(false);
+
+		// Act & Assert
+		await Should.ThrowAsync<SshConnectionException>(async () => 
+			await service.GetDataFromCsvAsync<TestCsvModel>(filePath));
+	}
+
+	[Fact]
+	public async Task GetDataFromCsvAsyncEnumerable_WhenNotConnected_ShouldThrowException()
+	{
+		// Arrange
+		const string filePath = "/test/file.csv";
+		A.CallTo(() => sftpClient.IsConnected).Returns(false);
+
+		// Act & Assert
+		await Should.ThrowAsync<SshConnectionException>(async () =>
+		{
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (TestCsvModel _ in service.GetDataFromCsvAsyncEnumerable<TestCsvModel>(filePath))
+			{
+				// This block is intentionally empty for the exception test
+			}
+#pragma warning restore S108 // Nested blocks of code should not be left empty
+		});
+	}
+
 	private static ISftpFile CreateSftpFile(string name, bool isRegularFile)
 	{
 		ISftpFile file = A.Fake<ISftpFile>();
 		A.CallTo(() => file.Name).Returns(name);
 		A.CallTo(() => file.IsRegularFile).Returns(isRegularFile);
 		return file;
+	}
+
+	private class TestCsvModel
+	{
+		public string Name { get; set; } = string.Empty;
+		public int Age { get; set; }
 	}
 }

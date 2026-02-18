@@ -89,4 +89,138 @@ public sealed class MemoryCacheMiddlewareEvictionTests
 		A.CallTo(() => cache.Remove(A<string>._)).MustHaveHappened(keys.Length, Times.Exactly);
 		tracker.CacheTags.ContainsKey(tag).ShouldBeFalse();
 	}
+
+	[RetryFact(3)]
+	public async Task EvictCacheAsync_WithMultipleTags_RemovesAllTaggedEntries()
+	{
+		// Arrange
+		const string tags = "tag1,tag2";
+		CacheEntry entry = new()
+		{
+			Data = new byte[] { 1, 2, 3 },
+			Tags = new HashSet<string> { "tag1" }
+		};
+
+		tracker.CacheTags.TryAdd("tag1", new HashSet<string> { "key1" });
+		tracker.CacheTags.TryAdd("tag2", new HashSet<string> { "key2" });
+
+		object? outValue = entry;
+		A.CallTo(() => cache.TryGetValue(A<object>._, out outValue)).Returns(true);
+
+		Dictionary<string, StringValues> queryDict = new()
+			{
+				{ options.EvictionQueryParam, "true" },
+				{ options.EvictTagQueryParam, tags }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
+
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
+
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert
+		A.CallTo(() => cache.Remove(A<string>._)).MustHaveHappened();
+		tracker.CacheTags.ContainsKey("tag1").ShouldBeFalse();
+		tracker.CacheTags.ContainsKey("tag2").ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
+	public async Task EvictCacheAsync_WithSingleKey_RemovesEntry()
+	{
+		// Arrange
+		CacheEntry entry = new()
+		{
+			Data = new byte[] { 1, 2, 3 },
+			Tags = new HashSet<string> { "tag1" }
+		};
+
+		tracker.CacheTags.TryAdd("tag1", new HashSet<string> { "testkey" });
+
+		object? outValue = entry;
+		A.CallTo(() => cache.TryGetValue(A<object>._, out outValue)).Returns(true);
+
+		Dictionary<string, StringValues> queryDict = new()
+			{
+				{ options.UseCacheQueryParam, "true" },
+				{ options.EvictionQueryParam, "true" }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
+
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
+
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert
+		A.CallTo(() => cache.Remove(A<string>._)).MustHaveHappened();
+		metrics.EvictedDueToRemoved().ShouldBe(1);
+	}
+
+	[RetryFact(3)]
+	public async Task EvictCacheAsync_WithSingleKey_WithSuppressedLogs_DoesNotLog()
+	{
+		// Arrange
+		CacheOptions optionsWithSuppressedLogs = new() { SuppressLogs = true };
+		CacheEntry entry = new()
+		{
+			Data = new byte[] { 1, 2, 3 },
+			Tags = new HashSet<string>()
+		};
+
+		object? outValue = entry;
+		A.CallTo(() => cache.TryGetValue(A<object>._, out outValue)).Returns(true);
+
+		Dictionary<string, StringValues> queryDict = new()
+			{
+				{ optionsWithSuppressedLogs.UseCacheQueryParam, "true" },
+				{ optionsWithSuppressedLogs.EvictionQueryParam, "true" }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
+
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: optionsWithSuppressedLogs, cacheMetrics: metrics, cacheTracker: tracker);
+
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert
+		A.CallTo(() => cache.Remove(A<string>._)).MustHaveHappened();
+	}
+
+	[RetryFact(3)]
+	public async Task EvictCacheAsync_WithNonExistentKey_DoesNotThrow()
+	{
+		// Arrange
+		object? outValue = null;
+		A.CallTo(() => cache.TryGetValue(A<object>._, out outValue)).Returns(false);
+
+		Dictionary<string, StringValues> queryDict = new()
+			{
+				{ options.UseCacheQueryParam, "true" },
+				{ options.EvictionQueryParam, "true" }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
+
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
+
+		// Act & Assert - should not throw
+		await middleware.InvokeAsync(context);
+	}
+
+	[RetryFact(3)]
+	public async Task EvictCacheAsync_WithTagNotInTracker_DoesNotThrow()
+	{
+		// Arrange
+		Dictionary<string, StringValues> queryDict = new()
+			{
+				{ options.EvictionQueryParam, "true" },
+				{ options.EvictTagQueryParam, "nonexistent-tag" }
+			};
+		context.Request.Query = new QueryCollection(queryDict);
+
+		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
+
+		// Act & Assert - should not throw
+		await middleware.InvokeAsync(context);
+	}
 }

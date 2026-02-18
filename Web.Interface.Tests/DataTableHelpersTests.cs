@@ -117,4 +117,176 @@ public sealed class DataTableHelpersTests
 		result.SearchValues.Count.ShouldBe(1);
 		result.SearchValues["invalid"].ShouldBeNull();
 	}
+
+	[Fact]
+	public void GetDataTableRequest_ValidContentTypeWithNullForm_ReturnsEmptyRequest()
+	{
+		HttpRequest request = A.Fake<HttpRequest>();
+		A.CallTo(() => request.ContentType).Returns("application/x-www-form-urlencoded");
+		A.CallTo(() => request.Form).Returns(null!);
+
+		DataTableRequest result = request.GetDataTableRequest();
+
+		result.ShouldNotBeNull();
+		result.SearchValues.Count.ShouldBe(0);
+		result.PageSize.ShouldBe(0);
+		result.Skip.ShouldBe(0);
+	}
+
+	[Fact]
+	public void GetDataTableRequest_SearchValueWithoutEquals_SkipsValue()
+	{
+		Dictionary<string, StringValues> formData = new()
+			{
+				{ "search[value]", new StringValues("invalidvalue,field=value") }
+			};
+
+		HttpRequest request = A.Fake<HttpRequest>();
+		IFormCollection formCollection = new FormCollection(formData);
+
+		A.CallTo(() => request.ContentType).Returns("application/x-www-form-urlencoded");
+		A.CallTo(() => request.Form).Returns(formCollection);
+
+		DataTableRequest result = request.GetDataTableRequest();
+
+		result.SearchValues.Count.ShouldBe(1);
+		result.SearchValues.ShouldContainKey("field");
+		result.SearchValues["field"].ShouldBe("value");
+	}
+
+	[Fact]
+	public void GetDataTableRequest_MultipleOrderColumns_ParsesAllCorrectly()
+	{
+		Dictionary<string, StringValues> formData = new()
+			{
+				{ "order[0][column]", new StringValues("0") },
+				{ "order[0][dir]", new StringValues("asc") },
+				{ "order[1][column]", new StringValues("1") },
+				{ "order[1][dir]", new StringValues("desc") },
+				{ "columns[0][data]", new StringValues("firstName") },
+				{ "columns[1][data]", new StringValues("lastName") }
+			};
+
+		HttpRequest request = A.Fake<HttpRequest>();
+		IFormCollection formCollection = new FormCollection(formData);
+
+		A.CallTo(() => request.ContentType).Returns("application/x-www-form-urlencoded");
+		A.CallTo(() => request.Form).Returns(formCollection);
+
+		DataTableRequest result = request.GetDataTableRequest();
+
+		result.SortColumns.Count.ShouldBe(2);
+		result.SortColumns[0].ShouldBe("firstName");
+		result.SortColumns[1].ShouldBe("lastName");
+		result.SortColumnDir[0].ShouldBe("asc");
+		result.SortColumnDir[1].ShouldBe("desc");
+	}
+
+	[Fact]
+	public void GetDataTableRequest_FormDataContentTypeVariants_ParsesCorrectly()
+	{
+		Dictionary<string, StringValues> formData = new()
+			{
+				{ "draw", new StringValues("1") },
+				{ "start", new StringValues("5") },
+				{ "length", new StringValues("25") }
+			};
+
+		HttpRequest request = A.Fake<HttpRequest>();
+		IFormCollection formCollection = new FormCollection(formData);
+
+		A.CallTo(() => request.ContentType).Returns("multipart/form-data");
+		A.CallTo(() => request.Form).Returns(formCollection);
+
+		DataTableRequest result = request.GetDataTableRequest();
+
+		result.Draw.ShouldBe("1");
+		result.PageSize.ShouldBe(25);
+		result.Skip.ShouldBe(5);
+	}
+
+	[Fact]
+	public void GetDataTableRequest_EmptyStartAndLength_HandlesCorrectly()
+	{
+		Dictionary<string, StringValues> formData = new()
+			{
+				{ "start", StringValues.Empty },
+				{ "length", StringValues.Empty }
+			};
+
+		HttpRequest request = A.Fake<HttpRequest>();
+		IFormCollection formCollection = new FormCollection(formData);
+
+		A.CallTo(() => request.ContentType).Returns("application/x-www-form-urlencoded");
+		A.CallTo(() => request.Form).Returns(formCollection);
+
+		DataTableRequest result = request.GetDataTableRequest();
+
+		result.PageSize.ShouldBe(0);
+		result.Skip.ShouldBe(0);
+	}
+
+	[Fact]
+	public void DataTableRequest_Constructor_InitializesCollections()
+	{
+		DataTableRequest request = new();
+
+		request.SearchValues.ShouldNotBeNull();
+		request.SortColumnDir.ShouldNotBeNull();
+		request.SortColumns.ShouldNotBeNull();
+		request.SearchValues.Count.ShouldBe(0);
+		request.SortColumnDir.Count.ShouldBe(0);
+		request.SortColumns.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public void DataTableReturnData_DefaultValues_AreCorrect()
+	{
+		DataTableReturnData<string> data = new();
+
+		data.Draw.ShouldBeNull();
+		data.RecordsFiltered.ShouldBeNull();
+		data.RecordsTotal.ShouldBeNull();
+		data.Data.ShouldNotBeNull();
+		data.Data.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void SortAndLimitPostModel_Constructor_InitializesCollections()
+	{
+		SortAndLimitPostModel model = new();
+
+		model.SortColumns.ShouldNotBeNull();
+		model.SortColumnDir.ShouldNotBeNull();
+		model.SortColumns.Count.ShouldBe(0);
+		model.SortColumnDir.Count.ShouldBe(0);
+		model.Skip.ShouldBe(0);
+		model.PageSize.ShouldBe(0);
+	}
+
+	[Fact]
+	public void GetDataTableRequest_ExceptionDuringParsing_ReturnsEmptyRequest()
+	{
+		HttpRequest request = A.Fake<HttpRequest>();
+		A.CallTo(() => request.ContentType).Returns("application/x-www-form-urlencoded");
+		A.CallTo(() => request.Form).Throws<InvalidOperationException>();
+
+		DataTableRequest result = request.GetDataTableRequest();
+
+		result.ShouldNotBeNull();
+		result.SearchValues.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public void GetDataTableRequest_NullContentType_ReturnsEmptyRequest()
+	{
+		HttpRequest request = A.Fake<HttpRequest>();
+		A.CallTo(() => request.ContentType).Returns(null);
+		A.CallTo(() => request.Form).Returns(new FormCollection(new Dictionary<string, StringValues>()));
+
+		DataTableRequest result = request.GetDataTableRequest();
+
+		result.ShouldNotBeNull();
+		result.SearchValues.Count.ShouldBe(0);
+	}
 }

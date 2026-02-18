@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using CommonNetFuncs.Web.Middleware;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using xRetry.v3;
 
@@ -107,5 +108,54 @@ public sealed class OptionsMiddlewareTests
 		// Act & Assert
 
 		Should.Throw<ArgumentNullException>(() => new OptionsMiddleware(null!, "*", [], [], true, 3600, HttpStatusCode.OK));
+	}
+
+	[RetryFact(3)]
+	public void UseOptions_WithAllDefaults_ReturnsBuilder()
+	{
+		// Arrange
+		IApplicationBuilder builder = A.Fake<IApplicationBuilder>();
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(builder);
+
+		// Act
+		IApplicationBuilder result = builder.UseOptions();
+
+		// Assert
+		result.ShouldNotBeNull();
+	}
+
+	[RetryFact(3)]
+	public void UseOptions_WithCustomParameters_ReturnsBuilder()
+	{
+		// Arrange
+		IApplicationBuilder builder = A.Fake<IApplicationBuilder>();
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(builder);
+
+		// Act
+		IApplicationBuilder result = builder.UseOptions(
+			defaultAllowedOrigin: "https://example.com",
+			allowedHeaders: ["Content-Type"],
+			allowedMethods: ["GET", "POST"],
+			allowCredentials: false,
+			maxAge: 7200,
+			defaultStatusCode: HttpStatusCode.NoContent
+		);
+
+		// Assert
+		result.ShouldNotBeNull();
+	}
+
+	[RetryFact(3)]
+	public void UseOptions_WithNullHeaders_ReturnsBuilder()
+	{
+		// Arrange
+		IApplicationBuilder builder = A.Fake<IApplicationBuilder>();
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(builder);
+
+		// Act
+		IApplicationBuilder result = builder.UseOptions(allowedHeaders: null, allowedMethods: null);
+
+		// Assert
+		result.ShouldNotBeNull();
 	}
 }

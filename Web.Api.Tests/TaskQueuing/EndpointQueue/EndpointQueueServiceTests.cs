@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Collections.Concurrent;
+using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing;
 using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 
@@ -591,7 +592,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		System.Reflection.FieldInfo? queuesField = typeof(EndpointQueueService).GetField("queues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		queuesField.ShouldNotBeNull();
-		var queuesDict = queuesField!.GetValue(service) as System.Collections.Concurrent.ConcurrentDictionary<string, CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue>;
+		ConcurrentDictionary<string, CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue>? queuesDict = queuesField!.GetValue(service) as System.Collections.Concurrent.ConcurrentDictionary<string, CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue>;
 		queuesDict.ShouldNotBeNull();
 
 		// Get the queue and its internal stats field
@@ -601,7 +602,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		System.Reflection.FieldInfo? statsField = typeof(CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue).GetField("stats", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		statsField.ShouldNotBeNull();
-		var statsObj = statsField!.GetValue(queue) as QueueStats;
+		QueueStats? statsObj = statsField!.GetValue(queue) as QueueStats;
 		statsObj.ShouldNotBeNull();
 
 		// Manipulate the stats to have an old LastProcessedAt timestamp

@@ -31,21 +31,34 @@ public sealed class CollectionsTests : IDisposable
 		context.Database.EnsureCreated();
 	}
 
+	public enum ExecutionMode
+	{
+		Sync,
+		Async
+	}
+
 	[Theory]
-	[InlineData(true)]
-	[InlineData(false)]
-	public void GetObjectByPartial_WithMatchingNonNullFields_ReturnsCorrectEntity(bool ignoreDefaultValues)
+	[InlineData(true, ExecutionMode.Sync)]
+	[InlineData(true, ExecutionMode.Async)]
+	[InlineData(false, ExecutionMode.Sync)]
+	[InlineData(false, ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithMatchingNonNullFields_ReturnsCorrectEntity(bool ignoreDefaultValues, ExecutionMode mode)
 	{
 		// Arrange
 		TestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, CreatedDate = DateTime.UtcNow };
 		TestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 200, CreatedDate = DateTime.UtcNow.AddDays(1) };
 		context.TestEntities.AddRange(entity1, entity2);
-		context.SaveChanges();
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "Test1", Value = 0 };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues, cancellationToken: Current.CancellationToken);
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		if (ignoreDefaultValues)
@@ -61,171 +74,25 @@ public sealed class CollectionsTests : IDisposable
 		}
 	}
 
-	[Fact]
-	public void GetObjectByPartial_WithNullFields_IgnoresNullFields()
+	[Theory]
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithNullFields_IgnoresNullFields(ExecutionMode mode)
 	{
 		// Arrange
 		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = DateTime.UtcNow };
 		context.TestEntities.Add(entity);
-		context.SaveChanges();
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
 
 		TestEntity partialObject = new() { Name = "Test", Value = 100, Description = null };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-	[Fact]
-	public void GetObjectByPartial_WithDateTimeUtc_MatchesCorrectly()
-	{
-		// Arrange
-		DateTime utcDate = DateTime.UtcNow;
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
-		context.TestEntities.Add(entity);
-		context.SaveChanges();
-
-		TestEntity partialObject = new() { CreatedDate = utcDate };
-
-		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-	[Fact]
-	public void GetObjectByPartial_WithDateTimeLocal_ConvertsToUtc()
-	{
-		// Arrange
-		DateTime localDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Local);
-		DateTime utcDate = localDate.ToUniversalTime();
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
-		context.TestEntities.Add(entity);
-		context.SaveChanges();
-
-		TestEntity partialObject = new() { CreatedDate = localDate };
-
-		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-	[Fact]
-	public void GetObjectByPartial_WithDateTimeUnspecified_HandlesCorrectly()
-	{
-		// Arrange
-		DateTime unspecifiedDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Unspecified);
-		// SQLite normalizes DateTime to UTC, so we need to store and query as UTC
-		DateTime utcDate = DateTime.SpecifyKind(unspecifiedDate, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
-		context.TestEntities.Add(entity);
-		context.SaveChanges();
-
-		TestEntity partialObject = new() { CreatedDate = utcDate };
-
-		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-	[Fact]
-	public void GetObjectByPartial_WithDateTimeOffset_ConvertsToUtc()
-	{
-		// Arrange
-		DateTimeOffset dateTimeOffset = new(2024, 1, 1, 12, 0, 0, TimeSpan.FromHours(-5));
-		TestEntityWithDateTimeOffset entity = new() { Id = 1, Name = "Test", CreatedDate = dateTimeOffset };
-		context.TestEntitiesWithDateTimeOffset.Add(entity);
-		context.SaveChanges();
-
-		TestEntityWithDateTimeOffset partialObject = new() { CreatedDate = dateTimeOffset };
-
-		// Act
-		TestEntityWithDateTimeOffset? result = context.TestEntitiesWithDateTimeOffset.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-	[Fact]
-	public void GetObjectByPartial_WithNoMatchingEntity_ReturnsNull()
-	{
-		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test1", Value = 100 };
-		context.TestEntities.Add(entity);
-		context.SaveChanges();
-
-		TestEntity partialObject = new() { Name = "NonExistent" };
-
-		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public void GetObjectByPartial_WithAllNullFields_ReturnsNull()
-	{
-		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		context.TestEntities.Add(entity);
-		context.SaveChanges();
-
-		TestEntity partialObject = new() { Name = null, Description = null };
-
-		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public void GetObjectByPartial_WithDefaultValues_IgnoresWhenFlagIsTrue()
-	{
-		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		context.TestEntities.Add(entity);
-		context.SaveChanges();
-
-		TestEntity partialObject = new() { Name = "Test", Value = 0, Id = 0 }; // 0 is default for int
-
-		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: true, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-	[Fact]
-	public void GetObjectByPartial_WithDefaultValues_IncludesWhenFlagIsFalse()
-	{
-		// Arrange
-		// Set a specific CreatedDate to avoid default DateTime comparison issues
-		DateTime specificDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
-		context.TestEntities.Add(entity);
-		context.SaveChanges();
-
-		// When ignoreDefaultValues = false, ALL non-null properties are included
-		// So we need to match all properties including CreatedDate
-		TestEntity partialObject = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
-
-		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: false, cancellationToken: Current.CancellationToken);
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -233,9 +100,224 @@ public sealed class CollectionsTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData(true)]
-	[InlineData(false)]
-	public void GetObjectByPartial_WithMultipleMatches_ReturnsFirst(bool ignoreDefaultValues)
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithDateTimeUtc_MatchesCorrectly(ExecutionMode mode)
+	{
+		// Arrange
+		DateTime utcDate = DateTime.UtcNow;
+		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		context.TestEntities.Add(entity);
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
+
+		TestEntity partialObject = new() { CreatedDate = utcDate };
+
+		// Act
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Theory]
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithDateTimeLocal_ConvertsToUtc(ExecutionMode mode)
+	{
+		// Arrange
+		DateTime localDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Local);
+		DateTime utcDate = localDate.ToUniversalTime();
+		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		context.TestEntities.Add(entity);
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
+
+		TestEntity partialObject = new() { CreatedDate = localDate };
+
+		// Act
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Theory]
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithDateTimeUnspecified_HandlesCorrectly(ExecutionMode mode)
+	{
+		// Arrange
+		DateTime unspecifiedDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Unspecified);
+		// SQLite normalizes DateTime to UTC, so we need to store and query as UTC
+		DateTime utcDate = DateTime.SpecifyKind(unspecifiedDate, DateTimeKind.Utc);
+		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		context.TestEntities.Add(entity);
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
+
+		TestEntity partialObject = new() { CreatedDate = utcDate };
+
+		// Act
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Fact]
+	[Theory]
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithDateTimeOffset_ConvertsToUtc(ExecutionMode mode)
+	{
+		// Arrange
+		DateTimeOffset dateTimeOffset = new(2024, 1, 1, 12, 0, 0, TimeSpan.FromHours(-5));
+		TestEntityWithDateTimeOffset entity = new() { Id = 1, Name = "Test", CreatedDate = dateTimeOffset };
+		context.TestEntitiesWithDateTimeOffset.Add(entity);
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
+
+		TestEntityWithDateTimeOffset partialObject = new() { CreatedDate = dateTimeOffset };
+
+		// Act
+		TestEntityWithDateTimeOffset? result = mode == ExecutionMode.Async
+			? await context.TestEntitiesWithDateTimeOffset.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
+			: context.TestEntitiesWithDateTimeOffset.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Fact]
+	[Theory]
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithNoMatchingEntity_ReturnsNull(ExecutionMode mode)
+	{
+		// Arrange
+		TestEntity entity = new() { Id = 1, Name = "Test1", Value = 100 };
+		context.TestEntities.Add(entity);
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
+
+		TestEntity partialObject = new() { Name = "NonExistent" };
+
+		// Act
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	[Theory]
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithAllNullFields_ReturnsNull(ExecutionMode mode)
+	{
+		// Arrange
+		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
+		context.TestEntities.Add(entity);
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
+
+		TestEntity partialObject = new() { Name = null, Description = null };
+
+		// Act
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	[Theory]
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithDefaultValues_IgnoresWhenFlagIsTrue(ExecutionMode mode)
+	{
+		// Arrange
+		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
+		context.TestEntities.Add(entity);
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
+
+		TestEntity partialObject = new() { Name = "Test", Value = 0, Id = 0 }; // 0 is default for int
+
+		// Act
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues: true, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: true, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Theory]
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithDefaultValues_IncludesWhenFlagIsFalse(ExecutionMode mode)
+	{
+		// Arrange
+		// Set a specific CreatedDate to avoid default DateTime comparison issues
+		DateTime specificDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		TestEntity entity = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
+		context.TestEntities.Add(entity);
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
+
+		// When ignoreDefaultValues = false, ALL non-null properties are included
+		// So we need to match all properties including CreatedDate
+		TestEntity partialObject = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
+
+		// Act
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, false, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: false, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Id.ShouldBe(entity.Id);
+	}
+
+	[Theory]
+	[InlineData(true, ExecutionMode.Sync)]
+	[InlineData(true, ExecutionMode.Async)]
+	[InlineData(false, ExecutionMode.Sync)]
+	[InlineData(false, ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithMultipleMatches_ReturnsFirst(bool ignoreDefaultValues, ExecutionMode mode)
 	{
 		// Arrange
 		DateTime specificDate1 = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -243,7 +325,10 @@ public sealed class CollectionsTests : IDisposable
 		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = specificDate1 };
 		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 200, CreatedDate = specificDate2 };
 		context.TestEntities.AddRange(entity1, entity2);
-		context.SaveChanges();
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
 
 		TestEntity partialObject;
 		if (ignoreDefaultValues)
@@ -259,7 +344,9 @@ public sealed class CollectionsTests : IDisposable
 		}
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues, Current.CancellationToken);
+		TestEntity? result = mode == ExecutionMode.Async
+			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues, Current.CancellationToken)
+			: context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -350,35 +437,7 @@ public sealed class CollectionsTests : IDisposable
 		result.Value.ShouldBe(100);
 	}
 
-	[Theory]
-	[InlineData(true)]
-	[InlineData(false)]
-	public async Task GetObjectByPartialAsync_WithMatchingNonNullFields_ReturnsCorrectEntity(bool ignoreDefaultValues)
-	{
-		// Arrange
-		TestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, CreatedDate = DateTime.UtcNow };
-		TestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 200, CreatedDate = DateTime.UtcNow.AddDays(1) };
-		context.TestEntities.AddRange(entity1, entity2);
-		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { Name = "Test1", Value = 0 };
-
-		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues, Current.CancellationToken);
-
-		// Assert
-		if (ignoreDefaultValues)
-		{
-			result.ShouldNotBeNull();
-			result.Id.ShouldBe(entity1.Id);
-			result.Name.ShouldBe(entity1.Name);
-		}
-		else
-		{
-			// With ignoreDefaultValues = false, Value = 0 will be included in search
-			result.ShouldBeNull(); // Won't match because entity1.Value = 100, not 0
-		}
-	}
 
 	[Fact]
 	public async Task GetObjectByPartialAsync_WithNullFields_IgnoresNullFields()
@@ -398,24 +457,7 @@ public sealed class CollectionsTests : IDisposable
 		result.Id.ShouldBe(entity.Id);
 	}
 
-	[Fact]
-	public async Task GetObjectByPartialAsync_WithDateTimeUtc_MatchesCorrectly()
-	{
-		// Arrange
-		DateTime utcDate = DateTime.UtcNow;
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
-		context.TestEntities.Add(entity);
-		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { CreatedDate = utcDate };
-
-		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
 
 	[Fact]
 	public async Task GetObjectByPartialAsync_WithDateTimeLocal_ConvertsToUtc()
@@ -437,158 +479,27 @@ public sealed class CollectionsTests : IDisposable
 		result.Id.ShouldBe(entity.Id);
 	}
 
-	[Fact]
-	public async Task GetObjectByPartialAsync_WithDateTimeUnspecified_HandlesCorrectly()
-	{
-		// Arrange
-		DateTime unspecifiedDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Unspecified);
-		// SQLite normalizes DateTime to UTC, so we need to store and query as UTC
-		DateTime utcDate = DateTime.SpecifyKind(unspecifiedDate, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
-		context.TestEntities.Add(entity);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		TestEntity partialObject = new() { CreatedDate = utcDate };
-
-		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 
-		// Assert
-		result.ShouldNotBeNull();
+
+
+
+
+
+
+
+
+	// Act
+	TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+
+	// Assert
+	result.ShouldNotBeNull();
 		result.Id.ShouldBe(entity.Id);
 	}
 
-	[Fact]
-	public async Task GetObjectByPartialAsync_WithDateTimeOffset_ConvertsToUtc()
-	{
-		// Arrange
-		DateTimeOffset dateTimeOffset = new(2024, 1, 1, 12, 0, 0, TimeSpan.FromHours(-5));
-		TestEntityWithDateTimeOffset entity = new() { Id = 1, Name = "Test", CreatedDate = dateTimeOffset };
-		context.TestEntitiesWithDateTimeOffset.Add(entity);
-		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntityWithDateTimeOffset partialObject = new() { CreatedDate = dateTimeOffset };
 
-		// Act
-		TestEntityWithDateTimeOffset? result = await context.TestEntitiesWithDateTimeOffset.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-	[Fact]
-	public async Task GetObjectByPartialAsync_WithNoMatchingEntity_ReturnsNull()
-	{
-		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test1", Value = 100 };
-		context.TestEntities.Add(entity);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		TestEntity partialObject = new() { Name = "NonExistent" };
-
-		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
-
-		// Assert
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public async Task GetObjectByPartialAsync_WithAllNullFields_ReturnsNull()
-	{
-		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		context.TestEntities.Add(entity);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		TestEntity partialObject = new() { Name = null, Description = null };
-
-		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
-
-		// Assert
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public async Task GetObjectByPartialAsync_WithDefaultValues_IgnoresWhenFlagIsTrue()
-	{
-		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
-		context.TestEntities.Add(entity);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		TestEntity partialObject = new() { Name = "Test", Value = 0, Id = 0 }; // 0 is default for int
-
-		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-	[Fact]
-	public async Task GetObjectByPartialAsync_WithDefaultValues_IncludesWhenFlagIsFalse()
-	{
-		// Arrange
-		// Set a specific CreatedDate to avoid default DateTime comparison issues
-		DateTime specificDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
-		context.TestEntities.Add(entity);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		// When ignoreDefaultValues = false, ALL non-null properties are included
-		// So we need to match all properties including CreatedDate
-		TestEntity partialObject = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
-
-		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, false, Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-	[Theory]
-	[InlineData(true)]
-	[InlineData(false)]
-	public async Task GetObjectByPartialAsync_WithMultipleMatches_ReturnsFirst(bool ignoreDefaultValues)
-	{
-		// Arrange
-		DateTime specificDate1 = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		DateTime specificDate2 = new(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc);
-		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = specificDate1 };
-		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 200, CreatedDate = specificDate2 };
-		context.TestEntities.AddRange(entity1, entity2);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		TestEntity partialObject;
-		if (ignoreDefaultValues)
-		{
-			// When ignoring defaults, we can use just the Name property
-			partialObject = new() { Name = "Test" };
-		}
-		else
-		{
-			// When not ignoring defaults, we need to match all properties including CreatedDate
-			// Let's match the first entity
-			partialObject = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = specificDate1 };
-		}
-
-		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues, Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Name.ShouldBe("Test");
-		if (!ignoreDefaultValues)
-		{
-			result.Id.ShouldBe(1); // Should match entity1 since we specified Id=1
-		}
-	}
 
 	[Fact]
 	public async Task GetObjectByPartialAsync_WithCancellationToken_RespondsToCancel()
@@ -713,44 +624,34 @@ public sealed class CollectionsTests : IDisposable
 	}
 
 	[Fact]
-	public void GetObjectByPartial_WithDateTimeOffsetSameInstant_MatchesCorrectly()
+	[Theory]
+	[InlineData(ExecutionMode.Sync)]
+	[InlineData(ExecutionMode.Async)]
+	public async Task GetObjectByPartial_WithDateTimeOffsetSameInstant_MatchesCorrectly(ExecutionMode mode)
 	{
 		// Arrange - Use same UTC instant
 		DateTimeOffset dateOffset = new(2024, 6, 15, 14, 30, 0, TimeSpan.Zero);
 
 		TestEntityWithDateTimeOffset entity = new() { Id = 1, Name = "Test", CreatedDate = dateOffset };
 		context.TestEntitiesWithDateTimeOffset.Add(entity);
-		context.SaveChanges();
+		if (mode == ExecutionMode.Async)
+			await context.SaveChangesAsync(Current.CancellationToken);
+		else
+			context.SaveChanges();
 
 		TestEntityWithDateTimeOffset partialObject = new() { CreatedDate = dateOffset };
 
 		// Act
-		TestEntityWithDateTimeOffset? result = context.TestEntitiesWithDateTimeOffset.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
+		TestEntityWithDateTimeOffset? result = mode == ExecutionMode.Async
+			? await context.TestEntitiesWithDateTimeOffset.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
+			: context.TestEntitiesWithDateTimeOffset.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Id.ShouldBe(entity.Id);
 	}
 
-	[Fact]
-	public async Task GetObjectByPartialAsync_WithDateTimeOffsetSameInstant_MatchesCorrectly()
-	{
-		// Arrange - Use same UTC instant
-		DateTimeOffset dateOffset = new(2024, 6, 15, 14, 30, 0, TimeSpan.Zero);
 
-		TestEntityWithDateTimeOffset entity = new() { Id = 1, Name = "Test", CreatedDate = dateOffset };
-		context.TestEntitiesWithDateTimeOffset.Add(entity);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		TestEntityWithDateTimeOffset partialObject = new() { CreatedDate = dateOffset };
-
-		// Act
-		TestEntityWithDateTimeOffset? result = await context.TestEntitiesWithDateTimeOffset.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
 
 	[Fact]
 	public void GetObjectByPartial_WithEmptyCollection_ReturnsNull()
@@ -1274,41 +1175,41 @@ public sealed class CollectionsTests : IDisposable
 
 	// Test DbContext and entities
 	private sealed class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)
-	{
-		public DbSet<TestEntity> TestEntities => Set<TestEntity>();
-		public DbSet<TestEntityWithDateTimeOffset> TestEntitiesWithDateTimeOffset => Set<TestEntityWithDateTimeOffset>();
+{
+	public DbSet<TestEntity> TestEntities => Set<TestEntity>();
+	public DbSet<TestEntityWithDateTimeOffset> TestEntitiesWithDateTimeOffset => Set<TestEntityWithDateTimeOffset>();
 
-		protected override void OnModelCreating(ModelBuilder modelBuilder)
-		{
-			modelBuilder.Entity<TestEntity>();
-			modelBuilder.Entity<TestEntityWithDateTimeOffset>();
-		}
-	}
-
-	private sealed class TestEntity
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
-		public int Id { get; set; }
-		public string? Name { get; set; }
-		public int Value { get; set; }
-		public string? Description { get; set; }
-		public DateTime CreatedDate { get; set; }
+		modelBuilder.Entity<TestEntity>();
+		modelBuilder.Entity<TestEntityWithDateTimeOffset>();
 	}
+}
 
-	private sealed class TestEntityWithDateTimeOffset
-	{
-		public int Id { get; set; }
-		public string? Name { get; set; }
-		public DateTimeOffset CreatedDate { get; set; }
-	}
+private sealed class TestEntity
+{
+	public int Id { get; set; }
+	public string? Name { get; set; }
+	public int Value { get; set; }
+	public string? Description { get; set; }
+	public DateTime CreatedDate { get; set; }
+}
+
+private sealed class TestEntityWithDateTimeOffset
+{
+	public int Id { get; set; }
+	public string? Name { get; set; }
+	public DateTimeOffset CreatedDate { get; set; }
+}
 
 #pragma warning disable S1144 // Unused private types or members should be removed
-	private sealed class TestEntityNotInModel
-	{
-		public int Id { get; set; }
-		public string? Name { get; set; }
-		public int Value { get; set; }
-		public string? Description { get; set; }
-		public DateTime CreatedDate { get; set; }
-	}
+private sealed class TestEntityNotInModel
+{
+	public int Id { get; set; }
+	public string? Name { get; set; }
+	public int Value { get; set; }
+	public string? Description { get; set; }
+	public DateTime CreatedDate { get; set; }
+}
 #pragma warning restore S1144 // Unused private types or members should be removed
 }

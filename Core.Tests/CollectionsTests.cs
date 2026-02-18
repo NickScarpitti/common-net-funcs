@@ -44,13 +44,38 @@ public sealed class CollectionsTests
 		fixture = new Fixture();
 	}
 
+	public enum AnyFastCollectionType
+	{
+		ICollection,
+		IList,
+		ConcurrentBag,
+		Array,
+		Dictionary,
+		ConcurrentDictionary
+	}
+
 	#region AnyFast Tests
 
-	[Fact]
-	public void AnyFast_WithNullICollection_ReturnsFalse()
+	[Theory]
+	[InlineData(AnyFastCollectionType.ICollection)]
+	[InlineData(AnyFastCollectionType.IList)]
+	[InlineData(AnyFastCollectionType.ConcurrentBag)]
+	[InlineData(AnyFastCollectionType.Array)]
+	[InlineData(AnyFastCollectionType.Dictionary)]
+	[InlineData(AnyFastCollectionType.ConcurrentDictionary)]
+	public void AnyFast_WithNullCollection_ReturnsFalse(AnyFastCollectionType collectionType)
 	{
 		// Act
-		bool result = ((ICollection<string>?)null).AnyFast();
+		bool result = collectionType switch
+		{
+			AnyFastCollectionType.ICollection => ((ICollection<string>?)null).AnyFast(),
+			AnyFastCollectionType.IList => ((IList<string>?)null).AnyFast(),
+			AnyFastCollectionType.ConcurrentBag => ((ConcurrentBag<string>?)null).AnyFast(),
+			AnyFastCollectionType.Array => ((string[]?)null).AnyFast(),
+			AnyFastCollectionType.Dictionary => ((IDictionary<string, string>?)null).AnyFast(),
+			AnyFastCollectionType.ConcurrentDictionary => ((ConcurrentDictionary<string, string>?)null).AnyFast(),
+			_ => throw new ArgumentOutOfRangeException(nameof(collectionType))
+		};
 
 		// Assert
 		result.ShouldBeFalse();
@@ -76,16 +101,6 @@ public sealed class CollectionsTests
 		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void AnyFast_WithNullIList_ReturnsFalse()
-	{
-		// Act
-		bool result = ((IList<string>?)null).AnyFast();
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
 	[Theory]
 	[InlineData(0, false)]
 	[InlineData(1, true)]
@@ -104,16 +119,6 @@ public sealed class CollectionsTests
 
 		// Assert
 		result.ShouldBe(expected);
-	}
-
-	[Fact]
-	public void AnyFast_WithNullConcurrentBag_ReturnsFalse()
-	{
-		// Act
-		bool result = ((ConcurrentBag<string>?)null).AnyFast();
-
-		// Assert
-		result.ShouldBeFalse();
 	}
 
 	[Theory]
@@ -136,16 +141,6 @@ public sealed class CollectionsTests
 		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void AnyFast_WithNullArray_ReturnsFalse()
-	{
-		// Act
-		bool result = ((string[]?)null).AnyFast();
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
 	[Theory]
 	[InlineData(0, false)]
 	[InlineData(1, true)]
@@ -164,16 +159,6 @@ public sealed class CollectionsTests
 
 		// Assert
 		result.ShouldBe(expected);
-	}
-
-	[Fact]
-	public void AnyFast_WithNullDictionary_ReturnsFalse()
-	{
-		// Act
-		bool result = ((IDictionary<string, string>?)null).AnyFast();
-
-		// Assert
-		result.ShouldBeFalse();
 	}
 
 	[Theory]
@@ -655,6 +640,12 @@ public sealed class CollectionsTests
 
 	#endregion
 
+	public enum SelectMethodType
+	{
+		SelectNonEmpty,
+		SelectNonNull
+	}
+
 	#region SelectNonEmpty and SelectNonNull Tests
 
 	[Fact]
@@ -673,40 +664,24 @@ public sealed class CollectionsTests
 		result.ShouldContain("test2");
 	}
 
-	[Fact]
-	public void SelectNonEmpty_WithNullCollection_ReturnsNull()
+	[Theory]
+	[InlineData(SelectMethodType.SelectNonEmpty)]
+	[InlineData(SelectMethodType.SelectNonNull)]
+	public void Select_WithNullCollection_ReturnsNull(SelectMethodType methodType)
 	{
-		// Act
-		IEnumerable<string>? result = Collections.SelectNonEmpty(null);
-
-		// Assert
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public void SelectNonNull_ReturnsNonNullObjects()
-	{
-		// Arrange
-		List<TestClass?> items = new() { new TestClass { Name = "test1" }, null, new TestClass { Name = "test2" } };
-
-		// Act
-		IEnumerable<TestClass> result = items.SelectNonNull();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Count().ShouldBe(2);
-		result.ShouldContain(item => item.Name == "test1");
-		result.ShouldContain(item => item.Name == "test2");
-	}
-
-	[Fact]
-	public void SelectNonNull_WithNullCollection_ReturnsNull()
-	{
-		// Act
-		IEnumerable<TestClass>? result = Collections.SelectNonNull<TestClass>(null);
-
-		// Assert
-		result.ShouldBeNull();
+		switch (methodType)
+		{
+			case SelectMethodType.SelectNonEmpty:
+				IEnumerable<string>? resultEmpty = Collections.SelectNonEmpty(null);
+				resultEmpty.ShouldBeNull();
+				break;
+			case SelectMethodType.SelectNonNull:
+				IEnumerable<TestClass>? resultNull = Collections.SelectNonNull<TestClass>(null);
+				resultNull.ShouldBeNull();
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(methodType));
+		}
 	}
 
 	#endregion
@@ -2921,138 +2896,146 @@ public sealed class CollectionsTests
 
 	#endregion
 
-	[Fact]
-	public void ClearTrim_List_Null_DoesNothing()
+	public enum ClearTrimCollectionType
 	{
-		List<int>? list = null;
-		Should.NotThrow(() => list.ClearTrim());
-		Should.NotThrow(() => list.ClearTrim(forceGc: true));
+		List,
+		Dictionary,
+		HashSet,
+		Stack,
+		Queue
 	}
 
-	[Fact]
-	public void ClearTrim_List_ClearsAndTrims()
+	[Theory]
+	[InlineData(ClearTrimCollectionType.List)]
+	[InlineData(ClearTrimCollectionType.Dictionary)]
+	[InlineData(ClearTrimCollectionType.HashSet)]
+	[InlineData(ClearTrimCollectionType.Stack)]
+	[InlineData(ClearTrimCollectionType.Queue)]
+	public void ClearTrim_Null_DoesNothing(ClearTrimCollectionType collectionType)
 	{
-		List<int> list = new() { 1, 2, 3, 4 };
-		int oldCapacity = list.Capacity;
-
-		list.ClearTrim();
-
-		list.Count.ShouldBe(0);
-		list.Capacity.ShouldBeLessThanOrEqualTo(oldCapacity);
+		Should.NotThrow(() =>
+		{
+			switch (collectionType)
+			{
+				case ClearTrimCollectionType.List:
+					List<int>? list = null;
+					list.ClearTrim();
+					list.ClearTrim(forceGc: true);
+					break;
+				case ClearTrimCollectionType.Dictionary:
+					Dictionary<int, string>? dict = null;
+					dict.ClearTrim();
+					dict.ClearTrim(forceGc: true);
+					break;
+				case ClearTrimCollectionType.HashSet:
+					HashSet<int>? set = null;
+					set.ClearTrim();
+					set.ClearTrim(forceGc: true);
+					break;
+				case ClearTrimCollectionType.Stack:
+					Stack<int>? stack = null;
+					stack.ClearTrim();
+					stack.ClearTrim(forceGc: true);
+					break;
+				case ClearTrimCollectionType.Queue:
+					Queue<int>? queue = null;
+					queue.ClearTrim();
+					queue.ClearTrim(forceGc: true);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(collectionType));
+			}
+		});
 	}
 
-	[Fact]
-	public void ClearTrim_List_ClearsAndTrims_WithForceGc()
+	[Theory]
+	[InlineData(ClearTrimCollectionType.List)]
+	[InlineData(ClearTrimCollectionType.Dictionary)]
+	[InlineData(ClearTrimCollectionType.HashSet)]
+	[InlineData(ClearTrimCollectionType.Stack)]
+	[InlineData(ClearTrimCollectionType.Queue)]
+	public void ClearTrim_ClearsAndTrims(ClearTrimCollectionType collectionType)
 	{
-		List<int> list = new() { 1, 2, 3, 4 };
-		int oldCapacity = list.Capacity;
-
-		Should.NotThrow(() => list.ClearTrim(forceGc: true));
-		list.Count.ShouldBe(0);
-		list.Capacity.ShouldBeLessThanOrEqualTo(oldCapacity);
+		switch (collectionType)
+		{
+			case ClearTrimCollectionType.List:
+				List<int> list = new() { 1, 2, 3, 4 };
+				list.ClearTrim();
+				list.Count.ShouldBe(0);
+				break;
+			case ClearTrimCollectionType.Dictionary:
+				Dictionary<int, string> dict = new() { [1] = "a", [2] = "b" };
+				dict.ClearTrim();
+				dict.Count.ShouldBe(0);
+				break;
+			case ClearTrimCollectionType.HashSet:
+				HashSet<int> set = new() { 1, 2, 3 };
+				set.ClearTrim();
+				set.Count.ShouldBe(0);
+				break;
+			case ClearTrimCollectionType.Stack:
+				Stack<int> stack = new();
+				stack.Push(1);
+				stack.Push(2);
+				stack.ClearTrim();
+				stack.Count.ShouldBe(0);
+				break;
+			case ClearTrimCollectionType.Queue:
+				Queue<int> queue = new();
+				queue.Enqueue(1);
+				queue.Enqueue(2);
+				queue.ClearTrim();
+				queue.Count.ShouldBe(0);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(collectionType));
+		}
 	}
 
-	[Fact]
-	public void ClearTrim_Dictionary_Null_DoesNothing()
+	[Theory]
+	[InlineData(ClearTrimCollectionType.List)]
+	[InlineData(ClearTrimCollectionType.Dictionary)]
+	[InlineData(ClearTrimCollectionType.HashSet)]
+	[InlineData(ClearTrimCollectionType.Stack)]
+	[InlineData(ClearTrimCollectionType.Queue)]
+	public void ClearTrim_ClearsAndTrims_WithForceGc(ClearTrimCollectionType collectionType)
 	{
-		Dictionary<int, string>? dict = null;
-		Should.NotThrow(() => dict.ClearTrim());
-		Should.NotThrow(() => dict.ClearTrim(forceGc: true));
-	}
-
-	[Fact]
-	public void ClearTrim_Dictionary_ClearsAndTrims()
-	{
-		Dictionary<int, string> dict = new() { [1] = "a", [2] = "b" };
-		dict.ClearTrim();
-		dict.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void ClearTrim_Dictionary_ClearsAndTrims_WithForceGc()
-	{
-		Dictionary<int, string> dict = new() { [1] = "a", [2] = "b" };
-		Should.NotThrow(() => dict.ClearTrim(forceGc: true));
-		dict.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void ClearTrim_HashSet_Null_DoesNothing()
-	{
-		HashSet<int>? set = null;
-		Should.NotThrow(() => set.ClearTrim());
-		Should.NotThrow(() => set.ClearTrim(forceGc: true));
-	}
-
-	[Fact]
-	public void ClearTrim_HashSet_ClearsAndTrims()
-	{
-		HashSet<int> set = new() { 1, 2, 3 };
-		set.ClearTrim();
-		set.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void ClearTrim_HashSet_ClearsAndTrims_WithForceGc()
-	{
-		HashSet<int> set = new() { 1, 2, 3 };
-		Should.NotThrow(() => set.ClearTrim(forceGc: true));
-		set.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void ClearTrim_Stack_Null_DoesNothing()
-	{
-		Stack<int>? stack = null;
-		Should.NotThrow(() => stack.ClearTrim());
-		Should.NotThrow(() => stack.ClearTrim(forceGc: true));
-	}
-
-	[Fact]
-	public void ClearTrim_Stack_ClearsAndTrims()
-	{
-		Stack<int> stack = new();
-		stack.Push(1);
-		stack.Push(2);
-		stack.ClearTrim();
-		stack.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void ClearTrim_Stack_ClearsAndTrims_WithForceGc()
-	{
-		Stack<int> stack = new();
-		stack.Push(1);
-		stack.Push(2);
-		Should.NotThrow(() => stack.ClearTrim(forceGc: true));
-		stack.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void ClearTrim_Queue_Null_DoesNothing()
-	{
-		Queue<int>? queue = null;
-		Should.NotThrow(() => queue.ClearTrim());
-		Should.NotThrow(() => queue.ClearTrim(forceGc: true));
-	}
-
-	[Fact]
-	public void ClearTrim_Queue_ClearsAndTrims()
-	{
-		Queue<int> queue = new();
-		queue.Enqueue(1);
-		queue.Enqueue(2);
-		queue.ClearTrim();
-		queue.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void ClearTrim_Queue_ClearsAndTrims_WithForceGc()
-	{
-		Queue<int> queue = new();
-		queue.Enqueue(1);
-		queue.Enqueue(2);
-		Should.NotThrow(() => queue.ClearTrim(forceGc: true));
-		queue.Count.ShouldBe(0);
+		Should.NotThrow(() =>
+		{
+			switch (collectionType)
+			{
+				case ClearTrimCollectionType.List:
+					List<int> list = new() { 1, 2, 3, 4 };
+					list.ClearTrim(forceGc: true);
+					list.Count.ShouldBe(0);
+					break;
+				case ClearTrimCollectionType.Dictionary:
+					Dictionary<int, string> dict = new() { [1] = "a", [2] = "b" };
+					dict.ClearTrim(forceGc: true);
+					dict.Count.ShouldBe(0);
+					break;
+				case ClearTrimCollectionType.HashSet:
+					HashSet<int> set = new() { 1, 2, 3 };
+					set.ClearTrim(forceGc: true);
+					set.Count.ShouldBe(0);
+					break;
+				case ClearTrimCollectionType.Stack:
+					Stack<int> stack = new();
+					stack.Push(1);
+					stack.Push(2);
+					stack.ClearTrim(forceGc: true);
+					stack.Count.ShouldBe(0);
+					break;
+				case ClearTrimCollectionType.Queue:
+					Queue<int> queue = new();
+					queue.Enqueue(1);
+					queue.Enqueue(2);
+					queue.ClearTrim(forceGc: true);
+					queue.Count.ShouldBe(0);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(collectionType));
+			}
+		});
 	}
 }

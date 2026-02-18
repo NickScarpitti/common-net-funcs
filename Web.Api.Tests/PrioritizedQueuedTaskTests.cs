@@ -6,6 +6,30 @@ namespace Web.Api.Tests;
 
 public class PrioritizedQueuedTaskTests
 {
+	private enum ComparisonType
+	{
+		HigherPriority,
+		LowerPriority,
+		NegativePriorities
+	}
+
+	private enum OperatorType
+	{
+		Equals,
+		NotEquals,
+		LessThan,
+		LessThanOrEquals,
+		GreaterThan,
+		GreaterThanOrEquals
+	}
+
+	private enum NullPosition
+	{
+		Both,
+		Left,
+		Right
+	}
+
 	[Fact]
 	public void Constructor_Should_Create_Task_With_TaskFunction()
 	{
@@ -182,44 +206,32 @@ public class PrioritizedQueuedTaskTests
 		result.ShouldBeLessThan(0); // Earlier task comes first (FIFO)
 	}
 
-	[Fact]
-	public void CompareTo_Should_Return_Negative_When_This_Has_Lower_Priority()
+	[Theory]
+	[InlineData(ComparisonType.LowerPriority, 1, 10)]  // Low priority comes after high priority
+	[InlineData(ComparisonType.HigherPriority, 10, 5)] // High priority comes before low priority
+	[InlineData(ComparisonType.NegativePriorities, -10, -5)] // -10 has lower priority than -5
+	public void CompareTo_WithDifferentPriorities_ReturnsExpectedComparison(ComparisonType type, int priority1, int priority2)
 	{
 		// Arrange
-		PrioritizedQueuedTask task1 = new(_ => Task.FromResult<object?>(null))
-		{
-			Priority = 5
-		};
-		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
-		{
-			Priority = 10
-		};
+		PrioritizedQueuedTask task1 = new(_ => Task.FromResult<object?>(null)) { Priority = priority1 };
+		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null)) { Priority = priority2 };
 
 		// Act
 		int result = task1.CompareTo(task2);
 
 		// Assert
-		result.ShouldBeGreaterThan(0);
-	}
-
-	[Fact]
-	public void CompareTo_Should_Return_Positive_When_This_Has_Higher_Priority()
-	{
-		// Arrange
-		PrioritizedQueuedTask task1 = new(_ => Task.FromResult<object?>(null))
+		switch (type)
 		{
-			Priority = 10
-		};
-		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
-		{
-			Priority = 5
-		};
-
-		// Act
-		int result = task1.CompareTo(task2);
-
-		// Assert
-		result.ShouldBeLessThan(0);
+			case ComparisonType.LowerPriority:
+				result.ShouldBeGreaterThan(0); // Low priority comes after high priority
+				break;
+			case ComparisonType.HigherPriority:
+				result.ShouldBeLessThan(0); // High priority comes before low priority
+				break;
+			case ComparisonType.NegativePriorities:
+				result.ShouldBeGreaterThan(0); // -10 has lower priority than -5
+				break;
+		}
 	}
 
 	[Fact]
@@ -269,102 +281,67 @@ public class PrioritizedQueuedTaskTests
 		Should.Throw<NotImplementedException>(() => task.GetHashCode());
 	}
 
-	[Fact]
-	public void OperatorEquals_Should_Return_True_When_Both_Are_Null()
+	[Theory]
+	[InlineData(OperatorType.Equals, NullPosition.Both, true)]
+	[InlineData(OperatorType.Equals, NullPosition.Left, false)]
+	[InlineData(OperatorType.Equals, NullPosition.Right, false)]
+	[InlineData(OperatorType.NotEquals, NullPosition.Both, false)]
+	[InlineData(OperatorType.NotEquals, NullPosition.Left, true)]
+	public void Operators_WithNullOperands_ReturnExpectedResults(OperatorType operatorType, NullPosition nullPos, bool expected)
 	{
 		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask? task2 = null;
+		PrioritizedQueuedTask? task1 = nullPos is NullPosition.Both or NullPosition.Left
+			? null
+			: new(_ => Task.FromResult<object?>(null));
+
+		PrioritizedQueuedTask? task2 = nullPos is NullPosition.Both or NullPosition.Right
+			? null
+			: new(_ => Task.FromResult<object?>(null));
 
 		// Act
-		bool result = task1 == task2;
+		bool result = operatorType switch
+		{
+			OperatorType.Equals => task1 == task2,
+			OperatorType.NotEquals => task1 != task2,
+			_ => throw new ArgumentOutOfRangeException(nameof(operatorType))
+		};
 
 		// Assert
-		result.ShouldBeTrue();
+		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void OperatorEquals_Should_Return_False_When_Left_Is_Null()
+	[Theory]
+	[InlineData(OperatorType.LessThan, NullPosition.Left, true)]
+	[InlineData(OperatorType.LessThan, NullPosition.Both, false)]
+	[InlineData(OperatorType.LessThanOrEquals, NullPosition.Left, true)]
+	[InlineData(OperatorType.LessThanOrEquals, NullPosition.Both, true)]
+	[InlineData(OperatorType.GreaterThan, NullPosition.Left, false)]
+	[InlineData(OperatorType.GreaterThan, NullPosition.Both, false)]
+	[InlineData(OperatorType.GreaterThanOrEquals, NullPosition.Left, false)]
+	[InlineData(OperatorType.GreaterThanOrEquals, NullPosition.Both, true)]
+	public void ComparisonOperators_WithNullOperands_ReturnExpectedResults(OperatorType operatorType, NullPosition nullPos, bool expected)
 	{
 		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null));
+		PrioritizedQueuedTask? task1 = nullPos is NullPosition.Both or NullPosition.Left
+			? null
+			: new(_ => Task.FromResult<object?>(null)) { Priority = 5 };
+
+		PrioritizedQueuedTask? task2 = nullPos is NullPosition.Both or NullPosition.Right
+			? null
+			: new(_ => Task.FromResult<object?>(null)) { Priority = 10 };
 
 		// Act
-		bool result = task1 == task2;
+		bool result = operatorType switch
+		{
+			OperatorType.LessThan => task1 < task2,
+			OperatorType.LessThanOrEquals => task1 <= task2,
+			OperatorType.GreaterThan => task1 > task2,
+			OperatorType.GreaterThanOrEquals => task1 >= task2,
+			_ => throw new ArgumentOutOfRangeException(nameof(operatorType))
+		};
 
 		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void OperatorEquals_Should_Return_False_When_Right_Is_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask task1 = new(_ => Task.FromResult<object?>(null));
-		PrioritizedQueuedTask? task2 = null;
-
-		// Act
-		bool result = task1 == task2;
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void OperatorNotEquals_Should_Return_False_When_Both_Are_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask? task2 = null;
-
-		// Act
-		bool result = task1 != task2;
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void OperatorNotEquals_Should_Return_True_When_Left_Is_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null));
-
-		// Act
-		bool result = task1 != task2;
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void OperatorLessThan_Should_Return_True_When_Left_Is_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null));
-
-		// Act
-		bool result = task1 < task2;
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void OperatorLessThan_Should_Return_False_When_Both_Are_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask? task2 = null;
-
-		// Act
-		bool result = task1 < task2;
-
-		// Assert
-		result.ShouldBeFalse();
+		result.ShouldBe(expected);
 	}
 
 	[Fact]
@@ -412,34 +389,6 @@ public class PrioritizedQueuedTaskTests
 	}
 
 	[Fact]
-	public void OperatorLessThanOrEqual_Should_Return_True_When_Left_Is_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null));
-
-		// Act
-		bool result = task1 <= task2;
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void OperatorLessThanOrEqual_Should_Return_True_When_Both_Are_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask? task2 = null;
-
-		// Act
-		bool result = task1 <= task2;
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
 	public void OperatorLessThanOrEqual_Should_Return_True_When_Priorities_Are_Equal()
 	{
 		// Arrange
@@ -458,34 +407,6 @@ public class PrioritizedQueuedTaskTests
 		// Assert
 		// Since task1 was created first, it should be <= task2
 		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void OperatorGreaterThan_Should_Return_False_When_Left_Is_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null));
-
-		// Act
-		bool result = task1 > task2;
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void OperatorGreaterThan_Should_Return_False_When_Both_Are_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask? task2 = null;
-
-		// Act
-		bool result = task1 > task2;
-
-		// Assert
-		result.ShouldBeFalse();
 	}
 
 	[Fact]
@@ -533,34 +454,6 @@ public class PrioritizedQueuedTaskTests
 	}
 
 	[Fact]
-	public void OperatorGreaterThanOrEqual_Should_Return_False_When_Left_Is_Null_And_Right_Is_Not()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null));
-
-		// Act
-		bool result = task1 >= task2;
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void OperatorGreaterThanOrEqual_Should_Return_True_When_Both_Are_Null()
-	{
-		// Arrange
-		PrioritizedQueuedTask? task1 = null;
-		PrioritizedQueuedTask? task2 = null;
-
-		// Act
-		bool result = task1 >= task2;
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
 	public void OperatorGreaterThanOrEqual_Should_Return_True_When_Left_Has_Lower_Priority()
 	{
 		// Arrange
@@ -602,28 +495,8 @@ public class PrioritizedQueuedTaskTests
 		bool result = task2 >= task1;
 
 		// Assert
-		// task2 was created later, so it should be >= task1 (comes after in FIFO)
+		//task2 was created later, so it should be >= task1 (comes after in FIFO)
 		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void CompareTo_Should_Handle_Negative_Priorities()
-	{
-		// Arrange
-		PrioritizedQueuedTask task1 = new(_ => Task.FromResult<object?>(null))
-		{
-			Priority = -10
-		};
-		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
-		{
-			Priority = -5
-		};
-
-		// Act
-		int result = task1.CompareTo(task2);
-
-		// Assert
-		result.ShouldBeGreaterThan(0); // -10 has lower priority than -5
 	}
 
 	[Fact]

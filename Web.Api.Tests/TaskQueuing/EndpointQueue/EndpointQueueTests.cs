@@ -6,17 +6,28 @@ namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
 public class EndpointQueueTests : IDisposable
 {
+	private enum ChannelType
+	{
+		Bounded,
+		Unbounded
+	}
+
 	private readonly List<CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue> _queuesToDispose = new();
 
-	[Fact]
-	public void Constructor_BoundedChannelOptions_Should_Initialize()
+	[Theory]
+	[InlineData(ChannelType.Bounded, 10, null)]
+	[InlineData(ChannelType.Unbounded, null, null)]
+	[InlineData(ChannelType.Bounded, 5, 500)]
+	[InlineData(ChannelType.Unbounded, null, 500)]
+	public void Constructor_WithDifferentOptions_InitializesCorrectly(ChannelType channelType, int? capacity, int? processTimeWindow)
 	{
 		// Arrange
-		BoundedChannelOptions options = new(10);
-		const string endpointKey = "test-endpoint";
+		string endpointKey = $"test-endpoint-{channelType}-{capacity}-{processTimeWindow}";
 
 		// Act
-		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = new(endpointKey, options);
+		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = channelType == ChannelType.Bounded
+			? new(endpointKey, new BoundedChannelOptions(capacity!.Value), processTimeWindow)
+			: new(endpointKey, new UnboundedChannelOptions(), processTimeWindow);
 		_queuesToDispose.Add(queue);
 
 		// Assert
@@ -25,77 +36,16 @@ public class EndpointQueueTests : IDisposable
 		queue.Stats.EndpointKey.ShouldBe(endpointKey);
 	}
 
-	[Fact]
-	public void Constructor_UnboundedChannelOptions_Should_Initialize()
+	[Theory]
+	[InlineData(ChannelType.Bounded, 42)]
+	[InlineData(ChannelType.Unbounded, 99)]
+	public async Task EnqueueAsync_WithDifferentChannelTypes_ExecutesTask(ChannelType channelType, int expectedResult)
 	{
 		// Arrange
-		UnboundedChannelOptions options = new();
-		const string endpointKey = "test-endpoint-unbounded";
-
-		// Act
-		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = new(endpointKey, options);
+		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = channelType == ChannelType.Bounded
+			? new("test", new BoundedChannelOptions(10))
+			: new("test", new UnboundedChannelOptions());
 		_queuesToDispose.Add(queue);
-
-		// Assert
-		queue.EndpointKey.ShouldBe(endpointKey);
-		queue.Stats.ShouldNotBeNull();
-		queue.Stats.EndpointKey.ShouldBe(endpointKey);
-	}
-
-	[Fact]
-	public void Constructor_BoundedChannelOptions_WithCustomProcessTimeWindow_Should_Initialize()
-	{
-		// Arrange
-		BoundedChannelOptions options = new(5);
-		const string endpointKey = "test-endpoint-custom-window";
-
-		// Act
-		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = new(endpointKey, options, processTimeWindow: 500);
-		_queuesToDispose.Add(queue);
-
-		// Assert
-		queue.EndpointKey.ShouldBe(endpointKey);
-	}
-
-	[Fact]
-	public void Constructor_UnboundedChannelOptions_WithCustomProcessTimeWindow_Should_Initialize()
-	{
-		// Arrange
-		UnboundedChannelOptions options = new();
-		const string endpointKey = "test-endpoint-unbounded-custom-window";
-
-		// Act
-		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = new(endpointKey, options, processTimeWindow: 500);
-		_queuesToDispose.Add(queue);
-
-		// Assert
-		queue.EndpointKey.ShouldBe(endpointKey);
-	}
-
-	[Fact]
-	public async Task EnqueueAsync_BoundedChannel_Should_Execute_Task()
-	{
-		// Arrange
-		BoundedChannelOptions options = new(10);
-		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = new("test", options);
-		_queuesToDispose.Add(queue);
-		const int expectedResult = 42;
-
-		// Act
-		int? result = await queue.EnqueueAsync(_ => Task.FromResult(expectedResult), TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldBe(expectedResult);
-	}
-
-	[Fact]
-	public async Task EnqueueAsync_UnboundedChannel_Should_Execute_Task()
-	{
-		// Arrange
-		UnboundedChannelOptions options = new();
-		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = new("test", options);
-		_queuesToDispose.Add(queue);
-		const int expectedResult = 99;
 
 		// Act
 		int? result = await queue.EnqueueAsync(_ => Task.FromResult(expectedResult), TestContext.Current.CancellationToken);

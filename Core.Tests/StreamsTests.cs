@@ -175,28 +175,33 @@ public sealed class StreamsTests
 		await Should.ThrowAsync<OperationCanceledException>(async () => await target.WriteStreamToStream(source, cts.Token));
 	}
 
-	[Fact]
-	public async Task WriteStreamToStream_Throws_If_Source_Disposed()
+	public enum DisposedStreamType
 	{
-		// Arrange
-		await using ControllableFileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
-		await using MemoryStream target = new();
-		await source.DisposeAsync();
-
-		// Act & Assert
-		await Should.ThrowAsync<ObjectDisposedException>(async () => await target.WriteStreamToStream(source));
+		Source,
+		Target
 	}
 
-	[Fact]
-	public async Task WriteStreamToStream_Throws_If_Target_Disposed()
+	[Theory]
+	[InlineData(DisposedStreamType.Source)]
+	[InlineData(DisposedStreamType.Target)]
+	public async Task WriteStreamToStream_Throws_If_Stream_Disposed(DisposedStreamType disposedStream)
 	{
 		// Arrange
 		await using ControllableFileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
-		await target.DisposeAsync();
 
-		// Act & Assert
-		await Should.ThrowAsync<InvalidOperationException>(async () => await target.WriteStreamToStream(source));
+		if (disposedStream == DisposedStreamType.Source)
+		{
+			await source.DisposeAsync();
+			// Act & Assert
+			await Should.ThrowAsync<ObjectDisposedException>(async () => await target.WriteStreamToStream(source));
+		}
+		else
+		{
+			await target.DisposeAsync();
+			// Act & Assert
+			await Should.ThrowAsync<InvalidOperationException>(async () => await target.WriteStreamToStream(source));
+		}
 	}
 
 	[Fact]
@@ -297,55 +302,63 @@ public sealed class StreamsTests
 		public override bool CanRead => canRead;
 	}
 
-	[Fact]
-	public async Task WriteStreamToStream_Stream_Resets_Source_Position()
+	public enum StreamResetType
 	{
-		// Arrange
-		string tempSource = Path.GetTempFileName();
-		string tempTarget = Path.GetTempFileName();
-		byte[] data = { 10, 20, 30, 40 };
-		await File.WriteAllBytesAsync(tempSource, data, TestContext.Current.CancellationToken);
-		await File.WriteAllBytesAsync(tempTarget, Array.Empty<byte>(), TestContext.Current.CancellationToken);
-
-		await using FileStream source = new(tempSource, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-		await using FileStream target = new(tempTarget, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-
-		source.Position = source.Length; // Move to end
-
-		// Act
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
-
-		// Assert
-		source.Position.ShouldBe(0);
-		target.Position.ShouldBe(0);
-		(await target.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken)).ShouldBe(data);
-
-		source.Close();
-		target.Close();
-		await source.DisposeAsync();
-		await target.DisposeAsync();
-
-		File.Delete(tempSource);
-		File.Delete(tempTarget);
+		FileStream,
+		MemoryStream
 	}
 
-	[Fact]
-	public async Task WriteStreamToStream_MemoryStream_Resets_Source_Position()
+	[Theory]
+	[InlineData(StreamResetType.FileStream)]
+	[InlineData(StreamResetType.MemoryStream)]
+	public async Task WriteStreamToStream_Resets_Source_Position(StreamResetType streamType)
 	{
 		// Arrange
-		byte[] data = { 5, 6, 7, 8 };
-		MemoryStream source = new(data, true);
-		MemoryStream target = new();
+		if (streamType == StreamResetType.FileStream)
+		{
+			string tempSource = Path.GetTempFileName();
+			string tempTarget = Path.GetTempFileName();
+			byte[] data = { 10, 20, 30, 40 };
+			await File.WriteAllBytesAsync(tempSource, data, TestContext.Current.CancellationToken);
+			await File.WriteAllBytesAsync(tempTarget, Array.Empty<byte>(), TestContext.Current.CancellationToken);
 
-		source.Position = source.Length;
+			await using FileStream source = new(tempSource, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+			await using FileStream target = new(tempTarget, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
 
-		// Act
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+			source.Position = source.Length;
 
-		// Assert
-		source.Position.ShouldBe(0);
-		target.Position.ShouldBe(0);
-		target.ToArray().ShouldBe(data);
+			// Act
+			await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+
+			// Assert
+			source.Position.ShouldBe(0);
+			target.Position.ShouldBe(0);
+			(await target.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken)).ShouldBe(data);
+
+			source.Close();
+			target.Close();
+			await source.DisposeAsync();
+			await target.DisposeAsync();
+
+			File.Delete(tempSource);
+			File.Delete(tempTarget);
+		}
+		else
+		{
+			byte[] data = { 5, 6, 7, 8 };
+			MemoryStream source = new(data, true);
+			MemoryStream target = new();
+
+			source.Position = source.Length;
+
+			// Act
+			await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+
+			// Assert
+			source.Position.ShouldBe(0);
+			target.Position.ShouldBe(0);
+			target.ToArray().ShouldBe(data);
+		}
 	}
 
 	[Fact]
@@ -680,49 +693,44 @@ public sealed class StreamsTests
 		inner.Position.ShouldBe(50);
 	}
 
-	[Fact]
-	public void CountingStream_CanRead_ReturnsInnerStreamCanRead()
+	public enum StreamPropertyType
 	{
-		// Arrange
-		using MemoryStream inner = new();
-		using CountingStream counting = new(inner);
-
-		// Assert
-		counting.CanRead.ShouldBe(inner.CanRead);
+		CanRead,
+		CanSeek,
+		CanWrite,
+		Length
 	}
 
-	[Fact]
-	public void CountingStream_CanSeek_ReturnsInnerStreamCanSeek()
+	[Theory]
+	[InlineData(StreamPropertyType.CanRead)]
+	[InlineData(StreamPropertyType.CanSeek)]
+	[InlineData(StreamPropertyType.CanWrite)]
+	[InlineData(StreamPropertyType.Length)]
+	public void CountingStream_DelegatesToInnerStreamProperties(StreamPropertyType propertyType)
 	{
 		// Arrange
-		using MemoryStream inner = new();
-		using CountingStream counting = new(inner);
-
-		// Assert
-		counting.CanSeek.ShouldBe(inner.CanSeek);
-	}
-
-	[Fact]
-	public void CountingStream_CanWrite_ReturnsInnerStreamCanWrite()
-	{
-		// Arrange
-		using MemoryStream inner = new();
-		using CountingStream counting = new(inner);
-
-		// Assert
-		counting.CanWrite.ShouldBe(inner.CanWrite);
-	}
-
-	[Fact]
-	public void CountingStream_Length_ReturnsInnerStreamLength()
-	{
-		// Arrange
-		byte[] data = fixture.CreateMany<byte>(200).ToArray();
+		byte[] data = propertyType == StreamPropertyType.Length ? fixture.CreateMany<byte>(200).ToArray() : [];
 		using MemoryStream inner = new(data);
 		using CountingStream counting = new(inner);
 
 		// Assert
-		counting.Length.ShouldBe(inner.Length);
+		switch (propertyType)
+		{
+			case StreamPropertyType.CanRead:
+				counting.CanRead.ShouldBe(inner.CanRead);
+				break;
+			case StreamPropertyType.CanSeek:
+				counting.CanSeek.ShouldBe(inner.CanSeek);
+				break;
+			case StreamPropertyType.CanWrite:
+				counting.CanWrite.ShouldBe(inner.CanWrite);
+				break;
+			case StreamPropertyType.Length:
+				counting.Length.ShouldBe(inner.Length);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(propertyType));
+		}
 	}
 
 	[Fact]

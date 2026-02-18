@@ -65,30 +65,39 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		result.Value.ShouldBe(10.5m);
 	}
 
-	[Fact]
-	public async Task Get_ShouldReturnNull_WhenRequestFails()
+	[Theory]
+	[InlineData(ErrorScenario.RequestFails)]
+	[InlineData(ErrorScenario.Exception)]
+	public async Task Get_ShouldHandleErrors(ErrorScenario scenario)
 	{
 		// Arrange
-		RestObject<TestModel> restObject = new()
-		{
-			Result = null,
-			Response = new HttpResponseMessage(HttpStatusCode.BadRequest)
-		};
-
-		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.Returns(Task.FromResult(restObject));
-
 		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 1));
 
-		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
+		if (scenario == ErrorScenario.RequestFails)
+		{
+			RestObject<TestModel> restObject = new()
+			{
+				Result = null,
+				Response = new HttpResponseMessage(HttpStatusCode.BadRequest)
+			};
+			A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
 
-		// Assert
-		result.ShouldBeNull();
+			// Act
+			TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+			// Assert
+			result.ShouldBeNull();
+		}
+		else
+		{
+			A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Throws(new InvalidOperationException("Test exception"));
+
+			// Act & Assert
+			await Should.ThrowAsync<HttpRequestException>(async () => await wrapper.Get<TestModel>(options));
+		}
 	}
-
-	[Fact]
-	public async Task Get_ShouldRetry_WhenInitialRequestFails()
 	{
 		// Arrange
 		RestObject<TestModel> failedResponse = new()
@@ -97,23 +106,23 @@ public sealed class RestHelpersWrapperTests : IDisposable
 			Response = new HttpResponseMessage(HttpStatusCode.InternalServerError)
 		};
 
-		TestModel expectedResult = new() { Id = 1, Name = "Test" };
-		RestObject<TestModel> successResponse = new()
-		{
-			Result = expectedResult,
-			Response = new HttpResponseMessage(HttpStatusCode.OK)
-		};
+	TestModel expectedResult = new() { Id = 1, Name = "Test" };
+	RestObject<TestModel> successResponse = new()
+	{
+		Result = expectedResult,
+		Response = new HttpResponseMessage(HttpStatusCode.OK)
+	};
 
-		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+	A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
 				.ReturnsNextFromSequence(Task.FromResult(failedResponse), Task.FromResult(successResponse));
 
-		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 2, RetryDelay: 10));
+	RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 2, RetryDelay: 10));
 
-		// Act
-		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
+	// Act
+	TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
-		// Assert
-		result.ShouldNotBeNull();
+	// Assert
+	result.ShouldNotBeNull();
 		result.Id.ShouldBe(1);
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
 				.MustHaveHappened(2, Times.Exactly);
@@ -214,20 +223,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 	}
 
 	[Fact]
-	public async Task Get_ShouldThrowHttpRequestException_OnException()
-	{
-		// Arrange
-		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-				.Throws(new InvalidOperationException("Test exception"));
-
-		RestHelperOptions options = new("test-endpoint", "TestApi");
-
-		// Act & Assert
-		await Should.ThrowAsync<HttpRequestException>(async () => await wrapper.Get<TestModel>(options));
-	}
-
-	[Fact]
-	public async Task Get_ShouldInitializeResilienceOptions_WhenNull()
+	public async Task Get_ShouldRetry_WhenInitialRequestFails()
 	{
 		// Arrange
 		RestObject<TestModel> restObject = new()

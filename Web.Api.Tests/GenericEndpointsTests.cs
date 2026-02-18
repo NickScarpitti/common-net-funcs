@@ -12,6 +12,13 @@ namespace Web.Api.Tests;
 
 public sealed class GenericEndpointsTests
 {
+	private enum BulkOperationResult
+	{
+		Zero,
+		Null,
+		Exception
+	}
+
 	private readonly IFixture fixture;
 	private readonly GenericEndpoints sut;
 
@@ -244,51 +251,43 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteMany(whereClause, A<GlobalFilterOptions?>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
-	public async Task DeleteMany_WithExpression_WhenReturnsZero_ReturnsOkWithZero()
-	{
-		// Arrange
-		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 100;
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(A<Expression<Func<TestEntity, bool>>>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(0);
-
-		// Act
-		ActionResult<int> result = await sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Result.ShouldBeOfType<OkObjectResult>();
-		((OkObjectResult)result.Result!).Value.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task DeleteMany_WithExpression_WhenReturnsNull_ReturnsNoContent()
+	[Theory]
+	[InlineData(BulkOperationResult.Zero, 0)]
+	[InlineData(BulkOperationResult.Null, null)]
+	[InlineData(BulkOperationResult.Exception, null)]
+	public async Task DeleteMany_WithExpression_ErrorScenarios_ReturnsExpectedResult(BulkOperationResult resultType, int? expectedValue)
 	{
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(whereClause, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(Task.FromResult<int?>(null));
+
+		switch (resultType)
+		{
+			case BulkOperationResult.Zero:
+				A.CallTo(() => dbContextActions.DeleteMany(A<Expression<Func<TestEntity, bool>>>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(0);
+				break;
+			case BulkOperationResult.Null:
+				A.CallTo(() => dbContextActions.DeleteMany(whereClause, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(Task.FromResult<int?>(null));
+				break;
+			case BulkOperationResult.Exception:
+				A.CallTo(() => dbContextActions.DeleteMany(whereClause, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Throws<InvalidOperationException>();
+				break;
+		}
 
 		// Act
 		ActionResult<int> result = await sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
-		result.Result.ShouldBeOfType<NoContentResult>();
-	}
-
-	[Fact]
-	public async Task DeleteMany_WithExpression_WhenExceptionThrown_ReturnsNoContent()
-	{
-		// Arrange
-		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(whereClause, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Throws<InvalidOperationException>();
-
-		// Act
-		ActionResult<int> result = await sut.DeleteMany(whereClause, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.Result.ShouldBeOfType<NoContentResult>();
+		if (resultType == BulkOperationResult.Zero)
+		{
+			result.ShouldNotBeNull();
+			result.Result.ShouldBeOfType<OkObjectResult>();
+			((OkObjectResult)result.Result!).Value.ShouldBe(0);
+		}
+		else
+		{
+			result.Result.ShouldBeOfType<NoContentResult>();
+		}
 	}
 
 	[Fact]
@@ -311,55 +310,44 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
-	public async Task UpdateMany_WhenReturnsZero_ReturnsOkWithZero()
-	{
-		// Arrange
-		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 100;
-		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(0);
-
-		// Act
-		ActionResult<int> result = await sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Result.ShouldBeOfType<OkObjectResult>();
-		((OkObjectResult)result.Result!).Value.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task UpdateMany_WhenReturnsNull_ReturnsNoContent()
-	{
-		// Arrange
-		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-
-		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(Task.FromResult<int?>(null));
-
-		// Act
-		ActionResult<int> result = await sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.Result.ShouldBeOfType<NoContentResult>();
-	}
-
-	[Fact]
-	public async Task UpdateMany_WhenExceptionThrown_ReturnsNoContent()
+	[Theory]
+	[InlineData(BulkOperationResult.Zero, 0)]
+	[InlineData(BulkOperationResult.Null, null)]
+	[InlineData(BulkOperationResult.Exception, null)]
+	public async Task UpdateMany_ErrorScenarios_ReturnsExpectedResult(BulkOperationResult resultType, int? expectedValue)
 	{
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
 		Action<UpdateSettersBuilder<TestEntity>>? updateSettersConfig = (builder) => builder.SetProperty(e => e.Name, "Updated Name");
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Throws<InvalidOperationException>();
+
+		switch (resultType)
+		{
+			case BulkOperationResult.Zero:
+				A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(0);
+				break;
+			case BulkOperationResult.Null:
+				A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Returns(Task.FromResult<int?>(null));
+				break;
+			case BulkOperationResult.Exception:
+				A.CallTo(() => dbContextActions.UpdateMany(whereClause, updateSettersConfig, A<TimeSpan?>._, A<GlobalFilterOptions?>._, A<CancellationToken>._)).Throws<InvalidOperationException>();
+				break;
+		}
 
 		// Act
 		ActionResult<int> result = await sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
-		result.Result.ShouldBeOfType<NoContentResult>();
+		if (resultType == BulkOperationResult.Zero)
+		{
+			result.ShouldNotBeNull();
+			result.Result.ShouldBeOfType<OkObjectResult>();
+			((OkObjectResult)result.Result!).Value.ShouldBe(0);
+		}
+		else
+		{
+			result.Result.ShouldBeOfType<NoContentResult>();
+		}
 	}
 
 	[Fact]

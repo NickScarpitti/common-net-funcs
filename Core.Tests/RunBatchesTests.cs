@@ -6,6 +6,20 @@ public sealed class RunBatchesTests
 {
 	private readonly Fixture fixture = new();
 
+	public enum ArgumentValidationType
+	{
+		NullItems,
+		NullProcessor,
+		ZeroBatchSize,
+		NegativeBatchSize
+	}
+
+	public enum ProcessorSyncType
+	{
+		Async,
+		Sync
+	}
+
 	[Theory]
 	[InlineData(100, 30)]  // Multiple batches
 	[InlineData(10, 20)]   // Single batch

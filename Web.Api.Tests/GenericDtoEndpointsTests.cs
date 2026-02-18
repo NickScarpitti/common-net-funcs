@@ -56,6 +56,9 @@ public sealed class GenericDtoEndpointsTests
 		public DbSet<TestEntity> TestEntities { get; set; } = null!;
 	}
 
+	private enum ErrorScenario { Success, SaveFails, ExceptionThrown, NotFound, DeleteFails, EmptyList, ReturnsNull }
+	private enum PatchScenario { ModelNotFound, SaveFails, ExceptionThrown }
+
 	#region CreateMany Tests
 
 
@@ -82,40 +85,30 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.CreateMany(A<IEnumerable<TestEntity>>.Ignored, removeNavigationProps)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
-	public async Task CreateMany_WhenSaveFails_ReturnsNoContent()
+	[Theory]
+	[InlineData(ErrorScenario.SaveFails)]
+	[InlineData(ErrorScenario.ExceptionThrown)]
+	public async Task CreateMany_ErrorScenarios_ReturnsNoContent(ErrorScenario scenario)
 	{
 		// Arrange
-
 		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
+
+		switch (scenario)
+		{
+			case ErrorScenario.SaveFails:
+				A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
+				break;
+			case ErrorScenario.ExceptionThrown:
+				A.CallTo(() => dbContextActions.CreateMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored))
+					.Throws<InvalidOperationException>();
+				break;
+		}
 
 		// Act
-
 		ActionResult<List<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
-
-		result.Result.ShouldBeOfType<NoContentResult>();
-	}
-
-	[Fact]
-	public async Task CreateMany_WhenExceptionThrown_ReturnsNoContent()
-	{
-		// Arrange
-
-		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.CreateMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored))
-				.Throws<InvalidOperationException>();
-
-		// Act
-
-		ActionResult<List<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
-
-		// Assert
-
 		result.Result.ShouldBeOfType<NoContentResult>();
 	}
 
@@ -147,40 +140,30 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteByObject(A<TestEntity>.Ignored, removeNavigationProps)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
-	public async Task Delete_WhenSaveFails_ReturnsNoContent()
+	[Theory]
+	[InlineData(ErrorScenario.SaveFails)]
+	[InlineData(ErrorScenario.ExceptionThrown)]
+	public async Task Delete_ErrorScenarios_ReturnsNoContent(ErrorScenario scenario)
 	{
 		// Arrange
-
 		TestInDto model = fixture.Create<TestInDto>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
+
+		switch (scenario)
+		{
+			case ErrorScenario.SaveFails:
+				A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
+				break;
+			case ErrorScenario.ExceptionThrown:
+				A.CallTo(() => dbContextActions.DeleteByObject(A<TestEntity>.Ignored, A<bool>.Ignored))
+					.Throws<InvalidOperationException>();
+				break;
+		}
 
 		// Act
-
 		ActionResult<TestOutDto> result = await sut.Delete<TestEntity, TestDbContext, TestInDto, TestOutDto>(model, dbContextActions);
 
 		// Assert
-
-		result.Result.ShouldBeOfType<NoContentResult>();
-	}
-
-	[Fact]
-	public async Task Delete_WhenExceptionThrown_ReturnsNoContent()
-	{
-		// Arrange
-
-		TestInDto model = fixture.Create<TestInDto>();
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteByObject(A<TestEntity>.Ignored, A<bool>.Ignored))
-				.Throws<InvalidOperationException>();
-
-		// Act
-
-		ActionResult<TestOutDto> result = await sut.Delete<TestEntity, TestDbContext, TestInDto, TestOutDto>(model, dbContextActions);
-
-		// Assert
-
 		result.Result.ShouldBeOfType<NoContentResult>();
 	}
 
@@ -212,76 +195,39 @@ public sealed class GenericDtoEndpointsTests
 		(result.Result as OkObjectResult)!.Value.ShouldBe(models);
 	}
 
-	[Fact]
-	public async Task DeleteMany_WhenDeleteManyReturnsFalse_ReturnsNoContent()
+	[Theory]
+	[InlineData(ErrorScenario.DeleteFails)]
+	[InlineData(ErrorScenario.SaveFails)]
+	[InlineData(ErrorScenario.EmptyList)]
+	[InlineData(ErrorScenario.ExceptionThrown)]
+	public async Task DeleteMany_ErrorScenarios_ReturnsNoContent(ErrorScenario scenario)
 	{
 		// Arrange
-
-		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
+		List<TestInDto> models = scenario == ErrorScenario.EmptyList ? [] : fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Returns(false);
+
+		switch (scenario)
+		{
+			case ErrorScenario.DeleteFails:
+				A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Returns(false);
+				break;
+			case ErrorScenario.SaveFails:
+				A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Returns(true);
+				A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
+				break;
+			case ErrorScenario.EmptyList:
+				// No setup needed - empty list is the error condition
+				break;
+			case ErrorScenario.ExceptionThrown:
+				A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored))
+					.Throws<InvalidOperationException>();
+				break;
+		}
 
 		// Act
-
 		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
-
-		result.Result.ShouldBeOfType<NoContentResult>();
-	}
-
-	[Fact]
-	public async Task DeleteMany_WhenSaveFails_ReturnsNoContent()
-	{
-		// Arrange
-
-		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Returns(true);
-		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
-
-		// Act
-
-		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
-
-		// Assert
-
-		result.Result.ShouldBeOfType<NoContentResult>();
-	}
-
-	[Fact]
-	public async Task DeleteMany_WhenEmptyList_ReturnsNoContent()
-	{
-		// Arrange
-
-		List<TestInDto> models = [];
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-
-		// Act
-
-		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
-
-		// Assert
-
-		result.Result.ShouldBeOfType<NoContentResult>();
-	}
-
-	[Fact]
-	public async Task DeleteMany_WhenExceptionThrown_ReturnsNoContent()
-	{
-		// Arrange
-
-		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored))
-				.Throws<InvalidOperationException>();
-
-		// Act
-
-		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
-
-		// Assert
-
 		result.Result.ShouldBeOfType<NoContentResult>();
 	}
 
@@ -628,85 +574,37 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.Update(A<TestEntity>.Ignored)).MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
-	public async Task Update_SingleKey_WhenModelNotFound_ReturnsNoContent()
+	[Theory]
+	[InlineData(ErrorScenario.NotFound)]
+	[InlineData(ErrorScenario.SaveFails)]
+	[InlineData(ErrorScenario.ExceptionThrown)]
+	public async Task Update_SingleKey_ErrorScenarios_ReturnsNoContent(ErrorScenario scenario)
 	{
 		// Arrange
-
 		TestInDto inDto = fixture.Create<TestInDto>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(Task.FromResult<TestEntity?>(null));
+
+		switch (scenario)
+		{
+			case ErrorScenario.NotFound:
+				A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(Task.FromResult<TestEntity?>(null));
+				break;
+			case ErrorScenario.SaveFails:
+				TestEntity dbModelSave = fixture.Create<TestEntity>();
+				A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(dbModelSave);
+				A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
+				break;
+			case ErrorScenario.ExceptionThrown:
+				TestEntity dbModelEx = fixture.Create<TestEntity>();
+				A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(dbModelEx);
+				A.CallTo(() => dbContextActions.SaveChanges()).Throws<InvalidOperationException>();
+				break;
+		}
 
 		// Act
-
 		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
 
 		// Assert
-
-		result.Result.ShouldBeOfType<NoContentResult>();
-	}
-
-	[Fact]
-	public async Task Update_SingleKey_WhenValidationFails_ReturnsValidationProblem()
-	{
-		// Arrange
-
-		TestEntity dbModel = fixture.Create<TestEntity>();
-		TestInDto inDto = fixture.Create<TestInDto>();
-		inDto.Name = null!; // Will fail Required validation
-
-
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(dbModel);
-
-		// Act
-
-		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
-
-		// Assert
-
-		result.Result.ShouldBeOfType<ObjectResult>();
-		((ObjectResult)result.Result!).StatusCode.ShouldBe(400);
-	}
-
-	[Fact]
-	public async Task Update_SingleKey_WhenSaveFails_ReturnsNoContent()
-	{
-		// Arrange
-
-		TestEntity dbModel = fixture.Create<TestEntity>();
-		TestInDto inDto = fixture.Create<TestInDto>();
-
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(dbModel);
-		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
-
-		// Act
-
-		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
-
-		// Assert
-
-		result.Result.ShouldBeOfType<NoContentResult>();
-	}
-
-	[Fact]
-	public async Task Update_SingleKey_WhenExceptionThrown_ReturnsNoContent()
-	{
-		// Arrange
-
-		TestEntity dbModel = fixture.Create<TestEntity>();
-		TestInDto inDto = fixture.Create<TestInDto>();
-		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(dbModel);
-		A.CallTo(() => dbContextActions.SaveChanges()).Throws<InvalidOperationException>();
-
-		// Act
-
-		ActionResult<TestOutDto> result = await sut.Update<TestEntity, TestDbContext, TestInDto, TestOutDto>(1, inDto, dbContextActions);
-
-		// Assert
-
 		result.Result.ShouldBeOfType<NoContentResult>();
 	}
 

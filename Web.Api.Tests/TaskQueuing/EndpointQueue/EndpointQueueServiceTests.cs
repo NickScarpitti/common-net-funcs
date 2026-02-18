@@ -9,40 +9,31 @@ public class EndpointQueueServiceTests : IDisposable
 {
 	private readonly List<EndpointQueueService> _servicesToDispose = new();
 
-	[Fact]
-	public async Task ExecuteAsync_Bounded_Should_Invoke_Queue()
+	private enum ChannelType { Bounded, Unbounded }
+	private enum DisposeCount { Once, Multiple }
+	private enum ConstructorType { CleanupIntervalOnly, CleanupAndCutoff, NegativeCutoff, ZeroCutoff }
+	private enum DefaultCutoffTest { DefaultConstructor, CleanupIntervalOnly }
+	private enum ResultType { Null, ComplexObject }
+
+	[Theory]
+	[InlineData(ChannelType.Bounded, 77)]
+	[InlineData(ChannelType.Unbounded, 88)]
+	public async Task ExecuteAsync_Should_Invoke_Queue(ChannelType channelType, int expectedResult)
 	{
 		// Arrange
-
-		BoundedChannelOptions options = new(1);
 		EndpointQueueService service = new();
 		_servicesToDispose.Add(service);
 
 		// Act
-
-		int? result = await service.ExecuteAsync("key", _ => Task.FromResult(77), options, TestContext.Current.CancellationToken);
-
-		// Assert
-
-		result.ShouldBe(77);
-	}
-
-	[Fact]
-	public async Task ExecuteAsync_Unbounded_Should_Invoke_Queue()
-	{
-		// Arrange
-
-		UnboundedChannelOptions options = new();
-		EndpointQueueService service = new();
-		_servicesToDispose.Add(service);
-
-		// Act
-
-		int? result = await service.ExecuteAsync("key", _ => Task.FromResult(88), options, TestContext.Current.CancellationToken);
+		int? result = channelType switch
+		{
+			ChannelType.Bounded => await service.ExecuteAsync("key", _ => Task.FromResult(expectedResult), new BoundedChannelOptions(1), TestContext.Current.CancellationToken),
+			ChannelType.Unbounded => await service.ExecuteAsync("key", _ => Task.FromResult(expectedResult), new UnboundedChannelOptions(), TestContext.Current.CancellationToken),
+			_ => throw new ArgumentOutOfRangeException(nameof(channelType))
+		};
 
 		// Assert
-
-		result.ShouldBe(88);
+		result.ShouldBe(expectedResult);
 	}
 
 	[Fact]
@@ -95,64 +86,42 @@ public class EndpointQueueServiceTests : IDisposable
 
 	}
 
-	[Fact]
-	public async Task ExecuteAsync_Bounded_Should_Reuse_Same_Queue_For_Same_Key()
+	[Theory]
+	[InlineData(ChannelType.Bounded, "test-endpoint", 3)]
+	[InlineData(ChannelType.Unbounded, "test-endpoint-unbounded", 2)]
+	public async Task ExecuteAsync_Should_Reuse_Same_Queue_For_Same_Key(ChannelType channelType, string key, int expectedQueuedTasks)
 	{
 		// Arrange
-
-		BoundedChannelOptions options = new(10);
 		EndpointQueueService service = new();
 		_servicesToDispose.Add(service);
-		const string key = "test-endpoint";
 
 		// Act
-
-		int? result1 = await service.ExecuteAsync(key, _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		int? result2 = await service.ExecuteAsync(key, _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
-		int? result3 = await service.ExecuteAsync(key, _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
+		if (channelType == ChannelType.Bounded)
+		{
+			BoundedChannelOptions options = new(10);
+			int? result1 = await service.ExecuteAsync(key, _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+			int? result2 = await service.ExecuteAsync(key, _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
+			int? result3 = await service.ExecuteAsync(key, _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
+			result1.ShouldBe(1);
+			result2.ShouldBe(2);
+			result3.ShouldBe(3);
+		}
+		else
+		{
+			UnboundedChannelOptions options = new();
+			int? result1 = await service.ExecuteAsync(key, _ => Task.FromResult(10), options, TestContext.Current.CancellationToken);
+			int? result2 = await service.ExecuteAsync(key, _ => Task.FromResult(20), options, TestContext.Current.CancellationToken);
+			result1.ShouldBe(10);
+			result2.ShouldBe(20);
+		}
 
 		// Give async stats tracking a moment to complete
-
 		await Task.Delay(50, TestContext.Current.CancellationToken);
 
 		// Assert
-
-		result1.ShouldBe(1);
-		result2.ShouldBe(2);
-		result3.ShouldBe(3);
-
 		QueueStats stats = await service.GetQueueStatsAsync(key);
-		stats.QueuedTasks.ShouldBe(3);
-		stats.ProcessedTasks.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ExecuteAsync_Unbounded_Should_Reuse_Same_Queue_For_Same_Key()
-	{
-		// Arrange
-
-		UnboundedChannelOptions options = new();
-		EndpointQueueService service = new();
-		_servicesToDispose.Add(service);
-		const string key = "test-endpoint-unbounded";
-
-		// Act
-
-		int? result1 = await service.ExecuteAsync(key, _ => Task.FromResult(10), options, TestContext.Current.CancellationToken);
-		int? result2 = await service.ExecuteAsync(key, _ => Task.FromResult(20), options, TestContext.Current.CancellationToken);
-
-		// Give async stats tracking a moment to complete
-
-		await Task.Delay(50, TestContext.Current.CancellationToken);
-
-		// Assert
-
-		result1.ShouldBe(10);
-		result2.ShouldBe(20);
-
-		QueueStats stats = await service.GetQueueStatsAsync(key);
-		stats.QueuedTasks.ShouldBe(2);
-		stats.ProcessedTasks.ShouldBe(2);
+		stats.QueuedTasks.ShouldBe(expectedQueuedTasks);
+		stats.ProcessedTasks.ShouldBe(expectedQueuedTasks);
 	}
 
 	[Fact]
@@ -328,50 +297,36 @@ public class EndpointQueueServiceTests : IDisposable
 		stats.QueuedTasks.ShouldBe(2);
 	}
 
-	[Fact]
-	public async Task ExecuteAsync_With_Null_Result_Should_Work()
+	[Theory]
+	[InlineData(ResultType.Null)]
+	[InlineData(ResultType.ComplexObject)]
+	public async Task ExecuteAsync_With_Different_Result_Types_Should_Work(ResultType resultType)
 	{
 		// Arrange
-
 		BoundedChannelOptions options = new(10);
 		EndpointQueueService service = new();
 		_servicesToDispose.Add(service);
 
-		// Act
-
-		string? result = await service.ExecuteAsync("null-test", _ => Task.FromResult<string?>(null), options, TestContext.Current.CancellationToken);
-
-		// Assert
-
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public async Task ExecuteAsync_With_Complex_Object_Should_Work()
-	{
-		// Arrange
-
-		BoundedChannelOptions options = new(10);
-		EndpointQueueService service = new();
-		_servicesToDispose.Add(service);
-
-		TestData testData = new()
+		// Act & Assert
+		if (resultType == ResultType.Null)
 		{
-			Id = 42,
-			Name = "Test",
-			Values = new List<string> { "A", "B", "C" }
-		};
-
-		// Act
-
-		TestData? result = await service.ExecuteAsync("complex-test", _ => Task.FromResult(testData), options, TestContext.Current.CancellationToken);
-
-		// Assert
-
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(42);
-		result.Name.ShouldBe("Test");
-		result.Values.Count.ShouldBe(3);
+			string? result = await service.ExecuteAsync("null-test", _ => Task.FromResult<string?>(null), options, TestContext.Current.CancellationToken);
+			result.ShouldBeNull();
+		}
+		else
+		{
+			TestData testData = new()
+			{
+				Id = 42,
+				Name = "Test",
+				Values = new List<string> { "A", "B", "C" }
+			};
+			TestData? result = await service.ExecuteAsync("complex-test", _ => Task.FromResult(testData), options, TestContext.Current.CancellationToken);
+			result.ShouldNotBeNull();
+			result.Id.ShouldBe(42);
+			result.Name.ShouldBe("Test");
+			result.Values.Count.ShouldBe(3);
+		}
 	}
 
 	[Fact]
@@ -408,49 +363,47 @@ public class EndpointQueueServiceTests : IDisposable
 		stats2.QueuedTasks.ShouldBe(1);
 	}
 
-	[Fact]
-	public async Task Dispose_Should_Dispose_All_Queues()
+	[Theory]
+	[InlineData(DisposeCount.Once)]
+	[InlineData(DisposeCount.Multiple)]
+	public async Task Dispose_Should_Handle_All_Queues(DisposeCount disposeCount)
 	{
 		// Arrange
-
 		BoundedChannelOptions options = new(10);
 		EndpointQueueService service = new();
 
-		// Create multiple queues
+		if (disposeCount == DisposeCount.Once)
+		{
+			// Create multiple queues
+			_ = await service.ExecuteAsync("queue1", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+			_ = await service.ExecuteAsync("queue2", _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
+			_ = await service.ExecuteAsync("queue3", _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
 
-		_ = await service.ExecuteAsync("queue1", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		_ = await service.ExecuteAsync("queue2", _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
-		_ = await service.ExecuteAsync("queue3", _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
-
-		Dictionary<string, QueueStats> statsBeforeDispose = await service.GetAllQueueStatsAsync();
-		statsBeforeDispose.Count.ShouldBe(3);
+			Dictionary<string, QueueStats> statsBeforeDispose = await service.GetAllQueueStatsAsync();
+			statsBeforeDispose.Count.ShouldBe(3);
+		}
+		else
+		{
+			_ = await service.ExecuteAsync("test", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+		}
 
 		// Act
+		if (disposeCount == DisposeCount.Once)
+		{
+			service.Dispose();
 
-		service.Dispose();
-
-		// Assert - Service should still respond but queues are disposed
-
-		Dictionary<string, QueueStats> statsAfterDispose = await service.GetAllQueueStatsAsync();
-		statsAfterDispose.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task Dispose_Multiple_Times_Should_Be_Safe()
-	{
-		// Arrange
-
-		BoundedChannelOptions options = new(10);
-		EndpointQueueService service = new();
-		_ = await service.ExecuteAsync("test", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-
-		// Act & Assert
-
-		service.Dispose();
-		service.Dispose();
-		service.Dispose();
-
-		Should.NotThrow(() => service.Dispose());
+			// Assert - Service should still respond but queues are disposed
+			Dictionary<string, QueueStats> statsAfterDispose = await service.GetAllQueueStatsAsync();
+			statsAfterDispose.Count.ShouldBe(0);
+		}
+		else
+		{
+			// Act & Assert - Multiple disposes should not throw
+			service.Dispose();
+			service.Dispose();
+			service.Dispose();
+			Should.NotThrow(() => service.Dispose());
+		}
 	}
 
 	[Fact]
@@ -624,47 +577,25 @@ public class EndpointQueueServiceTests : IDisposable
 		allStats.Count.ShouldBe(0);
 	}
 
-	[Fact]
-	public void Constructor_With_CleanupInterval_Should_Create_Service()
+	[Theory]
+	[InlineData(ConstructorType.CleanupIntervalOnly, 10.0, 30.0)]
+	[InlineData(ConstructorType.CleanupAndCutoff, 2.0, 15.0)]
+	[InlineData(ConstructorType.NegativeCutoff, 1.0, -45.0)]
+	[InlineData(ConstructorType.ZeroCutoff, 1.0, 0.0)]
+	public void Constructor_Variations_Should_Create_Service(ConstructorType constructorType, double cleanupMinutes, double cutoffTimeMinutes)
 	{
 		// Arrange
-		TimeSpan cleanupInterval = TimeSpan.FromMinutes(10);
+		TimeSpan cleanupInterval = TimeSpan.FromMinutes(cleanupMinutes);
 
 		// Act
-		EndpointQueueService service = new(cleanupInterval);
+		EndpointQueueService service = constructorType switch
+		{
+			ConstructorType.CleanupIntervalOnly => new EndpointQueueService(cleanupInterval),
+			_ => new EndpointQueueService(cleanupInterval, cutoffTimeMinutes)
+		};
 		_servicesToDispose.Add(service);
 
-		// Assert - Service should be created successfully
-		service.ShouldNotBeNull();
-	}
-
-	[Fact]
-	public void Constructor_With_CleanupInterval_And_CutoffTime_Should_Create_Service()
-	{
-		// Arrange
-		TimeSpan cleanupInterval = TimeSpan.FromMinutes(2);
-		double cutoffTimeMinutes = 15.0;
-
-		// Act
-		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
-		_servicesToDispose.Add(service);
-
-		// Assert - Service should be created successfully
-		service.ShouldNotBeNull();
-	}
-
-	[Fact]
-	public void Constructor_With_Negative_CutoffTime_Should_Use_Absolute_Value()
-	{
-		// Arrange
-		TimeSpan cleanupInterval = TimeSpan.FromMinutes(1);
-		double negativeCutoffTime = -45.0;
-
-		// Act
-		EndpointQueueService service = new(cleanupInterval, negativeCutoffTime);
-		_servicesToDispose.Add(service);
-
-		// Assert - Service should be created and Math.Abs should be used
+		// Assert
 		service.ShouldNotBeNull();
 
 		// Verify cutoffTimeMinutes field via reflection
@@ -672,7 +603,16 @@ public class EndpointQueueServiceTests : IDisposable
 			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		cutoffField.ShouldNotBeNull();
 		double actualCutoff = (double)cutoffField.GetValue(service)!;
-		actualCutoff.ShouldBe(45.0); // Should be absolute value
+
+		double expectedCutoff = constructorType switch
+		{
+			ConstructorType.CleanupIntervalOnly => 30.0, // Default
+			ConstructorType.CleanupAndCutoff => cutoffTimeMinutes,
+			ConstructorType.NegativeCutoff => Math.Abs(cutoffTimeMinutes),
+			ConstructorType.ZeroCutoff => 0.0,
+			_ => throw new ArgumentOutOfRangeException(nameof(constructorType))
+		};
+		actualCutoff.ShouldBe(expectedCutoff);
 	}
 
 	[Fact]
@@ -817,11 +757,18 @@ public class EndpointQueueServiceTests : IDisposable
 		stats.ContainsKey("queue-C").ShouldBeTrue();
 	}
 
-	[Fact]
-	public async Task Default_Constructor_Should_Use_Default_CutoffTime()
+	[Theory]
+	[InlineData(DefaultCutoffTest.DefaultConstructor)]
+	[InlineData(DefaultCutoffTest.CleanupIntervalOnly)]
+	public async Task Default_Cutoff_Time_Should_Be_30_Minutes(DefaultCutoffTest testType)
 	{
 		// Arrange & Act
-		EndpointQueueService service = new();
+		EndpointQueueService service = testType switch
+		{
+			DefaultCutoffTest.DefaultConstructor => new EndpointQueueService(),
+			DefaultCutoffTest.CleanupIntervalOnly => new EndpointQueueService(TimeSpan.FromMinutes(10)),
+			_ => throw new ArgumentOutOfRangeException(nameof(testType))
+		};
 		_servicesToDispose.Add(service);
 
 		// Assert - Verify cutoffTimeMinutes field is 30.0 (default)
@@ -831,47 +778,13 @@ public class EndpointQueueServiceTests : IDisposable
 		double actualCutoff = (double)cutoffField.GetValue(service)!;
 		actualCutoff.ShouldBe(30.0); // Default value
 
-		// Service should work normally
-		BoundedChannelOptions options = new(10);
-		int? result = await service.ExecuteAsync("test", _ => Task.FromResult(42), options, TestContext.Current.CancellationToken);
-		result.ShouldBe(42);
-	}
-
-	[Fact]
-	public void Constructor_With_CleanupInterval_Should_Use_Default_CutoffTime()
-	{
-		// Arrange
-		TimeSpan cleanupInterval = TimeSpan.FromMinutes(10);
-
-		// Act
-		EndpointQueueService service = new(cleanupInterval);
-		_servicesToDispose.Add(service);
-
-		// Assert - Verify cutoffTimeMinutes field is 30.0 (default)
-		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
-			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-		cutoffField.ShouldNotBeNull();
-		double actualCutoff = (double)cutoffField.GetValue(service)!;
-		actualCutoff.ShouldBe(30.0); // Default value
-	}
-
-	[Fact]
-	public void Constructor_With_Zero_CutoffTime_Should_Use_Absolute_Value()
-	{
-		// Arrange
-		TimeSpan cleanupInterval = TimeSpan.FromMinutes(1);
-		double zeroCutoffTime = 0.0;
-
-		// Act
-		EndpointQueueService service = new(cleanupInterval, zeroCutoffTime);
-		_servicesToDispose.Add(service);
-
-		// Assert - Math.Abs(0) = 0
-		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
-			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-		cutoffField.ShouldNotBeNull();
-		double actualCutoff = (double)cutoffField.GetValue(service)!;
-		actualCutoff.ShouldBe(0.0);
+		// For DefaultConstructor, also verify service works normally
+		if (testType == DefaultCutoffTest.DefaultConstructor)
+		{
+			BoundedChannelOptions options = new(10);
+			int? result = await service.ExecuteAsync("test", _ => Task.FromResult(42), options, TestContext.Current.CancellationToken);
+			result.ShouldBe(42);
+		}
 	}
 
 	private bool _disposed;

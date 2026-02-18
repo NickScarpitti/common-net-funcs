@@ -177,75 +177,34 @@ public class SubsetValidatorGeneratorTests
 		diagnostic.GetMessage().ShouldContain("is not present in the parent class");
 	}
 
-	[Fact]
-	public void Generator_WithInheritedProperties_ShouldAllowBaseClassProperties()
+	[Theory]
+	[InlineData(true, false)]  // allowInheritedProperties=true, should NOT report diagnostic
+	[InlineData(false, true)]  // allowInheritedProperties=false, SHOULD report diagnostic for BaseProperty
+	public void Generator_WithAllowInheritedPropertiesFlag_ShouldHandleBaseClassProperties(bool allowInheritedProperties, bool shouldReportDiagnostic)
 	{
 		// Arrange
-		const string source = @"
+		string source = @$"
 			using CommonNetFuncs.SubsetModelBinder;
 
 			namespace TestNamespace
-			{
+			{{
 				public class BaseClass
-				{
-					public string BaseProperty { get; set; }
-				}
+				{{
+					public string BaseProperty {{ get; set; }}
+				}}
 
 				public class OriginalClass : BaseClass
-				{
-					public string Name { get; set; }
-				}
+				{{
+					public string Name {{ get; set; }}
+				}}
 
-				[SubsetOf(typeof(OriginalClass), allowInheritedProperties: true)]
+				[SubsetOf(typeof(OriginalClass), allowInheritedProperties: {allowInheritedProperties.ToString().ToLower()})]
 				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-					public string BaseProperty { get; set; }
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get diagnostics
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert - No diagnostics should be reported
-		result.Diagnostics.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void Generator_WithoutInheritedProperties_ShouldReportBaseClassProperties()
-	{
-		// Arrange
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				public class BaseClass
-				{
-					public string BaseProperty { get; set; }
-				}
-
-				public class OriginalClass : BaseClass
-				{
-					public string Name { get; set; }
-				}
-
-				[SubsetOf(typeof(OriginalClass), allowInheritedProperties: false)]
-				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-					public string BaseProperty { get; set; }
-				}
-			}";
+				{{
+					public string Name {{ get; set; }}
+					public string BaseProperty {{ get; set; }}
+				}}
+			}}";
 
 		// Create compilation
 		CSharpCompilation compilation = CreateCompilation(source);
@@ -260,31 +219,40 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0002");
-		diagnostic.ShouldNotBeNull();
-		diagnostic.GetMessage().ShouldContain("BaseProperty");
+		if (shouldReportDiagnostic)
+		{
+			Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0002");
+			diagnostic.ShouldNotBeNull();
+			diagnostic!.GetMessage().ShouldContain("BaseProperty");
+		}
+		else
+		{
+			result.Diagnostics.ShouldBeEmpty();
+		}
 	}
 
-	[Fact]
-	public void Generator_WithMvcFlag_ShouldGenerateModelMetadataType()
+	[Theory]
+	[InlineData(true, "Microsoft.AspNetCore.Mvc", "ModelMetadataType")]
+	[InlineData(false, "System.ComponentModel.DataAnnotations", "MetadataType")]
+	public void Generator_WithMvcFlag_ShouldGenerateCorrectMetadataAttribute(bool isMvcApp, string expectedUsing, string expectedAttribute)
 	{
 		// Arrange
-		const string source = @"
+		string source = @$"
 			using CommonNetFuncs.SubsetModelBinder;
 
 			namespace TestNamespace
-			{
+			{{
 				public class OriginalClass
-				{
-					public string Name { get; set; }
-				}
+				{{
+					public string Name {{ get; set; }}
+				}}
 
-				[SubsetOf(typeof(OriginalClass), isMvcApp: true)]
+				[SubsetOf(typeof(OriginalClass), isMvcApp: {isMvcApp.ToString().ToLower()})]
 				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-				}
-			}";
+				{{
+					public string Name {{ get; set; }}
+				}}
+			}}";
 
 		// Create compilation
 		CSharpCompilation compilation = CreateCompilation(source);
@@ -301,107 +269,32 @@ public class SubsetValidatorGeneratorTests
 		// Assert
 		SyntaxTree generatedFile = result.GeneratedTrees[0];
 		string generatedCode = generatedFile.ToString();
-		generatedCode.ShouldContain("using Microsoft.AspNetCore.Mvc;");
-		generatedCode.ShouldContain("[ModelMetadataType(typeof(OriginalClass))]");
+		generatedCode.ShouldContain($"using {expectedUsing};");
+		generatedCode.ShouldContain($"[{expectedAttribute}(typeof(OriginalClass))]");
 	}
 
-	[Fact]
-	public void Generator_WithoutMvcFlag_ShouldGenerateMetadataType()
+	[Theory]
+	[InlineData(true, false)]  // ignoreType=true, should NOT report type mismatch
+	[InlineData(false, true)]  // ignoreType=false, SHOULD report type mismatch
+	public void Generator_WithIgnoreTypeFlag_ShouldHandleTypeMismatchCorrectly(bool ignoreType, bool shouldReportDiagnostic)
 	{
 		// Arrange
-		const string source = @"
+		string source = @$"
 			using CommonNetFuncs.SubsetModelBinder;
 
 			namespace TestNamespace
-			{
+			{{
 				public class OriginalClass
-				{
-					public string Name { get; set; }
-				}
+				{{
+					public string Name {{ get; set; }}
+				}}
 
-				[SubsetOf(typeof(OriginalClass), isMvcApp: false)]
+				[SubsetOf(typeof(OriginalClass), ignoreType: {ignoreType.ToString().ToLower()})]
 				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get results
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert
-		SyntaxTree generatedFile = result.GeneratedTrees[0];
-		string generatedCode = generatedFile.ToString();
-		generatedCode.ShouldContain("using System.ComponentModel.DataAnnotations;");
-		generatedCode.ShouldContain("[MetadataType(typeof(OriginalClass))]");
-	}
-
-	[Fact]
-	public void Generator_WithIgnoreTypeFlag_ShouldNotReportTypeMismatch()
-	{
-		// Arrange
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				public class OriginalClass
-				{
-					public string Name { get; set; }
-				}
-
-				[SubsetOf(typeof(OriginalClass), ignoreType: true)]
-				public partial class SubsetClass
-				{
-					public int Name { get; set; }  // Type mismatch but ignored
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get diagnostics
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert - No type mismatch diagnostic should be reported
-		result.Diagnostics.Any(d => d.Id == "SG0001").ShouldBeFalse();
-	}
-
-	[Fact]
-	public void Generator_WithoutIgnoreTypeFlag_ShouldReportTypeMismatch()
-	{
-		// Arrange
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				public class OriginalClass
-				{
-					public string Name { get; set; }
-				}
-
-				[SubsetOf(typeof(OriginalClass), ignoreType: false)]
-				public partial class SubsetClass
-				{
-					public int Name { get; set; }  // Type mismatch
-				}
-			}";
+				{{
+					public int Name {{ get; set; }}  // Type mismatch
+				}}
+			}}";
 
 		// Create compilation
 		CSharpCompilation compilation = CreateCompilation(source);
@@ -416,9 +309,15 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0001");
-		diagnostic.ShouldNotBeNull();
-		diagnostic.GetMessage().ShouldContain("has a different type");
+		bool hasDiagnostic = result.Diagnostics.Any(d => d.Id == "SG0001");
+		hasDiagnostic.ShouldBe(shouldReportDiagnostic);
+
+		if (shouldReportDiagnostic)
+		{
+			Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0001");
+			diagnostic.ShouldNotBeNull();
+			diagnostic!.GetMessage().ShouldContain("has a different type");
+		}
 	}
 
 	[Fact]
@@ -1051,43 +950,6 @@ public class SubsetValidatorGeneratorTests
 	}
 
 	[Fact]
-	public void Generator_WithAttributeOnNonPartialClass_ShouldReportDiagnostic()
-	{
-		// Arrange - testing edge case with non-partial class
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				public class OriginalClass
-				{
-					public string Name { get; set; }
-				}
-
-				[SubsetOf(typeof(OriginalClass))]
-				public class SubsetClass
-				{
-					public string Name { get; set; }
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get results
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert - Should report partial keyword diagnostic
-		result.Diagnostics.Any(d => d.GetMessage().Contains("partial")).ShouldBeTrue();
-	}
-
-	[Fact]
 	public void Generator_WithNestedClass_ShouldHandleCorrectly()
 	{
 		// Arrange
@@ -1127,140 +989,36 @@ public class SubsetValidatorGeneratorTests
 		result.GeneratedTrees.Length.ShouldBe(1);
 	}
 
-	[Fact]
-	public void Generator_WithGenericClass_ShouldHandleCorrectly()
+	[Theory]
+	[InlineData("public class OriginalClass<T>", "T", "typeof(OriginalClass<string>)", "string")]
+	[InlineData("public abstract class OriginalClass", "string", "typeof(OriginalClass)", "string")]
+	[InlineData("public sealed class OriginalClass", "string", "typeof(OriginalClass)", "string")]
+	[InlineData("internal class OriginalClass", "string", "typeof(OriginalClass)", "string", true)]
+	public void Generator_WithClassModifiers_ShouldHandleCorrectly(
+		string classDeclaration,
+		string originalPropertyType,
+		string typeofExpression,
+		string subsetPropertyType,
+		bool isInternalAccessModifier = false)
 	{
 		// Arrange
-		const string source = @"
+		string subsetAccessModifier = isInternalAccessModifier ? "internal" : "public";
+		string source = @$"
 			using CommonNetFuncs.SubsetModelBinder;
 
 			namespace TestNamespace
-			{
-				public class OriginalClass<T>
-				{
-					public T Name { get; set; }
-				}
+			{{
+				{classDeclaration}
+				{{
+					public {originalPropertyType} Name {{ get; set; }}
+				}}
 
-				[SubsetOf(typeof(OriginalClass<string>))]
-				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get results
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert
-		result.GeneratedTrees.Length.ShouldBe(1);
-		result.Diagnostics.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void Generator_WithAbstractClass_ShouldHandleCorrectly()
-	{
-		// Arrange
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				public abstract class OriginalClass
-				{
-					public string Name { get; set; }
-				}
-
-				[SubsetOf(typeof(OriginalClass))]
-				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get results
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert
-		result.GeneratedTrees.Length.ShouldBe(1);
-		result.Diagnostics.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void Generator_WithSealedClass_ShouldHandleCorrectly()
-	{
-		// Arrange
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				public sealed class OriginalClass
-				{
-					public string Name { get; set; }
-				}
-
-				[SubsetOf(typeof(OriginalClass))]
-				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get results
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert
-		result.GeneratedTrees.Length.ShouldBe(1);
-		result.Diagnostics.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void Generator_WithInternalClass_ShouldHandleCorrectly()
-	{
-		// Arrange
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				internal class OriginalClass
-				{
-					public string Name { get; set; }
-				}
-
-				[SubsetOf(typeof(OriginalClass))]
-				internal partial class SubsetClass
-				{
-					public string Name { get; set; }
-				}
-			}";
+				[SubsetOf({typeofExpression})]
+				{subsetAccessModifier} partial class SubsetClass
+				{{
+					public {subsetPropertyType} Name {{ get; set; }}
+				}}
+			}}";
 
 		// Create compilation
 		CSharpCompilation compilation = CreateCompilation(source);
@@ -1397,27 +1155,35 @@ public class SubsetValidatorGeneratorTests
 		result.Diagnostics.ShouldBeEmpty();
 	}
 
-	[Fact]
-	public void Generator_WithVirtualProperties_ShouldHandleCorrectly()
+	[Theory]
+	[InlineData("public virtual string Name { get; set; }", "public string Name { get; set; }", true)]
+	[InlineData("public static string StaticProperty { get; set; }", "public static string StaticProperty { get; set; }", false)]
+	[InlineData("public string ReadOnlyProperty { get; }", "public string ReadOnlyProperty { get; }", true)]
+	[InlineData("private string _name;\r\n\t\t\t\t\tpublic string Name => _name;", "private string _name;\r\n\t\t\t\t\tpublic string Name => _name;", true)]
+	public void Generator_WithDifferentPropertyAccessors_ShouldHandleCorrectly(
+		string originalProperty,
+		string subsetProperty,
+		bool shouldCheckDiagnostics)
 	{
 		// Arrange
-		const string source = @"
+		string source = @$"
 			using CommonNetFuncs.SubsetModelBinder;
 
 			namespace TestNamespace
-			{
+			{{
 				public class OriginalClass
-				{
-					public virtual string Name { get; set; }
-					public virtual int Age { get; set; }
-				}
+				{{
+					public string Name {{ get; set; }}
+					{originalProperty}
+				}}
 
 				[SubsetOf(typeof(OriginalClass))]
 				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-				}
-			}";
+				{{
+					public string Name {{ get; set; }}
+					{subsetProperty}
+				}}
+			}}";
 
 		// Create compilation
 		CSharpCompilation compilation = CreateCompilation(source);
@@ -1433,126 +1199,10 @@ public class SubsetValidatorGeneratorTests
 
 		// Assert
 		result.GeneratedTrees.Length.ShouldBe(1);
-		result.Diagnostics.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void Generator_WithStaticProperties_ShouldIgnoreThem()
-	{
-		// Arrange
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				public class OriginalClass
-				{
-					public string Name { get; set; }
-					public static string StaticProperty { get; set; }
-				}
-
-				[SubsetOf(typeof(OriginalClass))]
-				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-					public static string StaticProperty { get; set; }
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get results
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert
-		result.GeneratedTrees.Length.ShouldBe(1);
-	}
-
-	[Fact]
-	public void Generator_WithReadOnlyProperties_ShouldHandleCorrectly()
-	{
-		// Arrange
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				public class OriginalClass
-				{
-					public string Name { get; set; }
-					public string ReadOnlyProperty { get; }
-				}
-
-				[SubsetOf(typeof(OriginalClass))]
-				public partial class SubsetClass
-				{
-					public string Name { get; set; }
-					public string ReadOnlyProperty { get; }
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get results
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert
-		result.GeneratedTrees.Length.ShouldBe(1);
-		result.Diagnostics.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void Generator_WithExpressionBodiedProperties_ShouldHandleCorrectly()
-	{
-		// Arrange
-		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-
-			namespace TestNamespace
-			{
-				public class OriginalClass
-				{
-					private string _name;
-					public string Name => _name;
-				}
-
-				[SubsetOf(typeof(OriginalClass))]
-				public partial class SubsetClass
-				{
-					private string _name;
-					public string Name => _name;
-				}
-			}";
-
-		// Create compilation
-		CSharpCompilation compilation = CreateCompilation(source);
-
-		SubsetValidatorGenerator generator = new();
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-
-		// Run the generation pass
-		driver = driver.RunGenerators(compilation, Current.CancellationToken);
-
-		// Get results
-		GeneratorDriverRunResult result = driver.GetRunResult();
-
-		// Assert
-		result.GeneratedTrees.Length.ShouldBe(1);
-		result.Diagnostics.ShouldBeEmpty();
+		if (shouldCheckDiagnostics)
+		{
+			result.Diagnostics.ShouldBeEmpty();
+		}
 	}
 
 	[Fact]

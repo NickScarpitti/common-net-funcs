@@ -3,6 +3,15 @@ using CommonNetFuncs.Web.Common.ValidationAttributes;
 
 namespace Web.Common.Tests.ValidationAttributes;
 
+public enum ListDenyRegexTestCase
+{
+	NullValue,
+	EmptyList,
+	AllNullItems,
+	AllEmptyStrings,
+	AllValidItems
+}
+
 public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 {
 	[Fact]
@@ -40,56 +49,28 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 		attribute.DenyOnlyFullMatch.ShouldBe(true);
 	}
 
-	[Fact]
-	public void IsValid_WithNull_ShouldReturnSuccess()
+	[Theory]
+	[InlineData(ListDenyRegexTestCase.NullValue)]
+	[InlineData(ListDenyRegexTestCase.EmptyList)]
+	[InlineData(ListDenyRegexTestCase.AllNullItems)]
+	[InlineData(ListDenyRegexTestCase.AllEmptyStrings)]
+	[InlineData(ListDenyRegexTestCase.AllValidItems)]
+	public void IsValid_WithValidScenarios_ShouldReturnSuccess(ListDenyRegexTestCase testCase)
 	{
 		// Arrange
 		ListDenyRegularExpressionAttribute attribute = new("^admin");
+		object? value = testCase switch
+		{
+			ListDenyRegexTestCase.NullValue => null,
+			ListDenyRegexTestCase.EmptyList => new List<string>(),
+			ListDenyRegexTestCase.AllNullItems => new List<string?> { null, null, null },
+			ListDenyRegexTestCase.AllEmptyStrings => new List<string> { string.Empty, "", "" },
+			ListDenyRegexTestCase.AllValidItems => new List<string> { "user1", "customer", "guest" },
+			_ => throw new ArgumentOutOfRangeException(nameof(testCase))
+		};
 
 		// Act
-		ValidationResult? result = attribute.GetValidationResult(null, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithEmptyList_ShouldReturnSuccess()
-	{
-		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new("^admin");
-		List<string> emptyList = [];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(emptyList, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithAllNullItems_ShouldReturnSuccess()
-	{
-		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new("^admin");
-		List<string?> nullList = [null, null, null];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(nullList, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithAllEmptyStrings_ShouldReturnSuccess()
-	{
-		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new("^admin");
-		List<string> emptyStrings = [string.Empty, "", ""];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(emptyStrings, DummyValidationContext);
+		ValidationResult? result = attribute.GetValidationResult(value, DummyValidationContext);
 
 		// Assert
 		result.ShouldBe(ValidationResult.Success);
@@ -152,23 +133,38 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 		}
 	}
 
-	[Fact]
-	public void IsValid_WithAllValidItems_ShouldReturnSuccess()
+	[Theory]
+	[InlineData("Users", 1, "admin123")]
+	[InlineData("Inputs", 0, "<script>alert('xss')</script>")]
+	[InlineData("Queries", 2, "DROP TABLE users")]
+	public void IsValid_WithInvalidItems_ShouldFailAtCorrectIndex(string memberName, int expectedIndex, string invalidValue)
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new("^admin");
-		List<string> items = ["user1", "customer", "guest"];
+		string pattern = memberName == "Queries" ? "DROP|DELETE|INSERT" :
+						 memberName == "Inputs" ? "<script" : "^admin";
+		ListDenyRegularExpressionAttribute attribute = new(pattern);
+		List<string> items = expectedIndex switch
+		{
+			0 => [invalidValue, "safe", "clean"],
+			1 => ["user1", invalidValue, "guest"],
+			2 => ["safe query", "another safe", invalidValue],
+			_ => throw new ArgumentOutOfRangeException(nameof(expectedIndex))
+		};
 
 		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, DummyValidationContext);
+		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext(memberName));
 
 		// Assert
-		result.ShouldBe(ValidationResult.Success);
+		result.ShouldNotBeNull();
+		result.ErrorMessage.ShouldNotBeNull();
+		result.ErrorMessage.ShouldContain($"index {expectedIndex}");
+		result.MemberNames.ShouldContain(memberName);
 	}
 
 	[Fact]
 	public void IsValid_WithOneInvalidItem_ShouldFailAtCorrectIndex()
 	{
+		// Legacy test - kept for backwards compatibility
 		// Arrange
 		ListDenyRegularExpressionAttribute attribute = new("^admin");
 		List<string> items = ["user1", "admin123", "guest"];
@@ -182,39 +178,6 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 		result.ErrorMessage.ShouldContain("index 1");
 		result.ErrorMessage.ShouldContain("admin123");
 		result.MemberNames.ShouldContain("Users");
-	}
-
-	[Fact]
-	public void IsValid_WithFirstItemInvalid_ShouldFailAtIndex0()
-	{
-		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new("<script");
-		List<string> items = ["<script>alert('xss')</script>", "safe", "clean"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext("Inputs"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldNotBeNull();
-		result.ErrorMessage.ShouldContain("index 0");
-	}
-
-	[Fact]
-	public void IsValid_WithLastItemInvalid_ShouldFailAtCorrectIndex()
-	{
-		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new("DROP|DELETE|INSERT");
-		List<string> items = ["safe query", "another safe", "DROP TABLE users"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext("Queries"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldNotBeNull();
-		result.ErrorMessage.ShouldContain("index 2");
-		result.ErrorMessage.ShouldContain("DROP TABLE users");
 	}
 
 	[Fact]
@@ -315,26 +278,16 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 		result.ErrorMessage.ShouldContain("index 1");
 	}
 
-	[Fact]
-	public void IsValid_WithNonEnumerableType_ShouldThrow()
+	[Theory]
+	[InlineData(false, "notAList")]
+	[InlineData(true, "singleString")]
+	public void IsValid_WithNonEnumerableType_ShouldThrow(bool isString, string value)
 	{
 		// Arrange
 		ListDenyRegularExpressionAttribute attribute = new("^test");
-		const int nonEnumerable = 42;
 
 		// Act & Assert
-		Should.Throw<InvalidDataException>(() => attribute.GetValidationResult(nonEnumerable, DummyValidationContext));
-	}
-
-	[Fact]
-	public void IsValid_WithStringType_ShouldThrow()
-	{
-		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new("^test");
-		const string singleString = "test";
-
-		// Act & Assert
-		Should.Throw<InvalidDataException>(() => attribute.GetValidationResult(singleString, DummyValidationContext));
+		Should.Throw<InvalidDataException>(() => attribute.GetValidationResult(isString ? value : (object)42, DummyValidationContext));
 	}
 
 	[Fact]
@@ -392,59 +345,44 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 		}
 	}
 
-	[Fact]
-	public void IsValid_WithXSSPatterns_ShouldDetectMaliciousContent()
+	[Theory]
+	[InlineData("<script|javascript:|onerror=|onclick=", 1, "<script>alert('xss')</script>")]
+	[InlineData("(DROP|DELETE|INSERT).*(TABLE|FROM|INTO)", 2, "DROP TABLE users")]
+	public void IsValid_WithSecurityPatterns_ShouldDetectMaliciousContent(string pattern, int expectedIndex, string maliciousValue)
 	{
 		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new("<script|javascript:|onerror=|onclick=", denyOnlyFullMatch: false);
-		List<string> items = [
-			"clean content",
-			"<script>alert('xss')</script>",
-			"more clean content"
-		];
+		ListDenyRegularExpressionAttribute attribute = new(pattern, denyOnlyFullMatch: false);
+		List<string> items = expectedIndex switch
+		{
+			1 => ["clean content", maliciousValue, "more clean content"],
+			2 => ["SELECT * FROM users", "clean query", maliciousValue],
+			_ => throw new ArgumentOutOfRangeException(nameof(expectedIndex))
+		};
 
 		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext("Contents"));
+		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext(expectedIndex == 1 ? "Contents" : "Queries"));
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.ErrorMessage.ShouldNotBeNull();
-		result.ErrorMessage.ShouldContain("index 1");
+		result.ErrorMessage.ShouldContain($"index {expectedIndex}");
 	}
 
-	[Fact]
-	public void IsValid_WithSQLInjectionPatterns_ShouldDetectMaliciousContent()
-	{
-		// Arrange
-		ListDenyRegularExpressionAttribute attribute = new("(DROP|DELETE|INSERT|UPDATE).*(TABLE|FROM|INTO)", denyOnlyFullMatch: false);
-		List<string> items = [
-			"SELECT * FROM users",
-			"clean query",
-			"DROP TABLE users"
-		];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext("Queries"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldNotBeNull();
-		result.ErrorMessage.ShouldContain("index 2");
-	}
-
-	[Fact]
-	public void IsValid_WithCaseInsensitivePattern_ShouldRespectRegexOptions()
+	[Theory]
+	[InlineData("^admin", "admin", "ADMIN")]
+	[InlineData("^ADMIN", "ADMIN", "admin")]
+	public void IsValid_WithCaseInsensitivePattern_ShouldRespectRegexOptions(string pattern, string invalidValue, string validValue)
 	{
 		// Arrange - Using default regex which is case-sensitive
-		ListDenyRegularExpressionAttribute attribute = new("^ADMIN");
+		ListDenyRegularExpressionAttribute attribute = new(pattern);
 
 		// Act
-		ValidationResult? resultLower = attribute.GetValidationResult(new List<string> { "admin" }, DummyValidationContext);
-		ValidationResult? resultUpper = attribute.GetValidationResult(new List<string> { "ADMIN" }, CreateValidationContext("Items"));
+		ValidationResult? resultValid = attribute.GetValidationResult(new List<string> { validValue }, DummyValidationContext);
+		ValidationResult? resultInvalid = attribute.GetValidationResult(new List<string> { invalidValue }, CreateValidationContext("Items"));
 
 		// Assert
-		resultLower.ShouldBe(ValidationResult.Success); // Doesn't match (case-sensitive)
-		resultUpper.ShouldNotBeNull(); // Matches
+		resultValid.ShouldBe(ValidationResult.Success); // Doesn't match (case-sensitive)
+		resultInvalid.ShouldNotBeNull(); // Matches
 	}
 
 	[Fact]
@@ -637,13 +575,15 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 		Should.Throw<InvalidOperationException>(() => attribute.GetValidationResult(new List<string> { "test" }, DummyValidationContext));
 	}
 
-	[Fact]
-	public void SetupRegex_WithNoTimeout_ShouldCompileRegexWithoutTimeout()
+	[Theory]
+	[InlineData(-1, true)]
+	[InlineData(5000, true)]
+	public void SetupRegex_WithTimeoutVariations_ShouldCompileRegex(int timeoutMs, bool shouldFail)
 	{
-		// Arrange - test the MatchTimeoutInMilliseconds == -1 branch
+		// Arrange
 		ListDenyRegularExpressionAttribute attribute = new(@"^\d+$")
 		{
-			MatchTimeoutInMilliseconds = -1
+			MatchTimeoutInMilliseconds = timeoutMs
 		};
 		List<string> items = ["123"];
 
@@ -651,54 +591,36 @@ public sealed class ListDenyRegularExpressionAttributeTests : ValidationTestBase
 		ValidationResult? result = attribute.GetValidationResult(items, DummyValidationContext);
 
 		// Assert
-		result.ShouldNotBeNull(); // Should fail because "123" matches the pattern
-	}
-
-	[Fact]
-	public void SetupRegex_WithCustomTimeout_ShouldCompileRegexWithTimeout()
-	{
-		// Arrange - test the MatchTimeoutInMilliseconds != -1 branch
-		ListDenyRegularExpressionAttribute attribute = new(@"^\d+$")
+		if (shouldFail)
 		{
-			MatchTimeoutInMilliseconds = 5000
-		};
-		List<string> items = ["123"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, DummyValidationContext);
-
-		// Assert
-		result.ShouldNotBeNull(); // Should fail because "123" matches the pattern
-		attribute.MatchTimeout.TotalMilliseconds.ShouldBe(5000);
+			result.ShouldNotBeNull(); // Should fail because "123" matches the pattern
+		}
+		if (timeoutMs == 5000)
+		{
+			attribute.MatchTimeout.TotalMilliseconds.ShouldBe(5000);
+		}
 	}
 
-	[Fact]
-	public void IsValid_DenyOnlyFullMatch_WithMatchNotAtStartOrNotFullLength_ShouldSucceed()
+	[Theory]
+	[InlineData(@"\d+", "abc123def", 0, 3, false)] // Match at index 3, length 3, total length 9 - should succeed
+	[InlineData(@"\d+", "123abc", 0, 3, false)]    // Match at index 0, length 3, total length 6 - should succeed
+	public void IsValid_DenyOnlyFullMatch_WithMatchNotFullLength_ShouldSucceed(string pattern, string value, int matchIndex, int matchLength, bool shouldFail)
 	{
-		// Arrange - pattern without anchors finds match but not at index 0 or not full length
-		// This tests the false branch of the condition in line 102
-		ListDenyRegularExpressionAttribute attribute = new(@"\d+", denyOnlyFullMatch: true);
-		List<string> items = ["abc123def"]; // Match "123" is at index 3, not 0
+		// Arrange
+		ListDenyRegularExpressionAttribute attribute = new(pattern, denyOnlyFullMatch: true);
+		List<string> items = [value];
 
 		// Act
 		ValidationResult? result = attribute.GetValidationResult(items, DummyValidationContext);
 
 		// Assert
-		result.ShouldBe(ValidationResult.Success); // Should succeed because match is not at index 0
-	}
-
-	[Fact]
-	public void IsValid_DenyOnlyFullMatch_WithMatchAtStartButNotFullLength_ShouldSucceed()
-	{
-		// Arrange - pattern matches at index 0 but not the full length
-		// This tests the second part of the compound condition: m.Length == item.Length
-		ListDenyRegularExpressionAttribute attribute = new(@"\d+", denyOnlyFullMatch: true);
-		List<string> items = ["123abc"]; // Match "123" is at index 0 with length 3, but item length is 6
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success); // Should succeed because match length != item length
+		if (shouldFail)
+		{
+			result.ShouldNotBeNull();
+		}
+		else
+		{
+			result.ShouldBe(ValidationResult.Success);
+		}
 	}
 }

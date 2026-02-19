@@ -61,21 +61,27 @@ public sealed class HtmlEmailBuilderTests
 		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void BuildHtmlEmail_WithBasicContent_ShouldCreateValidHtml()
+	[Theory]
+	[InlineData("Hello World", "Goodbye", true)]
+	[InlineData("Hello", null, false)]
+	public void BuildHtmlEmail_WithContent_ShouldCreateValidHtml(string body, string? footer, bool shouldContainFooter)
 	{
-		// Arrange
-		const string body = "Hello World";
-		const string footer = "Goodbye";
-
 		// Act
 		string result = BuildHtmlEmail(body, footer);
 
 		// Assert
 		result.ShouldStartWith("<html><body>");
 		result.ShouldEndWith("</body></html>");
-		result.ShouldContain("Hello World");
-		result.ShouldContain("Goodbye");
+		result.ShouldContain(body);
+		if (shouldContainFooter)
+		{
+			result.ShouldContain(footer!);
+			result.ShouldContain("<br><br>");
+		}
+		else
+		{
+			result.ShouldNotContain("<br><br>");
+		}
 	}
 
 	[Fact]
@@ -212,20 +218,18 @@ public sealed class HtmlEmailBuilderTests
 		result.ShouldContain(footer);
 	}
 
-	[Fact]
-	public void CreateHtmlTable_WithEmptyData_ShouldReturnEmptyString()
+	[Theory]
+	[InlineData(true)]  // DataTable
+	[InlineData(false)] // List
+	public void CreateHtmlTable_WithEmptyData_ShouldReturnEmptyString(bool useDataTable)
 	{
-		// Arrange
-		using DataTable? emptyTable = null;
-		List<List<string>>? emptyList = null;
-
 		// Act
-		string resultFromTable = emptyTable.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
-		string resultFromList = emptyList.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
+		string result = useDataTable
+			? ((DataTable?)null).CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken)
+			: ((List<List<string>>?)null).CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
-		resultFromTable.ShouldBe(string.Empty);
-		resultFromList.ShouldBe(string.Empty);
+		result.ShouldBe(string.Empty);
 	}
 
 	[Fact]
@@ -249,26 +253,4 @@ public sealed class HtmlEmailBuilderTests
 		});
 	}
 
-	[Theory]
-	[InlineData(true, "<br><br>")]
-	[InlineData(false, "")]
-	public void BuildHtmlEmail_WithOptionalFooter_ShouldHandleSpacingCorrectly(bool includeFooter, string expectedSpacing)
-	{
-		// Arrange
-		const string body = "Hello";
-		string? footer = includeFooter ? "Footer" : null;
-
-		// Act
-		string result = BuildHtmlEmail(body, footer);
-
-		// Assert
-		if (includeFooter)
-		{
-			result.ShouldContain(expectedSpacing);
-		}
-		else
-		{
-			result.ShouldNotContain("<br><br>");
-		}
-	}
 }

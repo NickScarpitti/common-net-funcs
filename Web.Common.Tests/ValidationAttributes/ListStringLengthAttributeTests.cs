@@ -31,14 +31,8 @@ public sealed class ListStringLengthAttributeTests : ValidationTestBase
 	[InlineData(-10)]
 	public void MaximumLength_SetToNegative_ShouldThrow(int maxLength)
 	{
-		// Arrange
-		Should.Throw<ArgumentOutOfRangeException>(() =>
-		{
-			ListStringLengthAttribute attribute = new(maxLength);
-		});
-
 		// Act & Assert
-		// Should.Throw<ArgumentOutOfRangeException>(() => attribute.MaximumLength = maxLength);
+		Should.Throw<ArgumentOutOfRangeException>(() => new ListStringLengthAttribute(maxLength));
 	}
 
 	[Theory]

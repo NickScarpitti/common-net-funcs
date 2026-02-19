@@ -11,6 +11,21 @@ namespace Web.Requests.Tests;
 
 public sealed class WrapperHelpersTests
 {
+	public enum ContentTypeScenario
+	{
+		MemPack,
+		MsgPack,
+		Json
+	}
+
+	public enum CompressionScenario
+	{
+		Gzip,
+		Brotli,
+		None,
+		Unknown
+	}
+
 	#region GetHeaders Tests
 
 	[Fact]
@@ -41,193 +56,46 @@ public sealed class WrapperHelpersTests
 
 	#region SetCompressionHttpHeaders Tests
 
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnGzipMemPackHeaders_WhenConfigured()
+	[Theory]
+	[InlineData(CompressionScenario.Gzip, ContentTypeScenario.MemPack, MemPack)]
+	[InlineData(CompressionScenario.Gzip, ContentTypeScenario.MsgPack, MsgPack)]
+	[InlineData(CompressionScenario.Gzip, ContentTypeScenario.Json, Json)]
+	[InlineData(CompressionScenario.Brotli, ContentTypeScenario.MemPack, MemPack)]
+	[InlineData(CompressionScenario.Brotli, ContentTypeScenario.MsgPack, MsgPack)]
+	[InlineData(CompressionScenario.Brotli, ContentTypeScenario.Json, Json)]
+	[InlineData(CompressionScenario.None, ContentTypeScenario.MemPack, MemPack)]
+	[InlineData(CompressionScenario.None, ContentTypeScenario.MsgPack, MsgPack)]
+	[InlineData(CompressionScenario.None, ContentTypeScenario.Json, Json)]
+	[InlineData(CompressionScenario.Unknown, ContentTypeScenario.MemPack, MemPack)]
+	[InlineData(CompressionScenario.Unknown, ContentTypeScenario.MsgPack, MsgPack)]
+	[InlineData(CompressionScenario.Unknown, ContentTypeScenario.Json, Json)]
+	public void SetCompressionHttpHeaders_ShouldReturnCorrectContentType(
+		CompressionScenario compressionScenario,
+		ContentTypeScenario contentTypeScenario,
+		string expectedContentType)
 	{
+		// Arrange
 		CompressionOptions options = new()
 		{
 			UseCompression = true,
-			CompressionType = ECompressionType.Gzip,
-			UseMemPack = true
+			CompressionType = compressionScenario switch
+			{
+				CompressionScenario.Gzip => ECompressionType.Gzip,
+				CompressionScenario.Brotli => ECompressionType.Brotli,
+				CompressionScenario.None => null,
+				CompressionScenario.Unknown => (ECompressionType)999,
+				_ => null
+			},
+			UseMemPack = contentTypeScenario == ContentTypeScenario.MemPack,
+			UseMsgPack = contentTypeScenario == ContentTypeScenario.MsgPack
 		};
 
+		// Act
 		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
 
+		// Assert
 		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MemPack);
-		headers.ShouldContainKey("Accept-Encoding");
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnBrotliMemPackHeaders_WhenConfigured()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Brotli,
-			UseMemPack = true
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MemPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnGzipMsgPackHeaders_WhenConfigured()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Gzip,
-			UseMsgPack = true
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MsgPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnBrotliMsgPackHeaders_WhenConfigured()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Brotli,
-			UseMsgPack = true
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MsgPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnGzipJsonHeaders_WhenConfigured()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Gzip
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(Json);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnBrotliJsonHeaders_WhenConfigured()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Brotli
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(Json);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnMemPackHeaders_WhenNoCompressionTypeSpecified()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			UseMemPack = true,
-			CompressionType = null
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MemPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnMsgPackHeaders_WhenNoCompressionTypeSpecified()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			UseMsgPack = true,
-			CompressionType = null
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MsgPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnJsonHeaders_WhenNoCompressionTypeSpecified()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = null
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(Json);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldDefaultToGzipMemPack_WhenUnknownCompressionType()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			UseMemPack = true,
-			CompressionType = (ECompressionType)999 // Invalid type
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MemPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldDefaultToGzipMsgPack_WhenUnknownCompressionType()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			UseMsgPack = true,
-			CompressionType = (ECompressionType)999 // Invalid type
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MsgPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldDefaultToGzipJson_WhenUnknownCompressionType()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = (ECompressionType)999 // Invalid type
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(Json);
+		headers["Content-Type"].ShouldBe(expectedContentType);
 	}
 
 	[Fact]
@@ -276,49 +144,26 @@ public sealed class WrapperHelpersTests
 
 	#region GetWaitTime Tests
 
-	[Fact]
-	public void GetWaitTime_ShouldReturnConstantDelay_WithConstantBackoff()
+	[Theory]
+	[InlineData(EDelayBackoffType.Constant, 100.0, 3, 100.0)]
+	[InlineData(EDelayBackoffType.Linear, 100.0, 3, 300.0)]
+	[InlineData(EDelayBackoffType.Exponential, 10.0, 3, 1000.0)]
+	public void GetWaitTime_ShouldReturnCorrectDelay_ForBackoffType(
+		EDelayBackoffType backoffType,
+		double retryDelayMs,
+		int attempts,
+		double expectedMilliseconds)
 	{
 		ResilienceOptions options = new()
 		{
-			DelayBackoffType = EDelayBackoffType.Constant,
-			RetryDelay = TimeSpan.FromMilliseconds(100),
+			DelayBackoffType = backoffType,
+			RetryDelay = TimeSpan.FromMilliseconds(retryDelayMs),
 			UseJitter = false
 		};
 
-		TimeSpan waitTime = WrapperHelpers.GetWaitTime(options, attempts: 3);
+		TimeSpan waitTime = WrapperHelpers.GetWaitTime(options, attempts);
 
-		waitTime.TotalMilliseconds.ShouldBe(100, tolerance: 0.1);
-	}
-
-	[Fact]
-	public void GetWaitTime_ShouldReturnLinearDelay_WithLinearBackoff()
-	{
-		ResilienceOptions options = new()
-		{
-			DelayBackoffType = EDelayBackoffType.Linear,
-			RetryDelay = TimeSpan.FromMilliseconds(100),
-			UseJitter = false
-		};
-
-		TimeSpan waitTime = WrapperHelpers.GetWaitTime(options, attempts: 3);
-
-		waitTime.TotalMilliseconds.ShouldBe(300, tolerance: 0.1);
-	}
-
-	[Fact]
-	public void GetWaitTime_ShouldReturnExponentialDelay_WithExponentialBackoff()
-	{
-		ResilienceOptions options = new()
-		{
-			DelayBackoffType = EDelayBackoffType.Exponential,
-			RetryDelay = TimeSpan.FromMilliseconds(10),
-			UseJitter = false
-		};
-
-		TimeSpan waitTime = WrapperHelpers.GetWaitTime(options, attempts: 3);
-
-		waitTime.TotalMilliseconds.ShouldBe(1000, tolerance: 0.1); // 10^3
+		waitTime.TotalMilliseconds.ShouldBe(expectedMilliseconds, tolerance: 0.1);
 	}
 
 	[Fact]
@@ -385,8 +230,10 @@ public sealed class WrapperHelpersTests
 		token.ShouldBe("fetched-token");
 	}
 
-	[Fact]
-	public async Task PopulateBearerToken_ShouldRefreshToken_OnUnauthorized()
+	[Theory]
+	[InlineData(HttpStatusCode.Unauthorized)]
+	[InlineData(HttpStatusCode.Forbidden)]
+	public async Task PopulateBearerToken_ShouldRefreshToken_OnAuthenticationFailure(HttpStatusCode statusCode)
 	{
 		bool refreshCalled = false;
 		RestHelperOptions options = new("test", "api", ResilienceOptions: new ResilienceOptions
@@ -398,30 +245,9 @@ public sealed class WrapperHelpersTests
 			}
 		});
 
-		HttpResponseMessage unauthorizedResponse = new(HttpStatusCode.Unauthorized);
+		HttpResponseMessage response = new(statusCode);
 
-		string? token = await WrapperHelpers.PopulateBearerToken(options, attempts: 1, unauthorizedResponse, "old-token");
-
-		refreshCalled.ShouldBeTrue();
-		token.ShouldBe("refreshed-token");
-	}
-
-	[Fact]
-	public async Task PopulateBearerToken_ShouldRefreshToken_OnForbidden()
-	{
-		bool refreshCalled = false;
-		RestHelperOptions options = new("test", "api", ResilienceOptions: new ResilienceOptions
-		{
-			GetBearerTokenFunc = (apiName, refresh) =>
-			{
-				if (refresh) refreshCalled = true;
-				return ValueTask.FromResult("refreshed-token");
-			}
-		});
-
-		HttpResponseMessage forbiddenResponse = new(HttpStatusCode.Forbidden);
-
-		string? token = await WrapperHelpers.PopulateBearerToken(options, attempts: 1, forbiddenResponse, "old-token");
+		string? token = await WrapperHelpers.PopulateBearerToken(options, attempts: 1, response, "old-token");
 
 		refreshCalled.ShouldBeTrue();
 		token.ShouldBe("refreshed-token");
@@ -530,132 +356,35 @@ public sealed class WrapperHelpersTests
 		shouldRetry.ShouldBeTrue();
 	}
 
-	[Fact]
-	public void ShouldRetry_ShouldReturnTrue_ForUnauthorized()
+	[Theory]
+	[InlineData(HttpStatusCode.Unauthorized)]
+	[InlineData(HttpStatusCode.Forbidden)]
+	[InlineData(HttpStatusCode.InternalServerError)]
+	[InlineData(HttpStatusCode.BadGateway)]
+	[InlineData(HttpStatusCode.ServiceUnavailable)]
+	[InlineData(HttpStatusCode.GatewayTimeout)]
+	[InlineData(HttpStatusCode.RequestTimeout)]
+	[InlineData(HttpStatusCode.TooManyRequests)]
+	public void ShouldRetry_ShouldReturnTrue_ForRetryableStatusCodes(HttpStatusCode statusCode)
 	{
 		ResilienceOptions options = new();
 
-		HttpResponseMessage response = new(HttpStatusCode.Unauthorized);
+		HttpResponseMessage response = new(statusCode);
 
 		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
 
 		shouldRetry.ShouldBeTrue();
 	}
 
-	[Fact]
-	public void ShouldRetry_ShouldReturnTrue_ForForbidden()
+	[Theory]
+	[InlineData(HttpStatusCode.BadRequest)]
+	[InlineData(HttpStatusCode.NotFound)]
+	[InlineData(HttpStatusCode.Conflict)]
+	public void ShouldRetry_ShouldReturnFalse_ForNonRetryableStatusCodes(HttpStatusCode statusCode)
 	{
 		ResilienceOptions options = new();
 
-		HttpResponseMessage response = new(HttpStatusCode.Forbidden);
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnTrue_ForInternalServerError()
-	{
-		ResilienceOptions options = new();
-
-		HttpResponseMessage response = new(HttpStatusCode.InternalServerError);
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnTrue_ForBadGateway()
-	{
-		ResilienceOptions options = new();
-
-		HttpResponseMessage response = new(HttpStatusCode.BadGateway);
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnTrue_ForServiceUnavailable()
-	{
-		ResilienceOptions options = new();
-
-		HttpResponseMessage response = new(HttpStatusCode.ServiceUnavailable);
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnTrue_ForGatewayTimeout()
-	{
-		ResilienceOptions options = new();
-
-		HttpResponseMessage response = new(HttpStatusCode.GatewayTimeout);
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnTrue_ForRequestTimeout()
-	{
-		ResilienceOptions options = new();
-
-		HttpResponseMessage response = new(HttpStatusCode.RequestTimeout);
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnTrue_ForTooManyRequests()
-	{
-		ResilienceOptions options = new();
-
-		HttpResponseMessage response = new(HttpStatusCode.TooManyRequests);
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnFalse_ForBadRequest()
-	{
-		ResilienceOptions options = new();
-
-		HttpResponseMessage response = new(HttpStatusCode.BadRequest);
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnFalse_ForNotFound()
-	{
-		ResilienceOptions options = new();
-
-		HttpResponseMessage response = new(HttpStatusCode.NotFound);
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnFalse_ForConflict()
-	{
-		ResilienceOptions options = new();
-
-		HttpResponseMessage response = new(HttpStatusCode.Conflict);
+		HttpResponseMessage response = new(statusCode);
 
 		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
 
@@ -709,53 +438,46 @@ public sealed class WrapperHelpersTests
 		result.MsgPackOptions.ShouldNotBeNull();
 	}
 
-	[Fact]
-	public void GetRequestOptions_ShouldSetBodyObject_ForPostRequest()
+	[Theory]
+	[InlineData("Post", true, false)]
+	[InlineData("Put", true, false)]
+	[InlineData("Patch", false, true)]
+	[InlineData("Get", false, false)]
+	public void GetRequestOptions_ShouldHandleBodyCorrectly_ForHttpMethod(
+		string httpMethod,
+		bool shouldSetBodyObject,
+		bool shouldSetPatchDocument)
 	{
 		RestHelperOptions options = new("test", "api");
 		Dictionary<string, string> headers = [];
+		HttpMethod method = httpMethod switch
+		{
+			"Post" => HttpMethod.Post,
+			"Put" => HttpMethod.Put,
+			"Patch" => HttpMethod.Patch,
+			"Get" => HttpMethod.Get,
+			_ => HttpMethod.Get
+		};
 
-		RequestOptions<string> result = WrapperHelpers.GetRequestOptions(
-			options, new Uri("http://test.com/"), headers, HttpMethod.Post, null, "body-content");
+		HttpContent? patchContent = shouldSetPatchDocument ? new StringContent("{}") : null;
+		string? bodyContent = shouldSetBodyObject || httpMethod == "Get" ? "body-content" : null;
 
-		result.BodyObject.ShouldBe("body-content");
-	}
+		RequestOptions<string> result = shouldSetPatchDocument
+			? WrapperHelpers.GetRequestOptions<string>(options, new Uri("http://test.com/"), headers, method, null, null, patchContent)
+			: WrapperHelpers.GetRequestOptions(options, new Uri("http://test.com/"), headers, method, null, bodyContent);
 
-	[Fact]
-	public void GetRequestOptions_ShouldSetBodyObject_ForPutRequest()
-	{
-		RestHelperOptions options = new("test", "api");
-		Dictionary<string, string> headers = [];
-
-		RequestOptions<string> result = WrapperHelpers.GetRequestOptions(
-			options, new Uri("http://test.com/"), headers, HttpMethod.Put, null, "body-content");
-
-		result.BodyObject.ShouldBe("body-content");
-	}
-
-	[Fact]
-	public void GetRequestOptions_ShouldSetPatchDocument_ForPatchRequest()
-	{
-		RestHelperOptions options = new("test", "api");
-		Dictionary<string, string> headers = [];
-		HttpContent patchContent = new StringContent("{}");
-
-		RequestOptions<string> result = WrapperHelpers.GetRequestOptions<string>(
-			options, new Uri("http://test.com/"), headers, HttpMethod.Patch, null, null, patchContent);
-
-		result.PatchDocument.ShouldBe(patchContent);
-	}
-
-	[Fact]
-	public void GetRequestOptions_ShouldNotSetBodyObject_ForGetRequest()
-	{
-		RestHelperOptions options = new("test", "api");
-		Dictionary<string, string> headers = [];
-
-		RequestOptions<string> result = WrapperHelpers.GetRequestOptions(
-			options, new Uri("http://test.com/"), headers, HttpMethod.Get, null, "body-content");
-
-		result.BodyObject.ShouldBeNull();
+		if (shouldSetBodyObject)
+		{
+			result.BodyObject.ShouldBe("body-content");
+		}
+		else if (shouldSetPatchDocument)
+		{
+			result.PatchDocument.ShouldBe(patchContent);
+		}
+		else
+		{
+			result.BodyObject.ShouldBeNull();
+		}
 	}
 
 	#endregion

@@ -33,25 +33,6 @@ public sealed partial class BaseDbContextActionsTests
 	}
 
 	[Fact]
-	public async Task GetByKeyFull_WithValidKey_ShouldReturnExpectedEntity()
-	{
-		// Arrange
-		TestEntity testEntity = fixture.Create<TestEntity>();
-		await context.TestEntities.AddAsync(testEntity, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
-
-		// Act
-		TestEntity? result = await testContext.GetByKey(testEntity.Id, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Id.ShouldBe(testEntity.Id);
-		result.Name.ShouldBe(testEntity.Name);
-	}
-
-	[Fact]
 	public async Task GetByKey_WithCompoundKey_ShouldReturnEntity()
 	{
 		// Arrange
@@ -85,21 +66,6 @@ public sealed partial class BaseDbContextActionsTests
 		TestEntity? result = await testContext.GetByKey(full, new object[] { entity.Id }, cancellationToken: Current.CancellationToken);
 
 		// Assert
-		result.ShouldNotBeNull();
-		result!.Id.ShouldBe(entity.Id);
-	}
-
-	[Fact]
-	public async Task GetByKeyFull_WithCompoundKey_ShouldReturnEntity()
-	{
-		TestEntity entity = fixture.Create<TestEntity>();
-		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
-
-		TestEntity? result = await testContext.GetByKeyFull(new object[] { entity.Id }, cancellationToken: Current.CancellationToken);
-
 		result.ShouldNotBeNull();
 		result!.Id.ShouldBe(entity.Id);
 	}
@@ -168,21 +134,6 @@ public sealed partial class BaseDbContextActionsTests
 		results.ShouldNotBeNull();
 		results.Count.ShouldBe(entities.Count);
 		results.Select(x => x.Id).ShouldBe(entities.Select(x => x.Id));
-	}
-
-	[Fact]
-	public async Task GetAllFull_ShouldReturnAllEntities()
-	{
-		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
-		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
-
-		List<TestEntity>? results = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
-
-		results.ShouldNotBeNull();
-		results.Count.ShouldBe(entities.Count);
 	}
 
 	[Fact]
@@ -633,45 +584,6 @@ public sealed partial class BaseDbContextActionsTests
 		results[0].Id.ShouldBe(target.Id);
 	}
 
-	[Fact]
-	public async Task GetWithFilterFullStreaming_ShouldReturnFilteredEntities()
-	{
-		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
-		TestEntity target = entities[0];
-		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
-		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
-
-		List<TestEntity> results = new();
-		await foreach (TestEntity item in testContext.GetWithFilterFullStreaming(filter, cancellationToken: Current.CancellationToken)!)
-		{
-			results.Add(item);
-		}
-
-		results.Count.ShouldBe(1);
-		results[0].Id.ShouldBe(target.Id);
-	}
-
-	[Fact]
-	public async Task GetWithFilter_WithProjection_ShouldReturnProjectedEntities()
-	{
-		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
-		TestEntity target = entities[0];
-		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
-		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
-
-		List<string>? results = await testContext.GetWithFilter(filter, x => x.Name, cancellationToken: Current.CancellationToken);
-
-		results.ShouldNotBeNull();
-		results!.Count.ShouldBe(1);
-		results[0].ShouldBe(target.Name);
-	}
-
 	[Theory]
 	[InlineData(true)]
 	[InlineData(false)]
@@ -686,24 +598,6 @@ public sealed partial class BaseDbContextActionsTests
 		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
 
 		List<string>? results = await testContext.GetWithFilter(full, filter, x => x.Name, cancellationToken: Current.CancellationToken);
-
-		results.ShouldNotBeNull();
-		results!.Count.ShouldBe(1);
-		results[0].ShouldBe(target.Name);
-	}
-
-	[Fact]
-	public async Task GetWithFilterFull_WithProjection_ShouldReturnProjectedEntities()
-	{
-		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
-		TestEntity target = entities[0];
-		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
-		await context.SaveChangesAsync(Current.CancellationToken);
-
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
-		Expression<Func<TestEntity, bool>> filter = x => x.Id == target.Id;
-
-		List<string>? results = await testContext.GetWithFilterFull(filter, x => x.Name, cancellationToken: Current.CancellationToken);
 
 		results.ShouldNotBeNull();
 		results!.Count.ShouldBe(1);

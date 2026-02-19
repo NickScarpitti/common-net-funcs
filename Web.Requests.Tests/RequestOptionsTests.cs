@@ -3,73 +3,74 @@ using CommonNetFuncs.Web.Requests.Rest;
 
 namespace Web.Requests.Tests;
 
+public enum UrlScenario
+{
+	Valid,
+	Null,
+	Empty,
+	Whitespace,
+	Invalid
+}
+
 public sealed class RequestOptionsTests
 {
-	[Fact]
-	public void RedactedUrl_ReturnsRedactedUri_WhenUrlIsValid()
+	[Theory]
+	[InlineData(UrlScenario.Valid)]
+	[InlineData(UrlScenario.Null)]
+	[InlineData(UrlScenario.Empty)]
+	[InlineData(UrlScenario.Whitespace)]
+	[InlineData(UrlScenario.Invalid)]
+	public void RedactedUrl_HandlesScenarios(UrlScenario scenario)
 	{
-		RequestOptions<string> options = new()
-		{
-			Url = "https://api.example.com/users?token=secret123&key=value"
-		};
+		// Arrange
+		string? url;
+		string? expectedResult;
 
+		switch (scenario)
+		{
+			case UrlScenario.Valid:
+				url = "https://api.example.com/users?token=secret123&key=value";
+				expectedResult = null; // Will check contains instead
+				break;
+			case UrlScenario.Null:
+				url = null!;
+				expectedResult = null;
+				break;
+			case UrlScenario.Empty:
+				url = string.Empty;
+				expectedResult = string.Empty;
+				break;
+			case UrlScenario.Whitespace:
+				url = "   ";
+				expectedResult = "   ";
+				break;
+			case UrlScenario.Invalid:
+				url = "not a valid url format $$$ invalid";
+				expectedResult = "<Error Redacting URL>";
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(scenario));
+		}
+
+		RequestOptions<string> options = new() { Url = url };
+
+		// Act
 		string redacted = options.RedactedUrl;
 
-		// Should redact the query parameters
-		redacted.ShouldNotContain("secret123");
-		redacted.ShouldContain("api.example.com");
-	}
-
-	[Fact]
-	public void RedactedUrl_ReturnsOriginalUrl_WhenUrlIsNull()
-	{
-		RequestOptions<string> options = new()
+		// Assert
+		switch (scenario)
 		{
-			Url = null!
-		};
-
-		string redacted = options.RedactedUrl;
-
-		redacted.ShouldBeNull();
-	}
-
-	[Fact]
-	public void RedactedUrl_ReturnsOriginalUrl_WhenUrlIsEmpty()
-	{
-		RequestOptions<string> options = new()
-		{
-			Url = string.Empty
-		};
-
-		string redacted = options.RedactedUrl;
-
-		redacted.ShouldBe(string.Empty);
-	}
-
-	[Fact]
-	public void RedactedUrl_ReturnsOriginalUrl_WhenUrlIsWhitespace()
-	{
-		RequestOptions<string> options = new()
-		{
-			Url = "   "
-		};
-
-		string redacted = options.RedactedUrl;
-
-		redacted.ShouldBe("   ");
-	}
-
-	[Fact]
-	public void RedactedUrl_ReturnsErrorMessage_WhenUrlIsInvalid()
-	{
-		RequestOptions<string> options = new()
-		{
-			Url = "not a valid url format $$$ invalid"
-		};
-
-		string redacted = options.RedactedUrl;
-
-		redacted.ShouldBe("<Error Redacting URL>");
+			case UrlScenario.Valid:
+				redacted.ShouldNotContain("secret123");
+				redacted.ShouldContain("api.example.com");
+				break;
+			case UrlScenario.Null:
+				redacted.ShouldBeNull();
+				break;
+			default:
+				redacted.ShouldBe(expectedResult);
+				break;
+		}
 	}
 
 	[Fact]

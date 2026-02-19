@@ -6,7 +6,7 @@ namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
 public class EndpointQueueTests : IDisposable
 {
-	private enum ChannelType
+	public enum ChannelType
 	{
 		Bounded,
 		Unbounded
@@ -25,9 +25,14 @@ public class EndpointQueueTests : IDisposable
 		string endpointKey = $"test-endpoint-{channelType}-{capacity}-{processTimeWindow}";
 
 		// Act
-		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = channelType == ChannelType.Bounded
-			? new(endpointKey, new BoundedChannelOptions(capacity!.Value), processTimeWindow)
-			: new(endpointKey, new UnboundedChannelOptions(), processTimeWindow);
+		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = (channelType, processTimeWindow) switch
+		{
+			(ChannelType.Bounded, not null) => new(endpointKey, new BoundedChannelOptions(capacity!.Value), processTimeWindow.Value),
+			(ChannelType.Bounded, null) => new(endpointKey, new BoundedChannelOptions(capacity!.Value)),
+			(ChannelType.Unbounded, not null) => new(endpointKey, new UnboundedChannelOptions(), processTimeWindow.Value),
+			(ChannelType.Unbounded, null) => new(endpointKey, new UnboundedChannelOptions()),
+			_ => throw new ArgumentOutOfRangeException(nameof(channelType))
+		};
 		_queuesToDispose.Add(queue);
 
 		// Assert

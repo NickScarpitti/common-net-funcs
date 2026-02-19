@@ -3,81 +3,116 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
+public enum CacheManagerType
+{
+	Lru,
+	Fifo
+}
+
 public sealed class CacheManagerTests
 {
-	[Fact]
-	public void Constructor_Should_Initialize_Properties()
+	[Theory]
+	[InlineData(CacheManagerType.Lru)]
+	[InlineData(CacheManagerType.Fifo)]
+	public void Constructor_Should_Initialize_Properties(CacheManagerType managerType)
 	{
 		// Arrange & Act
-
-		CacheManager<int, string> cacheManager = new(42);
-
-		// Assert
-
-		cacheManager.GetCache().ShouldNotBeNull();
-		cacheManager.GetLimitedCache().ShouldNotBeNull();
-		cacheManager.GetLimitedCacheSize().ShouldBe(42);
-		cacheManager.IsUsingLimitedCache().ShouldBeTrue();
+		if (managerType == CacheManagerType.Lru)
+		{
+			CacheManager<int, string> cacheManager = new(42);
+			cacheManager.GetCache().ShouldNotBeNull();
+			cacheManager.GetLimitedCache().ShouldNotBeNull();
+			cacheManager.GetLimitedCacheSize().ShouldBe(42);
+			cacheManager.IsUsingLimitedCache().ShouldBeTrue();
+		}
+		else
+		{
+			CacheManagerFifo<int, string> cacheManager = new(42);
+			cacheManager.GetCache().ShouldNotBeNull();
+			cacheManager.GetLimitedCache().ShouldNotBeNull();
+			cacheManager.GetLimitedCacheSize().ShouldBe(42);
+			cacheManager.IsUsingLimitedCache().ShouldBeTrue();
+		}
 	}
 
 	[Theory]
-	[InlineData(1)]
-	[InlineData(10)]
-	[InlineData(100)]
-	public void SetLimitedCacheSize_Should_Change_Size_And_Clear_LimitedCache(int newSize)
+	[InlineData(CacheManagerType.Lru, 1)]
+	[InlineData(CacheManagerType.Lru, 10)]
+	[InlineData(CacheManagerType.Lru, 100)]
+	[InlineData(CacheManagerType.Fifo, 1)]
+	[InlineData(CacheManagerType.Fifo, 10)]
+	[InlineData(CacheManagerType.Fifo, 100)]
+	public void SetLimitedCacheSize_Should_Change_Size_And_Clear_LimitedCache(CacheManagerType managerType, int newSize)
 	{
-		// Arrange
-
-		CacheManager<int, string> cacheManager = new(5);
-		cacheManager.TryAddLimitedCache(1, "a");
-		cacheManager.GetLimitedCache().Count.ShouldBe(1);
-
-		// Act
-
-		cacheManager.SetLimitedCacheSize(newSize);
-
-		// Assert
-
-		cacheManager.GetLimitedCacheSize().ShouldBe(newSize);
-		cacheManager.GetLimitedCache().Count.ShouldBe(0);
+		// Arrange & Act & Assert
+		if (managerType == CacheManagerType.Lru)
+		{
+			CacheManager<int, string> cacheManager = new(5);
+			cacheManager.TryAddLimitedCache(1, "a");
+			cacheManager.GetLimitedCache().Count.ShouldBe(1);
+			cacheManager.SetLimitedCacheSize(newSize);
+			cacheManager.GetLimitedCacheSize().ShouldBe(newSize);
+			cacheManager.GetLimitedCache().Count.ShouldBe(0);
+		}
+		else
+		{
+			CacheManagerFifo<int, string> cacheManager = new(5);
+			cacheManager.TryAddLimitedCache(1, "a");
+			cacheManager.GetLimitedCache().Count.ShouldBe(1);
+			cacheManager.SetLimitedCacheSize(newSize);
+			cacheManager.GetLimitedCacheSize().ShouldBe(newSize);
+			cacheManager.GetLimitedCache().Count.ShouldBe(0);
+		}
 	}
 
-	[Fact]
-	public void GetLimitedCache_Should_Return_Readonly_Cache()
+	[Theory]
+	[InlineData(CacheManagerType.Lru)]
+	[InlineData(CacheManagerType.Fifo)]
+	public void GetLimitedCache_Should_Return_Readonly_Cache(CacheManagerType managerType)
 	{
-		// Arrange
-
-		CacheManager<int, string> cacheManager = new(5);
-
-		// Act
-
-		cacheManager.TryAddLimitedCache(1, "a");
-
-		// Assert
-
-		cacheManager.GetLimitedCache().Count.ShouldBe(1);
-		cacheManager.GetLimitedCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
-		cacheManager.GetLimitedCache().Keys.First().ShouldBe(1);
-		cacheManager.GetLimitedCache().Values.First().ShouldBe("a");
+		if (managerType == CacheManagerType.Lru)
+		{
+			CacheManager<int, string> cacheManager = new(5);
+			cacheManager.TryAddLimitedCache(1, "a");
+			cacheManager.GetLimitedCache().Count.ShouldBe(1);
+			cacheManager.GetLimitedCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
+			cacheManager.GetLimitedCache().Keys.First().ShouldBe(1);
+			cacheManager.GetLimitedCache().Values.First().ShouldBe("a");
+		}
+		else
+		{
+			CacheManagerFifo<int, string> cacheManager = new(5);
+			cacheManager.TryAddLimitedCache(1, "a");
+			cacheManager.GetLimitedCache().Count.ShouldBe(1);
+			cacheManager.GetLimitedCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
+			cacheManager.GetLimitedCache().Keys.First().ShouldBe(1);
+			cacheManager.GetLimitedCache().Values.First().ShouldBe("a");
+		}
 	}
 
-	[Fact]
-	public void GetCache_Should_Return_Readonly_Cache()
+	[Theory]
+	[InlineData(CacheManagerType.Lru)]
+	[InlineData(CacheManagerType.Fifo)]
+	public void GetCache_Should_Return_Readonly_Cache(CacheManagerType managerType)
 	{
-		// Arrange
-
-		CacheManager<int, string> cacheManager = new(5);
-
-		// Act
-
-		cacheManager.TryAddCache(1, "a");
-
-		// Assert
-
-		cacheManager.GetCache().Count.ShouldBe(1);
-		cacheManager.GetCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
-		cacheManager.GetCache().Keys.First().ShouldBe(1);
-		cacheManager.GetCache().Values.First().ShouldBe("a");
+		if (managerType == CacheManagerType.Lru)
+		{
+			CacheManager<int, string> cacheManager = new(5);
+			cacheManager.TryAddCache(1, "a");
+			cacheManager.GetCache().Count.ShouldBe(1);
+			cacheManager.GetCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
+			cacheManager.GetCache().Keys.First().ShouldBe(1);
+			cacheManager.GetCache().Values.First().ShouldBe("a");
+		}
+		else
+		{
+			CacheManagerFifo<int, string> cacheManager = new(5);
+			cacheManager.TryAddCache(1, "a");
+			cacheManager.GetCache().Count.ShouldBe(1);
+			cacheManager.GetCache().ShouldBeOfType<ReadOnlyDictionary<int, string?>>();
+			cacheManager.GetCache().Keys.First().ShouldBe(1);
+			cacheManager.GetCache().Values.First().ShouldBe("a");
+		}
 	}
 
 	[Theory]

@@ -1,7 +1,69 @@
-﻿using CommonNetFuncs.Core;
-using System.Reflection;
+﻿using System.Reflection;
+using CommonNetFuncs.Core;
 
 namespace Core.Tests;
+
+public enum EMergeScenario
+{
+	MultipleObjects,
+	SingleObject,
+	DefaultValuesDoNotOverride
+}
+
+public enum ECacheOperation
+{
+	SetLimitedCacheSize,
+	SetUseLimitedCache,
+	ClearAllCaches,
+	GetLimitedCache,
+	GetCache
+}
+
+public enum ESimpleTypeConversion
+{
+	IntToLong,
+	FloatToDouble,
+	ByteToInt,
+	ByteToShort,
+	IntToInt,
+	DoubleToDouble,
+	BoolToBool,
+	StringToString,
+	IntToString,
+	StringToInt
+}
+
+public enum ERuntimeOperation
+{
+	CopyObjectNull,
+	CopyItemNull,
+	CopyCollectionNull,
+	CopyObjectValid,
+	CopyItemValid,
+	CopyCollectionArray,
+	CopyCollectionDictionary,
+	CopyCollectionList,
+	CopyCollectionUnknown
+}
+
+public enum ECollectionConversionType
+{
+	ListToArray,
+	ListToHashSet,
+	EmptyDictionary
+}
+
+public enum EAdvancedCollectionType
+{
+	PrimitiveArray,
+	ComplexArray,
+	PrimitiveDictionary,
+	HashSet,
+	LinkedList,
+	NestedArray,
+	ComplexGeneric,
+	EmptyArray
+}
 
 public sealed class CopyTests
 {
@@ -383,247 +445,156 @@ public sealed class CopyTests
 
 	#region MergeInstances Tests
 
-	[Fact]
-	public void MergeInstances_WithMultipleObjects_ShouldMergeNonDefaultValues()
+	[Theory]
+	[InlineData(EMergeScenario.MultipleObjects)]
+	[InlineData(EMergeScenario.SingleObject)]
+	[InlineData(EMergeScenario.DefaultValuesDoNotOverride)]
+	public void MergeInstances_ShouldMergeCorrectly(EMergeScenario scenario)
 	{
-		// Arrange
-		SourceClass target = new()
+		switch (scenario)
 		{
-			Id = 0, // Default value
-			Name = null // Default value
-		};
-
-		SourceClass source1 = new()
-		{
-			Id = 1, // Non-default value
-			Name = null // Default value
-		};
-
-		SourceClass source2 = new()
-		{
-			Id = 0, // Default value
-			Name = "Test" // Non-default value
-		};
-
-		// Act
-		SourceClass result = target.MergeInstances(new[] { source1, source2 }, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldBeSameAs(target); // Should return the same instance
-		result.Id.ShouldBe(1); // Should take value from source1
-		result.Name.ShouldBe("Test"); // Should take value from source2
-	}
-
-	[Fact]
-	public void MergeInstances_WithSingleObject_ShouldMergeNonDefaultValues()
-	{
-		// Arrange
-		SourceClass target = new()
-		{
-			Id = 0, // Default value
-			Name = null // Default value
-		};
-
-		SourceClass source = new()
-		{
-			Id = 1, // Non-default value
-			Name = "Test" // Non-default value
-		};
-
-		// Act
-		SourceClass result = target.MergeInstances(source, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldBeSameAs(target); // Should return the same instance
-		result.Id.ShouldBe(1); // Should take value from source
-		result.Name.ShouldBe("Test"); // Should take value from source
-	}
-
-	[Fact]
-	public void MergeInstances_WithDefaultValues_ShouldNotOverrideNonDefaultValues()
-	{
-		// Arrange
-		SourceClass target = new()
-		{
-			Id = 1, // Non-default value
-			Name = "Original" // Non-default value
-		};
-
-		SourceClass source = new()
-		{
-			Id = 0, // Default value
-			Name = "Test" // Non-default value
-		};
-
-		// Act
-		SourceClass result = target.MergeInstances(source, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldBeSameAs(target); // Should return the same instance
-		result.Id.ShouldBe(1); // Should keep original value
-		result.Name.ShouldBe("Original"); // Should keep original value since it's non-default
+			case EMergeScenario.MultipleObjects:
+				{
+					SourceClass target = new() { Id = 0, Name = null };
+					SourceClass source1 = new() { Id = 1, Name = null };
+					SourceClass source2 = new() { Id = 0, Name = "Test" };
+					SourceClass result = target.MergeInstances(new[] { source1, source2 }, cancellationToken: TestContext.Current.CancellationToken);
+					result.ShouldBeSameAs(target);
+					result.Id.ShouldBe(1);
+					result.Name.ShouldBe("Test");
+					break;
+				}
+			case EMergeScenario.SingleObject:
+				{
+					SourceClass target = new() { Id = 0, Name = null };
+					SourceClass source = new() { Id = 1, Name = "Test" };
+					SourceClass result = target.MergeInstances(source, cancellationToken: TestContext.Current.CancellationToken);
+					result.ShouldBeSameAs(target);
+					result.Id.ShouldBe(1);
+					result.Name.ShouldBe("Test");
+					break;
+				}
+			case EMergeScenario.DefaultValuesDoNotOverride:
+				{
+					SourceClass target = new() { Id = 1, Name = "Original" };
+					SourceClass source = new() { Id = 0, Name = "Test" };
+					SourceClass result = target.MergeInstances(source, cancellationToken: TestContext.Current.CancellationToken);
+					result.ShouldBeSameAs(target);
+					result.Id.ShouldBe(1);
+					result.Name.ShouldBe("Original");
+					break;
+				}
+		}
 	}
 
 	#endregion
 
 	#region CacheManager API Tests
 
-	[Fact]
-	public void SetLimitedCacheSize_ShouldBeSetSize()
-	{
-		// Arrange
-		Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
-
-		// Assert
-		Copy.DeepCopyCacheManager.GetLimitedCacheSize().ShouldBe(10);
-	}
-
-	[Fact]
-	public void SetCopyCacheSize_ShouldBeSetSize()
-	{
-		// Act
-		Copy.CopyCacheManager.SetLimitedCacheSize(10);
-
-		// Assert
-		Copy.CopyCacheManager.GetLimitedCacheSize().ShouldBe(10);
-	}
-
 	[Theory]
-	[InlineData(true)]
-	[InlineData(false)]
-	public void SetUseLimitedCache_ShouldBeUseLimited(bool useLimited)
+	[InlineData(ECacheOperation.SetLimitedCacheSize, true)]
+	[InlineData(ECacheOperation.SetLimitedCacheSize, false)]
+	[InlineData(ECacheOperation.SetUseLimitedCache, true)]
+	[InlineData(ECacheOperation.SetUseLimitedCache, false)]
+	[InlineData(ECacheOperation.ClearAllCaches, true)]
+	[InlineData(ECacheOperation.ClearAllCaches, false)]
+	[InlineData(ECacheOperation.GetLimitedCache, true)]
+	[InlineData(ECacheOperation.GetLimitedCache, false)]
+	[InlineData(ECacheOperation.GetCache, true)]
+	[InlineData(ECacheOperation.GetCache, false)]
+	public void CacheManager_Operations_ShouldWorkCorrectly(ECacheOperation operation, bool useDeepCopy)
 	{
-		// Act
-		Copy.DeepCopyCacheManager.SetUseLimitedCache(useLimited);
-
-		// Assert
-		Copy.DeepCopyCacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
-	}
-
-	[Theory]
-	[InlineData(true)]
-	[InlineData(false)]
-	public void SetUseCopyCache_ShouldBeUseLimited(bool useLimited)
-	{
-		// Act
-		Copy.CopyCacheManager.SetUseLimitedCache(useLimited);
-
-		// Assert
-		Copy.CopyCacheManager.IsUsingLimitedCache().ShouldBe(useLimited);
-	}
-
-	[Fact]
-	public void ClearDeepCopyCaches_ShouldNotThrow()
-	{
-		// Arrange
-		Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
-		SourceClass source = new() { Id = 42, Name = "CacheTest" };
-		DestinationClass dest = new();
-		source.CopyPropertiesTo(dest, useCache: true); // Create cached value
-
-		// Act
-		Copy.DeepCopyCacheManager.ClearAllCaches();
-
-		// Assert
-		Copy.DeepCopyCacheManager.GetCache().Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void ClearCopyCaches_ShouldNotThrow()
-	{
-		// Arrange
-		Copy.CopyCacheManager.SetLimitedCacheSize(10);
-		SourceClass source = new() { Id = 42, Name = "CacheTest" };
-		DestinationClass dest = new();
-		source.CopyPropertiesTo(dest, useCache: true); // Create cached value
-
-		// Act
-		Copy.CopyCacheManager.ClearAllCaches();
-
-		// Assert
-		Copy.CopyCacheManager.GetCache().Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void GetLimitedDeepCopyCache_ShouldNotThrow()
-	{
-		// Arrange
-		Copy.DeepCopyCacheManager.SetUseLimitedCache(true);
-		Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
-		SourceClass source = new() { Id = 42, Name = "CacheTest" };
-
-		// Act
-		DestinationClass dest = source.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>(useCache: true); // Create cached value
-
-		// Assert
-		dest.ShouldNotBeNull();
-		Copy.DeepCopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
-		Copy.DeepCopyCacheManager.GetLimitedCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
-		Copy.DeepCopyCacheManager.GetLimitedCache().Values.First().ShouldNotBeNull();
-
-		// Cleanup
-		Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
-	}
-
-	[Fact]
-	public void GetLimitedCache_ShouldNotThrow()
-	{
-		// Arrange
-		Copy.CopyCacheManager.SetUseLimitedCache(true);
-		Copy.CopyCacheManager.SetLimitedCacheSize(10);
-		SourceClass source = new() { Id = 42, Name = "CacheTest" };
-		DestinationClass dest = new();
-
-		// Act
-		source.CopyPropertiesTo(dest, useCache: true); // Create cached value
-
-		// Assert
-		Copy.CopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
-		Copy.CopyCacheManager.GetLimitedCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
-		Copy.CopyCacheManager.GetLimitedCache().Values.First().ShouldNotBeNull();
-
-		// Cleanup
-		Copy.CopyCacheManager.SetUseLimitedCache(false);
-	}
-
-	[Fact]
-	public void GetCache_ShouldNotThrow()
-	{
-		// Arrange
-		Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
-		SourceClass source = new() { Id = 42, Name = "CacheTest" };
-
-		// Act
-		DestinationClass dest = source.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>(useCache: true); // Create cached value
-
-		// Assert
-		dest.ShouldNotBeNull();
-		Copy.DeepCopyCacheManager.GetCache().Count.ShouldBe(1);
-		Copy.DeepCopyCacheManager.GetLimitedCache().Count.ShouldBe(0);
-		Copy.DeepCopyCacheManager.GetLimitedCacheSize().ShouldBe(1);
-		Copy.DeepCopyCacheManager.GetCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
-		Copy.DeepCopyCacheManager.GetCache().Values.First().ShouldNotBeNull();
-	}
-
-	[Fact]
-	public void GetCache_ShouldNotBeUsingLimitedCache()
-	{
-		// Arrange
-		Copy.CopyCacheManager.SetUseLimitedCache(false);
-		Copy.CopyCacheManager.ClearAllCaches();
-		Copy.CopyCacheTypedManager.ClearAllCaches();
-		SourceClass source = new() { Id = 42, Name = "CacheTest" };
-		DestinationClass dest = new();
-
-		// Act
-		source.CopyPropertiesTo(dest, useCache: true); // Create cached value
-
-		// Assert
-		Copy.CopyCacheManager.GetCache().Count.ShouldBe(1);
-		Copy.CopyCacheManager.GetLimitedCache().Count.ShouldBe(0);
-		Copy.CopyCacheManager.GetLimitedCacheSize().ShouldBe(1);
-		Copy.CopyCacheManager.GetCache().Keys.First().ShouldBe((typeof(SourceClass), typeof(DestinationClass)));
-		Copy.CopyCacheManager.GetCache().Values.First().ShouldNotBeNull();
+		switch (operation)
+		{
+			case ECacheOperation.SetLimitedCacheSize:
+				if (useDeepCopy)
+				{
+					Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
+					Copy.DeepCopyCacheManager.GetLimitedCacheSize().ShouldBe(10);
+				}
+				else
+				{
+					Copy.CopyCacheManager.SetLimitedCacheSize(10);
+					Copy.CopyCacheManager.GetLimitedCacheSize().ShouldBe(10);
+				}
+				break;
+			case ECacheOperation.SetUseLimitedCache:
+				if (useDeepCopy)
+				{
+					Copy.DeepCopyCacheManager.SetUseLimitedCache(true);
+					Copy.DeepCopyCacheManager.IsUsingLimitedCache().ShouldBeTrue();
+					Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
+				}
+				else
+				{
+					Copy.CopyCacheManager.SetUseLimitedCache(true);
+					Copy.CopyCacheManager.IsUsingLimitedCache().ShouldBeTrue();
+					Copy.CopyCacheManager.SetUseLimitedCache(false);
+				}
+				break;
+			case ECacheOperation.ClearAllCaches:
+				if (useDeepCopy)
+				{
+					Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
+					SourceClass source = new() { Id = 42, Name = "CacheTest" };
+					DestinationClass dest = new();
+					source.CopyPropertiesTo(dest, useCache: true);
+					Copy.DeepCopyCacheManager.ClearAllCaches();
+					Copy.DeepCopyCacheManager.GetCache().Count.ShouldBe(0);
+				}
+				else
+				{
+					Copy.CopyCacheManager.SetLimitedCacheSize(10);
+					SourceClass source = new() { Id = 42, Name = "CacheTest" };
+					DestinationClass dest = new();
+					source.CopyPropertiesTo(dest, useCache: true);
+					Copy.CopyCacheManager.ClearAllCaches();
+					Copy.CopyCacheManager.GetCache().Count.ShouldBe(0);
+				}
+				break;
+			case ECacheOperation.GetLimitedCache:
+				if (useDeepCopy)
+				{
+					Copy.DeepCopyCacheManager.SetUseLimitedCache(true);
+					Copy.DeepCopyCacheManager.SetLimitedCacheSize(10);
+					SourceClass source = new() { Id = 42, Name = "CacheTest" };
+					DestinationClass dest = source.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>(useCache: true);
+					dest.ShouldNotBeNull();
+					Copy.DeepCopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
+					Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
+				}
+				else
+				{
+					Copy.CopyCacheManager.SetUseLimitedCache(true);
+					Copy.CopyCacheManager.SetLimitedCacheSize(10);
+					SourceClass source = new() { Id = 42, Name = "CacheTest" };
+					DestinationClass dest = new();
+					source.CopyPropertiesTo(dest, useCache: true);
+					Copy.CopyCacheManager.GetLimitedCache().Count.ShouldBe(1);
+					Copy.CopyCacheManager.SetUseLimitedCache(false);
+				}
+				break;
+			case ECacheOperation.GetCache:
+				if (useDeepCopy)
+				{
+					Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
+					SourceClass source = new() { Id = 42, Name = "CacheTest" };
+					DestinationClass dest = source.CopyPropertiesToNewRecursive<SourceClass, DestinationClass>(useCache: true);
+					dest.ShouldNotBeNull();
+					Copy.DeepCopyCacheManager.GetCache().Count.ShouldBe(1);
+				}
+				else
+				{
+					Copy.CopyCacheManager.SetUseLimitedCache(false);
+					Copy.CopyCacheManager.ClearAllCaches();
+					Copy.CopyCacheTypedManager.ClearAllCaches();
+					SourceClass source = new() { Id = 42, Name = "CacheTest" };
+					DestinationClass dest = new();
+					source.CopyPropertiesTo(dest, useCache: true);
+					Copy.CopyCacheManager.GetCache().Count.ShouldBe(1);
+				}
+				break;
+		}
 	}
 
 	[Fact]
@@ -1373,185 +1344,115 @@ public sealed class CopyTests
 
 	#region Advanced Runtime Helper Tests
 
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithArrayToArrayConversion_ShouldCopyArray()
+	[Theory]
+	[InlineData(EAdvancedCollectionType.PrimitiveArray)]
+	[InlineData(EAdvancedCollectionType.ComplexArray)]
+	[InlineData(EAdvancedCollectionType.PrimitiveDictionary)]
+	[InlineData(EAdvancedCollectionType.HashSet)]
+	[InlineData(EAdvancedCollectionType.LinkedList)]
+	[InlineData(EAdvancedCollectionType.NestedArray)]
+	[InlineData(EAdvancedCollectionType.ComplexGeneric)]
+	[InlineData(EAdvancedCollectionType.EmptyArray)]
+	public void CopyPropertiesToNewRecursive_WithCollectionTypes_ShouldCopyCorrectly(EAdvancedCollectionType collectionType)
 	{
-		// Arrange
-		ClassWithPrimitiveArray source = new()
+		switch (collectionType)
 		{
-			Id = 1,
-			Values = new[] { 1, 2, 3, 4, 5 }
-		};
-
-		// Act
-		ClassWithPrimitiveArray result = source.CopyPropertiesToNewRecursive<ClassWithPrimitiveArray, ClassWithPrimitiveArray>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Values.ShouldNotBeNull();
-		result.Values.Length.ShouldBe(5);
-		result.Values[0].ShouldBe(1);
-		result.Values[4].ShouldBe(5);
-	}
-
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithComplexArrayInExpression_ShouldCopyComplexArray()
-	{
-		// Arrange
-		ClassWithComplexArray source = new()
-		{
-			Id = 1,
-			Items = new[]
-			{
-				new SourceClass { Id = 10, Name = "Item1" },
-				new SourceClass { Id = 20, Name = "Item2" }
-			}
-		};
-
-		// Act
-		ClassWithComplexArray result = source.CopyPropertiesToNewRecursive<ClassWithComplexArray, ClassWithComplexArray>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Items.ShouldNotBeNull();
-		result.Items.Length.ShouldBe(2);
-		result.Items[0].Id.ShouldBe(10);
-		result.Items[1].Name.ShouldBe("Item2");
-	}
-
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithDictionaryOfPrimitives_ShouldCopyDictionary()
-	{
-		// Arrange
-		ClassWithPrimitiveDictionary source = new()
-		{
-			Id = 1,
-			Data = new Dictionary<string, int>
-			{
-				["key1"] = 100,
-				["key2"] = 200
-			}
-		};
-
-		// Act
-		ClassWithPrimitiveDictionary result = source.CopyPropertiesToNewRecursive<ClassWithPrimitiveDictionary, ClassWithPrimitiveDictionary>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Data.ShouldNotBeNull();
-		result.Data.Count.ShouldBe(2);
-		result.Data["key1"].ShouldBe(100);
-		result.Data["key2"].ShouldBe(200);
-	}
-
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithEmptyArray_ShouldCopyEmptyArray()
-	{
-		// Arrange
-		ClassWithPrimitiveArray source = new()
-		{
-			Id = 1,
-			Values = Array.Empty<int>()
-		};
-
-		// Act
-		ClassWithPrimitiveArray result = source.CopyPropertiesToNewRecursive<ClassWithPrimitiveArray, ClassWithPrimitiveArray>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Values.ShouldNotBeNull();
-		result.Values.Length.ShouldBe(0);
-	}
-
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithGenericCollection_ShouldUseAddMethod()
-	{
-		// Arrange
-		ClassWithHashSet source = new()
-		{
-			Id = 1,
-			Items = new HashSet<int> { 1, 2, 3, 4, 5 }
-		};
-
-		// Act
-		ClassWithHashSet result = source.CopyPropertiesToNewRecursive<ClassWithHashSet, ClassWithHashSet>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Items.ShouldNotBeNull();
-		result.Items.Count.ShouldBe(5);
-		result.Items.Contains(1).ShouldBeTrue();
-		result.Items.Contains(5).ShouldBeTrue();
-	}
-
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithConcreteCollectionType_ShouldCopyToConcreteType()
-	{
-		// Arrange
-		ClassWithLinkedList source = new()
-		{
-			Id = 1,
-			Items = new LinkedList<int>([1, 2, 3])
-		};
-
-		// Act
-		ClassWithLinkedList result = source.CopyPropertiesToNewRecursive<ClassWithLinkedList, ClassWithLinkedList>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Items.ShouldNotBeNull();
-		result.Items.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithNestedArray_ShouldCopyNestedArray()
-	{
-		// Arrange
-		ClassWithNestedArray source = new()
-		{
-			Id = 1,
-			Matrix = new[]
-			{
-				new[] { 1, 2, 3 },
-				new[] { 4, 5, 6 }
-			}
-		};
-
-		// Act
-		ClassWithNestedArray result = source.CopyPropertiesToNewRecursive<ClassWithNestedArray, ClassWithNestedArray>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Matrix.ShouldNotBeNull();
-		result.Matrix.Length.ShouldBe(2);
-		result.Matrix[0].Length.ShouldBe(3);
-		result.Matrix[0][0].ShouldBe(1);
-		result.Matrix[1][2].ShouldBe(6);
-	}
-
-	[Fact]
-	public void CopyPropertiesToNewRecursive_WithComplexGenericCollection_ShouldCopyComplexGenericCollection()
-	{
-		// Arrange
-		ClassWithComplexGeneric source = new()
-		{
-			Id = 1,
-			Data = new List<Dictionary<string, SourceClass>>
-			{
-				new() {
-					["key1"] = new SourceClass { Id = 10, Name = "Value1" }
+			case EAdvancedCollectionType.PrimitiveArray:
+				{
+					ClassWithPrimitiveArray source = new() { Id = 1, Values = new[] { 1, 2, 3, 4, 5 } };
+					ClassWithPrimitiveArray result = source.CopyPropertiesToNewRecursive<ClassWithPrimitiveArray, ClassWithPrimitiveArray>();
+					result.ShouldNotBeNull();
+					result.Values.ShouldNotBeNull();
+					result.Values.Length.ShouldBe(5);
+					result.Values[0].ShouldBe(1);
+					result.Values[4].ShouldBe(5);
+					break;
 				}
-			}
-		};
-
-		// Act
-		ClassWithComplexGeneric result = source.CopyPropertiesToNewRecursive<ClassWithComplexGeneric, ClassWithComplexGeneric>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Data.ShouldNotBeNull();
-		result.Data.Count.ShouldBe(1);
-		result.Data[0]["key1"].Id.ShouldBe(10);
+			case EAdvancedCollectionType.ComplexArray:
+				{
+					ClassWithComplexArray source = new()
+					{
+						Id = 1,
+						Items = new[] { new SourceClass { Id = 10, Name = "Item1" }, new SourceClass { Id = 20, Name = "Item2" } }
+					};
+					ClassWithComplexArray result = source.CopyPropertiesToNewRecursive<ClassWithComplexArray, ClassWithComplexArray>();
+					result.ShouldNotBeNull();
+					result.Items.ShouldNotBeNull();
+					result.Items.Length.ShouldBe(2);
+					result.Items[0].Id.ShouldBe(10);
+					result.Items[1].Name.ShouldBe("Item2");
+					break;
+				}
+			case EAdvancedCollectionType.PrimitiveDictionary:
+				{
+					ClassWithPrimitiveDictionary source = new() { Id = 1, Data = new Dictionary<string, int> { ["key1"] = 100, ["key2"] = 200 } };
+					ClassWithPrimitiveDictionary result = source.CopyPropertiesToNewRecursive<ClassWithPrimitiveDictionary, ClassWithPrimitiveDictionary>();
+					result.ShouldNotBeNull();
+					result.Data.ShouldNotBeNull();
+					result.Data.Count.ShouldBe(2);
+					result.Data["key1"].ShouldBe(100);
+					result.Data["key2"].ShouldBe(200);
+					break;
+				}
+			case EAdvancedCollectionType.HashSet:
+				{
+					ClassWithHashSet source = new() { Id = 1, Items = new HashSet<int> { 1, 2, 3, 4, 5 } };
+					ClassWithHashSet result = source.CopyPropertiesToNewRecursive<ClassWithHashSet, ClassWithHashSet>();
+					result.ShouldNotBeNull();
+					result.Items.ShouldNotBeNull();
+					result.Items.Count.ShouldBe(5);
+					result.Items.Contains(1).ShouldBeTrue();
+					result.Items.Contains(5).ShouldBeTrue();
+					break;
+				}
+			case EAdvancedCollectionType.LinkedList:
+				{
+					ClassWithLinkedList source = new() { Id = 1, Items = new LinkedList<int>([1, 2, 3]) };
+					ClassWithLinkedList result = source.CopyPropertiesToNewRecursive<ClassWithLinkedList, ClassWithLinkedList>();
+					result.ShouldNotBeNull();
+					result.Items.ShouldNotBeNull();
+					result.Items.Count.ShouldBe(3);
+					break;
+				}
+			case EAdvancedCollectionType.NestedArray:
+				{
+					ClassWithNestedArray source = new() { Id = 1, Matrix = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } } };
+					ClassWithNestedArray result = source.CopyPropertiesToNewRecursive<ClassWithNestedArray, ClassWithNestedArray>();
+					result.ShouldNotBeNull();
+					result.Matrix.ShouldNotBeNull();
+					result.Matrix.Length.ShouldBe(2);
+					result.Matrix[0].Length.ShouldBe(3);
+					result.Matrix[0][0].ShouldBe(1);
+					result.Matrix[1][2].ShouldBe(6);
+					break;
+				}
+			case EAdvancedCollectionType.ComplexGeneric:
+				{
+					ClassWithComplexGeneric source = new()
+					{
+						Id = 1,
+						Data = new List<Dictionary<string, SourceClass>>
+						{
+							new() { ["key1"] = new SourceClass { Id = 10, Name = "Value1" } }
+						}
+					};
+					ClassWithComplexGeneric result = source.CopyPropertiesToNewRecursive<ClassWithComplexGeneric, ClassWithComplexGeneric>();
+					result.ShouldNotBeNull();
+					result.Data.ShouldNotBeNull();
+					result.Data.Count.ShouldBe(1);
+					result.Data[0]["key1"].Id.ShouldBe(10);
+					break;
+				}
+			case EAdvancedCollectionType.EmptyArray:
+				{
+					ClassWithPrimitiveArray source = new() { Id = 1, Values = Array.Empty<int>() };
+					ClassWithPrimitiveArray result = source.CopyPropertiesToNewRecursive<ClassWithPrimitiveArray, ClassWithPrimitiveArray>();
+					result.ShouldNotBeNull();
+					result.Values.ShouldNotBeNull();
+					result.Values.Length.ShouldBe(0);
+					break;
+				}
+		}
 	}
 
 	[Fact]
@@ -2072,6 +1973,101 @@ public sealed class CopyTests
 
 	#region Cache Hit Path Tests
 
+	[Theory]
+	[InlineData(ERuntimeOperation.CopyObjectNull)]
+	[InlineData(ERuntimeOperation.CopyItemNull)]
+	[InlineData(ERuntimeOperation.CopyCollectionNull)]
+	[InlineData(ERuntimeOperation.CopyObjectValid)]
+	[InlineData(ERuntimeOperation.CopyItemValid)]
+	[InlineData(ERuntimeOperation.CopyCollectionArray)]
+	[InlineData(ERuntimeOperation.CopyCollectionDictionary)]
+	[InlineData(ERuntimeOperation.CopyCollectionList)]
+	[InlineData(ERuntimeOperation.CopyCollectionUnknown)]
+	public void RuntimeOperations_ShouldWorkCorrectly(ERuntimeOperation operation)
+	{
+		switch (operation)
+		{
+			case ERuntimeOperation.CopyObjectNull:
+				{
+					object? result = typeof(Copy).GetMethod("CopyObjectRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
+						.Invoke(null, new object?[] { null, typeof(DestinationClass), 0, -1 });
+					result.ShouldBeNull();
+					break;
+				}
+			case ERuntimeOperation.CopyItemNull:
+				{
+					object? result = typeof(Copy).GetMethod("CopyItemRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
+						.Invoke(null, new object?[] { null, typeof(int), 0, -1 });
+					result.ShouldBeNull();
+					break;
+				}
+			case ERuntimeOperation.CopyCollectionNull:
+				{
+					object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
+						.Invoke(null, new object?[] { null, typeof(List<int>), 0, -1 });
+					result.ShouldBeNull();
+					break;
+				}
+			case ERuntimeOperation.CopyObjectValid:
+				{
+					SourceClass source = new() { Id = 42, Name = "Test" };
+					object? result = typeof(Copy).GetMethod("CopyObjectRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
+						.Invoke(null, new object[] { source, typeof(DestinationClass), 0, -1 });
+					result.ShouldNotBeNull();
+					result.ShouldBeOfType<DestinationClass>();
+					((DestinationClass)result).Id.ShouldBe(42);
+					((DestinationClass)result).Name.ShouldBe("Test");
+					break;
+				}
+			case ERuntimeOperation.CopyItemValid:
+				{
+					const int item = 42;
+					object? result = typeof(Copy).GetMethod("CopyItemRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
+						.Invoke(null, new object[] { item, typeof(int), 0, -1 });
+					result.ShouldBe(42);
+					break;
+				}
+			case ERuntimeOperation.CopyCollectionArray:
+				{
+					int[] source = new[] { 1, 2, 3 };
+					object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
+						.Invoke(null, new object[] { source, typeof(int[]), 0, -1 });
+					result.ShouldNotBeNull();
+					result.ShouldBeOfType<int[]>();
+					((int[])result).Length.ShouldBe(3);
+					break;
+				}
+			case ERuntimeOperation.CopyCollectionDictionary:
+				{
+					Dictionary<string, int> source = new() { ["key1"] = 1, ["key2"] = 2 };
+					object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
+						.Invoke(null, new object[] { source, typeof(Dictionary<string, int>), 0, -1 });
+					result.ShouldNotBeNull();
+					result.ShouldBeOfType<Dictionary<string, int>>();
+					((Dictionary<string, int>)result).Count.ShouldBe(2);
+					break;
+				}
+			case ERuntimeOperation.CopyCollectionList:
+				{
+					List<int> source = new() { 1, 2, 3 };
+					object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
+						.Invoke(null, new object[] { source, typeof(List<int>), 0, -1 });
+					result.ShouldNotBeNull();
+					result.ShouldBeOfType<List<int>>();
+					((List<int>)result).Count.ShouldBe(3);
+					break;
+				}
+			case ERuntimeOperation.CopyCollectionUnknown:
+				{
+					const string source = "test";
+					object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
+						.Invoke(null, new object[] { source, typeof(string), 0, -1 });
+					result.ShouldBe(source);
+					break;
+				}
+		}
+	}
+
 	[Fact]
 	public void GetOrAddFunctionFromCopyCache_SecondCall_ShouldReturnCachedFunction()
 	{
@@ -2236,243 +2232,94 @@ public sealed class CopyTests
 		result.ShouldBeNull();
 	}
 
-	[Fact]
-	public void CopyObjectRuntime_WithValidSource_ShouldCopyObject()
-	{
-		// Arrange
-		SourceClass source = new() { Id = 42, Name = "Test" };
-
-		// Act
-		object? result = typeof(Copy).GetMethod("CopyObjectRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(DestinationClass), 0, -1 });
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBeOfType<DestinationClass>();
-		((DestinationClass)result).Id.ShouldBe(42);
-		((DestinationClass)result).Name.ShouldBe("Test");
-	}
-
-	[Fact]
-	public void CopyItemRuntime_WithSimpleType_ShouldReturnItem()
-	{
-		// Arrange
-		const int item = 42;
-
-		// Act
-		object? result = typeof(Copy).GetMethod("CopyItemRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { item, typeof(int), 0, -1 });
-
-		// Assert
-		result.ShouldBe(42);
-	}
-
-	[Fact]
-	public void CopyCollectionRuntime_WithArray_ShouldCopyArray()
-	{
-		// Arrange
-		int[] source = new[] { 1, 2, 3 };
-
-		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(int[]), 0, -1 });
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBeOfType<int[]>();
-		((int[])result).Length.ShouldBe(3);
-	}
-
-	[Fact]
-	public void CopyCollectionRuntime_WithDictionary_ShouldCopyDictionary()
-	{
-		// Arrange
-		Dictionary<string, int> source = new() { ["key1"] = 1, ["key2"] = 2 };
-
-		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(Dictionary<string, int>), 0, -1 });
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBeOfType<Dictionary<string, int>>();
-		((Dictionary<string, int>)result).Count.ShouldBe(2);
-	}
-
-	[Fact]
-	public void CopyCollectionRuntime_WithGenericList_ShouldCopyList()
-	{
-		// Arrange
-		List<int> source = new() { 1, 2, 3 };
-
-		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(List<int>), 0, -1 });
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBeOfType<List<int>>();
-		((List<int>)result).Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public void CopyCollectionRuntime_WithUnknownCollectionType_ShouldReturnSource()
-	{
-		// Arrange - Use a simple string which is IEnumerable but not a typical collection
-		const string source = "test";
-
-		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(string), 0, -1 });
-
-		// Assert
-		result.ShouldBe(source); // Should return source for unknown types
-	}
-
 	#endregion
 
 	#region CreateCopyFunction Direct Tests (Simple Type Destinations)
 
-	[Fact]
-	public void CreateCopyFunction_WithSimpleDestType_SameAsSource_ShouldReturnDirectCopy()
+	[Theory]
+	[InlineData(ESimpleTypeConversion.IntToInt, 42, 42)]
+	[InlineData(ESimpleTypeConversion.IntToLong, 42, 42L)]
+	[InlineData(ESimpleTypeConversion.DoubleToDouble, 3.14, 3.14)]
+	[InlineData(ESimpleTypeConversion.ByteToShort, (byte)200, (short)200)]
+	[InlineData(ESimpleTypeConversion.BoolToBool, true, true)]
+	public void CreateCopyFunction_WithSimpleTypes_ShouldCopyOrConvert(ESimpleTypeConversion conversionType, object inputValue, object expectedValue)
 	{
-		// Arrange - Test the sourceType == destType branch when destType.IsSimpleType() is true (line 608-609)
 		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
 		createCopyFunctionMethod.ShouldNotBeNull();
 
-		// Act - Call CreateCopyFunction(typeof(int), typeof(int))
+		Type sourceType, destType;
+		switch (conversionType)
+		{
+			case ESimpleTypeConversion.IntToInt:
+				sourceType = typeof(int);
+				destType = typeof(int);
+				break;
+			case ESimpleTypeConversion.IntToLong:
+				sourceType = typeof(int);
+				destType = typeof(long);
+				break;
+			case ESimpleTypeConversion.DoubleToDouble:
+				sourceType = typeof(double);
+				destType = typeof(double);
+				break;
+			case ESimpleTypeConversion.ByteToShort:
+				sourceType = typeof(byte);
+				destType = typeof(short);
+				break;
+			case ESimpleTypeConversion.BoolToBool:
+				sourceType = typeof(bool);
+				destType = typeof(bool);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(conversionType));
+		}
+
 		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
-			createCopyFunctionMethod.Invoke(null, new object[] { typeof(int), typeof(int) })!;
-
-		object? result = copyFunc(42, null, 0, -1);
-
-		// Assert
+			createCopyFunctionMethod.Invoke(null, new object[] { sourceType, destType })!;
+		object? result = copyFunc(inputValue, null, 0, -1);
 		result.ShouldNotBeNull();
-		result.ShouldBe(42);
+		result.ShouldBe(expectedValue);
 	}
 
-	[Fact]
-	public void CreateCopyFunction_WithConvertibleSimpleTypes_ShouldConvert()
+	[Theory]
+	[InlineData(ESimpleTypeConversion.StringToString, "test string", "test string")]
+	[InlineData(ESimpleTypeConversion.IntToString, 123, null!)]
+	[InlineData(ESimpleTypeConversion.StringToInt, "hello", 0)]
+	public void CreateCopyFunction_WithStringConversions_ShouldHandleCorrectly(ESimpleTypeConversion conversionType, object inputValue, object? expectedValue)
 	{
-		// Arrange - Test the CanConvertTypes branch when destType.IsSimpleType() is true (line 612-613)
 		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
 		createCopyFunctionMethod.ShouldNotBeNull();
 
-		// Act - Call CreateCopyFunction(typeof(int), typeof(long)) - convertible types
+		Type sourceType, destType;
+		switch (conversionType)
+		{
+			case ESimpleTypeConversion.StringToString:
+				sourceType = typeof(string);
+				destType = typeof(string);
+				break;
+			case ESimpleTypeConversion.IntToString:
+				sourceType = typeof(int);
+				destType = typeof(string);
+				break;
+			case ESimpleTypeConversion.StringToInt:
+				sourceType = typeof(string);
+				destType = typeof(int);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(conversionType));
+		}
+
 		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
-			createCopyFunctionMethod.Invoke(null, new object[] { typeof(int), typeof(long) })!;
-
-		object? result = copyFunc(42, null, 0, -1);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBe(42L);
-	}
-
-	[Fact]
-	public void CreateCopyFunction_WithInconvertibleSimpleTypes_ShouldReturnDefault()
-	{
-		// Arrange - Test the else branch (default value) when destType.IsSimpleType() is true (line 617-618)
-		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
-		createCopyFunctionMethod.ShouldNotBeNull();
-
-		// Act - Call CreateCopyFunction(typeof(string), typeof(int)) - inconvertible types
-		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
-			createCopyFunctionMethod.Invoke(null, new object[] { typeof(string), typeof(int) })!;
-
-		object? result = copyFunc("hello", null, 0, -1);
-
-		// Assert
-		result.ShouldBe(0); // Default value for int
-	}
-
-	[Fact]
-	public void CreateCopyFunction_WithSimpleDestType_StringToString_ShouldCopy()
-	{
-		// Arrange - Test simple type path with reference type (string) - line 680-684
-		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
-		createCopyFunctionMethod.ShouldNotBeNull();
-
-		// Act - Call CreateCopyFunction(typeof(string), typeof(string))
-		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
-			createCopyFunctionMethod.Invoke(null, new object[] { typeof(string), typeof(string) })!;
-
-		object? result = copyFunc("test string", null, 0, -1);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBe("test string");
-	}
-
-	[Fact]
-	public void CreateCopyFunction_WithSimpleDestType_StringToNullableString_ShouldReturnNull()
-	{
-		// Arrange - Test the else branch returning null for reference type (line 617-618)
-		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
-		createCopyFunctionMethod.ShouldNotBeNull();
-
-		// Act - Call CreateCopyFunction(typeof(int), typeof(string)) - incompatible
-		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
-			createCopyFunctionMethod.Invoke(null, new object[] { typeof(int), typeof(string) })!;
-
-		object? result = copyFunc(123, null, 0, -1);
-
-		// Assert
-		result.ShouldBeNull(); // Default value for reference type (string)
-	}
-
-	[Fact]
-	public void CreateCopyFunction_WithSimpleDestType_DoubleToDouble_ShouldCopy()
-	{
-		// Arrange - Test simple type path with another value type - covers line 680-684
-		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
-		createCopyFunctionMethod.ShouldNotBeNull();
-
-		// Act - Call CreateCopyFunction(typeof(double), typeof(double))
-		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
-			createCopyFunctionMethod.Invoke(null, new object[] { typeof(double), typeof(double) })!;
-
-		object? result = copyFunc(3.14, null, 0, -1);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBe(3.14);
-	}
-
-	[Fact]
-	public void CreateCopyFunction_WithSimpleDestType_ByteToShort_ShouldConvert()
-	{
-		// Arrange - Test conversion between numeric types - covers line 612-613 and 680-684
-		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
-		createCopyFunctionMethod.ShouldNotBeNull();
-
-		// Act - Call CreateCopyFunction(typeof(byte), typeof(short))
-		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
-			createCopyFunctionMethod.Invoke(null, new object[] { typeof(byte), typeof(short) })!;
-
-		object? result = copyFunc((byte)200, null, 0, -1);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBe((short)200);
-	}
-
-	[Fact]
-	public void CreateCopyFunction_WithSimpleDestType_BoolToBool_ShouldCopy()
-	{
-		// Arrange - Additional coverage for bool type
-		MethodInfo? createCopyFunctionMethod = typeof(Copy).GetMethod("CreateCopyFunction", BindingFlags.NonPublic | BindingFlags.Static);
-		createCopyFunctionMethod.ShouldNotBeNull();
-
-		// Act - Call CreateCopyFunction(typeof(bool), typeof(bool))
-		Func<object, object?, int, int, object?> copyFunc = (Func<object, object?, int, int, object?>)
-			createCopyFunctionMethod.Invoke(null, new object[] { typeof(bool), typeof(bool) })!;
-
-		object? result = copyFunc(true, null, 0, -1);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBe(true);
+			createCopyFunctionMethod.Invoke(null, new object[] { sourceType, destType })!;
+		object? result = copyFunc(inputValue, null, 0, -1);
+		if (expectedValue == null)
+		{
+			result.ShouldBeNull();
+		}
+		else
+		{
+			result.ShouldBe(expectedValue);
+		}
 	}
 
 	#endregion

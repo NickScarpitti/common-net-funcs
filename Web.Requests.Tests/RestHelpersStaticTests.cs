@@ -11,9 +11,9 @@ namespace Web.Requests.Tests;
 
 public sealed class RestHelpersStaticTests
 {
-	private enum ExceptionType { TaskCanceledExpected, TaskCanceledUnexpected, GeneralException }
-	private enum TimeoutValue { Null, Zero }
-	private enum CompressionType { GZip, Brotli }
+	public enum ExceptionType { TaskCanceledExpected, TaskCanceledUnexpected, GeneralException }
+	public enum TimeoutValue { Null, Zero }
+	public enum CompressionType { GZip, Brotli }
 	[Theory]
 	[InlineData("GET", null)]
 	[InlineData("POST", "body")]

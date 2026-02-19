@@ -9,11 +9,11 @@ public class EndpointQueueServiceTests : IDisposable
 {
 	private readonly List<EndpointQueueService> _servicesToDispose = new();
 
-	private enum ChannelType { Bounded, Unbounded }
-	private enum DisposeCount { Once, Multiple }
-	private enum ConstructorType { CleanupIntervalOnly, CleanupAndCutoff, NegativeCutoff, ZeroCutoff }
-	private enum DefaultCutoffTest { DefaultConstructor, CleanupIntervalOnly }
-	private enum ResultType { Null, ComplexObject }
+	public enum ChannelType { Bounded, Unbounded }
+	public enum DisposeCount { Once, Multiple }
+	public enum ConstructorType { CleanupIntervalOnly, CleanupAndCutoff, NegativeCutoff, ZeroCutoff }
+	public enum DefaultCutoffTest { DefaultConstructor, CleanupIntervalOnly }
+	public enum ResultType { Null, ComplexObject }
 
 	[Theory]
 	[InlineData(ChannelType.Bounded, 77)]

@@ -4,6 +4,12 @@ using static CommonNetFuncs.Core.MathHelpers;
 
 namespace Core.Tests;
 
+public enum ToleranceTestMode
+{
+	Equals,
+	NotEquals
+}
+
 public sealed class MathHelpersTests
 {
 	[Theory]

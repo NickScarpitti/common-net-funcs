@@ -7,6 +7,25 @@ using static CommonNetFuncs.Web.Requests.Rest.RestHelperConstants;
 
 namespace Web.Requests.Tests;
 
+public enum TimeoutScenario
+{
+	Negative,
+	Null,
+	Zero,
+	Positive
+}
+
+public enum ValidationError
+{
+	ApiNameNull,
+	ApiNameEmpty,
+	ApiNameWhitespace,
+	UrlNull,
+	UrlEmpty,
+	UrlWhitespace,
+	BearerTokenMissing
+}
+
 public sealed class OptionsClassesTests
 {
 	#region CompressionOptions Tests
@@ -126,44 +145,41 @@ public sealed class OptionsClassesTests
 		options.UseJitter.ShouldBeFalse();
 	}
 
-	[Fact]
-	public void ResilienceOptions_TimeoutValue_HandlesNegativeValue()
+	[Theory]
+	[InlineData(TimeoutScenario.Negative)]
+	[InlineData(TimeoutScenario.Null)]
+	[InlineData(TimeoutScenario.Zero)]
+	[InlineData(TimeoutScenario.Positive)]
+	public void ResilienceOptions_TimeoutValue_HandlesScenarios(TimeoutScenario scenario)
 	{
 		// Arrange & Act
-		ResilienceOptions options = new(TimeoutValue: -10);
+		ResilienceOptions options;
+		TimeSpan expected;
+
+		switch (scenario)
+		{
+			case TimeoutScenario.Negative:
+				options = new(TimeoutValue: -10);
+				expected = TimeSpan.FromSeconds(100);
+				break;
+			case TimeoutScenario.Null:
+				options = new(TimeoutValue: null);
+				expected = TimeSpan.FromSeconds(100);
+				break;
+			case TimeoutScenario.Zero:
+				options = new(TimeoutValue: 0);
+				expected = TimeSpan.Zero;
+				break;
+			case TimeoutScenario.Positive:
+				options = new(TimeoutValue: 60);
+				expected = TimeSpan.FromSeconds(60);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(scenario));
+		}
 
 		// Assert
-		options.TimeoutValue.ShouldBe(TimeSpan.FromSeconds(100)); // Should default to 100
-	}
-
-	[Fact]
-	public void ResilienceOptions_TimeoutValue_HandlesNullValue()
-	{
-		// Arrange & Act
-		ResilienceOptions options = new(TimeoutValue: null);
-
-		// Assert
-		options.TimeoutValue.ShouldBe(TimeSpan.FromSeconds(100)); // Should default to 100
-	}
-
-	[Fact]
-	public void ResilienceOptions_TimeoutValue_AcceptsZero()
-	{
-		// Arrange & Act
-		ResilienceOptions options = new(TimeoutValue: 0);
-
-		// Assert
-		options.TimeoutValue.ShouldBe(TimeSpan.Zero); // Zero is accepted as-is
-	}
-
-	[Fact]
-	public void ResilienceOptions_TimeoutValue_AcceptsPositiveValue()
-	{
-		// Arrange & Act
-		ResilienceOptions options = new(TimeoutValue: 60);
-
-		// Assert
-		options.TimeoutValue.ShouldBe(TimeSpan.FromSeconds(60));
+		options.TimeoutValue.ShouldBe(expected);
 	}
 
 	[Fact]
@@ -267,82 +283,62 @@ public sealed class OptionsClassesTests
 		options.ResilienceOptions.ShouldBeNull();
 	}
 
-	[Fact]
-	public void RestHelperOptions_Constructor_ThrowsWhenApiNameIsNull()
+	[Theory]
+	[InlineData(ValidationError.ApiNameNull)]
+	[InlineData(ValidationError.ApiNameEmpty)]
+	[InlineData(ValidationError.ApiNameWhitespace)]
+	[InlineData(ValidationError.UrlNull)]
+	[InlineData(ValidationError.UrlEmpty)]
+	[InlineData(ValidationError.UrlWhitespace)]
+	[InlineData(ValidationError.BearerTokenMissing)]
+	public void RestHelperOptions_Constructor_ThrowsOnValidationError(ValidationError error)
 	{
-		// Arrange & Act & Assert
+		// Arrange
+		string? url = "/api/test";
+		string? apiName = "TestApi";
+		bool useBearerToken = false;
+		string? bearerToken = null;
+		string expectedParamName;
+
+		switch (error)
+		{
+			case ValidationError.ApiNameNull:
+				apiName = null!;
+				expectedParamName = "ApiName";
+				break;
+			case ValidationError.ApiNameEmpty:
+				apiName = "";
+				expectedParamName = "ApiName";
+				break;
+			case ValidationError.ApiNameWhitespace:
+				apiName = "   ";
+				expectedParamName = "ApiName";
+				break;
+			case ValidationError.UrlNull:
+				url = null!;
+				expectedParamName = "Url";
+				break;
+			case ValidationError.UrlEmpty:
+				url = "";
+				expectedParamName = "Url";
+				break;
+			case ValidationError.UrlWhitespace:
+				url = "   ";
+				expectedParamName = "Url";
+				break;
+			case ValidationError.BearerTokenMissing:
+				useBearerToken = true;
+				expectedParamName = "BearerToken";
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(error));
+		}
+
+		// Act & Assert
 		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "/api/test", ApiName: null!));
+			new RestHelperOptions(Url: url, ApiName: apiName, UseBearerToken: useBearerToken, BearerToken: bearerToken));
 
-		ex.ParamName.ShouldBe("ApiName");
-		ex.Message.ShouldContain("ApiName cannot be null or whitespace");
-	}
-
-	[Fact]
-	public void RestHelperOptions_Constructor_ThrowsWhenApiNameIsEmpty()
-	{
-		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "/api/test", ApiName: ""));
-
-		ex.ParamName.ShouldBe("ApiName");
-	}
-
-	[Fact]
-	public void RestHelperOptions_Constructor_ThrowsWhenApiNameIsWhitespace()
-	{
-		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "/api/test", ApiName: "   "));
-
-		ex.ParamName.ShouldBe("ApiName");
-	}
-
-	[Fact]
-	public void RestHelperOptions_Constructor_ThrowsWhenUrlIsNull()
-	{
-		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: null!, ApiName: "TestApi"));
-
-		ex.ParamName.ShouldBe("Url");
-		ex.Message.ShouldContain("Url cannot be null or whitespace");
-	}
-
-	[Fact]
-	public void RestHelperOptions_Constructor_ThrowsWhenUrlIsEmpty()
-	{
-		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "", ApiName: "TestApi"));
-
-		ex.ParamName.ShouldBe("Url");
-	}
-
-	[Fact]
-	public void RestHelperOptions_Constructor_ThrowsWhenUrlIsWhitespace()
-	{
-		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "   ", ApiName: "TestApi"));
-
-		ex.ParamName.ShouldBe("Url");
-	}
-
-	[Fact]
-	public void RestHelperOptions_Constructor_ThrowsWhenBearerTokenRequiredButMissing()
-	{
-		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(
-				Url: "/api/test",
-				ApiName: "TestApi",
-				UseBearerToken: true,
-				BearerToken: null
-			));
-
-		ex.ParamName.ShouldBe("BearerToken");
-		ex.Message.ShouldContain("BearerToken cannot be null or whitespace when UseBearerToken is true");
+		ex.ParamName.ShouldBe(expectedParamName);
 	}
 
 	[Fact]

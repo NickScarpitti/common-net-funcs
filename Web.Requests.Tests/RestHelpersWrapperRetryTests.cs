@@ -6,6 +6,24 @@ using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
 namespace Web.Requests.Tests;
 
+public enum HttpOperation
+{
+	GetStreaming,
+	PostRequestStreaming,
+	GenericPostRequest,
+	StringPostRequest,
+	PatchRequest,
+	PutRequest,
+	DeleteRequest
+}
+
+public enum RetryScenario
+{
+	UseBearerToken,
+	Retry,
+	MaxRetry
+}
+
 /// <summary>
 /// Additional tests for RestHelpersWrapper to improve coverage of retry, bearer token, and max retry scenarios
 /// </summary>

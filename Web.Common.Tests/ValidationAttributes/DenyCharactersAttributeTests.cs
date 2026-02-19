@@ -4,6 +4,14 @@ using CommonNetFuncs.Web.Common.ValidationAttributes;
 
 namespace Web.Common.Tests.ValidationAttributes;
 
+public enum DenyCharConstructorCase
+{
+	NullString,
+	EmptyString,
+	NullArray,
+	EmptyArray
+}
+
 public sealed class DenyCharactersAttributeTests : ValidationTestBase
 {
 	[Fact]

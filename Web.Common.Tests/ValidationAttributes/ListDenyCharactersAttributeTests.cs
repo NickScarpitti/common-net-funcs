@@ -3,202 +3,115 @@ using CommonNetFuncs.Web.Common.ValidationAttributes;
 
 namespace Web.Common.Tests.ValidationAttributes;
 
+public enum CharConstructorTestCase
+{
+	NullString,
+	EmptyString,
+	NullArray,
+	EmptyArray
+}
+
+public enum ListDenyCharTestCase
+{
+	NullValue,
+	EmptyList,
+	AllNullItems,
+	AllEmptyStrings,
+	AllValidItems
+}
+
 public sealed class ListDenyCharactersAttributeTests : ValidationTestBase
 {
-	[Fact]
-	public void Constructor_WithNullCharacters_ShouldThrow()
+	[Theory]
+	[InlineData(CharConstructorTestCase.NullString)]
+	[InlineData(CharConstructorTestCase.EmptyString)]
+	[InlineData(CharConstructorTestCase.NullArray)]
+	[InlineData(CharConstructorTestCase.EmptyArray)]
+	public void Constructor_WithInvalidInput_ShouldThrow(CharConstructorTestCase testCase)
 	{
 		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => new ListDenyCharactersAttribute((string?)null!));
+		switch (testCase)
+		{
+			case CharConstructorTestCase.NullString:
+				Should.Throw<ArgumentNullException>(() => new ListDenyCharactersAttribute((string?)null!));
+				break;
+			case CharConstructorTestCase.EmptyString:
+				Should.Throw<ArgumentException>(() => new ListDenyCharactersAttribute(string.Empty));
+				break;
+			case CharConstructorTestCase.NullArray:
+				Should.Throw<ArgumentNullException>(() => new ListDenyCharactersAttribute((char[])null!));
+				break;
+			case CharConstructorTestCase.EmptyArray:
+				Should.Throw<ArgumentException>(() => new ListDenyCharactersAttribute(Array.Empty<char>()));
+				break;
+		}
 	}
 
-	[Fact]
-	public void Constructor_WithEmptyCharacters_ShouldThrow()
+	[Theory]
+	[InlineData("<>", "'")]
+	[InlineData("abc", "def")]
+	public void Constructor_WithValidInput_ShouldSetProperties(string chars, string altChars)
 	{
-		// Act & Assert
-		Should.Throw<ArgumentException>(() => new ListDenyCharactersAttribute(string.Empty));
+		// Arrange & Act
+		ListDenyCharactersAttribute attribute1 = new(chars);
+		ListDenyCharactersAttribute attribute2 = new(altChars.ToCharArray());
+
+		// Assert
+		attribute1.DenyCharacters.ShouldBe(chars);
+		attribute2.DenyCharacters.ShouldBe(altChars);
 	}
 
-	[Fact]
-	public void Constructor_WithCharArray_ShouldSetProperties()
+	[Theory]
+	[InlineData(ListDenyCharTestCase.NullValue)]
+	[InlineData(ListDenyCharTestCase.EmptyList)]
+	[InlineData(ListDenyCharTestCase.AllNullItems)]
+	[InlineData(ListDenyCharTestCase.AllEmptyStrings)]
+	[InlineData(ListDenyCharTestCase.AllValidItems)]
+	public void IsValid_WithValidScenarios_ShouldReturnSuccess(ListDenyCharTestCase testCase)
 	{
 		// Arrange
-		char[] blacklist = ['<', '>', '"', '\'', '/'];
+		ListDenyCharactersAttribute attribute = new("<>");
+		object? value = testCase switch
+		{
+			ListDenyCharTestCase.NullValue => null,
+			ListDenyCharTestCase.EmptyList => new List<string>(),
+			ListDenyCharTestCase.AllNullItems => new List<string?> { null, null, null },
+			ListDenyCharTestCase.AllEmptyStrings => new List<string> { string.Empty, "", "" },
+			ListDenyCharTestCase.AllValidItems => new List<string> { "hello", "world", "test" },
+			_ => throw new ArgumentOutOfRangeException(nameof(testCase))
+		};
 
 		// Act
+		ValidationResult? result = attribute.GetValidationResult(value, testCase == ListDenyCharTestCase.AllValidItems ? CreateValidationContext("Items") : DummyValidationContext);
+
+		// Assert
+		result.ShouldBe(ValidationResult.Success);
+	}
+
+	[Theory]
+	[InlineData("<>\"", 1, "world<test", "Items")]
+	[InlineData("@#$", 0, "test@email", "Emails")]
+	[InlineData("!", 2, "invalid!", "Items")]
+	public void IsValid_WithInvalidItems_ShouldFailAtCorrectIndex(string blacklist, int expectedIndex, string invalidValue, string memberName)
+	{
+		// Arrange
 		ListDenyCharactersAttribute attribute = new(blacklist);
-
-		// Assert
-		attribute.DenyCharacters.ShouldBe("<>\"'/");
-	}
-
-	[Fact]
-	public void Constructor_WithNullCharArray_ShouldThrow()
-	{
-		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => new ListDenyCharactersAttribute((char[])null!));
-	}
-
-	[Fact]
-	public void Constructor_WithEmptyCharArray_ShouldThrow()
-	{
-		// Act & Assert
-		Should.Throw<ArgumentException>(() => new ListDenyCharactersAttribute(Array.Empty<char>()));
-	}
-
-	[Fact]
-	public void Constructor_WithValidCharacters_ShouldSetProperties()
-	{
-		// Arrange
-		const string blacklist = "<>\"'/";
+		List<string> items = expectedIndex switch
+		{
+			0 => [invalidValue, "valid", "alsoValid"],
+			1 => ["hello", invalidValue, "valid"],
+			2 => ["valid1", "valid2", invalidValue],
+			_ => throw new ArgumentOutOfRangeException(nameof(expectedIndex))
+		};
 
 		// Act
-		ListDenyCharactersAttribute attribute = new(blacklist);
-
-		// Assert
-		attribute.DenyCharacters.ShouldBe(blacklist);
-	}
-
-	[Fact]
-	public void IsValid_WithNull_ShouldReturnSuccess()
-	{
-		// Arrange
-		ListDenyCharactersAttribute attribute = new("<>");
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(null, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithEmptyList_ShouldReturnSuccess()
-	{
-		// Arrange
-		ListDenyCharactersAttribute attribute = new("<>");
-		List<string> emptyList = [];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(emptyList, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithAllNullItems_ShouldReturnSuccess()
-	{
-		// Arrange
-		ListDenyCharactersAttribute attribute = new("<>");
-		List<string?> nullList = [null, null, null];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(nullList, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithAllEmptyStrings_ShouldReturnSuccess()
-	{
-		// Arrange
-		ListDenyCharactersAttribute attribute = new("<>");
-		List<string> emptyStrings = [string.Empty, "", ""];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(emptyStrings, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithValidItems_ShouldReturnSuccess()
-	{
-		// Arrange
-		ListDenyCharactersAttribute attribute = new("<>\"");
-		List<string> validItems = ["hello", "world", "test"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(validItems, CreateValidationContext("Items"));
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithOneInvalidItem_ShouldFail()
-	{
-		// Arrange
-		ListDenyCharactersAttribute attribute = new("<>\"");
-		List<string> items = ["hello", "world<test", "valid"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext("Items"));
+		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext(memberName));
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.ErrorMessage.ShouldNotBeNull();
-		result.ErrorMessage.ShouldContain("index 1");
-		// UrlEncodeReadable will encode < as %3c
-		result.ErrorMessage.ShouldContain("world");
-		result.ErrorMessage.ShouldContain("<>\"");
-		result.MemberNames.ShouldContain("Items");
-	}
-
-	[Fact]
-	public void IsValid_WithFirstItemInvalid_ShouldFailAtIndex0()
-	{
-		// Arrange
-		ListDenyCharactersAttribute attribute = new("@#$");
-		List<string> items = ["test@email", "valid", "alsoValid"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext("Emails"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldNotBeNull();
-		result.ErrorMessage.ShouldContain("index 0");
-		// UrlEncodeReadable will encode @ as %40
-		result.ErrorMessage.ShouldContain("test");
-	}
-
-	[Fact]
-	public void IsValid_WithLastItemInvalid_ShouldFailAtCorrectIndex()
-	{
-		// Arrange
-		ListDenyCharactersAttribute attribute = new("!");
-		List<string> items = ["valid1", "valid2", "invalid!"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext("Items"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldNotBeNull();
-		result.ErrorMessage.ShouldContain("index 2");
-		result.ErrorMessage.ShouldContain("invalid!");
-	}
-
-	[Fact]
-	public void IsValid_WithMultipleInvalidItems_ShouldFailAtFirstInvalid()
-	{
-		// Arrange
-		ListDenyCharactersAttribute attribute = new("<>");
-		List<string> items = ["valid", "invalid<", "also>invalid"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(items, CreateValidationContext("Items"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldNotBeNull();
-		result.ErrorMessage.ShouldContain("index 1");
-		// UrlEncodeReadable will encode < as %3c
-		result.ErrorMessage.ShouldContain("invalid");
+		result.ErrorMessage.ShouldContain($"index {expectedIndex}");
+		result.MemberNames.ShouldContain(memberName);
 	}
 
 	[Fact]

@@ -6,14 +6,14 @@ namespace Web.Api.Tests;
 
 public class PrioritizedQueuedTaskTests
 {
-	private enum ComparisonType
+	public enum ComparisonType
 	{
 		HigherPriority,
 		LowerPriority,
 		NegativePriorities
 	}
 
-	private enum OperatorType
+	public enum OperatorType
 	{
 		Equals,
 		NotEquals,
@@ -23,7 +23,7 @@ public class PrioritizedQueuedTaskTests
 		GreaterThanOrEquals
 	}
 
-	private enum NullPosition
+	public enum NullPosition
 	{
 		Both,
 		Left,

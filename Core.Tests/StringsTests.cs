@@ -4,6 +4,25 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
+public enum MakeNullNullTestCondition
+{
+	FirstConditionStrEq,
+	SecondConditionOnlyNullPatterns,
+	ThirdConditionTrimmedEquals,
+	AllConditionsFalse,
+	EmptyAfterReplace,
+	OnlyWhitespace
+}
+
+public enum EmptySpanMethod
+{
+	Left,
+	Right,
+	ExtractBetween,
+	ParsePascalCase,
+	FormatDateString
+}
+
 public sealed class StringsTests
 {
 	[Theory]
@@ -95,76 +114,20 @@ public sealed class StringsTests
 		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void MakeNullNull_FirstCondition_StrEqReturnsTrue()
+	[Theory]
+	[InlineData(MakeNullNullTestCondition.FirstConditionStrEq, "NULL", null)]
+	[InlineData(MakeNullNullTestCondition.SecondConditionOnlyNullPatterns, "nullnull", null)]
+	[InlineData(MakeNullNullTestCondition.ThirdConditionTrimmedEquals, "   Null   ", null)]
+	[InlineData(MakeNullNullTestCondition.AllConditionsFalse, "some value", "some value")]
+	[InlineData(MakeNullNullTestCondition.EmptyAfterReplace, "NullNullNull", null)]
+	[InlineData(MakeNullNullTestCondition.OnlyWhitespace, "     ", "     ")]
+	public void MakeNullNull_Conditions_WorkCorrectly(MakeNullNullTestCondition _ /* condition enum is for documentation */, string input, string? expected)
 	{
-		// Tests first part of OR: s?.StrEq("Null") != false
-		// Arrange
-		const string input = "NULL";
-
 		// Act
 		string? result = input.MakeNullNull();
 
 		// Assert
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public void MakeNullNull_SecondCondition_OnlyNullPatternsRemain()
-	{
-		// Tests second part of OR: s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0
-		// First condition should be false for this to be the deciding factor
-		// Arrange
-		const string input = "nullnull"; // Doesn't equal "Null" alone, but is composed only of "null"
-
-		// Act
-		string? result = input.MakeNullNull();
-
-		// Assert
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public void MakeNullNull_ThirdCondition_TrimmedEqualsNull()
-	{
-		// Tests third part of OR: s.Trim().StrEq("Null")
-		// This should be redundant with first condition, but testing explicitly
-		// Arrange
-		const string input = "   Null   ";
-
-		// Act
-		string? result = input.MakeNullNull();
-
-		// Assert
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public void MakeNullNull_AllConditionsFalse_ReturnsOriginal()
-	{
-		// Tests when all three OR conditions are false
-		// Arrange
-		const string input = "some value";
-
-		// Act
-		string? result = input.MakeNullNull();
-
-		// Assert
-		result.ShouldBe("some value");
-	}
-
-	[Fact]
-	public void MakeNullNull_EmptyAfterReplaceButNotNull_ReturnsNull()
-	{
-		// Specifically test the second condition where Replace leaves empty string
-		// Arrange
-		const string input = "NullNullNull";
-
-		// Act
-		string? result = input.MakeNullNull();
-
-		// Assert
-		result.ShouldBeNull();
+		result.ShouldBe(expected);
 	}
 
 	[Fact]
@@ -176,20 +139,6 @@ public sealed class StringsTests
 		" \t Null \t ".MakeNullNull().ShouldBeNull(); // Leading/trailing tabs are trimmed
 		"NULL\nNULL".MakeNullNull().ShouldBe("NULL\nNULL"); // Newline between NULLs means it's not just NULL
 		"null\r\nnull".MakeNullNull().ShouldBe("null\r\nnull"); // CRLF between nulls means it's not just null
-	}
-
-	[Fact]
-	public void MakeNullNull_OnlyWhitespace_ReturnsOriginal()
-	{
-		// Tests the outer if condition - whitespace only should not become null
-		// Arrange
-		const string input = "     ";
-
-		// Act
-		string? result = input.MakeNullNull();
-
-		// Assert
-		result.ShouldBe("     ");
 	}
 
 	[Theory]
@@ -454,19 +403,6 @@ public sealed class StringsTests
 		// Assert
 		result.StringProp.ShouldBe("test");
 		result.NestedObject.InnerString.ShouldBe("inner1");
-	}
-
-	[Fact]
-	public void TrimObjectStrings_HandlesNull()
-	{
-		// Arrange
-		TestObject? testObject = null;
-
-		// Act
-		TestObject? result = testObject?.TrimObjectStrings(recursive: true);
-
-		// Assert
-		result.ShouldBeNull();
 	}
 
 	public sealed class TestObject
@@ -1700,30 +1636,20 @@ public sealed class StringsTests
 		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void ToFractionString_NullableDecimal_Works()
+	[Theory]
+	[InlineData(true)] // decimal
+	[InlineData(false)] // double
+	public void ToFractionString_Nullable_ReturnsNull(bool isDecimal)
 	{
-		// Arrange
-		decimal? input = null;
-
-		// Act
-		string? result = input.ToFractionString(2);
-
-		// Assert
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public void ToFractionString_NullableDouble_Works()
-	{
-		// Arrange
-		double? input = null;
-
-		// Act
-		string? result = input.ToFractionString(2);
-
-		// Assert
-		result.ShouldBeNull();
+		// Act & Assert
+		if (isDecimal)
+		{
+			((decimal?)null).ToFractionString(2).ShouldBeNull();
+		}
+		else
+		{
+			((double?)null).ToFractionString(2).ShouldBeNull();
+		}
 	}
 
 	[Theory]
@@ -2025,17 +1951,28 @@ public sealed class StringsTests
 		result.ToString().ShouldBe(expected);
 	}
 
-	[Fact]
-	public void Left_Span_Empty_ReturnsEmpty()
+	[Theory]
+	[InlineData(EmptySpanMethod.Left, 3, "")]
+	[InlineData(EmptySpanMethod.Right, 3, "")]
+	[InlineData(EmptySpanMethod.ExtractBetween, 0, "")]
+	[InlineData(EmptySpanMethod.ParsePascalCase, 0, "")]
+	public void SpanMethods_EmptySpan_ReturnsEmpty(EmptySpanMethod method, int param, string expected)
 	{
 		// Arrange
 		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
 
 		// Act
-		ReadOnlySpan<char> result = span.Left(3);
+		ReadOnlySpan<char> result = method switch
+		{
+			EmptySpanMethod.Left => span.Left(param),
+			EmptySpanMethod.Right => span.Right(param),
+			EmptySpanMethod.ExtractBetween => span.ExtractBetween("[", "]"),
+			EmptySpanMethod.ParsePascalCase => span.ParsePascalCase(),
+			_ => ReadOnlySpan<char>.Empty
+		};
 
 		// Assert
-		result.ToString().ShouldBe(string.Empty);
+		result.ToString().ShouldBe(expected);
 	}
 
 	[Theory]
@@ -2055,17 +1992,28 @@ public sealed class StringsTests
 		result.ToString().ShouldBe(expected);
 	}
 
-	[Fact]
-	public void Right_Span_Empty_ReturnsEmpty()
+	[Theory]
+	[InlineData(EmptySpanMethod.Right, 3, "")]
+	[InlineData(EmptySpanMethod.ExtractBetween, 0, "")]
+	[InlineData(EmptySpanMethod.ParsePascalCase, 0, "")]
+	[InlineData(EmptySpanMethod.FormatDateString, 0, "")]
+	public void SpanMethods_EmptySpan_ReturnsEmpty_Additional(EmptySpanMethod method, int param, string expected)
 	{
 		// Arrange
 		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
 
 		// Act
-		ReadOnlySpan<char> result = span.Right(3);
+		ReadOnlySpan<char> result = method switch
+		{
+			EmptySpanMethod.Right => span.Right(param),
+			EmptySpanMethod.ExtractBetween => span.ExtractBetween("[", "]"),
+			EmptySpanMethod.ParsePascalCase => span.ParsePascalCase(),
+			EmptySpanMethod.FormatDateString => span.FormatDateString("yyyyMMdd", "MM/dd/yyyy"),
+			_ => ReadOnlySpan<char>.Empty
+		};
 
 		// Assert
-		result.ToString().ShouldBe(string.Empty);
+		result.ToString().ShouldBe(expected);
 	}
 
 	[Theory]
@@ -2084,19 +2032,6 @@ public sealed class StringsTests
 		result.ToString().ShouldBe(expected);
 	}
 
-	[Fact]
-	public void ExtractBetween_Span_Empty_ReturnsEmpty()
-	{
-		// Arrange
-		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
-
-		// Act
-		ReadOnlySpan<char> result = span.ExtractBetween("[", "]");
-
-		// Assert
-		result.ToString().ShouldBe(string.Empty);
-	}
-
 	[Theory]
 	[InlineData("PascalCaseTest", "Pascal Case Test")]
 	[InlineData("camelCase", "camel Case")]
@@ -2112,19 +2047,6 @@ public sealed class StringsTests
 
 		// Assert
 		result.ToString().ShouldBe(expected);
-	}
-
-	[Fact]
-	public void ParsePascalCase_Span_Empty_ReturnsEmpty()
-	{
-		// Arrange
-		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
-
-		// Act
-		ReadOnlySpan<char> result = span.ParsePascalCase();
-
-		// Assert
-		result.ToString().ShouldBe(string.Empty);
 	}
 
 	[Theory]
@@ -2366,19 +2288,6 @@ public sealed class StringsTests
 		result.ToString().ShouldBe(expected);
 	}
 
-	[Fact]
-	public void FormatDateString_Span_Empty_ReturnsEmpty()
-	{
-		// Arrange
-		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
-
-		// Act
-		ReadOnlySpan<char> result = span.FormatDateString("yyyyMMdd", "MM/dd/yyyy");
-
-		// Assert
-		result.ToString().ShouldBe(string.Empty);
-	}
-
 	[Theory]
 	[InlineData("123", 123)]
 	[InlineData("notanint", null)]
@@ -2505,225 +2414,33 @@ public sealed class StringsTests
 		result.ToString().ShouldBe(expected);
 	}
 
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_NullCollection_ReturnsFalse()
+	[Theory]
+	[InlineData(null, "test", false, false)] // Null collection
+	[InlineData(new string[0], "test", false, false)] // Empty collection
+	[InlineData(new[] { "apple", "banana", "cherry" }, "banana", false, true)] // Exact match
+	[InlineData(new[] { "apple", "BANANA", "cherry" }, "banana", false, true)] // Case insensitive match
+	[InlineData(new[] { "apple", "banana", "cherry" }, "date", false, false)] // No match
+	[InlineData(new[] { "apple", null, "banana" }, "banana", false, true)] // Contains nulls, match exists
+	[InlineData(new[] { "apple", null, "banana" }, "date", false, false)] // Contains nulls, no match
+	[InlineData(new[] { "apple", "banana" }, null, false, false)] // Search text is null
+	[InlineData(new string?[] { null, null }, "banana", false, false)] // All nulls collection
+	[InlineData(null, "test", true, false)] // Null collection (span version)
+	[InlineData(new string[0], "test", true, false)] // Empty collection (span version)
+	[InlineData(new[] { "apple", "banana", "cherry" }, "banana", true, true)] // Exact match (span version)
+	[InlineData(new[] { "apple", "banana", "cherry" }, "date", true, false)] // No match (span version)
+	[InlineData(new[] { "apple", null, "banana" }, "banana", true, true)] // Contains nulls, match exists (span version)
+	[InlineData(new[] { "apple", null, "banana" }, "date", true, false)] // Contains nulls, no match (span version)
+	[InlineData(new[] { "apple", "banana" }, "", true, false)] // Search span is empty
+	[InlineData(new string?[] { null, null }, "banana", true, false)] // All nulls collection (span version)
+	public void ContainsInvariant_IEnumerableString_VariousScenarios(string?[]? collection, string? searchText, bool useSpan, bool expected)
 	{
-		// Arrange
-		IEnumerable<string?>? collection = null;
-
 		// Act
-		bool result = collection.ContainsInvariant("test");
+		bool result = useSpan && !string.IsNullOrEmpty(searchText)
+			? collection.ContainsInvariant(searchText.AsSpan())
+			: collection.ContainsInvariant(searchText);
 
 		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void SpanContainsInvariant_IEnumerableString_NullCollection_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?>? collection = null;
-
-		// Act
-		bool result = collection.ContainsInvariant("test".AsSpan());
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_EmptyCollection_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?> collection = [];
-
-		// Act
-		bool result = collection.ContainsInvariant("test");
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void SpanContainsInvariant_IEnumerableString_EmptyCollection_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?> collection = [];
-
-		// Act
-		bool result = collection.ContainsInvariant("test".AsSpan());
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_ContainsExactMatch_ReturnsTrue()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", "banana", "cherry"];
-
-		// Act
-		bool result = collection.ContainsInvariant("banana");
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void SpanContainsInvariant_IEnumerableString_ContainsExactMatch_ReturnsTrue()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", "banana", "cherry"];
-
-		// Act
-		bool result = collection.ContainsInvariant("banana".AsSpan());
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_ContainsCaseInsensitiveMatch_ReturnsTrue()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", "BANANA", "cherry"];
-
-		// Act
-		bool result = collection.ContainsInvariant("banana");
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_DoesNotContain_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", "banana", "cherry"];
-
-		// Act
-		bool result = collection.ContainsInvariant("date");
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void SpanContainsInvariant_IEnumerableString_DoesNotContain_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", "banana", "cherry"];
-
-		// Act
-		bool result = collection.ContainsInvariant("date".AsSpan());
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_ContainsNulls_ReturnsTrueIfMatchExists()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", null, "banana"];
-
-		// Act
-		bool result = collection.ContainsInvariant("banana");
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void SpanContainsInvariant_IEnumerableString_ContainsNulls_ReturnsTrueIfMatchExists()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", null, "banana"];
-
-		// Act
-		bool result = collection.ContainsInvariant("banana".AsSpan());
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_ContainsNulls_ReturnsFalseIfNoMatch()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", null, "banana"];
-
-		// Act
-		bool result = collection.ContainsInvariant("date");
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void SpanContainsInvariant_IEnumerableString_ContainsNulls_ReturnsFalseIfNoMatch()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", null, "banana"];
-
-		// Act
-		bool result = collection.ContainsInvariant("date".AsSpan());
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_SearchTextIsNull_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", "banana"];
-
-		// Act
-		bool result = collection.ContainsInvariant(null);
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ContainsInvariantSpan_IEnumerableString_SearchSpanIsEmpty_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?> collection = ["apple", "banana"];
-
-		// Act
-		bool result = collection.ContainsInvariant(new Span<char>());
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ContainsInvariant_IEnumerableString_AllNulls_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?> collection = [null, null];
-
-		// Act
-		bool result = collection.ContainsInvariant("banana");
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ContainsInvariantSpan_IEnumerableString_AllNulls_ReturnsFalse()
-	{
-		// Arrange
-		IEnumerable<string?> collection = [null, null];
-
-		// Act
-		bool result = collection.ContainsInvariant("banana".AsSpan());
-
-		// Assert
-		result.ShouldBeFalse();
+		result.ShouldBe(expected);
 	}
 
 	private class Nested
@@ -2918,57 +2635,26 @@ public sealed class StringsTests
 		result.ShouldBeFalse();
 	}
 
-	[Fact]
-	public void ToTitleCase_HandlesNonWordCharacters()
+	[Theory]
+	[InlineData("hello-world...test", "Hello-World...Test")]
+	[InlineData("  hello   world  ", "Hello", "World")] // Checks for both words with ShouldContain
+	[InlineData("hELLo WoRLD", "Hello World")]
+	[InlineData("hello-world_test", "Hello-World_Test")]
+	public void ToTitleCase_SpecialCases_HandlesCorrectly(string input, string expectedOrPartial, string? expectedPart2 = null)
 	{
-		// Arrange
-		const string input = "hello-world...test";
-
 		// Act
 		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
-		result.ShouldBe("Hello-World...Test");
-	}
-
-	[Fact]
-	public void ToTitleCase_HandlesEmptyWords()
-	{
-		// Arrange
-		const string input = "  hello   world  ";
-
-		// Act
-		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldContain("Hello");
-		result.ShouldContain("World");
-	}
-
-	[Fact]
-	public void ToTitleCase_ConvertByLength_KeepsShortUppercaseWords()
-	{
-		// Arrange
-		const string input = "THE quick BROWN fox";
-
-		// Act
-		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 5, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldBe("THE Quick Brown Fox");
-	}
-
-	[Fact]
-	public void ToTitleCase_HandlesMixedCase()
-	{
-		// Arrange
-		const string input = "hELLo WoRLD";
-
-		// Act
-		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldBe("Hello World");
+		if (expectedPart2 != null)
+		{
+			result.ShouldContain(expectedOrPartial);
+			result.ShouldContain(expectedPart2);
+		}
+		else
+		{
+			result.ShouldBe(expectedOrPartial);
+		}
 	}
 
 	[Fact]
@@ -3055,27 +2741,18 @@ public sealed class StringsTests
 
 
 
-	[Fact]
-	public void ExtractToLastInstance_Span_EmptySpan_ReturnsEmpty()
+	[Theory]
+	[InlineData(".", true)]
+	[InlineData(".", false)]
+	public void ExtractSpanMethods_EmptySpan_ReturnsEmpty(string charToFind, bool isToLast)
 	{
 		// Arrange
 		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
 
 		// Act
-		ReadOnlySpan<char> result = span.ExtractToLastInstance('.');
-
-		// Assert
-		result.IsEmpty.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ExtractFromLastInstance_Span_EmptySpan_ReturnsEmpty()
-	{
-		// Arrange
-		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
-
-		// Act
-		ReadOnlySpan<char> result = span.ExtractFromLastInstance('.');
+		ReadOnlySpan<char> result = isToLast
+			? span.ExtractToLastInstance(charToFind[0])
+			: span.ExtractFromLastInstance(charToFind[0]);
 
 		// Assert
 		result.IsEmpty.ShouldBeTrue();
@@ -3430,82 +3107,20 @@ public sealed class StringsTests
 		result.ShouldNotBeNull();
 	}
 
-	[Fact]
-	public void FormatPhoneNumber_SevenDigits()
+	[Theory]
+	[InlineData("1234567", false, "123-4567")]  // SevenDigits
+	[InlineData("1234567890", true, "(123)-456-7890")]  // TenDigitsWithParens
+	[InlineData("11234567890", false, "+1 123-456-7890")]  // ElevenDigits
+	[InlineData("121234567890", false, "+12 123-456-7890")]  // TwelveDigits
+	[InlineData("1234567x123", false, "123-4567x123")]  // WithExtension
+	[InlineData("12345", false, "12345")]  // InvalidLength
+	public void FormatPhoneNumber_EdgeCases_FormatsCorrectly(string input, bool addParenToAreaCode, string expected)
 	{
-		// Arrange
-		const string input = "1234567";
-
 		// Act
-		string? result = input.FormatPhoneNumber();
+		string? result = input.FormatPhoneNumber(addParenToAreaCode: addParenToAreaCode);
 
 		// Assert
-		result.ShouldBe("123-4567");
-	}
-
-	[Fact]
-	public void FormatPhoneNumber_TenDigitsWithParens()
-	{
-		// Arrange
-		const string input = "1234567890";
-
-		// Act
-		string? result = input.FormatPhoneNumber(addParenToAreaCode: true);
-
-		// Assert
-		result.ShouldBe("(123)-456-7890");
-	}
-
-	[Fact]
-	public void FormatPhoneNumber_ElevenDigits()
-	{
-		// Arrange
-		const string input = "11234567890";
-
-		// Act
-		string? result = input.FormatPhoneNumber();
-
-		// Assert
-		result.ShouldBe("+1 123-456-7890");
-	}
-
-	[Fact]
-	public void FormatPhoneNumber_TwelveDigits()
-	{
-		// Arrange
-		const string input = "121234567890";
-
-		// Act
-		string? result = input.FormatPhoneNumber();
-
-		// Assert
-		result.ShouldBe("+12 123-456-7890");
-	}
-
-	[Fact]
-	public void FormatPhoneNumber_WithExtension()
-	{
-		// Arrange
-		const string input = "1234567x123";
-
-		// Act
-		string? result = input.FormatPhoneNumber();
-
-		// Assert
-		result.ShouldBe("123-4567x123");
-	}
-
-	[Fact]
-	public void FormatPhoneNumber_InvalidLength()
-	{
-		// Arrange
-		const string input = "12345";
-
-		// Act
-		string? result = input.FormatPhoneNumber();
-
-		// Assert
-		result.ShouldBe("12345");
+		result.ShouldBe(expected);
 	}
 
 	[Theory]

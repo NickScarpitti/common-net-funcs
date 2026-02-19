@@ -35,6 +35,12 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		public decimal Value { get; set; }
 	}
 
+	public enum ErrorScenario
+	{
+		RequestFails,
+		Exception
+	}
+
 	#endregion
 
 	#region GET Tests
@@ -98,6 +104,9 @@ public sealed class RestHelpersWrapperTests : IDisposable
 			await Should.ThrowAsync<HttpRequestException>(async () => await wrapper.Get<TestModel>(options));
 		}
 	}
+
+	[Fact]
+	public async Task Get_ShouldRetry_WhenInitialRequestFails()
 	{
 		// Arrange
 		RestObject<TestModel> failedResponse = new()
@@ -106,23 +115,23 @@ public sealed class RestHelpersWrapperTests : IDisposable
 			Response = new HttpResponseMessage(HttpStatusCode.InternalServerError)
 		};
 
-	TestModel expectedResult = new() { Id = 1, Name = "Test" };
-	RestObject<TestModel> successResponse = new()
-	{
-		Result = expectedResult,
-		Response = new HttpResponseMessage(HttpStatusCode.OK)
-	};
+		TestModel expectedResult = new() { Id = 1, Name = "Test" };
+		RestObject<TestModel> successResponse = new()
+		{
+			Result = expectedResult,
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
 
-	A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
 				.ReturnsNextFromSequence(Task.FromResult(failedResponse), Task.FromResult(successResponse));
 
-	RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 2, RetryDelay: 10));
+		RestHelperOptions options = new("test-endpoint", "TestApi", ResilienceOptions: new ResilienceOptions(MaxRetry: 2, RetryDelay: 10));
 
-	// Act
-	TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
+		// Act
+		TestModel? result = await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
-	// Assert
-	result.ShouldNotBeNull();
+		// Assert
+		result.ShouldNotBeNull();
 		result.Id.ShouldBe(1);
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
 				.MustHaveHappened(2, Times.Exactly);
@@ -223,7 +232,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 	}
 
 	[Fact]
-	public async Task Get_ShouldRetry_WhenInitialRequestFails()
+	public async Task Get_ShouldCreateResilienceOptions_WhenNotProvided()
 	{
 		// Arrange
 		RestObject<TestModel> restObject = new()

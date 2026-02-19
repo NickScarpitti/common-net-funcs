@@ -162,29 +162,18 @@ public sealed class ListRangeAttributeTests : ValidationTestBase
 		});
 	}
 
-	[Fact]
-	public void Constructor_TypeBased_WithEqualBoundsAndExclusive_ShouldThrow()
+	[Theory]
+	[InlineData(true, false)]  // minExclusive, equalBounds
+	[InlineData(false, true)]  // maxExclusive, equalBounds
+	public void Constructor_TypeBased_WithEqualBoundsAndExclusive_ShouldThrow(bool minExclusive, bool maxExclusive)
 	{
 		// Arrange & Act & Assert
 		Should.Throw<InvalidOperationException>(() =>
 		{
 			ListRangeAttribute attribute = new(typeof(int), "5", "5")
 			{
-				MinimumIsExclusive = true
-			};
-			attribute.GetValidationResult(new List<int> { 5 }, DummyValidationContext);
-		});
-	}
-
-	[Fact]
-	public void Constructor_TypeBased_WithEqualBoundsAndMaxExclusive_ShouldThrow()
-	{
-		// Arrange & Act & Assert - test the MaximumIsExclusive branch
-		Should.Throw<InvalidOperationException>(() =>
-		{
-			ListRangeAttribute attribute = new(typeof(int), "5", "5")
-			{
-				MaximumIsExclusive = true
+				MinimumIsExclusive = minExclusive,
+				MaximumIsExclusive = maxExclusive
 			};
 			attribute.GetValidationResult(new List<int> { 5 }, DummyValidationContext);
 		});
@@ -228,30 +217,16 @@ public sealed class ListRangeAttributeTests : ValidationTestBase
 		});
 	}
 
-	[Fact]
-	public void ParseLimitsInInvariantCulture_Property_ShouldAffectParsing()
+	[Theory]
+	[InlineData(true, true)]   // parse invariant, convert invariant
+	[InlineData(false, false)] // parse current, convert current
+	public void CultureProperties_ShouldAffectParsing(bool parseInvariant, bool convertInvariant)
 	{
 		// Arrange
 		ListRangeAttribute attribute = new(typeof(decimal), "1.5", "10.5")
 		{
-			ParseLimitsInInvariantCulture = true
-		};
-		List<decimal> list = [5.5m];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void ConvertValueInInvariantCulture_Property_ShouldAffectConversion()
-	{
-		// Arrange
-		ListRangeAttribute attribute = new(typeof(decimal), "1.5", "10.5")
-		{
-			ConvertValueInInvariantCulture = true
+			ParseLimitsInInvariantCulture = parseInvariant,
+			ConvertValueInInvariantCulture = convertInvariant
 		};
 		List<decimal> list = [5.5m];
 
@@ -292,66 +267,6 @@ public sealed class ListRangeAttributeTests : ValidationTestBase
 	}
 
 	[Fact]
-	public void IsValid_IntConstructor_WithFormatException_ShouldReturnValidationError()
-	{
-		// Arrange - use int constructor with string value to trigger FormatException in Convert.ToInt32
-		ListRangeAttribute attribute = new(1, 10);
-		List<object> list = ["not_a_number"]; // String will cause FormatException when converting to int
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, CreateValidationContext("TestProperty"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldBe("Invalid format");
-	}
-
-	[Fact]
-	public void IsValid_IntConstructor_WithInvalidCast_ShouldReturnValidationError()
-	{
-		// Arrange - use int constructor with incompatible type to trigger InvalidCastException
-		ListRangeAttribute attribute = new(1, 10);
-		List<object> list = [new object()]; // Object cannot be converted to int
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, CreateValidationContext("TestProperty"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldBe("Invalid cast");
-	}
-
-	[Fact]
-	public void IsValid_DoubleConstructor_WithFormatException_ShouldReturnValidationError()
-	{
-		// Arrange - use double constructor with string value to trigger FormatException
-		ListRangeAttribute attribute = new(1.0, 10.0);
-		List<object> list = ["not_a_number"]; // String will cause FormatException when converting to double
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, CreateValidationContext("TestProperty"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldBe("Invalid format");
-	}
-
-	[Fact]
-	public void IsValid_DoubleConstructor_WithInvalidCast_ShouldReturnValidationError()
-	{
-		// Arrange - use double constructor with incompatible type to trigger InvalidCastException
-		ListRangeAttribute attribute = new(1.0, 10.0);
-		List<object> list = [new object()]; // Object cannot be converted to double
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, CreateValidationContext("TestProperty"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage.ShouldBe("Invalid cast");
-	}
-
-	[Fact]
 	public void IsValid_WithNotSupportedException_ShouldReturnValidationError()
 	{
 		// Arrange - Double to int TypeConverter throws NotSupportedException for certain conversions
@@ -365,110 +280,6 @@ public sealed class ListRangeAttributeTests : ValidationTestBase
 		// Assert
 		result.ShouldNotBeNull();
 		result.ErrorMessage.ShouldBe("Not supported");
-	}
-
-	[Fact]
-	public void ParseLimitsInInvariantCulture_False_ShouldUseCurrentCulture()
-	{
-		// Arrange - test with ParseLimitsInInvariantCulture = false (default)
-		ListRangeAttribute attribute = new(typeof(decimal), "1.5", "10.5")
-		{
-			ParseLimitsInInvariantCulture = false // Explicitly set to false to test that branch
-		};
-		List<decimal> list = [5.5m];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void ConvertValueInInvariantCulture_False_ShouldUseCurrentCulture()
-	{
-		// Arrange - test the ConvertValueInInvariantCulture = false path
-		ListRangeAttribute attribute = new(typeof(int), "1", "10")
-		{
-			ConvertValueInInvariantCulture = false // Test the else branch
-		};
-		List<int> list = [5];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void ConvertValueInInvariantCulture_WithTypeMatch_ShouldNotConvert()
-	{
-		// Arrange - value already matches the type, so no conversion needed
-		ListRangeAttribute attribute = new(typeof(decimal), "1.5", "10.5")
-		{
-			ConvertValueInInvariantCulture = true
-		};
-		// List with values that already are the correct type
-		List<decimal> list = [2.5m, 7.5m];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void ConvertValueInInvariantCulture_False_WithTypeMatch_ShouldNotConvert()
-	{
-		// Arrange - test type equality check in the false branch
-		ListRangeAttribute attribute = new(typeof(decimal), "1.5", "10.5")
-		{
-			ConvertValueInInvariantCulture = false
-		};
-		List<decimal> list = [2.5m, 7.5m];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void ConvertValueInInvariantCulture_WithTypeMismatch_ShouldConvert()
-	{
-		// Arrange - test conversion when types don't match
-		ListRangeAttribute attribute = new(typeof(int), "1", "10")
-		{
-			ConvertValueInInvariantCulture = true
-		};
-		// List with string values that need to be converted to int
-		List<object> list = ["5", "7"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void ConvertValueInInvariantCulture_False_WithTypeMismatch_ShouldConvert()
-	{
-		// Arrange - test conversion in else branch when types don't match
-		ListRangeAttribute attribute = new(typeof(int), "1", "10")
-		{
-			ConvertValueInInvariantCulture = false
-		};
-		List<object> list = ["5", "7"];
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(list, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
 	}
 
 	[Fact]
@@ -516,12 +327,52 @@ public sealed class ListRangeAttributeTests : ValidationTestBase
 		result.ErrorMessage?.ShouldContain("must be between");
 	}
 
-	[Fact]
-	public void Constructor_IntConstructor_WithEqualBounds_ShouldWork()
+	[Theory]
+	[InlineData(true, "Invalid format")]   // int constructor, format exception
+	[InlineData(false, "Invalid cast")]    // int constructor, cast exception
+	public void IsValid_IntConstructor_WithExceptions_ShouldReturnValidationError(bool isFormatException, string expectedError)
 	{
-		// Arrange & Act
-		ListRangeAttribute attribute = new(5, 5);
-		List<int> list = [5];
+		// Arrange
+		ListRangeAttribute attribute = new(1, 10);
+		List<object> list = isFormatException ? ["not_a_number"] : [new object()];
+
+		// Act
+		ValidationResult? result = attribute.GetValidationResult(list, CreateValidationContext("TestProperty"));
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ErrorMessage.ShouldBe(expectedError);
+	}
+
+	[Theory]
+	[InlineData(true, "Invalid format")]   // double constructor, format exception
+	[InlineData(false, "Invalid cast")]    // double constructor, cast exception
+	public void IsValid_DoubleConstructor_WithExceptions_ShouldReturnValidationError(bool isFormatException, string expectedError)
+	{
+		// Arrange
+		ListRangeAttribute attribute = new(1.0, 10.0);
+		List<object> list = isFormatException ? ["not_a_number"] : [new object()];
+
+		// Act
+		ValidationResult? result = attribute.GetValidationResult(list, CreateValidationContext("TestProperty"));
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.ErrorMessage.ShouldBe(expectedError);
+	}
+
+	[Theory]
+	[InlineData(true, true)]   // invariant, type match
+	[InlineData(true, false)]  // invariant, type mismatch
+	[InlineData(false, true)]  // current culture, type match
+	[InlineData(false, false)] // current culture, type mismatch
+	public void ConvertValueInInvariantCulture_WithTypeVariations_ShouldWork(bool invariant, bool typeMatch)
+	{
+		// Arrange
+		ListRangeAttribute attribute = typeMatch
+			? new(typeof(decimal), "1.5", "10.5") { ConvertValueInInvariantCulture = invariant }
+			: new(typeof(int), "1", "10") { ConvertValueInInvariantCulture = invariant };
+		List<object> list = typeMatch ? [2.5m, 7.5m] : ["5", "7"];
 
 		// Act
 		ValidationResult? result = attribute.GetValidationResult(list, DummyValidationContext);
@@ -530,12 +381,16 @@ public sealed class ListRangeAttributeTests : ValidationTestBase
 		result.ShouldBe(ValidationResult.Success);
 	}
 
-	[Fact]
-	public void Constructor_DoubleConstructor_WithEqualBounds_ShouldWork()
+	[Theory]
+	[InlineData(5, 5)]      // int equal bounds
+	[InlineData(5.5, 5.5)]  // double equal bounds
+	public void Constructor_WithEqualBounds_ShouldWork(object min, object max)
 	{
 		// Arrange & Act
-		ListRangeAttribute attribute = new(5.5, 5.5);
-		List<double> list = [5.5];
+		ListRangeAttribute attribute = min is int intMin
+			? new ListRangeAttribute(intMin, (int)max)
+			: new ListRangeAttribute((double)min, (double)max);
+		List<object> list = [min];
 
 		// Act
 		ValidationResult? result = attribute.GetValidationResult(list, DummyValidationContext);

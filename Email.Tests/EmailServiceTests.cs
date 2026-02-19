@@ -1,4 +1,4 @@
-using AutoFixture.Xunit3;
+﻿using AutoFixture.Xunit3;
 using CommonNetFuncs.Email;
 
 namespace Email.Tests;

@@ -56,8 +56,8 @@ public sealed class GenericDtoEndpointsTests
 		public DbSet<TestEntity> TestEntities { get; set; } = null!;
 	}
 
-	private enum ErrorScenario { Success, SaveFails, ExceptionThrown, NotFound, DeleteFails, EmptyList, ReturnsNull }
-	private enum PatchScenario { ModelNotFound, SaveFails, ExceptionThrown }
+	public enum ErrorScenario { Success, SaveFails, ExceptionThrown, NotFound, DeleteFails, EmptyList, ReturnsNull }
+	public enum PatchScenario { ModelNotFound, SaveFails, ExceptionThrown }
 
 	#region CreateMany Tests
 

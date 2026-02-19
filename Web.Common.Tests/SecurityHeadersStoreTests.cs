@@ -2,6 +2,16 @@
 
 namespace Web.Common.Tests;
 
+public enum SecurityHeaderKey
+{
+	XssProtection,
+	XFrameOptions,
+	ReferrerPolicy,
+	XContentTypeOptions,
+	XPermittedCrossDomainPolicies,
+	ContentSecurityPolicy
+}
+
 public class SecurityHeadersStoreTests
 {
 	[Fact]
@@ -32,39 +42,18 @@ public class SecurityHeadersStoreTests
 		SecurityHeadersStore.SecurityHeaders.ShouldContainKey("Content-Security-Policy");
 	}
 
-	[Fact]
-	public void SecurityHeaders_XssProtection_HasCorrectValue()
+	[Theory]
+	[InlineData(SecurityHeaderKey.XssProtection, "X-Xss-Protection", "1; mode=block")]
+	[InlineData(SecurityHeaderKey.XFrameOptions, "X-Frame-Options", "DENY")]
+	[InlineData(SecurityHeaderKey.ReferrerPolicy, "Referrer-Policy", "no-referrer")]
+	[InlineData(SecurityHeaderKey.XContentTypeOptions, "X-Content-Type-Options", "nosniff")]
+	[InlineData(SecurityHeaderKey.XPermittedCrossDomainPolicies, "X-Permitted-Cross-Domain-Policies", "none")]
+	public void SecurityHeaders_IndividualHeaders_HaveCorrectValues(SecurityHeaderKey key, string headerName, string expectedValue)
 	{
 		// Assert
-		SecurityHeadersStore.SecurityHeaders["X-Xss-Protection"].ShouldBe("1; mode=block");
-	}
-
-	[Fact]
-	public void SecurityHeaders_XFrameOptions_HasCorrectValue()
-	{
-		// Assert
-		SecurityHeadersStore.SecurityHeaders["X-Frame-Options"].ShouldBe("DENY");
-	}
-
-	[Fact]
-	public void SecurityHeaders_ReferrerPolicy_HasCorrectValue()
-	{
-		// Assert
-		SecurityHeadersStore.SecurityHeaders["Referrer-Policy"].ShouldBe("no-referrer");
-	}
-
-	[Fact]
-	public void SecurityHeaders_XContentTypeOptions_HasCorrectValue()
-	{
-		// Assert
-		SecurityHeadersStore.SecurityHeaders["X-Content-Type-Options"].ShouldBe("nosniff");
-	}
-
-	[Fact]
-	public void SecurityHeaders_XPermittedCrossDomainPolicies_HasCorrectValue()
-	{
-		// Assert
-		SecurityHeadersStore.SecurityHeaders["X-Permitted-Cross-Domain-Policies"].ShouldBe("none");
+		SecurityHeadersStore.SecurityHeaders[headerName].ShouldBe(expectedValue);
+		SecurityHeadersStore.SecurityHeaders.TryGetValue(headerName, out var value).ShouldBeTrue();
+		value.ShouldBe(expectedValue);
 	}
 
 	[Fact]
@@ -108,18 +97,13 @@ public class SecurityHeadersStoreTests
 		SecurityHeadersStore.HeadersToRemove.ShouldContain("X-Powered-By");
 	}
 
-	[Fact]
-	public void HeadersToRemove_Server_IsPresent()
+	[Theory]
+	[InlineData("Server")]
+	[InlineData("X-Powered-By")]
+	public void HeadersToRemove_ContainsExpectedHeader(string headerName)
 	{
 		// Assert
-		SecurityHeadersStore.HeadersToRemove.ShouldContain("Server");
-	}
-
-	[Fact]
-	public void HeadersToRemove_XPoweredBy_IsPresent()
-	{
-		// Assert
-		SecurityHeadersStore.HeadersToRemove.ShouldContain("X-Powered-By");
+		SecurityHeadersStore.HeadersToRemove.ShouldContain(headerName);
 	}
 
 	[Theory]

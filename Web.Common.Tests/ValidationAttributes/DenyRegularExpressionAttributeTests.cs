@@ -6,6 +6,12 @@ using CommonNetFuncs.Web.Common.ValidationAttributes;
 
 namespace Web.Common.Tests.ValidationAttributes;
 
+public enum DenyRegexValidationCase
+{
+	Null,
+	Empty
+}
+
 public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 {
 	[Fact]
@@ -29,27 +35,17 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 		attribute.MatchTimeoutInMilliseconds.ShouldBe(2000); // Default timeout
 	}
 
-	[Fact]
-	public void IsValid_WithNull_ShouldReturnSuccess()
+	[Theory]
+	[InlineData(DenyRegexValidationCase.Null)]
+	[InlineData(DenyRegexValidationCase.Empty)]
+	public void IsValid_WithNullOrEmpty_ShouldReturnSuccess(DenyRegexValidationCase testCase)
 	{
 		// Arrange
 		DenyRegularExpressionAttribute attribute = new("^admin.*");
+		string? value = testCase == DenyRegexValidationCase.Null ? null : string.Empty;
 
 		// Act
-		ValidationResult? result = attribute.GetValidationResult(null, DummyValidationContext);
-
-		// Assert
-		result.ShouldBe(ValidationResult.Success);
-	}
-
-	[Fact]
-	public void IsValid_WithEmptyString_ShouldReturnSuccess()
-	{
-		// Arrange
-		DenyRegularExpressionAttribute attribute = new("^admin.*");
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(string.Empty, DummyValidationContext);
+		ValidationResult? result = attribute.GetValidationResult(value, DummyValidationContext);
 
 		// Assert
 		result.ShouldBe(ValidationResult.Success);

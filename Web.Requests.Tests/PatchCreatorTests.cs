@@ -7,6 +7,27 @@ using Newtonsoft.Json.Linq;
 
 namespace Web.Requests.Tests;
 
+public enum PropertyType
+{
+	Integer,
+	String,
+	Decimal,
+	Date
+}
+
+public enum PatchOperation
+{
+	Add,
+	Remove,
+	Replace
+}
+
+public enum TypeMismatchScenario
+{
+	StringToNumber,
+	NumberToBoolean
+}
+
 public class PatchCreatorTests
 {
 	private sealed class TestModel
@@ -165,31 +186,33 @@ public class PatchCreatorTests
 		((JValue)patch.Operations[0].value).Value.ShouldBe("Y");
 	}
 
-	[Fact]
-	public void CreatePatch_ShouldDetectNestedObjectAdded()
+	[Theory]
+	[InlineData(true)]  // Added
+	[InlineData(false)] // Removed
+	public void CreatePatch_ShouldDetectNestedObjectAddedOrRemoved(bool isAdded)
 	{
-		TestModel original = new() { Id = 1, Nested = null };
-		TestModel modified = new() { Id = 1, Nested = new NestedModel { Value = "Z" } };
+		TestModel original, modified;
+
+		if (isAdded)
+		{
+			original = new() { Id = 1, Nested = null };
+			modified = new() { Id = 1, Nested = new NestedModel { Value = "Z" } };
+		}
+		else
+		{
+			original = new() { Id = 1, Nested = new NestedModel { Value = "Z" } };
+			modified = new() { Id = 1, Nested = null };
+		}
 
 		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
 
 		patch.Operations.Count.ShouldBe(1);
 		patch.Operations[0].op.ShouldBe(ReplaceOperation);
 		patch.Operations[0].path.ShouldBe("/Nested");
-		patch.Operations[0].value.ShouldBeOfType<JObject>();
-	}
-
-	[Fact]
-	public void CreatePatch_ShouldDetectNestedObjectRemoved()
-	{
-		TestModel original = new() { Id = 1, Nested = new NestedModel { Value = "Z" } };
-		TestModel modified = new() { Id = 1, Nested = null };
-
-		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
-
-		patch.Operations.Count.ShouldBe(1);
-		patch.Operations[0].op.ShouldBe(ReplaceOperation);
-		patch.Operations[0].path.ShouldBe("/Nested");
+		if (isAdded)
+		{
+			patch.Operations[0].value.ShouldBeOfType<JObject>();
+		}
 	}
 
 	[Fact]
@@ -287,165 +310,104 @@ public class PatchCreatorTests
 		((JValue)patch.Operations[0].value).Value.ShouldBe(4.56f);
 	}
 
-	[Fact]
-	public void CreatePatch_ShouldDetectTypeMismatch_StringToNumber()
+	[Theory]
+	[InlineData(TypeMismatchScenario.StringToNumber)]
+	[InlineData(TypeMismatchScenario.NumberToBoolean)]
+	public void CreatePatch_ShouldDetectTypeMismatch(TypeMismatchScenario scenario)
 	{
-		// Arrange: Property changes type from string to number
-		JObject original = new() { ["Value"] = "123" };
-		JObject modified = new() { ["Value"] = 123 };
+		// Arrange
+		JObject original, modified;
+		object expectedValue;
+
+		switch (scenario)
+		{
+			case TypeMismatchScenario.StringToNumber:
+				original = new() { ["Value"] = "123" };
+				modified = new() { ["Value"] = 123 };
+				expectedValue = 123;
+				break;
+			case TypeMismatchScenario.NumberToBoolean:
+				original = new() { ["Flag"] = 1 };
+				modified = new() { ["Flag"] = true };
+				expectedValue = true;
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(scenario));
+		}
 
 		// Act
 		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
 
-		// Assert: Should replace due to type mismatch
+		// Assert
 		patch.Operations.Count.ShouldBe(1);
 		patch.Operations[0].op.ShouldBe(ReplaceOperation);
-		patch.Operations[0].path.ShouldBe("/Value");
-		((JValue)patch.Operations[0].value).Value.ShouldBe(123);
+		((JValue)patch.Operations[0].value).Value.ShouldBe(expectedValue);
 	}
 
-	[Fact]
-	public void CreatePatch_ShouldDetectTypeMismatch_NumberToBoolean()
+	[Theory]
+	[InlineData(PropertyType.Decimal)]
+	[InlineData(PropertyType.Date)]
+	public void CreatePatch_ShouldNotGeneratePatch_WhenValuesAreEqual(PropertyType propertyType)
 	{
-		// Arrange: Property changes type from number to boolean
-		JObject original = new() { ["Flag"] = 1 };
-		JObject modified = new() { ["Flag"] = true };
+		// Arrange
+		TestModel original;
+		TestModel modified;
+
+		switch (propertyType)
+		{
+			case PropertyType.Decimal:
+				original = new() { Id = 1, Amount = 99.99m };
+				modified = new() { Id = 1, Amount = 99.99m };
+				break;
+			case PropertyType.Date:
+				DateTime sameDateTime = new(2024, 6, 15, 10, 30, 45, DateTimeKind.Utc);
+				DateOnly sameDateOnly = new(2024, 6, 15);
+				DateTimeOffset sameOffset = new(2024, 6, 15, 10, 30, 45, TimeSpan.FromHours(-5));
+				original = new() { Id = 1, DateTime = sameDateTime, DateOnly = sameDateOnly, DateTimeOffset = sameOffset };
+				modified = new() { Id = 1, DateTime = sameDateTime, DateOnly = sameDateOnly, DateTimeOffset = sameOffset };
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(propertyType));
+		}
 
 		// Act
 		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
 
-		// Assert: Should replace due to type mismatch
-		patch.Operations.Count.ShouldBe(1);
-		patch.Operations[0].op.ShouldBe(ReplaceOperation);
-		patch.Operations[0].path.ShouldBe("/Flag");
-		((JValue)patch.Operations[0].value).Value.ShouldBe(true);
-	}
-
-	[Fact]
-	public void CreatePatch_ShouldNotGeneratePatch_WhenFloatsAreEqual()
-	{
-		// Arrange: Same float value
-		TestModel original = new() { Id = 1, Amount = 99.99m };
-		TestModel modified = new() { Id = 1, Amount = 99.99m };
-
-		// Act
-		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
-
-		// Assert: No operations when values are equal
+		// Assert
 		patch.Operations.ShouldBeEmpty();
 	}
 
-	[Fact]
-	public void CreatePatch_ShouldNotGeneratePatch_WhenDateTimesAreEqual()
+	[Theory]
+	[InlineData(PatchOperation.Add)]
+	[InlineData(PatchOperation.Remove)]
+	public void CreatePatch_ShouldHandleMultipleProperties(PatchOperation operation)
 	{
-		// Arrange: Same DateTime value
-		DateTime sameDate = new(2024, 6, 15, 10, 30, 45, DateTimeKind.Utc);
-		TestModel original = new() { Id = 1, DateTime = sameDate };
-		TestModel modified = new() { Id = 1, DateTime = sameDate };
+		// Arrange
+		JObject original, modified;
+		string expectedOp;
+
+		switch (operation)
+		{
+			case PatchOperation.Add:
+				original = new() { ["A"] = 1 };
+				modified = new() { ["A"] = 1, ["B"] = 2, ["C"] = 3 };
+				expectedOp = "add";
+				break;
+			case PatchOperation.Remove:
+				original = new() { ["A"] = 1, ["B"] = 2, ["C"] = 3 };
+				modified = new() { ["A"] = 1 };
+				expectedOp = "remove";
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(operation));
+		}
 
 		// Act
 		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
 
-		// Assert: No operations when dates are equal
-		patch.Operations.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void CreatePatch_ShouldNotGeneratePatch_WhenDateOnlyAreEqual()
-	{
-		// Arrange: Same DateOnly value
-		DateOnly sameDate = new(2024, 6, 15);
-		TestModel original = new() { Id = 1, DateOnly = sameDate };
-		TestModel modified = new() { Id = 1, DateOnly = sameDate };
-
-		// Act
-		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
-
-		// Assert: No operations when dates are equal
-		patch.Operations.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void CreatePatch_ShouldNotGeneratePatch_WhenDateTimeOffsetsAreEqual()
-	{
-		// Arrange: Same DateTimeOffset value
-		DateTimeOffset sameOffset = new(2024, 6, 15, 10, 30, 45, TimeSpan.FromHours(-5));
-		TestModel original = new() { Id = 1, DateTimeOffset = sameOffset };
-		TestModel modified = new() { Id = 1, DateTimeOffset = sameOffset };
-
-		// Act
-		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
-
-		// Assert: No operations when offsets are equal
-		patch.Operations.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void CreatePatch_ShouldDetectDateTimeOffsetChange()
-	{
-		// Arrange: Different DateTimeOffset values
-		DateTimeOffset originalOffset = new(2024, 1, 1, 12, 0, 0, TimeSpan.Zero);
-		DateTimeOffset modifiedOffset = new(2024, 1, 2, 12, 0, 0, TimeSpan.Zero);
-		TestModel original = new() { Id = 1, DateTimeOffset = originalOffset };
-		TestModel modified = new() { Id = 1, DateTimeOffset = modifiedOffset };
-
-		// Act
-		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
-
-		// Assert: Should detect the change
-		patch.Operations.Count.ShouldBe(1);
-		patch.Operations[0].op.ShouldBe(ReplaceOperation);
-		patch.Operations[0].path.ShouldBe("/DateTimeOffset");
-	}
-
-	[Fact]
-	public void CreatePatch_ShouldDetectDateOnlyChange()
-	{
-		// Arrange: Different DateOnly values
-		DateOnly originalDate = new(2024, 1, 1);
-		DateOnly modifiedDate = new(2024, 12, 31);
-		TestModel original = new() { Id = 1, DateOnly = originalDate };
-		TestModel modified = new() { Id = 1, DateOnly = modifiedDate };
-
-		// Act
-		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
-
-		// Assert: Should detect the change
-		patch.Operations.Count.ShouldBe(1);
-		patch.Operations[0].op.ShouldBe(ReplaceOperation);
-		patch.Operations[0].path.ShouldBe("/DateOnly");
-	}
-
-	[Fact]
-	public void CreatePatch_ShouldHandleMultiplePropertiesAdded()
-	{
-		// Arrange: Multiple new properties
-		JObject original = new() { ["A"] = 1 };
-		JObject modified = new() { ["A"] = 1, ["B"] = 2, ["C"] = 3 };
-
-		// Act
-		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
-
-		// Assert: Should have add operations for both new properties
+		// Assert
 		patch.Operations.Count.ShouldBe(2);
-		patch.Operations.ShouldAllBe(op => op.op == AddOperation);
-		patch.Operations.ShouldContain(op => op.path == "/B");
-		patch.Operations.ShouldContain(op => op.path == "/C");
-	}
-
-	[Fact]
-	public void CreatePatch_ShouldHandleMultiplePropertiesRemoved()
-	{
-		// Arrange: Multiple properties removed
-		JObject original = new() { ["A"] = 1, ["B"] = 2, ["C"] = 3 };
-		JObject modified = new() { ["A"] = 1 };
-
-		// Act
-		JsonPatchDocument patch = PatchCreator.CreatePatch(original, modified);
-
-		// Assert: Should have remove operations for both removed properties
-		patch.Operations.Count.ShouldBe(2);
-		patch.Operations.ShouldAllBe(op => op.op == RemoveOperation);
+		patch.Operations.ShouldAllBe(op => op.op == expectedOp);
 		patch.Operations.ShouldContain(op => op.path == "/B");
 		patch.Operations.ShouldContain(op => op.path == "/C");
 	}

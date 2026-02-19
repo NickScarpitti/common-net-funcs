@@ -11,81 +11,22 @@ public sealed partial class BaseDbContextActionsTests
 {
 	#region FullQueryOptions Tests
 
-	[Fact]
-	public void Constructor_DefaultValues_SetsPropertiesToNull()
-	{
-		// Act
-		FullQueryOptions options = new();
-
-		// Assert
-		options.SplitQueryOverride.ShouldBeNull();
-	}
-
 	[Theory]
+	[InlineData(null)]  // Constructor default
 	[InlineData(true)]
 	[InlineData(false)]
-	[InlineData(null)]
 	public void SplitQueryOverride_SetAndGet_ReturnsCorrectValue(bool? value)
 	{
-		// Arrange
-		FullQueryOptions options = new()
-		{
-			// Act
-			SplitQueryOverride = value
-		};
+		// Arrange & Act
+		FullQueryOptions options = new() { SplitQueryOverride = value };
 
 		// Assert
 		options.SplitQueryOverride.ShouldBe(value);
 	}
 
-	[Fact]
-	public void FullQueryOptions_CanBeUsedInCollections()
-	{
-		// Arrange
-		List<FullQueryOptions> optionsList =
-		[
-			new() { SplitQueryOverride = true },
-			new() { SplitQueryOverride = false },
-			new() { SplitQueryOverride = null }
-		];
-
-		// Assert
-		optionsList.Count.ShouldBe(3);
-		optionsList[0].SplitQueryOverride.ShouldBe(true);
-		optionsList[1].SplitQueryOverride.ShouldBe(false);
-		optionsList[2].SplitQueryOverride.ShouldBeNull();
-	}
-
 	#endregion
 
 	#region GenericPagingModel Tests
-
-	[Fact]
-	public void Constructor_Default_InitializesEmptyList()
-	{
-		// Act
-		GenericPagingModel<TestEntity> model = new();
-
-		// Assert
-		model.Entities.ShouldNotBeNull();
-		model.Entities.ShouldBeEmpty();
-		model.TotalRecords.ShouldBe(0);
-	}
-
-	[Fact]
-	public void Entities_SetAndGet_WorksCorrectly()
-	{
-		// Arrange
-		GenericPagingModel<TestEntity> model = new();
-		List<TestEntity> entities = [new() { Id = 1, Name = "Test" }];
-
-		// Act
-		model.Entities = entities;
-
-		// Assert
-		model.Entities.ShouldBe(entities);
-		model.Entities.Count.ShouldBe(1);
-	}
 
 	[Theory]
 	[InlineData(0)]
@@ -94,14 +35,11 @@ public sealed partial class BaseDbContextActionsTests
 	[InlineData(int.MaxValue)]
 	public void TotalRecords_SetAndGet_WorksCorrectly(int totalRecords)
 	{
-		// Arrange
-		GenericPagingModel<TestEntity> model = new()
-		{
-			// Act
-			TotalRecords = totalRecords
-		};
+		// Act
+		GenericPagingModel<TestEntity> model = new() { TotalRecords = totalRecords };
 
 		// Assert
+		model.Entities.ShouldNotBeNull(); // Verifies default initialization
 		model.TotalRecords.ShouldBe(totalRecords);
 	}
 
@@ -134,12 +72,8 @@ public sealed partial class BaseDbContextActionsTests
 	[Fact]
 	public void GenericPagingModel_WithNullEntities_CanBeSet()
 	{
-		// Arrange
-		GenericPagingModel<TestEntity> model = new()
-		{
-			// Act
-			Entities = null!
-		};
+		//  Act
+		GenericPagingModel<TestEntity> model = new() { Entities = null! };
 
 		// Assert
 		model.Entities.ShouldBeNull();

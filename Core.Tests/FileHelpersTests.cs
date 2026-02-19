@@ -4,6 +4,42 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
+public enum ApiVariant
+{
+	StringExtension,
+	PathAndFileName
+}
+
+public enum DirectoryState
+{
+	Exists,
+	Missing
+}
+
+public enum LoggingMode
+{
+	WithLogging,
+	SuppressLogging
+}
+
+public enum FileState
+{
+	DoesNotExist,
+	Exists
+}
+
+public enum IteratorStartMode
+{
+	StartFromZero,
+	ContinueFromExisting
+}
+
+public enum PipeSizeLimit
+{
+	WithSizeLimit,
+	WithoutSizeLimit
+}
+
 public sealed class FileHelpersTests : IDisposable
 {
 	private readonly string tempDir;
@@ -28,92 +64,70 @@ public sealed class FileHelpersTests : IDisposable
 		Dispose();
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_String_ReturnsUniqueName_WhenFileExists()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension)]
+	[InlineData(ApiVariant.PathAndFileName)]
+	public async Task GetSafeSaveName_ReturnsUniqueName_WhenFileExists(ApiVariant variant)
 	{
 		// Arrange
-		string fileName = Path.Combine(tempDir, "test.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-		string duplicateName = fileName;
-
-		// Act
-		string safeName = duplicateName.GetSafeSaveName();
-
-		// Assert
-		safeName.ShouldNotBe(duplicateName);
-		Path.GetFileNameWithoutExtension(safeName).ShouldContain("0");
-		File.Exists(safeName).ShouldBeFalse();
-	}
-
-	[Fact]
-	public void GetSafeSaveName_String_CreatesDirectory_WhenMissingAndFlagSet()
-	{
-		// Arrange
-		string newDir = Path.Combine(tempDir, "NewSubDir");
-		string fileName = Path.Combine(newDir, "file.txt");
-
-		// Act
-		string safeName = fileName.GetSafeSaveName(createPathIfMissing: true);
-
-		// Assert
-		Directory.Exists(newDir).ShouldBeTrue();
-		safeName.ShouldContain(newDir);
-	}
-
-	[Fact]
-	public void GetSafeSaveName_String_ReturnsEmpty_WhenDirectoryMissingAndNoCreate()
-	{
-		// Arrange
-		string newDir = Path.Combine(tempDir, "MissingDir");
-		string fileName = Path.Combine(newDir, "file.txt");
-
-		// Act
-		string safeName = fileName.GetSafeSaveName(createPathIfMissing: false);
-
-		// Assert
-		safeName.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_ReturnsUniqueName_WhenFileExists()
-	{
-		// Arrange
-		const string fileName = "test2.txt";
+		string fileName = variant == ApiVariant.StringExtension ? "test.txt" : "test2.txt";
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName()
+			: FileHelpers.GetSafeSaveName(tempDir, fileName);
 
 		// Assert
-		safeName.ShouldNotBe(fileName);
-		safeName.ShouldContain("0");
+		if (variant == ApiVariant.StringExtension)
+		{
+			safeName.ShouldNotBe(filePath);
+			Path.GetFileNameWithoutExtension(safeName).ShouldContain("0");
+		}
+		else
+		{
+			safeName.ShouldNotBe(fileName);
+			safeName.ShouldContain("0");
+		}
+		File.Exists(variant == ApiVariant.StringExtension ? safeName : Path.Combine(tempDir, safeName)).ShouldBeFalse();
 	}
 
-	[Fact]
-	public void GetSafeSaveName_PathAndFileName_CreatesDirectory_WhenMissingAndFlagSet()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension)]
+	[InlineData(ApiVariant.PathAndFileName)]
+	public void GetSafeSaveName_CreatesDirectory_WhenMissingAndFlagSet(ApiVariant variant)
 	{
 		// Arrange
-		string newDir = Path.Combine(tempDir, "NewSubDir2");
-		const string fileName = "file2.txt";
+		string newDir = Path.Combine(tempDir, variant == ApiVariant.StringExtension ? "NewSubDir" : "NewSubDir2");
+		string fileName = variant == ApiVariant.StringExtension ? Path.Combine(newDir, "file.txt") : "file2.txt";
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(newDir, fileName, createPathIfMissing: true);
+		string safeName = variant == ApiVariant.StringExtension
+			? fileName.GetSafeSaveName(createPathIfMissing: true)
+			: FileHelpers.GetSafeSaveName(newDir, fileName, createPathIfMissing: true);
 
 		// Assert
 		Directory.Exists(newDir).ShouldBeTrue();
-		safeName.ShouldBe("file2.txt");
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldContain(newDir);
+		else
+			safeName.ShouldBe("file2.txt");
 	}
 
-	[Fact]
-	public void GetSafeSaveName_PathAndFileName_ReturnsEmpty_WhenDirectoryMissingAndNoCreate()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension)]
+	[InlineData(ApiVariant.PathAndFileName)]
+	public void GetSafeSaveName_ReturnsEmpty_WhenDirectoryMissingAndNoCreate(ApiVariant variant)
 	{
 		// Arrange
-		string newDir = Path.Combine(tempDir, "MissingDir2");
-		const string fileName = "file3.txt";
+		string newDir = Path.Combine(tempDir, variant == ApiVariant.StringExtension ? "MissingDir" : "MissingDir2");
+		string fileName = variant == ApiVariant.StringExtension ? Path.Combine(newDir, "file.txt") : "file3.txt";
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(newDir, fileName, createPathIfMissing: false);
+		string safeName = variant == ApiVariant.StringExtension
+			? fileName.GetSafeSaveName(createPathIfMissing: false)
+			: FileHelpers.GetSafeSaveName(newDir, fileName, createPathIfMissing: false);
 
 		// Assert
 		safeName.ShouldBeEmpty();
@@ -227,283 +241,270 @@ public sealed class FileHelpersTests : IDisposable
 		files.ShouldNotContain(file3);
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_StartFromExistingNumber()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, 99, "(100)")]
+	[InlineData(ApiVariant.PathAndFileName, 3, "(4)")]
+	public async Task GetSafeSaveName_StartFromExistingNumber_Increments(ApiVariant variant, int existingNumber, string expectedResult)
 	{
 		// Arrange
-		const string fileName = "test (3).txt";
+		string fileName = variant == ApiVariant.StringExtension
+			? $"report ({existingNumber}).pdf"
+			: $"test ({existingNumber}).txt";
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", cancellationToken: TestContext.Current.CancellationToken);
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(startFromZero: false)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
 
 		// Assert
-		safeName.ShouldNotBe(fileName);
-		safeName.ShouldBe("test (4).txt");
+		if (variant == ApiVariant.StringExtension)
+		{
+			Path.GetFileName(safeName).ShouldBe($"report {expectedResult}.pdf");
+			Path.GetDirectoryName(safeName).ShouldBe(tempDir);
+		}
+		else
+		{
+			safeName.ShouldNotBe(fileName);
+			safeName.ShouldBe($"test {expectedResult}.txt");
+		}
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_AlreadyHasIterator()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, 3)]
+	[InlineData(ApiVariant.PathAndFileName, "(0)")]
+	public async Task GetSafeSaveName_StrCompBreaksLoop(ApiVariant variant, object expectedMarker)
 	{
 		// Arrange
-		const string fileName = "test (1).txt";
-		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", cancellationToken: TestContext.Current.CancellationToken);
-
-		// Act
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
-
-		// Assert
-		safeName.ShouldNotBe(fileName);
-		safeName.ShouldBe("test (0).txt");
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_StrCompBreaksLoop()
-	{
-		// Arrange
-		// Simulate a scenario where StrComp returns true (file name doesn't change)
-		// This is tricky to simulate directly, so we can use a file name that matches the incrementing pattern but doesn't actually change after replacement.
-		const string fileName = "test (0).txt";
+		string fileName = variant == ApiVariant.StringExtension
+			? "test (0).txt"
+			: "loop_test (0).txt";
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName()
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
 
 		// Assert
-		// The method should break out of the loop and return a name (should not loop infinitely)
 		safeName.ShouldNotBeNullOrWhiteSpace();
 		safeName.ShouldEndWith(".txt");
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_String_WithIteratorInName_IncrementsCorrectly()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, "(0)")]
+	[InlineData(ApiVariant.PathAndFileName, "(4)")]
+	public async Task GetSafeSaveName_AlreadyHasIterator_HandlesCorrectly(ApiVariant variant, string expectedPattern)
 	{
-		// Arrange - Test the hasIterator branch with proper directory path
-		string fileName = Path.Combine(tempDir, "file (0).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act
-		string safeName = fileName.GetSafeSaveName();
-
-		// Assert
-		safeName.ShouldNotBe(fileName);
-		Path.GetFileName(safeName).ShouldBe("file (1).txt");
-		Path.GetDirectoryName(safeName).ShouldBe(tempDir);
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_String_AvoidInfiniteLoop_WhenRegexPatternFails()
-	{
-		// Arrange - Create a file with malformed pattern that could cause issues
-		string fileName = Path.Combine(tempDir, "test(broken).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act - Should not hang, should complete quickly
-		string safeName = fileName.GetSafeSaveName();
-
-		// Assert
-		safeName.ShouldNotBeNullOrWhiteSpace();
-		File.Exists(safeName).ShouldBeFalse();
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_AvoidInfiniteLoop_WithMultipleExistingFiles()
-	{
-		// Arrange - Create multiple sequential numbered files
-		const string baseName = "document";
-		for (int i = 0; i < 5; i++)
+		// Arrange
+		if (variant == ApiVariant.StringExtension)
 		{
-			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).txt");
-			await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+			string fileName = Path.Combine(tempDir, "file (0).txt");
+			await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+
+			// Act
+			string safeName = fileName.GetSafeSaveName();
+
+			// Assert
+			safeName.ShouldNotBe(fileName);
+			Path.GetFileName(safeName).ShouldBe("file (1).txt");
+			Path.GetDirectoryName(safeName).ShouldBe(tempDir);
 		}
+		else
+		{
+			const string fileName = "test (1).txt";
+			string filePath = Path.Combine(tempDir, fileName);
+			await File.WriteAllTextAsync(filePath, "data", cancellationToken: TestContext.Current.CancellationToken);
 
-		// Act - Should find next available number without infinite loop
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, $"{baseName} (0).txt");
+			// Act
+			string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
 
-		// Assert
-		safeName.ShouldBe($"{baseName} (5).txt");
+			// Assert
+			safeName.ShouldNotBe(fileName);
+			safeName.ShouldBe("test (0).txt");
+		}
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_String_HandlesComplexIteratorPattern()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, "(broken)")]
+	[InlineData(ApiVariant.PathAndFileName, 5)]
+	public async Task GetSafeSaveName_AvoidInfiniteLoop_VariousPatterns(ApiVariant variant, object marker)
 	{
-		// Arrange - File with iterator at the end
-		string fileName = Path.Combine(tempDir, "report (99).pdf");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		// Arrange
+		if (variant == ApiVariant.StringExtension)
+		{
+			string fileName = Path.Combine(tempDir, "test(broken).txt");
+			await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
 
-		// Act - Set startFromZero = false to continue from existing number
-		string safeName = fileName.GetSafeSaveName(startFromZero: false);
+			// Act
+			string safeName = fileName.GetSafeSaveName();
 
-		// Assert - Should increment from 99 to 100
-		Path.GetFileName(safeName).ShouldBe("report (100).pdf");
-		Path.GetDirectoryName(safeName).ShouldBe(tempDir);
+			// Assert
+			safeName.ShouldNotBeNullOrWhiteSpace();
+			File.Exists(safeName).ShouldBeFalse();
+		}
+		else
+		{
+			const string baseName = "document";
+			for (int i = 0; i < (int)marker; i++)
+			{
+				string filePath = Path.Combine(tempDir, $"{baseName} ({i}).txt");
+				await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+			}
+
+			// Act
+			string safeName = FileHelpers.GetSafeSaveName(tempDir, $"{baseName} (0).txt");
+
+			// Assert
+			safeName.ShouldBe($"{baseName} (5).txt");
+		}
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_String_InfiniteLoopProtection_WithLogging()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, false)]
+	[InlineData(ApiVariant.PathAndFileName, false)]
+	[InlineData(ApiVariant.StringExtension, true)]
+	[InlineData(ApiVariant.PathAndFileName, true)]
+	public async Task GetSafeSaveName_InfiniteLoopProtection_WithLogging(ApiVariant variant, bool suppressLogging)
 	{
-		// Arrange - Create a file and test with logging enabled to cover the infinite loop protection logging branch
-		string fileName = Path.Combine(tempDir, "LogTest.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act - With suppressLogging = false to cover the logging branch in infinite loop protection
-		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
-
-		// Assert - Should complete without hanging and return a unique name
-		safeName.ShouldNotBe(fileName);
-		Path.GetFileName(safeName).ShouldBe("LogTest (0).txt");
-		File.Exists(safeName).ShouldBeFalse();
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_InfiniteLoopProtection_WithLogging()
-	{
-		// Arrange - Create file and test with logging to cover infinite loop protection logging
-		const string fileName = "test_file.dat";
-		string filePath = Path.Combine(tempDir, fileName);
+		// Arrange
+		string baseName = $"LogTest_{variant}_{suppressLogging}.txt";
+		string filePath = Path.Combine(tempDir, baseName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
-		// Act - With suppressLogging = false to ensure infinite loop protection logging is covered
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(suppressLogging: suppressLogging)
+			: FileHelpers.GetSafeSaveName(tempDir, baseName, suppressLogging: suppressLogging);
 
-		// Assert - Should complete and return a name
-		safeName.ShouldNotBeNullOrWhiteSpace();
-		safeName.ShouldBe("test_file (0).dat");
+		// Assert
+		if (variant == ApiVariant.StringExtension)
+		{
+			safeName.ShouldNotBe(filePath);
+			Path.GetFileName(safeName).ShouldBe($"LogTest_{variant}_{suppressLogging} (0).txt");
+		}
+		else
+		{
+			safeName.ShouldNotBeNullOrWhiteSpace();
+			safeName.ShouldBe($"LogTest_{variant}_{suppressLogging} (0).txt");
+		}
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_String_TerminatesWithManySequentialFiles()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, 100)]
+	[InlineData(ApiVariant.PathAndFileName, 50)]
+	public async Task GetSafeSaveName_TerminatesWithManySequentialFiles(ApiVariant variant, int fileCount)
 	{
-		// Arrange - Create many sequential files to stress test the loop termination
-		const string baseName = "stress_test";
-		for (int i = 0; i < 100; i++)
+		// Arrange
+		string baseName = variant == ApiVariant.StringExtension ? "stress_test" : "batch_file";
+		for (int i = 0; i < fileCount; i++)
 		{
 			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).log");
 			await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 		}
 
-		// Act - Should find the next available number and not loop infinitely
-		string existingFile = Path.Combine(tempDir, $"{baseName} (0).log");
-		string safeName = existingFile.GetSafeSaveName();
-
-		// Assert
-		Path.GetFileName(safeName).ShouldBe($"{baseName} (100).log");
-		File.Exists(safeName).ShouldBeFalse();
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_TerminatesWithManySequentialFiles()
-	{
-		// Arrange - Create many sequential files
-		const string baseName = "batch_file";
-		for (int i = 0; i < 50; i++)
-		{
-			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).dat");
-			await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
-		}
-
-		// Act - Should handle many existing files without infinite loop
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, $"{baseName} (0).dat");
-
-		// Assert
-		safeName.ShouldBe($"{baseName} (50).dat");
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_String_WithVeryLongFilename_DoesNotInfiniteLoop()
-	{
-		// Arrange - File with very long name to test edge case
-		string longName = new('a', 200);
-		string fileName = Path.Combine(tempDir, $"{longName}.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act - Should handle long filenames without infinite loop
-		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
-
-		// Assert
-		safeName.ShouldNotBe(fileName);
-		File.Exists(safeName).ShouldBeFalse();
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_WithVeryLongFilename_DoesNotInfiniteLoop()
-	{
-		// Arrange - Very long filename
-		string longName = new('b', 150);
-		string fileName = $"{longName}.log";
-		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
-
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
-
-		// Assert - Should complete without infinite loop
-		safeName.ShouldNotBeNullOrWhiteSpace();
-		safeName.ShouldContain("(0)");
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_String_WithSpecialCharsInIterator_DoesNotInfiniteLoop()
-	{
-		// Arrange - File with pattern that won't match the numeric iterator pattern
-		string fileName = Path.Combine(tempDir, "file (abc).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act - Should not loop infinitely even though pattern doesn't match [0-9]+
-		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
+		string existingFile = Path.Combine(tempDir, $"{baseName} (0).log");
+		string safeName = variant == ApiVariant.StringExtension
+			? existingFile.GetSafeSaveName()
+			: FileHelpers.GetSafeSaveName(tempDir, $"{baseName} (0).log");
 
 		// Assert
-		safeName.ShouldNotBe(fileName);
-		// Should add " (0)" since the (abc) doesn't match the numeric pattern
-		Path.GetFileName(safeName).ShouldBe("file (abc) (0).txt");
+		if (variant == ApiVariant.StringExtension)
+		{
+			Path.GetFileName(safeName).ShouldBe($"{baseName} ({fileCount}).log");
+			File.Exists(safeName).ShouldBeFalse();
+		}
+		else
+		{
+			safeName.ShouldBe($"{baseName} ({fileCount}).log");
+		}
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_WithSpecialCharsInIterator_DoesNotInfiniteLoop()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, 200)]
+	[InlineData(ApiVariant.PathAndFileName, 150)]
+	public async Task GetSafeSaveName_WithVeryLongFilename_DoesNotInfiniteLoop(ApiVariant variant, int nameLength)
 	{
 		// Arrange
-		const string fileName = "document (xyz).pdf";
+		string longName = new(variant == ApiVariant.StringExtension ? 'a' : 'b', nameLength);
+		string fileName = $"{longName}.txt";
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
 		// Act
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(suppressLogging: false)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
 
 		// Assert
-		safeName.ShouldContain("(0)");
+		if (variant == ApiVariant.StringExtension)
+		{
+			safeName.ShouldNotBe(filePath);
+			File.Exists(safeName).ShouldBeFalse();
+		}
+		else
+		{
+			safeName.ShouldNotBeNullOrWhiteSpace();
+			safeName.ShouldContain("(0)");
+		}
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_String_WithMultipleParentheses_TerminatesCorrectly()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, "(abc)")]
+	[InlineData(ApiVariant.PathAndFileName, "(xyz)")]
+	public async Task GetSafeSaveName_WithSpecialCharsInIterator_DoesNotInfiniteLoop(ApiVariant variant, string iteratorPattern)
 	{
-		// Arrange - File with multiple parentheses groups - regex matches last numeric group before extension
-		string fileName = Path.Combine(tempDir, "file (old) (1).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act - Use startFromZero=false to continue from existing number
-		string safeName = fileName.GetSafeSaveName(startFromZero: false, suppressLogging: false);
-
-		// Assert - The regex pattern matches (1) at the end, so next should be (2)
-		safeName.ShouldNotBe(fileName);
-		Path.GetFileName(safeName).ShouldBe("file (old) (2).txt");
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_WithMultipleParentheses_TerminatesCorrectly()
-	{
-		// Arrange - The regex matches the last numeric group before extension
-		const string fileName = "report (2023) (5).xlsx";
+		// Arrange
+		string baseName = variant == ApiVariant.StringExtension ? "file" : "document";
+		string fileName = $"{baseName} {iteratorPattern}.txt";
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
-		// Act - Use startFromZero=false to continue from existing number
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false, suppressLogging: false);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(suppressLogging: false)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
 
-		// Assert - Pattern matches (5), so next is (6)
-		safeName.ShouldBe("report (2023) (6).xlsx");
+		// Assert
+		safeName.ShouldContain("(0)");
+		if (variant == ApiVariant.StringExtension)
+		{
+			safeName.ShouldNotBe(filePath);
+			Path.GetFileName(safeName).ShouldBe($"{baseName} {iteratorPattern} (0).txt");
+		}
+	}
+
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, "(old) (1)", "(old) (2)")]
+	[InlineData(ApiVariant.PathAndFileName, "(2023) (5)", "(2023) (6)")]
+	public async Task GetSafeSaveName_WithMultipleParentheses_TerminatesCorrectly(ApiVariant variant, string existingPattern, string expectedPattern)
+	{
+		// Arrange
+		string baseName = variant == ApiVariant.StringExtension ? "file" : "report";
+		string extension = variant == ApiVariant.StringExtension ? ".txt" : ".xlsx";
+		string fileName = $"{baseName} {existingPattern}{extension}";
+		string filePath = Path.Combine(tempDir, fileName);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(startFromZero: false, suppressLogging: false)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false, suppressLogging: false);
+
+		// Assert
+		string expectedFileName = $"{baseName} {expectedPattern}{extension}";
+		if (variant == ApiVariant.StringExtension)
+		{
+			safeName.ShouldNotBe(filePath);
+			Path.GetFileName(safeName).ShouldBe(expectedFileName);
+		}
+		else
+		{
+			safeName.ShouldBe(expectedFileName);
+		}
 	}
 
 	#region ReadFileFromPipe tests with size limit
@@ -955,167 +956,95 @@ public sealed class FileHelpersTests : IDisposable
 
 	#region Tests for logging and edge cases
 
-	[Fact]
-	public async Task GetSafeSaveName_String_WithLogging_ReturnsEmpty_WhenDirectoryMissing()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, LoggingMode.WithLogging)]
+	[InlineData(ApiVariant.PathAndFileName, LoggingMode.WithLogging)]
+	[InlineData(ApiVariant.StringExtension, LoggingMode.SuppressLogging)]
+	[InlineData(ApiVariant.PathAndFileName, LoggingMode.SuppressLogging)]
+	public async Task GetSafeSaveName_WithLogging_WhenFileExists(ApiVariant variant, LoggingMode loggingMode)
 	{
 		// Arrange
-		string newDir = Path.Combine(tempDir, "LoggingTest");
-		string fileName = Path.Combine(newDir, "file.txt");
+		string baseName = $"logging_test_{variant}_{loggingMode}.txt";
+		string filePath = Path.Combine(tempDir, baseName);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		bool suppressLogging = loggingMode == LoggingMode.SuppressLogging;
 
-		// Act - suppressLogging=false (default), createPathIfMissing=false
-		string safeName = fileName.GetSafeSaveName(suppressLogging: false, createPathIfMissing: false);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(suppressLogging: suppressLogging)
+			: FileHelpers.GetSafeSaveName(tempDir, baseName, suppressLogging: suppressLogging);
 
 		// Assert
-		safeName.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void GetSafeSaveName_String_SuppressLogging_ReturnsContinue_WhenDirectoryMissing()
-	{
-		// Arrange
-		string newDir = Path.Combine(tempDir, "SuppressLogMissingDir");
-		string fileName = Path.Combine(newDir, "file.txt");
-
-		// Act - suppressLogging=true, createPathIfMissing=false
-		// Note: This appears to be a bug in the original implementation
-		// When directory doesn't exist, createPathIfMissing=false, and suppressLogging=true,
-		// the method continues instead of returning empty
-		string safeName = fileName.GetSafeSaveName(suppressLogging: true, createPathIfMissing: false);
-
-		// Assert - The method continues and returns a path even though directory doesn't exist
-		// This may or may not be the intended behavior
-		safeName.ShouldNotBeEmpty();
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_String_WithLogging_CreatesDirectory()
-	{
-		// Arrange
-		string newDir = Path.Combine(tempDir, "LoggingCreateTest");
-		string fileName = Path.Combine(newDir, "file.txt");
-
-		// Act - suppressLogging=false (default), createPathIfMissing=true
-		string safeName = fileName.GetSafeSaveName(suppressLogging: false, createPathIfMissing: true);
-
-		// Assert
-		Directory.Exists(newDir).ShouldBeTrue();
-		safeName.ShouldContain(newDir);
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_String_WithLogging_WhenFileExists()
-	{
-		// Arrange
-		string fileName = Path.Combine(tempDir, "logging_test.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act - suppressLogging=false (default)
-		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
-
-		// Assert
-		safeName.ShouldNotBe(fileName);
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldNotBe(filePath);
+		else
+			safeName.ShouldNotBe(baseName);
 		safeName.ShouldContain("(0)");
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_String_WithLogging_WhenFileDoesNotExist()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, LoggingMode.WithLogging)]
+	[InlineData(ApiVariant.PathAndFileName, LoggingMode.WithLogging)]
+	[InlineData(ApiVariant.StringExtension, LoggingMode.SuppressLogging)]
+	[InlineData(ApiVariant.PathAndFileName, LoggingMode.SuppressLogging)]
+	public void GetSafeSaveName_WithLogging_WhenFileDoesNotExist(ApiVariant variant, LoggingMode loggingMode)
 	{
 		// Arrange
-		string fileName = Path.Combine(tempDir, "unique_logging_test.txt");
+		string baseName = $"unique_logging_{variant}_{loggingMode}.txt";
+		string fileName = variant == ApiVariant.StringExtension ? Path.Combine(tempDir, baseName) : baseName;
+		bool suppressLogging = loggingMode == LoggingMode.SuppressLogging;
 
-		// Act - suppressLogging=false (default)
-		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? fileName.GetSafeSaveName(suppressLogging: suppressLogging)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: suppressLogging);
 
 		// Assert
-		safeName.ShouldBe(fileName);
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldBe(fileName);
+		else
+			safeName.ShouldBe(baseName);
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_WithLogging_CreatesDirectory()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, LoggingMode.WithLogging)]
+	[InlineData(ApiVariant.PathAndFileName, LoggingMode.WithLogging)]
+	public void GetSafeSaveName_WithLogging_CreatesDirectory(ApiVariant variant, LoggingMode loggingMode)
 	{
 		// Arrange
-		string newDir = Path.Combine(tempDir, "LoggingCreateTest2");
-		const string fileName = "file.txt";
+		string newDir = Path.Combine(tempDir, $"LoggingCreateTest_{variant}");
+		string fileName = variant == ApiVariant.StringExtension ? Path.Combine(newDir, "file.txt") : "file.txt";
+		bool suppressLogging = loggingMode == LoggingMode.SuppressLogging;
 
-		// Act - suppressLogging=false (default), createPathIfMissing=true
-		string safeName = FileHelpers.GetSafeSaveName(newDir, fileName, suppressLogging: false, createPathIfMissing: true);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? fileName.GetSafeSaveName(suppressLogging: suppressLogging, createPathIfMissing: true)
+			: FileHelpers.GetSafeSaveName(newDir, fileName, suppressLogging: suppressLogging, createPathIfMissing: true);
 
 		// Assert
 		Directory.Exists(newDir).ShouldBeTrue();
-		safeName.ShouldBe(fileName);
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldContain(newDir);
+		else
+			safeName.ShouldBe(fileName);
 	}
 
-	[Fact]
-	public void GetSafeSaveName_PathAndFileName_WithLogging_ReturnsEmpty_WhenDirectoryMissing()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, LoggingMode.WithLogging)]
+	[InlineData(ApiVariant.PathAndFileName, LoggingMode.WithLogging)]
+	public void GetSafeSaveName_WithLogging_ReturnsEmpty_WhenDirectoryMissing(ApiVariant variant, LoggingMode loggingMode)
 	{
 		// Arrange
-		string newDir = Path.Combine(tempDir, "LoggingMissingTest");
-		const string fileName = "file.txt";
+		string newDir = Path.Combine(tempDir, $"LoggingMissing_{variant}");
+		string fileName = variant == ApiVariant.StringExtension ? Path.Combine(newDir, "file.txt") : "file.txt";
 
-		// Act - suppressLogging=false (default), createPathIfMissing=false
-		string safeName = FileHelpers.GetSafeSaveName(newDir, fileName, suppressLogging: false, createPathIfMissing: false);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? fileName.GetSafeSaveName(suppressLogging: false, createPathIfMissing: false)
+			: FileHelpers.GetSafeSaveName(newDir, fileName, suppressLogging: false, createPathIfMissing: false);
 
 		// Assert
 		safeName.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void GetSafeSaveName_PathAndFileName_SuppressLogging_Continues_WhenDirectoryMissing()
-	{
-		// Arrange
-		string newDir = Path.Combine(tempDir, "SuppressLogMissingDir2");
-		const string fileName = "file.txt";
-
-		// Act - suppressLogging=true, createPathIfMissing=false
-		string safeName = FileHelpers.GetSafeSaveName(newDir, fileName, suppressLogging: true, createPathIfMissing: false);
-
-		// Assert - continues execution and returns a filename (possible bug in original code)
-		safeName.ShouldNotBeEmpty();
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_WithLogging_WhenFileExists()
-	{
-		// Arrange
-		const string fileName = "logging_test2.txt";
-		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
-
-		// Act - suppressLogging=false (default)
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
-
-		// Assert
-		safeName.ShouldNotBe(fileName);
-		safeName.ShouldContain("(0)");
-	}
-
-	[Fact]
-	public void GetSafeSaveName_PathAndFileName_WithLogging_WhenFileDoesNotExist()
-	{
-		// Arrange
-		const string fileName = "unique_logging_test2.txt";
-
-		// Act - suppressLogging=false (default)
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
-
-		// Assert
-		safeName.ShouldBe(fileName);
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_WithLogging_BreaksLoop()
-	{
-		// Arrange
-		const string fileName = "loop_test (0).txt";
-		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
-
-		// Act - suppressLogging=false to hit logging in loop break
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
-
-		// Assert
-		safeName.ShouldNotBeNullOrWhiteSpace();
-		safeName.ShouldEndWith(".txt");
 	}
 
 	[Theory]
@@ -1364,112 +1293,188 @@ public sealed class FileHelpersTests : IDisposable
 		fileList.ShouldBeEmpty();
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_String_StartFromZero_WithExistingIterator_StartsFromZero()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, 5)]
+	[InlineData(ApiVariant.PathAndFileName, 10)]
+	public async Task GetSafeSaveName_StartFromZero_WithExistingIterator_StartsFromZero(ApiVariant variant, int existingIterNumber)
 	{
 		// Arrange
-		string fileName = Path.Combine(tempDir, "test (5).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act - startFromZero=true (default) should start incrementing from 0
-		string safeName = fileName.GetSafeSaveName(startFromZero: true);
-
-		// Assert
-		safeName.ShouldNotBe(fileName);
-		safeName.ShouldContain("(0)");
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_String_StartFromExisting_WithNoIterator_StartsFromZero()
-	{
-		// Arrange
-		string fileName = Path.Combine(tempDir, "test_no_iterator.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act - startFromZero=false but no iterator present, so should start from 0
-		string safeName = fileName.GetSafeSaveName(startFromZero: false);
-
-		// Assert
-		safeName.ShouldNotBe(fileName);
-		safeName.ShouldContain("(0)");
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_String_StartFromExisting_WithInvalidIterator_StartsFromZero()
-	{
-		// Arrange - filename has parentheses but not a valid number
-		string fileName = Path.Combine(tempDir, "test (abc).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
-
-		// Act - startFromZero=false but iterator isn't a valid int, so should start from 0
-		string safeName = fileName.GetSafeSaveName(startFromZero: false);
-
-		// Assert
-		safeName.ShouldNotBe(fileName);
-		safeName.ShouldContain("(0)");
-	}
-
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_StartFromZero_WithExistingIterator()
-	{
-		// Arrange
-		const string fileName = "test_path (10).txt";
+		string baseName = variant == ApiVariant.StringExtension ? "test" : "test_path";
+		string fileName = $"{baseName} ({existingIterNumber}).txt";
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
-		// Act - startFromZero=true (default)
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: true);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(startFromZero: true)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: true);
 
 		// Assert
-		safeName.ShouldNotBe(fileName);
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldNotBe(filePath);
+		else
+			safeName.ShouldNotBe(fileName);
 		safeName.ShouldContain("(0)");
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_StartFromExisting_WithNoIterator()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension)]
+	[InlineData(ApiVariant.PathAndFileName)]
+	public async Task GetSafeSaveName_StartFromExisting_WithNoIterator_StartsFromZero(ApiVariant variant)
 	{
 		// Arrange
-		const string fileName = "no_iter_test.txt";
+		string baseName = variant == ApiVariant.StringExtension ? "test_no_iterator" : "no_iter_test";
+		string fileName = $"{baseName}.txt";
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
-		// Act - startFromZero=false but no iterator, so starts from 0
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(startFromZero: false)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
 
 		// Assert
-		safeName.ShouldNotBe(fileName);
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldNotBe(filePath);
+		else
+			safeName.ShouldNotBe(fileName);
 		safeName.ShouldContain("(0)");
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_PathAndFileName_StartFromExisting_WithInvalidIterator()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, "(abc)")]
+	[InlineData(ApiVariant.PathAndFileName, "(xyz)")]
+	public async Task GetSafeSaveName_StartFromExisting_WithInvalidIterator_StartsFromZero(ApiVariant variant, string invalidIterator)
 	{
 		// Arrange
-		const string fileName = "test (xyz).txt";
+		string fileName = $"test {invalidIterator}.txt";
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
-		// Act - startFromZero=false but invalid iterator
-		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(startFromZero: false)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
 
 		// Assert
-		safeName.ShouldNotBe(fileName);
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldNotBe(filePath);
+		else
+			safeName.ShouldNotBe(fileName);
 		safeName.ShouldContain("(0)");
 	}
 
-	[Fact]
-	public async Task GetSafeSaveName_String_WithIteratorInFileName_LogsAndIncrements()
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, "(2)", "(0)")]
+	[InlineData(ApiVariant.PathAndFileName, "(3)", "(0)")]
+	public async Task GetSafeSaveName_WithIteratorInFileName_ReplacesIterator(ApiVariant variant, string existingIter, string file0Iter)
 	{
 		// Arrange
-		string fileName = Path.Combine(tempDir, "test_with_iterator (5).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		string baseName = variant == ApiVariant.StringExtension ? "file_with_iter" : "path_iter_test";
+		string fileName = $"{baseName} {existingIter}.txt";
+		string fileName0 = $"{baseName} {file0Iter}.txt";
+		string filePath = Path.Combine(tempDir, fileName);
+		string filePath0 = Path.Combine(tempDir, fileName0);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath0, "data2", TestContext.Current.CancellationToken);
 
-		// Act - suppressLogging=false (default)
-		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName()
+			: FileHelpers.GetSafeSaveName(tempDir, fileName);
 
 		// Assert
-		safeName.ShouldNotBe(fileName);
-		safeName.ShouldContain("(0)"); // Should start from 0 by default
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldNotBe(filePath);
+		else
+			safeName.ShouldNotBe(fileName);
+		safeName.ShouldContain(baseName);
+	}
+
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, false, true)]
+	[InlineData(ApiVariant.PathAndFileName, false, true)]
+	[InlineData(ApiVariant.StringExtension, true, false)]
+	[InlineData(ApiVariant.PathAndFileName, true, false)]
+	public async Task GetSafeSaveName_WithIteratorInFileName_WithLogging(ApiVariant variant, bool suppressLogging, bool hasLogging)
+	{
+		// Arrange
+		string baseName = $"suppress_iter_{variant}_{suppressLogging}";
+		string fileName = $"{baseName} (7).txt";
+		string fileName0 = $"{baseName} (0).txt";
+		string filePath = Path.Combine(tempDir, fileName);
+		string filePath0 = Path.Combine(tempDir, fileName0);
+		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath0, "data2", TestContext.Current.CancellationToken);
+
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? filePath.GetSafeSaveName(suppressLogging: suppressLogging)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: suppressLogging);
+
+		// Assert
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldNotBe(filePath);
+		else
+			safeName.ShouldNotBe(fileName);
+		safeName.ShouldContain(baseName);
+	}
+
+	[Theory]
+	[InlineData(ApiVariant.StringExtension, 2)]
+	[InlineData(ApiVariant.PathAndFileName, 3)]
+	public async Task GetSafeSaveName_MultipleFilesWithIterators_FindsNext(ApiVariant variant, int expectedIterator)
+	{
+		// Arrange
+		string baseName = variant == ApiVariant.StringExtension ? "increment_test" : "path_gap";
+		string extension = ".txt";
+		string baseFile = Path.Combine(tempDir, $"{baseName}{extension}");
+		string file0 = Path.Combine(tempDir, $"{baseName} (0){extension}");
+		string file1 = Path.Combine(tempDir, $"{baseName} (1){extension}");
+
+		if (variant == ApiVariant.StringExtension)
+		{
+			await File.WriteAllTextAsync(baseFile, "base", TestContext.Current.CancellationToken);
+			await File.WriteAllTextAsync(file0, "data0", TestContext.Current.CancellationToken);
+			await File.WriteAllTextAsync(file1, "data1", TestContext.Current.CancellationToken);
+		}
+		else
+		{
+			string file2 = Path.Combine(tempDir, $"{baseName} (2){extension}");
+			await File.WriteAllTextAsync(file0, "data0", TestContext.Current.CancellationToken);
+			await File.WriteAllTextAsync(file1, "data1", TestContext.Current.CancellationToken);
+			await File.WriteAllTextAsync(file2, "data2", TestContext.Current.CancellationToken);
+		}
+
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? baseFile.GetSafeSaveName()
+			: FileHelpers.GetSafeSaveName(tempDir, $"{baseName} (0){extension}");
+
+		// Assert
+		safeName.ShouldContain($"({expectedIterator})");
+	}
+
+	[Theory]
+	[InlineData(ApiVariant.StringExtension)]
+	[InlineData(ApiVariant.PathAndFileName)]
+	public void GetSafeSaveName_UniqueFile_WithoutLogging(ApiVariant variant)
+	{
+		// Arrange
+		string baseName = variant == ApiVariant.StringExtension ? "unique_suppress_log" : "path_unique_suppress";
+		string fileName = $"{baseName}.txt";
+		string fullPath = Path.Combine(tempDir, fileName);
+
+		// Act
+		string safeName = variant == ApiVariant.StringExtension
+			? fullPath.GetSafeSaveName(suppressLogging: true)
+			: FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: true);
+
+		// Assert
+		if (variant == ApiVariant.StringExtension)
+			safeName.ShouldBe(fullPath);
+		else
+			safeName.ShouldBe(fileName);
 	}
 
 	[Fact]
@@ -1733,33 +1738,32 @@ public sealed class FileHelpersTests : IDisposable
 		safeName.ShouldContain("(2)");
 	}
 
-	[Fact]
-	public async Task GetHashFromFile_WithNonExistentFile_ReturnsEmpty()
+	[Theory]
+	[InlineData(true)]  // Non-existent file
+	[InlineData(false)] // Locked file exception
+	public async Task GetHashFromFile_ReturnsEmptyOnException(bool fileDoesNotExist)
 	{
 		// Arrange
-		string nonExistent = Path.Combine(tempDir, "does_not_exist_at_all.bin");
+		string fileName = Path.Combine(tempDir, fileDoesNotExist ? "does_not_exist_at_all.bin" : "locked_file.txt");
 
-		// Act
-		string hash = await nonExistent.GetHashFromFile();
+		if (!fileDoesNotExist)
+		{
+			await File.WriteAllTextAsync(fileName, "content", TestContext.Current.CancellationToken);
+		}
 
-		// Assert
-		hash.ShouldBe(string.Empty);
-	}
-
-	[Fact]
-	public async Task GetHashFromFile_WithException_ReturnsEmpty()
-	{
-		// Arrange - Create a file then try to get hash while it's locked
-		string fileName = Path.Combine(tempDir, "locked_file.txt");
-		await File.WriteAllTextAsync(fileName, "content", TestContext.Current.CancellationToken);
-
-		// Act - Open file exclusively to lock it, then try to get hash
-		await using FileStream lockStream = new(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-		// Try to get hash while file is locked - this should cause an exception
-		string hash = await fileName.GetHashFromFile();
-
-		// Assert - should return empty string on exception
-		hash.ShouldBe(string.Empty);
+		// Act & Assert
+		if (fileDoesNotExist)
+		{
+			string hash = await fileName.GetHashFromFile();
+			hash.ShouldBe(string.Empty);
+		}
+		else
+		{
+			// Open file exclusively to lock it, try to get hash
+			await using FileStream lockStream = new(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			string hash = await fileName.GetHashFromFile();
+			hash.ShouldBe(string.Empty);
+		}
 	}
 
 	#endregion

@@ -60,27 +60,36 @@ public sealed class AllowedNullableValuesAttributeTests : ValidationTestBase
 		}
 	}
 
-	[Fact]
-	public void Constructor_WithNonEnum_ShouldThrow()
+	[Theory]
+	[InlineData(true, true)]  // true = null allowed values, true = enum type
+	[InlineData(false, true)] // false = null allowed values, true = enum type
+	[InlineData(true, false)] // true = null allowed values, false = non-enum type (int)
+	[InlineData(false, false)] // false = null allowed values, false = non-enum type (string)
+	public void Constructor_WithInvalidType_ShouldThrow(bool withBoolean, bool isEnumType)
 	{
 		// Act & Assert
-		Should.Throw<ArgumentException>(() => new AllowedNullableValuesAttribute(typeof(string)));
-	}
-
-	[Theory]
-	[InlineData(4)]
-	[InlineData(99)]
-	public void IsValid_WithInvalidEnumValue_ShouldReturnError(int invalidValue)
-	{
-		// Arrange
-		AllowedNullableValuesAttribute attribute = new(typeof(ETest));
-
-		// Act
-		ValidationResult? result = attribute.GetValidationResult(invalidValue, CreateValidationContext("TestProperty"));
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ErrorMessage?.ShouldContain("must be one of the following values");
+		if (isEnumType)
+		{
+			if (withBoolean)
+			{
+				Should.Throw<ArgumentException>(() => new AllowedNullableValuesAttribute(true, typeof(string)));
+			}
+			else
+			{
+				Should.Throw<ArgumentException>(() => new AllowedNullableValuesAttribute(typeof(int)));
+			}
+		}
+		else
+		{
+			if (withBoolean)
+			{
+				Should.Throw<ArgumentNullException>(() => new AllowedNullableValuesAttribute(true, (object[])null!));
+			}
+			else
+			{
+				Should.Throw<ArgumentNullException>(() => new AllowedNullableValuesAttribute((object[])null!));
+			}
+		}
 	}
 
 	[Theory]
@@ -88,13 +97,15 @@ public sealed class AllowedNullableValuesAttributeTests : ValidationTestBase
 	[InlineData(2, true)]
 	[InlineData(3, true)]
 	[InlineData(4, false)]
+	[InlineData(99, false)]
 	public void IsValid_WithAllowedValues_ShouldValidateCorrectly(object value, bool shouldBeValid)
 	{
 		// Arrange
 		AllowedNullableValuesAttribute attribute = new(1, 2, 3);
 
 		// Act
-		ValidationResult? result = attribute.GetValidationResult(value, DummyValidationContext);
+		ValidationResult? result = attribute.GetValidationResult(value,
+			shouldBeValid ? DummyValidationContext : CreateValidationContext("TestProperty"));
 
 		// Assert
 		if (shouldBeValid)
@@ -106,27 +117,6 @@ public sealed class AllowedNullableValuesAttributeTests : ValidationTestBase
 			result.ShouldNotBeNull();
 			result.ErrorMessage?.ShouldContain("must be one of the following values");
 		}
-	}
-
-	[Fact]
-	public void Constructor_WithNullAllowedValues_ShouldThrow()
-	{
-		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => new AllowedNullableValuesAttribute(true, (object[])null!));
-	}
-
-	[Fact]
-	public void Constructor_SimpleWithNullAllowedValues_ShouldThrow()
-	{
-		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => new AllowedNullableValuesAttribute((object[])null!));
-	}
-
-	[Fact]
-	public void Constructor_SingleParamEnum_WithNonEnum_ShouldThrow()
-	{
-		// Act & Assert
-		Should.Throw<ArgumentException>(() => new AllowedNullableValuesAttribute(typeof(int)));
 	}
 
 	[Fact]

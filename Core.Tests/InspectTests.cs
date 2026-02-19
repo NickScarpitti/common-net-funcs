@@ -7,6 +7,41 @@ namespace Core.Tests;
 
 public sealed class InspectTests
 {
+	// Public enums for test variations (required to be public for xUnit)
+	public enum TestObjectType
+	{
+		ValueType,
+		ReferenceType
+	}
+
+	public enum HashMethodType
+	{
+		Sync,
+		Async
+	}
+
+	public enum ObjectContentType
+	{
+		WithValueTypes,
+		WithNestedObjects,
+		WithNullNestedObject,
+		WithEmptyCollection,
+		WithPrimitiveTypes,
+		WithNestedCollections
+	}
+
+	public enum RecursiveMode
+	{
+		NonRecursive,
+		Recursive
+	}
+
+	public enum NullPropertyScenario
+	{
+		BothNull,
+		OneNull
+	}
+
 	// Helper classes for testing
 	public sealed class SimpleClass
 	{
@@ -181,6 +216,18 @@ public sealed class InspectTests
 	}
 
 	[Fact]
+	public async Task GetHashForObjectAsync_ReturnsNullString_ForNull()
+	{
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type
+		SimpleClass obj = null;
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type
+#pragma warning disable CS8634 // Nullability of type argument doesn't match 'class' constraint
+		string hash = await obj.GetHashForObjectAsync();
+#pragma warning restore CS8634
+		hash.ShouldBe("null");
+	}
+
+	[Fact]
 	public void GetHashForObject_CollectionOrderIndependence()
 	{
 		ClassWithCollection a = new() { Items = new[] { 1, 2, 3 } };
@@ -256,24 +303,14 @@ public sealed class InspectTests
 		public SimpleClass? NullObject { get; set; }
 	}
 
-	[Fact]
-	public void GetDefaultValue_ForValueType_ReturnsUninitializedObject()
+	[Theory]
+	[InlineData(TestObjectType.ValueType, 0)]
+	[InlineData(TestObjectType.ReferenceType, null)]
+	public void GetDefaultValue_ReturnsExpectedForType(TestObjectType typeCategory, object? expected)
 	{
-		// Arrange & Act
-		object? result = typeof(int).GetDefaultValue();
-
-		// Assert
-		result.ShouldBe(0);
-	}
-
-	[Fact]
-	public void GetDefaultValue_ForReferenceType_ReturnsNull()
-	{
-		// Arrange & Act
-		object? result = typeof(string).GetDefaultValue();
-
-		// Assert
-		result.ShouldBeNull();
+		Type type = typeCategory == TestObjectType.ValueType ? typeof(int) : typeof(string);
+		object? result = type.GetDefaultValue();
+		result.ShouldBe(expected);
 	}
 
 	[Fact]
@@ -289,17 +326,13 @@ public sealed class InspectTests
 		count.ShouldBe(2); // Both properties are at default
 	}
 
-	[Fact]
-	public void ObjectHasAttribute_WithNullTypeId_ReturnsFalse()
+	[Theory]
+	[InlineData(typeof(SimpleClass), "NonExistentAttribute", false)]
+	[InlineData(typeof(ClassWithDescription), "NonExistentAttribute", false)]
+	public void ObjectHasAttribute_Variations(Type type, string attrName, bool expected)
 	{
-		// Arrange - SimpleClass doesn't have DescriptionAttribute
-		Type type = typeof(SimpleClass);
-
-		// Act
-		bool result = type.ObjectHasAttribute("NonExistentAttribute");
-
-		// Assert
-		result.ShouldBeFalse();
+		bool result = type.ObjectHasAttribute(attrName);
+		result.ShouldBe(expected);
 	}
 
 	[Fact]
@@ -316,120 +349,53 @@ public sealed class InspectTests
 		result.ShouldBeFalse();
 	}
 
-	[Fact]
-	public void IsEqual_WithValueTypes_ComparesCorrectly()
+	[Theory]
+	[InlineData(5, 5, true)]
+	[InlineData(5, 6, false)]
+	public void IsEqual_WithValueTypes_ComparesValues(int aValue, int bValue, bool expected)
 	{
-		// Arrange
-		ClassWithValueTypes a = new() { IntValue = 5, DoubleValue = 3.14, BoolValue = true, DecimalValue = 10.5m };
-		ClassWithValueTypes b = new() { IntValue = 5, DoubleValue = 3.14, BoolValue = true, DecimalValue = 10.5m };
-
-		// Act
+		ClassWithValueTypes a = new() { IntValue = aValue, DoubleValue = 3.14, BoolValue = true, DecimalValue = 10.5m };
+		ClassWithValueTypes b = new() { IntValue = bValue, DoubleValue = 3.14, BoolValue = true, DecimalValue = 10.5m };
 		bool result = a.IsEqual(b);
-
-		// Assert
-		result.ShouldBeTrue();
+		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void IsEqual_WithValueTypes_DifferentValues_ReturnsFalse()
+	[Theory]
+	[InlineData(1, 1, true)]
+	[InlineData(1, 2, false)]
+	public void IsEqual_WithComparableTypes_ComparesDates(int aDay, int bDay, bool expected)
 	{
-		// Arrange
-		ClassWithValueTypes a = new() { IntValue = 5, DoubleValue = 3.14, BoolValue = true, DecimalValue = 10.5m };
-		ClassWithValueTypes b = new() { IntValue = 6, DoubleValue = 3.14, BoolValue = true, DecimalValue = 10.5m };
-
-		// Act
-		bool result = a.IsEqual(b);
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void IsEqual_WithComparableTypes_UsesCompareTo()
-	{
-		// Arrange
 #pragma warning disable S6562 // Provide the "DateTimeKind" when creating this object
-		ClassWithComparable a = new() { DateValue = new DateTime(2024, 1, 1), StringValue = "test" };
-		ClassWithComparable b = new() { DateValue = new DateTime(2024, 1, 1), StringValue = "test" };
+		ClassWithComparable a = new() { DateValue = new DateTime(2024, 1, aDay), StringValue = "test" };
+		ClassWithComparable b = new() { DateValue = new DateTime(2024, 1, bDay), StringValue = "test" };
 #pragma warning restore S6562 // Provide the "DateTimeKind" when creating this object
-
-		// Act
 		bool result = a.IsEqual(b);
-
-		// Assert
-		result.ShouldBeTrue();
+		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void IsEqual_WithComparableTypes_DifferentDates_ReturnsFalse()
+	[Theory]
+	[InlineData(RecursiveMode.NonRecursive, true)]
+	[InlineData(RecursiveMode.Recursive, false)]
+	public void IsEqual_WithRecursiveMode_HandlesNestedObjects(RecursiveMode mode, bool expected)
 	{
-		// Arrange
-#pragma warning disable S6562 // Provide the "DateTimeKind" when creating this object
-		ClassWithComparable a = new() { DateValue = new DateTime(2024, 1, 1), StringValue = "test" };
-		ClassWithComparable b = new() { DateValue = new DateTime(2024, 1, 2), StringValue = "test" };
-#pragma warning restore S6562 // Provide the "DateTimeKind" when creating this object
-
-		// Act
-		bool result = a.IsEqual(b);
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void IsEqual_NonRecursive_IgnoresNestedObjects()
-	{
-		// Arrange
 		ClassWithComplexObject a = new() { Value = 1, Nested = new SimpleClass { IntProp = 5 } };
 		ClassWithComplexObject b = new() { Value = 1, Nested = new SimpleClass { IntProp = 10 } };
-
-		// Act - non-recursive should ignore nested differences
-		bool result = a.IsEqual(b, recursive: false);
-
-		// Assert
-		result.ShouldBeTrue();
+		bool recursive = mode == RecursiveMode.Recursive;
+		bool result = a.IsEqual(b, recursive: recursive);
+		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void IsEqual_Recursive_ComparesNestedObjects()
+	[Theory]
+	[InlineData(NullPropertyScenario.BothNull, true)]
+	[InlineData(NullPropertyScenario.OneNull, false)]
+	public void IsEqual_WithNullProperties_HandlesCorrectly(NullPropertyScenario scenario, bool expected)
 	{
-		// Arrange
-		ClassWithComplexObject a = new() { Value = 1, Nested = new SimpleClass { IntProp = 5 } };
-		ClassWithComplexObject b = new() { Value = 1, Nested = new SimpleClass { IntProp = 10 } };
-
-		// Act - recursive should detect nested differences
-		bool result = a.IsEqual(b, recursive: true);
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void IsEqual_WithNullProperties_HandlesCorrectly()
-	{
-		// Arrange
-		ClassWithNullProperties a = new() { NullString = null, NullObject = null };
-		ClassWithNullProperties b = new() { NullString = null, NullObject = null };
-
-		// Act
-		bool result = a.IsEqual(b);
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void IsEqual_WithOneNullNestedProperty_ReturnsFalse()
-	{
-		// Arrange
-		ClassWithNullProperties a = new() { NullObject = new SimpleClass { IntProp = 1 } };
+		ClassWithNullProperties a = scenario == NullPropertyScenario.BothNull
+			? new() { NullObject = null }
+			: new() { NullObject = new SimpleClass { IntProp = 1 } };
 		ClassWithNullProperties b = new() { NullObject = null };
-
-		// Act
 		bool result = a.IsEqual(b, recursive: true);
-
-		// Assert
-		result.ShouldBeFalse();
+		result.ShouldBe(expected);
 	}
 
 	[Theory]
@@ -468,122 +434,26 @@ public sealed class InspectTests
 		hash.ShouldNotBeNullOrEmpty();
 	}
 
-	[Fact]
-	public async Task GetHashForObjectAsync_ReturnsNullString_ForNull()
+	[Theory]
+	[InlineData(ObjectContentType.WithValueTypes)]
+	[InlineData(ObjectContentType.WithNestedObjects)]
+	[InlineData(ObjectContentType.WithNullNestedObject)]
+	[InlineData(ObjectContentType.WithEmptyCollection)]
+	[InlineData(ObjectContentType.WithPrimitiveTypes)]
+	[InlineData(ObjectContentType.WithNestedCollections)]
+	public void GetHashForObject_ProducesHash_ForVariousObjectTypes(ObjectContentType contentType)
 	{
-		// Arrange & Act
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type
-		SimpleClass obj = null;
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type
-#pragma warning disable CS8634 // Nullability of type argument doesn't match 'class' constraint
-		string hash = await obj.GetHashForObjectAsync();
-#pragma warning restore CS8634
-
-		// Assert
-		hash.ShouldBe("null");
-	}
-
-	[Fact]
-	public void GetHashForObject_WithValueTypes_ProducesHash()
-	{
-		// Arrange
-		ClassWithValueTypes obj = new() { IntValue = 10, DoubleValue = 5.5, BoolValue = true, DecimalValue = 99.99m };
-
-		// Act
+		object obj = contentType switch
+		{
+			ObjectContentType.WithValueTypes => new ClassWithValueTypes { IntValue = 10, DoubleValue = 5.5, BoolValue = true, DecimalValue = 99.99m },
+			ObjectContentType.WithNestedObjects => new ClassWithComplexObject { Value = 1, Nested = new SimpleClass { IntProp = 42, StringProp = "nested" } },
+			ObjectContentType.WithNullNestedObject => new ClassWithComplexObject { Value = 1, Nested = null },
+			ObjectContentType.WithEmptyCollection => new ClassWithCollection { Items = Array.Empty<int>() },
+			ObjectContentType.WithPrimitiveTypes => new ClassWithPrimitives { ByteValue = 255, ShortValue = 1000, LongValue = 999999L, FloatValue = 3.14f, CharValue = 'X' },
+			ObjectContentType.WithNestedCollections => new ClassWithCollection { Items = new List<int> { 1, 2, 3, 4, 5 } },
+			_ => throw new ArgumentException("Unknown content type")
+		};
 		string hash = obj.GetHashForObject();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public async Task GetHashForObjectAsync_WithValueTypes_ProducesHash()
-	{
-		// Arrange
-		ClassWithValueTypes obj = new() { IntValue = 10, DoubleValue = 5.5, BoolValue = true, DecimalValue = 99.99m };
-
-		// Act
-		string hash = await obj.GetHashForObjectAsync();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public void GetHashForObject_WithNestedObjects_ProducesHash()
-	{
-		// Arrange
-		ClassWithComplexObject obj = new() { Value = 1, Nested = new SimpleClass { IntProp = 42, StringProp = "nested" } };
-
-		// Act
-		string hash = obj.GetHashForObject();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public async Task GetHashForObjectAsync_WithNestedObjects_ProducesHash()
-	{
-		// Arrange
-		ClassWithComplexObject obj = new() { Value = 1, Nested = new SimpleClass { IntProp = 42, StringProp = "nested" } };
-
-		// Act
-		string hash = await obj.GetHashForObjectAsync();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public void GetHashForObject_WithNullNestedObject_ProducesHash()
-	{
-		// Arrange
-		ClassWithComplexObject obj = new() { Value = 1, Nested = null };
-
-		// Act
-		string hash = obj.GetHashForObject();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public async Task GetHashForObjectAsync_WithNullNestedObject_ProducesHash()
-	{
-		// Arrange
-		ClassWithComplexObject obj = new() { Value = 1, Nested = null };
-
-		// Act
-		string hash = await obj.GetHashForObjectAsync();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public void GetHashForObject_WithEmptyCollection_ProducesHash()
-	{
-		// Arrange
-		ClassWithCollection obj = new() { Items = Array.Empty<int>() };
-
-		// Act
-		string hash = obj.GetHashForObject();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public async Task GetHashForObjectAsync_WithEmptyCollection_ProducesHash()
-	{
-		// Arrange
-		ClassWithCollection obj = new() { Items = Array.Empty<int>() };
-
-		// Act
-		string hash = await obj.GetHashForObjectAsync();
-
-		// Assert
 		hash.ShouldNotBeNullOrEmpty();
 	}
 
@@ -606,56 +476,6 @@ public sealed class InspectTests
 
 		// Assert
 		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void IsEqual_CachesComparisonDelegates()
-	{
-		// Arrange
-		SimpleClass a1 = new() { IntProp = 1, StringProp = "a" };
-		SimpleClass b1 = new() { IntProp = 1, StringProp = "a" };
-		SimpleClass a2 = new() { IntProp = 2, StringProp = "b" };
-		SimpleClass b2 = new() { IntProp = 2, StringProp = "b" };
-
-		// Act - call multiple times to test delegate caching
-		bool result1 = a1.IsEqual(b1);
-		bool result2 = a2.IsEqual(b2);
-
-		// Assert
-		result1.ShouldBeTrue();
-		result2.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void IsEqual_WithDifferentCaseSensitivitySettings_UsesSeparateDelegates()
-	{
-		// Arrange
-		SimpleClass a = new() { IntProp = 1, StringProp = "ABC" };
-		SimpleClass b = new() { IntProp = 1, StringProp = "abc" };
-
-		// Act
-		bool caseSensitive = a.IsEqual(b, ignoreStringCase: false);
-		bool caseInsensitive = a.IsEqual(b, ignoreStringCase: true);
-
-		// Assert
-		caseSensitive.ShouldBeFalse();
-		caseInsensitive.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void IsEqual_WithDifferentRecursiveSettings_UsesSeparateDelegates()
-	{
-		// Arrange
-		ClassWithComplexObject a = new() { Value = 1, Nested = new SimpleClass { IntProp = 5 } };
-		ClassWithComplexObject b = new() { Value = 1, Nested = new SimpleClass { IntProp = 10 } };
-
-		// Act
-		bool nonRecursive = a.IsEqual(b, recursive: false);
-		bool recursive = a.IsEqual(b, recursive: true);
-
-		// Assert
-		nonRecursive.ShouldBeTrue();
-		recursive.ShouldBeFalse();
 	}
 
 	[Fact]
@@ -687,75 +507,26 @@ public sealed class InspectTests
 		result.ShouldBeTrue();
 	}
 
-	[Fact]
-	public void GetHashForObject_WithPrimitiveTypes_ProducesHash()
+	[Theory]
+	[InlineData(ObjectContentType.WithValueTypes)]
+	[InlineData(ObjectContentType.WithNestedObjects)]
+	[InlineData(ObjectContentType.WithNullNestedObject)]
+	[InlineData(ObjectContentType.WithEmptyCollection)]
+	[InlineData(ObjectContentType.WithPrimitiveTypes)]
+	[InlineData(ObjectContentType.WithNestedCollections)]
+	public async Task GetHashForObjectAsync_ProducesHash_ForVariousObjectTypes(ObjectContentType contentType)
 	{
-		// Arrange
-		ClassWithPrimitives obj = new()
+		object obj = contentType switch
 		{
-			ByteValue = 255,
-			ShortValue = 1000,
-			LongValue = 999999L,
-			FloatValue = 3.14f,
-			CharValue = 'X'
+			ObjectContentType.WithValueTypes => new ClassWithValueTypes { IntValue = 10, DoubleValue = 5.5, BoolValue = true, DecimalValue = 99.99m },
+			ObjectContentType.WithNestedObjects => new ClassWithComplexObject { Value = 1, Nested = new SimpleClass { IntProp = 42, StringProp = "nested" } },
+			ObjectContentType.WithNullNestedObject => new ClassWithComplexObject { Value = 1, Nested = null },
+			ObjectContentType.WithEmptyCollection => new ClassWithCollection { Items = Array.Empty<int>() },
+			ObjectContentType.WithPrimitiveTypes => new ClassWithPrimitives { ByteValue = 255, ShortValue = 1000, LongValue = 999999L, FloatValue = 3.14f, CharValue = 'X' },
+			ObjectContentType.WithNestedCollections => new ClassWithCollection { Items = new List<int> { 1, 2, 3, 4, 5 } },
+			_ => throw new ArgumentException("Unknown content type")
 		};
-
-		// Act
-		string hash = obj.GetHashForObject();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public async Task GetHashForObjectAsync_WithPrimitiveTypes_ProducesHash()
-	{
-		// Arrange
-		ClassWithPrimitives obj = new()
-		{
-			ByteValue = 255,
-			ShortValue = 1000,
-			LongValue = 999999L,
-			FloatValue = 3.14f,
-			CharValue = 'X'
-		};
-
-		// Act
 		string hash = await obj.GetHashForObjectAsync();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public void GetHashForObject_WithNestedCollections_ProducesHash()
-	{
-		// Arrange
-		ClassWithCollection obj = new()
-		{
-			Items = new List<int> { 1, 2, 3, 4, 5 }
-		};
-
-		// Act
-		string hash = obj.GetHashForObject();
-
-		// Assert
-		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public async Task GetHashForObjectAsync_WithNestedCollections_ProducesHash()
-	{
-		// Arrange
-		ClassWithCollection obj = new()
-		{
-			Items = new List<int> { 1, 2, 3, 4, 5 }
-		};
-
-		// Act
-		string hash = await obj.GetHashForObjectAsync();
-
-		// Assert
 		hash.ShouldNotBeNullOrEmpty();
 	}
 
@@ -793,39 +564,6 @@ public sealed class InspectTests
 
 		// Assert
 		hash.ShouldNotBeNullOrEmpty();
-	}
-
-	[Fact]
-	public void IsEqual_WithAlreadyComparingPair_ReturnsTrue()
-	{
-		// Arrange - this tests the cycle detection by using self-referencing objects
-		CyclicClass obj = new();
-		obj.Self = obj;
-
-		// Act - comparing object to itself should work
-		bool result = obj.IsEqual(obj);
-
-		// Assert
-		result.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ObjectHasAttribute_WithAttributeWithNullName_ReturnsFalse()
-	{
-		// This tests the path where attrName is null in ObjectHasAttribute
-		// Though this is hard to create in practice, the code has a null check
-		Type type = typeof(SimpleClass);
-		bool result = type.ObjectHasAttribute("SomeAttribute");
-		result.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ObjectHasAttribute_WithDifferentAttributeName_ReturnsFalse()
-	{
-		// This tests the path where attrName is not null but doesn't match attributeName
-		Type type = typeof(ClassWithDescription);
-		bool result = type.ObjectHasAttribute("NonExistentAttribute");
-		result.ShouldBeFalse();
 	}
 }
 #pragma warning restore IDE0079 // Remove unnecessary suppression

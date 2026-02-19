@@ -1,18 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Linq.Expressions;
-using AutoFixture.AutoFakeItEasy;
+﻿using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.EFCore;
 using CommonNetFuncs.Web.Api;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 namespace Web.Api.Tests;
 
 public sealed class GenericEndpointsTests
 {
-	private enum BulkOperationResult
+	public enum BulkOperationResult
 	{
 		Zero,
 		Null,
@@ -252,10 +252,10 @@ public sealed class GenericEndpointsTests
 	}
 
 	[Theory]
-	[InlineData(BulkOperationResult.Zero, 0)]
-	[InlineData(BulkOperationResult.Null, null)]
-	[InlineData(BulkOperationResult.Exception, null)]
-	public async Task DeleteMany_WithExpression_ErrorScenarios_ReturnsExpectedResult(BulkOperationResult resultType, int? expectedValue)
+	[InlineData(BulkOperationResult.Zero)]
+	[InlineData(BulkOperationResult.Null)]
+	[InlineData(BulkOperationResult.Exception)]
+	public async Task DeleteMany_WithExpression_ErrorScenarios_ReturnsExpectedResult(BulkOperationResult resultType)
 	{
 		// Arrange
 		Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
@@ -338,11 +338,11 @@ public sealed class GenericEndpointsTests
 		ActionResult<int> result = await sut.UpdateMany(whereClause, updateSettersConfig, dbContextActions, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
-		if (resultType == BulkOperationResult.Zero)
+		if (expectedValue.HasValue)
 		{
 			result.ShouldNotBeNull();
 			result.Result.ShouldBeOfType<OkObjectResult>();
-			((OkObjectResult)result.Result!).Value.ShouldBe(0);
+			((OkObjectResult)result.Result!).Value.ShouldBe(expectedValue.Value);
 		}
 		else
 		{

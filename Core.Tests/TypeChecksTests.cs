@@ -5,6 +5,15 @@ using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
+public enum CacheType
+{
+	All,
+	SimpleType,
+	ReadOnlyCollection,
+	NumericType,
+	Enumerable
+}
+
 public sealed class TypeChecksTests
 {
 
@@ -197,8 +206,13 @@ public sealed class TypeChecksTests
 		Value2
 	}
 
-	[Fact]
-	public void ClearTypeCheckCaches_ShouldClearAllCaches()
+	[Theory]
+	[InlineData(CacheType.All)]
+	[InlineData(CacheType.SimpleType)]
+	[InlineData(CacheType.ReadOnlyCollection)]
+	[InlineData(CacheType.NumericType)]
+	[InlineData(CacheType.Enumerable)]
+	public void ClearTypeCheckCache_ShouldClearSpecifiedCache(CacheType cacheType)
 	{
 		// Arrange - populate caches by calling methods
 		typeof(int).IsSimpleType();
@@ -207,73 +221,29 @@ public sealed class TypeChecksTests
 		typeof(int[]).IsEnumerable();
 
 		// Act
-		TypeChecks.ClearTypeCheckCaches();
+		switch (cacheType)
+		{
+			case CacheType.All:
+				TypeChecks.ClearTypeCheckCaches();
+				break;
+			case CacheType.SimpleType:
+				TypeChecks.ClearSimpleTypeCache();
+				break;
+			case CacheType.ReadOnlyCollection:
+				TypeChecks.ClearReadOnlyCollectionTypeCache();
+				break;
+			case CacheType.NumericType:
+				TypeChecks.ClearNumericTypeCache();
+				break;
+			case CacheType.Enumerable:
+				TypeChecks.ClearEnumerableTypeCache();
+				break;
+		}
 
-		// Assert - verify caches were cleared by calling methods again
-		// (they should still work correctly)
+		// Assert - verify caches were cleared by calling methods again (they should still work correctly)
 		typeof(int).IsSimpleType().ShouldBeTrue();
 		typeof(List<int>).IsReadOnlyCollectionType().ShouldBeFalse();
 		typeof(double).IsNumericType().ShouldBeTrue();
-		typeof(int[]).IsEnumerable().ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ClearSimpleTypeCache_ShouldClearSimpleTypeCache()
-	{
-		// Arrange
-		typeof(int).IsSimpleType();
-		typeof(string).IsSimpleType();
-
-		// Act
-		TypeChecks.ClearSimpleTypeCache();
-
-		// Assert - verify cache was cleared by calling method again
-		typeof(int).IsSimpleType().ShouldBeTrue();
-		typeof(string).IsSimpleType().ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ClearReadOnlyCollectionTypeCache_ShouldClearReadOnlyCollectionTypeCache()
-	{
-		// Arrange
-		typeof(IReadOnlyCollection<int>).IsReadOnlyCollectionType();
-		typeof(List<int>).IsReadOnlyCollectionType();
-
-		// Act
-		TypeChecks.ClearReadOnlyCollectionTypeCache();
-
-		// Assert - verify cache was cleared by calling method again
-		typeof(IReadOnlyCollection<int>).IsReadOnlyCollectionType().ShouldBeTrue();
-		typeof(List<int>).IsReadOnlyCollectionType().ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ClearNumericTypeCache_ShouldClearNumericTypeCache()
-	{
-		// Arrange
-		typeof(int).IsNumericType();
-		typeof(double).IsNumericType();
-
-		// Act
-		TypeChecks.ClearNumericTypeCache();
-
-		// Assert - verify cache was cleared by calling method again
-		typeof(int).IsNumericType().ShouldBeTrue();
-		typeof(double).IsNumericType().ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ClearEnumerableTypeCache_ShouldClearEnumerableTypeCache()
-	{
-		// Arrange
-		typeof(List<int>).IsEnumerable();
-		typeof(int[]).IsEnumerable();
-
-		// Act
-		TypeChecks.ClearEnumerableTypeCache();
-
-		// Assert - verify cache was cleared by calling method again
-		typeof(List<int>).IsEnumerable().ShouldBeTrue();
 		typeof(int[]).IsEnumerable().ShouldBeTrue();
 	}
 

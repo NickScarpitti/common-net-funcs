@@ -6,6 +6,13 @@ using static Xunit.TestContext;
 
 namespace Core.Tests;
 
+public enum ExecutionMode { Task, FuncWithSemaphore, FuncWithoutSemaphore }
+public enum ExceptionScenario { NoException, TaskException, FuncException }
+public enum NullScenario { NotNull, ObjectNull, ResultNull, SemaphoreNull }
+public enum CollectionType { List, HashSet, ConcurrentBag }
+public enum DataSourceType { IEnumerable, ConcurrentBag, List, HashSet }
+public enum SemaphorePresence { WithSemaphore, WithoutSemaphore }
+
 public sealed class AsyncTests
 {
 	private readonly Fixture fixture;
@@ -36,27 +43,56 @@ public sealed class AsyncTests
 		await Should.NotThrowAsync(async () => await obj.ObjectFill(task));
 	}
 
-	[Fact]
-	public async Task ObjectFill_WithNullResult_ShouldNotThrowException()
+	[Theory]
+	[InlineData(NullScenario.NotNull, false)]
+	[InlineData(NullScenario.ResultNull, false)]
+	[InlineData(NullScenario.ObjectNull, false)]
+	public async Task ObjectFill_WithNullScenariosAndExceptions_ShouldHandleCorrectly(NullScenario nullScenario, bool throwException)
 	{
-		AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Original" };
-		AsyncIntString? taskResult = null;
-		Task<AsyncIntString?> task = Task.FromResult(taskResult);
+		AsyncIntString? obj = nullScenario == NullScenario.ObjectNull ? null : new() { AsyncInt = 0, AsyncString = "Original" };
+		Task<AsyncIntString?> task = nullScenario == NullScenario.ResultNull
+			? Task.FromResult<AsyncIntString?>(null)
+			: throwException
+				? Task.FromException<AsyncIntString?>(new InvalidOperationException())
+				: Task.FromResult<AsyncIntString?>(new AsyncIntString { AsyncInt = 42, AsyncString = "Updated" });
 
-		await obj.ObjectFill(task);
+		await Should.NotThrowAsync(async () => await obj.ObjectFill(task));
 
-		obj.AsyncInt.ShouldBe(0);
-		obj.AsyncString.ShouldBe("Original");
+		if (nullScenario != NullScenario.ObjectNull && obj != null)
+		{
+			if (nullScenario == NullScenario.NotNull && !throwException)
+			{
+				obj.AsyncInt.ShouldBe(42);
+				obj.AsyncString.ShouldBe("Updated");
+			}
+			else
+			{
+				obj.AsyncInt.ShouldBe(0);
+				obj.AsyncString.ShouldBe("Original");
+			}
+		}
 	}
 
-	[Fact]
-	public async Task ObjectFill_WhenTaskThrowsException_ShouldHandleException()
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task ObjectFill_WhenTaskThrowsException_ShouldHandleException(bool throwException)
 	{
 		AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Original" };
-		Task<AsyncIntString> task = Task.FromException<AsyncIntString>(new InvalidOperationException());
+		Task<AsyncIntString> task = throwException
+			? Task.FromException<AsyncIntString>(new InvalidOperationException())
+			: Task.FromResult(new AsyncIntString { AsyncInt = 42, AsyncString = "Updated" });
 		await Should.NotThrowAsync(async () => await obj.ObjectFill(task));
-		obj.AsyncInt.ShouldBe(0);
-		obj.AsyncString.ShouldBe("Original");
+		if (throwException)
+		{
+			obj.AsyncInt.ShouldBe(0);
+			obj.AsyncString.ShouldBe("Original");
+		}
+		else
+		{
+			obj.AsyncInt.ShouldBe(42);
+			obj.AsyncString.ShouldBe("Updated");
+		}
 	}
 
 	[Fact]
@@ -178,77 +214,55 @@ public sealed class AsyncTests
 		obj.AsyncString.ShouldBe("NoSemaphore");
 	}
 
-	[Fact]
-	public async Task ObjectFill_WithFuncAndSemaphore_WhenObjectIsNull_ShouldNotThrow()
+	[Theory]
+	[InlineData(NullScenario.ObjectNull, false)]
+	[InlineData(NullScenario.ResultNull, false)]
+	[InlineData(NullScenario.NotNull, true)]
+	public async Task ObjectFill_WithFuncAndSemaphore_NullAndExceptionScenarios(NullScenario nullScenario, bool throwException)
 	{
-		AsyncIntString obj = null!;
-		static Task<AsyncIntString> func()
+		AsyncIntString? obj = nullScenario == NullScenario.ObjectNull
+			? null
+			: new() { AsyncInt = nullScenario == NullScenario.NotNull ? 30 : 25, AsyncString = nullScenario == NullScenario.NotNull ? "BeforeError" : "Original" };
+
+		Task<AsyncIntString?> func()
 		{
-			return Task.FromResult(new AsyncIntString { AsyncInt = 100, AsyncString = "Test" });
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await Should.NotThrowAsync(async () => await obj.ObjectFill(func, semaphore));
-	}
-
-	[Fact]
-	public async Task ObjectFill_WithFuncAndSemaphore_WhenResultIsNull_ShouldNotModifyObject()
-	{
-		AsyncIntString obj = new() { AsyncInt = 25, AsyncString = "Original" };
-		static Task<AsyncIntString> func()
-		{
-			return Task.FromResult<AsyncIntString>(null!);
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await obj.ObjectFill(func, semaphore);
-
-		obj.AsyncInt.ShouldBe(25);
-		obj.AsyncString.ShouldBe("Original");
-	}
-
-	[Fact]
-	public async Task ObjectFill_WithFuncAndSemaphore_WhenTaskThrows_ShouldHandleException()
-	{
-		AsyncIntString obj = new() { AsyncInt = 30, AsyncString = "BeforeError" };
-		static Task<AsyncIntString> func()
-		{
-			return Task.FromException<AsyncIntString>(new InvalidOperationException("Task failed"));
+			if (throwException)
+				return Task.FromException<AsyncIntString?>(new InvalidOperationException("Task failed"));
+			if (nullScenario == NullScenario.ResultNull)
+				return Task.FromResult<AsyncIntString?>(null);
+			return Task.FromResult<AsyncIntString?>(new AsyncIntString { AsyncInt = 100, AsyncString = "Test" });
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
 
 		await Should.NotThrowAsync(async () => await obj.ObjectFill(func, semaphore));
 
-		obj.AsyncInt.ShouldBe(30);
-		obj.AsyncString.ShouldBe("BeforeError");
+		if (obj != null && nullScenario != NullScenario.ObjectNull)
+		{
+			if (nullScenario == NullScenario.NotNull && throwException)
+			{
+				obj.AsyncInt.ShouldBe(30);
+				obj.AsyncString.ShouldBe("BeforeError");
+			}
+			else if (nullScenario == NullScenario.ResultNull)
+			{
+				obj.AsyncInt.ShouldBe(25);
+				obj.AsyncString.ShouldBe("Original");
+			}
+		}
 	}
 
-	[Fact]
-	public async Task ObjectFill_WithFuncAndSemaphore_ShouldReleaseSemaphoreOnSuccess()
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task ObjectFill_WithFuncAndSemaphore_ShouldReleaseSemaphore(bool throwException)
 	{
 		AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Test" };
 		using SemaphoreSlim semaphore = new(1, 1);
-		static Task<AsyncIntString> func()
+		Task<AsyncIntString> func()
 		{
+			if (throwException) throw new InvalidOperationException("Fail");
 			return Task.FromResult(new AsyncIntString { AsyncInt = 1, AsyncString = "Success" });
-		}
-
-		await obj.ObjectFill(func, semaphore);
-
-		semaphore.CurrentCount.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_WithFuncAndSemaphore_ShouldReleaseSemaphoreOnException()
-	{
-		AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Test" };
-		using SemaphoreSlim semaphore = new(1, 1);
-		static Task<AsyncIntString> func()
-		{
-			throw new InvalidOperationException("Fail");
 		}
 
 		await obj.ObjectFill(func, semaphore);
@@ -376,179 +390,146 @@ public sealed class AsyncTests
 
 	#region ObjectFill ConcurrentBag/IList/HashSet with Func + Semaphore
 
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithFuncSemaphore_ShouldAddItem()
+	[Theory]
+	[InlineData(CollectionType.ConcurrentBag, false)]
+	[InlineData(CollectionType.ConcurrentBag, true)]
+	[InlineData(CollectionType.List, false)]
+	[InlineData(CollectionType.List, true)]
+	[InlineData(CollectionType.HashSet, false)]
+	[InlineData(CollectionType.HashSet, true)]
+	public async Task ObjectFill_CollectionsWithFuncSemaphore_ShouldHandleAdditions(CollectionType collectionType, bool throwException)
 	{
-		ConcurrentBag<int?> bag = [];
-		static Task<int?> func()
+		dynamic collection = collectionType switch
 		{
-			return Task.FromResult<int?>(42);
-		}
+			CollectionType.ConcurrentBag => new ConcurrentBag<int?>(),
+			CollectionType.List => new List<int?>(),
+			CollectionType.HashSet => new HashSet<int?>(),
+			_ => throw new ArgumentException("Invalid collection type")
+		};
 
-		using SemaphoreSlim semaphore = new(1, 1);
-		await bag.ObjectFill(func, semaphore, Current.CancellationToken);
-		bag.Count.ShouldBe(1);
-		bag.ShouldContain(42);
-	}
-
-	[Fact]
-	public async Task ObjectFill_IListWithFuncSemaphore_ShouldAddItem()
-	{
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
-		IList<string?> list = new List<string?>();
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
-		static Task<string?> func()
+		Task<int?> func()
 		{
-			return Task.FromResult<string?>("Test");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await list.ObjectFill(func, semaphore, Current.CancellationToken);
-		list.Count.ShouldBe(1);
-		list[0].ShouldBe("Test");
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetNullableWithFuncSemaphore_ShouldAddItem()
-	{
-		HashSet<int?> hashSet = [];
-		static Task<int?> func()
-		{
+			if (throwException) throw new InvalidOperationException("Test exception");
 			return Task.FromResult<int?>(99);
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-		hashSet.Count.ShouldBe(1);
-		hashSet.ShouldContain(99);
+		if (collectionType == CollectionType.List)
+		{
+			await ((IList<int?>)collection).ObjectFill(func, semaphore, Current.CancellationToken);
+		}
+		else if (collectionType == CollectionType.HashSet)
+		{
+			await ((HashSet<int?>)collection).ObjectFill(func, semaphore, Current.CancellationToken);
+		}
+		else
+		{
+			await ((ConcurrentBag<int?>)collection).ObjectFill(func, semaphore, Current.CancellationToken);
+		}
+
+		if (throwException)
+		{
+			((IEnumerable<int?>)collection).Count().ShouldBe(0);
+		}
+		else
+		{
+			((IEnumerable<int?>)collection).Count().ShouldBe(1);
+		}
 	}
 
 	#endregion
 
 	#region ObjectFill List/HashSet with Task<IEnumerable>
 
-	[Fact]
-	public async Task ObjectFill_ListWithTaskIEnumerable_ShouldAddRange()
+	[Theory]
+	[InlineData(CollectionType.List, ExecutionMode.Task)]
+	[InlineData(CollectionType.List, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(CollectionType.HashSet, ExecutionMode.Task)]
+	[InlineData(CollectionType.HashSet, ExecutionMode.FuncWithSemaphore)]
+	public async Task ObjectFill_WithTaskIEnumerable_ShouldAddRange(CollectionType collectionType, ExecutionMode executionMode)
 	{
-		List<int> list = [1, 2];
-		IEnumerable<int> items = new[] { 3, 4, 5 };
-		Task<IEnumerable<int>> task = Task.FromResult(items);
-		await list.ObjectFill(task);
-		list.Count.ShouldBe(5);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskIEnumerable_ShouldAddRange()
-	{
-		HashSet<string> hashSet = ["A", "B"];
-		IEnumerable<string> items = new[] { "C", "D" };
-		Task<IEnumerable<string>> task = Task.FromResult(items);
-		await hashSet.ObjectFill(task);
-		hashSet.Count.ShouldBe(4);
-	}
-
-	#endregion
-
-	#region ObjectFill List/HashSet with Func<Task<IEnumerable>> + Semaphore
-
-	[Fact]
-	public async Task ObjectFill_ListWithFuncIEnumerable_ShouldAddRange()
-	{
-		List<int> list = [1];
-		static Task<IEnumerable<int>> func()
+		dynamic collection = collectionType switch
 		{
-			return Task.FromResult<IEnumerable<int>>([2, 3]);
+			CollectionType.List => new List<int> { 1, 2 },
+			CollectionType.HashSet => new HashSet<int> { 1, 2 },
+			_ => throw new ArgumentException("Invalid collection type")
+		};
+
+		if (executionMode == ExecutionMode.Task)
+		{
+			IEnumerable<int> items = new[] { 3, 4, 5 };
+			Task<IEnumerable<int>> task = Task.FromResult(items);
+			await Async.ObjectFill(collection, task);
+		}
+		else
+		{
+			Task<IEnumerable<int>> func()
+			{
+				return Task.FromResult<IEnumerable<int>>([3, 4, 5]);
+			}
+			using SemaphoreSlim semaphore = new(1, 1);
+			if (collectionType == CollectionType.List)
+				await ((List<int>)collection).ObjectFill(func, semaphore, Current.CancellationToken);
+			else
+				await ((HashSet<int>)collection).ObjectFill(func, semaphore, Current.CancellationToken);
 		}
 
-		using SemaphoreSlim semaphore = new(1, 1);
-		await list.ObjectFill(func, semaphore, Current.CancellationToken);
-		list.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncIEnumerable_ShouldAddRange()
-	{
-		HashSet<int> hashSet = [1];
-		static Task<IEnumerable<int>> func()
-		{
-			return Task.FromResult<IEnumerable<int>>([2, 3]);
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-		hashSet.Count.ShouldBe(3);
+		((IEnumerable<int>)collection).Count().ShouldBe(5);
 	}
 
 	#endregion
 
 	#region ObjectFill ConcurrentBag Overloads
 
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithTaskIEnumerable_ShouldAddRange()
+	[Theory]
+	[InlineData(DataSourceType.IEnumerable, ExecutionMode.Task)]
+	[InlineData(DataSourceType.IEnumerable, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(DataSourceType.ConcurrentBag, ExecutionMode.Task)]
+	[InlineData(DataSourceType.ConcurrentBag, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(DataSourceType.List, ExecutionMode.Task)]
+	[InlineData(DataSourceType.List, ExecutionMode.FuncWithSemaphore)]
+	public async Task ObjectFill_ConcurrentBagOverloads_ShouldAddRange(DataSourceType dataSourceType, ExecutionMode executionMode)
 	{
 		ConcurrentBag<int> bag = [];
-		Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>([1, 2, 3]);
-		await bag.ObjectFill(task);
-		bag.Count.ShouldBe(3);
-	}
+		using SemaphoreSlim? semaphore = executionMode == ExecutionMode.FuncWithSemaphore ? new(1, 1) : null;
 
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithFuncIEnumerable_ShouldAddRange()
-	{
-		ConcurrentBag<int> bag = [];
-		static Task<IEnumerable<int>> func()
+		if (executionMode == ExecutionMode.Task)
 		{
-			return Task.FromResult<IEnumerable<int>>([1, 2, 3]);
+			switch (dataSourceType)
+			{
+				case DataSourceType.IEnumerable:
+					Task<IEnumerable<int>?> taskIEnumerable = Task.FromResult<IEnumerable<int>?>([1, 2, 3]);
+					await bag.ObjectFill(taskIEnumerable);
+					break;
+				case DataSourceType.ConcurrentBag:
+					Task<ConcurrentBag<int>?> taskConcurrentBag = Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int>([1, 2, 3]));
+					await bag.ObjectFill(taskConcurrentBag);
+					break;
+				case DataSourceType.List:
+					Task<List<int>?> taskList = Task.FromResult<List<int>?>(new List<int> { 1, 2, 3 });
+					await bag.ObjectFill(taskList);
+					break;
+			}
+		}
+		else
+		{
+			switch (dataSourceType)
+			{
+				case DataSourceType.IEnumerable:
+					Task<IEnumerable<int>> funcIEnumerable() => Task.FromResult<IEnumerable<int>>([1, 2, 3]);
+					await bag.ObjectFill(funcIEnumerable, semaphore!, Current.CancellationToken);
+					break;
+				case DataSourceType.ConcurrentBag:
+					Task<ConcurrentBag<int>> funcConcurrentBag() => Task.FromResult(new ConcurrentBag<int>([1, 2, 3]));
+					await bag.ObjectFill(funcConcurrentBag, semaphore!, Current.CancellationToken);
+					break;
+				case DataSourceType.List:
+					Task<List<int>> funcList() => Task.FromResult(new List<int> { 1, 2, 3 });
+					await bag.ObjectFill(funcList, semaphore!, Current.CancellationToken);
+					break;
+			}
 		}
 
-		using SemaphoreSlim semaphore = new(1, 1);
-		await bag.ObjectFill(func, semaphore, Current.CancellationToken);
-		bag.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithTaskConcurrentBag_ShouldAddRange()
-	{
-		ConcurrentBag<int> bag = [];
-		Task<ConcurrentBag<int>?> task = Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int>([1, 2, 3]));
-		await bag.ObjectFill(task);
-		bag.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithFuncConcurrentBag_ShouldAddRange()
-	{
-		ConcurrentBag<int> bag = [];
-		static Task<ConcurrentBag<int>> func()
-		{
-			return Task.FromResult(new ConcurrentBag<int>([1, 2, 3]));
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await bag.ObjectFill(func, semaphore, Current.CancellationToken);
-		bag.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithTaskList_ShouldAddRange()
-	{
-		ConcurrentBag<int> bag = [];
-		Task<List<int>?> task = Task.FromResult<List<int>?>(new List<int> { 1, 2, 3 });
-		await bag.ObjectFill(task);
-		bag.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithFuncList_ShouldAddRange()
-	{
-		ConcurrentBag<int> bag = [];
-		static Task<List<int>> func()
-		{
-			return Task.FromResult(new List<int> { 1, 2, 3 });
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await bag.ObjectFill(func, semaphore, Current.CancellationToken);
 		bag.Count.ShouldBe(3);
 	}
 
@@ -561,63 +542,60 @@ public sealed class AsyncTests
 		hashSet.Count.ShouldBe(3);
 	}
 
-	[Fact]
-	public async Task ObjectFill_NullConcurrentBagWithTaskIEnumerable_ShouldNotThrow()
+	[Theory]
+	[InlineData(DataSourceType.IEnumerable, ExecutionMode.Task)]
+	[InlineData(DataSourceType.IEnumerable, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(DataSourceType.ConcurrentBag, ExecutionMode.Task)]
+	[InlineData(DataSourceType.ConcurrentBag, ExecutionMode.FuncWithSemaphore)]
+	public async Task ObjectFill_ConcurrentBagNull_ShouldNotThrow(DataSourceType dataSourceType, ExecutionMode executionMode)
 	{
 		ConcurrentBag<int>? bag = null;
-		Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>([1, 2, 3]);
-		await Should.NotThrowAsync(async () => await bag.ObjectFill(task));
-	}
+		using SemaphoreSlim? semaphore = executionMode == ExecutionMode.FuncWithSemaphore ? new(1, 1) : null;
 
-	[Fact]
-	public async Task ObjectFill_NullConcurrentBagWithFuncIEnumerable_ShouldNotThrow()
-	{
-		ConcurrentBag<int>? bag = null;
-		static Task<IEnumerable<int>> func()
+		if (executionMode == ExecutionMode.Task)
 		{
-			return Task.FromResult<IEnumerable<int>>([1, 2, 3]);
+			if (dataSourceType == DataSourceType.IEnumerable)
+			{
+				Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>([1, 2, 3]);
+				await Should.NotThrowAsync(async () => await bag.ObjectFill(task));
+			}
+			else
+			{
+				Task<ConcurrentBag<int>?> task = Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int>([1, 2, 3]));
+				await Should.NotThrowAsync(async () => await bag.ObjectFill(task));
+			}
 		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await Should.NotThrowAsync(async () => await bag.ObjectFill(func, semaphore, Current.CancellationToken));
-	}
-
-	[Fact]
-	public async Task ObjectFill_NullConcurrentBagWithTaskConcurrentBag_ShouldNotThrow()
-	{
-		ConcurrentBag<int>? bag = null;
-		Task<ConcurrentBag<int>?> task = Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int>([1, 2, 3]));
-		await Should.NotThrowAsync(async () => await bag.ObjectFill(task));
-	}
-
-	[Fact]
-	public async Task ObjectFill_NullConcurrentBagWithFuncConcurrentBag_ShouldNotThrow()
-	{
-		ConcurrentBag<int>? bag = null;
-		static Task<ConcurrentBag<int>> func()
+		else
 		{
-			return Task.FromResult(new ConcurrentBag<int>([1, 2, 3]));
+			if (dataSourceType == DataSourceType.IEnumerable)
+			{
+				Task<IEnumerable<int>> func() => Task.FromResult<IEnumerable<int>>([1, 2, 3]);
+				await Should.NotThrowAsync(async () => await bag.ObjectFill(func, semaphore!, Current.CancellationToken));
+			}
+			else
+			{
+				Task<ConcurrentBag<int>> func() => Task.FromResult(new ConcurrentBag<int>([1, 2, 3]));
+				await Should.NotThrowAsync(async () => await bag.ObjectFill(func, semaphore!, Current.CancellationToken));
+			}
 		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await Should.NotThrowAsync(async () => await bag.ObjectFill(func, semaphore, Current.CancellationToken));
 	}
 
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithNullTaskIEnumerable_ShouldNotAdd()
+	[Theory]
+	[InlineData(DataSourceType.IEnumerable)]
+	[InlineData(DataSourceType.ConcurrentBag)]
+	public async Task ObjectFill_ConcurrentBagWithNullTaskResult_ShouldNotAdd(DataSourceType dataSourceType)
 	{
 		ConcurrentBag<int> bag = [];
-		Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>(null);
-		await bag.ObjectFill(task);
-		bag.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithNullTaskConcurrentBag_ShouldNotAdd()
-	{
-		ConcurrentBag<int> bag = [];
-		Task<ConcurrentBag<int>?> task = Task.FromResult<ConcurrentBag<int>?>(null);
-		await bag.ObjectFill(task);
+		if (dataSourceType == DataSourceType.IEnumerable)
+		{
+			Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>(null);
+			await bag.ObjectFill(task);
+		}
+		else
+		{
+			Task<ConcurrentBag<int>?> task = Task.FromResult<ConcurrentBag<int>?>(null);
+			await bag.ObjectFill(task);
+		}
 		bag.Count.ShouldBe(0);
 	}
 
@@ -625,441 +603,193 @@ public sealed class AsyncTests
 
 	#region ObjectFill Exception Handling
 
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithFuncThrowing_ShouldHandleException()
+	[Theory]
+	[InlineData(CollectionType.List, DataSourceType.List, ExecutionMode.Task)]
+	[InlineData(CollectionType.List, DataSourceType.IEnumerable, ExecutionMode.Task)]
+	[InlineData(CollectionType.List, DataSourceType.List, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(CollectionType.List, DataSourceType.IEnumerable, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(CollectionType.HashSet, DataSourceType.List, ExecutionMode.Task)]
+	[InlineData(CollectionType.HashSet, DataSourceType.HashSet, ExecutionMode.Task)]
+	[InlineData(CollectionType.HashSet, DataSourceType.IEnumerable, ExecutionMode.Task)]
+	[InlineData(CollectionType.HashSet, DataSourceType.List, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(CollectionType.HashSet, DataSourceType.HashSet, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(CollectionType.HashSet, DataSourceType.IEnumerable, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(CollectionType.ConcurrentBag, DataSourceType.IEnumerable, ExecutionMode.Task)]
+	[InlineData(CollectionType.ConcurrentBag, DataSourceType.IEnumerable, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(CollectionType.ConcurrentBag, DataSourceType.ConcurrentBag, ExecutionMode.Task)]
+	[InlineData(CollectionType.ConcurrentBag, DataSourceType.ConcurrentBag, ExecutionMode.FuncWithSemaphore)]
+	[InlineData(CollectionType.ConcurrentBag, DataSourceType.List, ExecutionMode.Task)]
+	[InlineData(CollectionType.ConcurrentBag, DataSourceType.List, ExecutionMode.FuncWithSemaphore)]
+	public async Task ObjectFill_WithTaskOrFuncThrowing_ShouldHandleException(CollectionType collectionType, DataSourceType dataSourceType, ExecutionMode executionMode)
 	{
-		ConcurrentBag<int?> bag = [];
-		static Task<int?> func()
+		dynamic collection = collectionType switch
 		{
-			throw new InvalidOperationException("Test exception");
+			CollectionType.List => new List<int> { 1 },
+			CollectionType.HashSet => dataSourceType == DataSourceType.ConcurrentBag ? new HashSet<int>() : new HashSet<int> { 1 },
+			CollectionType.ConcurrentBag => new ConcurrentBag<int>(),
+			_ => throw new ArgumentException("Invalid collection type")
+		};
+
+		int expectedCount = collectionType == CollectionType.ConcurrentBag ? 0 : (dataSourceType == DataSourceType.ConcurrentBag && collectionType == CollectionType.HashSet) ? 0 : 1;
+
+		using SemaphoreSlim? semaphore = executionMode == ExecutionMode.FuncWithSemaphore ? new(1, 1) : null;
+
+		if (executionMode == ExecutionMode.Task)
+		{
+			switch (dataSourceType)
+			{
+				case DataSourceType.List:
+					Task<List<int>?> taskList = Task.FromException<List<int>?>(new InvalidOperationException("Test exception"));
+					await Async.ObjectFill(collection, taskList);
+					break;
+				case DataSourceType.HashSet:
+					Task<HashSet<int>?> taskHashSet = Task.FromException<HashSet<int>?>(new InvalidOperationException("Test exception"));
+					await Async.ObjectFill(collection, taskHashSet);
+					break;
+				case DataSourceType.IEnumerable:
+					Task<IEnumerable<int>?> taskIEnumerable = Task.FromException<IEnumerable<int>?>(new InvalidOperationException("Test exception"));
+					await Async.ObjectFill(collection, taskIEnumerable);
+					break;
+				case DataSourceType.ConcurrentBag:
+					Task<ConcurrentBag<int>?> taskConcurrentBag = Task.FromException<ConcurrentBag<int>?>(new InvalidOperationException("Test exception"));
+					await Async.ObjectFill(collection, taskConcurrentBag);
+					break;
+			}
+		}
+		else
+		{
+			switch (dataSourceType)
+			{
+				case DataSourceType.List:
+					Task<List<int>> funcList() => throw new InvalidOperationException("Test exception");
+					if (collectionType == CollectionType.List)
+						await ((List<int>)collection).ObjectFill(funcList, semaphore!, Current.CancellationToken);
+					else if (collectionType == CollectionType.HashSet)
+						await ((HashSet<int>)collection).ObjectFill(funcList, semaphore!, Current.CancellationToken);
+					else
+						await ((ConcurrentBag<int>)collection).ObjectFill(funcList, semaphore!, Current.CancellationToken);
+					break;
+				case DataSourceType.HashSet:
+					Task<HashSet<int>> funcHashSet() => throw new InvalidOperationException("Test exception");
+					await ((HashSet<int>)collection).ObjectFill(funcHashSet, semaphore!, Current.CancellationToken);
+					break;
+				case DataSourceType.IEnumerable:
+					Task<IEnumerable<int>> funcIEnumerable() => throw new InvalidOperationException("Test exception");
+					if (collectionType == CollectionType.List)
+						await ((List<int>)collection).ObjectFill(funcIEnumerable, semaphore!, Current.CancellationToken);
+					else if (collectionType == CollectionType.HashSet)
+						await ((HashSet<int>)collection).ObjectFill(funcIEnumerable, semaphore!, Current.CancellationToken);
+					else
+						await ((ConcurrentBag<int>)collection).ObjectFill(funcIEnumerable, semaphore!, Current.CancellationToken);
+					break;
+				case DataSourceType.ConcurrentBag:
+					Task<ConcurrentBag<int>> funcConcurrentBag() => throw new InvalidOperationException("Test exception");
+					await ((ConcurrentBag<int>)collection).ObjectFill(funcConcurrentBag, semaphore!, Current.CancellationToken);
+					break;
+			}
 		}
 
-		using SemaphoreSlim semaphore = new(1, 1);
-		await bag.ObjectFill(func, semaphore, Current.CancellationToken);
-		bag.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_IListWithFuncThrowing_ShouldHandleException()
-	{
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
-		IList<string?> list = new List<string?>();
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
-		static Task<string?> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await list.ObjectFill(func, semaphore, Current.CancellationToken);
-		list.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncThrowing_ShouldHandleException()
-	{
-		HashSet<int?> hashSet = [];
-		static Task<int?> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-		hashSet.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithTaskThrowing_ShouldHandleException()
-	{
-		List<int> list = [1];
-		Task<List<int>?> task = Task.FromException<List<int>?>(new InvalidOperationException("Test exception"));
-		await list.ObjectFill(task);
-		list.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskListThrowing_ShouldHandleException()
-	{
-		HashSet<int> hashSet = [1];
-		Task<List<int>?> task = Task.FromException<List<int>?>(new InvalidOperationException("Test exception"));
-		await hashSet.ObjectFill(task);
-		hashSet.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskHashSetThrowing_ShouldHandleException()
-	{
-		HashSet<int> hashSet = [1];
-		Task<HashSet<int>?> task = Task.FromException<HashSet<int>?>(new InvalidOperationException("Test exception"));
-		await hashSet.ObjectFill(task);
-		hashSet.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithFuncListThrowing_ShouldHandleException()
-	{
-		List<int> list = [1];
-		static Task<List<int>> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await list.ObjectFill(func, semaphore, Current.CancellationToken);
-		list.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncListThrowing_ShouldHandleException()
-	{
-		HashSet<int> hashSet = [1];
-		static Task<List<int>> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-		hashSet.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncHashSetThrowing_ShouldHandleException()
-	{
-		HashSet<int> hashSet = [1];
-		static Task<HashSet<int>> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-		hashSet.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithTaskIEnumerableThrowing_ShouldHandleException()
-	{
-		List<int> list = [1];
-		Task<IEnumerable<int>> task = Task.FromException<IEnumerable<int>>(new InvalidOperationException("Test exception"));
-		await list.ObjectFill(task);
-		list.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskIEnumerableThrowing_ShouldHandleException()
-	{
-		HashSet<int> hashSet = [1];
-		Task<IEnumerable<int>> task = Task.FromException<IEnumerable<int>>(new InvalidOperationException("Test exception"));
-		await hashSet.ObjectFill(task);
-		hashSet.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithFuncIEnumerableThrowing_ShouldHandleException()
-	{
-		List<int> list = [1];
-		static Task<IEnumerable<int>> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await list.ObjectFill(func, semaphore, Current.CancellationToken);
-		list.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncIEnumerableThrowing_ShouldHandleException()
-	{
-		HashSet<int> hashSet = [1];
-		static Task<IEnumerable<int>> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-		hashSet.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithTaskIEnumerableThrowing_ShouldHandleException()
-	{
-		ConcurrentBag<int> bag = [];
-		Task<IEnumerable<int>?> task = Task.FromException<IEnumerable<int>?>(new InvalidOperationException("Test exception"));
-		await bag.ObjectFill(task);
-		bag.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithFuncIEnumerableThrowing_ShouldHandleException()
-	{
-		ConcurrentBag<int> bag = [];
-		static Task<IEnumerable<int>> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await bag.ObjectFill(func, semaphore, Current.CancellationToken);
-		bag.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithTaskConcurrentBagThrowing_ShouldHandleException()
-	{
-		ConcurrentBag<int> bag = [];
-		Task<ConcurrentBag<int>?> task = Task.FromException<ConcurrentBag<int>?>(new InvalidOperationException("Test exception"));
-		await bag.ObjectFill(task);
-		bag.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithFuncConcurrentBagThrowing_ShouldHandleException()
-	{
-		ConcurrentBag<int> bag = [];
-		static Task<ConcurrentBag<int>> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await bag.ObjectFill(func, semaphore, Current.CancellationToken);
-		bag.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithTaskListThrowing_ShouldHandleException()
-	{
-		ConcurrentBag<int> bag = [];
-		Task<List<int>?> task = Task.FromException<List<int>?>(new InvalidOperationException("Test exception"));
-		await bag.ObjectFill(task);
-		bag.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithFuncListThrowing_ShouldHandleException()
-	{
-		ConcurrentBag<int> bag = [];
-		static Task<List<int>> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await bag.ObjectFill(func, semaphore, Current.CancellationToken);
-		bag.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskConcurrentBagThrowing_ShouldHandleException()
-	{
-		HashSet<int> hashSet = [];
-		Task<ConcurrentBag<int>?> task = Task.FromException<ConcurrentBag<int>?>(new InvalidOperationException("Test exception"));
-		await hashSet.ObjectFill(task);
-		hashSet.Count.ShouldBe(0);
+		((IEnumerable<int>)collection).Count().ShouldBe(expectedCount);
 	}
 
 	#endregion
 
 	#region ObjectFill Null Semaphore Tests
 
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithNullSemaphore_ShouldAddItem()
+	[Theory]
+	[InlineData(CollectionType.ConcurrentBag)]
+	[InlineData(CollectionType.List)]
+	[InlineData(CollectionType.HashSet)]
+	public async Task ObjectFill_CollectionsWithNullSemaphore_ShouldAddItem(CollectionType collectionType)
 	{
-		ConcurrentBag<int?> bag = [];
-		static Task<int?> func()
+		dynamic collection = collectionType switch
 		{
-			return Task.FromResult<int?>(42);
+			CollectionType.ConcurrentBag => new ConcurrentBag<int?>(),
+			CollectionType.List => (IList<int?>)new List<int?>(),
+			CollectionType.HashSet => new HashSet<int?>(),
+			_ => throw new ArgumentException("Invalid collection type")
+		};
+
+		Task<int?> func() => Task.FromResult<int?>(collectionType == CollectionType.ConcurrentBag ? 42 : 99);
+
+		if (collectionType == CollectionType.List)
+			await ((IList<int?>)collection).ObjectFill(func, null!, Current.CancellationToken);
+		else if (collectionType == CollectionType.HashSet)
+			await ((HashSet<int?>)collection).ObjectFill(func, null!, Current.CancellationToken);
+		else
+			await ((ConcurrentBag<int?>)collection).ObjectFill(func, null!, Current.CancellationToken);
+
+		((IEnumerable<int?>)collection).Count().ShouldBe(1);
+	}
+
+	[Theory]
+	[InlineData(CollectionType.List, DataSourceType.List)]
+	[InlineData(CollectionType.List, DataSourceType.IEnumerable)]
+	[InlineData(CollectionType.ConcurrentBag, DataSourceType.IEnumerable)]
+	[InlineData(CollectionType.ConcurrentBag, DataSourceType.ConcurrentBag)]
+	[InlineData(CollectionType.ConcurrentBag, DataSourceType.List)]
+	public async Task ObjectFill_WithNullSemaphore_ShouldAddRange(CollectionType collectionType, DataSourceType dataSourceType)
+	{
+		dynamic collection = collectionType switch
+		{
+			CollectionType.List => new List<int> { 1 },
+			CollectionType.HashSet => new HashSet<int> { 1 },
+			CollectionType.ConcurrentBag => new ConcurrentBag<int>(),
+			_ => throw new ArgumentException("Invalid collection type")
+		};
+
+		int expectedCount = collectionType == CollectionType.ConcurrentBag ? 2 : 3;  // ConcurrentBag starts empty
+
+		switch (dataSourceType)
+		{
+			case DataSourceType.List:
+				Task<List<int>> funcList() => Task.FromResult(new List<int> { 2, 3 });
+				if (collectionType == CollectionType.List)
+					await ((List<int>)collection).ObjectFill(funcList, null!, Current.CancellationToken);
+				else if (collectionType == CollectionType.HashSet)
+					await ((HashSet<int>)collection).ObjectFill(funcList, null!, Current.CancellationToken);
+				else
+					await ((ConcurrentBag<int>)collection).ObjectFill(funcList, null!, Current.CancellationToken);
+				break;
+			case DataSourceType.IEnumerable:
+				Task<IEnumerable<int>> funcIEnumerable() => Task.FromResult<IEnumerable<int>>([2, 3]);
+				if (collectionType == CollectionType.List)
+					await ((List<int>)collection).ObjectFill(funcIEnumerable, null!, Current.CancellationToken);
+				else if (collectionType == CollectionType.HashSet)
+					await ((HashSet<int>)collection).ObjectFill(funcIEnumerable, null!, Current.CancellationToken);
+				else
+					await ((ConcurrentBag<int>)collection).ObjectFill(funcIEnumerable, null!, Current.CancellationToken);
+				break;
+			case DataSourceType.ConcurrentBag:
+				Task<ConcurrentBag<int>> funcConcurrentBag() => Task.FromResult(new ConcurrentBag<int>([1, 2, 3]));
+				await ((ConcurrentBag<int>)collection).ObjectFill(funcConcurrentBag, null!, Current.CancellationToken);
+				expectedCount = 3;
+				break;
 		}
 
-		await bag.ObjectFill(func, null, Current.CancellationToken);
-		bag.Count.ShouldBe(1);
-		bag.ShouldContain(42);
+		((IEnumerable<int>)collection).Count().ShouldBe(expectedCount);
 	}
 
 	[Fact]
-	public async Task ObjectFill_IListWithNullSemaphore_ShouldAddItem()
+	public async Task ObjectFill_HashSet_WithTaskListSemaphoreNull_ShouldReplaceWithListContent()
 	{
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
-		IList<string?> list = new List<string?>();
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
-		static Task<string?> func()
-		{
-			return Task.FromResult<string?>("Test");
-		}
+		HashSet<int> collection = new HashSet<int> { 1 };
+		Task<List<int>> func() => Task.FromResult(new List<int> { 2, 3 });
 
-		await list.ObjectFill(func, null, Current.CancellationToken);
-		list.Count.ShouldBe(1);
-		list[0].ShouldBe("Test");
+		await collection.ObjectFill(func, null!, Current.CancellationToken);
+
+		collection.Count.ShouldBe(3); // HashSet adds items from List: {1, 2, 3}
 	}
 
 	[Fact]
-	public async Task ObjectFill_HashSetNullableWithNullSemaphore_ShouldAddItem()
+	public async Task ObjectFill_HashSet_WithTaskIEnumerableSemaphoreNull_ShouldReplaceWithIEnumerableContent()
 	{
-		HashSet<int?> hashSet = [];
-		static Task<int?> func()
-		{
-			return Task.FromResult<int?>(99);
-		}
+		HashSet<int> collection = new HashSet<int> { 1 };
+		Task<IEnumerable<int>> func() => Task.FromResult<IEnumerable<int>>([2, 3]);
 
-		await hashSet.ObjectFill(func, null, Current.CancellationToken);
-		hashSet.Count.ShouldBe(1);
-		hashSet.ShouldContain(99);
-	}
+		await collection.ObjectFill(func, null!, Current.CancellationToken);
 
-	[Fact]
-	public async Task ObjectFill_ListWithNullSemaphore_ShouldAddRange()
-	{
-		List<int> list = [1];
-		static Task<List<int>> func()
-		{
-			return Task.FromResult(new List<int> { 2, 3 });
-		}
-
-		await list.ObjectFill(func, null, Current.CancellationToken);
-		list.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_DataTableWithNullSemaphore_ShouldLoadData()
-	{
-		using DataTable dt = new();
-		dt.Columns.Add("Id", typeof(int));
-		static Task<DataTable> func()
-		{
-			DataTable resultDt = new();
-			resultDt.Columns.Add("Id", typeof(int));
-			resultDt.Rows.Add(1);
-			return Task.FromResult(resultDt);
-		}
-		await dt.ObjectFill(func, null!, Current.CancellationToken);
-		dt.Rows.Count.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_MemoryStreamWithNullSemaphore_ShouldWriteData()
-	{
-		byte[] testData = [1, 2, 3];
-		await using MemoryStream ms = new();
-		async Task<MemoryStream> func()
-		{
-			MemoryStream resultMs = new();
-			await resultMs.WriteAsync(testData, Current.CancellationToken);
-			resultMs.Position = 0;
-			return resultMs;
-		}
-		await ms.ObjectFill(func, null!, Current.CancellationToken);
-		ms.Position = 0;
-		byte[] buffer = new byte[testData.Length];
-		await ms.ReadAsync(buffer.AsMemory(0, testData.Length), Current.CancellationToken);
-		buffer.ShouldBe(testData);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithNullSemaphoreList_ShouldAddRange()
-	{
-		HashSet<int> hashSet = [1];
-		static Task<List<int>> func()
-		{
-			return Task.FromResult(new List<int> { 2, 3 });
-		}
-
-		await hashSet.ObjectFill(func, null!, Current.CancellationToken);
-		hashSet.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithNullSemaphoreHashSet_ShouldAddRange()
-	{
-		HashSet<int> hashSet = [1];
-		static Task<HashSet<int>> func()
-		{
-			return Task.FromResult(new HashSet<int> { 2, 3 });
-		}
-
-		await hashSet.ObjectFill(func, null!, Current.CancellationToken);
-		hashSet.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithNullSemaphoreIEnumerable_ShouldAddRange()
-	{
-		HashSet<int> hashSet = [1];
-		static Task<IEnumerable<int>> func()
-		{
-			return Task.FromResult<IEnumerable<int>>([2, 3]);
-		}
-
-		await hashSet.ObjectFill(func, null!, Current.CancellationToken);
-		hashSet.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithNullSemaphoreIEnumerable_ShouldAddRange()
-	{
-		List<int> list = [1];
-		static Task<IEnumerable<int>> func()
-		{
-			return Task.FromResult<IEnumerable<int>>([2, 3]);
-		}
-
-		await list.ObjectFill(func, null!, Current.CancellationToken);
-		list.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithNullSemaphoreIEnumerable_ShouldAddRange()
-	{
-		ConcurrentBag<int> bag = [];
-		static Task<IEnumerable<int>> func()
-		{
-			return Task.FromResult<IEnumerable<int>>([1, 2, 3]);
-		}
-
-		await bag.ObjectFill(func, null!, Current.CancellationToken);
-		bag.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithNullSemaphoreConcurrentBag_ShouldAddRange()
-	{
-		ConcurrentBag<int> bag = [];
-		static Task<ConcurrentBag<int>> func()
-		{
-			return Task.FromResult(new ConcurrentBag<int>([1, 2, 3]));
-		}
-
-		await bag.ObjectFill(func, null!, Current.CancellationToken);
-		bag.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ConcurrentBagWithNullSemaphoreList_ShouldAddRange()
-	{
-		ConcurrentBag<int> bag = [];
-		static Task<List<int>> func()
-		{
-			return Task.FromResult(new List<int> { 1, 2, 3 });
-		}
-
-		await bag.ObjectFill(func, null!, Current.CancellationToken);
-		bag.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectUpdate_WithNullSemaphore_ShouldUpdateProperty()
-	{
-		AsyncIntString obj = new();
-		static Task<int> func()
-		{
-			return Task.FromResult(42);
-		}
-
-		await obj.ObjectUpdate("AsyncInt", func, null!, Current.CancellationToken);
-		obj.AsyncInt.ShouldBe(42);
+		collection.Count.ShouldBe(3); // HashSet adds items from IEnumerable: {1, 2, 3}
 	}
 
 	#endregion
@@ -1067,295 +797,202 @@ public sealed class AsyncTests
 	#region ObjectFill<T> MemoryStream
 
 	[Theory]
-	[InlineData(5)]
-	[InlineData(0)]
-	public async Task ObjectFill_WithMemoryStream_ShouldWriteDataFromTaskResult(int length)
-	{
-		byte[] testData = Enumerable.Range(1, length).Select(x => (byte)x).ToArray();
-		await using MemoryStream ms = new();
-		await using MemoryStream resultMs = new();
-		await resultMs.WriteAsync(testData, Current.CancellationToken);
-		resultMs.Position = 0;
-		Task<MemoryStream> task = Task.FromResult(resultMs);
-
-		await ms.ObjectFill(task);
-
-		ms.Position = 0;
-		byte[] buffer = new byte[testData.Length];
-		await ms.ReadAsync(buffer.AsMemory(0, testData.Length), Current.CancellationToken);
-		buffer.ShouldBe(testData);
-	}
-
-	[Fact]
-	public async Task ObjectFill_MemoryStreamWithFuncSemaphore_ShouldWriteData()
+	[InlineData(ExecutionMode.Task, false)]
+	[InlineData(ExecutionMode.FuncWithSemaphore, false)]
+	[InlineData(ExecutionMode.FuncWithoutSemaphore, false)]
+	[InlineData(ExecutionMode.Task, true)]
+	[InlineData(ExecutionMode.FuncWithSemaphore, true)]
+	public async Task ObjectFill_MemoryStream_ShouldWriteDataOrHandleException(ExecutionMode executionMode, bool throwException)
 	{
 		byte[] testData = [1, 2, 3, 4, 5];
 		await using MemoryStream ms = new();
-		async Task<MemoryStream> func()
+		using SemaphoreSlim? semaphore = executionMode == ExecutionMode.FuncWithSemaphore ? new(1, 1) : null;
+
+		if (executionMode == ExecutionMode.Task)
 		{
-			MemoryStream resultMs = new();
-			await resultMs.WriteAsync(testData, Current.CancellationToken);
-			resultMs.Position = 0;
-			return resultMs;
+			if (throwException)
+			{
+				Task<MemoryStream> task = Task.FromException<MemoryStream>(new InvalidOperationException("Test exception"));
+				await ms.ObjectFill(task);
+			}
+			else
+			{
+				await using MemoryStream resultMs = new();
+				await resultMs.WriteAsync(testData, Current.CancellationToken);
+				resultMs.Position = 0;
+				Task<MemoryStream> task = Task.FromResult(resultMs);
+				await ms.ObjectFill(task);
+			}
 		}
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await ms.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		ms.Position = 0;
-		byte[] buffer = new byte[testData.Length];
-		await ms.ReadAsync(buffer.AsMemory(0, testData.Length), Current.CancellationToken);
-		buffer.ShouldBe(testData);
-	}
-
-	[Fact]
-	public async Task ObjectFill_MemoryStreamWithTaskThrowing_ShouldHandleException()
-	{
-		await using MemoryStream ms = new();
-		Task<MemoryStream> task = Task.FromException<MemoryStream>(new InvalidOperationException("Test exception"));
-
-		await ms.ObjectFill(task);
-
-		ms.Length.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_MemoryStreamWithFuncThrowing_ShouldHandleException()
-	{
-		await using MemoryStream ms = new();
-		static Task<MemoryStream> func()
+		else
 		{
-			throw new InvalidOperationException("Test exception");
+			async Task<MemoryStream> func()
+			{
+				if (throwException) throw new InvalidOperationException("Test exception");
+				MemoryStream resultMs = new();
+				await resultMs.WriteAsync(testData, Current.CancellationToken);
+				resultMs.Position = 0;
+				return resultMs;
+			}
+
+			if (executionMode == ExecutionMode.FuncWithSemaphore)
+				await ms.ObjectFill(func, semaphore!, Current.CancellationToken);
+			else
+				await ms.ObjectFill(func, null!, Current.CancellationToken);
 		}
 
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await ms.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		ms.Length.ShouldBe(0);
+		if (throwException)
+		{
+			ms.Length.ShouldBe(0);
+		}
+		else
+		{
+			ms.Position = 0;
+			byte[] buffer = new byte[testData.Length];
+			await ms.ReadAsync(buffer.AsMemory(0, testData.Length), Current.CancellationToken);
+			buffer.ShouldBe(testData);
+		}
 	}
 
 	#endregion
 
 	#region ObjectFill<T> DataTable
 
-	[Fact]
-	public async Task ObjectFill_WithDataTable_ShouldLoadDataFromTaskResult()
+	[Theory]
+	[InlineData(ExecutionMode.Task, false)]
+	[InlineData(ExecutionMode.FuncWithSemaphore, false)]
+	[InlineData(ExecutionMode.FuncWithoutSemaphore, false)]
+	[InlineData(ExecutionMode.Task, true)]
+	[InlineData(ExecutionMode.FuncWithSemaphore, true)]
+	public async Task ObjectFill_DataTable_ShouldLoadDataOrHandleException(ExecutionMode executionMode, bool throwException)
 	{
 		using DataTable dt = new();
 		dt.Columns.Add("Id", typeof(int));
 		dt.Columns.Add("Name", typeof(string));
-		using DataTable resultDt = new();
-		resultDt.Columns.Add("Id", typeof(int));
-		resultDt.Columns.Add("Name", typeof(string));
-		resultDt.Rows.Add(1, "Item1");
-		resultDt.Rows.Add(2, "Item2");
-		Task<DataTable> task = Task.FromResult(resultDt);
+		using SemaphoreSlim? semaphore = executionMode == ExecutionMode.FuncWithSemaphore ? new(1, 1) : null;
 
-		await dt.ObjectFill(task);
-
-		dt.Rows.Count.ShouldBe(2);
-		dt.Rows[0]["Id"].ShouldBe(1);
-		dt.Rows[0]["Name"].ShouldBe("Item1");
-		dt.Rows[1]["Id"].ShouldBe(2);
-		dt.Rows[1]["Name"].ShouldBe("Item2");
-	}
-
-	[Fact]
-	public async Task ObjectFill_DataTableWithFuncSemaphore_ShouldLoadData()
-	{
-		using DataTable dt = new();
-		dt.Columns.Add("Id", typeof(int));
-		dt.Columns.Add("Name", typeof(string));
-		static Task<DataTable> func()
+		if (executionMode == ExecutionMode.Task)
 		{
-			DataTable resultDt = new();
-			resultDt.Columns.Add("Id", typeof(int));
-			resultDt.Columns.Add("Name", typeof(string));
-			resultDt.Rows.Add(1, "Item1");
-			resultDt.Rows.Add(2, "Item2");
-			return Task.FromResult(resultDt);
+			if (throwException)
+			{
+				Task<DataTable> task = Task.FromException<DataTable>(new InvalidOperationException("Test exception"));
+				await dt.ObjectFill(task);
+			}
+			else
+			{
+				using DataTable resultDt = new();
+				resultDt.Columns.Add("Id", typeof(int));
+				resultDt.Columns.Add("Name", typeof(string));
+				resultDt.Rows.Add(1, "Item1");
+				resultDt.Rows.Add(2, "Item2");
+				Task<DataTable> task = Task.FromResult(resultDt);
+				await dt.ObjectFill(task);
+			}
 		}
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await dt.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		dt.Rows.Count.ShouldBe(2);
-		dt.Rows[0]["Id"].ShouldBe(1);
-		dt.Rows[0]["Name"].ShouldBe("Item1");
-	}
-
-	[Fact]
-	public async Task ObjectFill_DataTableWithTaskThrowing_ShouldHandleException()
-	{
-		using DataTable dt = new();
-		dt.Columns.Add("Id", typeof(int));
-		Task<DataTable> task = Task.FromException<DataTable>(new InvalidOperationException("Test exception"));
-
-		await dt.ObjectFill(task);
-
-		dt.Rows.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task ObjectFill_DataTableWithFuncThrowing_ShouldHandleException()
-	{
-		using DataTable dt = new();
-		dt.Columns.Add("Id", typeof(int));
-		static Task<DataTable> func()
+		else
 		{
-			throw new InvalidOperationException("Test exception");
+			Task<DataTable> func()
+			{
+				if (throwException) throw new InvalidOperationException("Test exception");
+				DataTable resultDt = new();
+				resultDt.Columns.Add("Id", typeof(int));
+				resultDt.Columns.Add("Name", typeof(string));
+				resultDt.Rows.Add(1, "Item1");
+				return Task.FromResult(resultDt);
+			}
+
+			if (executionMode == ExecutionMode.FuncWithSemaphore)
+				await dt.ObjectFill(func, semaphore!, Current.CancellationToken);
+			else
+				await dt.ObjectFill(func, null!, Current.CancellationToken);
 		}
 
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await dt.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		dt.Rows.Count.ShouldBe(0);
+		if (throwException)
+		{
+			dt.Rows.Count.ShouldBe(0);
+		}
+		else
+		{
+			dt.Rows.Count.ShouldBe(executionMode == ExecutionMode.Task ? 2 : 1);
+			dt.Rows[0]["Id"].ShouldBe(1);
+			dt.Rows[0]["Name"].ShouldBe("Item1");
+		}
 	}
 
 	#endregion
 
 	#region ObjectFill<T> List<T> with Task<List<T>?>
 
-	[Fact]
-	public async Task ObjectFill_ListWithTaskList_ShouldAddRangeToList()
+	[Theory]
+	[InlineData(CollectionType.List, NullScenario.NotNull)]
+	[InlineData(CollectionType.List, NullScenario.ResultNull)]
+	[InlineData(CollectionType.HashSet, NullScenario.NotNull)]
+	[InlineData(CollectionType.HashSet, NullScenario.ResultNull)]
+	public async Task ObjectFill_ListWithTaskList_ShouldAddOrHandleNull(CollectionType collectionType, NullScenario nullScenario)
 	{
-		List<int> list = [1, 2, 3];
-		Task<List<int>?> task = Task.FromResult<List<int>?>(new List<int> { 4, 5, 6 });
+		if (collectionType == CollectionType.List)
+		{
+			List<int> list = [1, 2, 3];
+			Task<List<int>?> task = nullScenario == NullScenario.ResultNull
+				? Task.FromResult<List<int>?>(null)
+				: Task.FromResult<List<int>?>(new List<int> { 4, 5, 6 });
 
-		await list.ObjectFill(task);
+			await list.ObjectFill(task);
 
-		list.Count.ShouldBe(6);
-		list.ShouldBe([1, 2, 3, 4, 5, 6]);
+			if (nullScenario == NullScenario.ResultNull)
+			{
+				list.Count.ShouldBe(3);
+				list.ShouldBe([1, 2, 3]);
+			}
+			else
+			{
+				list.Count.ShouldBe(6);
+				list.ShouldBe([1, 2, 3, 4, 5, 6]);
+			}
+		}
+		else // HashSet
+		{
+			HashSet<int> hashSet = [1, 2, 3];
+			Task<List<int>?> task = nullScenario == NullScenario.ResultNull
+				? Task.FromResult<List<int>?>(null)
+				: Task.FromResult<List<int>?>(new List<int> { 4, 5, 6 });
+
+			await hashSet.ObjectFill(task);
+
+			if (nullScenario == NullScenario.ResultNull)
+			{
+				hashSet.Count.ShouldBe(3);
+				hashSet.ShouldBe([1, 2, 3]);
+			}
+			else
+			{
+				hashSet.Count.ShouldBe(6);
+				hashSet.ShouldBe([1, 2, 3, 4, 5, 6]);
+			}
+		}
 	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithTaskList_WhenResultIsNull_ShouldNotModifyList()
-	{
-		List<string> list = ["A", "B"];
-		Task<List<string>?> task = Task.FromResult<List<string>?>(null);
-
-		await list.ObjectFill(task);
-
-		list.Count.ShouldBe(2);
-		list.ShouldBe(["A", "B"]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithTaskList_WhenTaskThrows_ShouldHandleException()
-	{
-		List<int> list = [1, 2];
-		Task<List<int>?> task = Task.FromException<List<int>?>(new InvalidOperationException("Test error"));
-
-		await Should.NotThrowAsync(async () => await list.ObjectFill(task));
-
-		list.Count.ShouldBe(2);
-		list.ShouldBe([1, 2]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithTaskList_WhenResultIsEmpty_ShouldNotAddItems()
-	{
-		List<int> list = [10, 20];
-		Task<List<int>?> task = Task.FromResult<List<int>?>(new List<int>());
-
-		await list.ObjectFill(task);
-
-		list.Count.ShouldBe(2);
-		list.ShouldBe([10, 20]);
-	}
-
-	#endregion
-
-	#region ObjectFill<T> HashSet<T> with Task<List<T>?>
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskList_ShouldAddRangeToHashSet()
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task ObjectFill_HashSetWithTaskHashSet_ShouldHandleDuplicates(bool hasDuplicates)
 	{
 		HashSet<int> hashSet = [1, 2, 3];
-		Task<List<int>?> task = Task.FromResult<List<int>?>(new List<int> { 4, 5, 6 });
+		Task<HashSet<int>?> task = hasDuplicates
+			? Task.FromResult<HashSet<int>?>(new HashSet<int> { 2, 3, 4, 5 })
+			: Task.FromResult<HashSet<int>?>(new HashSet<int> { 4, 5, 6 });
 
 		await hashSet.ObjectFill(task);
 
-		hashSet.Count.ShouldBe(6);
-		hashSet.ShouldBe([1, 2, 3, 4, 5, 6]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskList_WhenResultIsNull_ShouldNotModifyHashSet()
-	{
-		HashSet<string> hashSet = ["A", "B"];
-		Task<List<string>?> task = Task.FromResult<List<string>?>(null);
-
-		await hashSet.ObjectFill(task);
-
-		hashSet.Count.ShouldBe(2);
-		hashSet.ShouldBe(["A", "B"]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskList_WhenTaskThrows_ShouldHandleException()
-	{
-		HashSet<int> hashSet = [1, 2];
-		Task<List<int>?> task = Task.FromException<List<int>?>(new InvalidOperationException("Test error"));
-
-		await Should.NotThrowAsync(async () => await hashSet.ObjectFill(task));
-
-		hashSet.Count.ShouldBe(2);
-		hashSet.ShouldBe([1, 2]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskList_WhenResultHasDuplicates_ShouldOnlyAddUnique()
-	{
-		HashSet<int> hashSet = [1, 2, 3];
-		Task<List<int>?> task = Task.FromResult<List<int>?>(new List<int> { 2, 3, 4, 5 });
-
-		await hashSet.ObjectFill(task);
-
-		hashSet.Count.ShouldBe(5);
-		hashSet.ShouldBe([1, 2, 3, 4, 5]);
-	}
-
-	#endregion
-
-	#region ObjectFill<T> HashSet<T> with Task<HashSet<T>?>
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskHashSet_ShouldAddRangeToHashSet()
-	{
-		HashSet<int> hashSet = [1, 2, 3];
-		Task<HashSet<int>?> task = Task.FromResult<HashSet<int>?>(new HashSet<int> { 4, 5, 6 });
-
-		await hashSet.ObjectFill(task);
-
-		hashSet.Count.ShouldBe(6);
-		hashSet.ShouldBe([1, 2, 3, 4, 5, 6]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskHashSet_WhenResultIsNull_ShouldNotModifyHashSet()
-	{
-		HashSet<string> hashSet = ["A", "B"];
-		Task<HashSet<string>?> task = Task.FromResult<HashSet<string>?>(null);
-
-		await hashSet.ObjectFill(task);
-
-		hashSet.Count.ShouldBe(2);
-		hashSet.ShouldBe(["A", "B"]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithTaskHashSet_WhenResultHasDuplicates_ShouldOnlyAddUnique()
-	{
-		HashSet<int> hashSet = [1, 2, 3];
-		Task<HashSet<int>?> task = Task.FromResult<HashSet<int>?>(new HashSet<int> { 2, 3, 4, 5 });
-
-		await hashSet.ObjectFill(task);
-
-		hashSet.Count.ShouldBe(5);
-		hashSet.ShouldBe([1, 2, 3, 4, 5]);
+		if (hasDuplicates)
+		{
+			hashSet.Count.ShouldBe(5);
+			hashSet.ShouldBe([1, 2, 3, 4, 5]);
+		}
+		else
+		{
+			hashSet.Count.ShouldBe(6);
+			hashSet.ShouldBe([1, 2, 3, 4, 5, 6]);
+		}
 	}
 
 	#endregion
@@ -1363,105 +1000,120 @@ public sealed class AsyncTests
 	#region ObjectFill<T> List<T> with Func, Semaphore, CancellationToken
 
 	[Fact]
-	public async Task ObjectFill_ListWithFuncSemaphore_ShouldAddRangeToList()
+	public async Task ObjectFill_List_WithFuncSemaphore_ShouldAddItems()
 	{
-		List<int> list = [1, 2, 3];
-		static Task<List<int>> func()
-		{
-			return Task.FromResult(new List<int> { 4, 5, 6 });
-		}
-
 		using SemaphoreSlim semaphore = new(1, 1);
+		List<int> collection = new List<int> { 1, 2, 3 };
+		Task<List<int>> func() => Task.FromResult(new List<int> { 4, 5, 6 });
 
-		await list.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		list.Count.ShouldBe(6);
-		list.ShouldBe([1, 2, 3, 4, 5, 6]);
+		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
+		collection.Count.ShouldBe(6);
 	}
 
 	[Fact]
-	public async Task ObjectFill_ListWithFuncSemaphore_WithNullSemaphore_ShouldWork()
+	public async Task ObjectFill_List_WithFuncReturningNull_ShouldKeepOriginal()
 	{
-		List<string> list = ["A", "B"];
-		static Task<List<string>> func()
-		{
-			return Task.FromResult(new List<string> { "C", "D" });
-		}
+		using SemaphoreSlim semaphore = new(1, 1);
+		List<int> collection = new List<int> { 1, 2, 3 };
+		Task<List<int>> func() => Task.FromResult<List<int>>(null!);
 
-		await list.ObjectFill(func, null, Current.CancellationToken);
-
-		list.Count.ShouldBe(4);
-		list.ShouldBe(["A", "B", "C", "D"]);
+		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
+		collection.Count.ShouldBe(3);
 	}
 
 	[Fact]
-	public async Task ObjectFill_ListWithFuncSemaphore_WhenResultIsNull_ShouldNotModifyList()
+	public async Task ObjectFill_List_WithNullSemaphore_ShouldAddItems()
 	{
-		List<int> list = [10, 20];
-		static Task<List<int>> func()
-		{
-			return Task.FromResult<List<int>>(null!);
-		}
+		List<int> collection = new List<int> { 1, 2, 3 };
+		Task<List<int>> func() => Task.FromResult(new List<int> { 4, 5, 6 });
 
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await list.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		list.Count.ShouldBe(2);
-		list.ShouldBe([10, 20]);
+		await Async.ObjectFill(collection, func, null, Current.CancellationToken);
+		collection.Count.ShouldBe(6);
 	}
 
 	[Fact]
-	public async Task ObjectFill_ListWithFuncSemaphore_WhenTaskThrows_ShouldHandleException()
+	public async Task ObjectFill_List_WithFuncThrowingException_ShouldKeepOriginal()
 	{
-		List<int> list = [1, 2];
-		static Task<List<int>> func()
-		{
-			return Task.FromException<List<int>>(new InvalidOperationException("Test error"));
-		}
-
 		using SemaphoreSlim semaphore = new(1, 1);
+		List<int> collection = new List<int> { 1, 2, 3 };
+		Task<List<int>> func() => Task.FromException<List<int>>(new InvalidOperationException("Test error"));
 
-		await Should.NotThrowAsync(async () => await list.ObjectFill(func, semaphore, default));
-
-		list.Count.ShouldBe(2);
-		list.ShouldBe([1, 2]);
+		await Async.ObjectFill(collection, func, semaphore, default);
+		collection.Count.ShouldBe(3);
 	}
 
 	[Fact]
-	public async Task ObjectFill_ListWithFuncSemaphore_ShouldReleaseSemaphoreOnSuccess()
+	public async Task ObjectFill_HashSet_WithFuncSemaphore_ShouldAddItems()
 	{
-		List<int> list = [1];
-		static Task<List<int>> func()
-		{
-			return Task.FromResult(new List<int> { 2 });
-		}
+		using SemaphoreSlim semaphore = new(1, 1);
+		HashSet<int> collection = new HashSet<int> { 1, 2, 3 };
 
+		Task<HashSet<int>> func() => Task.FromResult(new HashSet<int> { 4, 5, 6 });
+
+		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
+		collection.Count.ShouldBe(6);  // {1, 2, 3, 4, 5, 6}
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithFuncReturningNull_ShouldHandleGracefully()
+	{
+		HashSet<int> collection = new HashSet<int> { 1, 2, 3 };
+		using SemaphoreSlim semaphore = new(1, 1);
+		Task<HashSet<int>> func() => Task.FromResult<HashSet<int>>(null!);
+
+		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
+
+		collection.Count.ShouldBe(3); // Collection unchanged when result is null
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithFuncThrowingException_ShouldHandleGracefully()
+	{
+		HashSet<int> collection = new HashSet<int> { 1, 2, 3 };
+		using SemaphoreSlim semaphore = new(1, 1);
+		Task<HashSet<int>> func() => Task.FromException<HashSet<int>>(new InvalidOperationException("Test error"));
+
+		await Async.ObjectFill(collection, func, semaphore, default);
+
+		collection.Count.ShouldBe(3); // Collection unchanged when exception thrown
+	}
+
+	[Theory]
+	[InlineData(CollectionType.List, false)]
+	[InlineData(CollectionType.List, true)]
+	[InlineData(CollectionType.HashSet, false)]
+	[InlineData(CollectionType.HashSet, true)]
+	public async Task ObjectFill_WithFuncSemaphore_ShouldReleaseSemaphore(CollectionType collectionType, bool throwException)
+	{
+		dynamic collection = collectionType == CollectionType.List ? new List<int> { 1 } : (dynamic)new HashSet<int> { 1 };
 		using SemaphoreSlim semaphore = new(1, 1);
 
-		await list.ObjectFill(func, semaphore, Current.CancellationToken);
+		if (collectionType == CollectionType.List)
+		{
+			Task<List<int>> func()
+			{
+				if (throwException) throw new InvalidOperationException("Fail");
+				return Task.FromResult(new List<int> { 2 });
+			}
+			await ((List<int>)collection).ObjectFill(func, semaphore, Current.CancellationToken);
+		}
+		else
+		{
+			Task<HashSet<int>> func()
+			{
+				if (throwException) throw new InvalidOperationException("Fail");
+				return Task.FromResult(new HashSet<int> { 2 });
+			}
+			await ((HashSet<int>)collection).ObjectFill(func, semaphore, Current.CancellationToken);
+		}
 
 		semaphore.CurrentCount.ShouldBe(1);
 	}
 
-	[Fact]
-	public async Task ObjectFill_ListWithFuncSemaphore_ShouldReleaseSemaphoreOnException()
-	{
-		List<int> list = [1];
-		static Task<List<int>> func()
-		{
-			throw new InvalidOperationException("Fail");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await list.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		semaphore.CurrentCount.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithFuncSemaphore_ShouldLimitConcurrency()
+	[Theory]
+	[InlineData(CollectionType.List)]
+	[InlineData(CollectionType.HashSet)]
+	public async Task ObjectFill_WithFuncSemaphore_ShouldLimitConcurrency(CollectionType collectionType)
 	{
 		int concurrentExecutions = 0;
 		int maxConcurrent = 0;
@@ -1471,199 +1123,50 @@ public sealed class AsyncTests
 		List<Task> tasks = [];
 		for (int i = 0; i < 5; i++)
 		{
-			List<int> list = [i];
-			async Task<List<int>> func()
+			int index = i;
+			if (collectionType == CollectionType.List)
 			{
-				lock (lockObj)
+				List<int> collection = new List<int> { i };
+				async Task<List<int>> func()
 				{
-					concurrentExecutions++;
-					maxConcurrent = Math.Max(maxConcurrent, concurrentExecutions);
+					lock (lockObj)
+					{
+						concurrentExecutions++;
+						maxConcurrent = Math.Max(maxConcurrent, concurrentExecutions);
+					}
+					await Task.Delay(50, Current.CancellationToken);
+					lock (lockObj)
+					{
+						concurrentExecutions--;
+					}
+					return new List<int> { index * 10 };
 				}
-				await Task.Delay(50, Current.CancellationToken);
-				lock (lockObj)
-				{
-					concurrentExecutions--;
-				}
-				return new List<int> { i * 10 };
+				tasks.Add(collection.ObjectFill(func, semaphore, Current.CancellationToken));
 			}
-			tasks.Add(list.ObjectFill(func, semaphore, Current.CancellationToken));
+			else
+			{
+				HashSet<int> collection = new HashSet<int> { i };
+				async Task<HashSet<int>> func()
+				{
+					lock (lockObj)
+					{
+						concurrentExecutions++;
+						maxConcurrent = Math.Max(maxConcurrent, concurrentExecutions);
+					}
+					await Task.Delay(50, Current.CancellationToken);
+					lock (lockObj)
+					{
+						concurrentExecutions--;
+					}
+					return new HashSet<int> { index * 10 };
+				}
+				tasks.Add(collection.ObjectFill(func, semaphore, Current.CancellationToken));
+			}
 		}
 
 		await Task.WhenAll(tasks);
 
 		maxConcurrent.ShouldBeLessThanOrEqualTo(2);
-	}
-
-	[Fact]
-	public async Task ObjectFill_ListWithFuncSemaphore_WithCancellationToken_ShouldHandleCancellation()
-	{
-		List<int> list = [1];
-		using CancellationTokenSource cts = new();
-		static Task<List<int>> func()
-		{
-			return Task.FromResult(new List<int> { 2 });
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await cts.CancelAsync();
-
-		await Should.ThrowAsync<Exception>(async () =>
-			await list.ObjectFill(func, semaphore, cts.Token));
-	}
-
-	#endregion
-
-	#region ObjectFill<T> HashSet<T> with Func, Semaphore, CancellationToken
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncSemaphore_ShouldAddRangeToHashSet()
-	{
-		HashSet<int> hashSet = [1, 2, 3];
-		static Task<HashSet<int>> func()
-		{
-			return Task.FromResult(new HashSet<int> { 4, 5, 6 });
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		hashSet.Count.ShouldBe(6);
-		hashSet.ShouldBe([1, 2, 3, 4, 5, 6]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncSemaphore_WhenResultIsNull_ShouldNotModifyHashSet()
-	{
-		HashSet<string> hashSet = ["A", "B"];
-		static Task<HashSet<string>> func()
-		{
-			return Task.FromResult<HashSet<string>>(null!);
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		hashSet.Count.ShouldBe(2);
-		hashSet.ShouldBe(["A", "B"]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncSemaphore_WhenTaskThrows_ShouldHandleException()
-	{
-		HashSet<int> hashSet = [1, 2];
-		static Task<HashSet<int>> func()
-		{
-			return Task.FromException<HashSet<int>>(new InvalidOperationException("Test error"));
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await Should.NotThrowAsync(async () => await hashSet.ObjectFill(func, semaphore, default));
-
-		hashSet.Count.ShouldBe(2);
-		hashSet.ShouldBe([1, 2]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncSemaphore_WhenResultHasDuplicates_ShouldOnlyAddUnique()
-	{
-		HashSet<int> hashSet = [1, 2, 3];
-		static Task<HashSet<int>> func()
-		{
-			return Task.FromResult(new HashSet<int> { 2, 3, 4, 5 });
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		hashSet.Count.ShouldBe(5);
-		hashSet.ShouldBe([1, 2, 3, 4, 5]);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncSemaphore_ShouldReleaseSemaphoreOnSuccess()
-	{
-		HashSet<int> hashSet = [1];
-		static Task<HashSet<int>> func()
-		{
-			return Task.FromResult(new HashSet<int> { 2 });
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		semaphore.CurrentCount.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncSemaphore_ShouldReleaseSemaphoreOnException()
-	{
-		HashSet<int> hashSet = [1];
-		static Task<HashSet<int>> func()
-		{
-			throw new InvalidOperationException("Fail");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-
-		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
-
-		semaphore.CurrentCount.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncSemaphore_ShouldLimitConcurrency()
-	{
-		int concurrentExecutions = 0;
-		int maxConcurrent = 0;
-		object lockObj = new();
-		using SemaphoreSlim semaphore = new(2, 2);
-
-		List<Task> tasks = [];
-		for (int i = 0; i < 5; i++)
-		{
-			HashSet<int> hashSet = [i];
-			async Task<HashSet<int>> func()
-			{
-				lock (lockObj)
-				{
-					concurrentExecutions++;
-					maxConcurrent = Math.Max(maxConcurrent, concurrentExecutions);
-				}
-				await Task.Delay(50, Current.CancellationToken);
-				lock (lockObj)
-				{
-					concurrentExecutions--;
-				}
-				return new HashSet<int> { i * 10 };
-			}
-			tasks.Add(hashSet.ObjectFill(func, semaphore, Current.CancellationToken));
-		}
-
-		await Task.WhenAll(tasks);
-
-		maxConcurrent.ShouldBeLessThanOrEqualTo(2);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSetWithFuncSemaphore_WithCancellationToken_ShouldHandleCancellation()
-	{
-		HashSet<int> hashSet = [1];
-		using CancellationTokenSource cts = new();
-		static Task<HashSet<int>> func()
-		{
-			return Task.FromResult(new HashSet<int> { 2 });
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await cts.CancelAsync();
-
-		await Should.ThrowAsync<Exception>(async () =>
-			await hashSet.ObjectFill(func, semaphore, cts.Token));
 	}
 
 	#endregion
@@ -1741,31 +1244,22 @@ public sealed class AsyncTests
 		await Should.NotThrowAsync(async () => await obj.ObjectUpdate(prop, func, semaphore, Current.CancellationToken));
 	}
 
-	[Fact]
-	public async Task ObjectUpdate_WithFuncSemaphoreNullObject_ShouldHandleException()
+	[Theory]
+	[InlineData(NullScenario.ObjectNull, false)]
+	[InlineData(NullScenario.NotNull, true)]
+	public async Task ObjectUpdate_WithFuncSemaphore_ShouldHandleNullOrException(NullScenario nullScenario, bool throwException)
 	{
-		AsyncIntString? obj = null;
-		static Task<int> func()
+		AsyncIntString? obj = nullScenario == NullScenario.ObjectNull ? null : new();
+		Task<int> func()
 		{
+			if (throwException) throw new InvalidOperationException("Test exception");
 			return Task.FromResult(100);
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
 		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("AsyncInt", func, semaphore, Current.CancellationToken));
-	}
-
-	[Fact]
-	public async Task ObjectUpdate_WithFuncSemaphoreThrowing_ShouldHandleException()
-	{
-		AsyncIntString obj = new();
-		static Task<int> func()
-		{
-			throw new InvalidOperationException("Test exception");
-		}
-
-		using SemaphoreSlim semaphore = new(1, 1);
-		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("AsyncInt", func, semaphore, Current.CancellationToken));
-		obj.AsyncInt.ShouldBe(0);
+		if (obj != null && !throwException) obj.AsyncInt.ShouldBe(100);
+		else if (obj != null) obj.AsyncInt.ShouldBe(0);
 	}
 
 	#endregion
@@ -1935,90 +1429,66 @@ public sealed class AsyncTests
 	#region RunAll (void) - Theory Example
 
 	[Theory]
-	[InlineData(3)]
-	[InlineData(5)]
-	public async Task RunAll_VoidTasks_ShouldExecuteAllTasks(int count)
+	[InlineData(3, false)]
+	[InlineData(5, false)]
+	[InlineData(3, true)]
+	public async Task RunAll_VoidTasks_ShouldExecuteTasksOrStopOnError(int count, bool breakOnError)
 	{
 		int executed = 0;
-		List<Func<Task>> tasks = Enumerable.Range(0, count).Select(_ => new Func<Task>(async () =>
+		using CancellationTokenSource? cts = breakOnError ? new() : null;
+		List<Func<Task>> tasks = [];
+		for (int i = 0; i < count; i++)
 		{
-			await Task.Delay(10);
-			Interlocked.Increment(ref executed);
-		})).ToList();
-		await tasks.RunAll();
-		executed.ShouldBe(count);
-	}
+			int index = i;
+			tasks.Add(async () =>
+			{
+				Interlocked.Increment(ref executed);
+				await Task.Delay(index == 1 && breakOnError ? 50 : 10);
+				if (breakOnError && index == 1) throw new InvalidOperationException("Error");
+			});
+		}
+		if (breakOnError)
+			await tasks.RunAll(null, cts, true);
+		else
+			await tasks.RunAll();
 
-	[Fact]
-	public async Task RunAll_VoidWithBreakOnError_ShouldStopOnException()
-	{
-		int executed = 0;
-		using CancellationTokenSource cts = new();
-		List<Func<Task>> tasks =
-		[
-			async () => { Interlocked.Increment(ref executed); await Task.Delay(10); },
-			async () => { Interlocked.Increment(ref executed); await Task.Delay(50); throw new InvalidOperationException("Error"); },
-			async () => { Interlocked.Increment(ref executed); await Task.Delay(10000); }
-		];
-		await tasks.RunAll(null, cts, true);
-		executed.ShouldBeLessThanOrEqualTo(3);
-	}
-
-	[Fact]
-	public async Task RunAll_VoidWithExceptionNoBreak_ShouldContinue()
-	{
-		int executed = 0;
-		List<Func<Task>> tasks =
-		[
-			async () => { Interlocked.Increment(ref executed); await Task.Delay(10); },
-			async () => { Interlocked.Increment(ref executed); throw new InvalidOperationException("Error"); },
-			async () => { Interlocked.Increment(ref executed); await Task.Delay(10); }
-		];
-		await tasks.RunAll();
-		executed.ShouldBe(3);
+		if (breakOnError)
+			executed.ShouldBeLessThanOrEqualTo(count);
+		else
+			executed.ShouldBe(count);
 	}
 
 	#endregion
 
 	#region RunAsyncWithSemaphore Tests
 
-	[Fact]
-	public async Task RunAsyncWithSemaphore_ShouldExecuteTask()
+	[Theory]
+	[InlineData(false, false)]
+	[InlineData(true, false)]
+	[InlineData(false, true)]
+	public async Task RunAsyncWithSemaphore_ShouldExecuteAndReleaseSemaphore(bool throwException, bool isVoid)
 	{
-		Task<int> task = Task.FromResult(42);
 		using SemaphoreSlim semaphore = new(1, 1);
-		int result = await task.RunAsyncWithSemaphore(semaphore);
-		result.ShouldBe(42);
-		semaphore.CurrentCount.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task RunAsyncWithSemaphore_Void_ShouldExecuteTask()
-	{
-		bool executed = false;
-		Task task = Task.Run(() => executed = true);
-		using SemaphoreSlim semaphore = new(1, 1);
-		await task.RunAsyncWithSemaphore(semaphore);
-		executed.ShouldBeTrue();
-		semaphore.CurrentCount.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task RunAsyncWithSemaphore_WithException_ShouldReleaseSemaphore()
-	{
-		Task<int> task = Task.FromException<int>(new InvalidOperationException("Test"));
-		using SemaphoreSlim semaphore = new(1, 1);
-		int result = await task.RunAsyncWithSemaphore(semaphore);
-		result.ShouldBe(0);
-		semaphore.CurrentCount.ShouldBe(1);
-	}
-
-	[Fact]
-	public async Task RunAsyncWithSemaphore_Void_WithException_ShouldReleaseSemaphore()
-	{
-		Task task = Task.FromException(new InvalidOperationException("Test"));
-		using SemaphoreSlim semaphore = new(1, 1);
-		await task.RunAsyncWithSemaphore(semaphore);
+		if (isVoid)
+		{
+			bool executed = !throwException;
+			Task task = throwException
+				? Task.FromException(new InvalidOperationException("Test"))
+				: Task.Run(() => executed = true);
+			await task.RunAsyncWithSemaphore(semaphore);
+			if (!throwException) executed.ShouldBeTrue();
+		}
+		else
+		{
+			Task<int> task = throwException
+				? Task.FromException<int>(new InvalidOperationException("Test"))
+				: Task.FromResult(42);
+			int result = await task.RunAsyncWithSemaphore(semaphore);
+			if (throwException)
+				result.ShouldBe(0);
+			else
+				result.ShouldBe(42);
+		}
 		semaphore.CurrentCount.ShouldBe(1);
 	}
 

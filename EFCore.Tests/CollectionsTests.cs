@@ -1,10 +1,10 @@
-﻿using System.Reflection;
-using CommonNetFuncs.EFCore;
+﻿using CommonNetFuncs.EFCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using NSubstitute;
+using System.Reflection;
 using static Xunit.TestContext;
 
 namespace EFCore.Tests;
@@ -13,7 +13,7 @@ public sealed class CollectionsTests : IDisposable
 {
 	private readonly Fixture fixture;
 	private readonly SqliteConnection connection;
-	private readonly TestDbContext context;
+	private readonly CollectionTestDbContext context;
 	private bool disposed;
 
 	public CollectionsTests()
@@ -24,10 +24,10 @@ public sealed class CollectionsTests : IDisposable
 
 		connection = new SqliteConnection("DataSource=:memory:");
 		connection.Open();
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
+		DbContextOptions<CollectionTestDbContext> options = new DbContextOptionsBuilder<CollectionTestDbContext>()
 			.UseSqlite(connection)
 			.Options;
-		context = new TestDbContext(options);
+		context = new CollectionTestDbContext(options);
 		context.Database.EnsureCreated();
 	}
 
@@ -45,18 +45,18 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartial_WithMatchingNonNullFields_ReturnsCorrectEntity(bool ignoreDefaultValues, ExecutionMode mode)
 	{
 		// Arrange
-		TestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, CreatedDate = DateTime.UtcNow };
-		TestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 200, CreatedDate = DateTime.UtcNow.AddDays(1) };
+		CollectionTestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, CreatedDate = DateTime.UtcNow };
+		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 200, CreatedDate = DateTime.UtcNow.AddDays(1) };
 		context.TestEntities.AddRange(entity1, entity2);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
 		else
 			context.SaveChanges();
 
-		TestEntity partialObject = new() { Name = "Test1", Value = 0 };
+		CollectionTestEntity partialObject = new() { Name = "Test1", Value = 0 };
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues, cancellationToken: Current.CancellationToken);
 
@@ -80,17 +80,17 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartial_WithNullFields_IgnoresNullFields(ExecutionMode mode)
 	{
 		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = DateTime.UtcNow };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = DateTime.UtcNow };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
 		else
 			context.SaveChanges();
 
-		TestEntity partialObject = new() { Name = "Test", Value = 100, Description = null };
+		CollectionTestEntity partialObject = new() { Name = "Test", Value = 100, Description = null };
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
 
@@ -106,17 +106,17 @@ public sealed class CollectionsTests : IDisposable
 	{
 		// Arrange
 		DateTime utcDate = DateTime.UtcNow;
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
 		else
 			context.SaveChanges();
 
-		TestEntity partialObject = new() { CreatedDate = utcDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = utcDate };
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
 
@@ -133,17 +133,17 @@ public sealed class CollectionsTests : IDisposable
 		// Arrange
 		DateTime localDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Local);
 		DateTime utcDate = localDate.ToUniversalTime();
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
 		else
 			context.SaveChanges();
 
-		TestEntity partialObject = new() { CreatedDate = localDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = localDate };
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
 
@@ -161,17 +161,17 @@ public sealed class CollectionsTests : IDisposable
 		DateTime unspecifiedDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Unspecified);
 		// SQLite normalizes DateTime to UTC, so we need to store and query as UTC
 		DateTime utcDate = DateTime.SpecifyKind(unspecifiedDate, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
 		else
 			context.SaveChanges();
 
-		TestEntity partialObject = new() { CreatedDate = utcDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = utcDate };
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
 
@@ -180,7 +180,6 @@ public sealed class CollectionsTests : IDisposable
 		result.Id.ShouldBe(entity.Id);
 	}
 
-	[Fact]
 	[Theory]
 	[InlineData(ExecutionMode.Sync)]
 	[InlineData(ExecutionMode.Async)]
@@ -207,24 +206,23 @@ public sealed class CollectionsTests : IDisposable
 		result.Id.ShouldBe(entity.Id);
 	}
 
-	[Fact]
 	[Theory]
 	[InlineData(ExecutionMode.Sync)]
 	[InlineData(ExecutionMode.Async)]
 	public async Task GetObjectByPartial_WithNoMatchingEntity_ReturnsNull(ExecutionMode mode)
 	{
 		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test1", Value = 100 };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test1", Value = 100 };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
 		else
 			context.SaveChanges();
 
-		TestEntity partialObject = new() { Name = "NonExistent" };
+		CollectionTestEntity partialObject = new() { Name = "NonExistent" };
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
 
@@ -232,24 +230,23 @@ public sealed class CollectionsTests : IDisposable
 		result.ShouldBeNull();
 	}
 
-	[Fact]
 	[Theory]
 	[InlineData(ExecutionMode.Sync)]
 	[InlineData(ExecutionMode.Async)]
 	public async Task GetObjectByPartial_WithAllNullFields_ReturnsNull(ExecutionMode mode)
 	{
 		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
 		else
 			context.SaveChanges();
 
-		TestEntity partialObject = new() { Name = null, Description = null };
+		CollectionTestEntity partialObject = new() { Name = null, Description = null };
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, true, cancellationToken: Current.CancellationToken);
 
@@ -257,24 +254,23 @@ public sealed class CollectionsTests : IDisposable
 		result.ShouldBeNull();
 	}
 
-	[Fact]
 	[Theory]
 	[InlineData(ExecutionMode.Sync)]
 	[InlineData(ExecutionMode.Async)]
 	public async Task GetObjectByPartial_WithDefaultValues_IgnoresWhenFlagIsTrue(ExecutionMode mode)
 	{
 		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
 		else
 			context.SaveChanges();
 
-		TestEntity partialObject = new() { Name = "Test", Value = 0, Id = 0 }; // 0 is default for int
+		CollectionTestEntity partialObject = new() { Name = "Test", Value = 0, Id = 0 }; // 0 is default for int
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues: true, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: true, cancellationToken: Current.CancellationToken);
 
@@ -291,7 +287,7 @@ public sealed class CollectionsTests : IDisposable
 		// Arrange
 		// Set a specific CreatedDate to avoid default DateTime comparison issues
 		DateTime specificDate = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
@@ -300,10 +296,10 @@ public sealed class CollectionsTests : IDisposable
 
 		// When ignoreDefaultValues = false, ALL non-null properties are included
 		// So we need to match all properties including CreatedDate
-		TestEntity partialObject = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
+		CollectionTestEntity partialObject = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, false, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: false, cancellationToken: Current.CancellationToken);
 
@@ -322,15 +318,15 @@ public sealed class CollectionsTests : IDisposable
 		// Arrange
 		DateTime specificDate1 = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		DateTime specificDate2 = new(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc);
-		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = specificDate1 };
-		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 200, CreatedDate = specificDate2 };
+		CollectionTestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = specificDate1 };
+		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test", Value = 200, CreatedDate = specificDate2 };
 		context.TestEntities.AddRange(entity1, entity2);
 		if (mode == ExecutionMode.Async)
 			await context.SaveChangesAsync(Current.CancellationToken);
 		else
 			context.SaveChanges();
 
-		TestEntity partialObject;
+		CollectionTestEntity partialObject;
 		if (ignoreDefaultValues)
 		{
 			// When ignoring defaults, we can use just the Name property
@@ -344,7 +340,7 @@ public sealed class CollectionsTests : IDisposable
 		}
 
 		// Act
-		TestEntity? result = mode == ExecutionMode.Async
+		CollectionTestEntity? result = mode == ExecutionMode.Async
 			? await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues, Current.CancellationToken)
 			: context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues, Current.CancellationToken);
 
@@ -361,11 +357,11 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithCancellationToken_RespondsToCancel()
 	{
 		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
 		context.TestEntities.Add(entity);
 		context.SaveChanges();
 
-		TestEntity partialObject = new() { Name = "Test" };
+		CollectionTestEntity partialObject = new() { Name = "Test" };
 		using CancellationTokenSource cts = new();
 		cts.Cancel();
 
@@ -378,16 +374,16 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithComplexMatch_CombinesMultipleConditions()
 	{
 		// Arrange
-		TestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, Description = "Desc1" };
-		TestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 100, Description = "Desc2" };
-		TestEntity entity3 = new() { Id = 3, Name = "Test1", Value = 200, Description = "Desc1" };
+		CollectionTestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, Description = "Desc1" };
+		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 100, Description = "Desc2" };
+		CollectionTestEntity entity3 = new() { Id = 3, Name = "Test1", Value = 200, Description = "Desc1" };
 		context.TestEntities.AddRange(entity1, entity2, entity3);
 		context.SaveChanges();
 
-		TestEntity partialObject = new() { Name = "Test1", Value = 100, Description = "Desc1" };
+		CollectionTestEntity partialObject = new() { Name = "Test1", Value = 100, Description = "Desc1" };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -401,15 +397,15 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithStringEmpty_MatchesCorrectly()
 	{
 		// Arrange
-		TestEntity entity1 = new() { Id = 1, Name = "", Value = 100 };
-		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100 };
+		CollectionTestEntity entity1 = new() { Id = 1, Name = "", Value = 100 };
+		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100 };
 		context.TestEntities.AddRange(entity1, entity2);
 		context.SaveChanges();
 
-		TestEntity partialObject = new() { Name = "" };
+		CollectionTestEntity partialObject = new() { Name = "" };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -421,15 +417,15 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithNullableProperties_HandlesCorrectly()
 	{
 		// Arrange
-		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, Description = "HasDescription" };
-		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100, Description = null };
+		CollectionTestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, Description = "HasDescription" };
+		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100, Description = null };
 		context.TestEntities.AddRange(entity1, entity2);
 		context.SaveChanges();
 
-		TestEntity partialObject = new() { Name = "Test", Value = 100 };
+		CollectionTestEntity partialObject = new() { Name = "Test", Value = 100 };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -443,14 +439,14 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartialAsync_WithNullFields_IgnoresNullFields()
 	{
 		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = DateTime.UtcNow };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = DateTime.UtcNow };
 		context.TestEntities.Add(entity);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { Name = "Test", Value = 100, Description = null };
+		CollectionTestEntity partialObject = new() { Name = "Test", Value = 100, Description = null };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -465,51 +461,29 @@ public sealed class CollectionsTests : IDisposable
 		// Arrange
 		DateTime localDate = new(2024, 1, 1, 12, 0, 0, DateTimeKind.Local);
 		DateTime utcDate = localDate.ToUniversalTime();
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { CreatedDate = localDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = localDate };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Id.ShouldBe(entity.Id);
 	}
 
-
-
-
-
-
-
-
-
-
-
-	// Act
-	TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
-
-	// Assert
-	result.ShouldNotBeNull();
-		result.Id.ShouldBe(entity.Id);
-	}
-
-
-
-
-
 	[Fact]
 	public async Task GetObjectByPartialAsync_WithCancellationToken_RespondsToCancel()
 	{
 		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
 		context.TestEntities.Add(entity);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { Name = "Test" };
+		CollectionTestEntity partialObject = new() { Name = "Test" };
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
@@ -522,16 +496,16 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartialAsync_WithComplexMatch_CombinesMultipleConditions()
 	{
 		// Arrange
-		TestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, Description = "Desc1" };
-		TestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 100, Description = "Desc2" };
-		TestEntity entity3 = new() { Id = 3, Name = "Test1", Value = 200, Description = "Desc1" };
+		CollectionTestEntity entity1 = new() { Id = 1, Name = "Test1", Value = 100, Description = "Desc1" };
+		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 100, Description = "Desc2" };
+		CollectionTestEntity entity3 = new() { Id = 3, Name = "Test1", Value = 200, Description = "Desc1" };
 		context.TestEntities.AddRange(entity1, entity2, entity3);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { Name = "Test1", Value = 100, Description = "Desc1" };
+		CollectionTestEntity partialObject = new() { Name = "Test1", Value = 100, Description = "Desc1" };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -545,15 +519,15 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartialAsync_WithStringEmpty_MatchesCorrectly()
 	{
 		// Arrange
-		TestEntity entity1 = new() { Id = 1, Name = "", Value = 100 };
-		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100 };
+		CollectionTestEntity entity1 = new() { Id = 1, Name = "", Value = 100 };
+		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100 };
 		context.TestEntities.AddRange(entity1, entity2);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { Name = "" };
+		CollectionTestEntity partialObject = new() { Name = "" };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -565,15 +539,15 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartialAsync_WithNullableProperties_HandlesCorrectly()
 	{
 		// Arrange
-		TestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, Description = "HasDescription" };
-		TestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100, Description = null };
+		CollectionTestEntity entity1 = new() { Id = 1, Name = "Test", Value = 100, Description = "HasDescription" };
+		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test", Value = 100, Description = null };
 		context.TestEntities.AddRange(entity1, entity2);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { Name = "Test", Value = 100 };
+		CollectionTestEntity partialObject = new() { Name = "Test", Value = 100 };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -586,16 +560,16 @@ public sealed class CollectionsTests : IDisposable
 	{
 		// Arrange - Store UTC time
 		DateTime utcDate = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		context.SaveChanges();
 
 		// Search with Local time equivalent
 		DateTime localDate = utcDate.ToLocalTime();
-		TestEntity partialObject = new() { CreatedDate = localDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = localDate };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -607,23 +581,22 @@ public sealed class CollectionsTests : IDisposable
 	{
 		// Arrange - Store UTC time
 		DateTime utcDate = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
 		// Search with Local time equivalent
 		DateTime localDate = utcDate.ToLocalTime();
-		TestEntity partialObject = new() { CreatedDate = localDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = localDate };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Id.ShouldBe(entity.Id);
 	}
 
-	[Fact]
 	[Theory]
 	[InlineData(ExecutionMode.Sync)]
 	[InlineData(ExecutionMode.Async)]
@@ -657,10 +630,10 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithEmptyCollection_ReturnsNull()
 	{
 		// Arrange - No entities in database
-		TestEntity partialObject = new() { Name = "Test" };
+		CollectionTestEntity partialObject = new() { Name = "Test" };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -670,10 +643,10 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartialAsync_WithEmptyCollection_ReturnsNull()
 	{
 		// Arrange - No entities in database
-		TestEntity partialObject = new() { Name = "Test" };
+		CollectionTestEntity partialObject = new() { Name = "Test" };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -683,15 +656,15 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithAllPropertiesDefault_ReturnsNullWhenIgnoringDefaults()
 	{
 		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
 		context.TestEntities.Add(entity);
 		context.SaveChanges();
 
 		// All properties have default values
-		TestEntity partialObject = new() { Id = 0, Value = 0, CreatedDate = default };
+		CollectionTestEntity partialObject = new() { Id = 0, Value = 0, CreatedDate = default };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: true, Current.CancellationToken);
+		CollectionTestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, ignoreDefaultValues: true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull(); // No conditions built, returns null
@@ -701,15 +674,15 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartialAsync_WithAllPropertiesDefault_ReturnsNullWhenIgnoringDefaults()
 	{
 		// Arrange
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
 		context.TestEntities.Add(entity);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
 		// All properties have default values
-		TestEntity partialObject = new() { Id = 0, Value = 0, CreatedDate = default };
+		CollectionTestEntity partialObject = new() { Id = 0, Value = 0, CreatedDate = default };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues: true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, ignoreDefaultValues: true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull(); // No conditions built, returns null
@@ -719,25 +692,25 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithSqlServerProvider_NormalizesDateTimeToUnspecified()
 	{
 		// Arrange - Create context with SQL Server provider
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
+		DbContextOptions<CollectionTestDbContext> options = new DbContextOptionsBuilder<CollectionTestDbContext>()
 			.UseSqlServer("Server=localhost;Database=test;Trusted_Connection=true;TrustServerCertificate=true")
 			.Options;
 
-		using TestDbContext sqlContext = new(options);
+		using CollectionTestDbContext sqlContext = new(options);
 
 		DateTime localDate = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Local);
 
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = localDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = localDate };
 		sqlContext.TestEntities.Add(entity);
 
-		TestEntity partialObject = new() { Name = "Test", CreatedDate = localDate };
+		CollectionTestEntity partialObject = new() { Name = "Test", CreatedDate = localDate };
 
 		// Act - This will fail to connect but will test the normalization logic
 		// The provider name check and GetColumnType() logic gets exercised
 		Exception? caughtException = null;
 		try
 		{
-			TestEntity? _ = sqlContext.TestEntities.GetObjectByPartial(sqlContext, partialObject, true, Current.CancellationToken);
+			CollectionTestEntity? _ = sqlContext.TestEntities.GetObjectByPartial(sqlContext, partialObject, true, Current.CancellationToken);
 		}
 		catch (Exception ex) when (ex is Microsoft.Data.SqlClient.SqlException || ex.InnerException is Microsoft.Data.SqlClient.SqlException)
 		{
@@ -753,25 +726,25 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithSqliteProvider_NormalizesToUtc()
 	{
 		// Arrange - Create context with SQLite provider (tests default/unknown provider path)
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
+		DbContextOptions<CollectionTestDbContext> options = new DbContextOptionsBuilder<CollectionTestDbContext>()
 			.UseSqlite("Data Source=:memory:")
 			.Options;
 
-		using TestDbContext sqliteContext = new(options);
+		using CollectionTestDbContext sqliteContext = new(options);
 		sqliteContext.Database.OpenConnection();
 		sqliteContext.Database.EnsureCreated();
 
 		DateTime localDate = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Local);
 		DateTime expectedUtc = localDate.ToUniversalTime();
 
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = expectedUtc };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = expectedUtc };
 		sqliteContext.TestEntities.Add(entity);
 		sqliteContext.SaveChanges();
 
-		TestEntity partialObject = new() { CreatedDate = localDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = localDate };
 
 		// Act
-		TestEntity? result = sqliteContext.TestEntities.GetObjectByPartial(sqliteContext, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = sqliteContext.TestEntities.GetObjectByPartial(sqliteContext, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -783,14 +756,14 @@ public sealed class CollectionsTests : IDisposable
 	{
 		// Arrange
 		DateTime utcDate = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		context.SaveChanges();
 
-		TestEntity partialObject = new() { CreatedDate = utcDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = utcDate };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -804,14 +777,14 @@ public sealed class CollectionsTests : IDisposable
 		// SQLite normalizes DateTime to UTC, not Unspecified like InMemory provider
 		DateTime unspecifiedDate = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 		DateTime utcDate = DateTime.SpecifyKind(unspecifiedDate, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		context.SaveChanges();
 
-		TestEntity partialObject = new() { CreatedDate = utcDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = utcDate };
 
 		// Act
-		TestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = context.TestEntities.GetObjectByPartial(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -822,25 +795,25 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartialAsync_WithSqliteProvider_NormalizesToUtc()
 	{
 		// Arrange - Create context with SQLite provider (tests default/unknown provider path)
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
+		DbContextOptions<CollectionTestDbContext> options = new DbContextOptionsBuilder<CollectionTestDbContext>()
 			.UseSqlite("Data Source=:memory:")
 			.Options;
 
-		await using TestDbContext sqliteContext = new(options);
+		await using CollectionTestDbContext sqliteContext = new(options);
 		await sqliteContext.Database.OpenConnectionAsync(Current.CancellationToken);
 		await sqliteContext.Database.EnsureCreatedAsync(Current.CancellationToken);
 
 		DateTime localDate = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Local);
 		DateTime expectedUtc = localDate.ToUniversalTime();
 
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = expectedUtc };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = expectedUtc };
 		sqliteContext.TestEntities.Add(entity);
 		await sqliteContext.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { CreatedDate = localDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = localDate };
 
 		// Act
-		TestEntity? result = await sqliteContext.TestEntities.GetObjectByPartialAsync(sqliteContext, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await sqliteContext.TestEntities.GetObjectByPartialAsync(sqliteContext, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -852,14 +825,14 @@ public sealed class CollectionsTests : IDisposable
 	{
 		// Arrange
 		DateTime utcDate = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { CreatedDate = utcDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = utcDate };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -873,14 +846,14 @@ public sealed class CollectionsTests : IDisposable
 		// SQLite normalizes DateTime to UTC, not Unspecified like InMemory provider
 		DateTime unspecifiedDate = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 		DateTime utcDate = DateTime.SpecifyKind(unspecifiedDate, DateTimeKind.Utc);
-		TestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
+		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		TestEntity partialObject = new() { CreatedDate = utcDate };
+		CollectionTestEntity partialObject = new() { CreatedDate = utcDate };
 
 		// Act
-		TestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
+		CollectionTestEntity? result = await context.TestEntities.GetObjectByPartialAsync(context, partialObject, true, Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -932,7 +905,7 @@ public sealed class CollectionsTests : IDisposable
 		mockContext.Database.Returns(database);
 		mockContext.Model.FindEntityType(Arg.Any<Type>()).Returns(entityTypeMetadata);
 
-		PropertyInfo property = typeof(TestEntity).GetProperty(nameof(TestEntity.CreatedDate))!;
+		PropertyInfo property = typeof(CollectionTestEntity).GetProperty(nameof(CollectionTestEntity.CreatedDate))!;
 
 		// Act - Call private method via reflection
 		DateTime result = InvokeNormalizeDateTimeForDatabase(localDate, property, entityTypeMetadata, mockContext);
@@ -962,7 +935,7 @@ public sealed class CollectionsTests : IDisposable
 		mockContext.Database.Returns(database);
 		mockContext.Model.FindEntityType(Arg.Any<Type>()).Returns(entityTypeMetadata);
 
-		PropertyInfo property = typeof(TestEntity).GetProperty(nameof(TestEntity.CreatedDate))!;
+		PropertyInfo property = typeof(CollectionTestEntity).GetProperty(nameof(CollectionTestEntity.CreatedDate))!;
 
 		// Act
 		DateTime result = InvokeNormalizeDateTimeForDatabase(localDate, property, entityTypeMetadata, mockContext);
@@ -993,7 +966,7 @@ public sealed class CollectionsTests : IDisposable
 		mockContext.Database.Returns(database);
 		mockContext.Model.FindEntityType(Arg.Any<Type>()).Returns(entityTypeMetadata);
 
-		PropertyInfo property = typeof(TestEntity).GetProperty(nameof(TestEntity.CreatedDate))!;
+		PropertyInfo property = typeof(CollectionTestEntity).GetProperty(nameof(CollectionTestEntity.CreatedDate))!;
 
 		// Act
 		DateTime result = InvokeNormalizeDateTimeForDatabase(localDate, property, entityTypeMetadata, mockContext);
@@ -1023,7 +996,7 @@ public sealed class CollectionsTests : IDisposable
 		mockContext.Database.Returns(database);
 		mockContext.Model.FindEntityType(Arg.Any<Type>()).Returns(entityTypeMetadata);
 
-		PropertyInfo property = typeof(TestEntity).GetProperty(nameof(TestEntity.CreatedDate))!;
+		PropertyInfo property = typeof(CollectionTestEntity).GetProperty(nameof(CollectionTestEntity.CreatedDate))!;
 
 		// Act
 		DateTime result = InvokeNormalizeDateTimeForDatabase(localDate, property, entityTypeMetadata, mockContext);
@@ -1053,7 +1026,7 @@ public sealed class CollectionsTests : IDisposable
 		mockContext.Database.Returns(database);
 		mockContext.Model.FindEntityType(Arg.Any<Type>()).Returns(entityTypeMetadata);
 
-		PropertyInfo property = typeof(TestEntity).GetProperty(nameof(TestEntity.CreatedDate))!;
+		PropertyInfo property = typeof(CollectionTestEntity).GetProperty(nameof(CollectionTestEntity.CreatedDate))!;
 
 		// Act
 		DateTime result = InvokeNormalizeDateTimeForDatabase(localDate, property, entityTypeMetadata, mockContext);
@@ -1084,7 +1057,7 @@ public sealed class CollectionsTests : IDisposable
 		mockContext.Database.Returns(database);
 		mockContext.Model.FindEntityType(Arg.Any<Type>()).Returns(entityTypeMetadata);
 
-		PropertyInfo property = typeof(TestEntity).GetProperty(nameof(TestEntity.CreatedDate))!;
+		PropertyInfo property = typeof(CollectionTestEntity).GetProperty(nameof(CollectionTestEntity.CreatedDate))!;
 
 		// Act
 		DateTime result = InvokeNormalizeDateTimeForDatabase(localDate, property, entityTypeMetadata, mockContext);
@@ -1131,7 +1104,7 @@ public sealed class CollectionsTests : IDisposable
 		mockContext.Database.Returns(database);
 		mockContext.Model.FindEntityType(Arg.Any<Type>()).Returns(entityTypeMetadata);
 
-		PropertyInfo property = typeof(TestEntity).GetProperty(nameof(TestEntity.CreatedDate))!;
+		PropertyInfo property = typeof(CollectionTestEntity).GetProperty(nameof(CollectionTestEntity.CreatedDate))!;
 
 		// Act
 		DateTime result = InvokeNormalizeDateTimeForDatabase(localDate, property, entityTypeMetadata, mockContext);
@@ -1174,19 +1147,19 @@ public sealed class CollectionsTests : IDisposable
 	}
 
 	// Test DbContext and entities
-	private sealed class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)
+	private sealed class CollectionTestDbContext(DbContextOptions<CollectionTestDbContext> options) : DbContext(options)
 {
-	public DbSet<TestEntity> TestEntities => Set<TestEntity>();
+	public DbSet<CollectionTestEntity> TestEntities => Set<CollectionTestEntity>();
 	public DbSet<TestEntityWithDateTimeOffset> TestEntitiesWithDateTimeOffset => Set<TestEntityWithDateTimeOffset>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
-		modelBuilder.Entity<TestEntity>();
+		modelBuilder.Entity<CollectionTestEntity>();
 		modelBuilder.Entity<TestEntityWithDateTimeOffset>();
 	}
 }
 
-private sealed class TestEntity
+private sealed class CollectionTestEntity
 {
 	public int Id { get; set; }
 	public string? Name { get; set; }

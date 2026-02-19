@@ -9,6 +9,13 @@ using Newtonsoft.Json.Serialization;
 
 namespace Web.Requests.Tests;
 
+public enum SerializerSetting
+{
+	ContractResolver,
+	ReferenceLoopHandling,
+	NullValueHandling
+}
+
 public class JsonPatchFormatterTests
 {
 	[Fact]
@@ -22,49 +29,36 @@ public class JsonPatchFormatterTests
 		formatter.ShouldBeOfType<NewtonsoftJsonPatchInputFormatter>();
 	}
 
-	[Fact]
-	public void JsonPatchInputFormatter_ShouldHave_DefaultContractResolver()
+	[Theory]
+	[InlineData(SerializerSetting.ContractResolver)]
+	[InlineData(SerializerSetting.ReferenceLoopHandling)]
+	[InlineData(SerializerSetting.NullValueHandling)]
+	public void JsonPatchInputFormatter_ShouldHaveCorrectSerializerSettings(SerializerSetting setting)
 	{
 		// Act
 		NewtonsoftJsonPatchInputFormatter formatter = JsonPatchFormatter.JsonPatchInputFormatter();
 
-		// Use reflection to access protected SerializerSettings
 		PropertyInfo? serializerSettingsProperty = formatter.GetType().GetProperty("SerializerSettings", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
 		serializerSettingsProperty.ShouldNotBeNull();
 
 		JsonSerializerSettings? serializerSettings = serializerSettingsProperty.GetValue(formatter) as JsonSerializerSettings;
 		serializerSettings.ShouldNotBeNull();
 
-		serializerSettings.ContractResolver.ShouldBeOfType<DefaultContractResolver>();
-	}
-
-	[Fact]
-	public void JsonPatchInputFormatter_ShouldHave_ReferenceLoopHandling_Ignore()
-	{
-		// Act
-		NewtonsoftJsonPatchInputFormatter formatter = JsonPatchFormatter.JsonPatchInputFormatter();
-
-		PropertyInfo? serializerSettingsProperty = formatter.GetType().GetProperty("SerializerSettings", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-		JsonSerializerSettings? serializerSettings = serializerSettingsProperty?.GetValue(formatter) as JsonSerializerSettings;
-		serializerSettings.ShouldNotBeNull();
-
-		serializerSettings.ReferenceLoopHandling.ShouldBe(ReferenceLoopHandling.Ignore);
-	}
-
-	[Fact]
-	public void JsonPatchInputFormatter_ShouldHave_NullValueHandling_Ignore()
-	{
-		// Act
-		NewtonsoftJsonPatchInputFormatter formatter = JsonPatchFormatter.JsonPatchInputFormatter();
-
-		PropertyInfo? serializerSettingsProperty = formatter.GetType().GetProperty("SerializerSettings", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-		JsonSerializerSettings? serializerSettings = serializerSettingsProperty?.GetValue(formatter) as JsonSerializerSettings;
-		serializerSettings.ShouldNotBeNull();
-
-		serializerSettings.NullValueHandling.ShouldBe(NullValueHandling.Ignore);
+		// Assert
+		switch (setting)
+		{
+			case SerializerSetting.ContractResolver:
+				serializerSettings.ContractResolver.ShouldBeOfType<DefaultContractResolver>();
+				break;
+			case SerializerSetting.ReferenceLoopHandling:
+				serializerSettings.ReferenceLoopHandling.ShouldBe(ReferenceLoopHandling.Ignore);
+				break;
+			case SerializerSetting.NullValueHandling:
+				serializerSettings.NullValueHandling.ShouldBe(NullValueHandling.Ignore);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(setting));
+		}
 	}
 
 	[Theory]

@@ -532,49 +532,31 @@ public class AwsS3HelpersStaticTests
 		outputStream.Length.ShouldBe(0);
 	}
 
-	[Fact]
-	public async Task GetS3File_Stream_Should_Handle_NotFound_Exception()
+	[Theory]
+	[InlineData(EExceptionScenario.NotFound)]
+	[InlineData(EExceptionScenario.InternalServerError)]
+	[InlineData(EExceptionScenario.GeneralException)]
+	public async Task GetS3File_Stream_Should_Handle_Exceptions(EExceptionScenario scenario)
 	{
 		// Arrange
 		await using MemoryStream outputStream = new();
 		ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
-		A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-			.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
-
-		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		outputStream.Length.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task GetS3File_Stream_Should_Handle_Non_NotFound_AmazonS3Exception()
-	{
-		// Arrange
-		await using MemoryStream outputStream = new();
-		ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
-
-		A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-			.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
-
-		// Act
-		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, cancellationToken: Current.CancellationToken);
-
-		// Assert
-		outputStream.Length.ShouldBe(0);
-	}
-
-	[Fact]
-	public async Task GetS3File_Stream_Should_Handle_General_Exception()
-	{
-		// Arrange
-		await using MemoryStream outputStream = new();
-		ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
-
-		A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-			.ThrowsAsync(new InvalidOperationException("Error"));
+		switch (scenario)
+		{
+			case EExceptionScenario.NotFound:
+				A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
+					.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
+				break;
+			case EExceptionScenario.InternalServerError:
+				A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
+					.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
+				break;
+			case EExceptionScenario.GeneralException:
+				A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
+					.ThrowsAsync(new InvalidOperationException("Error"));
+				break;
+		}
 
 		// Act
 		await _s3Client.GetS3File(TestBucketName, TestFileName, outputStream, validatedBuckets, cancellationToken: Current.CancellationToken);
@@ -646,8 +628,11 @@ public class AwsS3HelpersStaticTests
 		}
 	}
 
-	[Fact]
-	public async Task GetS3File_FilePath_Should_Handle_NotFound_Exception()
+	[Theory]
+	[InlineData(EExceptionScenario.NotFound)]
+	[InlineData(EExceptionScenario.InternalServerError)]
+	[InlineData(EExceptionScenario.GeneralException)]
+	public async Task GetS3File_FilePath_Should_Handle_Exceptions(EExceptionScenario scenario)
 	{
 		// Arrange
 		string tempFile = Path.GetTempFileName();
@@ -655,60 +640,21 @@ public class AwsS3HelpersStaticTests
 		{
 			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
 
-			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-				.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
-
-			// Act
-			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
-
-			// Assert - Should handle gracefully
-			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-				.MustHaveHappened();
-		}
-		finally
-		{
-			if (File.Exists(tempFile))
-				File.Delete(tempFile);
-		}
-	}
-
-	[Fact]
-	public async Task GetS3File_FilePath_Should_Handle_Non_NotFound_Exception()
-	{
-		// Arrange
-		string tempFile = Path.GetTempFileName();
-		try
-		{
-			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
-
-			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-				.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
-
-			// Act
-			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);
-
-			// Assert - Should handle gracefully
-			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-				.MustHaveHappened();
-		}
-		finally
-		{
-			if (File.Exists(tempFile))
-				File.Delete(tempFile);
-		}
-	}
-
-	[Fact]
-	public async Task GetS3File_FilePath_Should_Handle_General_Exception()
-	{
-		// Arrange
-		string tempFile = Path.GetTempFileName();
-		try
-		{
-			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
-
-			A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
-				.ThrowsAsync(new InvalidOperationException("Error"));
+			switch (scenario)
+			{
+				case EExceptionScenario.NotFound:
+					A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
+						.ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
+					break;
+				case EExceptionScenario.InternalServerError:
+					A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
+						.ThrowsAsync(new AmazonS3Exception("Server error") { StatusCode = HttpStatusCode.InternalServerError });
+					break;
+				case EExceptionScenario.GeneralException:
+					A.CallTo(() => _s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._))
+						.ThrowsAsync(new InvalidOperationException("Error"));
+					break;
+			}
 
 			// Act
 			await _s3Client.GetS3File(TestBucketName, TestFileName, tempFile, validatedBuckets, cancellationToken: Current.CancellationToken);

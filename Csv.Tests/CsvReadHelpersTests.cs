@@ -17,6 +17,15 @@ public sealed class CsvReadHelpersTests
 
 	private sealed record TestRecord(string Name, int Age, DateTime BirthDate);
 
+	public enum CsvReadMethodType
+	{
+		Sync,
+		Async,
+		AsyncEnumerable,
+		DataTable,
+		DataTableWithType
+	}
+
 	//[Theory]
 	//[InlineData(true, null)]
 	//[InlineData(false, null)]
@@ -162,16 +171,6 @@ public sealed class CsvReadHelpersTests
 		}
 	}
 
-	[Fact]
-	public void ReadCsv_WithInvalidFilePath_ShouldThrowFileNotFoundException()
-	{
-		// Arrange
-		string invalidPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-		// Act & Assert
-		Should.Throw<FileNotFoundException>(() => CsvReadHelpers.ReadCsv<TestRecord>(invalidPath));
-	}
-
 	[Theory]
 	[InlineData(true, null)]
 	[InlineData(false, null)]
@@ -197,27 +196,6 @@ public sealed class CsvReadHelpersTests
 			result[i].Age.ShouldBe(expectedRecords[i].Age);
 			result[i].BirthDate.ShouldBe(expectedRecords[i].BirthDate);
 		}
-	}
-
-	[Fact]
-	public void ReadCsvFromStream_WithNullStream_ShouldThrowArgumentNullException()
-	{
-		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => CsvReadHelpers.ReadCsv<TestRecord>((Stream)null!));
-	}
-
-	[Fact]
-	public void ReadCsvFromStream_WithEmptyStream_ShouldReturnEmptyList()
-	{
-		// Arrange
-		using MemoryStream emptyStream = new();
-
-		// Act
-		List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(emptyStream);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBeEmpty();
 	}
 
 	[Theory]
@@ -254,16 +232,6 @@ public sealed class CsvReadHelpersTests
 		}
 	}
 
-	[Fact]
-	public async Task ReadCsvAsync_WithInvalidFilePath_ShouldThrowFileNotFoundException()
-	{
-		// Arrange
-		string invalidPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-		// Act & Assert
-		await Should.ThrowAsync<FileNotFoundException>(async () => await CsvReadHelpers.ReadCsvAsync<TestRecord>(invalidPath));
-	}
-
 	[Theory]
 	[InlineData(true, null)]
 	[InlineData(false, null)]
@@ -289,27 +257,6 @@ public sealed class CsvReadHelpersTests
 			result[i].Age.ShouldBe(expectedRecords[i].Age);
 			result[i].BirthDate.ShouldBe(expectedRecords[i].BirthDate);
 		}
-	}
-
-	[Fact]
-	public async Task ReadCsvFromStreamAsync_WithNullStream_ShouldThrowArgumentNullException()
-	{
-		// Act & Assert
-		await Should.ThrowAsync<ArgumentNullException>(async () => await CsvReadHelpers.ReadCsvAsync<TestRecord>((Stream)null!));
-	}
-
-	[Fact]
-	public async Task ReadCsvFromStreamAsync_WithEmptyStream_ShouldReturnEmptyList()
-	{
-		// Arrange
-		await using MemoryStream emptyStream = new();
-
-		// Act
-		List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(emptyStream, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBeEmpty();
 	}
 
 	[Theory]
@@ -350,22 +297,6 @@ public sealed class CsvReadHelpersTests
 		}
 	}
 
-	[Fact]
-	public async Task ReadCsvAsyncEnumerable_WithInvalidFilePath_ShouldThrowFileNotFoundException()
-	{
-		// Arrange
-		string invalidPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-		// Act & Assert
-		await Should.ThrowAsync<FileNotFoundException>(async () =>
-		{
-			await foreach (TestRecord _ in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(invalidPath))
-			{
-				// Should not reach here
-			}
-		});
-	}
-
 	[Theory]
 	[InlineData(true, null)]
 	[InlineData(false, null)]
@@ -395,37 +326,6 @@ public sealed class CsvReadHelpersTests
 			result[i].Age.ShouldBe(expectedRecords[i].Age);
 			result[i].BirthDate.ShouldBe(expectedRecords[i].BirthDate);
 		}
-	}
-
-	[Fact]
-	public async Task ReadCsvFromStreamAsyncEnumerable_WithNullStream_ShouldThrowArgumentNullException()
-	{
-		// Act & Assert
-		await Should.ThrowAsync<ArgumentNullException>(async () =>
-		{
-			await foreach (TestRecord _ in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>((Stream)null!))
-			{
-				// Should not reach here
-			}
-		});
-	}
-
-	[Fact]
-	public async Task ReadCsvFromStreamAsyncEnumerable_WithEmptyStream_ShouldYieldNoRecords()
-	{
-		// Arrange
-		await using MemoryStream emptyStream = new();
-
-		// Act
-		List<TestRecord> result = new();
-		await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(emptyStream, cancellationToken: TestContext.Current.CancellationToken))
-		{
-			result.Add(record);
-		}
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBeEmpty();
 	}
 
 	[Theory]
@@ -462,16 +362,6 @@ public sealed class CsvReadHelpersTests
 		}
 	}
 
-	[Fact]
-	public void ReadCsvToDataTable_WithInvalidFilePath_ShouldThrowFileNotFoundException()
-	{
-		// Arrange
-		string invalidPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-		// Act & Assert
-		Should.Throw<FileNotFoundException>(() => CsvReadHelpers.ReadCsvToDataTable(invalidPath));
-	}
-
 	[Theory]
 	[InlineData(true, null)]
 	[InlineData(false, null)]
@@ -503,16 +393,6 @@ public sealed class CsvReadHelpersTests
 		}
 	}
 
-	[Fact]
-	public void ReadCsvToDataTable_WithType_WithInvalidFilePath_ShouldThrowFileNotFoundException()
-	{
-		// Arrange
-		string invalidPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-		// Act & Assert
-		Should.Throw<FileNotFoundException>(() => CsvReadHelpers.ReadCsvToDataTable(invalidPath, typeof(TestRecord)));
-	}
-
 	[Theory]
 	[InlineData(true, null)]
 	[InlineData(false, null)]
@@ -540,27 +420,6 @@ public sealed class CsvReadHelpersTests
 		}
 	}
 
-	[Fact]
-	public void ReadCsvStreamToDataTable_WithNullStream_ShouldThrowArgumentNullException()
-	{
-		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => CsvReadHelpers.ReadCsvToDataTable((Stream)null!));
-	}
-
-	[Fact]
-	public void ReadCsvStreamToDataTable_WithEmptyStream_ShouldReturnEmptyDataTable()
-	{
-		// Arrange
-		using MemoryStream emptyStream = new();
-
-		// Act
-		using DataTable dataTable = CsvReadHelpers.ReadCsvToDataTable(emptyStream, false);
-
-		// Assert
-		dataTable.ShouldNotBeNull();
-		dataTable.Rows.Count.ShouldBe(0);
-	}
-
 	[Theory]
 	[InlineData(true, null)]
 	[InlineData(false, null)]
@@ -585,26 +444,140 @@ public sealed class CsvReadHelpersTests
 		dataTable.Columns.Contains("BirthDate").ShouldBeTrue();
 	}
 
-	[Fact]
-	public void ReadCsvStreamToDataTable_WithType_WithNullStream_ShouldThrowArgumentNullException()
-	{
-		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => CsvReadHelpers.ReadCsvToDataTable((Stream)null!, typeof(TestRecord)));
-	}
+	#region Consolidated Validation Tests
 
-	[Fact]
-	public void ReadCsvStreamToDataTable_WithType_WithEmptyStream_ShouldReturnEmptyDataTable()
+	[Theory]
+	[InlineData(CsvReadMethodType.Sync)]
+	[InlineData(CsvReadMethodType.Async)]
+	[InlineData(CsvReadMethodType.AsyncEnumerable)]
+	[InlineData(CsvReadMethodType.DataTable)]
+	[InlineData(CsvReadMethodType.DataTableWithType)]
+	public async Task ReadCsv_AllMethods_WithInvalidFilePath_ShouldThrowFileNotFoundException(CsvReadMethodType methodType)
 	{
 		// Arrange
-		using MemoryStream emptyStream = new();
+		string invalidPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
-		// Act
-		using DataTable dataTable = CsvReadHelpers.ReadCsvToDataTable(emptyStream, typeof(TestRecord), false);
-
-		// Assert
-		dataTable.ShouldNotBeNull();
-		dataTable.Rows.Count.ShouldBe(0);
+		// Act & Assert
+		switch (methodType)
+		{
+			case CsvReadMethodType.Sync:
+				Should.Throw<FileNotFoundException>(() => CsvReadHelpers.ReadCsv<TestRecord>(invalidPath));
+				break;
+			case CsvReadMethodType.Async:
+				await Should.ThrowAsync<FileNotFoundException>(async () => await CsvReadHelpers.ReadCsvAsync<TestRecord>(invalidPath, cancellationToken: TestContext.Current.CancellationToken));
+				break;
+			case CsvReadMethodType.AsyncEnumerable:
+				await Should.ThrowAsync<FileNotFoundException>(async () =>
+				{
+					await foreach (TestRecord _ in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(invalidPath, cancellationToken: TestContext.Current.CancellationToken))
+					{
+						// Should not reach here
+					}
+				});
+				break;
+			case CsvReadMethodType.DataTable:
+				Should.Throw<FileNotFoundException>(() => CsvReadHelpers.ReadCsvToDataTable(invalidPath));
+				break;
+			case CsvReadMethodType.DataTableWithType:
+				Should.Throw<FileNotFoundException>(() => CsvReadHelpers.ReadCsvToDataTable(invalidPath, typeof(TestRecord)));
+				break;
+		}
 	}
+
+	[Theory]
+	[InlineData(CsvReadMethodType.Sync)]
+	[InlineData(CsvReadMethodType.Async)]
+	[InlineData(CsvReadMethodType.AsyncEnumerable)]
+	[InlineData(CsvReadMethodType.DataTable)]
+	[InlineData(CsvReadMethodType.DataTableWithType)]
+	public async Task ReadCsv_AllMethods_WithNullStream_ShouldThrowArgumentNullException(CsvReadMethodType methodType)
+	{
+		// Act & Assert
+		switch (methodType)
+		{
+			case CsvReadMethodType.Sync:
+				Should.Throw<ArgumentNullException>(() => CsvReadHelpers.ReadCsv<TestRecord>((Stream)null!));
+				break;
+			case CsvReadMethodType.Async:
+				await Should.ThrowAsync<ArgumentNullException>(async () => await CsvReadHelpers.ReadCsvAsync<TestRecord>((Stream)null!, cancellationToken: TestContext.Current.CancellationToken));
+				break;
+			case CsvReadMethodType.AsyncEnumerable:
+				await Should.ThrowAsync<ArgumentNullException>(async () =>
+				{
+					await foreach (TestRecord _ in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>((Stream)null!, cancellationToken: TestContext.Current.CancellationToken))
+					{
+						// Should not reach here
+					}
+				});
+				break;
+			case CsvReadMethodType.DataTable:
+				Should.Throw<ArgumentNullException>(() => CsvReadHelpers.ReadCsvToDataTable((Stream)null!));
+				break;
+			case CsvReadMethodType.DataTableWithType:
+				Should.Throw<ArgumentNullException>(() => CsvReadHelpers.ReadCsvToDataTable((Stream)null!, typeof(TestRecord)));
+				break;
+		}
+	}
+
+	[Theory]
+	[InlineData(CsvReadMethodType.Sync)]
+	[InlineData(CsvReadMethodType.Async)]
+	[InlineData(CsvReadMethodType.AsyncEnumerable)]
+	[InlineData(CsvReadMethodType.DataTable)]
+	[InlineData(CsvReadMethodType.DataTableWithType)]
+	public async Task ReadCsv_AllMethods_WithEmptyStream_ShouldReturnEmpty(CsvReadMethodType methodType)
+	{
+		// Arrange & Act & Assert
+		switch (methodType)
+		{
+			case CsvReadMethodType.Sync:
+				{
+					using MemoryStream emptyStream = new();
+					List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(emptyStream);
+					result.ShouldNotBeNull();
+					result.ShouldBeEmpty();
+					break;
+				}
+			case CsvReadMethodType.Async:
+				{
+					await using MemoryStream emptyStream = new();
+					List<TestRecord> result = await CsvReadHelpers.ReadCsvAsync<TestRecord>(emptyStream, cancellationToken: TestContext.Current.CancellationToken);
+					result.ShouldNotBeNull();
+					result.ShouldBeEmpty();
+					break;
+				}
+			case CsvReadMethodType.AsyncEnumerable:
+				{
+					await using MemoryStream emptyStream = new();
+					List<TestRecord> result = new();
+					await foreach (TestRecord record in CsvReadHelpers.ReadCsvAsyncEnumerable<TestRecord>(emptyStream, cancellationToken: TestContext.Current.CancellationToken))
+					{
+						result.Add(record);
+					}
+					result.ShouldNotBeNull();
+					result.ShouldBeEmpty();
+					break;
+				}
+			case CsvReadMethodType.DataTable:
+				{
+					using MemoryStream emptyStream = new();
+					using DataTable dataTable = CsvReadHelpers.ReadCsvToDataTable(emptyStream, false);
+					dataTable.ShouldNotBeNull();
+					dataTable.Rows.Count.ShouldBe(0);
+					break;
+				}
+			case CsvReadMethodType.DataTableWithType:
+				{
+					await using MemoryStream emptyStream = new();
+					using DataTable dataTable = CsvReadHelpers.ReadCsvToDataTable(emptyStream, typeof(TestRecord), false);
+					dataTable.ShouldNotBeNull();
+					dataTable.Rows.Count.ShouldBe(0);
+					break;
+				}
+		}
+	}
+
+	#endregion
 
 	private static string GenerateCsvContent(IEnumerable<TestRecord> records, bool includeHeader)
 	{

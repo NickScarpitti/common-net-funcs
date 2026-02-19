@@ -7,6 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Requests.Tests;
 
+public enum SerializerType
+{
+	MessagePack,
+	MemoryPack
+}
+
 public sealed class ModelClassesTests
 {
 	[Fact]
@@ -28,52 +34,42 @@ public sealed class ModelClassesTests
 		asyncIntString.AsyncString.ShouldBe("test");
 	}
 
-	[Fact]
-	public void AsyncIntString_CanBeSerializedWithMessagePack()
+	[Theory]
+	[InlineData(SerializerType.MessagePack)]
+	[InlineData(SerializerType.MemoryPack)]
+	public void AsyncIntString_CanBeSerialized(SerializerType serializerType)
 	{
 		// Arrange
 		AsyncIntString original = new()
 		{
-			AsyncInt = 100,
-			AsyncDecimal = 99.99m,
-			AsyncFloat = 1.23f,
-			AsyncString = "serialization test"
+			AsyncInt = serializerType == SerializerType.MessagePack ? 100 : 200,
+			AsyncDecimal = serializerType == SerializerType.MessagePack ? 99.99m : 50.50m,
+			AsyncFloat = serializerType == SerializerType.MessagePack ? 1.23f : 3.45f,
+			AsyncString = serializerType == SerializerType.MessagePack ? "serialization test" : "memorypack test"
 		};
 
 		// Act
-		byte[] serialized = MessagePackSerializer.Serialize(original, cancellationToken: TestContext.Current.CancellationToken);
-		AsyncIntString? deserialized = MessagePackSerializer.Deserialize<AsyncIntString>(serialized, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		deserialized.ShouldNotBeNull();
-		deserialized.AsyncInt.ShouldBe(100);
-		deserialized.AsyncDecimal.ShouldBe(99.99m);
-		deserialized.AsyncFloat.ShouldBe(1.23f);
-		deserialized.AsyncString.ShouldBe("serialization test");
-	}
-
-	[Fact]
-	public void AsyncIntString_CanBeSerializedWithMemoryPack()
-	{
-		// Arrange
-		AsyncIntString original = new()
+		AsyncIntString? deserialized;
+		switch (serializerType)
 		{
-			AsyncInt = 200,
-			AsyncDecimal = 50.50m,
-			AsyncFloat = 3.45f,
-			AsyncString = "memorypack test"
-		};
-
-		// Act
-		byte[] serialized = MemoryPackSerializer.Serialize(original);
-		AsyncIntString? deserialized = MemoryPackSerializer.Deserialize<AsyncIntString>(serialized);
+			case SerializerType.MessagePack:
+				byte[] msgPackBytes = MessagePackSerializer.Serialize(original, cancellationToken: TestContext.Current.CancellationToken);
+				deserialized = MessagePackSerializer.Deserialize<AsyncIntString>(msgPackBytes, cancellationToken: TestContext.Current.CancellationToken);
+				break;
+			case SerializerType.MemoryPack:
+				byte[] memPackBytes = MemoryPackSerializer.Serialize(original);
+				deserialized = MemoryPackSerializer.Deserialize<AsyncIntString>(memPackBytes);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(serializerType));
+		}
 
 		// Assert
 		deserialized.ShouldNotBeNull();
-		deserialized.AsyncInt.ShouldBe(200);
-		deserialized.AsyncDecimal.ShouldBe(50.50m);
-		deserialized.AsyncFloat.ShouldBe(3.45f);
-		deserialized.AsyncString.ShouldBe("memorypack test");
+		deserialized.AsyncInt.ShouldBe(original.AsyncInt);
+		deserialized.AsyncDecimal.ShouldBe(original.AsyncDecimal);
+		deserialized.AsyncFloat.ShouldBe(original.AsyncFloat);
+		deserialized.AsyncString.ShouldBe(original.AsyncString);
 	}
 
 	[Fact]

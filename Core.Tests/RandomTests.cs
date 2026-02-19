@@ -4,6 +4,11 @@ using static CommonNetFuncs.Core.Random;
 
 namespace Core.Tests;
 
+// Enums for test consolidation (must be public for xUnit)
+public enum NumericType { Int, Double, Decimal }
+public enum ShuffleMethodType { ListInPlace, IEnumerable, IList, Array, Span }
+public enum StringLengthValidation { InvalidMaxLength, InvalidLengthRange }
+
 public sealed class RandomTests
 {
 	[Theory]
@@ -86,13 +91,23 @@ public sealed class RandomTests
 	}
 
 	[Theory]
-	[InlineData(0)]
-	[InlineData(-1)]
-	[InlineData(-10)]
-	public void GetRandomInts_WhenNumberToGenerateIsZeroOrNegative_ThrowsException(int numberToGenerate)
+	[InlineData(NumericType.Int, 0)]
+	[InlineData(NumericType.Int, -1)]
+	[InlineData(NumericType.Int, -10)]
+	[InlineData(NumericType.Double, 0)]
+	[InlineData(NumericType.Double, -1)]
+	[InlineData(NumericType.Decimal, 0)]
+	[InlineData(NumericType.Decimal, -1)]
+	public void GetRandomMultiple_WhenNumberToGenerateIsZeroOrNegative_ThrowsException(NumericType type, int numberToGenerate)
 	{
 		// Act & Assert
-		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomInts(numberToGenerate).ToList());
+		ArgumentOutOfRangeException exception = type switch
+		{
+			NumericType.Int => Should.Throw<ArgumentOutOfRangeException>(() => GetRandomInts(numberToGenerate).ToList()),
+			NumericType.Double => Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDoubles(numberToGenerate).ToList()),
+			NumericType.Decimal => Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDecimals(numberToGenerate).ToList()),
+			_ => throw new ArgumentOutOfRangeException(nameof(type))
+		};
 		exception.Message.ShouldContain("Number to generate must be greater than 0");
 		exception.ParamName.ShouldBe("numberToGenerate");
 	}
@@ -113,35 +128,70 @@ public sealed class RandomTests
 	}
 
 	[Theory]
-	[InlineData(0)]
-	[InlineData(-1)]
-	[InlineData(-5)]
-	public void GetRandomDouble_WithInvalidPrecision_ThrowsException(int precision)
+	[InlineData(NumericType.Double, 0)]
+	[InlineData(NumericType.Double, -1)]
+	[InlineData(NumericType.Double, -5)]
+	[InlineData(NumericType.Decimal, 0)]
+	[InlineData(NumericType.Decimal, -1)]
+	[InlineData(NumericType.Decimal, -5)]
+	public void GetRandomFloatingPoint_WithInvalidPrecision_ThrowsException(NumericType type, int precision)
 	{
 		// Act & Assert
-		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDouble(precision));
+		ArgumentOutOfRangeException exception = type switch
+		{
+			NumericType.Double => Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDouble(precision)),
+			NumericType.Decimal => Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDecimal(precision)),
+			_ => throw new ArgumentOutOfRangeException(nameof(type))
+		};
 		exception.Message.ShouldContain("decimalPlaces must be greater than 0");
 		exception.ParamName.ShouldBe("decimalPlaces");
 	}
 
-	[Fact]
-	public void GetRandomDouble_WithPrecisionGreaterThan15_CapsAt15()
+	[Theory]
+	[InlineData(NumericType.Double, 20, 15)]
+	[InlineData(NumericType.Decimal, 35, 28)]
+	public void GetRandomFloatingPoint_WithPrecisionGreaterThanMax_CapsAtMax(NumericType type, int requestedPrecision, int maxPrecision)
 	{
-		// Act
-		double result = GetRandomDouble(20);
-
-		// Assert
-		result.ShouldBeGreaterThanOrEqualTo(0);
-		result.ShouldBeLessThan(1);
-		result.GetPrecision().ShouldBeLessThanOrEqualTo(15);
+		// Act & Assert
+		switch (type)
+		{
+			case NumericType.Double:
+				double doubleResult = GetRandomDouble(requestedPrecision);
+				doubleResult.ShouldBeGreaterThanOrEqualTo(0);
+				doubleResult.ShouldBeLessThan(1);
+				doubleResult.GetPrecision().ShouldBeLessThanOrEqualTo(maxPrecision);
+				break;
+			case NumericType.Decimal:
+				decimal decimalResult = GetRandomDecimal(requestedPrecision);
+				decimalResult.ShouldBeGreaterThanOrEqualTo(0);
+				decimalResult.ShouldBeLessThan(1);
+				decimalResult.GetPrecision().ShouldBeLessThanOrEqualTo(maxPrecision);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(type));
+		}
 	}
 
-	[Fact]
-	public void GetRandomDouble_DefaultPrecision_ReturnsCorrectRange()
+	[Theory]
+	[InlineData(NumericType.Double)]
+	[InlineData(NumericType.Decimal)]
+	public void GetRandomFloatingPoint_DefaultPrecision_ReturnsCorrectRange(NumericType type)
 	{
-		double result = GetRandomDouble();
-		result.ShouldBeGreaterThanOrEqualTo(0);
-		result.ShouldBeLessThan(1);
+		switch (type)
+		{
+			case NumericType.Double:
+				double doubleResult = GetRandomDouble();
+				doubleResult.ShouldBeGreaterThanOrEqualTo(0);
+				doubleResult.ShouldBeLessThan(1);
+				break;
+			case NumericType.Decimal:
+				decimal decimalResult = GetRandomDecimal();
+				decimalResult.ShouldBeGreaterThanOrEqualTo(0);
+				decimalResult.ShouldBeLessThan(1);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(type));
+		}
 	}
 
 	[Theory]
@@ -156,18 +206,6 @@ public sealed class RandomTests
 		results.Count().ShouldBe(count);
 		results.All(x => x is >= 0 and < 1).ShouldBeTrue();
 		results.All(x => x.GetPrecision() <= precision).ShouldBeTrue();
-	}
-
-	[Theory]
-	[InlineData(0)]
-	[InlineData(-1)]
-	[InlineData(-10)]
-	public void GetRandomDoubles_WhenNumberToGenerateIsZeroOrNegative_ThrowsException(int numberToGenerate)
-	{
-		// Act & Assert
-		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDoubles(numberToGenerate).ToList());
-		exception.Message.ShouldContain("Number to generate must be greater than 0");
-		exception.ParamName.ShouldBe("numberToGenerate");
 	}
 
 	[Theory]
@@ -186,38 +224,6 @@ public sealed class RandomTests
 	}
 
 	[Theory]
-	[InlineData(0)]
-	[InlineData(-1)]
-	[InlineData(-5)]
-	public void GetRandomDecimal_WithInvalidPrecision_ThrowsException(int precision)
-	{
-		// Act & Assert
-		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDecimal(precision));
-		exception.Message.ShouldContain("decimalPlaces must be greater than 0");
-		exception.ParamName.ShouldBe("decimalPlaces");
-	}
-
-	[Fact]
-	public void GetRandomDecimal_WithPrecisionGreaterThan28_CapsAt28()
-	{
-		// Act
-		decimal result = GetRandomDecimal(35);
-
-		// Assert
-		result.ShouldBeGreaterThanOrEqualTo(0);
-		result.ShouldBeLessThan(1);
-		result.GetPrecision().ShouldBeLessThanOrEqualTo(28);
-	}
-
-	[Fact]
-	public void GetRandomDecimal_DefaultPrecision_ReturnsCorrectRange()
-	{
-		decimal result = GetRandomDecimal();
-		result.ShouldBeGreaterThanOrEqualTo(0);
-		result.ShouldBeLessThan(1);
-	}
-
-	[Theory]
 	[InlineData(5, 3)]
 	[InlineData(10, 10)]
 	public void GetRandomDecimals_GeneratesCorrectNumberAndPrecision(int count, int precision)
@@ -229,18 +235,6 @@ public sealed class RandomTests
 		results.Count().ShouldBe(count);
 		results.All(x => x is >= 0 and < 1).ShouldBeTrue();
 		results.All(x => x.GetPrecision() <= precision).ShouldBeTrue();
-	}
-
-	[Theory]
-	[InlineData(0)]
-	[InlineData(-1)]
-	[InlineData(-10)]
-	public void GetRandomDecimals_WhenNumberToGenerateIsZeroOrNegative_ThrowsException(int numberToGenerate)
-	{
-		// Act & Assert
-		ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => GetRandomDecimals(numberToGenerate).ToList());
-		exception.Message.ShouldContain("Number to generate must be greater than 0");
-		exception.ParamName.ShouldBe("numberToGenerate");
 	}
 
 	[Fact]
@@ -259,17 +253,39 @@ public sealed class RandomTests
 		original.SequenceEqual(copy).ShouldBeFalse();
 	}
 
-	[Fact]
-	public void ShuffleListInPlace_WithEmptyList_ReturnsEmptyList()
+	[Theory]
+	[InlineData(ShuffleMethodType.ListInPlace)]
+	[InlineData(ShuffleMethodType.IEnumerable)]
+	[InlineData(ShuffleMethodType.IList)]
+	[InlineData(ShuffleMethodType.Array)]
+	public void Shuffle_WithEmptyCollection_ReturnsEmpty(ShuffleMethodType methodType)
 	{
-		// Arrange
-		List<int> emptyList = new();
-
-		// Act
-		IList<int> result = emptyList.ShuffleListInPlace(cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		result.ShouldBeEmpty();
+		// Arrange & Act & Assert
+		switch (methodType)
+		{
+			case ShuffleMethodType.ListInPlace:
+				List<int> emptyList = new();
+				IList<int> result = emptyList.ShuffleListInPlace(cancellationToken: TestContext.Current.CancellationToken);
+				result.ShouldBeEmpty();
+				break;
+			case ShuffleMethodType.IEnumerable:
+				List<int> emptyEnumerable = new();
+				IEnumerable<int> enumerableResult = emptyEnumerable.Shuffle();
+				enumerableResult.ShouldBeEmpty();
+				break;
+			case ShuffleMethodType.IList:
+				List<int> emptyIList = new();
+				List<int> iListResult = emptyIList.Shuffle();
+				iListResult.ShouldBeEmpty();
+				break;
+			case ShuffleMethodType.Array:
+				int[] emptyArray = Array.Empty<int>();
+				emptyArray.Shuffle();
+				emptyArray.ShouldBeEmpty();
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(methodType));
+		}
 	}
 
 	[Fact]
@@ -316,45 +332,6 @@ public sealed class RandomTests
 		shuffled.Length.ShouldBe(original.Length);
 		shuffled.Order().SequenceEqual(original.Order()).ShouldBeTrue();
 		shuffled.SequenceEqual(original).ShouldBeFalse();
-	}
-
-	[Fact]
-	public void Shuffle_WithEmptyEnumerable_ReturnsEmpty()
-	{
-		// Arrange
-		List<int> empty = new();
-
-		// Act
-		IEnumerable<int> result = empty.Shuffle();
-
-		// Assert
-		result.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void Shuffle_IList_WithEmptyList_ReturnsEmpty()
-	{
-		// Arrange
-		List<int> empty = new();
-
-		// Act
-		List<int> result = empty.Shuffle();
-
-		// Assert
-		result.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void Shuffle_Array_WithEmptyArray_RemainsEmpty()
-	{
-		// Arrange
-		int[] empty = Array.Empty<int>();
-
-		// Act
-		empty.Shuffle();
-
-		// Assert
-		empty.ShouldBeEmpty();
 	}
 
 	[Fact]
@@ -446,32 +423,24 @@ public sealed class RandomTests
 	[Theory]
 	[InlineData(10)]
 	[InlineData(20)]
-	public void GenerateRandomStringByCharSet_UsesProvidedCharSet(int length)
+	public void GenerateRandomStringByCharSet_UsesProvidedOrDefaultCharSet(int length)
 	{
 		// Arrange
 		HashSet<char> charSet = ['A', 'B', 'C', '1', '2', '3'];
 
-		// Act
-		string result = GenerateRandomStringByCharSet(length, charSet, TestContext.Current.CancellationToken);
+		// Act - with provided charset
+		string resultWithCharSet = GenerateRandomStringByCharSet(length, charSet, TestContext.Current.CancellationToken);
 
 		// Assert
-		result.Length.ShouldBe(length);
-		result.All(charSet.Contains).ShouldBeTrue();
-	}
+		resultWithCharSet.Length.ShouldBe(length);
+		resultWithCharSet.All(charSet.Contains).ShouldBeTrue();
 
-	[Theory]
-	[InlineData(10)]
-	[InlineData(20)]
-	public void GenerateRandomStringByCharSet_UsesDefaultCharSet(int length)
-	{
-		// Act
-		string result = GenerateRandomStringByCharSet(length, cancellationToken: TestContext.Current.CancellationToken);
+		// Act - with default charset
+		string resultDefault = GenerateRandomStringByCharSet(length, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
-		result.Length.ShouldBe(length);
-
-		// Check if all characters are from the default char set
-		result.All(DefaultCharSet.Contains).ShouldBeTrue();
+		resultDefault.Length.ShouldBe(length);
+		resultDefault.All(DefaultCharSet.Contains).ShouldBeTrue();
 	}
 
 	[Fact]
@@ -543,19 +512,24 @@ public sealed class RandomTests
 	}
 
 	[Theory]
-	[InlineData(-1)]
-	[InlineData(0)]
-	public void GenerateRandomString_WithInvalidLength_ThrowsException(int maxLength)
+	[InlineData(StringLengthValidation.InvalidMaxLength, -1)]
+	[InlineData(StringLengthValidation.InvalidMaxLength, 0)]
+	[InlineData(StringLengthValidation.InvalidLengthRange, 10)]
+	[InlineData(StringLengthValidation.InvalidLengthRange, 0)]
+	public void GenerateRandomString_WithInvalidLength_ThrowsException(StringLengthValidation validationType, int value)
 	{
-		Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength));
-	}
-
-	[Theory]
-	[InlineData(10, 5)]
-	[InlineData(0, 0)]
-	public void GenerateRandomString_WithInvalidLengthRange_ThrowsException(int minLength, int maxLength)
-	{
-		Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength, minLength));
+		switch (validationType)
+		{
+			case StringLengthValidation.InvalidMaxLength:
+				Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(value));
+				break;
+			case StringLengthValidation.InvalidLengthRange:
+				// minLength > maxLength
+				Should.Throw<ArgumentOutOfRangeException>(() => GenerateRandomString(maxLength: value, minLength: value > 0 ? value + 5 : 0));
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(validationType));
+		}
 	}
 
 	[Fact]

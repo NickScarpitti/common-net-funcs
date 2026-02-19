@@ -1,13 +1,15 @@
-﻿using CommonNetFuncs.EFCore;
+﻿using System.Reflection;
+using CommonNetFuncs.EFCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using NSubstitute;
-using System.Reflection;
 using static Xunit.TestContext;
 
 namespace EFCore.Tests;
+
+#pragma warning disable S6966 // Use asynchronous methods when possible
 
 public sealed class CollectionsTests : IDisposable
 {
@@ -49,9 +51,14 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test2", Value = 200, CreatedDate = DateTime.UtcNow.AddDays(1) };
 		context.TestEntities.AddRange(entity1, entity2);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		CollectionTestEntity partialObject = new() { Name = "Test1", Value = 0 };
 
@@ -83,9 +90,14 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = DateTime.UtcNow };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		CollectionTestEntity partialObject = new() { Name = "Test", Value = 100, Description = null };
 
@@ -109,9 +121,14 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		CollectionTestEntity partialObject = new() { CreatedDate = utcDate };
 
@@ -136,9 +153,14 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		CollectionTestEntity partialObject = new() { CreatedDate = localDate };
 
@@ -164,9 +186,14 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100, CreatedDate = utcDate };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		CollectionTestEntity partialObject = new() { CreatedDate = utcDate };
 
@@ -190,9 +217,14 @@ public sealed class CollectionsTests : IDisposable
 		TestEntityWithDateTimeOffset entity = new() { Id = 1, Name = "Test", CreatedDate = dateTimeOffset };
 		context.TestEntitiesWithDateTimeOffset.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		TestEntityWithDateTimeOffset partialObject = new() { CreatedDate = dateTimeOffset };
 
@@ -215,9 +247,14 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity = new() { Id = 1, Name = "Test1", Value = 100 };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		CollectionTestEntity partialObject = new() { Name = "NonExistent" };
 
@@ -239,9 +276,14 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		CollectionTestEntity partialObject = new() { Name = null, Description = null };
 
@@ -263,9 +305,14 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 100 };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		CollectionTestEntity partialObject = new() { Name = "Test", Value = 0, Id = 0 }; // 0 is default for int
 
@@ -290,12 +337,17 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
 		context.TestEntities.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
 
 		// When ignoreDefaultValues = false, ALL non-null properties are included
 		// So we need to match all properties including CreatedDate
+
 		CollectionTestEntity partialObject = new() { Id = 1, Name = "Test", Value = 0, CreatedDate = specificDate };
 
 		// Act
@@ -322,9 +374,14 @@ public sealed class CollectionsTests : IDisposable
 		CollectionTestEntity entity2 = new() { Id = 2, Name = "Test", Value = 200, CreatedDate = specificDate2 };
 		context.TestEntities.AddRange(entity1, entity2);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		CollectionTestEntity partialObject;
 		if (ignoreDefaultValues)
@@ -608,9 +665,14 @@ public sealed class CollectionsTests : IDisposable
 		TestEntityWithDateTimeOffset entity = new() { Id = 1, Name = "Test", CreatedDate = dateOffset };
 		context.TestEntitiesWithDateTimeOffset.Add(entity);
 		if (mode == ExecutionMode.Async)
+		{
 			await context.SaveChangesAsync(Current.CancellationToken);
+		}
 		else
+		{
 			context.SaveChanges();
+		}
+
 
 		TestEntityWithDateTimeOffset partialObject = new() { CreatedDate = dateOffset };
 
@@ -1148,41 +1210,42 @@ public sealed class CollectionsTests : IDisposable
 
 	// Test DbContext and entities
 	private sealed class CollectionTestDbContext(DbContextOptions<CollectionTestDbContext> options) : DbContext(options)
-{
-	public DbSet<CollectionTestEntity> TestEntities => Set<CollectionTestEntity>();
-	public DbSet<TestEntityWithDateTimeOffset> TestEntitiesWithDateTimeOffset => Set<TestEntityWithDateTimeOffset>();
-
-	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
-		modelBuilder.Entity<CollectionTestEntity>();
-		modelBuilder.Entity<TestEntityWithDateTimeOffset>();
+		public DbSet<CollectionTestEntity> TestEntities => Set<CollectionTestEntity>();
+		public DbSet<TestEntityWithDateTimeOffset> TestEntitiesWithDateTimeOffset => Set<TestEntityWithDateTimeOffset>();
+
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			modelBuilder.Entity<CollectionTestEntity>();
+			modelBuilder.Entity<TestEntityWithDateTimeOffset>();
+		}
 	}
-}
 
-private sealed class CollectionTestEntity
-{
-	public int Id { get; set; }
-	public string? Name { get; set; }
-	public int Value { get; set; }
-	public string? Description { get; set; }
-	public DateTime CreatedDate { get; set; }
-}
+	private sealed class CollectionTestEntity
+	{
+		public int Id { get; set; }
+		public string? Name { get; set; }
+		public int Value { get; set; }
+		public string? Description { get; set; }
+		public DateTime CreatedDate { get; set; }
+	}
 
-private sealed class TestEntityWithDateTimeOffset
-{
-	public int Id { get; set; }
-	public string? Name { get; set; }
-	public DateTimeOffset CreatedDate { get; set; }
-}
+	private sealed class TestEntityWithDateTimeOffset
+	{
+		public int Id { get; set; }
+		public string? Name { get; set; }
+		public DateTimeOffset CreatedDate { get; set; }
+	}
 
 #pragma warning disable S1144 // Unused private types or members should be removed
-private sealed class TestEntityNotInModel
-{
-	public int Id { get; set; }
-	public string? Name { get; set; }
-	public int Value { get; set; }
-	public string? Description { get; set; }
-	public DateTime CreatedDate { get; set; }
-}
+	private sealed class TestEntityNotInModel
+	{
+		public int Id { get; set; }
+		public string? Name { get; set; }
+		public int Value { get; set; }
+		public string? Description { get; set; }
+		public DateTime CreatedDate { get; set; }
+	}
 #pragma warning restore S1144 // Unused private types or members should be removed
 }
+#pragma warning restore S6966 // Use asynchronous methods when possible

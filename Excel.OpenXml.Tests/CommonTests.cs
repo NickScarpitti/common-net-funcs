@@ -3848,7 +3848,7 @@ public sealed class CommonTests : IDisposable
 		FieldInfo? formatCacheField = commonType.GetField("formatCache", BindingFlags.NonPublic | BindingFlags.Static);
 		if (formatCacheField != null)
 		{
-			var formatCache = formatCacheField.GetValue(null);
+			object? formatCache = formatCacheField.GetValue(null);
 			if (formatCache != null)
 			{
 				MethodInfo? clearMethod = formatCache.GetType().GetMethod("Clear");

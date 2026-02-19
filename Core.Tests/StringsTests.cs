@@ -1329,7 +1329,7 @@ public sealed class StringsTests
 	public void ToNString_Overloads_Work()
 	{
 		// Arrange
-		DateTime? dt = new DateTime(2024, 1, 2, 3, 4, 5);
+		DateTime? dt = new DateTime(2024, 1, 2, 3, 4, 5, DateTimeKind.Unspecified);
 		DateOnly? d = new DateOnly(2024, 1, 2);
 		TimeSpan? ts = new TimeSpan(1, 2, 3);
 		int? i = 42;
@@ -1428,7 +1428,7 @@ public sealed class StringsTests
 		}
 		else
 		{
-			result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value));
+			result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value, 0, 0, 0, DateTimeKind.Unspecified));
 		}
 	}
 

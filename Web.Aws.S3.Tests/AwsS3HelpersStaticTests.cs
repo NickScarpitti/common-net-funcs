@@ -262,7 +262,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -294,7 +297,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -320,7 +326,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -600,7 +609,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -624,7 +636,9 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
 		}
 	}
 
@@ -666,7 +680,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -1228,7 +1245,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -1335,7 +1355,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -1395,7 +1418,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -1549,7 +1575,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -1581,7 +1610,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -1628,7 +1660,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 
@@ -1853,7 +1888,10 @@ public class AwsS3HelpersStaticTests
 		finally
 		{
 			if (File.Exists(tempFile))
+			{
 				File.Delete(tempFile);
+			}
+
 		}
 	}
 

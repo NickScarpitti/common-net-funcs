@@ -2511,7 +2511,10 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -2534,7 +2537,10 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -2558,9 +2564,15 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(invalidInput))
+			{
 				File.Delete(invalidInput);
+			}
+
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -2690,7 +2702,10 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -2714,7 +2729,10 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -2825,7 +2843,10 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -2979,9 +3000,15 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(corruptedPath))
+			{
 				File.Delete(corruptedPath);
+			}
+
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -3016,9 +3043,15 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(corruptedPath))
+			{
 				File.Delete(corruptedPath);
+			}
+
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -3042,9 +3075,15 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(invalidPath))
+			{
 				File.Delete(invalidPath);
+			}
+
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -3068,9 +3107,15 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(invalidPath))
+			{
 				File.Delete(invalidPath);
+			}
+
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 
@@ -3121,9 +3166,15 @@ public sealed class ManipulationTests : IDisposable
 		finally
 		{
 			if (File.Exists(corruptedPath))
+			{
 				File.Delete(corruptedPath);
+			}
+
 			if (File.Exists(outputPath))
+			{
 				File.Delete(outputPath);
+			}
+
 		}
 	}
 

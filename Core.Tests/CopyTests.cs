@@ -1824,7 +1824,7 @@ public sealed class CopyTests
 			StringValue = "hello",
 			DoubleValue = 3.14,
 			BoolValue = true,
-			DateValue = new DateTime(2024, 1, 1)
+			DateValue = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)
 		};
 
 		// Act
@@ -1836,7 +1836,7 @@ public sealed class CopyTests
 		result.StringValue.ShouldBe("hello");
 		result.DoubleValue.ShouldBe(3.14);
 		result.BoolValue.ShouldBeTrue();
-		result.DateValue.ShouldBe(new DateTime(2024, 1, 1));
+		result.DateValue.ShouldBe(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified));
 	}
 
 	[Theory]

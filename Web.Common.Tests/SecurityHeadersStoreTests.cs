@@ -43,16 +43,16 @@ public class SecurityHeadersStoreTests
 	}
 
 	[Theory]
-	[InlineData(SecurityHeaderKey.XssProtection, "X-Xss-Protection", "1; mode=block")]
-	[InlineData(SecurityHeaderKey.XFrameOptions, "X-Frame-Options", "DENY")]
-	[InlineData(SecurityHeaderKey.ReferrerPolicy, "Referrer-Policy", "no-referrer")]
-	[InlineData(SecurityHeaderKey.XContentTypeOptions, "X-Content-Type-Options", "nosniff")]
-	[InlineData(SecurityHeaderKey.XPermittedCrossDomainPolicies, "X-Permitted-Cross-Domain-Policies", "none")]
-	public void SecurityHeaders_IndividualHeaders_HaveCorrectValues(SecurityHeaderKey key, string headerName, string expectedValue)
+	[InlineData("X-Xss-Protection", "1; mode=block")]
+	[InlineData("X-Frame-Options", "DENY")]
+	[InlineData("Referrer-Policy", "no-referrer")]
+	[InlineData("X-Content-Type-Options", "nosniff")]
+	[InlineData("X-Permitted-Cross-Domain-Policies", "none")]
+	public void SecurityHeaders_IndividualHeaders_HaveCorrectValues(string headerName, string expectedValue)
 	{
 		// Assert
 		SecurityHeadersStore.SecurityHeaders[headerName].ShouldBe(expectedValue);
-		SecurityHeadersStore.SecurityHeaders.TryGetValue(headerName, out var value).ShouldBeTrue();
+		SecurityHeadersStore.SecurityHeaders.TryGetValue(headerName, out string? value).ShouldBeTrue();
 		value.ShouldBe(expectedValue);
 	}
 
@@ -115,7 +115,7 @@ public class SecurityHeadersStoreTests
 	public void SecurityHeaders_AllHeaders_CanBeAccessedByKey(string headerName, string expectedValue)
 	{
 		// Assert
-		SecurityHeadersStore.SecurityHeaders.TryGetValue(headerName, out var value).ShouldBeTrue();
+		SecurityHeadersStore.SecurityHeaders.TryGetValue(headerName, out string? value).ShouldBeTrue();
 		value.ShouldBe(expectedValue);
 	}
 
@@ -123,7 +123,7 @@ public class SecurityHeadersStoreTests
 	public void SecurityHeaders_NonExistentKey_ReturnsNull()
 	{
 		// Act
-		var exists = SecurityHeadersStore.SecurityHeaders.TryGetValue("NonExistent-Header", out var value);
+		bool exists = SecurityHeadersStore.SecurityHeaders.TryGetValue("NonExistent-Header", out string? value);
 
 		// Assert
 		exists.ShouldBeFalse();
@@ -137,7 +137,7 @@ public class SecurityHeadersStoreTests
 		var headersList = new List<string>();
 
 		// Act
-		foreach (var header in SecurityHeadersStore.HeadersToRemove)
+		foreach (string header in SecurityHeadersStore.HeadersToRemove)
 		{
 			headersList.Add(header);
 		}

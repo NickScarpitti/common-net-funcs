@@ -110,9 +110,14 @@ public sealed class FileHelpersTests : IDisposable
 		// Assert
 		Directory.Exists(newDir).ShouldBeTrue();
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldContain(newDir);
+		}
 		else
+		{
 			safeName.ShouldBe("file2.txt");
+		}
+
 	}
 
 	[Theory]
@@ -272,14 +277,12 @@ public sealed class FileHelpersTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData(ApiVariant.StringExtension, 3)]
-	[InlineData(ApiVariant.PathAndFileName, "(0)")]
-	public async Task GetSafeSaveName_StrCompBreaksLoop(ApiVariant variant, object expectedMarker)
+	[InlineData(ApiVariant.StringExtension)]
+	[InlineData(ApiVariant.PathAndFileName)]
+	public async Task GetSafeSaveName_StrCompBreaksLoop(ApiVariant variant)
 	{
 		// Arrange
-		string fileName = variant == ApiVariant.StringExtension
-			? "test (0).txt"
-			: "loop_test (0).txt";
+		string fileName = variant == ApiVariant.StringExtension ? "test (0).txt" : "loop_test (0).txt";
 		string filePath = Path.Combine(tempDir, fileName);
 		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
 
@@ -294,9 +297,9 @@ public sealed class FileHelpersTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData(ApiVariant.StringExtension, "(0)")]
-	[InlineData(ApiVariant.PathAndFileName, "(4)")]
-	public async Task GetSafeSaveName_AlreadyHasIterator_HandlesCorrectly(ApiVariant variant, string expectedPattern)
+	[InlineData(ApiVariant.StringExtension)]
+	[InlineData(ApiVariant.PathAndFileName)]
+	public async Task GetSafeSaveName_AlreadyHasIterator_HandlesCorrectly(ApiVariant variant)
 	{
 		// Arrange
 		if (variant == ApiVariant.StringExtension)
@@ -976,9 +979,15 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Assert
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldNotBe(filePath);
+		}
 		else
+		{
 			safeName.ShouldNotBe(baseName);
+		}
+
+
 		safeName.ShouldContain("(0)");
 	}
 
@@ -1001,9 +1010,14 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Assert
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldBe(fileName);
+		}
 		else
+		{
 			safeName.ShouldBe(baseName);
+		}
+
 	}
 
 	[Theory]
@@ -1024,15 +1038,20 @@ public sealed class FileHelpersTests : IDisposable
 		// Assert
 		Directory.Exists(newDir).ShouldBeTrue();
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldContain(newDir);
+		}
 		else
+		{
 			safeName.ShouldBe(fileName);
+		}
+
 	}
 
 	[Theory]
-	[InlineData(ApiVariant.StringExtension, LoggingMode.WithLogging)]
-	[InlineData(ApiVariant.PathAndFileName, LoggingMode.WithLogging)]
-	public void GetSafeSaveName_WithLogging_ReturnsEmpty_WhenDirectoryMissing(ApiVariant variant, LoggingMode loggingMode)
+	[InlineData(ApiVariant.StringExtension)]
+	[InlineData(ApiVariant.PathAndFileName)]
+	public void GetSafeSaveName_WithLogging_ReturnsEmpty_WhenDirectoryMissing(ApiVariant variant)
 	{
 		// Arrange
 		string newDir = Path.Combine(tempDir, $"LoggingMissing_{variant}");
@@ -1311,9 +1330,15 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Assert
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldNotBe(filePath);
+		}
 		else
+		{
 			safeName.ShouldNotBe(fileName);
+		}
+
+
 		safeName.ShouldContain("(0)");
 	}
 
@@ -1335,9 +1360,15 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Assert
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldNotBe(filePath);
+		}
 		else
+		{
 			safeName.ShouldNotBe(fileName);
+		}
+
+
 		safeName.ShouldContain("(0)");
 	}
 
@@ -1358,9 +1389,15 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Assert
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldNotBe(filePath);
+		}
 		else
+		{
 			safeName.ShouldNotBe(fileName);
+		}
+
+
 		safeName.ShouldContain("(0)");
 	}
 
@@ -1385,18 +1422,24 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Assert
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldNotBe(filePath);
+		}
 		else
+		{
 			safeName.ShouldNotBe(fileName);
+		}
+
+
 		safeName.ShouldContain(baseName);
 	}
 
 	[Theory]
-	[InlineData(ApiVariant.StringExtension, false, true)]
-	[InlineData(ApiVariant.PathAndFileName, false, true)]
-	[InlineData(ApiVariant.StringExtension, true, false)]
-	[InlineData(ApiVariant.PathAndFileName, true, false)]
-	public async Task GetSafeSaveName_WithIteratorInFileName_WithLogging(ApiVariant variant, bool suppressLogging, bool hasLogging)
+	[InlineData(ApiVariant.StringExtension, false)]
+	[InlineData(ApiVariant.PathAndFileName, false)]
+	[InlineData(ApiVariant.StringExtension, true)]
+	[InlineData(ApiVariant.PathAndFileName, true)]
+	public async Task GetSafeSaveName_WithIteratorInFileName_WithLogging(ApiVariant variant, bool suppressLogging)
 	{
 		// Arrange
 		string baseName = $"suppress_iter_{variant}_{suppressLogging}";
@@ -1414,9 +1457,15 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Assert
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldNotBe(filePath);
+		}
 		else
+		{
 			safeName.ShouldNotBe(fileName);
+		}
+
+
 		safeName.ShouldContain(baseName);
 	}
 
@@ -1472,9 +1521,14 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Assert
 		if (variant == ApiVariant.StringExtension)
+		{
 			safeName.ShouldBe(fullPath);
+		}
 		else
+		{
 			safeName.ShouldBe(fileName);
+		}
+
 	}
 
 	[Fact]

@@ -718,7 +718,7 @@ public class PrioritizedSequentialTaskProcessorTests
 
 		// Act
 
-		var result = await processor.EnqueueWithPriorityAsync(_ => Task.FromResult((object?)expectedObject), cancellationToken: Current.CancellationToken);
+		object? result = await processor.EnqueueWithPriorityAsync(_ => Task.FromResult((object?)expectedObject), cancellationToken: Current.CancellationToken);
 
 		// Assert
 

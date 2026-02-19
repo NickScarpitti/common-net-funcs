@@ -1360,7 +1360,7 @@ public sealed class MemoryCacheMiddlewareTests
 		context.Request.Path = "/api/test";
 
 		// Large body
-		string bodyContent = new string('x', 10000);
+		string bodyContent = new('x', 10000);
 		MemoryStream bodyStream = new(Encoding.UTF8.GetBytes(bodyContent));
 		context.Request.Body = bodyStream;
 		context.Response.StatusCode = StatusCodes.Status200OK;

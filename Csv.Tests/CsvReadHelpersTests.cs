@@ -533,7 +533,11 @@ public sealed class CsvReadHelpersTests
 			case CsvReadMethodType.Sync:
 				{
 					using MemoryStream emptyStream = new();
+
+#pragma warning disable S6966
 					List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(emptyStream);
+#pragma warning restore S6966
+
 					result.ShouldNotBeNull();
 					result.ShouldBeEmpty();
 					break;

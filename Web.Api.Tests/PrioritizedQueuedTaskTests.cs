@@ -10,7 +10,7 @@ public class PrioritizedQueuedTaskTests
 	public void Constructor_Should_Create_Task_With_TaskFunction()
 	{
 		// Arrange
-		Func<CancellationToken, Task<object?>> taskFunction = _ => Task.FromResult<object?>(42);
+		static Task<object?> taskFunction(CancellationToken _) => Task.FromResult<object?>(42);
 
 		// Act
 		PrioritizedQueuedTask task = new(taskFunction);
@@ -31,10 +31,11 @@ public class PrioritizedQueuedTaskTests
 	public void Priority_Property_Should_Be_Settable(int priority)
 	{
 		// Arrange
-		PrioritizedQueuedTask task = new(_ => Task.FromResult<object?>(null));
-
-		// Act
-		task.Priority = priority;
+		PrioritizedQueuedTask task = new(_ => Task.FromResult<object?>(null))
+		{
+			// Act
+			Priority = priority
+		};
 
 		// Assert
 		task.Priority.ShouldBe(priority);
@@ -49,10 +50,11 @@ public class PrioritizedQueuedTaskTests
 	public void PriorityLevel_Property_Should_Be_Settable(TaskPriority priorityLevel)
 	{
 		// Arrange
-		PrioritizedQueuedTask task = new(_ => Task.FromResult<object?>(null));
-
-		// Act
-		task.PriorityLevel = priorityLevel;
+		PrioritizedQueuedTask task = new(_ => Task.FromResult<object?>(null))
+		{
+			// Act
+			PriorityLevel = priorityLevel
+		};
 
 		// Assert
 		task.PriorityLevel.ShouldBe(priorityLevel);
@@ -146,6 +148,7 @@ public class PrioritizedQueuedTaskTests
 		{
 			Priority = 1
 		};
+
 		PrioritizedQueuedTask highPriorityTask = new(_ => Task.FromResult<object?>(null))
 		{
 			Priority = 10
@@ -190,6 +193,7 @@ public class PrioritizedQueuedTaskTests
 		{
 			Priority = 5
 		};
+
 		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
 		{
 			Priority = 10
@@ -210,6 +214,7 @@ public class PrioritizedQueuedTaskTests
 		{
 			Priority = 10
 		};
+
 		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
 		{
 			Priority = 5
@@ -397,6 +402,7 @@ public class PrioritizedQueuedTaskTests
 		{
 			Priority = 10
 		};
+
 		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
 		{
 			Priority = 5
@@ -447,6 +453,7 @@ public class PrioritizedQueuedTaskTests
 		{
 			Priority = 5
 		};
+
 		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
 		{
 			Priority = 5
@@ -496,6 +503,7 @@ public class PrioritizedQueuedTaskTests
 		{
 			Priority = 5
 		};
+
 		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
 		{
 			Priority = 10
@@ -518,6 +526,7 @@ public class PrioritizedQueuedTaskTests
 		{
 			Priority = 10
 		};
+
 		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
 		{
 			Priority = 5
@@ -568,6 +577,7 @@ public class PrioritizedQueuedTaskTests
 		{
 			Priority = 5
 		};
+
 		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
 		{
 			Priority = 10
@@ -614,6 +624,7 @@ public class PrioritizedQueuedTaskTests
 		{
 			Priority = -10
 		};
+
 		PrioritizedQueuedTask task2 = new(_ => Task.FromResult<object?>(null))
 		{
 			Priority = -5

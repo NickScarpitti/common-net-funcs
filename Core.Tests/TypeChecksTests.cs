@@ -120,7 +120,7 @@ public sealed class TypeChecksTests
 	[InlineData(typeof(TimeSpan?), true)]
 	[InlineData(typeof(Guid?), true)]
 	[InlineData(typeof(decimal?), true)]
-	[InlineData(typeof(ETestEnum), true)]
+	[InlineData(typeof(ETest), true)]
 	[InlineData(typeof(DateTimeOffset), true)]
 	[InlineData(typeof(TimeSpan), true)]
 	public void IsSimpleType_ShouldIdentifySimpleTypes(Type type, bool expected)
@@ -191,7 +191,7 @@ public sealed class TypeChecksTests
 	}
 
 	// Test enum for IsSimpleType tests
-	private enum ETestEnum
+	private enum ETest
 	{
 		Value1,
 		Value2

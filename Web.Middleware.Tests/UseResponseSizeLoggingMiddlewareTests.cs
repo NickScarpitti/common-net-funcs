@@ -92,8 +92,7 @@ public sealed class UseResponseSizeLoggingMiddlewareTests
 		A.CallTo(() => next(context)).ThrowsAsync(exception);
 
 		// Act & Assert
-		Exception thrownException = await Should.ThrowAsync<Exception>(
-				async () => await middleware.InvokeAsync(context));
+		Exception thrownException = await Should.ThrowAsync<Exception>(async () => await middleware.InvokeAsync(context));
 
 		thrownException.ShouldBe(exception);
 		context.Response.Body.ShouldBe(context.Response.Body);

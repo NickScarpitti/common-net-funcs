@@ -24,7 +24,7 @@ public class ContentTypesTests
 		string fileName = string.Empty;
 
 		// Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() => fileName.GetContentType());
+		ArgumentException ex = Should.Throw<ArgumentException>(fileName.GetContentType);
 		ex.ParamName.ShouldBe("fileName");
 	}
 

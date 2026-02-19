@@ -393,7 +393,11 @@ public sealed class WrapperHelpersTests
 		{
 			GetBearerTokenFunc = (apiName, refresh) =>
 			{
-				if (refresh) refreshCalled = true;
+				if (refresh)
+				{
+					refreshCalled = true;
+				}
+
 				return ValueTask.FromResult("refreshed-token");
 			}
 		});
@@ -414,7 +418,12 @@ public sealed class WrapperHelpersTests
 		{
 			GetBearerTokenFunc = (apiName, refresh) =>
 			{
-				if (refresh) refreshCalled = true;
+				if (refresh)
+				{
+					refreshCalled = true;
+				}
+
+
 				return ValueTask.FromResult("refreshed-token");
 			}
 		});

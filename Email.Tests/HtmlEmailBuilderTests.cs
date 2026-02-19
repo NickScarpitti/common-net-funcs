@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using CommonNetFuncs.Email;
-
 using static CommonNetFuncs.Email.HtmlEmailBuilder;
 
 namespace Email.Tests;
@@ -137,9 +136,9 @@ public sealed class HtmlEmailBuilderTests
 		// Arrange
 		List<List<string>> tableData =
 		[
-				new() { "Name", "Age" },          // Header row
-            new() { "John", "30" },           // Data row 1
-            new() { "Jane", "25" }            // Data row 2
+			new() { "Name", "Age" },          // Header row
+			new() { "John", "30" },           // Data row 1
+			new() { "Jane", "25" }            // Data row 2
 		];
 
 		// Act

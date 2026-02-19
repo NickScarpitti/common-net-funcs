@@ -202,10 +202,7 @@ public sealed class ServiceCollectionExtensionsTests
 		IServiceCollection services = new ServiceCollection();
 
 		// Act
-		IHttpClientBuilder builder = services.AddRestClient("TestApi", client =>
-		{
-			client.BaseAddress = new Uri("https://api.example.com");
-		});
+		IHttpClientBuilder builder = services.AddRestClient("TestApi", client => client.BaseAddress = new Uri("https://api.example.com"));
 
 		// Assert
 		builder.ShouldNotBeNull();
@@ -258,10 +255,7 @@ public sealed class ServiceCollectionExtensionsTests
 		bool messageHandlerAdded = false;
 
 		// Act
-		services.AddRestClient("TestApi", client =>
-		{
-			client.BaseAddress = new Uri("https://api.example.com");
-		})
+		services.AddRestClient("TestApi", client => client.BaseAddress = new Uri("https://api.example.com"))
 		.ConfigurePrimaryHttpMessageHandler(() =>
 		{
 			messageHandlerAdded = true;
@@ -287,10 +281,7 @@ public sealed class ServiceCollectionExtensionsTests
 		IServiceCollection services = new ServiceCollection();
 
 		// Act
-		IHttpClientBuilder builder = services.AddRestClient("TestApi", (provider, client) =>
-		{
-			client.BaseAddress = new Uri("https://api.example.com");
-		});
+		IHttpClientBuilder builder = services.AddRestClient("TestApi", (provider, client) => client.BaseAddress = new Uri("https://api.example.com"));
 
 		// Assert
 		builder.ShouldNotBeNull();

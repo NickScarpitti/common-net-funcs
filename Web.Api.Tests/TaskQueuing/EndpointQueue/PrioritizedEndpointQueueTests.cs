@@ -167,10 +167,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		InvalidOperationException expectedException = new("Test exception");
 
 		// Act & Assert
-		InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
-		{
-			await queue.EnqueueAsync<int>(_ => throw expectedException, 1, TaskPriority.Normal);
-		});
+		InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw expectedException, 1, TaskPriority.Normal));
 
 		exception.Message.ShouldBe("Test exception");
 	}
@@ -463,7 +460,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		queue.Dispose();
 
 		// Assert - Should not throw
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 	}
 
 	[Fact]
@@ -474,8 +471,8 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 
 		// Act & Assert
 		queue.Dispose();
-		Should.NotThrow(() => queue.Dispose());
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
+		Should.NotThrow(queue.Dispose);
 	}
 
 	[Fact]
@@ -487,10 +484,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		await cts.CancelAsync(); // Cancel before enqueueing
 
 		// Act & Assert - Enqueueing with a cancelled token should throw
-		await Should.ThrowAsync<OperationCanceledException>(async () =>
-		{
-			await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, cts.Token);
-		});
+		await Should.ThrowAsync<OperationCanceledException>(async () => await queue.EnqueueAsync<int?>(async _ => 1, 1, TaskPriority.Normal, cts.Token));
 	}
 
 	[Fact]
@@ -741,7 +735,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		// Assert - The main goal is to ensure the finalizer doesn't throw
 		// The object may or may not be collected depending on GC behavior
 		// If the finalizer threw an exception, this test would fail
-		Should.NotThrow(() => GC.WaitForPendingFinalizers());
+		Should.NotThrow(GC.WaitForPendingFinalizers);
 	}
 
 	[Fact]
@@ -918,7 +912,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		await processingStarted.WaitAsync(Current.CancellationToken);
 
 		// Act - Dispose while task is processing
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 
 		// Clean up
 		finishProcessing.Release();
@@ -950,7 +944,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 
 		// Assert - Queue should no longer accept new work (this would hang or throw if processing task is still active)
 		// We can't enqueue after dispose without potential issues, so just verify dispose completed
-		Should.NotThrow(() => queue.Dispose()); // Should be idempotent
+		Should.NotThrow(queue.Dispose); // Should be idempotent
 	}
 
 	[Fact]
@@ -1023,10 +1017,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		InvalidOperationException expectedException = new("Custom error message");
 
 		// Act & Assert
-		InvalidOperationException actualException = await Should.ThrowAsync<InvalidOperationException>(async () =>
-		{
-			await queue.EnqueueAsync<int>(_ => throw expectedException, 1, TaskPriority.High, Current.CancellationToken);
-		});
+		InvalidOperationException actualException = await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw expectedException, 1, TaskPriority.High, Current.CancellationToken));
 
 		actualException.Message.ShouldBe("Custom error message");
 	}
@@ -1203,10 +1194,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		await cts.CancelAsync();
 
 		// Act & Assert
-		await Should.ThrowAsync<OperationCanceledException>(async () =>
-		{
-			await queue.EnqueueAsync(_ => Task.FromResult(1), 1, TaskPriority.Normal, cts.Token);
-		});
+		await Should.ThrowAsync<OperationCanceledException>(async () => await queue.EnqueueAsync(_ => Task.FromResult(1), 1, TaskPriority.Normal, cts.Token));
 	}
 
 	[Fact]
@@ -1252,10 +1240,10 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		await Task.Delay(20, Current.CancellationToken);
 
 		// Act - Dispose while tasks are processing
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 
 		// Assert - No exceptions thrown during disposal
-		Should.NotThrow(() => queue.Dispose()); // Idempotent
+		Should.NotThrow(queue.Dispose); // Idempotent
 	}
 
 	[Fact]
@@ -1381,10 +1369,10 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		PrioritizedEndpointQueue queue = CreateQueue();
 
 		// Act - Dispose without ever enqueueing anything
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 
 		// Assert
-		Should.NotThrow(() => queue.Dispose()); // Idempotent
+		Should.NotThrow(queue.Dispose); // Idempotent
 	}
 
 	[Fact]
@@ -1459,7 +1447,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		queue.Dispose(); // Third dispose
 
 		// Assert - Should not throw
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 	}
 
 	[Fact]
@@ -1582,13 +1570,13 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		await taskStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), Current.CancellationToken);
 
 		// Act - Dispose will wait for processing task which may throw AggregateException
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 
 		// Complete the task to clean up
 		taskCanComplete.SetResult(true);
 
 		// Assert - Disposal completed without throwing
-		Should.NotThrow(() => queue.Dispose()); // Should be idempotent
+		Should.NotThrow(queue.Dispose); // Should be idempotent
 
 		// Clean up the enqueued task
 #pragma warning disable S108 // Either remove or fill this block of code.
@@ -1611,10 +1599,10 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		queue.PreDisposeCancellationToken();
 
 		// Act - Dispose should handle ObjectDisposedException gracefully
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 
 		// Assert
-		Should.NotThrow(() => queue.Dispose()); // Idempotent
+		Should.NotThrow(queue.Dispose); // Idempotent
 	}
 
 	[Fact]
@@ -1804,14 +1792,14 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		await Task.Delay(50, Current.CancellationToken);
 
 		// Act - Call dispose multiple times rapidly
-		Task dispose1 = Task.Run(() => queue.Dispose(), Current.CancellationToken);
-		Task dispose2 = Task.Run(() => queue.Dispose(), Current.CancellationToken);
-		Task dispose3 = Task.Run(() => queue.Dispose(), Current.CancellationToken);
+		Task dispose1 = Task.Run(queue.Dispose, Current.CancellationToken);
+		Task dispose2 = Task.Run(queue.Dispose, Current.CancellationToken);
+		Task dispose3 = Task.Run(queue.Dispose, Current.CancellationToken);
 
 		await Task.WhenAll(dispose1, dispose2, dispose3);
 
 		// Assert - No exceptions
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 	}
 
 	[Fact]
@@ -1938,7 +1926,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		await Task.Delay(200, Current.CancellationToken);
 
 		// Assert - Should exit gracefully
-		Should.NotThrow(() => queue.Dispose()); // Idempotent
+		Should.NotThrow(queue.Dispose); // Idempotent
 	}
 
 	[Fact]
@@ -2009,7 +1997,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		await Task.Delay(300, Current.CancellationToken);
 
 		// Assert - Queue should be properly disposed without hanging
-		Should.NotThrow(() => queue.Dispose()); // Idempotent
+		Should.NotThrow(queue.Dispose); // Idempotent
 		queue.Stats.TotalProcessedTasks.ShouldBe(1);
 	}
 
@@ -2474,13 +2462,9 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		queue.Stats.TotalProcessedTasks.ShouldBe(1);
 	}
 
-	private class TestPrioritizedEndpointQueue : PrioritizedEndpointQueue
+	private class TestPrioritizedEndpointQueue(string endpointKey) : PrioritizedEndpointQueue(endpointKey)
 	{
 		public int CancelCallCount { get; private set; }
-
-		public TestPrioritizedEndpointQueue(string endpointKey) : base(endpointKey)
-		{
-		}
 
 		public override async Task<bool> CancelTasksByPriorityAsync(TaskPriority priority)
 		{
@@ -2489,16 +2473,10 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		}
 	}
 
-	private class DisposableResourceTestQueue : PrioritizedEndpointQueue
+	private class DisposableResourceTestQueue(string endpointKey) : PrioritizedEndpointQueue(endpointKey)
 	{
-		private readonly System.Reflection.FieldInfo? cancellationTokenSourceField;
-
-		public DisposableResourceTestQueue(string endpointKey) : base(endpointKey)
-		{
-			// Use reflection to access the private cancellationTokenSource field
-			cancellationTokenSourceField = typeof(PrioritizedEndpointQueue)
-				.GetField("cancellationTokenSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-		}
+		private readonly System.Reflection.FieldInfo? cancellationTokenSourceField = typeof(PrioritizedEndpointQueue)
+			.GetField("cancellationTokenSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
 		public void PreDisposeCancellationToken()
 		{
@@ -2510,15 +2488,10 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		}
 	}
 
-	private class DisposalTimingTestQueue : PrioritizedEndpointQueue
+	private class DisposalTimingTestQueue(string endpointKey) : PrioritizedEndpointQueue(endpointKey)
 	{
-		private readonly System.Reflection.FieldInfo? cancellationTokenSourceField;
-
-		public DisposalTimingTestQueue(string endpointKey) : base(endpointKey)
-		{
-			cancellationTokenSourceField = typeof(PrioritizedEndpointQueue)
-				.GetField("cancellationTokenSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-		}
+		private readonly System.Reflection.FieldInfo? cancellationTokenSourceField = typeof(PrioritizedEndpointQueue)
+			.GetField("cancellationTokenSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
 		public void TriggerCancellationDuringWait()
 		{
@@ -2530,22 +2503,14 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		}
 	}
 
-	private class ShutdownTestQueue : PrioritizedEndpointQueue
+	private class ShutdownTestQueue(string endpointKey) : PrioritizedEndpointQueue(endpointKey)
 	{
-		public ShutdownTestQueue(string endpointKey) : base(endpointKey)
-		{
-		}
 	}
 
-	private class CancellationDuringWaitTestQueue : PrioritizedEndpointQueue
+	private class CancellationDuringWaitTestQueue(string endpointKey) : PrioritizedEndpointQueue(endpointKey)
 	{
-		private readonly System.Reflection.FieldInfo? cancellationTokenSourceField;
-
-		public CancellationDuringWaitTestQueue(string endpointKey) : base(endpointKey)
-		{
-			cancellationTokenSourceField = typeof(PrioritizedEndpointQueue)
-				.GetField("cancellationTokenSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-		}
+		private readonly System.Reflection.FieldInfo? cancellationTokenSourceField = typeof(PrioritizedEndpointQueue)
+			.GetField("cancellationTokenSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
 		public void TriggerCancellationNow()
 		{
@@ -2557,34 +2522,21 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		}
 	}
 
-	private class IsShuttingDownTestQueue : PrioritizedEndpointQueue
+	private class IsShuttingDownTestQueue(string endpointKey) : PrioritizedEndpointQueue(endpointKey)
 	{
-		private readonly System.Reflection.FieldInfo? isShuttingDownField;
-
-		public IsShuttingDownTestQueue(string endpointKey) : base(endpointKey)
-		{
-			isShuttingDownField = typeof(PrioritizedEndpointQueue)
-				.GetField("isShuttingDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-		}
+		private readonly System.Reflection.FieldInfo? isShuttingDownField = typeof(PrioritizedEndpointQueue)
+			.GetField("isShuttingDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
 		public void SetShuttingDown()
 		{
-			if (isShuttingDownField != null)
-			{
-				isShuttingDownField.SetValue(this, true);
-			}
+			isShuttingDownField?.SetValue(this, true);
 		}
 	}
 
-	private class ShutdownFlagTestQueue : PrioritizedEndpointQueue
+	private class ShutdownFlagTestQueue(string name) : PrioritizedEndpointQueue(name)
 	{
-		private readonly System.Reflection.FieldInfo isShuttingDownField;
-
-		public ShutdownFlagTestQueue(string name) : base(name)
-		{
-			isShuttingDownField = typeof(PrioritizedEndpointQueue).GetField("isShuttingDown",
-				System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
-		}
+		private readonly System.Reflection.FieldInfo isShuttingDownField = typeof(PrioritizedEndpointQueue).GetField("isShuttingDown",
+			System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
 
 		public void ForceShutdownFlag()
 		{
@@ -2597,15 +2549,10 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		}
 	}
 
-	private class WaitCancellationTestQueue : PrioritizedEndpointQueue
+	private class WaitCancellationTestQueue(string name) : PrioritizedEndpointQueue(name)
 	{
-		private readonly System.Reflection.FieldInfo cancellationTokenSourceField;
-
-		public WaitCancellationTestQueue(string name) : base(name)
-		{
-			cancellationTokenSourceField = typeof(PrioritizedEndpointQueue).GetField("cancellationTokenSource",
-				System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
-		}
+		private readonly System.Reflection.FieldInfo cancellationTokenSourceField = typeof(PrioritizedEndpointQueue).GetField("cancellationTokenSource",
+			System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
 
 		public void CancelDuringWait()
 		{

@@ -20,20 +20,9 @@ public sealed class RestHelpersStaticTests
 		HttpMethod method = new(methodString);
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = method,
-			BodyObject = body,
-			Timeout = 1,
-			LogQuery = true,
-			LogBody = true
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = method, BodyObject = body, Timeout = 1, LogQuery = true, LogBody = true };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("\"result\"", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("\"result\"", Encoding.UTF8, "application/json") };
 
 		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -45,12 +34,7 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new() { ThrowOnSend = new TaskCanceledException("Canceled!") };
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			ExpectTaskCancellation = true
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, ExpectTaskCancellation = true };
 
 		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -62,12 +46,7 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new() { ThrowOnSend = new TaskCanceledException("Canceled!") };
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			ExpectTaskCancellation = false
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, ExpectTaskCancellation = false };
 
 		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -91,17 +70,9 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			Timeout = null
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, Timeout = null };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("\"result\"", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("\"result\"", Encoding.UTF8, "application/json") };
 
 		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -113,17 +84,9 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			Timeout = 0
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, Timeout = 0 };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("\"result\"", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("\"result\"", Encoding.UTF8, "application/json") };
 
 		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -137,10 +100,7 @@ public sealed class RestHelpersStaticTests
 		HttpClient client = new(handler);
 		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("\"foo\"", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("\"foo\"", Encoding.UTF8, "application/json") };
 
 		RestObject<string> result = await client.RestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -153,12 +113,7 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new() { ThrowOnSend = new TaskCanceledException("Canceled!") };
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			ExpectTaskCancellation = true
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, ExpectTaskCancellation = true };
 
 		RestObject<string> result = await client.RestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -171,12 +126,7 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new() { ThrowOnSend = new TaskCanceledException("Canceled!") };
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			ExpectTaskCancellation = false
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, ExpectTaskCancellation = false };
 
 		RestObject<string> result = await client.RestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -202,10 +152,7 @@ public sealed class RestHelpersStaticTests
 		HttpClient client = new(handler);
 		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json") };
 
 		List<string?> results = new();
 		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -221,17 +168,9 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			HttpHeaders = null
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, HttpHeaders = null };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json") };
 
 		List<string?> results = new();
 		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -247,17 +186,9 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			HttpHeaders = new Dictionary<string, string> { { "Accept", "text/xml" } }
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, HttpHeaders = new Dictionary<string, string> { { "Accept", "text/xml" } } };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json") };
 
 		List<string?> results = new();
 		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -273,12 +204,7 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new() { ThrowOnSend = new TaskCanceledException("Canceled!") };
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			ExpectTaskCancellation = true
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, ExpectTaskCancellation = true };
 
 		List<string?> results = new();
 		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -294,12 +220,7 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new() { ThrowOnSend = new TaskCanceledException("Canceled!") };
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			ExpectTaskCancellation = false
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, ExpectTaskCancellation = false };
 
 		List<string?> results = new();
 		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -333,10 +254,7 @@ public sealed class RestHelpersStaticTests
 		HttpClient client = new(handler);
 		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json") };
 
 		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -356,12 +274,7 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			HttpHeaders = null
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, HttpHeaders = null };
 
 		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
 		{
@@ -378,17 +291,9 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			HttpHeaders = new Dictionary<string, string> { { "Accept", "application/json" } }
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, HttpHeaders = new Dictionary<string, string> { { "Accept", "application/json" } } };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\"]", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[\"a\"]", Encoding.UTF8, "application/json") };
 
 		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -400,17 +305,9 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			HttpHeaders = new Dictionary<string, string> { { "Accept", "text/xml" } }
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, HttpHeaders = new Dictionary<string, string> { { "Accept", "text/xml" } } };
 
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\"]", Encoding.UTF8, "application/json")
-		};
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[\"a\"]", Encoding.UTF8, "application/json") };
 
 		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -422,12 +319,7 @@ public sealed class RestHelpersStaticTests
 	{
 		FakeHttpMessageHandler handler = new() { ThrowOnSend = new TaskCanceledException("Canceled!") };
 		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			ExpectTaskCancellation = true
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, ExpectTaskCancellation = true };
 
 		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -463,17 +355,9 @@ public sealed class RestHelpersStaticTests
 	[Fact]
 	public async Task HandleResponse_ReturnsSuccessResult()
 	{
-		HttpResponseMessage response = new(HttpStatusCode.OK)
-		{
-			Content = new StringContent("\"success\"", Encoding.UTF8, "application/json")
-		};
+		HttpResponseMessage response = new(HttpStatusCode.OK) { Content = new StringContent("\"success\"", Encoding.UTF8, "application/json") };
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			LogResponse = true
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, LogResponse = true };
 
 		string? result = await response.HandleResponse<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -483,17 +367,9 @@ public sealed class RestHelpersStaticTests
 	[Fact]
 	public async Task HandleResponse_HandlesErrorResponse()
 	{
-		HttpResponseMessage response = new(HttpStatusCode.BadRequest)
-		{
-			Content = new StringContent("Error message", Encoding.UTF8, "text/plain")
-		};
+		HttpResponseMessage response = new(HttpStatusCode.BadRequest){Content = new StringContent("Error message", Encoding.UTF8, "text/plain")};
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			LogQuery = true
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, LogQuery = true };
 
 		string? result = await response.HandleResponse<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -503,26 +379,11 @@ public sealed class RestHelpersStaticTests
 	[Fact]
 	public async Task HandleResponse_HandlesProblemDetails()
 	{
-		string problemJson = JsonSerializer.Serialize(new
-		{
-			status = 400,
-			title = "Bad Request",
-			errors = new Dictionary<string, string[]>
-						{
-								{ "field1", valueArray }
-						}
-		});
+		string problemJson = JsonSerializer.Serialize(new { status = 400, title = "Bad Request", errors = new Dictionary<string, string[]> { { "field1", valueArray } } });
 
-		HttpResponseMessage response = new(HttpStatusCode.BadRequest)
-		{
-			Content = new StringContent(problemJson, Encoding.UTF8, "application/problem+json")
-		};
+		HttpResponseMessage response = new(HttpStatusCode.BadRequest){Content = new StringContent(problemJson, Encoding.UTF8, "application/problem+json")};
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get };
 
 		string? result = await response.HandleResponse<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -532,16 +393,9 @@ public sealed class RestHelpersStaticTests
 	[Fact]
 	public async Task HandleResponse_HandlesException()
 	{
-		HttpResponseMessage response = new(HttpStatusCode.OK)
-		{
-			Content = new FakeContent(true)
-		};
+		HttpResponseMessage response = new(HttpStatusCode.OK){Content = new FakeContent(true)};
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get };
 
 		string? result = await response.HandleResponse<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -551,17 +405,9 @@ public sealed class RestHelpersStaticTests
 	[Fact]
 	public async Task HandleResponseAsync_YieldsSuccessResults()
 	{
-		HttpResponseMessage response = new(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json")
-		};
+		HttpResponseMessage response = new(HttpStatusCode.OK){Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json")};
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			LogResponse = true
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get, LogResponse = true };
 
 		List<string?> results = new();
 		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -583,18 +429,11 @@ public sealed class RestHelpersStaticTests
 		}
 		compressedStream.Position = 0;
 
-		HttpResponseMessage response = new(HttpStatusCode.OK)
-		{
-			Content = new StreamContent(compressedStream)
-		};
+		HttpResponseMessage response = new(HttpStatusCode.OK){Content = new StreamContent(compressedStream)};
 		response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 		response.Content.Headers.ContentEncoding.Add("gzip");
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get
-		};
+		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get };
 
 		List<string?> results = new();
 		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -616,18 +455,11 @@ public sealed class RestHelpersStaticTests
 		}
 		compressedStream.Position = 0;
 
-		HttpResponseMessage response = new(HttpStatusCode.OK)
-		{
-			Content = new StreamContent(compressedStream)
-		};
+		HttpResponseMessage response = new(HttpStatusCode.OK){Content = new StreamContent(compressedStream)};
 		response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 		response.Content.Headers.ContentEncoding.Add("br");
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get
-		};
+		RequestOptions<string> options = new(){Url = "http://test",HttpMethod = HttpMethod.Get};
 
 		List<string?> results = new();
 		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -641,17 +473,9 @@ public sealed class RestHelpersStaticTests
 	[Fact]
 	public async Task HandleResponseAsync_HandlesErrorResponse()
 	{
-		HttpResponseMessage response = new(HttpStatusCode.BadRequest)
-		{
-			Content = new StringContent("Error", Encoding.UTF8, "text/plain")
-		};
+		HttpResponseMessage response = new(HttpStatusCode.BadRequest){Content = new StringContent("Error", Encoding.UTF8, "text/plain")};
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			LogResponse = true
-		};
+		RequestOptions<string> options = new(){Url = "http://test",HttpMethod = HttpMethod.Get,LogResponse = true};
 
 		List<string?> results = new();
 		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -672,22 +496,12 @@ public sealed class RestHelpersStaticTests
 		{
 			status = 400,
 			title = "Bad Request",
-			errors = new Dictionary<string, string[]>
-				{
-						{ "field1", value }
-				}
+			errors = new Dictionary<string, string[]>{{ "field1", value }}
 		});
 
-		HttpResponseMessage response = new(HttpStatusCode.BadRequest)
-		{
-			Content = new StringContent(problemJson, Encoding.UTF8, "application/problem+json")
-		};
+		HttpResponseMessage response = new(HttpStatusCode.BadRequest){Content = new StringContent(problemJson, Encoding.UTF8, "application/problem+json")};
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get
-		};
+		RequestOptions<string> options = new(){Url = "http://test",HttpMethod = HttpMethod.Get};
 
 		List<string?> results = new();
 		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -701,16 +515,9 @@ public sealed class RestHelpersStaticTests
 	[Fact]
 	public async Task HandleResponseAsync_HandlesException()
 	{
-		HttpResponseMessage response = new(HttpStatusCode.OK)
-		{
-			Content = new FakeContent(true)
-		};
+		HttpResponseMessage response = new(HttpStatusCode.OK){Content = new FakeContent(true)};
 
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get
-		};
+		RequestOptions<string> options = new(){Url = "http://test",HttpMethod = HttpMethod.Get};
 
 		List<string?> results = new();
 		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
@@ -731,10 +538,12 @@ public sealed class RestHelpersStaticTests
 	{
 		// For JSON, the test data should be a JSON string (with quotes)
 		// For text/plain, the test data should be plain text (without quotes)
+
 		string testData = contentType.Contains("json") ? "\"test data\"" : "test data";
 		MemoryStream stream;
 
 		// If encoding is specified, compress the data appropriately
+
 		if (encoding == "gzip")
 		{
 			byte[] jsonBytes = Encoding.UTF8.GetBytes(testData);
@@ -1042,10 +851,10 @@ public sealed class RestHelpersStaticTests
 	{
 		HttpRequestMessage request = new(HttpMethod.Get, "http://test");
 		Dictionary<string, string> headers = new()
-				{
-						{ "X-Custom-Header", "value1" },
-						{ "X-Another-Header", "value2" }
-				};
+			{
+				{ "X-Custom-Header", "value1" },
+				{ "X-Another-Header", "value2" }
+			};
 
 		request.AttachHeaders(null, headers);
 

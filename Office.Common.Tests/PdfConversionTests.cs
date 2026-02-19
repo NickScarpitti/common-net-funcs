@@ -366,11 +366,8 @@ public sealed class PdfConversionTests //: IDisposable
 			// Act & Assert - With a very short timeout (1ms), the process should timeout and retry
 			// This tests the timeout and retry logic, including the Console.WriteLine for retries
 #pragma warning disable S6966 // Awaitable method should be used
-			Should.Throw<LibreOfficeFailedException>(() =>
-			{
-				ConvertToPdf(libreOfficePath, sourceFile, tempPath,
-					conversionTimeout: TimeSpan.FromMilliseconds(1), maxRetries: 2);
-			});
+			Should.Throw<LibreOfficeFailedException>(() => ConvertToPdf(libreOfficePath, sourceFile, tempPath,
+					conversionTimeout: TimeSpan.FromMilliseconds(1), maxRetries: 2));
 #pragma warning restore S6966 // Awaitable method should be used
 		}
 		finally
@@ -395,10 +392,7 @@ public sealed class PdfConversionTests //: IDisposable
 		{
 			// Act & Assert
 #pragma warning disable S6966 // Awaitable method should be used
-			Should.Throw<Exception>(() =>
-			{
-				ConvertToPdf(null!, sourceFile, tempPath);
-			});
+			Should.Throw<Exception>(() => ConvertToPdf(null!, sourceFile, tempPath));
 #pragma warning restore S6966 // Awaitable method should be used
 		}
 		finally
@@ -424,10 +418,7 @@ public sealed class PdfConversionTests //: IDisposable
 		{
 			// Act & Assert - Test retry logic with maxRetries > 1
 			// This should fail all retries and throw, exercising the retry Console.WriteLine
-			await Should.ThrowAsync<ArgumentException>(async () =>
-			{
-				await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 3);
-			});
+			await Should.ThrowAsync<ArgumentException>(async () => await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 3));
 		}
 		finally
 		{
@@ -454,8 +445,6 @@ public sealed class PdfConversionTests //: IDisposable
 
 		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		await File.WriteAllTextAsync(expectedOutputFile, "Old PDF content", TestContext.Current.CancellationToken);
-
-		long originalSize = new FileInfo(expectedOutputFile).Length;
 
 		try
 		{
@@ -687,8 +676,7 @@ public sealed class PdfConversionTests //: IDisposable
 		try
 		{
 			// Act & Assert - Should retry once before failing
-			LibreOfficeFailedException exception = Should.Throw<LibreOfficeFailedException>(() =>
-				ConvertToPdf(invalidLibreOfficePath, sourceFile, maxRetries: 1));
+			LibreOfficeFailedException exception = Should.Throw<LibreOfficeFailedException>(() => ConvertToPdf(invalidLibreOfficePath, sourceFile, maxRetries: 1));
 
 			exception.Message.ShouldContain("Failed to run LibreOffice!");
 		}
@@ -716,8 +704,7 @@ public sealed class PdfConversionTests //: IDisposable
 			await cts.CancelAsync();
 
 			// Assert - Should wrap OperationCanceledException in LibreOfficeFailedException
-			LibreOfficeFailedException exception = await Should.ThrowAsync<LibreOfficeFailedException>(() =>
-				ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 1));
+			LibreOfficeFailedException exception = await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 1));
 
 			exception.Message.ShouldContain("canceled");
 		}
@@ -869,11 +856,8 @@ public sealed class PdfConversionTests //: IDisposable
 
 						// Assert - Check if PDF was created
 						string expectedPdf = Combine(tempPath, $"{GetFileNameWithoutExtension(testFile)}.pdf");
-						if (File.Exists(expectedPdf))
-						{
-							// PDF created successfully
-							File.Delete(expectedPdf);
-						}
+						File.Exists(expectedPdf).ShouldBeTrue($"PDF should be created for {testFile}");
+						File.Delete(expectedPdf);
 					}
 					catch (LibreOfficeFailedException)
 					{
@@ -956,8 +940,7 @@ public sealed class PdfConversionTests //: IDisposable
 		try
 		{
 			// Act & Assert - Should throw LibreOfficeFailedException when canceled
-			await Should.ThrowAsync<LibreOfficeFailedException>(() =>
-				ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 0));
+			await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 0));
 		}
 		finally
 		{
@@ -1017,8 +1000,7 @@ public sealed class PdfConversionTests //: IDisposable
 		{
 			// Act - Use a very long timeout
 #pragma warning disable S6966 // Awaitable method should be used
-			ConvertToPdf(libreOfficePath, sourceFile, tempPath,
-				conversionTimeout: TimeSpan.FromMinutes(5), maxRetries: 1);
+			ConvertToPdf(libreOfficePath, sourceFile, tempPath, conversionTimeout: TimeSpan.FromMinutes(5), maxRetries: 1);
 #pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
@@ -1089,8 +1071,6 @@ public sealed class PdfConversionTests //: IDisposable
 
 		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		await File.WriteAllTextAsync(expectedOutputFile, "Old PDF to be overwritten", TestContext.Current.CancellationToken);
-
-		long originalSize = new FileInfo(expectedOutputFile).Length;
 
 		try
 		{
@@ -1203,10 +1183,7 @@ public sealed class PdfConversionTests //: IDisposable
 		try
 		{
 			// Act & Assert - With overwriteExistingFile = false (default), should fail when file exists
-			LibreOfficeFailedException exception = await Should.ThrowAsync<LibreOfficeFailedException>(async () =>
-			{
-				await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 1, overwriteExistingFile: false);
-			});
+			LibreOfficeFailedException exception = await Should.ThrowAsync<LibreOfficeFailedException>(async () => await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 1, overwriteExistingFile: false));
 
 			exception.Message.ShouldContain("Failed to run LibreOffice!");
 			exception.InnerException.ShouldNotBeNull();
@@ -1274,10 +1251,7 @@ public sealed class PdfConversionTests //: IDisposable
 		try
 		{
 			// Act & Assert - Not passing overwriteExistingFile, should use default (false) and fail
-			LibreOfficeFailedException exception = await Should.ThrowAsync<LibreOfficeFailedException>(async () =>
-			{
-				await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 1);
-			});
+			LibreOfficeFailedException exception = await Should.ThrowAsync<LibreOfficeFailedException>(async () => await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 1));
 
 			exception.Message.ShouldContain("Failed to run LibreOffice!");
 		}

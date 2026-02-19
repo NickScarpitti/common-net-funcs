@@ -54,9 +54,9 @@ public sealed class FilesTests
 		// Arrange
 		List<(Stream?, string)> files =
 		[
-				(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)i).ToArray()), "file1.txt"),
-						(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt"),
-						(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 2)).ToArray()), "file3.txt")
+			(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)i).ToArray()), "file1.txt"),
+			(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt"),
+			(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 2)).ToArray()), "file3.txt")
 		];
 		await using MemoryStream zipFileStream = new();
 
@@ -79,9 +79,9 @@ public sealed class FilesTests
 		// Arrange
 		List<(Stream?, string)> files =
 		[
-				(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)i).ToArray()), "file1.txt"),
-						(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt"),
-						(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 2)).ToArray()), "file3.txt")
+			(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)i).ToArray()), "file1.txt"),
+			(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt"),
+			(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 2)).ToArray()), "file3.txt")
 		];
 
 		// Act
@@ -103,8 +103,8 @@ public sealed class FilesTests
 		// Arrange
 		List<(Stream?, string)> files =
 		[
-				(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)i).ToArray()), "file1.txt"),
-						(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt")
+			(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)i).ToArray()), "file1.txt"),
+			(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt")
 		];
 		await using MemoryStream memoryStream = new();
 		await using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))

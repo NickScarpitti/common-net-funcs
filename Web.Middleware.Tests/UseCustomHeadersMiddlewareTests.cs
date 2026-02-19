@@ -88,10 +88,7 @@ public sealed class UseCustomHeadersMiddlewareTests
 	public async Task InvokeAsync_WithBothAddAndRemoveHeaders_ProcessesAllHeaders()
 	{
 		// Arrange
-		Dictionary<string, string> addHeaders = new()
-				{
-						{ "X-New-Header", "NewValue" }
-				};
+		Dictionary<string, string> addHeaders = new() { { "X-New-Header", "NewValue" } };
 		string[] removeHeaders = ["X-Old-Header"];
 		context.Response.Headers.TryAdd("X-Old-Header", "OldValue");
 

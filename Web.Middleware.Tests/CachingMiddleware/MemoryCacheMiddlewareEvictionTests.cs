@@ -24,37 +24,6 @@ public sealed class MemoryCacheMiddlewareEvictionTests
 		context = new DefaultHttpContext();
 	}
 
-	// Fails
-	//[RetryFact(3)]
-	//public async Task EvictCacheAsync_WithSingleKey_RemovesEntry()
-	//{
-	//    // Arrange
-	//    CacheEntry entry = new()
-	//    {
-	//        Data = new byte[] { 1, 2, 3 },
-	//        Tags = new HashSet<string> { "tag1" }
-	//    };
-
-	//    Dictionary<string, StringValues> queryDict = new()
-	//    {
-	//        { options.EvictionQueryParam, "true" }
-	//    };
-	//    context.Request.Query = new QueryCollection(queryDict);
-
-	//    // Setup the mock to handle the non-generic TryGetValue
-	//    object? outValue = entry; // Use a local variable to hold the out parameter value
-	//    A.CallTo(() => cache.TryGetValue(A<object>._, out outValue)).Returns(true);
-
-	//    MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
-
-	//    // Act
-	//    await middleware.InvokeAsync(context);
-
-	//    // Assert
-	//    A.CallTo(() => cache.Remove(A<string>._)).MustHaveHappened();
-	//    metrics.CurrentCacheSize.ShouldBe(0);
-	//}
-
 	[RetryFact(3)]
 	public async Task EvictCacheAsync_WithTags_RemovesAllTaggedEntries()
 	{
@@ -203,8 +172,11 @@ public sealed class MemoryCacheMiddlewareEvictionTests
 
 		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
 
-		// Act & Assert - should not throw
+		// Act
 		await middleware.InvokeAsync(context);
+
+		// Assert - should not throw and should not attempt to remove non-existent key
+		A.CallTo(() => cache.Remove(A<string>._)).MustNotHaveHappened();
 	}
 
 	[RetryFact(3)]
@@ -220,7 +192,11 @@ public sealed class MemoryCacheMiddlewareEvictionTests
 
 		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
 
-		// Act & Assert - should not throw
+		// Act
 		await middleware.InvokeAsync(context);
+
+		// Assert - should not throw and tag should still not be in tracker
+		tracker.CacheTags.ContainsKey("nonexistent-tag").ShouldBeFalse();
+		A.CallTo(() => cache.Remove(A<string>._)).MustNotHaveHappened();
 	}
 }

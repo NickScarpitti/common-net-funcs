@@ -201,10 +201,7 @@ public class EndpointQueueTests : IDisposable
 		_queuesToDispose.Add(queue);
 
 		// Act & Assert
-		await Should.ThrowAsync<InvalidOperationException>(async () =>
-		{
-			await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Test exception"), TestContext.Current.CancellationToken);
-		});
+		await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Test exception"), TestContext.Current.CancellationToken));
 
 		// Wait a bit for stats to update
 		await Task.Delay(50, TestContext.Current.CancellationToken);
@@ -357,7 +354,7 @@ public class EndpointQueueTests : IDisposable
 		queue.Dispose();
 
 		// Assert - Should not throw
-		Should.NotThrow(() => queue.Dispose()); // Can call Dispose multiple times
+		Should.NotThrow(queue.Dispose); // Can call Dispose multiple times
 	}
 
 	[Fact]
@@ -372,7 +369,7 @@ public class EndpointQueueTests : IDisposable
 		queue.Dispose();
 		queue.Dispose();
 
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 	}
 
 	[Fact]
@@ -393,7 +390,7 @@ public class EndpointQueueTests : IDisposable
 		queue.Dispose();
 
 		// Assert - Should not throw
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 	}
 
 	[Fact]
@@ -404,7 +401,7 @@ public class EndpointQueueTests : IDisposable
 		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = new("test", options);
 
 		// Act & Assert
-		Should.NotThrow(() => queue.Dispose());
+		Should.NotThrow(queue.Dispose);
 	}
 
 	[Fact]
@@ -482,20 +479,11 @@ public class EndpointQueueTests : IDisposable
 		_queuesToDispose.Add(queue);
 
 		// Act
-		await Should.ThrowAsync<InvalidOperationException>(async () =>
-		{
-			await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Error 1"), TestContext.Current.CancellationToken);
-		});
+		await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Error 1"), TestContext.Current.CancellationToken));
 
-		await Should.ThrowAsync<ArgumentException>(async () =>
-		{
-			await queue.EnqueueAsync<int>(_ => throw new ArgumentException("Error 2"), TestContext.Current.CancellationToken);
-		});
+		await Should.ThrowAsync<ArgumentException>(async () => await queue.EnqueueAsync<int>(_ => throw new ArgumentException("Error 2"), TestContext.Current.CancellationToken));
 
-		await Should.ThrowAsync<NotImplementedException>(async () =>
-		{
-			await queue.EnqueueAsync<int>(_ => throw new NotImplementedException("Error 3"), TestContext.Current.CancellationToken);
-		});
+		await Should.ThrowAsync<NotImplementedException>(async () => await queue.EnqueueAsync<int>(_ => throw new NotImplementedException("Error 3"), TestContext.Current.CancellationToken));
 
 		// Wait for stats to update
 		await Task.Delay(50, TestContext.Current.CancellationToken);
@@ -516,10 +504,7 @@ public class EndpointQueueTests : IDisposable
 		// Act
 		await queue.EnqueueAsync(_ => Task.FromResult(1), TestContext.Current.CancellationToken);
 
-		await Should.ThrowAsync<InvalidOperationException>(async () =>
-		{
-			await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Error"), TestContext.Current.CancellationToken);
-		});
+		await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Error"), TestContext.Current.CancellationToken));
 
 		await queue.EnqueueAsync(_ => Task.FromResult(2), TestContext.Current.CancellationToken);
 

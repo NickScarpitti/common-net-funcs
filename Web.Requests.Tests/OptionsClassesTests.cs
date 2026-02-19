@@ -15,9 +15,11 @@ public sealed class OptionsClassesTests
 	public void CompressionOptions_DefaultConstructor_SetsDefaults()
 	{
 		// Arrange & Act
+
 		CompressionOptions options = new();
 
 		// Assert
+
 		options.UseCompression.ShouldBeFalse();
 		options.CompressionType.ShouldBeNull();
 		options.UseMemPack.ShouldBeFalse();
@@ -28,14 +30,11 @@ public sealed class OptionsClassesTests
 	public void CompressionOptions_ParameterizedConstructor_SetsValues()
 	{
 		// Arrange & Act
-		CompressionOptions options = new(
-			UseCompression: true,
-			CompressionType: ECompressionType.Gzip,
-			UseMemPack: true,
-			UseMsgPack: false
-		);
+
+		CompressionOptions options = new(UseCompression: true, CompressionType: ECompressionType.Gzip, UseMemPack: true, UseMsgPack: false);
 
 		// Assert
+
 		options.UseCompression.ShouldBeTrue();
 		options.CompressionType.ShouldBe(ECompressionType.Gzip);
 		options.UseMemPack.ShouldBeTrue();
@@ -49,25 +48,29 @@ public sealed class OptionsClassesTests
 	public void CompressionOptions_SupportsAllCompressionTypes(ECompressionType compressionType)
 	{
 		// Arrange & Act
+
 		CompressionOptions options = new(CompressionType: compressionType);
 
 		// Assert
+
 		options.CompressionType.ShouldBe(compressionType);
 	}
 
 	[Fact]
 	public void CompressionOptions_PropertiesCanBeModified()
 	{
-		// Arrange
-		CompressionOptions options = new();
+		// Arrange & Act
 
-		// Act
-		options.UseCompression = true;
-		options.CompressionType = ECompressionType.Brotli;
-		options.UseMemPack = true;
-		options.UseMsgPack = true;
+		CompressionOptions options = new()
+		{
+			UseCompression = true,
+			CompressionType = ECompressionType.Brotli,
+			UseMemPack = true,
+			UseMsgPack = true
+		};
 
 		// Assert
+
 		options.UseCompression.ShouldBeTrue();
 		options.CompressionType.ShouldBe(ECompressionType.Brotli);
 		options.UseMemPack.ShouldBeTrue();
@@ -78,13 +81,16 @@ public sealed class OptionsClassesTests
 
 	#region ResilienceOptions Tests
 
+
 	[Fact]
 	public void ResilienceOptions_DefaultConstructor_SetsDefaults()
 	{
 		// Arrange & Act
+
 		ResilienceOptions options = new();
 
 		// Assert
+
 		options.MaxRetry.ShouldBe(10);
 		options.RetryDelay.ShouldBe(TimeSpan.FromMilliseconds(1000));
 		options.TimeoutValue.ShouldBe(TimeSpan.FromSeconds(100));
@@ -101,9 +107,11 @@ public sealed class OptionsClassesTests
 	public void ResilienceOptions_ParameterizedConstructor_SetsCustomValues()
 	{
 		// Arrange
-		Func<HttpStatusCode, bool> customRetryFunc = (status) => status == HttpStatusCode.BadRequest;
+
+		static bool customRetryFunc(HttpStatusCode status) => status == HttpStatusCode.BadRequest;
 
 		// Act
+
 		ResilienceOptions options = new(
 			MaxRetry: 5,
 			RetryDelay: 500,
@@ -116,6 +124,7 @@ public sealed class OptionsClassesTests
 		);
 
 		// Assert
+
 		options.MaxRetry.ShouldBe(5);
 		options.RetryDelay.ShouldBe(TimeSpan.FromMilliseconds(500));
 		options.TimeoutValue.ShouldBe(TimeSpan.FromSeconds(30));
@@ -130,9 +139,11 @@ public sealed class OptionsClassesTests
 	public void ResilienceOptions_TimeoutValue_HandlesNegativeValue()
 	{
 		// Arrange & Act
+
 		ResilienceOptions options = new(TimeoutValue: -10);
 
 		// Assert
+
 		options.TimeoutValue.ShouldBe(TimeSpan.FromSeconds(100)); // Should default to 100
 	}
 
@@ -140,9 +151,11 @@ public sealed class OptionsClassesTests
 	public void ResilienceOptions_TimeoutValue_HandlesNullValue()
 	{
 		// Arrange & Act
+
 		ResilienceOptions options = new(TimeoutValue: null);
 
 		// Assert
+
 		options.TimeoutValue.ShouldBe(TimeSpan.FromSeconds(100)); // Should default to 100
 	}
 
@@ -150,9 +163,11 @@ public sealed class OptionsClassesTests
 	public void ResilienceOptions_TimeoutValue_AcceptsZero()
 	{
 		// Arrange & Act
+
 		ResilienceOptions options = new(TimeoutValue: 0);
 
 		// Assert
+
 		options.TimeoutValue.ShouldBe(TimeSpan.Zero); // Zero is accepted as-is
 	}
 
@@ -160,9 +175,11 @@ public sealed class OptionsClassesTests
 	public void ResilienceOptions_TimeoutValue_AcceptsPositiveValue()
 	{
 		// Arrange & Act
+
 		ResilienceOptions options = new(TimeoutValue: 60);
 
 		// Assert
+
 		options.TimeoutValue.ShouldBe(TimeSpan.FromSeconds(60));
 	}
 
@@ -170,10 +187,12 @@ public sealed class OptionsClassesTests
 	public void ResilienceOptions_PropertiesCanBeModified()
 	{
 		// Arrange
+
 		ResilienceOptions options = new();
-		Func<HttpStatusCode, bool> newRetryFunc = (status) => status == HttpStatusCode.ServiceUnavailable;
+		static bool newRetryFunc(HttpStatusCode status) => status == HttpStatusCode.ServiceUnavailable;
 
 		// Act
+
 		options.MaxRetry = 3;
 		options.RetryDelay = TimeSpan.FromSeconds(2);
 		options.TimeoutValue = TimeSpan.FromSeconds(45);
@@ -185,6 +204,7 @@ public sealed class OptionsClassesTests
 		options.RefreshToken = true;
 
 		// Assert
+
 		options.MaxRetry.ShouldBe(3);
 		options.RetryDelay.ShouldBe(TimeSpan.FromSeconds(2));
 		options.TimeoutValue.ShouldBe(TimeSpan.FromSeconds(45));
@@ -200,12 +220,15 @@ public sealed class OptionsClassesTests
 	public void ResilienceOptions_ShouldRetryFunc_CanBeSet()
 	{
 		// Arrange
-		Func<HttpResponseMessage?, ResilienceOptions, bool> customRetryFunc = (response, opts) => true;
+
+		static bool customRetryFunc(HttpResponseMessage? response, ResilienceOptions opts) => true;
 
 		// Act
+
 		ResilienceOptions options = new(ShouldRetryFunc: customRetryFunc);
 
 		// Assert
+
 		options.ShouldRetryFunc.ShouldBe(customRetryFunc);
 		options.ShouldRetryFunc!(null, options).ShouldBeTrue();
 	}
@@ -214,13 +237,15 @@ public sealed class OptionsClassesTests
 	public async Task ResilienceOptions_GetBearerTokenFunc_CanBeSet()
 	{
 		// Arrange
-		Func<string, bool, ValueTask<string>> tokenFunc = (apiName, forceRefresh) =>
-			new ValueTask<string>($"token-{apiName}-{forceRefresh}");
+
+		static ValueTask<string> tokenFunc(string apiName, bool forceRefresh) => new($"token-{apiName}-{forceRefresh}");
 
 		// Act
+
 		ResilienceOptions options = new(GetBearerTokenFunc: tokenFunc);
 
 		// Assert
+
 		options.GetBearerTokenFunc.ShouldNotBeNull();
 		string token = await options.GetBearerTokenFunc!("TestApi", false);
 		token.ShouldBe("token-TestApi-False");
@@ -233,9 +258,11 @@ public sealed class OptionsClassesTests
 	public void ResilienceOptions_SupportsAllBackoffTypes(EDelayBackoffType backoffType)
 	{
 		// Arrange & Act
+
 		ResilienceOptions options = new(DelayBackoffType: backoffType);
 
 		// Assert
+
 		options.DelayBackoffType.ShouldBe(backoffType);
 	}
 
@@ -243,16 +270,16 @@ public sealed class OptionsClassesTests
 
 	#region RestHelperOptions Tests
 
+
 	[Fact]
 	public void RestHelperOptions_ValidConstructor_CreatesInstance()
 	{
 		// Arrange & Act
-		RestHelperOptions options = new(
-			Url: "/api/test",
-			ApiName: "TestApi"
-		);
+
+		RestHelperOptions options = new(Url: "/api/test", ApiName: "TestApi");
 
 		// Assert
+
 		options.Url.ShouldBe("/api/test");
 		options.ApiName.ShouldBe("TestApi");
 		options.HttpHeaders.ShouldBeNull();
@@ -271,8 +298,8 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_ThrowsWhenApiNameIsNull()
 	{
 		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "/api/test", ApiName: null!));
+
+		ArgumentException ex = Should.Throw<ArgumentException>(() => new RestHelperOptions(Url: "/api/test", ApiName: null!));
 
 		ex.ParamName.ShouldBe("ApiName");
 		ex.Message.ShouldContain("ApiName cannot be null or whitespace");
@@ -282,8 +309,8 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_ThrowsWhenApiNameIsEmpty()
 	{
 		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "/api/test", ApiName: ""));
+
+		ArgumentException ex = Should.Throw<ArgumentException>(() => new RestHelperOptions(Url: "/api/test", ApiName: ""));
 
 		ex.ParamName.ShouldBe("ApiName");
 	}
@@ -292,8 +319,8 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_ThrowsWhenApiNameIsWhitespace()
 	{
 		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "/api/test", ApiName: "   "));
+
+		ArgumentException ex = Should.Throw<ArgumentException>(() => new RestHelperOptions(Url: "/api/test", ApiName: "   "));
 
 		ex.ParamName.ShouldBe("ApiName");
 	}
@@ -302,8 +329,8 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_ThrowsWhenUrlIsNull()
 	{
 		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: null!, ApiName: "TestApi"));
+
+		ArgumentException ex = Should.Throw<ArgumentException>(() => new RestHelperOptions(Url: null!, ApiName: "TestApi"));
 
 		ex.ParamName.ShouldBe("Url");
 		ex.Message.ShouldContain("Url cannot be null or whitespace");
@@ -313,8 +340,8 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_ThrowsWhenUrlIsEmpty()
 	{
 		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "", ApiName: "TestApi"));
+
+		ArgumentException ex = Should.Throw<ArgumentException>(() => new RestHelperOptions(Url: "", ApiName: "TestApi"));
 
 		ex.ParamName.ShouldBe("Url");
 	}
@@ -323,8 +350,8 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_ThrowsWhenUrlIsWhitespace()
 	{
 		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(Url: "   ", ApiName: "TestApi"));
+
+		ArgumentException ex = Should.Throw<ArgumentException>(() => new RestHelperOptions(Url: "   ", ApiName: "TestApi"));
 
 		ex.ParamName.ShouldBe("Url");
 	}
@@ -333,13 +360,8 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_ThrowsWhenBearerTokenRequiredButMissing()
 	{
 		// Arrange & Act & Assert
-		ArgumentException ex = Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(
-				Url: "/api/test",
-				ApiName: "TestApi",
-				UseBearerToken: true,
-				BearerToken: null
-			));
+
+		ArgumentException ex = Should.Throw<ArgumentException>(() => new RestHelperOptions(Url: "/api/test", ApiName: "TestApi", UseBearerToken: true, BearerToken: null));
 
 		ex.ParamName.ShouldBe("BearerToken");
 		ex.Message.ShouldContain("BearerToken cannot be null or whitespace when UseBearerToken is true");
@@ -349,14 +371,11 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_AllowsNullBearerTokenWhenNotUsed()
 	{
 		// Arrange & Act
-		RestHelperOptions options = new(
-			Url: "/api/test",
-			ApiName: "TestApi",
-			UseBearerToken: false,
-			BearerToken: null
-		);
+
+		RestHelperOptions options = new(Url: "/api/test", ApiName: "TestApi", UseBearerToken: false, BearerToken: null);
 
 		// Assert
+
 		options.UseBearerToken.ShouldBeFalse();
 		options.BearerToken.ShouldBeNull();
 	}
@@ -365,20 +384,15 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_AllowsNullBearerTokenWhenGetBearerTokenFuncProvided()
 	{
 		// Arrange
-		ResilienceOptions resilienceOptions = new(
-			GetBearerTokenFunc: (apiName, forceRefresh) => new ValueTask<string>("dynamic-token")
-		);
+
+		ResilienceOptions resilienceOptions = new(GetBearerTokenFunc: (apiName, forceRefresh) => new ValueTask<string>("dynamic-token"));
 
 		// Act
-		RestHelperOptions options = new(
-			Url: "/api/test",
-			ApiName: "TestApi",
-			UseBearerToken: true,
-			BearerToken: null,
-			ResilienceOptions: resilienceOptions
-		);
+
+		RestHelperOptions options = new(Url: "/api/test", ApiName: "TestApi", UseBearerToken: true, BearerToken: null, ResilienceOptions: resilienceOptions);
 
 		// Assert
+
 		options.UseBearerToken.ShouldBeTrue();
 		options.BearerToken.ShouldBeNull();
 		options.ResilienceOptions?.GetBearerTokenFunc.ShouldNotBeNull();
@@ -388,6 +402,7 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_SetsAllProperties()
 	{
 		// Arrange
+
 		Dictionary<string, string> headers = new() { { "X-Custom", "Value" } };
 		CompressionOptions compressionOptions = new(UseCompression: true);
 		MsgPackOptions msgPackOptions = new() { UseMsgPackCompression = true };
@@ -395,6 +410,7 @@ public sealed class OptionsClassesTests
 		ResilienceOptions resilienceOptions = new(MaxRetry: 3);
 
 		// Act
+
 		RestHelperOptions options = new(
 			Url: "/api/endpoint",
 			ApiName: "ProductionApi",
@@ -411,6 +427,7 @@ public sealed class OptionsClassesTests
 		);
 
 		// Assert
+
 		options.Url.ShouldBe("/api/endpoint");
 		options.ApiName.ShouldBe("ProductionApi");
 		options.HttpHeaders.ShouldBe(headers);
@@ -429,23 +446,27 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_PropertiesCanBeModified()
 	{
 		// Arrange
-		RestHelperOptions options = new("/api/test", "TestApi");
 
-		// Act
-		options.Url = "/api/updated";
-		options.ApiName = "UpdatedApi";
-		options.HttpHeaders = new Dictionary<string, string> { { "New-Header", "NewValue" } };
-		options.UseBearerToken = true;
-		options.BearerToken = "new-token";
-		options.UseNewtonsoftDeserializer = true;
-		options.LogQuery = false;
-		options.LogBody = false;
-		options.CompressionOptions = new CompressionOptions(UseCompression: true);
-		options.MsgPackOptions = new MsgPackOptions { UseMsgPackCompression = true };
-		options.JsonSerializerOptions = new JsonSerializerOptions();
-		options.ResilienceOptions = new ResilienceOptions();
+		RestHelperOptions options = new("/api/test", "TestApi")
+		{
+			// Act
+
+			Url = "/api/updated",
+			ApiName = "UpdatedApi",
+			HttpHeaders = new Dictionary<string, string> { { "New-Header", "NewValue" } },
+			UseBearerToken = true,
+			BearerToken = "new-token",
+			UseNewtonsoftDeserializer = true,
+			LogQuery = false,
+			LogBody = false,
+			CompressionOptions = new CompressionOptions(UseCompression: true),
+			MsgPackOptions = new MsgPackOptions { UseMsgPackCompression = true },
+			JsonSerializerOptions = new JsonSerializerOptions(),
+			ResilienceOptions = new ResilienceOptions()
+		};
 
 		// Assert
+
 		options.Url.ShouldBe("/api/updated");
 		options.ApiName.ShouldBe("UpdatedApi");
 		options.HttpHeaders.ShouldNotBeNull();
@@ -464,26 +485,14 @@ public sealed class OptionsClassesTests
 	public void RestHelperOptions_Constructor_AcceptsEmptyBearerToken()
 	{
 		// Arrange & Act & Assert
-		Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(
-				Url: "/api/test",
-				ApiName: "TestApi",
-				UseBearerToken: true,
-				BearerToken: ""
-			));
+		Should.Throw<ArgumentException>(() => new RestHelperOptions(Url: "/api/test", ApiName: "TestApi", UseBearerToken: true, BearerToken: ""));
 	}
 
 	[Fact]
 	public void RestHelperOptions_Constructor_AcceptsWhitespaceBearerToken()
 	{
 		// Arrange & Act & Assert
-		Should.Throw<ArgumentException>(() =>
-			new RestHelperOptions(
-				Url: "/api/test",
-				ApiName: "TestApi",
-				UseBearerToken: true,
-				BearerToken: "   "
-			));
+		Should.Throw<ArgumentException>(() => new RestHelperOptions(Url: "/api/test", ApiName: "TestApi", UseBearerToken: true, BearerToken: "   "));
 	}
 
 	#endregion

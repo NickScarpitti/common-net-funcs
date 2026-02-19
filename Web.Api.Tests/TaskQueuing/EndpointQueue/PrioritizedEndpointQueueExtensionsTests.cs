@@ -16,8 +16,7 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		Mock<ControllerBase> controllerMock = new();
 		Mock<IPrioritizedEndpointQueueService> serviceMock = new();
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), priority, It.IsAny<CancellationToken>()))
-						.ReturnsAsync(321);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), priority, It.IsAny<CancellationToken>())).ReturnsAsync(321);
 
 		int result = await controllerMock.Object.ExecutePrioritizedAsync(serviceMock.Object, _ => Task.FromResult(321), priority, customKey);
 
@@ -32,8 +31,7 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		Mock<ControllerBase> controllerMock = new();
 		Mock<IPrioritizedEndpointQueueService> serviceMock = new();
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), customPriority, It.IsAny<CancellationToken>()))
-						.ReturnsAsync(654);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), customPriority, It.IsAny<CancellationToken>())).ReturnsAsync(654);
 
 		int result = await controllerMock.Object.ExecutePrioritizedAsync(serviceMock.Object, _ => Task.FromResult(654), customPriority, customKey);
 
@@ -48,8 +46,7 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 
 		string capturedKey = string.Empty;
 		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-						.Callback<string, Func<CancellationToken, Task<int>>, int, CancellationToken>((key, _, __, ___) => capturedKey = key)
-						.ReturnsAsync(999);
+			.Callback<string, Func<CancellationToken, Task<int>>, int, CancellationToken>((key, _, __, ___) => capturedKey = key).ReturnsAsync(999);
 
 		_ = await controllerMock.Object.ExecutePrioritizedAsync(serviceMock.Object, _ => Task.FromResult(999), 1, "my-custom-key");
 
@@ -62,8 +59,7 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		Mock<ControllerBase> controllerMock = new();
 		Mock<IPrioritizedEndpointQueueService> serviceMock = new();
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<string>>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-						.ReturnsAsync("result-value");
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<string>>>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync("result-value");
 
 		string? result = await controllerMock.Object.ExecutePrioritizedAsync(serviceMock.Object, _ => Task.FromResult("result-value"), 1);
 
@@ -78,8 +74,7 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 
 		int capturedPriority = 0;
 		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-						.Callback<string, Func<CancellationToken, Task<int>>, int, CancellationToken>((_, __, priority, ___) => capturedPriority = priority)
-						.ReturnsAsync(777);
+			.Callback<string, Func<CancellationToken, Task<int>>, int, CancellationToken>((_, __, priority, ___) => capturedPriority = priority).ReturnsAsync(777);
 
 		_ = await controllerMock.Object.ExecutePrioritizedAsync(serviceMock.Object, _ => Task.FromResult(777), 5);
 
@@ -94,8 +89,7 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 
 		int capturedPriority = 0;
 		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), It.IsAny<TaskPriority>(), It.IsAny<CancellationToken>()))
-						.Callback<string, Func<CancellationToken, Task<int>>, TaskPriority, CancellationToken>((_, __, priority, ___) => capturedPriority = (int)priority)
-						.ReturnsAsync(888);
+			.Callback<string, Func<CancellationToken, Task<int>>, TaskPriority, CancellationToken>((_, __, priority, ___) => capturedPriority = (int)priority).ReturnsAsync(888);
 
 		_ = await controllerMock.Object.ExecutePrioritizedAsync(serviceMock.Object, _ => Task.FromResult(888), TaskPriority.High);
 
@@ -116,7 +110,7 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		}
 
 		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<bool>>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-						.Returns(async (string _, Func<CancellationToken, Task<bool>> func, int __, CancellationToken ct) => await func(ct));
+			.Returns(async (string _, Func<CancellationToken, Task<bool>> func, int __, CancellationToken ct) => await func(ct));
 
 		_ = await controllerMock.Object.ExecutePrioritizedAsync(serviceMock.Object, TaskFunction, 1);
 

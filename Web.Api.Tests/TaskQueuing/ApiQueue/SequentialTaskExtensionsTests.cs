@@ -21,9 +21,7 @@ public class SequentialTaskExtensionsTests
 
 		endpointsMock.Setup(x => x.ServiceProvider).Returns(serviceProviderMock.Object);
 		endpointsMock.Setup(x => x.DataSources).Returns([]);
-		endpointsMock
-			.Setup(x => x.CreateApplicationBuilder())
-			.Returns(Mock.Of<IApplicationBuilder>());
+		endpointsMock.Setup(x => x.CreateApplicationBuilder()).Returns(Mock.Of<IApplicationBuilder>());
 
 		// Act
 		IEndpointRouteBuilder result = SequentialTaskExtensions.EndpointQueueMetrics(endpointsMock.Object);
@@ -41,9 +39,7 @@ public class SequentialTaskExtensionsTests
 
 		endpointsMock.Setup(x => x.ServiceProvider).Returns(serviceProviderMock.Object);
 		endpointsMock.Setup(x => x.DataSources).Returns([]);
-		endpointsMock
-			.Setup(x => x.CreateApplicationBuilder())
-			.Returns(Mock.Of<IApplicationBuilder>());
+		endpointsMock.Setup(x => x.CreateApplicationBuilder()).Returns(Mock.Of<IApplicationBuilder>());
 
 		// Act & Assert
 		Should.NotThrow(() => SequentialTaskExtensions.EndpointQueueMetrics(endpointsMock.Object));

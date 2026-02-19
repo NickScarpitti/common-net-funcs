@@ -1736,7 +1736,7 @@ public sealed class CommonTests : IDisposable
 		Cell cell = new();
 
 		// Act & Assert
-		Should.Throw<InvalidOperationException>(() => cell.GetWorkbookFromCell());
+		Should.Throw<InvalidOperationException>(cell.GetWorkbookFromCell);
 	}
 
 	[RetryFact(3)]
@@ -1746,7 +1746,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = new();
 
 		// Act & Assert
-		Should.Throw<InvalidOperationException>(() => worksheet.GetWorkbookFromWorksheet());
+		Should.Throw<InvalidOperationException>(worksheet.GetWorkbookFromWorksheet);
 	}
 
 	[RetryFact(3)]
@@ -2003,7 +2003,7 @@ public sealed class CommonTests : IDisposable
 		Cell cell = new();
 
 		// Act & Assert
-		Should.Throw<InvalidOperationException>(() => cell.GetWorksheetFromCell());
+		Should.Throw<InvalidOperationException>(cell.GetWorksheetFromCell);
 	}
 
 	[RetryFact(3)]
@@ -2014,7 +2014,7 @@ public sealed class CommonTests : IDisposable
 		worksheetPart.Worksheet = new Worksheet();
 
 		// Act & Assert
-		Should.Throw<InvalidOperationException>(() => worksheetPart.GetWorkbookFromWorksheet());
+		Should.Throw<InvalidOperationException>(worksheetPart.GetWorkbookFromWorksheet);
 	}
 
 	[RetryFact(3)]
@@ -3672,6 +3672,7 @@ public sealed class CommonTests : IDisposable
 			};
 
 			// Add table columns
+#pragma warning disable S3220 // Partially matching overload
 			TableColumns tableColumns = new() { Count = 3 };
 			tableColumns.Append(new TableColumn { Id = 1, Name = "Name" });
 			tableColumns.Append(new TableColumn { Id = 2, Name = "Age" });
@@ -3697,7 +3698,7 @@ public sealed class CommonTests : IDisposable
 			TableParts tableParts = new() { Count = 1 };
 			tableParts.Append(new TablePart { Id = worksheetPart.GetIdOfPart(tableDefinitionPart) });
 			worksheet.Append(tableParts);
-
+#pragma warning restore S3220 // Partially matching overload
 			document.Save();
 		}
 
@@ -3750,6 +3751,8 @@ public sealed class CommonTests : IDisposable
 			};
 
 			TableColumns tableColumns = new() { Count = 1 };
+
+#pragma warning disable S3220 // Partially matching overload
 			tableColumns.Append(new TableColumn { Id = 1, Name = "Column1" });
 			table.Append(tableColumns);
 			table.Append(new AutoFilter { Reference = "A1:A2" });
@@ -3759,7 +3762,7 @@ public sealed class CommonTests : IDisposable
 			TableParts tableParts = new() { Count = 1 };
 			tableParts.Append(new TablePart { Id = worksheetPart.GetIdOfPart(tableDefinitionPart) });
 			worksheet.Append(tableParts);
-
+#pragma warning restore S3220 // Partially matching overload
 			document.Save();
 		}
 
@@ -3781,7 +3784,7 @@ public sealed class CommonTests : IDisposable
 		// Arrange
 		using MemoryStream memoryStream = new();
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
-		uint sheetId = document.CreateNewSheet("Sheet1");
+		uint _ = document.CreateNewSheet("Sheet1");
 		Sheet? sheet = document.GetSheetByName("Sheet1");
 		WorksheetPart worksheetPart = (WorksheetPart)document.WorkbookPart!.GetPartById(sheet!.Id!);
 
@@ -3810,7 +3813,7 @@ public sealed class CommonTests : IDisposable
 		// Arrange
 		using MemoryStream memoryStream = new();
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
-		uint sheetId = document.CreateNewSheet("Sheet1");
+		uint _ = document.CreateNewSheet("Sheet1");
 		Sheet? sheet = document.GetSheetByName("Sheet1");
 		WorksheetPart worksheetPart = (WorksheetPart)document.WorkbookPart!.GetPartById(sheet!.Id!);
 
@@ -3848,7 +3851,7 @@ public sealed class CommonTests : IDisposable
 		FieldInfo? formatCacheField = commonType.GetField("formatCache", BindingFlags.NonPublic | BindingFlags.Static);
 		if (formatCacheField != null)
 		{
-			var formatCache = formatCacheField.GetValue(null);
+			object? formatCache = formatCacheField.GetValue(null);
 			if (formatCache != null)
 			{
 				MethodInfo? clearMethod = formatCache.GetType().GetMethod("Clear");
@@ -3869,7 +3872,7 @@ public sealed class CommonTests : IDisposable
 		// Arrange
 		using MemoryStream memoryStream = new();
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
-		uint sheetId = document.CreateNewSheet("TestSheet");
+		uint _ = document.CreateNewSheet("TestSheet");
 		Sheet? sheet = document.GetSheetByName("TestSheet");
 		WorksheetPart worksheetPart = (WorksheetPart)document.WorkbookPart!.GetPartById(sheet!.Id!);
 

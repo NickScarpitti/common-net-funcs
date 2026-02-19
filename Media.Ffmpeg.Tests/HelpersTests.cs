@@ -1,7 +1,7 @@
-﻿using AutoFixture.AutoFakeItEasy;
-using CommonNetFuncs.Media.Ffmpeg;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using AutoFixture.AutoFakeItEasy;
+using CommonNetFuncs.Media.Ffmpeg;
 using xRetry.v3;
 
 namespace Media.Ffmpeg.Tests;
@@ -129,10 +129,10 @@ public sealed class HelpersTests : IDisposable
 	{
 		// Arrange
 		ConcurrentBag<string> bag = new()
-				{
-						"FileName=a,Success=True,OriginalSize=1B,EndSize=2B,SizeRatio=200%,SizeDif=1",
-						"FileName=b,Success=True,OriginalSize=2B,EndSize=1B,SizeRatio=50%,SizeDif=-1"
-				};
+			{
+				"FileName=a,Success=True,OriginalSize=1B,EndSize=2B,SizeRatio=200%,SizeDif=1",
+				"FileName=b,Success=True,OriginalSize=2B,EndSize=1B,SizeRatio=50%,SizeDif=-1"
+			};
 
 		// Act
 		string result = Helpers.GetTotalFileDif(bag);
@@ -374,10 +374,8 @@ public sealed class HelpersTests : IDisposable
 		CancellationTokenSource? cancellationTokenSource = null;
 
 		// Act & Assert - Should not throw
-		Should.NotThrow(() => args.LogFfmpegOutput(
-			ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure,
-			fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
-			conversionOutputs, fpsDict, cancellationTokenSource));
+		Should.NotThrow(() => args.LogFfmpegOutput(ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure, fileToConvert, videoTimespan, conversionIndex,
+			cancelIfLarger, null, null, conversionOutputs, fpsDict, cancellationTokenSource));
 	}
 
 	[RetryFact(3)]
@@ -399,9 +397,7 @@ public sealed class HelpersTests : IDisposable
 		CancellationTokenSource? cancellationTokenSource = null;
 
 		// Act
-		args.LogFfmpegOutput(
-			ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure,
-			fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
+		args.LogFfmpegOutput(ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure, fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
 			conversionOutputs, fpsDict, cancellationTokenSource);
 
 		// Assert
@@ -429,9 +425,7 @@ public sealed class HelpersTests : IDisposable
 		CancellationTokenSource? cancellationTokenSource = null;
 
 		// Act
-		args.LogFfmpegOutput(
-			ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure,
-			fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
+		args.LogFfmpegOutput(ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure, fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
 			conversionOutputs, fpsDict, cancellationTokenSource);
 
 		// Assert
@@ -457,9 +451,7 @@ public sealed class HelpersTests : IDisposable
 		CancellationTokenSource cancellationTokenSource = new();
 
 		// Act
-		args.LogFfmpegOutput(
-			ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure,
-			fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
+		args.LogFfmpegOutput(ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure, fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
 			conversionOutputs, fpsDict, cancellationTokenSource);
 
 		// Assert
@@ -526,7 +518,7 @@ public sealed class HelpersTests : IDisposable
 
 		try
 		{
-using Process? process = Process.Start(startInfo);
+			using Process? process = Process.Start(startInfo);
 			if (process != null)
 			{
 				// Read stderr where FFmpeg writes progress
@@ -612,9 +604,9 @@ using Process? process = Process.Start(startInfo);
 	}
 
 	[RetryFact(3)]
-	public void LogFfmpegOutput_WithUnparseableTimeFormat_ShouldUseRawValue()
+	public void LogFfmpegOutput_WithUnParseableTimeFormat_ShouldUseRawValue()
 	{
-		// Arrange - Data with unparseable time format (not matching hh:mm:ss.ff)
+		// Arrange - Data with un-parseable time format (not matching hh:mm:ss.ff)
 		const string data = "frame=  48 fps=5.8 q=0.0 size=1kB time=invalid_time bitrate=4.5kbits/s speed=1.0x";
 		DataReceivedEventArgs args = CreateDataReceivedEventArgs(data);
 		DateTime lastOutput = DateTime.UtcNow.AddSeconds(-10);
@@ -630,9 +622,7 @@ using Process? process = Process.Start(startInfo);
 		CancellationTokenSource? cancellationTokenSource = null;
 
 		// Act
-		args.LogFfmpegOutput(
-			ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure,
-			fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
+		args.LogFfmpegOutput(ref lastOutput, ref lastSummaryOutput, ref conversionFailed, ref sizeFailure, fileToConvert, videoTimespan, conversionIndex, cancelIfLarger, null, null,
 			conversionOutputs, fpsDict, cancellationTokenSource);
 
 		// Assert - Should not throw and update lastOutput

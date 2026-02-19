@@ -90,10 +90,7 @@ public sealed class ExportTests : IDisposable
 		List<TestModel> testData = fixture.CreateMany<TestModel>(2).ToList();
 
 		// Act
-		using MemoryStream? result = testData.GenericExcelExport(
-				createTable: createTable,
-				tableName: tableName);
-
+		using MemoryStream? result = testData.GenericExcelExport(createTable: createTable, tableName: tableName);
 		// Assert
 		result.ShouldNotBeNull();
 		using SpreadsheetDocument doc = SpreadsheetDocument.Open(result, false);
@@ -134,23 +131,6 @@ public sealed class ExportTests : IDisposable
 		sheetData.ShouldNotBeNull();
 		sheetData.Elements<Row>().Count().ShouldBe(3); // Header + 2 data rows
 	}
-
-	//[RetryFact(3)]
-	//public void AddGenericTable_WithValidData_ShouldAddNewSheet()
-	//{
-	//    // Arrange
-	//    List<TestModel> testData = fixture.CreateMany<TestModel>(2).ToList();
-	//    using SpreadsheetDocument doc = SpreadsheetDocument.Create(_memoryStream, SpreadsheetDocumentType.Workbook);
-	//    doc.AddWorkbookPart();
-
-	//    // Act
-	//    bool result = doc.AddGenericTable(testData, "TestSheet");
-
-	//    // Assert
-	//    result.ShouldBeTrue();
-	//    doc.WorkbookPart.ShouldNotBeNull();
-	//    doc.WorkbookPart.Workbook.Sheets?.Elements<Sheet>().Count().ShouldBe(1);
-	//}
 
 	[RetryFact(3)]
 	public void ExportFromTable_WithSkipColumns_ShouldOmitSpecifiedColumns()
@@ -493,7 +473,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act
 		using MemoryStream? result = testData.GenericExcelExport(wrapText: true);
-
 		// Assert
 		result.ShouldNotBeNull();
 		result.Length.ShouldBeGreaterThan(0);
@@ -509,7 +488,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act
 		using MemoryStream? result = dataTable.GenericExcelExport(wrapText: true);
-
 		// Assert
 		result.ShouldNotBeNull();
 		result.Length.ShouldBeGreaterThan(0);
@@ -523,7 +501,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act
 		using MemoryStream? result = testData.GenericExcelExport(sheetName: "CustomSheet");
-
 		// Assert
 		result.ShouldNotBeNull();
 		using SpreadsheetDocument doc = SpreadsheetDocument.Open(result, false);
@@ -542,7 +519,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act
 		using MemoryStream? result = dataTable.GenericExcelExport(sheetName: "MyCustomSheet");
-
 		// Assert
 		result.ShouldNotBeNull();
 		using SpreadsheetDocument doc = SpreadsheetDocument.Open(result, false);
@@ -745,7 +721,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act
 		using MemoryStream? result = testData.GenericExcelExport();
-
 		// Assert
 		result.ShouldNotBeNull();
 		result.Length.ShouldBeGreaterThan(0);
@@ -772,7 +747,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act
 		using MemoryStream? result = dataTable.GenericExcelExport();
-
 		// Assert
 		result.ShouldNotBeNull();
 		result.Length.ShouldBeGreaterThan(0);
@@ -929,7 +903,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act
 		using MemoryStream? result = testData.GenericExcelExport(skipColumnNames: skipColumns);
-
 		// Assert
 		result.ShouldNotBeNull();
 		using SpreadsheetDocument doc = SpreadsheetDocument.Open(result, false);
@@ -955,7 +928,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act
 		using MemoryStream? result = dataTable.GenericExcelExport(skipColumnNames: skipColumns);
-
 		// Assert
 		result.ShouldNotBeNull();
 		using SpreadsheetDocument doc = SpreadsheetDocument.Open(result, false);
@@ -1107,12 +1079,12 @@ public sealed class ExportTests : IDisposable
 
 		// Act
 		using MemoryStream? result = testData.GenericExcelExport(
-			memoryStream: new MemoryStream(),
-			createTable: true,
-			sheetName: "CustomSheet",
-			tableName: "CustomTable",
-			skipColumnNames: new() { "Description" },
-			wrapText: true);
+					memoryStream: new MemoryStream(),
+					createTable: true,
+					sheetName: "CustomSheet",
+					tableName: "CustomTable",
+					skipColumnNames: new() { "Description" },
+					wrapText: true);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1146,13 +1118,15 @@ public sealed class ExportTests : IDisposable
 		}
 
 		// Act
-		using MemoryStream? result = dataTable.GenericExcelExport(
+		using MemoryStream? result = dataTable.GenericExcelExport
+		(
 			memoryStream: new MemoryStream(),
 			createTable: true,
 			sheetName: "DataSheet",
 			tableName: "DataTable",
 			skipColumnNames: new() { "Col3" },
-			wrapText: true);
+			wrapText: true
+		);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1378,7 +1352,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act - Use all default parameters
 		using MemoryStream? result = testData.GenericExcelExport();
-
 		// Assert
 		result.ShouldNotBeNull();
 		result.Length.ShouldBeGreaterThan(0);
@@ -1403,7 +1376,6 @@ public sealed class ExportTests : IDisposable
 
 		// Act - Use all default parameters
 		using MemoryStream? result = dataTable.GenericExcelExport();
-
 		// Assert
 		result.ShouldNotBeNull();
 		result.Length.ShouldBeGreaterThan(0);

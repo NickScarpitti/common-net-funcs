@@ -269,10 +269,10 @@ public sealed class CollectionsTests
 		// Arrange
 		Dictionary<string, int> dict = new();
 		List<KeyValuePair<string, int>> pairs = new()
-				{
-						new KeyValuePair<string, int>("test1", 42),
-						new KeyValuePair<string, int>("test2", 99)
-				};
+			{
+				new KeyValuePair<string, int>("test1", 42),
+				new KeyValuePair<string, int>("test2", 99)
+			};
 
 		// Act
 		dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
@@ -290,10 +290,10 @@ public sealed class CollectionsTests
 		// Arrange
 		Dictionary<string, int> dict = new() { { "test1", 42 } };
 		List<KeyValuePair<string, int>> pairs = new()
-				{
-						new KeyValuePair<string, int>("test1", 99),
-						new KeyValuePair<string, int>("test2", 100)
-				};
+			{
+				new KeyValuePair<string, int>("test1", 99),
+				new KeyValuePair<string, int>("test2", 100)
+			};
 
 		// Act
 		dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
@@ -793,11 +793,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> list = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 2, Name = "test2" },
-						new TestClass { Id = 3, Name = "test3" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 2, Name = "test2" },
+				new TestClass { Id = 3, Name = "test3" }
+			};
 
 		TestClass partial = new() { Id = 2 };
 
@@ -817,10 +817,10 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> list = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 2, Name = "test2" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 2, Name = "test2" }
+			};
 
 		TestClass partial = new() { Id = 3 };
 
@@ -838,11 +838,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> list = new()
-				{
-						new TestClass { Id = 1, Name = "test1", Value = 10 },
-						new TestClass { Id = 2, Name = "test2", Value = 20 },
-						new TestClass { Id = 2, Name = "test3", Value = 30 }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1", Value = 10 },
+				new TestClass { Id = 2, Name = "test2", Value = 20 },
+				new TestClass { Id = 2, Name = "test3", Value = 30 }
+			};
 
 		TestClass partial = new() { Id = 2, Name = "test3" };
 
@@ -1106,170 +1106,6 @@ public sealed class CollectionsTests
 
 	#region ToDataTable Tests
 
-	//	[Theory]
-	//	[InlineData(true)]
-	//	[InlineData(false)]
-	//	public void ToDataTable_ConvertsCollectionToDataTable(bool useExpressionTrees)
-	//	{
-	//		// Arrange
-	//		List<TestClass> collection = new()
-	//				{
-	//						new TestClass { Id = 1, Name = "test1", IsActive = true },
-	//						new TestClass { Id = 2, Name = "test2", IsActive = false }
-	//				};
-
-	//		using DataTable result = new();
-
-	//		// Act
-	//		if (useExpressionTrees)
-	//		{
-	//			collection.ToDataTable(result);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			collection.ToDataTableReflection(result);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-
-	//		// Assert
-	//		result.ShouldNotBeNull();
-	//		result.Columns.Count.ShouldBe(7); // Id, Name, IsActive
-	//		result.Rows.Count.ShouldBe(2);
-
-	//		result.Rows[0]["Id"].ShouldBe(1);
-	//		result.Rows[0]["Name"].ShouldBe("test1");
-	//		result.Rows[0]["IsActive"].ShouldBe(true);
-
-	//		result.Rows[1]["Id"].ShouldBe(2);
-	//		result.Rows[1]["Name"].ShouldBe("test2");
-	//		result.Rows[1]["IsActive"].ShouldBe(false);
-
-	//		result.Dispose();
-	//	}
-
-	//	[Theory]
-	//	[InlineData(nameof(TestClass.Id), nameof(TestClass.Name), false)]
-	//	[InlineData(nameof(TestClass.Id), nameof(TestClass.Name), true)]
-	//	[InlineData($"{nameof(TestClass.Id)}NotInTestClass1", $"{nameof(TestClass.Name)}NotInTestClass2", false)]
-	//	[InlineData($"{nameof(TestClass.Id)}NotInTestClass1", $"{nameof(TestClass.Name)}NotInTestClass2", true)]
-	//	[InlineData(null, null, false)]
-	//	[InlineData(null, null, true)]
-	//	public void ToDataTable_WithExistingDataTable_AddsRowsToIt(string? column1Name, string? column2Name, bool useExpressionTrees)
-	//	{
-	//		// Arrange
-	//		List<TestClass> collection = new()
-	//				{
-	//						new TestClass { Id = 1, Name = "test1" },
-	//						new TestClass { Id = 2, Name = "test2" }
-	//				};
-
-	//		using DataTable dataTable = new();
-
-	//		if (column1Name != null)
-	//		{
-	//			dataTable.Columns.Add(column1Name, typeof(int));
-	//		}
-
-	//		if (column2Name != null)
-	//		{
-	//			dataTable.Columns.Add(column2Name, typeof(string));
-	//		}
-
-	//		// Act
-	//		DataTable result = new();
-
-	//		// Act
-	//		if (useExpressionTrees)
-	//		{
-	//			result = collection.ToDataTable(dataTable);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			result = collection.ToDataTableReflection(dataTable);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-
-	//		// Assert
-	//		result.ShouldBeSameAs(dataTable);
-	//		result.Rows.Count.ShouldBe(2);
-	//		result.Rows[0]["Id"].ShouldBe(1);
-	//		result.Rows[0]["Name"].ShouldBe("test1");
-	//		result.Rows[1]["Id"].ShouldBe(2);
-	//		result.Rows[1]["Name"].ShouldBe("test2");
-	//	}
-
-	//	[Theory]
-	//	[InlineData(true)]
-	//	[InlineData(false)]
-	//	public void ToDataTable_WithParallel_ConvertsCollectionToDataTable(bool useExpressionTrees)
-	//	{
-	//		// Arrange
-	//		List<TestClass> collection = new()
-	//				{
-	//						new TestClass { Id = 1, Name = "test1" },
-	//						new TestClass { Id = 2, Name = "test2" }
-	//				};
-
-	//		// Act
-	//		using DataTable result = new();
-	//		if (useExpressionTrees)
-	//		{
-	//			collection.ToDataTable(result, useParallel: true);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			collection.ToDataTableReflection(result, useParallel: true);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-	//		// Assert
-	//		result.ShouldNotBeNull();
-	//		result.Rows.Count.ShouldBe(2);
-
-	//		// Since parallel processing doesn't guarantee order, we need to check both rows exist
-	//		bool foundRow1 = false;
-	//		bool foundRow2 = false;
-
-	//		foreach (DataRow row in result.Rows)
-	//		{
-	//			if (((int)row["Id"] == 1) && ((string)row["Name"] == "test1"))
-	//			{
-	//				foundRow1 = true;
-	//			}
-	//			else if (((int)row["Id"] == 2) && ((string)row["Name"] == "test2"))
-	//			{
-	//				foundRow2 = true;
-	//			}
-	//		}
-
-	//		foundRow1.ShouldBeTrue();
-	//		foundRow2.ShouldBeTrue();
-	//	}
-
-	//	[Theory]
-	//	[InlineData(true)]
-	//	[InlineData(false)]
-	//	public void ToDataTable_WithNullCollection_ReturnsNull(bool useExpressionTrees)
-	//	{
-	//		// Act
-	//		DataTable? result = new();
-	//		if (useExpressionTrees)
-	//		{
-	//			result = Collections.ToDataTable<TestClass>(null, result);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			result = Collections.ToDataTableReflection<TestClass>(null, result);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-
-	//		// Assert
-	//		result.ShouldBeNull();
-	//	}
-
 	[Fact]
 	public void ToDataTable_ConvertsCollectionToDataTable()
 	{
@@ -1329,9 +1165,7 @@ public sealed class CollectionsTests
 	public void ToDataTable_WithParallelAndCustomDegreeOfParallelism_ConvertsCorrectly()
 	{
 		// Arrange
-		List<TestClass> collection = Enumerable.Range(1, 10)
-			.Select(i => new TestClass { Id = i, Name = $"test{i}" })
-			.ToList();
+		List<TestClass> collection = Enumerable.Range(1, 10).Select(i => new TestClass { Id = i, Name = $"test{i}" }).ToList();
 
 		// Act
 		DataTable? result = collection.ToDataTable(useParallel: true, degreeOfParallelism: 2, cancellationToken: Current.CancellationToken);
@@ -1395,11 +1229,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" },
-						new TestClass { Id = 2, Name = "test3" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" },
+				new TestClass { Id = 2, Name = "test3" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name").ToList();
@@ -1421,10 +1255,10 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name", separator: ",").ToList();
@@ -1590,11 +1424,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name", distinct: false).ToList();
@@ -1609,11 +1443,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name", distinct: true).ToList();
@@ -1628,11 +1462,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" },
-						new TestClass { Id = 2, Name = "test3" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" },
+				new TestClass { Id = 2, Name = "test3" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name", parallel: true).ToList();
@@ -1668,11 +1502,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1", Description = "desc1" },
-						new TestClass { Id = 1, Name = "test2", Description = "desc2" },
-						new TestClass { Id = 1, Name = "test1", Description = "desc1" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1", Description = "desc1" },
+				new TestClass { Id = 1, Name = "test2", Description = "desc2" },
+				new TestClass { Id = 1, Name = "test1", Description = "desc1" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps(new HashSet<string> { "Name", "Description" }, distinct: distinct).ToList();

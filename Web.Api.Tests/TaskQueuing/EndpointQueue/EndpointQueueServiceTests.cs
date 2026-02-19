@@ -282,10 +282,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act & Assert
 
-		await Should.ThrowAsync<InvalidOperationException>(async () =>
-		{
-			await service.ExecuteAsync<int>(key, _ => throw new InvalidOperationException("Test exception"), options, TestContext.Current.CancellationToken);
-		});
+		await Should.ThrowAsync<InvalidOperationException>(async () => await service.ExecuteAsync<int>(key, _ => throw new InvalidOperationException("Test exception"), options, TestContext.Current.CancellationToken));
 
 		// Give async stats tracking a moment to complete
 
@@ -450,7 +447,7 @@ public class EndpointQueueServiceTests : IDisposable
 		service.Dispose();
 		service.Dispose();
 
-		Should.NotThrow(() => service.Dispose());
+		Should.NotThrow(service.Dispose);
 	}
 
 	[Fact]
@@ -668,8 +665,7 @@ public class EndpointQueueServiceTests : IDisposable
 		service.ShouldNotBeNull();
 
 		// Verify cutoffTimeMinutes field via reflection
-		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
-			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService).GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		cutoffField.ShouldNotBeNull();
 		double actualCutoff = (double)cutoffField.GetValue(service)!;
 		actualCutoff.ShouldBe(45.0); // Should be absolute value
@@ -699,8 +695,7 @@ public class EndpointQueueServiceTests : IDisposable
 		await Task.Delay(1000, TestContext.Current.CancellationToken); // Wait 1 second (> 0.6 seconds cutoff)
 
 		// Get cleanup method via reflection
-		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService)
-			.GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService).GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		cleanupMethod.ShouldNotBeNull();
 
 		// Act - Invoke cleanup
@@ -801,8 +796,7 @@ public class EndpointQueueServiceTests : IDisposable
 		await Task.Delay(150, TestContext.Current.CancellationToken);
 
 		// Get the cleanup method via reflection
-		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService)
-			.GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService).GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		cleanupMethod.ShouldNotBeNull();
 
 		// Act - Invoke cleanup (queues are recent so won't be removed)
@@ -825,8 +819,7 @@ public class EndpointQueueServiceTests : IDisposable
 		_servicesToDispose.Add(service);
 
 		// Assert - Verify cutoffTimeMinutes field is 30.0 (default)
-		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
-			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService).GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		cutoffField.ShouldNotBeNull();
 		double actualCutoff = (double)cutoffField.GetValue(service)!;
 		actualCutoff.ShouldBe(30.0); // Default value
@@ -848,8 +841,7 @@ public class EndpointQueueServiceTests : IDisposable
 		_servicesToDispose.Add(service);
 
 		// Assert - Verify cutoffTimeMinutes field is 30.0 (default)
-		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
-			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService).GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		cutoffField.ShouldNotBeNull();
 		double actualCutoff = (double)cutoffField.GetValue(service)!;
 		actualCutoff.ShouldBe(30.0); // Default value
@@ -867,8 +859,7 @@ public class EndpointQueueServiceTests : IDisposable
 		_servicesToDispose.Add(service);
 
 		// Assert - Math.Abs(0) = 0
-		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService)
-			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.FieldInfo? cutoffField = typeof(EndpointQueueService).GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		cutoffField.ShouldNotBeNull();
 		double actualCutoff = (double)cutoffField.GetValue(service)!;
 		actualCutoff.ShouldBe(0.0);

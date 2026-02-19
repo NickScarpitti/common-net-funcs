@@ -9,13 +9,11 @@ namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 public class SequentialTaskProcessorTests
 {
 	// Test helper class to expose internal functionality for cancellation testing
-	private class TestableProcessor : SequentialTaskProcessor
+	private class TestableProcessor(BoundedChannelOptions options) : SequentialTaskProcessor(options)
 	{
-		public TestableProcessor(BoundedChannelOptions options) : base(options) { }
-
 		// Helper method to enqueue a task and get access to the QueuedTask for cancellation testing
-		public async Task<(Task<object?> resultTask, QueuedTask queuedTask)> EnqueueAndCaptureAsync<T>(
-			Func<CancellationToken, Task<T?>> taskFunction)
+
+		public async Task<(Task<object?> resultTask, QueuedTask queuedTask)> EnqueueAndCaptureAsync<T>(Func<CancellationToken, Task<T?>> taskFunction)
 		{
 			QueuedTask queuedTask = new(async ct => await taskFunction(ct).ConfigureAwait(false));
 
@@ -220,11 +218,7 @@ public class SequentialTaskProcessorTests
 		await processor.StartAsync(CancellationToken.None);
 
 		// Act
-		Task<int?> task = processor.EnqueueAsync(async ct =>
-		{
-			await Task.Delay(10, ct);
-			return (int?)42;
-		}, cancellationToken: Current.CancellationToken);
+		Task<int?> task = processor.EnqueueAsync(async ct => { await Task.Delay(10, ct); return (int?)42; }, cancellationToken: Current.CancellationToken);
 
 		int? result = await task;
 
@@ -418,12 +412,7 @@ public class SequentialTaskProcessorTests
 		bool taskCompleted = false;
 
 		// Act
-		Task<int?> task = processor.EnqueueAsync(async ct =>
-		{
-			await Task.Delay(100, ct);
-			taskCompleted = true;
-			return (int?)42;
-		}, cancellationToken: Current.CancellationToken);
+		Task<int?> task = processor.EnqueueAsync(async ct => { await Task.Delay(100, ct); taskCompleted = true; return (int?)42; }, cancellationToken: Current.CancellationToken);
 
 		await Task.Delay(50, Current.CancellationToken); // Let it start processing
 
@@ -527,12 +516,7 @@ public class SequentialTaskProcessorTests
 		bool taskCompleted = false;
 
 		// Act - Enqueue a task
-		Task<int?> task = processor.EnqueueAsync(async _ =>
-		{
-			await Task.Delay(100);
-			taskCompleted = true;
-			return (int?)42;
-		}, cancellationToken: Current.CancellationToken);
+		Task<int?> task = processor.EnqueueAsync(async _ => { await Task.Delay(100, _); taskCompleted = true; return (int?)42; }, cancellationToken: Current.CancellationToken);
 
 		// Wait for task to complete
 		await task;
@@ -558,7 +542,7 @@ public class SequentialTaskProcessorTests
 		await Task.Delay(50, Current.CancellationToken);
 
 		// Dispose should handle the exception gracefully
-		Should.NotThrow(() => processor.Dispose());
+		Should.NotThrow(processor.Dispose);
 	}
 
 	[Fact]
@@ -617,10 +601,7 @@ public class SequentialTaskProcessorTests
 		await processor.StartAsync(CancellationToken.None);
 
 		// Act & Assert
-		await Should.ThrowAsync<InvalidOperationException>(async () =>
-		{
-			await processor.EnqueueAsync<int?>(_ => throw new InvalidOperationException("Test exception"), cancellationToken: Current.CancellationToken);
-		});
+		await Should.ThrowAsync<InvalidOperationException>(async () => await processor.EnqueueAsync<int?>(_ => throw new InvalidOperationException("Test exception"), cancellationToken: Current.CancellationToken));
 	}
 
 	[Fact]
@@ -634,12 +615,7 @@ public class SequentialTaskProcessorTests
 		bool taskStarted = false;
 
 		// Act - Enqueue a task without starting the processor
-		_ = processor.EnqueueAsync(async _ =>
-		{
-			taskStarted = true;
-			await Task.Delay(100);
-			return (int?)42;
-		}, cancellationToken: Current.CancellationToken);
+		_ = processor.EnqueueAsync(async _ => { taskStarted = true; await Task.Delay(100, _); return (int?)42; }, cancellationToken: Current.CancellationToken);
 
 		// Wait a moment for the task to be queued
 		await Task.Delay(50, Current.CancellationToken);
@@ -660,11 +636,7 @@ public class SequentialTaskProcessorTests
 		await processor.StartAsync(CancellationToken.None);
 
 		// Act
-		Task<int?> task = processor.EnqueueAsync(async ct =>
-		{
-			await Task.Delay(200, ct);
-			return (int?)42;
-		}, cancellationToken: Current.CancellationToken);
+		Task<int?> task = processor.EnqueueAsync(async ct => { await Task.Delay(200, ct); return (int?)42; }, cancellationToken: Current.CancellationToken);
 
 		int? result = await task;
 

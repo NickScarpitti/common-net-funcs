@@ -925,8 +925,18 @@ public static partial class Strings
 	{
 		// return string.Equals(s1?.Trim() ?? string.Empty, s2?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase);
 
-		if (s1 == null && s2 == null) return true;
-		if (s1 == null || s2 == null) return string.Equals(string.Empty, (s1 ?? s2)?.Trim(), StringComparison.InvariantCultureIgnoreCase);
+		if (s1 == null && s2 == null)
+		{
+			return true;
+		}
+
+
+		if (s1 == null || s2 == null)
+		{
+			return string.Equals(string.Empty, (s1 ?? s2)?.Trim(), StringComparison.InvariantCultureIgnoreCase);
+		}
+
+
 		return string.Equals(s1.Trim(), s2.Trim(), StringComparison.InvariantCultureIgnoreCase);
 	}
 
@@ -941,9 +951,21 @@ public static partial class Strings
 	{
 		// return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty);
 
-		if (s1 == null && s2 == null) return true;
-		if (s1 == null) return s2!.Length == 0;
-		if (s2 == null) return s1.Length == 0;
+		if (s1 == null && s2 == null)
+		{
+			return true;
+		}
+
+		if (s1 == null)
+		{
+			return s2!.Length == 0;
+		}
+
+		if (s2 == null)
+		{
+			return s1.Length == 0;
+		}
+
 		return string.Equals(s1, s2);
 	}
 
@@ -958,9 +980,21 @@ public static partial class Strings
 	{
 		//		return string.Equals(s1 ?? string.Empty, s2 ?? string.Empty, stringComparison);
 
-		if (s1 == null && s2 == null) return true;
-		if (s1 == null) return s2!.Length == 0;
-		if (s2 == null) return s1.Length == 0;
+		if (s1 == null && s2 == null)
+		{
+			return true;
+		}
+
+		if (s1 == null)
+		{
+			return s2!.Length == 0;
+		}
+
+		if (s2 == null)
+		{
+			return s1.Length == 0;
+		}
+
 		return string.Equals(s1, s2, stringComparison);
 	}
 

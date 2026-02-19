@@ -123,11 +123,7 @@ public sealed class OptimizerTests : IDisposable
 	[InlineData(new[] { "-b", "-O3" }, null, null, "test.gif")]     // Gifsicle
 	[InlineData(null, new[] { "--preserve" }, null, "test.jpg")]    // Jpegoptim
 	[InlineData(null, null, new[] { "-o5" }, "test.png")]          // Optipng
-	public async Task OptimizeImage_ShouldAppendFilePathToArgs_WhenNotPresent(
-			string[]? gifsicleArgs,
-			string[]? jpegoptimArgs,
-			string[]? optipngArgs,
-			string fileName)
+	public async Task OptimizeImage_ShouldAppendFilePathToArgs_WhenNotPresent(string[]? gifsicleArgs, string[]? jpegoptimArgs, string[]? optipngArgs, string fileName)
 	{
 		// Arrange
 		string testPath = Path.Combine(AppContext.BaseDirectory, "TestData", fileName);
@@ -140,11 +136,7 @@ public sealed class OptimizerTests : IDisposable
 	[InlineData(new[] { "--invalid-flag-that-does-not-exist" }, null, null, "test.gif")]     // Gifsicle with invalid flag
 	[InlineData(null, new[] { "--invalid-flag-that-does-not-exist" }, null, "test.jpg")]    // Jpegoptim with invalid flag
 	[InlineData(null, null, new[] { "--invalid-flag-that-does-not-exist" }, "test.png")]   // Optipng with invalid flag
-	public async Task OptimizeImage_ShouldHandleCommandFailure_WithInvalidArguments(
-			string[]? gifsicleArgs,
-			string[]? jpegoptimArgs,
-			string[]? optipngArgs,
-			string fileName)
+	public async Task OptimizeImage_ShouldHandleCommandFailure_WithInvalidArguments(string[]? gifsicleArgs, string[]? jpegoptimArgs, string[]? optipngArgs, string fileName)
 	{
 		// Arrange
 		string testPath = Path.Combine(AppContext.BaseDirectory, "TestData", fileName);

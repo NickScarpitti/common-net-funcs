@@ -82,10 +82,7 @@ public sealed class DataTableHelpersTests
 		A.CallTo(() => request.ContentType).Returns("application/x-www-form-urlencoded");
 		A.CallTo(() => request.Form).Returns(formCollection);
 
-		Dictionary<string, StringValues> formData = new()
-			{
-				{ "search[value]", new StringValues(string.Empty) }
-			};
+		Dictionary<string, StringValues> formData = new() { { "search[value]", new StringValues(string.Empty) } };
 
 		A.CallTo(() => formCollection.Keys).Returns(formData.Keys);
 		foreach (KeyValuePair<string, StringValues> item in formData)
@@ -101,10 +98,7 @@ public sealed class DataTableHelpersTests
 	[Fact]
 	public void GetDataTableRequest_InvalidSearchValueFormat_HandlesGracefully()
 	{
-		Dictionary<string, StringValues> formData = new()
-			{
-				{ "search[value]", new StringValues("invalid=") }
-			};
+		Dictionary<string, StringValues> formData = new() { { "search[value]", new StringValues("invalid=") } };
 
 		HttpRequest request = A.Fake<HttpRequest>();
 		IFormCollection formCollection = new FormCollection(formData);
@@ -138,7 +132,7 @@ public sealed class DataTableHelpersTests
 	{
 		Dictionary<string, StringValues> formData = new()
 			{
-				{ "search[value]", new StringValues("invalidvalue,field=value") }
+				{ "search[value]", new StringValues("InvalidValue,field=value") }
 			};
 
 		HttpRequest request = A.Fake<HttpRequest>();

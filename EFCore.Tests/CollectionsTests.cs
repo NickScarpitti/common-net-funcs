@@ -24,9 +24,7 @@ public sealed class CollectionsTests : IDisposable
 
 		connection = new SqliteConnection("DataSource=:memory:");
 		connection.Open();
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
-			.UseSqlite(connection)
-			.Options;
+		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseSqlite(connection).Options;
 		context = new TestDbContext(options);
 		context.Database.EnsureCreated();
 	}
@@ -283,8 +281,7 @@ public sealed class CollectionsTests : IDisposable
 		cts.Cancel();
 
 		// Act & Assert
-		Should.Throw<OperationCanceledException>(() =>
-				context.TestEntities.GetObjectByPartial(context, partialObject, cancellationToken: cts.Token));
+		Should.Throw<OperationCanceledException>(() => context.TestEntities.GetObjectByPartial(context, partialObject, cancellationToken: cts.Token));
 	}
 
 	[Fact]
@@ -852,9 +849,7 @@ public sealed class CollectionsTests : IDisposable
 	public void GetObjectByPartial_WithSqliteProvider_NormalizesToUtc()
 	{
 		// Arrange - Create context with SQLite provider (tests default/unknown provider path)
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
-			.UseSqlite("Data Source=:memory:")
-			.Options;
+		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseSqlite("Data Source=:memory:").Options;
 
 		using TestDbContext sqliteContext = new(options);
 		sqliteContext.Database.OpenConnection();
@@ -921,9 +916,7 @@ public sealed class CollectionsTests : IDisposable
 	public async Task GetObjectByPartialAsync_WithSqliteProvider_NormalizesToUtc()
 	{
 		// Arrange - Create context with SQLite provider (tests default/unknown provider path)
-		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
-			.UseSqlite("Data Source=:memory:")
-			.Options;
+		DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>().UseSqlite("Data Source=:memory:").Options;
 
 		await using TestDbContext sqliteContext = new(options);
 		await sqliteContext.Database.OpenConnectionAsync(Current.CancellationToken);

@@ -5,14 +5,9 @@ using static CommonNetFuncs.Web.Common.ValidationAttributes.ListMaxLengthAttribu
 namespace Web.Common.Tests.ValidationAttributes;
 
 // Custom collection that is NOT ICollection but has a Count property (for reflection test)
-public class CustomCollectionWithCount : IEnumerable<string?>
+public class CustomCollectionWithCount(List<string?> items) : IEnumerable<string?>
 {
-	private readonly List<string?> _items;
-
-	public CustomCollectionWithCount(List<string?> items)
-	{
-		_items = items;
-	}
+	private readonly List<string?> _items = items;
 
 	public int Count => _items.Count;
 
@@ -21,14 +16,9 @@ public class CustomCollectionWithCount : IEnumerable<string?>
 }
 
 // Custom collection with NO Count property (for InvalidCastException test)
-public class CustomCollectionNoCount : IEnumerable<string?>
+public class CustomCollectionNoCount(List<string?> items) : IEnumerable<string?>
 {
-	private readonly List<string?> _items;
-
-	public CustomCollectionNoCount(List<string?> items)
-	{
-		_items = items;
-	}
+	private readonly List<string?> _items = items;
 
 	public IEnumerator<string?> GetEnumerator() => _items.GetEnumerator();
 	System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();

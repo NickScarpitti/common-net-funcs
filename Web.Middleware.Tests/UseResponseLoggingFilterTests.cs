@@ -66,14 +66,10 @@ public sealed class UseResponseLoggingFilterTests
 		if (delaySeconds >= thresholdSeconds)
 		{
 			A.CallTo(() => logger.Log(
-					LogLevel.Warning,
-					A<EventId>.Ignored,
-					A<It.IsAnyType>.That.Matches(msg => msg.ToString()!.Contains("Method") &&
-							msg.ToString()!.Contains("took") &&
-							msg.ToString()!.Contains("to complete with result:") &&
-							msg.ToString()!.Contains(nameof(OkResult))),
-					null,
-					A<Func<It.IsAnyType, Exception?, string>>.Ignored));
+				LogLevel.Warning,
+				A<EventId>.Ignored,
+				A<It.IsAnyType>.That.Matches(msg => msg.ToString()!.Contains("Method") && msg.ToString()!.Contains("took") && msg.ToString()!.Contains("to complete with result:") && msg.ToString()
+					!.Contains(nameof(OkResult))), null, A<Func<It.IsAnyType, Exception?, string>>.Ignored));
 		}
 		else
 		{
@@ -120,10 +116,7 @@ public sealed class UseResponseLoggingFilterTests
 		List<IFilterMetadata> filterMetadata = new();
 		Dictionary<string, object?> actionArguments = new();
 
-		ActionExecutedContext executedContext = new(actionContext, filterMetadata, controller)
-		{
-			Result = new OkResult()
-		};
+		ActionExecutedContext executedContext = new(actionContext, filterMetadata, controller) { Result = new OkResult() };
 
 		// Act
 		ActionExecutingContext executingContext = new(actionContext, filterMetadata, actionArguments, controller);

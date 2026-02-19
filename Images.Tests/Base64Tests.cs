@@ -236,7 +236,7 @@ public sealed class Base64Tests : IDisposable
 	public async Task ConvertImageFileToBase64Async_WithValidStream_ReturnsBase64String()
 	{
 		// Arrange
-		using MemoryStream ms = new(File.ReadAllBytes(testImagePath));
+		await using MemoryStream ms = new(await File.ReadAllBytesAsync(testImagePath));
 
 		// Act
 		string? result = await ms.ConvertImageFileToBase64Async();
@@ -253,7 +253,7 @@ public sealed class Base64Tests : IDisposable
 	public async Task ConvertImageFileToBase64Async_WithEmptyStream_ReturnsNull()
 	{
 		// Arrange
-		using MemoryStream ms = new();
+		await using MemoryStream ms = new();
 
 		// Act
 		string? result = await ms.ConvertImageFileToBase64Async();
@@ -266,7 +266,7 @@ public sealed class Base64Tests : IDisposable
 	public async Task ConvertImageFileToBase64Async_WithCorruptedImage_ReturnsNull()
 	{
 		// Arrange
-		using MemoryStream ms = new();
+		await using MemoryStream ms = new();
 		await ms.WriteAsync(System.Text.Encoding.UTF8.GetBytes("Not an image"));
 		ms.Position = 0;
 
@@ -281,8 +281,8 @@ public sealed class Base64Tests : IDisposable
 	public async Task ConvertImageFileToBase64Async_WithNonSeekableStream_ReturnsBase64String()
 	{
 		// Arrange
-		byte[] imageBytes = File.ReadAllBytes(testImagePath);
-		using MemoryStream ms = new(imageBytes);
+		byte[] imageBytes = await File.ReadAllBytesAsync(testImagePath);
+		await using MemoryStream ms = new(imageBytes);
 		ms.Position = 5; // Set position to non-zero
 
 		// Act
@@ -372,20 +372,10 @@ public sealed class Base64Tests : IDisposable
 	[InlineData("none")]
 	[InlineData("NONE")]
 	[InlineData("None")]
-	public void ExtractBase64_WithNoneValue_ReturnsNull(string input)
-	{
-		// Act
-		string? result = input.ExtractBase64();
-
-		// Assert
-		result.ShouldBeNull();
-	}
-
-	[RetryTheory(3)]
 	[InlineData("https://example.com/image.png")]
 	[InlineData("http://example.com/image.jpg")]
 	[InlineData("HTTP://example.com/image.gif")]
-	public void ExtractBase64_WithHttpUrl_ReturnsNull(string input)
+	public void ExtractBase64_ReturnsNull(string input)
 	{
 		// Act
 		string? result = input.ExtractBase64();
@@ -440,7 +430,7 @@ public sealed class Base64Tests : IDisposable
 	public async Task ConvertImageFileToBase64Async_WithNonReadableStream_ReturnsNull()
 	{
 		// Arrange
-		byte[] imageBytes = File.ReadAllBytes(testImagePath);
+		byte[] imageBytes = await File.ReadAllBytesAsync(testImagePath);
 		using NonReadableMemoryStream ms = new(imageBytes);
 
 		// Act & Assert - method catches the exception and returns null
@@ -465,9 +455,7 @@ public sealed class Base64Tests : IDisposable
 /// <summary>
 /// Custom MemoryStream that returns false for CanRead to test exception handling
 /// </summary>
-internal sealed class NonReadableMemoryStream : MemoryStream
+internal sealed class NonReadableMemoryStream(byte[] buffer) : MemoryStream(buffer)
 {
-	public NonReadableMemoryStream(byte[] buffer) : base(buffer) { }
-
 	public override bool CanRead => false;
 }

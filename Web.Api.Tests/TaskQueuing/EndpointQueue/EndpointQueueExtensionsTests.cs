@@ -20,8 +20,7 @@ public class EndpointQueueExtensionsTests
 		Mock<IEndpointQueueService> serviceMock = new();
 		BoundedChannelOptions options = new(1);
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(123);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(123);
 
 		// Act
 		int result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(123), options);
@@ -38,8 +37,7 @@ public class EndpointQueueExtensionsTests
 		Mock<IEndpointQueueService> serviceMock = new();
 		UnboundedChannelOptions options = new();
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(456);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(456);
 
 		// Act
 		int result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(456), options);
@@ -58,9 +56,8 @@ public class EndpointQueueExtensionsTests
 		const string customKey = "CustomEndpointKey";
 		string capturedKey = string.Empty;
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(123)
-				.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(123)
+			.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
 
 		// Act
 		int result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(123), options, customKey);
@@ -80,9 +77,8 @@ public class EndpointQueueExtensionsTests
 		const string customKey = "CustomEndpointKeyUnbounded";
 		string capturedKey = string.Empty;
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(456)
-				.Callback<string, Func<CancellationToken, Task<int>>, UnboundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(456)
+			.Callback<string, Func<CancellationToken, Task<int>>, UnboundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
 
 		// Act
 		int result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(456), options, customKey);
@@ -108,9 +104,8 @@ public class EndpointQueueExtensionsTests
 			ActionDescriptor = actionDescriptorMock.Object
 		};
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(123)
-				.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(123)
+			.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
 
 		// Act
 		int result = await controller.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(123), options);
@@ -138,9 +133,8 @@ public class EndpointQueueExtensionsTests
 			ActionDescriptor = actionDescriptorMock.Object
 		};
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(456)
-				.Callback<string, Func<CancellationToken, Task<int>>, UnboundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(456)
+			.Callback<string, Func<CancellationToken, Task<int>>, UnboundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
 
 		// Act
 		int result = await controller.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(456), options);
@@ -166,9 +160,8 @@ public class EndpointQueueExtensionsTests
 		httpContextMock.Setup(x => x.RequestAborted).Returns(cts.Token);
 		controllerMock.Object.ControllerContext = new ControllerContext { HttpContext = httpContextMock.Object };
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(123)
-				.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((_, _, _, token) => capturedToken = token);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(123)
+			.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((_, _, _, token) => capturedToken = token);
 
 		// Act
 		int result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(123), options);
@@ -192,9 +185,8 @@ public class EndpointQueueExtensionsTests
 		httpContextMock.Setup(x => x.RequestAborted).Returns(cts.Token);
 		controllerMock.Object.ControllerContext = new ControllerContext { HttpContext = httpContextMock.Object };
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(456)
-				.Callback<string, Func<CancellationToken, Task<int>>, UnboundedChannelOptions, CancellationToken>((_, _, _, token) => capturedToken = token);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(456)
+			.Callback<string, Func<CancellationToken, Task<int>>, UnboundedChannelOptions, CancellationToken>((_, _, _, token) => capturedToken = token);
 
 		// Act
 		int result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(456), options);
@@ -217,9 +209,8 @@ public class EndpointQueueExtensionsTests
 			ActionDescriptor = null!
 		};
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(123)
-				.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(123)
+			.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((key, _, _, _) => capturedKey = key);
 
 		// Act
 		int result = await controller.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(123), options);
@@ -240,9 +231,8 @@ public class EndpointQueueExtensionsTests
 
 		controllerMock.Object.ControllerContext = new ControllerContext { HttpContext = null! };
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync(123)
-				.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((_, _, _, token) => capturedToken = token);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<int>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync(123)
+			.Callback<string, Func<CancellationToken, Task<int>>, BoundedChannelOptions, CancellationToken>((_, _, _, token) => capturedToken = token);
 
 		// Act
 		int result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult(123), options);
@@ -258,14 +248,11 @@ public class EndpointQueueExtensionsTests
 		// Arrange
 		Mock<IEndpointRouteBuilder> endpointsMock = new();
 
-		endpointsMock.Setup(x => x.CreateApplicationBuilder())
-				.Returns(Mock.Of<IApplicationBuilder>());
+		endpointsMock.Setup(x => x.CreateApplicationBuilder()).Returns(Mock.Of<IApplicationBuilder>());
 
-		endpointsMock.Setup(x => x.DataSources)
-				.Returns(new List<EndpointDataSource>());
+		endpointsMock.Setup(x => x.DataSources).Returns(new List<EndpointDataSource>());
 
-		endpointsMock.Setup(x => x.ServiceProvider)
-				.Returns(Mock.Of<IServiceProvider>());
+		endpointsMock.Setup(x => x.ServiceProvider).Returns(Mock.Of<IServiceProvider>());
 
 		// Act - Call the extension method directly from EndpointQueueExtensions
 		IEndpointRouteBuilder result = EndpointQueueExtensions.EndpointQueueMetrics(endpointsMock.Object);
@@ -314,8 +301,7 @@ public class EndpointQueueExtensionsTests
 		Mock<IEndpointQueueService> serviceMock = new();
 		BoundedChannelOptions options = new(1);
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<string?>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync((string?)null);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<string?>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
 
 		// Act
 		string? result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult<string?>(null), options);
@@ -332,8 +318,7 @@ public class EndpointQueueExtensionsTests
 		Mock<IEndpointQueueService> serviceMock = new();
 		UnboundedChannelOptions options = new();
 
-		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<string?>>>(), options, It.IsAny<CancellationToken>()))
-				.ReturnsAsync((string?)null);
+		serviceMock.Setup(x => x.ExecuteAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task<string?>>>(), options, It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
 
 		// Act
 		string? result = await controllerMock.Object.ExecuteQueuedAsync(serviceMock.Object, _ => Task.FromResult<string?>(null), options);

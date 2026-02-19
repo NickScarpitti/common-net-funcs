@@ -19,6 +19,8 @@ public static class Manipulation
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+	private const string reduceQualityErrorMessage = "Error reducing image quality to {Quality} with width {Width} and height {Height}";
+
 	private static void ResizeImageBase(this Image image, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, bool useDimsAsMax, bool resizeRequired)
 	{
 		if (resizeOptions != null)
@@ -307,7 +309,7 @@ public static class Manipulation
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error reducing image quality to {Quality} with width {Width} and height {Height}", quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
+			logger.Error(ex, reduceQualityErrorMessage, quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
 		}
 		finally
 		{
@@ -360,7 +362,7 @@ public static class Manipulation
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error reducing image quality to {Quality} with width {Width} and height {Height}", quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
+			logger.Error(ex, reduceQualityErrorMessage, quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
 		}
 		finally
 		{
@@ -512,7 +514,7 @@ public static class Manipulation
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error reducing image quality to {Quality} with width {Width} and height {Height}", quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
+			logger.Error(ex, reduceQualityErrorMessage, quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
 
 			// Clean up temp file if it exists
 			if (isSameFile && File.Exists(tempFilePath))
@@ -575,7 +577,7 @@ public static class Manipulation
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error reducing image quality to {Quality} with width {Width} and height {Height}", quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
+			logger.Error(ex, reduceQualityErrorMessage, quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
 		}
 		finally
 		{

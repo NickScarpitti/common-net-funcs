@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Web.Common;
+﻿using System.Globalization;
+using CommonNetFuncs.Web.Common;
 using FakeItEasy;
 using Microsoft.AspNetCore.Http;
 
@@ -6,6 +7,8 @@ namespace Web.Common.Tests;
 
 public class UriHelpersTests
 {
+	private readonly CultureInfo formatProvider = new("en-US");
+
 	[Theory]
 	[InlineData(null, null, "")]
 	[InlineData(new int[0], "param", "")]
@@ -49,7 +52,7 @@ public class UriHelpersTests
 	public void ToUriSafeString_DateTime_ShouldFormatCorrectly(string input, string? format, string expected)
 	{
 		// Arrange
-		DateTime date = DateTime.Parse(input);
+		DateTime date = DateTime.Parse(input, formatProvider);
 
 		// Act
 		string result = date.ToUriSafeString(format);
@@ -65,7 +68,7 @@ public class UriHelpersTests
 	public void ToUriSafeString_NullableDateTime_ShouldFormatCorrectly(string input, string? format, string expected)
 	{
 		// Arrange
-		DateTime? date = DateTime.Parse(input);
+		DateTime? date = DateTime.Parse(input, formatProvider);
 
 		// Act
 		string result = date.ToUriSafeString(format);
@@ -94,7 +97,7 @@ public class UriHelpersTests
 	public void ToUriSafeString_DateOnly_ShouldFormatCorrectly(string input, string? format, string expected)
 	{
 		// Arrange
-		DateOnly date = DateOnly.Parse(input);
+		DateOnly date = DateOnly.Parse(input, formatProvider);
 
 		// Act
 		string result = date.ToUriSafeString(format);
@@ -110,7 +113,7 @@ public class UriHelpersTests
 	public void ToUriSafeString_NullableDateOnly_ShouldFormatCorrectly(string input, string? format, string expected)
 	{
 		// Arrange
-		DateOnly? date = DateOnly.Parse(input);
+		DateOnly? date = DateOnly.Parse(input, formatProvider);
 
 		// Act
 		string result = date.ToUriSafeString(format);

@@ -196,24 +196,24 @@ public sealed class NavigationPropertiesTests : IDisposable
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			modelBuilder.Entity<TestEntity>()
-					.HasOne(x => x.RelatedEntity)
-					.WithMany();
+				.HasOne(x => x.RelatedEntity)
+				.WithMany();
 
 			modelBuilder.Entity<TestRelatedEntity>()
-					.HasOne(x => x.Parent)
-					.WithMany();
+				.HasOne(x => x.Parent)
+				.WithMany();
 
 			modelBuilder.Entity<DeepTestEntity>()
-					.HasOne(x => x.DeepTestRelatedEntity)
-					.WithMany(x => x.TestEntities);
+				.HasOne(x => x.DeepTestRelatedEntity)
+				.WithMany(x => x.TestEntities);
 
 			modelBuilder.Entity<DeepTestRelatedEntity>()
-					.HasOne(x => x.GetDeepTestRelatedEntity2)
-					.WithMany(x => x.DeepTestRelatedEntities);
+				.HasOne(x => x.GetDeepTestRelatedEntity2)
+				.WithMany(x => x.DeepTestRelatedEntities);
 
 			modelBuilder.Entity<DeepTestRelatedEntity2>()
-					.HasOne(x => x.DeepTestRelatedEntity3)
-					.WithMany(x => x.DeepTestRelatedEntity2s);
+				.HasOne(x => x.DeepTestRelatedEntity3)
+				.WithMany(x => x.DeepTestRelatedEntity2s);
 		}
 	}
 
@@ -311,8 +311,8 @@ public sealed class NavigationPropertiesTests : IDisposable
 
 		// Check cache is populated
 		IReadOnlyDictionary<NavigationProperties.NavigationPropertiesCacheKey, NavigationProperties.NavigationPropertiesCacheValue> cache = useLimitedCache
-				? NavigationProperties.NavigationCacheManager.GetLimitedCache()
-				: NavigationProperties.NavigationCacheManager.GetCache();
+			? NavigationProperties.NavigationCacheManager.GetLimitedCache()
+			: NavigationProperties.NavigationCacheManager.GetCache();
 		cache.Count.ShouldBeGreaterThan(0);
 
 		// Clear cache and verify
@@ -352,8 +352,8 @@ public sealed class NavigationPropertiesTests : IDisposable
 
 		// Check cache is populated
 		IReadOnlyDictionary<Type, List<string>> cache = useLimitedCache
-				? NavigationProperties.TopLevelNavigationCacheManager.GetLimitedCache()!
-				: NavigationProperties.TopLevelNavigationCacheManager.GetCache();
+			? NavigationProperties.TopLevelNavigationCacheManager.GetLimitedCache()!
+			: NavigationProperties.TopLevelNavigationCacheManager.GetCache();
 		cache.Count.ShouldBeGreaterThan(0);
 
 		// Clear cache and verify

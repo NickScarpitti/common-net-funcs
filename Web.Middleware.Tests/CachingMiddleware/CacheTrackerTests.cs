@@ -173,10 +173,7 @@ public sealed class CacheTrackerTests
 		for (int i = 0; i < 100; i++)
 		{
 			int capturedI = i;
-			tasks.Add(Task.Run(() =>
-			{
-				tracker.TrackEntry($"key{capturedI}", capturedI * 100);
-			}, Current.CancellationToken));
+			tasks.Add(Task.Run(() => tracker.TrackEntry($"key{capturedI}", capturedI * 100), Current.CancellationToken));
 		}
 
 		await Task.WhenAll([.. tasks]);

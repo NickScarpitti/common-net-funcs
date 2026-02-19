@@ -50,10 +50,7 @@ public sealed class MemoryCacheEvictionCallbackTests
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
 		byte[] data = Encoding.UTF8.GetBytes("test data");
-		A.CallTo(() => next(A<HttpContext>._)).Invokes((HttpContext ctx) =>
-		{
-			ctx.Response.Body.Write(data, 0, data.Length);
-		});
+		A.CallTo(() => next(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(data, 0, data.Length));
 
 		MemoryCacheMiddleware middleware = new(next, cache, options, metrics, tracker);
 
@@ -80,20 +77,14 @@ public sealed class MemoryCacheEvictionCallbackTests
 	{
 		// Arrange
 		const string tagName = "test-tag";
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Request.Path = "/api/test";
 		context.Request.Headers[options.CacheTagHeader] = tagName;
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
 		byte[] data = Encoding.UTF8.GetBytes("test data");
-		A.CallTo(() => next(A<HttpContext>._)).Invokes((HttpContext ctx) =>
-		{
-			ctx.Response.Body.Write(data, 0, data.Length);
-		});
+		A.CallTo(() => next(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(data, 0, data.Length));
 
 		MemoryCacheMiddleware middleware = new(next, cache, options, metrics, tracker);
 
@@ -127,18 +118,12 @@ public sealed class MemoryCacheEvictionCallbackTests
 				Response = { StatusCode = StatusCodes.Status200OK }
 			};
 
-			Dictionary<string, StringValues> queryDict = new()
-				{
-					{ options.UseCacheQueryParam, "true" }
-				};
+			Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 			testContext.Request.Query = new QueryCollection(queryDict);
 
 			byte[] data = Encoding.UTF8.GetBytes($"test data {i}");
 			RequestDelegate testNext = A.Fake<RequestDelegate>();
-			A.CallTo(() => testNext(A<HttpContext>._)).Invokes((HttpContext ctx) =>
-			{
-				ctx.Response.Body.Write(data, 0, data.Length);
-			});
+			A.CallTo(() => testNext(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(data, 0, data.Length));
 
 			MemoryCacheMiddleware middleware = new(testNext, cache, options, metrics, tracker);
 			await middleware.InvokeAsync(testContext);
@@ -167,19 +152,13 @@ public sealed class MemoryCacheEvictionCallbackTests
 			DefaultCacheDuration = TimeSpan.FromMilliseconds(100)
 		};
 
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ optionsWithLogging.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { optionsWithLogging.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Request.Path = "/api/test";
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
 		byte[] data = Encoding.UTF8.GetBytes("test data");
-		A.CallTo(() => next(A<HttpContext>._)).Invokes((HttpContext ctx) =>
-		{
-			ctx.Response.Body.Write(data, 0, data.Length);
-		});
+		A.CallTo(() => next(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(data, 0, data.Length));
 
 		MemoryCacheMiddleware middleware = new(next, cache, optionsWithLogging, metrics, tracker);
 
@@ -200,9 +179,7 @@ public sealed class MemoryCacheEvictionCallbackTests
 	{
 		// Arrange - Manually add an entry that's not a CacheEntry type
 		string key = "non-cache-entry";
-		MemoryCacheEntryOptions entryOptions = new MemoryCacheEntryOptions()
-			.SetSize(100)
-			.SetAbsoluteExpiration(TimeSpan.FromMilliseconds(100));
+		MemoryCacheEntryOptions entryOptions = new MemoryCacheEntryOptions().SetSize(100).SetAbsoluteExpiration(TimeSpan.FromMilliseconds(100));
 
 		cache.Set(key, "just a string", entryOptions);
 
@@ -221,20 +198,14 @@ public sealed class MemoryCacheEvictionCallbackTests
 	{
 		// Arrange
 		const string tags = "tag1,tag2,tag3";
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Request.Path = "/api/test";
 		context.Request.Headers[options.CacheTagHeader] = tags;
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
 		byte[] data = Encoding.UTF8.GetBytes("test data");
-		A.CallTo(() => next(A<HttpContext>._)).Invokes((HttpContext ctx) =>
-		{
-			ctx.Response.Body.Write(data, 0, data.Length);
-		});
+		A.CallTo(() => next(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(data, 0, data.Length));
 
 		MemoryCacheMiddleware middleware = new(next, cache, options, metrics, tracker);
 

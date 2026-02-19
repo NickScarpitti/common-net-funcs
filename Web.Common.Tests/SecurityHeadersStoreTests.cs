@@ -131,7 +131,7 @@ public class SecurityHeadersStoreTests
 	public void SecurityHeaders_AllHeaders_CanBeAccessedByKey(string headerName, string expectedValue)
 	{
 		// Assert
-		SecurityHeadersStore.SecurityHeaders.TryGetValue(headerName, out var value).ShouldBeTrue();
+		SecurityHeadersStore.SecurityHeaders.TryGetValue(headerName, out string? value).ShouldBeTrue();
 		value.ShouldBe(expectedValue);
 	}
 
@@ -139,7 +139,7 @@ public class SecurityHeadersStoreTests
 	public void SecurityHeaders_NonExistentKey_ReturnsNull()
 	{
 		// Act
-		var exists = SecurityHeadersStore.SecurityHeaders.TryGetValue("NonExistent-Header", out var value);
+		bool exists = SecurityHeadersStore.SecurityHeaders.TryGetValue("NonExistent-Header", out string? value);
 
 		// Assert
 		exists.ShouldBeFalse();
@@ -150,10 +150,10 @@ public class SecurityHeadersStoreTests
 	public void HeadersToRemove_CanBeEnumerated()
 	{
 		// Arrange
-		var headersList = new List<string>();
+		List<string> headersList = new();
 
 		// Act
-		foreach (var header in SecurityHeadersStore.HeadersToRemove)
+		foreach (string header in SecurityHeadersStore.HeadersToRemove)
 		{
 			headersList.Add(header);
 		}

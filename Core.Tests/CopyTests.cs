@@ -1,5 +1,5 @@
-﻿using CommonNetFuncs.Core;
-using System.Reflection;
+﻿using System.Reflection;
+using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
@@ -1923,7 +1923,7 @@ public sealed class CopyTests
 			StringValue = "hello",
 			DoubleValue = 3.14,
 			BoolValue = true,
-			DateValue = new DateTime(2024, 1, 1)
+			DateValue = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)
 		};
 
 		// Act
@@ -1935,7 +1935,7 @@ public sealed class CopyTests
 		result.StringValue.ShouldBe("hello");
 		result.DoubleValue.ShouldBe(3.14);
 		result.BoolValue.ShouldBeTrue();
-		result.DateValue.ShouldBe(new DateTime(2024, 1, 1));
+		result.DateValue.ShouldBe(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified));
 	}
 
 	[Theory]
@@ -2207,8 +2207,7 @@ public sealed class CopyTests
 	public void CopyCollectionRuntime_WithNullSource_ShouldReturnNull()
 	{
 		// Arrange & Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object?[] { null, typeof(List<int>), 0, -1 });
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object?[] { null, typeof(List<int>), 0, -1 });
 
 		// Assert
 		result.ShouldBeNull();
@@ -2218,8 +2217,7 @@ public sealed class CopyTests
 	public void CopyItemRuntime_WithNullItem_ShouldReturnNull()
 	{
 		// Arrange & Act
-		object? result = typeof(Copy).GetMethod("CopyItemRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object?[] { null, typeof(int), 0, -1 });
+		object? result = typeof(Copy).GetMethod("CopyItemRuntime", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object?[] { null, typeof(int), 0, -1 });
 
 		// Assert
 		result.ShouldBeNull();
@@ -2229,8 +2227,7 @@ public sealed class CopyTests
 	public void CopyObjectRuntime_WithNullSource_ShouldReturnNull()
 	{
 		// Arrange & Act
-		object? result = typeof(Copy).GetMethod("CopyObjectRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object?[] { null, typeof(DestinationClass), 0, -1 });
+		object? result = typeof(Copy).GetMethod("CopyObjectRuntime", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object?[] { null, typeof(DestinationClass), 0, -1 });
 
 		// Assert
 		result.ShouldBeNull();
@@ -2243,8 +2240,7 @@ public sealed class CopyTests
 		SourceClass source = new() { Id = 42, Name = "Test" };
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyObjectRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(DestinationClass), 0, -1 });
+		object? result = typeof(Copy).GetMethod("CopyObjectRuntime", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { source, typeof(DestinationClass), 0, -1 });
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -2260,8 +2256,7 @@ public sealed class CopyTests
 		const int item = 42;
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyItemRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { item, typeof(int), 0, -1 });
+		object? result = typeof(Copy).GetMethod("CopyItemRuntime", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { item, typeof(int), 0, -1 });
 
 		// Assert
 		result.ShouldBe(42);
@@ -2274,8 +2269,7 @@ public sealed class CopyTests
 		int[] source = new[] { 1, 2, 3 };
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(int[]), 0, -1 });
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { source, typeof(int[]), 0, -1 });
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -2290,8 +2284,7 @@ public sealed class CopyTests
 		Dictionary<string, int> source = new() { ["key1"] = 1, ["key2"] = 2 };
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(Dictionary<string, int>), 0, -1 });
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { source, typeof(Dictionary<string, int>), 0, -1 });
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -2306,8 +2299,7 @@ public sealed class CopyTests
 		List<int> source = new() { 1, 2, 3 };
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(List<int>), 0, -1 });
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { source, typeof(List<int>), 0, -1 });
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -2322,8 +2314,7 @@ public sealed class CopyTests
 		const string source = "test";
 
 		// Act
-		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!
-			.Invoke(null, new object[] { source, typeof(string), 0, -1 });
+		object? result = typeof(Copy).GetMethod("CopyCollectionRuntime", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { source, typeof(string), 0, -1 });
 
 		// Assert
 		result.ShouldBe(source); // Should return source for unknown types
@@ -2483,10 +2474,8 @@ public sealed class CopyTests
 	public void GetOrCreatePropertyMaps_ShouldCreateAndCacheMappings()
 	{
 		// Arrange & Act
-		Dictionary<string, (Action<DestinationClass, object?> Set, Func<SourceClass, object?> Get)> maps1 =
-			Copy.GetOrCreatePropertyMaps<SourceClass, DestinationClass>();
-		Dictionary<string, (Action<DestinationClass, object?> Set, Func<SourceClass, object?> Get)> maps2 =
-			Copy.GetOrCreatePropertyMaps<SourceClass, DestinationClass>();
+		Dictionary<string, (Action<DestinationClass, object?> Set, Func<SourceClass, object?> Get)> maps1 = Copy.GetOrCreatePropertyMaps<SourceClass, DestinationClass>();
+		Dictionary<string, (Action<DestinationClass, object?> Set, Func<SourceClass, object?> Get)> maps2 = Copy.GetOrCreatePropertyMaps<SourceClass, DestinationClass>();
 
 		// Assert
 		maps1.ShouldNotBeNull();
@@ -2507,8 +2496,7 @@ public sealed class CopyTests
 		Copy.CopyCacheTypedManager.ClearAllCaches();
 
 		// Act
-		Dictionary<string, (Action<DestinationWithDifferentTypes, object?> Set, Func<SourceClass, object?> Get)> maps =
-			Copy.GetOrCreatePropertyMaps<SourceClass, DestinationWithDifferentTypes>();
+		Dictionary<string, (Action<DestinationWithDifferentTypes, object?> Set, Func<SourceClass, object?> Get)> maps = Copy.GetOrCreatePropertyMaps<SourceClass, DestinationWithDifferentTypes>();
 
 		// Assert
 		maps.ShouldNotBeNull();
@@ -2669,15 +2657,6 @@ public sealed class CopyTests
 	{
 		public int Id { get; set; }
 		public string? Code { get; set; }
-
-		public override bool Equals(object? obj)
-		{
-			if (obj is ComplexKey other)
-			{
-				return Id == other.Id && Code == other.Code;
-			}
-			return false;
-		}
 
 		public override int GetHashCode()
 		{

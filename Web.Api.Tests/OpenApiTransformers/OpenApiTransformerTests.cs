@@ -28,6 +28,7 @@ public sealed class OpenApiTransformerTests
 			}
 #pragma warning restore S3923
 		};
+
 		if (initialParamCount is 1)
 		{
 			operation.Parameters ??= [];
@@ -58,10 +59,10 @@ public sealed class OpenApiTransformerTests
 		// Arrange
 		IAuthenticationSchemeProvider fakeProvider = A.Fake<IAuthenticationSchemeProvider>();
 		List<AuthenticationScheme> schemes = new()
-				{
-						new AuthenticationScheme("Bearer", "Bearer", typeof(IAuthenticationHandler)),
-						new AuthenticationScheme("Other", "Other", typeof(IAuthenticationHandler))
-				};
+			{
+				new AuthenticationScheme("Bearer", "Bearer", typeof(IAuthenticationHandler)),
+				new AuthenticationScheme("Other", "Other", typeof(IAuthenticationHandler))
+			};
 		A.CallTo(() => fakeProvider.GetAllSchemesAsync()).Returns(Task.FromResult<IEnumerable<AuthenticationScheme>>(schemes));
 		IOptions<BearerSecuritySchemeOptions> options = Options.Create(new BearerSecuritySchemeOptions { AuthenticationSchemeName = schemeName ?? "Bearer" });
 		BearerSecuritySchemeTransformer transformer = new(fakeProvider, options);

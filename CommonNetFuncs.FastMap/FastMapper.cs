@@ -132,7 +132,9 @@ public static class FastMapper
 	public static TDest? FastMap<TSource, TDest>(this TSource source, bool useCache) where TSource : class? where TDest : class?
 	{
 		if (source is null)
+		{
 			return default;
+		}
 
 		Func<TSource, TDest> mapper = useCache
 			? (Func<TSource, TDest>)GetOrAddFromManagedCache<TSource, TDest>(new(typeof(TSource), typeof(TDest)))
@@ -358,9 +360,13 @@ public static class FastMapper
 		Type destValueType = destArgs[1];
 
 		if (sourceKeyType != destKeyType)
+		{
+
 			throw new InvalidOperationException("Dictionary key types must match");
+		}
 
 		// Same value types - simple copy
+
 		if (sourceValueType == destValueType)
 		{
 			ConstructorInfo dictCtor = destType.GetConstructor([typeof(IDictionary<,>).MakeGenericType(sourceKeyType, sourceValueType)])!;

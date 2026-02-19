@@ -119,7 +119,11 @@ public sealed class MailAttachmentBytes : IMailAttachment
 
 	public Stream? GetStream()
 	{
-		if (AttachmentBytes == null) return null;
+		if (AttachmentBytes == null)
+		{
+			return null;
+		}
+
 		MemoryStream stream = new();
 		stream.Write(AttachmentBytes, 0, AttachmentBytes.Length);
 		stream.Position = 0;

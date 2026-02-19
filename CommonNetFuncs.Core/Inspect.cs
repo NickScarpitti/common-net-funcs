@@ -222,7 +222,7 @@ public static class Inspect
 	/// Creates a delegate for comparing two objects of the specified type for value equality.
 	/// </summary>
 	/// <param name="type">Type of the object to be compared</param>
-	/// <param name="ignoreStringCase">If <see langword="true"/>, will ignore case when comparing string properties for value equlity</param>
+	/// <param name="ignoreStringCase">If <see langword="true"/>, will ignore case when comparing string properties for value equality</param>
 	/// <param name="recursive">If <see langword="true"/>, will recursively compare properties of complex types</param>
 	/// <returns>A delegate for comparing two objects of the specified type for value equality</returns>
 	private static Func<object, object, IEnumerable<string>, bool> CreateCompareDelegate(Type type, bool ignoreStringCase, bool recursive)

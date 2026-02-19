@@ -23,9 +23,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -35,12 +33,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapCacheMetrics();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapCacheMetrics());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -92,9 +86,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -104,12 +96,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapCacheMetrics();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapCacheMetrics());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -137,9 +125,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -149,12 +135,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapCacheMetrics();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapCacheMetrics());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -182,9 +164,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -194,12 +174,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapCacheMetrics();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapCacheMetrics());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -225,9 +201,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -237,12 +211,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapCacheMetrics();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapCacheMetrics());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -271,9 +241,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -283,12 +251,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -307,9 +271,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -319,12 +281,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -360,9 +318,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -372,12 +328,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -396,9 +348,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -408,12 +358,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -432,9 +378,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -444,12 +388,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -499,9 +439,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -511,12 +449,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -535,9 +469,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -547,12 +479,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -599,9 +527,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -609,23 +535,16 @@ public sealed class MemoryCacheEndpointsTests
 						services.MemoryValueCaching();
 						services.AddAuthentication("TestScheme")
 							.AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>("TestScheme", options => { });
-						services.AddAuthorization(options =>
-						{
-							options.AddPolicy("TestPolicy", policy =>
-								policy.RequireAuthenticatedUser());
-						});
+						services.AddAuthorization(options => options.AddPolicy("TestPolicy", policy =>
+								policy.RequireAuthenticatedUser()));
 					})
 					.Configure(app =>
 					{
 						app.UseRouting();
 						app.UseAuthentication();
 						app.UseAuthorization();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints("TestPolicy");
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints("TestPolicy"));
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -642,9 +561,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -654,12 +571,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -707,9 +620,7 @@ public sealed class MemoryCacheEndpointsTests
 	{
 		// Arrange
 		using IHost host = await new HostBuilder()
-			.ConfigureWebHost(webBuilder =>
-			{
-				webBuilder
+			.ConfigureWebHost(webBuilder => webBuilder
 					.UseTestServer()
 					.ConfigureServices(services =>
 					{
@@ -719,12 +630,8 @@ public sealed class MemoryCacheEndpointsTests
 					.Configure(app =>
 					{
 						app.UseRouting();
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapEvictionEndpoints();
-						});
-					});
-			})
+						app.UseEndpoints(endpoints => endpoints.MapEvictionEndpoints());
+					}))
 			.StartAsync();
 
 		HttpClient client = host.GetTestClient();
@@ -785,10 +692,8 @@ public sealed class MemoryCacheEndpointsTests
 }
 
 // Test authentication handler for testing authorization
-internal class TestAuthHandler(
-	IOptionsMonitor<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions> options,
-	ILoggerFactory logger,
-	UrlEncoder encoder) : Microsoft.AspNetCore.Authentication.AuthenticationHandler<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>(options, logger, encoder)
+internal class TestAuthHandler(IOptionsMonitor<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
+	: Microsoft.AspNetCore.Authentication.AuthenticationHandler<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>(options, logger, encoder)
 {
 	protected override Task<Microsoft.AspNetCore.Authentication.AuthenticateResult> HandleAuthenticateAsync()
 	{

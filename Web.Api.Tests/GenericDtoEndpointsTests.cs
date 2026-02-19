@@ -107,8 +107,7 @@ public sealed class GenericDtoEndpointsTests
 
 		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.CreateMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored))
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.CreateMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Throws<InvalidOperationException>();
 
 		// Act
 
@@ -172,8 +171,7 @@ public sealed class GenericDtoEndpointsTests
 
 		TestInDto model = fixture.Create<TestInDto>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteByObject(A<TestEntity>.Ignored, A<bool>.Ignored))
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.DeleteByObject(A<TestEntity>.Ignored, A<bool>.Ignored)).Throws<InvalidOperationException>();
 
 		// Act
 
@@ -273,8 +271,7 @@ public sealed class GenericDtoEndpointsTests
 
 		List<TestInDto> models = fixture.CreateMany<TestInDto>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored))
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Throws<InvalidOperationException>();
 
 		// Act
 
@@ -352,8 +349,7 @@ public sealed class GenericDtoEndpointsTests
 
 		List<object> keys = fixture.CreateMany<int>(3).Cast<object>().ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteManyByKeys(A<IEnumerable<object>>.Ignored))
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.DeleteManyByKeys(A<IEnumerable<object>>.Ignored)).Throws<InvalidOperationException>();
 
 		// Act
 
@@ -491,8 +487,7 @@ public sealed class GenericDtoEndpointsTests
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.GetByKey(A<object>.Ignored, null, default)).Returns(model);
-		A.CallTo(() => dbContextActions.SaveChanges())
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.SaveChanges()).Throws<InvalidOperationException>();
 
 		// Act
 
@@ -861,8 +856,7 @@ public sealed class GenericDtoEndpointsTests
 
 		List<TestEntity> models = fixture.CreateMany<TestEntity>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.CreateMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored))
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.CreateMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored)).Throws<InvalidOperationException>();
 
 		// Act
 
@@ -926,8 +920,7 @@ public sealed class GenericDtoEndpointsTests
 
 		TestEntity model = fixture.Create<TestEntity>();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteByObject(A<TestEntity>.Ignored, A<bool>.Ignored, A<GlobalFilterOptions?>.Ignored))
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.DeleteByObject(A<TestEntity>.Ignored, A<bool>.Ignored, A<GlobalFilterOptions?>.Ignored)).Throws<InvalidOperationException>();
 
 		// Act
 
@@ -1047,8 +1040,7 @@ public sealed class GenericDtoEndpointsTests
 
 		List<TestEntity> models = fixture.CreateMany<TestEntity>(3).ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored, A<GlobalFilterOptions?>.Ignored))
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.DeleteMany(A<IEnumerable<TestEntity>>.Ignored, A<bool>.Ignored, A<GlobalFilterOptions?>.Ignored)).Throws<InvalidOperationException>();
 
 		// Act
 
@@ -1131,7 +1123,7 @@ public sealed class GenericDtoEndpointsTests
 		System.Linq.Expressions.Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.DeleteMany(A<System.Linq.Expressions.Expression<Func<TestEntity, bool>>>.Ignored, A<GlobalFilterOptions?>.Ignored, A<CancellationToken>.Ignored))
-				.Throws<InvalidOperationException>();
+			.Throws<InvalidOperationException>();
 
 		// Act
 
@@ -1220,8 +1212,7 @@ public sealed class GenericDtoEndpointsTests
 		// Arrange
 		List<object> keys = fixture.CreateMany<int>(3).Cast<object>().ToList();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
-		A.CallTo(() => dbContextActions.DeleteManyByKeys(A<IEnumerable<object>>.Ignored, A<GlobalFilterOptions?>.Ignored))
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.DeleteManyByKeys(A<IEnumerable<object>>.Ignored, A<GlobalFilterOptions?>.Ignored)).Throws<InvalidOperationException>();
 
 		// Act
 		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
@@ -1258,7 +1249,10 @@ public sealed class GenericDtoEndpointsTests
 		// Arrange
 
 		System.Linq.Expressions.Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		Action<UpdateSettersBuilder<TestEntity>> setPropertyCalls = builder => { };
+		static void setPropertyCalls(UpdateSettersBuilder<TestEntity> builder)
+		{
+			// Method intentionally left empty.
+		}
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.UpdateMany(whereClause, A<Action<UpdateSettersBuilder<TestEntity>>>.Ignored, null, null, A<CancellationToken>.Ignored)).Returns(3);
 
@@ -1279,7 +1273,10 @@ public sealed class GenericDtoEndpointsTests
 		// Arrange
 
 		System.Linq.Expressions.Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		Action<UpdateSettersBuilder<TestEntity>> setPropertyCalls = builder => { };
+		static void setPropertyCalls(UpdateSettersBuilder<TestEntity> builder)
+		{
+			// Method intentionally left empty.
+		}
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.UpdateMany(whereClause, A<Action<UpdateSettersBuilder<TestEntity>>>.Ignored, null, null, A<CancellationToken>.Ignored)).Returns(Task.FromResult<int?>(null));
 
@@ -1298,12 +1295,15 @@ public sealed class GenericDtoEndpointsTests
 		// Arrange
 
 		System.Linq.Expressions.Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		Action<UpdateSettersBuilder<TestEntity>> setPropertyCalls = builder => { };
+		static void setPropertyCalls(UpdateSettersBuilder<TestEntity> builder)
+		{
+			// Method intentionally left empty.
+		}
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.UpdateMany(A<System.Linq.Expressions.Expression<Func<TestEntity, bool>>>.Ignored,
-				A<Action<UpdateSettersBuilder<TestEntity>>>.Ignored, A<TimeSpan?>.Ignored,
-				A<GlobalFilterOptions?>.Ignored, A<CancellationToken>.Ignored))
-				.Throws<InvalidOperationException>();
+			A<Action<UpdateSettersBuilder<TestEntity>>>.Ignored, A<TimeSpan?>.Ignored,
+			A<GlobalFilterOptions?>.Ignored, A<CancellationToken>.Ignored))
+			.Throws<InvalidOperationException>();
 
 		// Act
 
@@ -1463,8 +1463,7 @@ public sealed class GenericDtoEndpointsTests
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.GetByKey(1, null, A<GlobalFilterOptions?>.Ignored, default)).Returns(model);
-		A.CallTo(() => dbContextActions.SaveChanges())
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.SaveChanges()).Throws<InvalidOperationException>();
 
 		// Act
 
@@ -1629,8 +1628,7 @@ public sealed class GenericDtoEndpointsTests
 
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 		A.CallTo(() => dbContextActions.GetByKey(A<object[]>.That.IsSameSequenceAs(new object[] { 1, 2 }), null, A<GlobalFilterOptions?>.Ignored, default)).Returns(model);
-		A.CallTo(() => dbContextActions.SaveChanges())
-				.Throws<InvalidOperationException>();
+		A.CallTo(() => dbContextActions.SaveChanges()).Throws<InvalidOperationException>();
 
 		// Act
 

@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
+﻿using CommonNetFuncs.Core;
+using CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
 using xRetry.v3;
 
 namespace Media.Ffmpeg.Tests;
@@ -76,10 +77,7 @@ public sealed class FfmpegRawCallsHelpersTests
 		string invalidPath = Path.Combine(Path.GetTempPath(), $"nonexistent_{Guid.NewGuid()}.mp4");
 
 		// Act & Assert - Should throw FileNotFoundException
-		await Should.ThrowAsync<FileNotFoundException>(async () =>
-		{
-			await Helpers.GetMediaInfoAsync(invalidPath);
-		});
+		await Should.ThrowAsync<FileNotFoundException>(async () => await Helpers.GetMediaInfoAsync(invalidPath));
 	}
 
 	[RetryFact(3)]
@@ -90,11 +88,9 @@ public sealed class FfmpegRawCallsHelpersTests
 
 		// Assert - Frame rate should be calculated properly
 		MediaStream? videoStream = result.Streams.FirstOrDefault(s => s?.CodecType == CodecType.Video);
-		if (videoStream != null)
-		{
-			// Frame rate should be greater than 0 for valid video
-			videoStream.FrameRate.ShouldBeGreaterThanOrEqualTo(0);
-		}
+
+		// Frame rate should be greater than 0 for valid video
+		videoStream?.FrameRate.ShouldBeGreaterThanOrEqualTo(0);
 	}
 
 	[RetryFact(3)]
@@ -116,13 +112,9 @@ public sealed class FfmpegRawCallsHelpersTests
 
 		// Assert - Duration should be max of all stream durations
 		result.Duration.ShouldBeGreaterThan(TimeSpan.Zero);
-		if (result.Streams.Any())
+		if (result.Streams.AnyFast())
 		{
-			TimeSpan maxStreamDuration = result.Streams
-				.Where(x => x?.Duration > TimeSpan.Zero)
-				.Select(x => x.Duration)
-				.DefaultIfEmpty(TimeSpan.Zero)
-				.Max();
+			TimeSpan maxStreamDuration = result.Streams.Where(x => x?.Duration > TimeSpan.Zero).Select(x => x.Duration).DefaultIfEmpty(TimeSpan.Zero).Max();
 
 			if (maxStreamDuration > TimeSpan.Zero)
 			{
@@ -188,7 +180,8 @@ public sealed class FfmpegRawCallsHelpersTests
 		result.ShouldNotBeNull();
 		result.FilePath.ShouldBe(corruptedPath);
 		result.Size.ShouldBeGreaterThan(0); // File size should still be set
-																				// Streams might be empty or incomplete due to corruption
+
+		// Streams might be empty or incomplete due to corruption
 	}
 
 	[RetryFact(3)]

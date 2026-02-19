@@ -139,14 +139,11 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		await cts.CancelAsync();
 
 		// Act & Assert
-		await Should.ThrowAsync<TaskCanceledException>(async () =>
-		{
-			await service.ExecuteAsync("test-key", async ct =>
+		await Should.ThrowAsync<TaskCanceledException>(async () => await service.ExecuteAsync("test-key", async ct =>
 			{
 				await Task.Delay(1000, ct);
 				return 42;
-			}, TaskPriority.Normal, cts.Token);
-		});
+			}, TaskPriority.Normal, cts.Token));
 	}
 
 	[Fact]
@@ -283,10 +280,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		PrioritizedEndpointQueueService service = new(serviceProviderMock.Object);
 
 		// Act & Assert
-		await Should.ThrowAsync<InvalidOperationException>(async () =>
-		{
-			await service.ExecuteAsync<int>("test-key", _ => throw new InvalidOperationException("Test exception"), TaskPriority.Normal);
-		});
+		await Should.ThrowAsync<InvalidOperationException>(async () => await service.ExecuteAsync<int>("test-key", _ => throw new InvalidOperationException("Test exception"), TaskPriority.Normal));
 	}
 
 	[Fact]
@@ -297,7 +291,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		PrioritizedEndpointQueueService service = new(serviceProviderMock.Object);
 
 		// Act & Assert
-		Should.NotThrow(() => service.Dispose());
+		Should.NotThrow(service.Dispose);
 	}
 
 	[Fact]
@@ -394,6 +388,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		// Get the cleanup method via reflection
 		System.Reflection.MethodInfo? cleanupMethod = typeof(PrioritizedEndpointQueueService)
 			.GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
 		cleanupMethod.ShouldNotBeNull();
 
 		// Act & Assert - Cleanup should not throw
@@ -415,6 +410,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		// Get the cleanup method via reflection
 		System.Reflection.MethodInfo? cleanupMethod = typeof(PrioritizedEndpointQueueService)
 			.GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
 		cleanupMethod.ShouldNotBeNull();
 
 		Dictionary<string, PrioritizedQueueStats> statsBefore = await service.GetAllQueueStatsAsync();
@@ -451,20 +447,18 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		// Get the cleanup method via reflection
 		System.Reflection.MethodInfo? cleanupMethod = typeof(PrioritizedEndpointQueueService)
 			.GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
 		cleanupMethod.ShouldNotBeNull();
 
 		// Set LastProcessedAt to be old
 		System.Reflection.FieldInfo? queuesField = typeof(PrioritizedEndpointQueueService)
 			.GetField("queues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-		System.Collections.Concurrent.ConcurrentDictionary<string, PrioritizedEndpointQueue>? queues =
-			queuesField?.GetValue(service) as System.Collections.Concurrent.ConcurrentDictionary<string, PrioritizedEndpointQueue>;
 
-		if (queues != null && queues.TryGetValue(endpointKey, out PrioritizedEndpointQueue? queue))
+		if (queuesField?.GetValue(service) is System.Collections.Concurrent.ConcurrentDictionary<string, PrioritizedEndpointQueue> queues &&
+					queues.TryGetValue(endpointKey, out PrioritizedEndpointQueue? queue))
 		{
-			System.Reflection.FieldInfo? statsField = typeof(PrioritizedEndpointQueue)
-				.GetField("stats", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-			PrioritizedQueueStats? statsObj = statsField?.GetValue(queue) as PrioritizedQueueStats;
-			if (statsObj != null)
+			System.Reflection.FieldInfo? statsField = typeof(PrioritizedEndpointQueue).GetField("stats", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+			if (statsField?.GetValue(queue) is PrioritizedQueueStats statsObj)
 			{
 				System.Reflection.FieldInfo? lastProcessedField = typeof(PrioritizedQueueStats)
 					.GetField("<LastProcessedAt>k__BackingField", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -511,8 +505,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		// Arrange
 		Mock<IServiceProvider> serviceProviderMock = new();
 		int getServiceCallCount = 0;
-		serviceProviderMock.Setup(sp => sp.GetService(typeof(NLog.Logger)))
-			.Returns(() =>
+		serviceProviderMock.Setup(sp => sp.GetService(typeof(NLog.Logger))).Returns(() =>
 			{
 				getServiceCallCount++;
 				return null;
@@ -572,8 +565,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		PrioritizedEndpointQueueService service = new(serviceProviderMock.Object);
 
 		// Get the timer field via reflection
-		System.Reflection.FieldInfo? timerField = typeof(PrioritizedEndpointQueueService)
-			.GetField("cleanupTimer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.FieldInfo? timerField = typeof(PrioritizedEndpointQueueService).GetField("cleanupTimer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		timerField.ShouldNotBeNull();
 
 		Timer? timer = timerField.GetValue(service) as Timer;
@@ -583,8 +575,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		service.Dispose();
 
 		// Assert - Verify disposed flag is set
-		System.Reflection.FieldInfo? disposedField = typeof(PrioritizedEndpointQueueService)
-			.GetField("disposed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.FieldInfo? disposedField = typeof(PrioritizedEndpointQueueService).GetField("disposed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		disposedField.ShouldNotBeNull();
 		bool isDisposed = (bool)disposedField.GetValue(service)!;
 		isDisposed.ShouldBeTrue();
@@ -614,8 +605,8 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		statsAfter.ShouldBeEmpty();
 
 		// Verify disposed flag via reflection
-		System.Reflection.FieldInfo? disposedField = typeof(PrioritizedEndpointQueueService)
-			.GetField("disposed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.FieldInfo? disposedField = typeof(PrioritizedEndpointQueueService).GetField("disposed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
 		disposedField.ShouldNotBeNull();
 		bool isDisposed = (bool)disposedField.GetValue(service)!;
 		isDisposed.ShouldBeTrue();
@@ -714,8 +705,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		service.ShouldNotBeNull();
 
 		// Verify cutoffTimeMinutes field via reflection
-		System.Reflection.FieldInfo? cutoffField = typeof(PrioritizedEndpointQueueService)
-			.GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		System.Reflection.FieldInfo? cutoffField = typeof(PrioritizedEndpointQueueService).GetField("cutoffTimeMinutes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 		cutoffField.ShouldNotBeNull();
 		double actualCutoff = (double)cutoffField.GetValue(service)!;
 		actualCutoff.ShouldBe(45.0); // Should be absolute value

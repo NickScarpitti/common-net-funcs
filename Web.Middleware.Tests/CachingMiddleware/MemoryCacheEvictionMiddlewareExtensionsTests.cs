@@ -10,13 +10,6 @@ namespace Web.Middleware.Tests.CachingMiddleware;
 
 public sealed class MemoryCacheEvictionMiddlewareExtensionsTests
 {
-	private readonly IFixture fixture;
-
-	public MemoryCacheEvictionMiddlewareExtensionsTests()
-	{
-		fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
-	}
-
 	[RetryFact(3)]
 	public void MemoryValueCaching_ShouldRegisterIMemoryCache()
 	{

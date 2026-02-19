@@ -500,8 +500,7 @@ public sealed class DirectQueryTests : IDisposable
 		public double? DoubleValue { get; set; }
 	}
 
-	[Fact]
-	public void SetupDb_AdditionalTable_ForComplexTests()
+	private void SetupDb_AdditionalTable_ForComplexTests()
 	{
 		using SqliteCommand createCommand = connection.CreateCommand();
 		createCommand.CommandText =
@@ -719,10 +718,7 @@ public sealed class DirectQueryTests : IDisposable
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM NonExistentTable";
 
-		await Should.ThrowAsync<DataException>(async () =>
-		{
-			await DirectQuery.GetDataDirectAsync<TestModel>(connection, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
-		});
+		await Should.ThrowAsync<DataException>(async () => await DirectQuery.GetDataDirectAsync<TestModel>(connection, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken));
 	}
 
 	[Fact]
@@ -914,10 +910,7 @@ public sealed class DirectQueryTests : IDisposable
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT Id, Name FROM TestTable LIMIT 1";
 
-		await Should.ThrowAsync<DataException>(async () =>
-		{
-			await DirectQuery.GetDataDirectAsync<IncompatibleTypeModel>(connection, cmd, cancellationToken: Current.CancellationToken);
-		});
+		await Should.ThrowAsync<DataException>(async () => await DirectQuery.GetDataDirectAsync<IncompatibleTypeModel>(connection, cmd, cancellationToken: Current.CancellationToken));
 	}
 
 	[Fact]
@@ -981,10 +974,7 @@ public sealed class DirectQueryTests : IDisposable
 		await disposedConn.DisposeAsync();
 		await using SqliteCommand cmd = new("SELECT * FROM TestTable", disposedConn);
 
-		await Should.ThrowAsync<DataException>(async () =>
-		{
-			await DirectQuery.GetDataDirectAsync<TestModel>(disposedConn, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
-		});
+		await Should.ThrowAsync<DataException>(async () => await DirectQuery.GetDataDirectAsync<TestModel>(disposedConn, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken));
 	}
 
 	[Fact]
@@ -1188,10 +1178,7 @@ public sealed class DirectQueryTests : IDisposable
 		using SqliteConnection tempConn = new("DataSource=:memory:");
 		await using SqliteCommand cmd = new("SELECT * FROM NonExistentTable", tempConn);
 
-		await Should.ThrowAsync<DataException>(async () =>
-		{
-			await DirectQuery.GetDataDirectAsync<TestModel>(tempConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
-		});
+		await Should.ThrowAsync<DataException>(async () => await DirectQuery.GetDataDirectAsync<TestModel>(tempConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken));
 	}
 
 	[Fact]

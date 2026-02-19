@@ -316,19 +316,13 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task CircularReferenceHandling_MultipleCallsSameEntity_ShouldUseCachedBehavior()
 	{
 		// Arrange - Create test entities with navigation properties
-		TestEntity[] entities = fixture.Build<TestEntity>()
-			.Without(x => x.Details)
-			.CreateMany(2)
-			.ToArray();
+		TestEntity[] entities = fixture.Build<TestEntity>().Without(x => x.Details).CreateMany(2).ToArray();
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
 		foreach (TestEntity entity in entities)
 		{
-			TestEntityDetail detail = fixture.Build<TestEntityDetail>()
-				.With(x => x.TestEntityId, entity.Id)
-				.Without(x => x.TestEntity)
-				.Create();
+			TestEntityDetail detail = fixture.Build<TestEntityDetail>().With(x => x.TestEntityId, entity.Id).Without(x => x.TestEntity).Create();
 			await context.AddAsync(detail, Current.CancellationToken);
 		}
 		await context.SaveChangesAsync(Current.CancellationToken);
@@ -355,19 +349,13 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task CircularReferenceHandling_StreamingMultipleCalls_ShouldUseCachedBehavior()
 	{
 		// Arrange - Create test entities with navigation properties
-		TestEntity[] entities = fixture.Build<TestEntity>()
-			.Without(x => x.Details)
-			.CreateMany(2)
-			.ToArray();
+		TestEntity[] entities = fixture.Build<TestEntity>().Without(x => x.Details).CreateMany(2).ToArray();
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
 		foreach (TestEntity entity in entities)
 		{
-			TestEntityDetail detail = fixture.Build<TestEntityDetail>()
-				.With(x => x.TestEntityId, entity.Id)
-				.Without(x => x.TestEntity)
-				.Create();
+			TestEntityDetail detail = fixture.Build<TestEntityDetail>().With(x => x.TestEntityId, entity.Id).Without(x => x.TestEntity).Create();
 			await context.AddAsync(detail, Current.CancellationToken);
 		}
 		await context.SaveChangesAsync(Current.CancellationToken);
@@ -397,19 +385,13 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task CircularReferenceHandling_CheckDictionaryState_ShouldCacheEntityType()
 	{
 		// Arrange - Create test entities with navigation properties
-		TestEntity[] entities = fixture.Build<TestEntity>()
-			.Without(x => x.Details)
-			.CreateMany(2)
-			.ToArray();
+		TestEntity[] entities = fixture.Build<TestEntity>().Without(x => x.Details).CreateMany(2).ToArray();
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
 		foreach (TestEntity entity in entities)
 		{
-			TestEntityDetail detail = fixture.Build<TestEntityDetail>()
-				.With(x => x.TestEntityId, entity.Id)
-				.Without(x => x.TestEntity)
-				.Create();
+			TestEntityDetail detail = fixture.Build<TestEntityDetail>().With(x => x.TestEntityId, entity.Id).Without(x => x.TestEntity).Create();
 			await context.AddAsync(detail, Current.CancellationToken);
 		}
 		await context.SaveChangesAsync(Current.CancellationToken);
@@ -541,8 +523,7 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task ExecuteWithCircularRefHandling_WhenDifferentInvalidOperationException_ShouldReturnDefault()
 	{
 		// Arrange - Get the static method via reflection
-		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
-			.GetMethod("ExecuteWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
+		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>).GetMethod("ExecuteWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
 		method.ShouldNotBeNull();
 
 		// Create a mock operation that throws InvalidOperationException with different HResult
@@ -569,8 +550,7 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task ExecuteWithCircularRefHandling_WhenGeneralExceptionThrown_ShouldReturnDefault()
 	{
 		// Arrange - Get the static method via reflection
-		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
-			.GetMethod("ExecuteWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
+		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>).GetMethod("ExecuteWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
 		method.ShouldNotBeNull();
 
 		// Create a mock operation that throws a general exception
@@ -589,8 +569,7 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task ExecuteStreamingWithCircularRefHandling_WhenSecondaryExceptionThrown_ShouldReturnEmpty()
 	{
 		// Arrange - Get the static method via reflection
-		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
-			.GetMethod("ExecuteStreamingWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
+		MethodInfo? method = typeof(BaseDbContextActions<TestEntity, TestDbContext>).GetMethod("ExecuteStreamingWithCircularRefHandling", BindingFlags.NonPublic | BindingFlags.Static);
 		method.ShouldNotBeNull();
 
 		// Create a mock query builder that throws circular ref exception, then a secondary exception
@@ -637,9 +616,7 @@ public sealed partial class BaseDbContextActionsTests
 	internal static (IServiceProvider serviceProvider, TestDbContext context, IDisposable scope) CreateSqliteServiceProvider()
 	{
 		ServiceCollection services = new();
-		services.AddDbContext<TestDbContext>(options =>
-			options.UseSqlite("DataSource=:memory:"),
-			ServiceLifetime.Scoped);
+		services.AddDbContext<TestDbContext>(options => options.UseSqlite("DataSource=:memory:"), ServiceLifetime.Scoped);
 		IServiceProvider provider = services.BuildServiceProvider();
 		IServiceScope scope = provider.CreateScope();
 		TestDbContext ctx = scope.ServiceProvider.GetRequiredService<TestDbContext>();
@@ -655,8 +632,7 @@ public sealed partial class BaseDbContextActionsTests
 	internal static (IServiceProvider serviceProvider, CircularRefDbContext context) CreateCircularRefServiceProvider()
 	{
 		ServiceCollection services = new();
-		services.AddDbContextPool<CircularRefDbContext>(options =>
-			options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+		services.AddDbContextPool<CircularRefDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
 		IServiceProvider provider = services.BuildServiceProvider();
 		CircularRefDbContext ctx = provider.GetRequiredService<CircularRefDbContext>();
 		return (provider, ctx);

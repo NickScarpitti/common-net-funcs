@@ -36,10 +36,7 @@ public sealed class CacheKeyGenerationTests
 		context.Request.Path = path;
 
 		// Combine all query parameters
-		Dictionary<string, StringValues> queryParams = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryParams = new() { { options.UseCacheQueryParam, "true" } };
 
 		if (!string.IsNullOrEmpty(queryString))
 		{
@@ -58,8 +55,7 @@ public sealed class CacheKeyGenerationTests
 		await middleware.InvokeAsync(context);
 
 		// Assert
-		A.CallTo(() => cache.CreateEntry(A<string>.That.Matches(key => key.Contains(path) &&
-			key.Contains(options.UseCacheQueryParam) &&
+		A.CallTo(() => cache.CreateEntry(A<string>.That.Matches(key => key.Contains(path) && key.Contains(options.UseCacheQueryParam) &&
 			(string.IsNullOrEmpty(queryString) || queryString.Split('&', StringSplitOptions.None).All(param => key.Contains(param)))))).MustHaveHappened();
 	}
 
@@ -73,10 +69,7 @@ public sealed class CacheKeyGenerationTests
 		byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
 		context.Request.Body = new MemoryStream(bodyBytes);
 
-		Dictionary<string, StringValues> queryDict = new()
-				{
-						{ options.UseCacheQueryParam, "true" }
-				};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 
 		context.Request.Query = new QueryCollection(queryDict);
 
@@ -98,10 +91,7 @@ public sealed class CacheKeyGenerationTests
 		context.Request.Path = "/api/test";
 		context.Request.Headers.Accept = "application/json";
 
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);
@@ -135,8 +125,7 @@ public sealed class CacheKeyGenerationTests
 		await middleware.InvokeAsync(context);
 
 		// Assert - Parameters should be ordered alphabetically
-		A.CallTo(() => cache.CreateEntry(A<string>.That.Matches(key =>
-			key.Contains("alpha") && key.Contains("middle") && key.Contains("zebra")))).MustHaveHappened();
+		A.CallTo(() => cache.CreateEntry(A<string>.That.Matches(key => key.Contains("alpha") && key.Contains("middle") && key.Contains("zebra")))).MustHaveHappened();
 	}
 
 	[RetryFact(3)]
@@ -170,10 +159,7 @@ public sealed class CacheKeyGenerationTests
 		context.Request.Path = "/api/test";
 		context.Request.Body = new MemoryStream();
 
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		MemoryCacheMiddleware middleware = new(next: A.Fake<RequestDelegate>(), cache: cache, cacheOptions: options, cacheMetrics: metrics, cacheTracker: tracker);

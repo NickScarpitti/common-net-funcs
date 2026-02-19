@@ -43,10 +43,8 @@ public class CoreRunBatchesBenchmarks
 	public bool RunBatchedProcess_NoDuplicates()
 	{
 		return items.RunBatchedProcess(batch =>
-		{
 			// Simulate some work
-			return batch.Any();
-		}, batchSize: 1000, logProgress: false);
+			batch.Any(), batchSize: 1000, logProgress: false);
 	}
 
 	[Benchmark(Description = "RunBatchedProcess - with duplicates")]

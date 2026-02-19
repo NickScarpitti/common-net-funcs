@@ -200,7 +200,7 @@ public class SshFtpServiceTests
 	{
 		// Act & Assert
 		service.Dispose();
-		Should.NotThrow(() => service.Dispose());
+		Should.NotThrow(service.Dispose);
 	}
 
 	[Fact]
@@ -222,8 +222,7 @@ public class SshFtpServiceTests
 		A.CallTo(() => sftpClient.IsConnected).Returns(false);
 
 		// Act & Assert
-		await Should.ThrowAsync<SshConnectionException>(async () => 
-			await service.GetDataFromCsvAsync<TestCsvModel>(filePath));
+		await Should.ThrowAsync<SshConnectionException>(async () => await service.GetDataFromCsvAsync<TestCsvModel>(filePath));
 	}
 
 	[Fact]

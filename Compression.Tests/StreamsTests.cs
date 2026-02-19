@@ -691,8 +691,7 @@ public sealed class StreamsTests
 		long maxBytes = data.Length - 10;
 
 		// Act & Assert
-		await Should.ThrowAsync<CompressionLimitExceededException>(
-			source.CopyWithLimitAsync(destination, maxBytes, TestContext.Current.CancellationToken));
+		await Should.ThrowAsync<CompressionLimitExceededException>(source.CopyWithLimitAsync(destination, maxBytes, TestContext.Current.CancellationToken));
 	}
 
 	// Tests for CompressionLimitExceededException

@@ -16,16 +16,21 @@ public sealed class DateTimeHelpersTests
 	[InlineData("2024-05-12", "2024-05-12", null, 0)] // Single day, Sun
 	public void GetBusinessDays_BasicCases(string start, string end, object? _, int expected)
 	{
+		// Arrange
 		DateTime startDate = DateTime.Parse(start, formatProvider);
-
 		DateTime endDate = DateTime.Parse(end, formatProvider);
+
+		// Act & Assert
 		DateTimeHelpers.GetBusinessDays(startDate, endDate).ShouldBe(expected);
 	}
 
 	[Fact]
 	public void GetBusinessDays_ReturnsZero_WhenStartOrEndIsNull()
 	{
+		// Arrange
 		DateTime date = DateTime.Today;
+
+		// Act & Assert
 		DateTimeHelpers.GetBusinessDays(null, date).ShouldBe(0);
 		DateTimeHelpers.GetBusinessDays(date, null).ShouldBe(0);
 		DateTimeHelpers.GetBusinessDays(null, null).ShouldBe(0);
@@ -34,21 +39,25 @@ public sealed class DateTimeHelpersTests
 	[Fact]
 	public void GetBusinessDays_ExcludesExceptionDates()
 	{
+		// Arrange
 		DateTime start = new(2024, 5, 6, 0, 0, 0, DateTimeKind.Unspecified); // Monday
 		DateTime end = new(2024, 5, 10, 0, 0, 0, DateTimeKind.Unspecified); // Friday
 		List<DateTime> holidays = new() { new(2024, 5, 8, 0, 0, 0, DateTimeKind.Unspecified), new(2024, 5, 9, 0, 0, 0, DateTimeKind.Unspecified) }; // Wed, Thu
+
+		// Act & Assert
 		DateTimeHelpers.GetBusinessDays(start, end, holidays).ShouldBe(3);
 	}
 
 	[Fact]
 	public void GetBusinessDays_ExcludesExceptionDates_OnlyWeekdays()
 	{
+		// Arrange
 		DateTime start = new(2024, 5, 6, 0, 0, 0, DateTimeKind.Unspecified); // Monday
 		DateTime end = new(2024, 5, 12, 0, 0, 0, DateTimeKind.Unspecified); // Sunday
 		List<DateTime> holidays = new() { new(2024, 5, 11, 0, 0, 0, DateTimeKind.Unspecified), new(2024, 5, 8, 0, 0, 0, DateTimeKind.Unspecified) }; // Sat, Wed
 
-		// Only Wed should be excluded
-		DateTimeHelpers.GetBusinessDays(start, end, holidays).ShouldBe(4);
+		// Act & Assert
+		DateTimeHelpers.GetBusinessDays(start, end, holidays).ShouldBe(4); // Only Wed should be excluded
 	}
 
 	[Theory]
@@ -58,8 +67,11 @@ public sealed class DateTimeHelpersTests
 	[InlineData("2024-05-12", DayOfWeek.Monday, "2024-05-06")] // Sun, get Monday
 	public void GetDayOfWeek_ReturnsCorrectDate(string dateStr, DayOfWeek dow, string expectedStr)
 	{
+		// Arrange
 		DateTime date = DateTime.Parse(dateStr, formatProvider);
 		DateTime expected = DateTime.Parse(expectedStr, formatProvider);
+
+		// Act & Assert
 		date.GetDayOfWeek(dow).ShouldBe(expected);
 	}
 
@@ -70,7 +82,10 @@ public sealed class DateTimeHelpersTests
 	[InlineData(12, 2024, "2024-12-01", "2024-12-31")]
 	public void GetMonthBoundaries_ByMonthYear_ReturnsCorrectBoundaries(int month, int year, string first, string last)
 	{
+		// Arrange & Act
 		(DateTime firstDay, DateTime lastDay) = DateTimeHelpers.GetMonthBoundaries(month, year);
+
+		// Assert
 		firstDay.ShouldBe(DateTime.Parse(first, formatProvider));
 		lastDay.ShouldBe(DateTime.Parse(last, formatProvider));
 	}
@@ -78,8 +93,13 @@ public sealed class DateTimeHelpersTests
 	[Fact]
 	public void GetMonthBoundaries_ByDate_ReturnsCorrectBoundaries()
 	{
+		// Arrange
 		DateTime date = new(2024, 2, 15, 0, 0, 0, DateTimeKind.Unspecified);
+
+		// Act
 		(DateTime firstDay, DateTime lastDay) = date.GetMonthBoundaries();
+
+		// Assert
 		firstDay.ShouldBe(new DateTime(2024, 2, 1, 0, 0, 0, DateTimeKind.Unspecified));
 		lastDay.ShouldBe(new DateTime(2024, 2, 29, 0, 0, 0, DateTimeKind.Unspecified));
 	}
@@ -89,13 +109,17 @@ public sealed class DateTimeHelpersTests
 	[InlineData(12, 2024, "2024-12-01")]
 	public void GetFirstDayOfMonth_ByMonthYear_ReturnsFirstDay(int month, int year, string expected)
 	{
+		// Act & Assert
 		DateTimeHelpers.GetFirstDayOfMonth(month, year).ShouldBe(DateTime.Parse(expected, formatProvider));
 	}
 
 	[Fact]
 	public void GetFirstDayOfMonth_ByDate_ReturnsFirstDay()
 	{
+		// Arrange
 		DateTime date = new(2024, 5, 15, 0, 0, 0, DateTimeKind.Unspecified);
+
+		// Act & Assert
 		date.GetFirstDayOfMonth().ShouldBe(new DateTime(2024, 5, 1, 0, 0, 0, DateTimeKind.Unspecified));
 	}
 
@@ -105,14 +129,17 @@ public sealed class DateTimeHelpersTests
 	[InlineData(4, 2024, "2024-04-30")]
 	public void GetLastDayOfMonth_ByMonthYear_ReturnsLastDay(int month, int year, string expected)
 	{
+		// Act & Assert
 		DateTimeHelpers.GetLastDayOfMonth(month, year).ShouldBe(DateTime.Parse(expected, formatProvider));
 	}
 
 	[Fact]
 	public void GetLastDayOfMonth_ByDate_ReturnsLastDay()
 	{
-
+		// Arrange
 		DateTime date = new(2024, 5, 15, 0, 0, 0, DateTimeKind.Unspecified);
+
+		// Act & Assert
 		date.GetLastDayOfMonth().ShouldBe(new DateTime(2024, 5, 31, 0, 0, 0, DateTimeKind.Unspecified));
 	}
 
@@ -120,7 +147,10 @@ public sealed class DateTimeHelpersTests
 	[Fact]
 	public void IsValidOaDate_NullableDouble_ReturnsFalseIfNull()
 	{
+		// Arrange
 		double? value = null;
+
+		// Act & Assert
 		value.IsValidOaDate().ShouldBeFalse();
 	}
 
@@ -131,7 +161,10 @@ public sealed class DateTimeHelpersTests
 	[InlineData(2958466.0, false)]
 	public void IsValidOaDate_NullableDouble_ReturnsExpected(double value, bool expected)
 	{
+		// Arrange
 		_ = value;
+
+		// Act & Assert
 		value.IsValidOaDate().ShouldBe(expected);
 	}
 
@@ -142,6 +175,7 @@ public sealed class DateTimeHelpersTests
 	[InlineData(2958466.0, false)]
 	public void IsValidOaDate_Double_ReturnsExpected(double value, bool expected)
 	{
+		// Act & Assert
 		value.IsValidOaDate().ShouldBe(expected);
 	}
 }

@@ -661,16 +661,13 @@ public sealed class FileHelpersTests : IDisposable
 		const long maxSize = 1024;
 
 		// Act & Assert
-		Exception exception = await Should.ThrowAsync<Exception>(async () =>
-		{
-			await pipeReader.ReadFileFromPipe(
+		Exception exception = await Should.ThrowAsync<Exception>(async () => await pipeReader.ReadFileFromPipe(
 				outputStream,
 				maxSize,
 				"Success",
 				"TooLarge",
 				null,
-				TestContext.Current.CancellationToken);
-		});
+				TestContext.Current.CancellationToken));
 
 		exception.Message.ShouldBe("Error reading file from pipe");
 		exception.InnerException.ShouldNotBeNull();
@@ -690,16 +687,13 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Act & Assert
 		// Note: The cancellation exception gets wrapped in a generic Exception by the implementation
-		Exception exception = await Should.ThrowAsync<Exception>(async () =>
-		{
-			await pipeReader.ReadFileFromPipe(
+		Exception exception = await Should.ThrowAsync<Exception>(async () => await pipeReader.ReadFileFromPipe(
 				outputStream,
 				maxSize,
 				"Success",
 				"TooLarge",
 				null,
-				cts.Token);
-		});
+				cts.Token));
 
 		exception.Message.ShouldBe("Error reading file from pipe");
 		exception.InnerException.ShouldBeOfType<TaskCanceledException>();
@@ -871,14 +865,11 @@ public sealed class FileHelpersTests : IDisposable
 		await using MemoryStream outputStream = new();
 
 		// Act & Assert
-		Exception exception = await Should.ThrowAsync<Exception>(async () =>
-		{
-			await pipeReader.ReadFileFromPipe(
+		Exception exception = await Should.ThrowAsync<Exception>(async () => await pipeReader.ReadFileFromPipe(
 				outputStream,
 				"Success",
 				null,
-				TestContext.Current.CancellationToken);
-		});
+				TestContext.Current.CancellationToken));
 
 		exception.Message.ShouldBe("Error reading file from pipe");
 		exception.InnerException.ShouldNotBeNull();
@@ -897,14 +888,11 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Act & Assert
 		// Note: The cancellation exception gets wrapped in a generic Exception by the implementation
-		Exception exception = await Should.ThrowAsync<Exception>(async () =>
-		{
-			await pipeReader.ReadFileFromPipe(
+		Exception exception = await Should.ThrowAsync<Exception>(async () => await pipeReader.ReadFileFromPipe(
 				outputStream,
 				"Success",
 				null,
-				cts.Token);
-		});
+				cts.Token));
 
 		exception.Message.ShouldBe("Error reading file from pipe");
 		exception.InnerException.ShouldBeOfType<TaskCanceledException>();
@@ -1481,16 +1469,13 @@ public sealed class FileHelpersTests : IDisposable
 		const long maxSize = 1024;
 
 		// Act & Assert
-		Exception exception = await Should.ThrowAsync<Exception>(async () =>
-		{
-			await pipeReader.ReadFileFromPipe(
+		Exception exception = await Should.ThrowAsync<Exception>(async () => await pipeReader.ReadFileFromPipe(
 				outputStream,
 				maxSize,
 				"Success",
 				"TooLarge",
 				null,
-				TestContext.Current.CancellationToken);
-		});
+				TestContext.Current.CancellationToken));
 
 		// The actual exception type should be preserved
 		exception.ShouldNotBeNull();
@@ -1504,14 +1489,11 @@ public sealed class FileHelpersTests : IDisposable
 		await using MemoryStream outputStream = new();
 
 		// Act & Assert
-		Exception exception = await Should.ThrowAsync<Exception>(async () =>
-		{
-			await pipeReader.ReadFileFromPipe(
+		Exception exception = await Should.ThrowAsync<Exception>(async () => await pipeReader.ReadFileFromPipe(
 				outputStream,
 				"Success",
 				null,
-				TestContext.Current.CancellationToken);
-		});
+				TestContext.Current.CancellationToken));
 
 		// The actual exception type should be preserved
 		exception.ShouldNotBeNull();

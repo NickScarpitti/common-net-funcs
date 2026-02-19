@@ -129,8 +129,7 @@ public class TestDbContextForFilters(DbContextOptions<TestDbContextForFilters> o
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
-		modelBuilder.Entity<TestEntityForFilters>()
-			.HasKey(e => e.Id);
+		modelBuilder.Entity<TestEntityForFilters>().HasKey(e => e.Id);
 	}
 }
 

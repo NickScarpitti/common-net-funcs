@@ -85,10 +85,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithCacheHit_ReturnsCachedResponse()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		byte[] cachedData = Encoding.UTF8.GetBytes("cached response");
@@ -124,10 +121,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithCustomCacheDuration_SetsCacheOptions(string? seconds, string? minutes, string? hours)
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 
 		if (seconds != null)
 		{
@@ -161,10 +155,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithNon200StatusCode_DoesNotCache()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Response.StatusCode = StatusCodes.Status404NotFound;
 
@@ -203,10 +194,7 @@ public sealed class MemoryCacheMiddlewareTests
 	{
 		// Arrange
 		CacheOptions optionsWithCompression = new() { UseCompression = true, CompressionType = ECompressionType.Gzip };
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ optionsWithCompression.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { optionsWithCompression.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
@@ -234,10 +222,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithCacheHitAndCompression_DecompressesData()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		string originalData = "Test data";
@@ -270,10 +255,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithEmptyResponseData_CachesEmptyResponse()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		object? outValue = new CacheEntry()
@@ -302,10 +284,7 @@ public sealed class MemoryCacheMiddlewareTests
 	{
 		// Arrange
 		const string tagName = "test-tag";
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Request.Headers[options.CacheTagHeader] = tagName;
 		context.Response.StatusCode = StatusCodes.Status200OK;
@@ -332,10 +311,7 @@ public sealed class MemoryCacheMiddlewareTests
 	{
 		// Arrange
 		const string tags = "tag1,tag2,tag3";
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Request.Headers[options.CacheTagHeader] = tags;
 		context.Response.StatusCode = StatusCodes.Status200OK;
@@ -362,10 +338,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithCachedHeaders_RestoresHeaders()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-			{
-				{ options.UseCacheQueryParam, "true" }
-			};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		Dictionary<string, string> cachedHeaders = new()
@@ -391,8 +364,8 @@ public sealed class MemoryCacheMiddlewareTests
 		await middleware.InvokeAsync(context);
 
 		// Assert
-		context.Response.Headers["Content-Type"].ToString().ShouldBe("application/json");
-		context.Response.Headers["Cache-Control"].ToString().ShouldBe("max-age=3600");
+		context.Response.Headers.ContentType.ToString().ShouldBe("application/json");
+		context.Response.Headers.CacheControl.ToString().ShouldBe("max-age=3600");
 	}
 
 	[RetryFact(3)]
@@ -407,7 +380,7 @@ public sealed class MemoryCacheMiddlewareTests
 
 		// Assert - Verify Dispose can be called multiple times without throwing
 		// The test passing without exceptions validates the dispose pattern is correctly implemented
-		Should.NotThrow(() => middleware.Dispose());
+		Should.NotThrow(middleware.Dispose);
 	}
 
 	[RetryFact(3)]
@@ -513,10 +486,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithPostRequest_GeneratesCacheKeyWithBodyHash()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Request.Method = "POST";
 		context.Request.Path = "/api/test";
@@ -549,15 +519,11 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WhenItemTooLargeForCache_DoesNotCache()
 	{
 		// Arrange
-		CacheOptions smallCacheOptions = new()
-		{
-			MaxCacheSizeInBytes = 10 // Very small cache
-		};
 
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ smallCacheOptions.UseCacheQueryParam, "true" }
-		};
+		// Very small cache
+		CacheOptions smallCacheOptions = new() { MaxCacheSizeInBytes = 10 };
+
+		Dictionary<string, StringValues> queryDict = new() { { smallCacheOptions.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
@@ -617,10 +583,7 @@ public sealed class MemoryCacheMiddlewareTests
 		A.CallTo(() => cache.TryGetValue("oldKey1", out outOldValue1)).Returns(true);
 		A.CallTo(() => cache.TryGetValue("oldKey2", out outOldValue2)).Returns(true);
 
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ smallCacheOptions.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { smallCacheOptions.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
@@ -647,10 +610,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WhenCannotFreeEnoughSpace_DoesNotCache()
 	{
 		// Arrange
-		CacheOptions smallCacheOptions = new()
-		{
-			MaxCacheSizeInBytes = 100
-		};
+		CacheOptions smallCacheOptions = new() { MaxCacheSizeInBytes = 100 };
 
 		CacheTracker testTracker = new();
 		// Only one small entry that won't free enough space
@@ -669,10 +629,7 @@ public sealed class MemoryCacheMiddlewareTests
 		object? outSmallValue = smallEntry;
 		A.CallTo(() => cache.TryGetValue("smallKey", out outSmallValue)).Returns(true);
 
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ smallCacheOptions.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { smallCacheOptions.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
@@ -700,10 +657,7 @@ public sealed class MemoryCacheMiddlewareTests
 		// Arrange
 		CacheOptions optionsWithSuppressedLogs = new() { SuppressLogs = true };
 
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.EvictionQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.EvictionQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		CacheEntry entry = new()
@@ -751,10 +705,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithCacheMissAndNonSuccessStatusCode_DoesNotCacheNonSuccessResponse()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
@@ -814,12 +765,9 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithAcceptHeader_IncludesInCacheKey()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
-		context.Request.Headers["Accept"] = "application/json";
+		context.Request.Headers.Accept = "application/json";
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
 		MemoryStream responseStream = new();
@@ -844,10 +792,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithEvictionOfNonExistentKey_CompletesSuccessfully()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.EvictionQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.EvictionQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		object? outValue = null;
@@ -868,18 +813,12 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WhenSpaceAvailableWithoutEviction_CachesSuccessfully()
 	{
 		// Arrange
-		CacheOptions largeCacheOptions = new()
-		{
-			MaxCacheSizeInBytes = 10000
-		};
+		CacheOptions largeCacheOptions = new() { MaxCacheSizeInBytes = 10000 };
 
 		CacheMetrics testMetrics = new();
 		testMetrics.AddToSize(100); // Only 100 bytes used
 
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ largeCacheOptions.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { largeCacheOptions.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
@@ -906,10 +845,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithNullCachedValue_HandlesGracefully()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		object? outValue = null;
@@ -932,10 +868,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithCacheHitButNullData_WritesNull()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		CacheEntry? cachedEntry = null;
@@ -1057,10 +990,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithEvictCacheButNoExistingEntry_CompletesWithoutError()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.EvictionQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.EvictionQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		object? outValue = null;
@@ -1129,10 +1059,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithRequestPathButNoQuery_GeneratesCacheKeyCorrectly()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Request.Path = "/api/users";
 		context.Response.StatusCode = StatusCodes.Status200OK;
@@ -1214,10 +1141,7 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithZeroLengthCompressedData_HandlesCorrectly()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
 		byte[] emptyCompressed = await Array.Empty<byte>().Compress(ECompressionType.Gzip);
@@ -1249,15 +1173,10 @@ public sealed class MemoryCacheMiddlewareTests
 		// Arrange
 		CacheOptions optionsWithHeaders = new()
 		{
-			HeadersToCache = System.Collections.Immutable.ImmutableHashSet.CreateRange(
-				StringComparer.OrdinalIgnoreCase,
-				new[] { "Content-Type", "Cache-Control", "ETag" })
+			HeadersToCache = System.Collections.Immutable.ImmutableHashSet.CreateRange(StringComparer.OrdinalIgnoreCase, ["Content-Type", "Cache-Control", "ETag"])
 		};
 
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ optionsWithHeaders.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { optionsWithHeaders.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
@@ -1266,9 +1185,9 @@ public sealed class MemoryCacheMiddlewareTests
 
 		A.CallTo(() => next(A<HttpContext>._)).Invokes((HttpContext ctx) =>
 		{
-			ctx.Response.Headers["Content-Type"] = "application/json";
-			ctx.Response.Headers["Cache-Control"] = "max-age=3600";
-			ctx.Response.Headers["ETag"] = "\"abc123\"";
+			ctx.Response.Headers.ContentType = "application/json";
+			ctx.Response.Headers.CacheControl = "max-age=3600";
+			ctx.Response.Headers.ETag = "\"abc123\"";
 			ctx.Response.Headers["X-Custom"] = "should-not-be-cached";
 			byte[] data = Encoding.UTF8.GetBytes("response");
 			ctx.Response.Body.Write(data, 0, data.Length);
@@ -1287,19 +1206,13 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WhenSpaceCheckPassesAfterLockAcquisition_CachesSuccessfully()
 	{
 		// Arrange
-		CacheOptions smallCacheOptions = new()
-		{
-			MaxCacheSizeInBytes = 200
-		};
+		CacheOptions smallCacheOptions = new() { MaxCacheSizeInBytes = 200 };
 
 		CacheTracker testTracker = new();
 		CacheMetrics testMetrics = new();
 		testMetrics.AddToSize(150); // Just under limit before lock
 
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ smallCacheOptions.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { smallCacheOptions.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Response.StatusCode = StatusCodes.Status200OK;
 
@@ -1351,16 +1264,13 @@ public sealed class MemoryCacheMiddlewareTests
 	public async Task InvokeAsync_WithPostRequestAndLargeBody_GeneratesCacheKeyWithBodyHash()
 	{
 		// Arrange
-		Dictionary<string, StringValues> queryDict = new()
-		{
-			{ options.UseCacheQueryParam, "true" }
-		};
+		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 		context.Request.Method = "POST";
 		context.Request.Path = "/api/test";
 
 		// Large body
-		string bodyContent = new string('x', 10000);
+		string bodyContent = new('x', 10000);
 		MemoryStream bodyStream = new(Encoding.UTF8.GetBytes(bodyContent));
 		context.Request.Body = bodyStream;
 		context.Response.StatusCode = StatusCodes.Status200OK;

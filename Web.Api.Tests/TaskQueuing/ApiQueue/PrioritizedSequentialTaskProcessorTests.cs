@@ -10,9 +10,8 @@ namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 public class PrioritizedSequentialTaskProcessorTests
 {
 	// Test helper class to expose internal functionality for cancellation testing
-	private class TestableProcessor : PrioritizedSequentialTaskProcessor
+	private class TestableProcessor(BoundedChannelOptions options) : PrioritizedSequentialTaskProcessor(options)
 	{
-		public TestableProcessor(BoundedChannelOptions options) : base(options) { }
 
 		// Helper method to enqueue a task and get access to the PrioritizedQueuedTask for cancellation testing
 		public async Task<(Task<object?> resultTask, PrioritizedQueuedTask queuedTask)> EnqueueAndCaptureAsync<T>(
@@ -718,7 +717,7 @@ public class PrioritizedSequentialTaskProcessorTests
 
 		// Act
 
-		var result = await processor.EnqueueWithPriorityAsync(_ => Task.FromResult((object?)expectedObject), cancellationToken: Current.CancellationToken);
+		object? result = await processor.EnqueueWithPriorityAsync(_ => Task.FromResult((object?)expectedObject), cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -848,9 +847,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		{
 			await Task.Delay(10, ct);
 			throw new OperationCanceledException("Task cancelled");
-#pragma warning disable CS0162 // Unreachable code detected
-			return null;
-#pragma warning restore CS0162 // Unreachable code detected
+
 		}, cancellationToken: Current.CancellationToken);
 
 		// Assert - Task should throw OperationCanceledException or Exception
@@ -871,7 +868,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		// Act - Enqueue a task
 		Task<int?> task = processor.EnqueueWithPriorityAsync(async _ =>
 		{
-			await Task.Delay(100);
+			await Task.Delay(100, _);
 			taskCompleted = true;
 			return (int?)42;
 		}, cancellationToken: Current.CancellationToken);
@@ -900,7 +897,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		await task;
 
 		// Act & Assert - Dispose should not throw even if there are issues
-		Should.NotThrow(() => processor.Dispose());
+		Should.NotThrow(processor.Dispose);
 	}
 
 	[Fact]
@@ -980,7 +977,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		_ = processor.EnqueueWithPriorityAsync(async _ =>
 		{
 			taskStarted = true;
-			await Task.Delay(100);
+			await Task.Delay(100, _);
 			return (int?)42;
 		}, cancellationToken: Current.CancellationToken);
 
@@ -1006,7 +1003,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		// Act - Enqueue a task that takes some time
 		Task<int?> result = processor.EnqueueWithPriorityAsync(async _ =>
 		{
-			await Task.Delay(200);
+			await Task.Delay(200, _);
 			return (int?)42;
 		}, cancellationToken: Current.CancellationToken);
 

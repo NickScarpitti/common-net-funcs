@@ -3,6 +3,30 @@ using static CommonNetFuncs.Compression.Streams;
 
 namespace Compression.Tests;
 
+public enum ExceptionConstructorType
+{
+	Parameterless,
+	WithMessage,
+	WithMessageAndInnerException
+}
+
+public enum ConcatenatedStreamReadMode
+{
+	Asynchronous,
+	Synchronous,
+	SpanBased
+}
+
+public enum ConcatenatedStreamUnsupportedOperation
+{
+	Length,
+	PositionGet,
+	PositionSet,
+	Seek,
+	SetLength,
+	Write
+}
+
 public sealed class StreamsTests
 {
 	private readonly Fixture fixture;
@@ -504,8 +528,9 @@ public sealed class StreamsTests
 	[Fact]
 	public async Task DetectCompressionType_Should_Return_None_For_Non_Compressed_Data()
 	{
-		// Arrange
-		await using MemoryStream stream = new(smallData);
+		// Arrange - Use predictable ASCII text data that won't match compression signatures
+		byte[] nonCompressedData = "This is plain text data that should not match any compression signature."u8.ToArray();
+		await using MemoryStream stream = new(nonCompressedData);
 
 		// Act
 		ECompressionType detectedType = await stream.DetectCompressionType();
@@ -696,101 +721,87 @@ public sealed class StreamsTests
 	}
 
 	// Tests for CompressionLimitExceededException
-	[Fact]
-	public void CompressionLimitExceededException_Should_Have_Parameterless_Constructor()
+	[Theory]
+	[InlineData(ExceptionConstructorType.Parameterless)]
+	[InlineData(ExceptionConstructorType.WithMessage)]
+	[InlineData(ExceptionConstructorType.WithMessageAndInnerException)]
+	public void CompressionLimitExceededException_Constructors_ShouldWork(ExceptionConstructorType constructorType)
 	{
-		// Act
-		CompressionLimitExceededException exception = new();
+		// Arrange, Act & Assert
+		switch (constructorType)
+		{
+			case ExceptionConstructorType.Parameterless:
+				CompressionLimitExceededException exception1 = new();
+				exception1.ShouldNotBeNull();
+				break;
 
-		// Assert
-		exception.ShouldNotBeNull();
-	}
+			case ExceptionConstructorType.WithMessage:
+				const string message = "Test exception message";
+				CompressionLimitExceededException exception2 = new(message);
+				exception2.Message.ShouldBe(message);
+				break;
 
-	[Fact]
-	public void CompressionLimitExceededException_Should_Have_Message_Constructor()
-	{
-		// Arrange
-		const string message = "Test exception message";
-
-		// Act
-		CompressionLimitExceededException exception = new(message);
-
-		// Assert
-		exception.Message.ShouldBe(message);
-	}
-
-	[Fact]
-	public void CompressionLimitExceededException_Should_Have_Message_And_InnerException_Constructor()
-	{
-		// Arrange
-		const string message = "Test exception message";
-		Exception innerException = new InvalidOperationException("Inner exception");
-
-		// Act
-		CompressionLimitExceededException exception = new(message, innerException);
-
-		// Assert
-		exception.Message.ShouldBe(message);
-		exception.InnerException.ShouldBeSameAs(innerException);
+			case ExceptionConstructorType.WithMessageAndInnerException:
+				const string message2 = "Test exception message";
+				Exception innerException = new InvalidOperationException("Inner exception");
+				CompressionLimitExceededException exception3 = new(message2, innerException);
+				exception3.Message.ShouldBe(message2);
+				exception3.InnerException.ShouldBeSameAs(innerException);
+				break;
+		}
 	}
 
 	// Tests for ConcatenatedStream
-	[Fact]
-	public async Task ConcatenatedStream_Should_Read_From_Both_Streams()
+	[Theory]
+	[InlineData(ConcatenatedStreamReadMode.Asynchronous)]
+	[InlineData(ConcatenatedStreamReadMode.Synchronous)]
+	[InlineData(ConcatenatedStreamReadMode.SpanBased)]
+	public async Task ConcatenatedStream_Should_Read_From_Both_Streams(ConcatenatedStreamReadMode readMode)
 	{
 		// Arrange
 		byte[] firstData = [1, 2, 3, 4, 5];
 		byte[] secondData = [6, 7, 8, 9, 10];
-		await using MemoryStream firstStream = new(firstData);
-		await using MemoryStream secondStream = new(secondData);
-		await using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
+		int bytesRead;
 
-		// Act
-		byte[] buffer = new byte[10];
-		int bytesRead = await concatenatedStream.ReadAsync(buffer.AsMemory(0, 10), TestContext.Current.CancellationToken);
+		// Act & Assert
+		switch (readMode)
+		{
+			case ConcatenatedStreamReadMode.Asynchronous:
+				await using (MemoryStream firstStream = new(firstData))
+				await using (MemoryStream secondStream = new(secondData))
+				await using (ConcatenatedStream concatenatedStream = new(firstStream, secondStream))
+				{
+					byte[] buffer = new byte[10];
+					bytesRead = await concatenatedStream.ReadAsync(buffer.AsMemory(0, 10), TestContext.Current.CancellationToken);
+					bytesRead.ShouldBe(10);
+					buffer.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+				}
+				break;
 
-		// Assert
-		bytesRead.ShouldBe(10);
-		buffer.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-	}
+			case ConcatenatedStreamReadMode.Synchronous:
+				using (MemoryStream firstStream = new(firstData))
+				using (MemoryStream secondStream = new(secondData))
+				using (ConcatenatedStream concatenatedStream = new(firstStream, secondStream))
+				{
+					byte[] buffer = new byte[10];
+					bytesRead = concatenatedStream.Read(buffer, 0, 10);
+					bytesRead.ShouldBe(10);
+					buffer.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+				}
+				break;
 
-
-	[Fact]
-	public void ConcatenatedStream_Should_Read_From_Both_Streams_Synchronously()
-	{
-		// Arrange
-		byte[] firstData = [1, 2, 3, 4, 5];
-		byte[] secondData = [6, 7, 8, 9, 10];
-		using MemoryStream firstStream = new(firstData);
-		using MemoryStream secondStream = new(secondData);
-		using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
-
-		// Act
-		byte[] buffer = new byte[10];
-		int bytesRead = concatenatedStream.Read(buffer, 0, 10);
-
-		// Assert
-		bytesRead.ShouldBe(10);
-		buffer.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-	}
-
-	[Fact]
-	public void ConcatenatedStream_Should_Read_From_Both_Streams_Using_Span()
-	{
-		// Arrange
-		byte[] firstData = [1, 2, 3, 4, 5];
-		byte[] secondData = [6, 7, 8, 9, 10];
-		using MemoryStream firstStream = new(firstData);
-		using MemoryStream secondStream = new(secondData);
-		using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
-
-		// Act
-		Span<byte> buffer = stackalloc byte[10];
-		int bytesRead = concatenatedStream.Read(buffer);
-
-		// Assert
-		bytesRead.ShouldBe(10);
-		buffer.ToArray().ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+			case ConcatenatedStreamReadMode.SpanBased:
+				using (MemoryStream firstStream = new(firstData))
+				using (MemoryStream secondStream = new(secondData))
+				using (ConcatenatedStream concatenatedStream = new(firstStream, secondStream))
+				{
+					Span<byte> buffer = stackalloc byte[10];
+					bytesRead = concatenatedStream.Read(buffer);
+					bytesRead.ShouldBe(10);
+					buffer.ToArray().ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+				}
+				break;
+		}
 	}
 
 	[Fact]
@@ -819,8 +830,14 @@ public sealed class StreamsTests
 		Should.NotThrow(concatenatedStream.Flush);
 	}
 
-	[Fact]
-	public void ConcatenatedStream_Length_Should_Throw_NotSupportedException()
+	[Theory]
+	[InlineData(ConcatenatedStreamUnsupportedOperation.Length)]
+	[InlineData(ConcatenatedStreamUnsupportedOperation.PositionGet)]
+	[InlineData(ConcatenatedStreamUnsupportedOperation.PositionSet)]
+	[InlineData(ConcatenatedStreamUnsupportedOperation.Seek)]
+	[InlineData(ConcatenatedStreamUnsupportedOperation.SetLength)]
+	[InlineData(ConcatenatedStreamUnsupportedOperation.Write)]
+	public void ConcatenatedStream_UnsupportedOperations_ShouldThrowNotSupportedException(ConcatenatedStreamUnsupportedOperation operation)
 	{
 		// Arrange
 		using MemoryStream firstStream = new([1, 2, 3]);
@@ -828,68 +845,28 @@ public sealed class StreamsTests
 		using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
 
 		// Act & Assert
-		Should.Throw<NotSupportedException>(() => _ = concatenatedStream.Length);
-	}
-
-	[Fact]
-	public void ConcatenatedStream_Position_Get_Should_Throw_NotSupportedException()
-	{
-		// Arrange
-		using MemoryStream firstStream = new([1, 2, 3]);
-		using MemoryStream secondStream = new([4, 5, 6]);
-		using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
-
-		// Act & Assert
-		Should.Throw<NotSupportedException>(() => _ = concatenatedStream.Position);
-	}
-
-	[Fact]
-	public void ConcatenatedStream_Position_Set_Should_Throw_NotSupportedException()
-	{
-		// Arrange
-		using MemoryStream firstStream = new([1, 2, 3]);
-		using MemoryStream secondStream = new([4, 5, 6]);
-		using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
-
-		// Act & Assert
-		Should.Throw<NotSupportedException>(() => concatenatedStream.Position = 0);
-	}
-
-	[Fact]
-	public void ConcatenatedStream_Seek_Should_Throw_NotSupportedException()
-	{
-		// Arrange
-		using MemoryStream firstStream = new([1, 2, 3]);
-		using MemoryStream secondStream = new([4, 5, 6]);
-		using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
-
-		// Act & Assert
-		Should.Throw<NotSupportedException>(() => concatenatedStream.Seek(0, SeekOrigin.Begin));
-	}
-
-	[Fact]
-	public void ConcatenatedStream_SetLength_Should_Throw_NotSupportedException()
-	{
-		// Arrange
-		using MemoryStream firstStream = new([1, 2, 3]);
-		using MemoryStream secondStream = new([4, 5, 6]);
-		using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
-
-		// Act & Assert
-		Should.Throw<NotSupportedException>(() => concatenatedStream.SetLength(10));
-	}
-
-	[Fact]
-	public void ConcatenatedStream_Write_Should_Throw_NotSupportedException()
-	{
-		// Arrange
-		using MemoryStream firstStream = new([1, 2, 3]);
-		using MemoryStream secondStream = new([4, 5, 6]);
-		using ConcatenatedStream concatenatedStream = new(firstStream, secondStream);
-		byte[] buffer = [7, 8, 9];
-
-		// Act & Assert
-		Should.Throw<NotSupportedException>(() => concatenatedStream.Write(buffer, 0, buffer.Length));
+		switch (operation)
+		{
+			case ConcatenatedStreamUnsupportedOperation.Length:
+				Should.Throw<NotSupportedException>(() => _ = concatenatedStream.Length);
+				break;
+			case ConcatenatedStreamUnsupportedOperation.PositionGet:
+				Should.Throw<NotSupportedException>(() => _ = concatenatedStream.Position);
+				break;
+			case ConcatenatedStreamUnsupportedOperation.PositionSet:
+				Should.Throw<NotSupportedException>(() => concatenatedStream.Position = 0);
+				break;
+			case ConcatenatedStreamUnsupportedOperation.Seek:
+				Should.Throw<NotSupportedException>(() => concatenatedStream.Seek(0, SeekOrigin.Begin));
+				break;
+			case ConcatenatedStreamUnsupportedOperation.SetLength:
+				Should.Throw<NotSupportedException>(() => concatenatedStream.SetLength(10));
+				break;
+			case ConcatenatedStreamUnsupportedOperation.Write:
+				byte[] buffer = [7, 8, 9];
+				Should.Throw<NotSupportedException>(() => concatenatedStream.Write(buffer, 0, buffer.Length));
+				break;
+		}
 	}
 
 	// Test for compress/decompress with leaveOpen parameter

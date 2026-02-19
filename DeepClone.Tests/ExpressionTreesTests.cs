@@ -455,27 +455,15 @@ public sealed class ExpressionTreesTests : IDisposable
 		result.ReadonlyChild.Text.ShouldBe("child");
 	}
 
-	[Fact]
-	public void DeepClone_WhenInputHasReadonlyDelegateField_ShouldSetToNull()
+	[Theory]
+	[InlineData(true)]  // readonly delegate field
+	[InlineData(false)] // writable delegate field
+	public void DeepClone_WhenInputHasDelegateField_ShouldSetToNull(bool testReadonly)
 	{
 		// Arrange
-		ClassWithDelegateFields source = new(() => { }, () => { });
-
-		// Act
-		ClassWithDelegateFields result = source.DeepClone();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldNotBeSameAs(source);
-		result.ReadonlyDelegateField.ShouldBeNull();
-		result.WritableDelegateField.ShouldBeNull();
-	}
-
-	[Fact]
-	public void DeepClone_WhenInputHasWritableDelegateField_ShouldSetToNull()
-	{
-		// Arrange
-		ClassWithDelegateFields source = new(null, () => { });
+		ClassWithDelegateFields source = testReadonly
+			? new(() => { }, () => { })  // both fields populated
+			: new(null, () => { });       // only writable field populated
 
 		// Act
 		ClassWithDelegateFields result = source.DeepClone();

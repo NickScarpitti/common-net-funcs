@@ -1,90 +1,83 @@
 ﻿namespace DeepClone.Tests;
 
+public enum ReferenceEqualityScenario
+{
+	BothNull,
+	SameReference,
+	DifferentReferences
+}
+
 public sealed class ReferenceEqualityComparerTests
 {
-    private readonly Fixture fixture;
-    private readonly CommonNetFuncs.DeepClone.ReferenceEqualityComparer comparer;
+	private readonly Fixture fixture;
+	private readonly CommonNetFuncs.DeepClone.ReferenceEqualityComparer comparer;
 
-    public ReferenceEqualityComparerTests()
-    {
-        fixture = new Fixture();
-        comparer = new CommonNetFuncs.DeepClone.ReferenceEqualityComparer();
-    }
+	public ReferenceEqualityComparerTests()
+	{
+		fixture = new Fixture();
+		comparer = new CommonNetFuncs.DeepClone.ReferenceEqualityComparer();
+	}
 
-    [Theory]
-    [InlineData(null, null, true)]
-    public void Equals_WhenBothParametersAreNull_ShouldReturnTrue(object? x, object? y, bool expected)
-    {
-        // Act
-        bool result = comparer.Equals(x, y);
+	[Theory]
+	[InlineData(ReferenceEqualityScenario.BothNull, true)]
+	[InlineData(ReferenceEqualityScenario.SameReference, true)]
+	[InlineData(ReferenceEqualityScenario.DifferentReferences, false)]
+	public void Equals_WithVariousScenarios_ReturnsExpectedResult(ReferenceEqualityScenario scenario, bool expected)
+	{
+		// Arrange & Act
+		bool result;
+		switch (scenario)
+		{
+			case ReferenceEqualityScenario.BothNull:
+				result = comparer.Equals(null, null);
+				break;
 
-        // Assert
-        result.ShouldBe(expected);
-    }
+			case ReferenceEqualityScenario.SameReference:
+				object obj = new();
+				result = comparer.Equals(obj, obj);
+				break;
 
-    [Fact]
-    public void Equals_WhenSameReference_ShouldReturnTrue()
-    {
-        // Arrange
-        object obj = new();
+			case ReferenceEqualityScenario.DifferentReferences:
+				string str1 = fixture.Create<string>();
+				string str2 = new(str1.ToCharArray());
+				result = comparer.Equals(str1, str2);
+				break;
 
-        // Act
-        bool result = comparer.Equals(obj, obj);
+			default:
+				throw new ArgumentException("Invalid scenario");
+		}
 
-        // Assert
-        result.ShouldBeTrue();
-    }
+		// Assert
+		result.ShouldBe(expected);
+	}
 
-    [Fact]
-    public void Equals_WhenDifferentReferences_ShouldReturnFalse()
-    {
-        // Arrange
-        string str1 = fixture.Create<string>();
-        string str2 = new(str1.ToCharArray());
+	[Theory]
+	[InlineData(true, 0)]  // null object
+	[InlineData(false, 0)] // non-null (0 is placeholder, will be replaced with actual hash)
+	public void GetHashCode_WithNullAndNonNull_ReturnsExpectedValue(bool isNull, int placeholderExpected)
+	{
+		// Arrange
+		object? obj = isNull ? null : new object();
+		int expected = isNull ? 0 : obj!.GetHashCode();
 
-        // Act
-        bool result = comparer.Equals(str1, str2);
+		// Act
+		int result = comparer.GetHashCode(obj!);
 
-        // Assert
-        result.ShouldBeFalse();
-    }
+		// Assert
+		result.ShouldBe(expected);
+	}
 
-    [Theory]
-    [InlineData(null, 0)]
-    public void GetHashCode_WhenObjectIsNull_ShouldReturnZero(object? obj, int expected)
-    {
-        // Act
-        int result = comparer.GetHashCode(obj!);
+	[Fact]
+	public void GetHashCode_WhenCalledMultipleTimes_ShouldReturnSameValue()
+	{
+		// Arrange
+		object obj = new();
 
-        // Assert
-        result.ShouldBe(expected);
-    }
+		// Act
+		int firstCall = comparer.GetHashCode(obj);
+		int secondCall = comparer.GetHashCode(obj);
 
-    [Fact]
-    public void GetHashCode_WhenObjectNotNull_ShouldReturnObjectHashCode()
-    {
-        // Arrange
-        object obj = new();
-        int expected = obj.GetHashCode();
-
-        // Act
-        int result = comparer.GetHashCode(obj);
-
-        // Assert
-        result.ShouldBe(expected);
-    }
-
-    [Fact]
-    public void GetHashCode_WhenCalledMultipleTimes_ShouldReturnSameValue()
-    {
-        // Arrange
-        object obj = new();
-
-        // Act
-        int firstCall = comparer.GetHashCode(obj);
-        int secondCall = comparer.GetHashCode(obj);
-
-        // Assert
-        firstCall.ShouldBe(secondCall);
-    }
+		// Assert
+		firstCall.ShouldBe(secondCall);
+	}
 }

@@ -660,7 +660,6 @@ public sealed class AsyncTests
 		int expectedCount = collectionType == CollectionType.ConcurrentBag ? 0 : (dataSourceType == DataSourceType.ConcurrentBag && collectionType == CollectionType.HashSet) ? 0 : 1;
 
 		using SemaphoreSlim? semaphore = executionMode == ExecutionMode.FuncWithSemaphore ? new(1, 1) : null;
-
 		if (executionMode == ExecutionMode.Task)
 		{
 			switch (dataSourceType)
@@ -951,7 +950,6 @@ public sealed class AsyncTests
 		dt.Columns.Add("Id", typeof(int));
 		dt.Columns.Add("Name", typeof(string));
 		using SemaphoreSlim? semaphore = executionMode == ExecutionMode.FuncWithSemaphore ? new(1, 1) : null;
-
 		if (executionMode == ExecutionMode.Task)
 		{
 			if (throwException)
@@ -1842,6 +1840,326 @@ public sealed class AsyncTests
 		TaskGroup group = new(tasks);
 
 		await Should.ThrowAsync<InvalidOperationException>(group.RunTasks());
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithFuncHashSetAndSemaphore_ShouldReleaseOnSuccess()
+	{
+		// Arrange
+		HashSet<string> collection = ["initial"];
+		using SemaphoreSlim semaphore = new(1, 1);
+		int releaseCount = 0;
+
+		// Wrap semaphore to track releases
+		static async Task<HashSet<string>> func()
+		{
+			await Task.Delay(10, Current.CancellationToken);
+			return ["added"];
+		}
+
+		// Act
+		await semaphore.WaitAsync(Current.CancellationToken);
+		int beforeCount = semaphore.CurrentCount;
+		semaphore.Release();
+
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(2);
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should be released
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithFuncListAndSemaphore_ShouldReleaseOnSuccess()
+	{
+		// Arrange
+		HashSet<string> collection = ["initial"];
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static async Task<List<string>> func()
+		{
+			await Task.Delay(10, Current.CancellationToken);
+			return ["added1", "added2"];
+		}
+
+		// Act
+		await semaphore.WaitAsync(Current.CancellationToken);
+		int beforeCount = semaphore.CurrentCount;
+		semaphore.Release();
+
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(3);
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should be released
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithFuncHashSetAndSemaphore_ShouldReleaseOnException()
+	{
+		// Arrange
+		HashSet<string> collection = ["initial"];
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<HashSet<string>> func() => Task.FromException<HashSet<string>>(new InvalidOperationException("Test error"));
+
+		// Act
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(1); // Collection unchanged
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should be released even on exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithFuncListAndSemaphore_ShouldReleaseOnException()
+	{
+		// Arrange
+		HashSet<string> collection = ["initial"];
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<List<string>> func() => Task.FromException<List<string>>(new InvalidOperationException("Test error"));
+
+		// Act
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(1); // Collection unchanged
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should be released even on exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithFuncHashSetAndNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		HashSet<string> collection = ["initial"];
+
+		static Task<HashSet<string>> func() => Task.FromResult(new HashSet<string> { "added1", "added2" });
+
+		// Act
+		await collection.ObjectFill(func, null!, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithComplexType_ShouldWork()
+	{
+		// Arrange
+		HashSet<TestModel> collection = [new() { Id = 1, Name = "Initial" }];
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<HashSet<TestModel>> func() => Task.FromResult(new HashSet<TestModel>(new TestModelEqualityComparer())
+		{
+			new() { Id = 2, Name = "Added" }
+		});
+
+		// Act
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(2);
+	}
+
+	private class TestModel
+	{
+		public int Id { get; set; }
+		public string? Name { get; set; }
+	}
+
+	private class TestModelEqualityComparer : IEqualityComparer<TestModel>
+	{
+		public bool Equals(TestModel? x, TestModel? y) => x?.Id == y?.Id;
+		public int GetHashCode(TestModel obj) => obj.Id.GetHashCode();
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBag_WithFuncIEnumerableAndSemaphore_ShouldAddRange()
+	{
+		// Arrange
+		ConcurrentBag<int> collection = [1, 2];
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<IEnumerable<int>> func() => Task.FromResult<IEnumerable<int>>([3, 4, 5]);
+
+		// Act
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(5);
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should be released
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBag_WithFuncIEnumerableAndNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		ConcurrentBag<int> collection = [1, 2];
+
+		static Task<IEnumerable<int>> func() => Task.FromResult<IEnumerable<int>>([3, 4, 5]);
+
+		// Act
+		await collection.ObjectFill(func, null!, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(5);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBag_WithFuncIEnumerableAndSemaphore_ShouldReleaseOnException()
+	{
+		// Arrange
+		ConcurrentBag<int> collection = [1, 2];
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<IEnumerable<int>> func() => throw new InvalidOperationException("Test exception");
+
+		// Act
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should still be released
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBag_WithNullResult_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentBag<int> collection = [1, 2];
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<IEnumerable<int>> func() => Task.FromResult<IEnumerable<int>>(null!);
+
+		// Act
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(2); // Should remain unchanged
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_NullConcurrentBag_WithFuncIEnumerable_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentBag<int>? collection = null;
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<IEnumerable<int>> func() => Task.FromResult<IEnumerable<int>>([3, 4, 5]);
+
+		// Act
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should still be released
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBag_WithTaskList_ShouldAddRange()
+	{
+		// Arrange
+		ConcurrentBag<int> collection = [1, 2];
+		Task<List<int>?> task = Task.FromResult<List<int>?>([3, 4, 5]);
+
+		// Act
+		await collection.ObjectFill(task);
+
+		// Assert
+		collection.Count.ShouldBe(5);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBag_WithTaskListNull_ShouldNotAdd()
+	{
+		// Arrange
+		ConcurrentBag<int> collection = [1, 2];
+		Task<List<int>?> task = Task.FromResult<List<int>?>(null);
+
+		// Act
+		await collection.ObjectFill(task);
+
+		// Assert
+		collection.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBag_WithFuncListAndSemaphore_ShouldAddRangeAndRelease()
+	{
+		// Arrange
+		ConcurrentBag<int> collection = [1, 2];
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		Task<List<int>> func() => Task.FromResult<List<int>>([3, 4, 5]);
+
+		// Act
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(5);
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should be released
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBag_WithFuncConcurrentBagAndSemaphore_ShouldAddRangeAndRelease()
+	{
+		// Arrange
+		ConcurrentBag<string> collection = ["a", "b"];
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		Task<ConcurrentBag<string>> func() => Task.FromResult<ConcurrentBag<string>>(new(["c", "d", "e"]));
+
+		// Act
+		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		collection.Count.ShouldBe(5);
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should be released
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithTaskConcurrentBagWithValues_ShouldAddAllElements()
+	{
+		// Arrange
+		HashSet<string> hashSet = ["existing"];
+		ConcurrentBag<string> bag = new(["value1", "value2", "value3"]);
+		Task<ConcurrentBag<string>?> task = Task.FromResult<ConcurrentBag<string>?>(bag);
+
+		// Act
+		await hashSet.ObjectFill(task);
+
+		// Assert
+		hashSet.Count.ShouldBe(4);
+		hashSet.ShouldContain("existing");
+		hashSet.ShouldContain("value1");
+		hashSet.ShouldContain("value2");
+		hashSet.ShouldContain("value3");
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithTaskConcurrentBagNull_ShouldNotAdd()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2, 3];
+		Task<ConcurrentBag<int>?> task = Task.FromResult<ConcurrentBag<int>?>(null);
+
+		// Act
+		await hashSet.ObjectFill(task);
+
+		// Assert
+		hashSet.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithTaskConcurrentBagThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2, 3];
+		Task<ConcurrentBag<int>?> task = Task.FromException<ConcurrentBag<int>?>(new InvalidOperationException("Test exception"));
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await hashSet.ObjectFill(task));
+		hashSet.Count.ShouldBe(3); // Should remain unchanged
 	}
 
 	#endregion

@@ -4,6 +4,27 @@ using CommonNetFuncs.FastMap;
 
 namespace FastMap.Tests;
 
+public enum EmptyCollectionType
+{
+	List,
+	Array,
+	Dictionary
+}
+
+public enum CollectionMappingType
+{
+	HashSetToHashSet,
+	QueueToList,
+	StackToList,
+	ListToHashSet
+}
+
+public enum DictionaryMappingError
+{
+	InvalidMapping,
+	MismatchedKeyTypes
+}
+
 public sealed class FastMapperTests
 {
 	public sealed class SimpleSource
@@ -454,43 +475,46 @@ public sealed class FastMapperTests
 		}
 	}
 
-	[Fact]
-	public void FasterMap_WhenSourceIsNull_ReturnsNull()
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void FasterMap_WithNullSource_ReturnsNull(bool useCache)
 	{
 		// Arrange
 		SimpleSource? source = null;
 
 		// Act
-		SimpleDestination? result = source.FastMap<SimpleSource?, SimpleDestination>();
+		SimpleDestination? result = source!.FastMap<SimpleSource, SimpleDestination>(useCache: useCache);
 
 		// Assert
 		result.ShouldBeNull();
 	}
 
-	[Fact]
-	public void FasterMap_WithInvalidDictionaryMapping_ThrowsException()
+	[Theory]
+	[InlineData(DictionaryMappingError.InvalidMapping)]
+	[InlineData(DictionaryMappingError.MismatchedKeyTypes)]
+	public void FasterMap_WithInvalidDictionaryMapping_ThrowsException(DictionaryMappingError errorType)
 	{
 		// Arrange
 		Dictionary<int, string> source = new() { [1] = "test" };
+		Exception? exception;
 
 		// Act & Assert
 		// FastMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
-		Exception? exception = Should.Throw<TypeInitializationException>(source.FastMap<Dictionary<int, string>, List<string>>);
-		exception.InnerException.ShouldNotBeNull();
-		exception.InnerException.ShouldBeOfType<ArgumentException>();
-	}
+		switch (errorType)
+		{
+			case DictionaryMappingError.InvalidMapping:
+				exception = Should.Throw<TypeInitializationException>(source.FastMap<Dictionary<int, string>, List<string>>);
+				exception.InnerException.ShouldNotBeNull();
+				exception.InnerException.ShouldBeOfType<ArgumentException>();
+				break;
 
-	[Fact]
-	public void FasterMap_WithMismatchedDictionaryKeyTypes_ThrowsException()
-	{
-		// Arrange
-		Dictionary<int, string> source = new() { [1] = "test" };
-
-		// Act & Assert
-		// FastMapper uses static generic class cache, so exception is wrapped in TypeInitializationException
-		Exception? exception = Should.Throw<TypeInitializationException>(source.FastMap<Dictionary<int, string>, Dictionary<string, string>>);
-		exception.InnerException.ShouldNotBeNull();
-		exception.InnerException.ShouldBeOfType<InvalidOperationException>();
+			case DictionaryMappingError.MismatchedKeyTypes:
+				exception = Should.Throw<TypeInitializationException>(source.FastMap<Dictionary<int, string>, Dictionary<string, string>>);
+				exception.InnerException.ShouldNotBeNull();
+				exception.InnerException.ShouldBeOfType<InvalidOperationException>();
+				break;
+		}
 	}
 
 	[Theory]
@@ -569,46 +593,36 @@ public sealed class FastMapperTests
 		}
 	}
 
-	[Fact]
-	public void FasterMap_WithEmptyList_ReturnsEmptyList()
+	[Theory]
+	[InlineData(EmptyCollectionType.List)]
+	[InlineData(EmptyCollectionType.Array)]
+	[InlineData(EmptyCollectionType.Dictionary)]
+	public void FasterMap_WithEmptyCollection_ReturnsEmptyCollection(EmptyCollectionType collectionType)
 	{
-		// Arrange
-		List<SimpleSource> source = [];
+		// Act & Assert
+		switch (collectionType)
+		{
+			case EmptyCollectionType.List:
+				List<SimpleSource> listSource = [];
+				List<SimpleDestination> listResult = listSource.FastMap<List<SimpleSource>, List<SimpleDestination>>();
+				listResult.ShouldNotBeNull();
+				listResult.Count.ShouldBe(0);
+				break;
 
-		// Act
-		List<SimpleDestination> result = source.FastMap<List<SimpleSource>, List<SimpleDestination>>();
+			case EmptyCollectionType.Array:
+				SimpleSource[] arraySource = [];
+				SimpleDestination[] arrayResult = arraySource.FastMap<SimpleSource[], SimpleDestination[]>();
+				arrayResult.ShouldNotBeNull();
+				arrayResult.Length.ShouldBe(0);
+				break;
 
-		// Assert
-		result.ShouldNotBeNull();
-		result.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void FasterMap_WithEmptyArray_ReturnsEmptyArray()
-	{
-		// Arrange
-		SimpleSource[] source = [];
-
-		// Act
-		SimpleDestination[] result = source.FastMap<SimpleSource[], SimpleDestination[]>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Length.ShouldBe(0);
-	}
-
-	[Fact]
-	public void FasterMap_WithEmptyDictionary_ReturnsEmptyDictionary()
-	{
-		// Arrange
-		Dictionary<string, int> source = [];
-
-		// Act
-		Dictionary<string, int> result = source.FastMap<Dictionary<string, int>, Dictionary<string, int>>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Count.ShouldBe(0);
+			case EmptyCollectionType.Dictionary:
+				Dictionary<string, int> dictSource = [];
+				Dictionary<string, int> dictResult = dictSource.FastMap<Dictionary<string, int>, Dictionary<string, int>>();
+				dictResult.ShouldNotBeNull();
+				dictResult.Count.ShouldBe(0);
+				break;
+		}
 	}
 
 	[Theory]
@@ -924,80 +938,54 @@ public sealed class FastMapperTests
 		public required List<string> Timestamp { get; set; }  // Incompatible with source
 	}
 
-	[Fact]
-	public void FasterMap_HashSetToHashSet_SameType_MapsCorrectly()
+	[Theory]
+	[InlineData(CollectionMappingType.HashSetToHashSet)]
+	[InlineData(CollectionMappingType.QueueToList)]
+	[InlineData(CollectionMappingType.StackToList)]
+	[InlineData(CollectionMappingType.ListToHashSet)]
+	public void FasterMap_CollectionTypeMapping_MapsCorrectly(CollectionMappingType mappingType)
 	{
-		// Arrange
-		HashSetSource source = new()
+		switch (mappingType)
 		{
-			Numbers = [1, 2, 3, 4, 5]
-		};
+			case CollectionMappingType.HashSetToHashSet:
+				HashSetSource hashsetSource = new() { Numbers = [1, 2, 3, 4, 5] };
+				HashSetDest hashsetResult = hashsetSource.FastMap<HashSetSource, HashSetDest>();
+				hashsetResult.ShouldNotBeNull();
+				hashsetResult.Numbers.ShouldBe(hashsetSource.Numbers);
+				break;
 
-		// Act
-		HashSetDest result = source.FastMap<HashSetSource, HashSetDest>();
+			case CollectionMappingType.QueueToList:
+				QueueSource queueSource = new() { Items = new Queue<string>(["first", "second", "third"]) };
+				QueueDest queueResult = queueSource.FastMap<QueueSource, QueueDest>();
+				queueResult.ShouldNotBeNull();
+				queueResult.Items.ShouldBe(queueSource.Items);
+				break;
 
-		// Assert
-		result.ShouldNotBeNull();
-		result.Numbers.ShouldBe(source.Numbers);
-	}
+			case CollectionMappingType.StackToList:
+				StackSource stackSource = new() { Values = new Stack<double>([1.1, 2.2, 3.3]) };
+				StackDest stackResult = stackSource.FastMap<StackSource, StackDest>();
+				stackResult.ShouldNotBeNull();
+				stackResult.Values.ShouldBe(stackSource.Values);
+				break;
 
-	[Fact]
-	public void FasterMap_QueueToList_SameElementType_MapsCorrectly()
-	{
-		// Arrange
-		QueueSource source = new()
-		{
-			Items = new Queue<string>(["first", "second", "third"])
-		};
-
-		// Act
-		QueueDest result = source.FastMap<QueueSource, QueueDest>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Items.ShouldBe(source.Items);
-	}
-
-	[Fact]
-	public void FasterMap_StackToList_SameElementType_MapsCorrectly()
-	{
-		// Arrange
-		StackSource source = new()
-		{
-			Values = new Stack<double>([1.1, 2.2, 3.3])
-		};
-
-		// Act
-		StackDest result = source.FastMap<StackSource, StackDest>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Values.ShouldBe(source.Values);
-	}
-
-	[Fact]
-	public void FasterMap_ListToHashSet_DifferentElementTypes_MapsCorrectly()
-	{
-		// Arrange - complex object type conversion in collections
-		SimpleSourceListWrapper source = new()
-		{
-			Items =
-			[
-				new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now },
-				new() { StringProp = "B", IntProp = 2, DateProp = DateTime.Now },
-				new() { StringProp = "C", IntProp = 3, DateProp = DateTime.Now }
-			]
-		};
-
-		// Act
-		SimpleDestHashSetWrapper result = source.FastMap<SimpleSourceListWrapper, SimpleDestHashSetWrapper>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Items.Count.ShouldBe(3);
-		SimpleDestination[] resultArray = [.. result.Items];
-		resultArray[0].StringProp.ShouldBe(source.Items[0].StringProp);
-		resultArray[0].IntProp.ShouldBe(source.Items[0].IntProp);
+			case CollectionMappingType.ListToHashSet:
+				SimpleSourceListWrapper listSource = new()
+				{
+					Items =
+					[
+						new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now },
+						new() { StringProp = "B", IntProp = 2, DateProp = DateTime.Now },
+						new() { StringProp = "C", IntProp = 3, DateProp = DateTime.Now }
+					]
+				};
+				SimpleDestHashSetWrapper hashSetResult = listSource.FastMap<SimpleSourceListWrapper, SimpleDestHashSetWrapper>();
+				hashSetResult.ShouldNotBeNull();
+				hashSetResult.Items.Count.ShouldBe(3);
+				SimpleDestination[] resultArray = [.. hashSetResult.Items];
+				resultArray[0].StringProp.ShouldBe(listSource.Items[0].StringProp);
+				resultArray[0].IntProp.ShouldBe(listSource.Items[0].IntProp);
+				break;
+		}
 	}
 
 	[Fact]
@@ -1027,19 +1015,6 @@ public sealed class FastMapperTests
 	#region Dead Code Branch Investigation
 
 	// Tests to investigate if lines 291-294, 298-299, 343, 346-347 are truly unreachable
-
-	[Fact]
-	public void FasterMap_WithNullSourceAndNoCaching_ReturnsDefault()
-	{
-		// Arrange
-		SimpleSource? source = null;
-
-		// Act
-		SimpleDestination? result = source!.FastMap<SimpleSource, SimpleDestination>(useCache: false);
-
-		// Assert
-		result.ShouldBeNull();
-	}
 
 	[Fact]
 	public void FasterMap_HashSetToHashSet_TopLevel_MapsCorrectly()

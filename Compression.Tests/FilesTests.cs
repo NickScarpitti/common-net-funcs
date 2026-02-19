@@ -4,6 +4,12 @@ using static CommonNetFuncs.Compression.Streams;
 
 namespace Compression.Tests;
 
+public enum ZipStreamMode
+{
+	ProvidedStream,
+	NullStream
+}
+
 public sealed class FilesTests
 {
 	private readonly Fixture fixture;
@@ -13,43 +19,44 @@ public sealed class FilesTests
 		fixture = new Fixture();
 	}
 
-	[Fact]
-	public async Task ZipFile_Should_Create_Zip_With_Single_File()
-	{
-		// Arrange
-		string fileName = fixture.Create<string>();
-		MemoryStream fileStream = new(fixture.CreateMany<byte>(100).ToArray());
-		MemoryStream zipFileStream = new();
-
-		// Act
-		await (fileStream, fileName).ZipFile(zipFileStream, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		zipFileStream.Length.ShouldBeGreaterThan(0);
-		await using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
-		archive.Entries.Count.ShouldBe(1);
-		archive.Entries[0].Name.ShouldBe(fileName);
-	}
-
-	[Fact]
-	public async Task ZipFile_NullStream_Should_Create_Zip_With_Single_File()
+	[Theory]
+	[InlineData(ZipStreamMode.ProvidedStream)]
+	[InlineData(ZipStreamMode.NullStream)]
+	public async Task ZipFile_Should_Create_Zip_With_Single_File(ZipStreamMode streamMode)
 	{
 		// Arrange
 		string fileName = fixture.Create<string>();
 		await using MemoryStream fileStream = new(fixture.CreateMany<byte>(100).ToArray());
+		MemoryStream? resultStream;
 
-		// Act
-		await using MemoryStream zipFileStream = await (fileStream, fileName).ZipFile(cancellationToken: TestContext.Current.CancellationToken);
+		// Act & Assert
+		switch (streamMode)
+		{
+			case ZipStreamMode.ProvidedStream:
+				MemoryStream zipFileStream = new();
+				await (fileStream, fileName).ZipFile(zipFileStream, cancellationToken: TestContext.Current.CancellationToken);
+				resultStream = zipFileStream;
+				break;
+
+			case ZipStreamMode.NullStream:
+				resultStream = await (fileStream, fileName).ZipFile(cancellationToken: TestContext.Current.CancellationToken);
+				break;
+
+			default:
+				throw new InvalidOperationException($"Unknown stream mode: {streamMode}");
+		}
 
 		// Assert
-		zipFileStream.Length.ShouldBeGreaterThan(0);
-		await using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
+		resultStream.Length.ShouldBeGreaterThan(0);
+		await using ZipArchive archive = new(resultStream, ZipArchiveMode.Read);
 		archive.Entries.Count.ShouldBe(1);
 		archive.Entries[0].Name.ShouldBe(fileName);
 	}
 
-	[Fact]
-	public async Task ZipFiles_Should_Create_Zip_With_Multiple_Files()
+	[Theory]
+	[InlineData(ZipStreamMode.ProvidedStream)]
+	[InlineData(ZipStreamMode.NullStream)]
+	public async Task ZipFiles_Should_Create_Zip_With_Multiple_Files(ZipStreamMode streamMode)
 	{
 		// Arrange
 		List<(Stream?, string)> files =
@@ -58,34 +65,23 @@ public sealed class FilesTests
 						(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt"),
 						(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 2)).ToArray()), "file3.txt")
 		];
-		await using MemoryStream zipFileStream = new();
+		MemoryStream? zipFileStream;
 
 		// Act
-		await files.ZipFiles(zipFileStream, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		zipFileStream.Length.ShouldBeGreaterThan(0);
-		await using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
-		archive.Entries.Count.ShouldBe(files.Count);
-		foreach ((Stream?, string fileName) file in files)
+		switch (streamMode)
 		{
-			archive.Entries.ShouldContain(x => x.Name == file.fileName);
+			case ZipStreamMode.ProvidedStream:
+				zipFileStream = new();
+				await files.ZipFiles(zipFileStream, cancellationToken: TestContext.Current.CancellationToken);
+				break;
+
+			case ZipStreamMode.NullStream:
+				zipFileStream = await files.ZipFiles(cancellationToken: TestContext.Current.CancellationToken);
+				break;
+
+			default:
+				throw new InvalidOperationException($"Unknown stream mode: {streamMode}");
 		}
-	}
-
-	[Fact]
-	public async Task ZipFiles_Null_Stream_Should_Create_Zip_With_Multiple_Files()
-	{
-		// Arrange
-		List<(Stream?, string)> files =
-		[
-				(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)i).ToArray()), "file1.txt"),
-						(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt"),
-						(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 2)).ToArray()), "file3.txt")
-		];
-
-		// Act
-		await using MemoryStream? zipFileStream = await files.ZipFiles(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		zipFileStream?.Length.ShouldBeGreaterThan(0);

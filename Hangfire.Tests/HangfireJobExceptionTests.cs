@@ -2,6 +2,21 @@
 
 namespace Hangfire.Tests;
 
+public enum ThrowMethod
+{
+	EntityNotFound,
+	ValidationFailed,
+	DependencyUnavailable
+}
+
+public enum MessageComponent
+{
+	OperationName,
+	EntityId,
+	PermanentFailureTag,
+	NoPermanentFailureTag
+}
+
 public sealed class HangfireJobExceptionTests
 {
 	private readonly Fixture fixture;
@@ -160,60 +175,44 @@ public sealed class HangfireJobExceptionTests
 		Assert.Equal(allowRetry, exception.AllowRetry);
 	}
 
-	[Fact]
-	public void Message_ShouldIncludeOperationName_WhenSet()
+	[Theory]
+	[InlineData(MessageComponent.OperationName)]
+	[InlineData(MessageComponent.EntityId)]
+	[InlineData(MessageComponent.PermanentFailureTag)]
+	[InlineData(MessageComponent.NoPermanentFailureTag)]
+	public void Message_ShouldIncludeComponent_WhenSet(MessageComponent component)
 	{
-		// Arrange
-		const string message = "Test error";
-		const string operationName = "TestOperation";
-
-		// Act
-		HangfireJobException exception = new(message, operationName);
+		// Arrange & Act
+		HangfireJobException exception = component switch
+		{
+			MessageComponent.OperationName =>
+				new HangfireJobException("Test error", "TestOperation"),
+			MessageComponent.EntityId =>
+				new HangfireJobException("Test error", "TestOperation", 123),
+			MessageComponent.PermanentFailureTag =>
+				new HangfireJobException("Test error", allowRetry: false),
+			MessageComponent.NoPermanentFailureTag =>
+				new HangfireJobException("Test error", allowRetry: true),
+			_ => throw new ArgumentException("Invalid component")
+		};
 
 		// Assert
-		Assert.Contains("[Operation: TestOperation]", exception.Message);
-		Assert.Contains(message, exception.Message);
-	}
-
-	[Fact]
-	public void Message_ShouldIncludeEntityId_WhenSet()
-	{
-		// Arrange
-		const string message = "Test error";
-		const string operationName = "TestOperation";
-		const int entityId = 123;
-
-		// Act
-		HangfireJobException exception = new(message, operationName, entityId);
-
-		// Assert
-		Assert.Contains("(Entity ID: 123)", exception.Message);
-	}
-
-	[Fact]
-	public void Message_ShouldIncludePermanentFailureTag_WhenAllowRetryIsFalse()
-	{
-		// Arrange
-		const string message = "Test error";
-
-		// Act
-		HangfireJobException exception = new(message, allowRetry: false);
-
-		// Assert
-		Assert.Contains("[PERMANENT FAILURE - NO RETRY]", exception.Message);
-	}
-
-	[Fact]
-	public void Message_ShouldNotIncludePermanentFailureTag_WhenAllowRetryIsTrue()
-	{
-		// Arrange
-		const string message = "Test error";
-
-		// Act
-		HangfireJobException exception = new(message, allowRetry: true);
-
-		// Assert
-		Assert.DoesNotContain("[PERMANENT FAILURE - NO RETRY]", exception.Message);
+		switch (component)
+		{
+			case MessageComponent.OperationName:
+				Assert.Contains("[Operation: TestOperation]", exception.Message);
+				Assert.Contains("Test error", exception.Message);
+				break;
+			case MessageComponent.EntityId:
+				Assert.Contains("(Entity ID: 123)", exception.Message);
+				break;
+			case MessageComponent.PermanentFailureTag:
+				Assert.Contains("[PERMANENT FAILURE - NO RETRY]", exception.Message);
+				break;
+			case MessageComponent.NoPermanentFailureTag:
+				Assert.DoesNotContain("[PERMANENT FAILURE - NO RETRY]", exception.Message);
+				break;
+		}
 	}
 
 	[Theory]
@@ -310,43 +309,23 @@ public sealed class HangfireJobExceptionTests
 		Assert.Equal(allowRetry, exception.AllowRetry);
 	}
 
-	[Fact]
-	public void ThrowEntityNotFound_DefaultAllowRetry_ShouldBeTrue()
+	[Theory]
+	[InlineData(ThrowMethod.EntityNotFound)]
+	[InlineData(ThrowMethod.ValidationFailed)]
+	[InlineData(ThrowMethod.DependencyUnavailable)]
+	public void ThrowMethods_DefaultAllowRetry_ShouldBeTrue(ThrowMethod method)
 	{
-		// Arrange
-		const string entityType = "Order";
-		const int entityId = 789;
-		const string operationName = "ProcessOrder";
-
 		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowEntityNotFound(entityType, entityId, operationName));
-
-		Assert.True(exception.AllowRetry);
-	}
-
-	[Fact]
-	public void ThrowValidationFailed_DefaultAllowRetry_ShouldBeTrue()
-	{
-		// Arrange
-		const string validationMessage = "Invalid input";
-		const string operationName = "ValidateInput";
-		const int entityId = 999;
-
-		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowValidationFailed(validationMessage, operationName, entityId));
-
-		Assert.True(exception.AllowRetry);
-	}
-
-	[Fact]
-	public void ThrowDependencyUnavailable_DefaultAllowRetry_ShouldBeTrue()
-	{
-		// Arrange
-		const string dependencyName = "DatabaseConnection";
-		const string operationName = "SaveData";
-
-		// Act & Assert
-		HangfireJobException exception = Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowDependencyUnavailable(dependencyName, operationName));
+		HangfireJobException exception = method switch
+		{
+			ThrowMethod.EntityNotFound =>
+				Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowEntityNotFound("Order", 789, "ProcessOrder")),
+			ThrowMethod.ValidationFailed =>
+				Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowValidationFailed("Invalid input", "ValidateInput", 999)),
+			ThrowMethod.DependencyUnavailable =>
+				Assert.Throws<HangfireJobException>(() => HangfireJobException.ThrowDependencyUnavailable("DatabaseConnection", "SaveData")),
+			_ => throw new ArgumentException("Invalid method")
+		};
 
 		Assert.True(exception.AllowRetry);
 	}

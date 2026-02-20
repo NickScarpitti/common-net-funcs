@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing;
 using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 using static Xunit.TestContext;
@@ -8,27 +7,6 @@ namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 
 public class SequentialTaskProcessorTests
 {
-	// Test helper class to expose internal functionality for cancellation testing
-	private class TestableProcessor(BoundedChannelOptions options) : SequentialTaskProcessor(options)
-	{
-		// Helper method to enqueue a task and get access to the QueuedTask for cancellation testing
-
-		public async Task<(Task<object?> resultTask, QueuedTask queuedTask)> EnqueueAndCaptureAsync<T>(Func<CancellationToken, Task<T?>> taskFunction)
-		{
-			QueuedTask queuedTask = new(async ct => await taskFunction(ct).ConfigureAwait(false));
-
-			// Use reflection to access the private writer field
-			FieldInfo? writerField = typeof(SequentialTaskProcessor).GetField("writer", BindingFlags.NonPublic | BindingFlags.Instance);
-
-			if (writerField?.GetValue(this) is ChannelWriter<QueuedTask> writer)
-			{
-				await writer.WriteAsync(queuedTask).ConfigureAwait(false);
-			}
-
-			return (queuedTask.CompletionSource.Task, queuedTask);
-		}
-	}
-
 	#region Constructor Tests
 
 	[Fact]
@@ -108,7 +86,7 @@ public class SequentialTaskProcessorTests
 		BoundedChannelOptions options = new(10);
 		using SequentialTaskProcessor processor = new(options);
 		await processor.StartAsync(CancellationToken.None);
-		int expectedValue = 42;
+		const int expectedValue = 42;
 
 		// Act
 		int? result = await processor.EnqueueAsync(_ => Task.FromResult((int?)expectedValue), cancellationToken: Current.CancellationToken);
@@ -139,7 +117,7 @@ public class SequentialTaskProcessorTests
 		BoundedChannelOptions options = new(10);
 		using SequentialTaskProcessor processor = new(options);
 		await processor.StartAsync(CancellationToken.None);
-		string expectedValue = "test result";
+		const string expectedValue = "test result";
 
 		// Act
 		string? result = await processor.EnqueueAsync(_ => Task.FromResult((string?)expectedValue), cancellationToken: Current.CancellationToken);
@@ -447,7 +425,7 @@ public class SequentialTaskProcessorTests
 		BoundedChannelOptions options = new(100);
 		using SequentialTaskProcessor processor = new(options);
 		await processor.StartAsync(CancellationToken.None);
-		int taskCount = 50;
+		const int taskCount = 50;
 		List<Task<int?>> tasks = new();
 
 		// Act

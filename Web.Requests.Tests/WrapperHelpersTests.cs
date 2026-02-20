@@ -372,7 +372,7 @@ public sealed class WrapperHelpersTests
 		bool funcCalled = false;
 		RestHelperOptions options = new("test", "api", ResilienceOptions: new ResilienceOptions
 		{
-			GetBearerTokenFunc = (apiName, refresh) =>
+			GetBearerTokenFunc = (_, __) =>
 			{
 				funcCalled = true;
 				return ValueTask.FromResult("fetched-token");
@@ -391,7 +391,7 @@ public sealed class WrapperHelpersTests
 		bool refreshCalled = false;
 		RestHelperOptions options = new("test", "api", ResilienceOptions: new ResilienceOptions
 		{
-			GetBearerTokenFunc = (apiName, refresh) =>
+			GetBearerTokenFunc = (_, refresh) =>
 			{
 				if (refresh)
 				{
@@ -416,7 +416,7 @@ public sealed class WrapperHelpersTests
 		bool refreshCalled = false;
 		RestHelperOptions options = new("test", "api", ResilienceOptions: new ResilienceOptions
 		{
-			GetBearerTokenFunc = (apiName, refresh) =>
+			GetBearerTokenFunc = (_, refresh) =>
 			{
 				if (refresh)
 				{
@@ -484,7 +484,7 @@ public sealed class WrapperHelpersTests
 	{
 		ResilienceOptions options = new()
 		{
-			ShouldRetryFunc = (response, opts) => true
+			ShouldRetryFunc = (_, __) => true
 		};
 
 		HttpResponseMessage response = new(HttpStatusCode.InternalServerError);
@@ -700,7 +700,7 @@ public sealed class WrapperHelpersTests
 
 		Dictionary<string, string> headers = new() { ["X-Test"] = "value" };
 		Uri baseAddress = new("http://api.test.com/");
-		string bearerToken = "test-token";
+		const string bearerToken = "test-token";
 
 		RequestOptions<string> result = WrapperHelpers.GetRequestOptions(
 			options, baseAddress, headers, HttpMethod.Get, bearerToken, "test-body");

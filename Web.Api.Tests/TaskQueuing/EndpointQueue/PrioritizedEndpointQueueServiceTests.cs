@@ -347,7 +347,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		intResult.ShouldBe(42);
 		stringResult.ShouldBe("test");
 		boolResult.ShouldBeTrue();
-		dateResult.ShouldNotBe(default(DateTime));
+		dateResult.ShouldNotBe(default);
 	}
 
 	[Fact]
@@ -680,7 +680,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		// Arrange
 		Mock<IServiceProvider> serviceProviderMock = new();
 		TimeSpan cleanupInterval = TimeSpan.FromMinutes(2);
-		double cutoffTimeMinutes = 15.0;
+		const double cutoffTimeMinutes = 15.0;
 
 		// Act
 		PrioritizedEndpointQueueService service = new(serviceProviderMock.Object, cleanupInterval, cutoffTimeMinutes);
@@ -696,7 +696,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		// Arrange
 		Mock<IServiceProvider> serviceProviderMock = new();
 		TimeSpan cleanupInterval = TimeSpan.FromMinutes(1);
-		double negativeCutoffTime = -45.0;
+		const double negativeCutoffTime = -45.0;
 
 		// Act
 		PrioritizedEndpointQueueService service = new(serviceProviderMock.Object, cleanupInterval, negativeCutoffTime);
@@ -719,7 +719,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		// Arrange - Use very short cutoff time (0.01 minutes = 0.6 seconds)
 		Mock<IServiceProvider> serviceProviderMock = new();
 		TimeSpan cleanupInterval = TimeSpan.FromHours(1); // Long interval so timer won't fire automatically
-		double cutoffTimeMinutes = 0.01; // 0.6 seconds
+		const double cutoffTimeMinutes = 0.01; // 0.6 seconds
 
 		PrioritizedEndpointQueueService service = new(serviceProviderMock.Object, cleanupInterval, cutoffTimeMinutes);
 
@@ -756,7 +756,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		// Arrange - Use short cutoff time
 		Mock<IServiceProvider> serviceProviderMock = new();
 		TimeSpan cleanupInterval = TimeSpan.FromHours(1);
-		double cutoffTimeMinutes = 0.02; // 1.2 seconds
+		const double cutoffTimeMinutes = 0.02; // 1.2 seconds
 
 		PrioritizedEndpointQueueService service = new(serviceProviderMock.Object, cleanupInterval, cutoffTimeMinutes);
 
@@ -793,7 +793,7 @@ public sealed class PrioritizedEndpointQueueServiceTests
 		// Arrange
 		Mock<IServiceProvider> serviceProviderMock = new();
 		TimeSpan cleanupInterval = TimeSpan.FromHours(1);
-		double cutoffTimeMinutes = 0.01;
+		const double cutoffTimeMinutes = 0.01;
 
 		PrioritizedEndpointQueueService service = new(serviceProviderMock.Object, cleanupInterval, cutoffTimeMinutes);
 

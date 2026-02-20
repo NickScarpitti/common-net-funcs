@@ -178,7 +178,7 @@ public sealed class MemoryCacheEvictionCallbackTests
 	public async Task HandleEviction_WithNonCacheEntry_HandlesGracefully()
 	{
 		// Arrange - Manually add an entry that's not a CacheEntry type
-		string key = "non-cache-entry";
+		const string key = "non-cache-entry";
 		MemoryCacheEntryOptions entryOptions = new MemoryCacheEntryOptions().SetSize(100).SetAbsoluteExpiration(TimeSpan.FromMilliseconds(100));
 
 		cache.Set(key, "just a string", entryOptions);

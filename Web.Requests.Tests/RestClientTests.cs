@@ -1,7 +1,7 @@
-﻿using CommonNetFuncs.Web.Requests.Rest;
-using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
-using System.Net;
+﻿using System.Net;
 using System.Text;
+using CommonNetFuncs.Web.Requests.Rest;
+using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
 namespace Web.Requests.Tests;
 
@@ -108,7 +108,7 @@ public sealed class RestClientTests
 	{
 		// Arrange
 
-		string jsonArray = "[{\"value\":1},{\"value\":2},{\"value\":3}]";
+		const string jsonArray = "[{\"value\":1},{\"value\":2},{\"value\":3}]";
 		FakeHttpMessageHandler handler = new() { Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(jsonArray, Encoding.UTF8, "application/json") } };
 
 		using HttpClient httpClient = new(handler) { BaseAddress = new Uri("https://api.test.com") };
@@ -170,7 +170,11 @@ public sealed class RestClientTests
 
 	private class TestModel
 	{
+#pragma warning disable S3459 // Unassigned members should be removed
+#pragma warning disable S1144 // Unused private types or members should be removed
 		public int Value { get; set; }
+#pragma warning restore S1144 // Unused private types or members should be removed
+#pragma warning restore S3459 // Unassigned members should be removed
 	}
 }
 

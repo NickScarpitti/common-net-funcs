@@ -49,7 +49,7 @@ public sealed class ConversionTaskTests : IDisposable
 			if (disposing)
 			{
 				// Cleanup temporary files after tests
-				Thread.Sleep(5000);
+				Task.Delay(5000).Wait();
 				if (Directory.Exists(workingDir))
 				{
 					try
@@ -486,7 +486,7 @@ public sealed class ConversionTaskTests : IDisposable
 		Directory.CreateDirectory(customPath);
 
 		// Act
-		bool result = await RawConversionTask.FfmpegConversionTaskFromXabe(fileToConvert,outputFileName,VideoCodec.h264,true,Format.mp4,ConversionPreset.UltraFast,customPath);
+		bool result = await RawConversionTask.FfmpegConversionTaskFromXabe(fileToConvert, outputFileName, VideoCodec.h264, true, Format.mp4, ConversionPreset.UltraFast, customPath);
 
 		// Assert
 		result.ShouldBeTrue();

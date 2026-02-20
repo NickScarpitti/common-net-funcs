@@ -30,7 +30,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 	{
 		// Arrange
 		PrioritizedEndpointQueue queue = CreateQueue();
-		int expectedResult = 42;
+		const int expectedResult = 42;
 
 		// Act
 		int? result = await queue.EnqueueAsync(_ => Task.FromResult(expectedResult), 1, TaskPriority.Normal, Current.CancellationToken);
@@ -82,7 +82,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 	{
 		// Arrange
 		PrioritizedEndpointQueue queue = CreateQueue();
-		string expectedResult = "test-result";
+		const string expectedResult = "test-result";
 
 		// Act
 		string? result = await queue.EnqueueAsync(_ => Task.FromResult(expectedResult), 1, TaskPriority.Normal, Current.CancellationToken);
@@ -600,7 +600,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 	public async Task EnqueueAsync_Should_Respect_ProcessTimeWindow()
 	{
 		// Arrange
-		int windowSize = 2;
+		const int windowSize = 2;
 		PrioritizedEndpointQueue queue = CreateQueue(processTimeWindow: windowSize);
 
 		// Act - Process more tasks than the window size
@@ -657,7 +657,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 	{
 		// Arrange
 		PrioritizedEndpointQueue queue = CreateQueue();
-		int taskCount = 20;
+		const int taskCount = 20;
 		List<Task<int?>> tasks = new();
 
 		// Act
@@ -1380,7 +1380,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 	{
 		// Arrange
 		PrioritizedEndpointQueue queue = CreateQueue();
-		int taskCount = 50;
+		const int taskCount = 50;
 		List<Task<int?>> tasks = new();
 
 		// Act - Enqueue many fast tasks
@@ -1559,7 +1559,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		TaskCompletionSource<bool> taskCanComplete = new();
 
 		// Enqueue a task that will start and then wait, simulating a long-running task
-		Task<int?> longRunningTask = queue.EnqueueAsync<int?>(async ct =>
+		Task<int?> longRunningTask = queue.EnqueueAsync<int?>(async _ =>
 		{
 			taskStarted.SetResult(true);
 			await taskCanComplete.Task; // Wait indefinitely
@@ -1775,7 +1775,7 @@ public sealed class PrioritizedEndpointQueueTests : IDisposable
 		PrioritizedEndpointQueue queue = CreateQueue();
 
 		// Act - Enqueue a task that completes synchronously
-		int? result = await queue.EnqueueAsync<int?>(ct => Task.FromResult<int?>(42), 1, TaskPriority.Normal, Current.CancellationToken);
+		int? result = await queue.EnqueueAsync<int?>(_ => Task.FromResult<int?>(42), 1, TaskPriority.Normal, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(42);

@@ -103,7 +103,7 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		Mock<IPrioritizedEndpointQueueService> serviceMock = new();
 
 		bool taskFunctionInvoked = false;
-		Task<bool> TaskFunction(CancellationToken ct)
+		Task<bool> TaskFunction(CancellationToken _)
 		{
 			taskFunctionInvoked = true;
 			return Task.FromResult(true);
@@ -146,7 +146,5 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		result.ShouldBe(app);
 	}
 
-	public class TestController : ControllerBase
-	{
-	}
+	public class TestController : ControllerBase;
 }

@@ -640,7 +640,7 @@ public class EndpointQueueServiceTests : IDisposable
 	{
 		// Arrange
 		TimeSpan cleanupInterval = TimeSpan.FromMinutes(2);
-		double cutoffTimeMinutes = 15.0;
+		const double cutoffTimeMinutes = 15.0;
 
 		// Act
 		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
@@ -655,7 +655,7 @@ public class EndpointQueueServiceTests : IDisposable
 	{
 		// Arrange
 		TimeSpan cleanupInterval = TimeSpan.FromMinutes(1);
-		double negativeCutoffTime = -45.0;
+		const double negativeCutoffTime = -45.0;
 
 		// Act
 		EndpointQueueService service = new(cleanupInterval, negativeCutoffTime);
@@ -676,7 +676,7 @@ public class EndpointQueueServiceTests : IDisposable
 	{
 		// Arrange - Use very short cutoff time (0.01 minutes = 0.6 seconds)
 		TimeSpan cleanupInterval = TimeSpan.FromHours(1); // Long interval so timer won't fire automatically
-		double cutoffTimeMinutes = 0.01; // 0.6 seconds
+		const double cutoffTimeMinutes = 0.01; // 0.6 seconds
 
 		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
 		_servicesToDispose.Add(service);
@@ -712,7 +712,7 @@ public class EndpointQueueServiceTests : IDisposable
 	{
 		// Arrange - Use short cutoff time
 		TimeSpan cleanupInterval = TimeSpan.FromHours(1);
-		double cutoffTimeMinutes = 0.02; // 1.2 seconds
+		const double cutoffTimeMinutes = 0.02; // 1.2 seconds
 
 		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
 		_servicesToDispose.Add(service);
@@ -750,7 +750,7 @@ public class EndpointQueueServiceTests : IDisposable
 	{
 		// Arrange
 		TimeSpan cleanupInterval = TimeSpan.FromHours(1);
-		double cutoffTimeMinutes = 0.01;
+		const double cutoffTimeMinutes = 0.01;
 
 		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
 		_servicesToDispose.Add(service);
@@ -782,7 +782,7 @@ public class EndpointQueueServiceTests : IDisposable
 	{
 		// Arrange
 		TimeSpan cleanupInterval = TimeSpan.FromHours(1);
-		double cutoffTimeMinutes = 30.0; // Default cutoff, queues won't be removed
+		const double cutoffTimeMinutes = 30.0; // Default cutoff, queues won't be removed
 
 		EndpointQueueService service = new(cleanupInterval, cutoffTimeMinutes);
 		_servicesToDispose.Add(service);
@@ -852,7 +852,7 @@ public class EndpointQueueServiceTests : IDisposable
 	{
 		// Arrange
 		TimeSpan cleanupInterval = TimeSpan.FromMinutes(1);
-		double zeroCutoffTime = 0.0;
+		const double zeroCutoffTime = 0.0;
 
 		// Act
 		EndpointQueueService service = new(cleanupInterval, zeroCutoffTime);

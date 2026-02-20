@@ -150,10 +150,7 @@ public sealed class CacheTrackerTests
 		for (int i = 0; i < 10; i++)
 		{
 			int capturedI = i;
-			tasks.Add(Task.Run(() =>
-			{
-				tracker.CacheTags[$"tag{capturedI}"] = [$"key{capturedI}"];
-			}, Current.CancellationToken));
+			tasks.Add(Task.Run(() => tracker.CacheTags[$"tag{capturedI}"] = [$"key{capturedI}"], Current.CancellationToken));
 		}
 
 		await Task.WhenAll([.. tasks]);

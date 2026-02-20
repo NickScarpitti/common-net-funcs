@@ -1,4 +1,4 @@
-﻿﻿using CommonNetFuncs.Sql.Common;
+﻿using CommonNetFuncs.Sql.Common;
 
 namespace Sql.Common.Tests;
 
@@ -37,7 +37,7 @@ public sealed class QueryParametersTests
 	public void CleanQueryParam_EnumerableString_ShouldCleanValidCollection()
 	{
 		// Arrange
-		IEnumerable<string> input = new[] { "test\n", " value ", "null", "  clean\nthis  " };
+		IEnumerable<string> input = new[] { "test\n", " value ", "null", "  Clean\nThis  " };
 
 		// Act
 		IEnumerable<string> result = input.CleanQueryParam()!;
@@ -47,7 +47,7 @@ public sealed class QueryParametersTests
 		result.Count().ShouldBe(3);
 		result.ShouldContain("test");
 		result.ShouldContain("value");
-		result.ShouldContain("cleanthis");
+		result.ShouldContain("CleanThis");
 	}
 
 	[Theory]
@@ -75,7 +75,7 @@ public sealed class QueryParametersTests
 
 	[Theory]
 	[InlineData("test'name", false, false, false, null, null, "test''name")]
-	[InlineData("test%name*", false, false, false, null, null, "testname")]
+	[InlineData("Test%Name*", false, false, false, null, null, "TestName")]
 	[InlineData("test;name", false, false, false, null, null, "")]
 	[InlineData("123abc", true, false, false, null, null, "123abc")]
 	[InlineData("abc", false, true, false, null, null, "abc")]
@@ -122,7 +122,7 @@ public sealed class QueryParametersTests
 	public void CleanQueryParam_IList_ShouldCleanValidList()
 	{
 		// Arrange
-		IList<string> input = new List<string> { "test\n", " value ", "null", "  clean\nthis  " };
+		IList<string> input = new List<string> { "test\n", " value ", "null", "  Clean\nThis  " };
 
 		// Act
 		List<string>? result = input.CleanQueryParam();
@@ -132,7 +132,7 @@ public sealed class QueryParametersTests
 		result.Count.ShouldBe(3);
 		result.ShouldContain("test");
 		result.ShouldContain("value");
-		result.ShouldContain("cleanthis");
+		result.ShouldContain("CleanThis");
 	}
 
 	[Fact]
@@ -180,7 +180,7 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_OnlyAlphanumeric_WithNonAlphanumeric_ShouldReturnDefault()
 	{
 		// Arrange
-		string input = "test@name";
+		const string input = "test@name";
 
 		// Act
 		string result = input.SanitizeSqlParameter(onlyAlphanumeric: true);
@@ -193,7 +193,7 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_OnlyAlphaChars_WithNumbers_ShouldReturnDefault()
 	{
 		// Arrange
-		string input = "test123";
+		const string input = "test123";
 
 		// Act
 		string result = input.SanitizeSqlParameter(onlyAlphaChars: true);
@@ -206,7 +206,7 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_OnlyNumberChars_WithLetters_ShouldReturnDefault()
 	{
 		// Arrange
-		string input = "123abc";
+		const string input = "123abc";
 
 		// Act
 		string result = input.SanitizeSqlParameter(onlyNumberChars: true);
@@ -219,7 +219,7 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_MaxLength_ExactMatch_ShouldPass()
 	{
 		// Arrange
-		string input = "test";
+		const string input = "test";
 
 		// Act
 		string result = input.SanitizeSqlParameter(maxLength: 4);
@@ -232,7 +232,7 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_MinLength_ExactMatch_ShouldPass()
 	{
 		// Arrange
-		string input = "test";
+		const string input = "test";
 
 		// Act
 		string result = input.SanitizeSqlParameter(minLength: 4);
@@ -245,8 +245,8 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_WithCustomDefaultValue_ShouldReturnDefault()
 	{
 		// Arrange
-		string input = "test;malicious";
-		string customDefault = "SAFE_DEFAULT";
+		const string input = "test;malicious";
+		const string customDefault = "SAFE_DEFAULT";
 
 		// Act
 		string result = input.SanitizeSqlParameter(defaultValue: customDefault);
@@ -259,8 +259,8 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_NullParameter_WithDefaultValue_ShouldReturnDefault()
 	{
 		// Arrange
-		string? input = null;
-		string customDefault = "NULL_DEFAULT";
+		const string? input = null;
+		const string customDefault = "NULL_DEFAULT";
 
 		// Act
 		string result = input.SanitizeSqlParameter(defaultValue: customDefault);
@@ -273,7 +273,7 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_OnlyAlphanumeric_OverridesOtherFlags()
 	{
 		// Arrange - alphanumeric string
-		string input = "test123";
+		const string input = "test123";
 
 		// Act - onlyAlphanumeric should override onlyAlphaChars
 		string result = input.SanitizeSqlParameter(onlyAlphanumeric: true, onlyAlphaChars: true);
@@ -286,7 +286,7 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_OnlyAlphaChars_OverridesOnlyNumberChars()
 	{
 		// Arrange - alpha only string
-		string input = "test";
+		const string input = "test";
 
 		// Act - onlyAlphaChars should override onlyNumberChars
 		string result = input.SanitizeSqlParameter(onlyAlphaChars: true, onlyNumberChars: true);
@@ -311,13 +311,13 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_EscapesAndRemovesWildcards()
 	{
 		// Arrange
-		string input = "test'with%wildcards*here";
+		const string input = "test'With%WildCards*Here";
 
 		// Act
 		string result = input.SanitizeSqlParameter();
 
 		// Assert
-		result.ShouldBe("test''withwildcardshere");
+		result.ShouldBe("test''WithWildCardsHere");
 	}
 
 	[Fact]
@@ -332,14 +332,14 @@ public sealed class QueryParametersTests
 		// Assert
 		result.ShouldNotBeNull();
 		result.Count().ShouldBe(3); // All become empty strings after cleaning
-		result.All(x => x == string.Empty).ShouldBeTrue();
+		result.All(x => x?.Length == 0).ShouldBeTrue();
 	}
 
 	[Fact]
 	public void SanitizeSqlParameter_NullParameter_NoDefaultValue_ShouldReturnEmptyString()
 	{
 		// Arrange
-		string? input = null;
+		const string? input = null;
 
 		// Act
 		string? result = input.SanitizeSqlParameter();
@@ -352,7 +352,7 @@ public sealed class QueryParametersTests
 	public void SanitizeSqlParameter_WhitespaceParameter_ShouldPassThrough()
 	{
 		// Arrange
-		string input = "   ";
+		const string input = "   ";
 
 		// Act
 		string result = input.SanitizeSqlParameter();

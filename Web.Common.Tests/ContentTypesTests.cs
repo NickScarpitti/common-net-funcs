@@ -10,7 +10,7 @@ public class ContentTypesTests
 	public void GetContentType_NullFileName_ThrowsArgumentException()
 	{
 		// Arrange
-		string? fileName = null;
+		const string? fileName = null;
 
 		// Act & Assert
 		ArgumentException ex = Should.Throw<ArgumentException>(() => fileName!.GetContentType());
@@ -100,7 +100,7 @@ public class ContentTypesTests
 	public void GetContentTypeByExtension_NullExtension_ThrowsArgumentException()
 	{
 		// Arrange
-		string? extension = null;
+		const string? extension = null;
 
 		// Act & Assert
 		ArgumentException ex = Should.Throw<ArgumentException>(() => ContentTypes.GetContentTypeByExtension(extension!));

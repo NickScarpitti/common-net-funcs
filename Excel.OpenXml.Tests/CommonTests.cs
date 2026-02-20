@@ -2437,7 +2437,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert - Should not create any columns when SheetData is missing
 		Columns? columns = worksheet.Elements<Columns>().FirstOrDefault();
-		(columns == null || !columns.Elements<Column>().Any()).ShouldBeTrue();
+		(columns?.Elements<Column>().Any() != true).ShouldBeTrue();
 	}
 
 	[RetryFact(3)]
@@ -2488,7 +2488,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert - Should not create columns for cells without references
 		Columns? columns = worksheet.Elements<Columns>().FirstOrDefault();
-		(columns == null || !columns.Elements<Column>().Any()).ShouldBeTrue();
+		(columns?.Elements<Column>().Any() != true).ShouldBeTrue();
 	}
 
 	[RetryFact(3)]

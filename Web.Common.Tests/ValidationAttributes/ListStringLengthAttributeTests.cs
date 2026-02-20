@@ -206,7 +206,7 @@ public sealed class ListStringLengthAttributeTests : ValidationTestBase
 		{
 			MinimumLength = 3
 		};
-		List<string> list = ["toolong123"]; // Exceeds max length
+		List<string> list = ["TooLong123"]; // Exceeds max length
 		ValidationContext context = new(new object()) { MemberName = null };
 
 		// Act

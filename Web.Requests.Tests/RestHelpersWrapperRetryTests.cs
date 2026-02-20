@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Runtime.CompilerServices;
 using CommonNetFuncs.Web.Requests.Rest;
 using CommonNetFuncs.Web.Requests.Rest.Options;
 using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
@@ -674,7 +673,10 @@ public sealed class RestHelpersWrapperRetryTests : IDisposable
 	{
 		// Arrange
 		const string dynamicToken = "func-generated-token";
-		static ValueTask<string> getBearerTokenFunc(string _, bool __) => new(dynamicToken);
+		static ValueTask<string> getBearerTokenFunc(string _, bool __)
+		{
+			return new(dynamicToken);
+		}
 
 		TestModel postObject = new() { Id = 1, Name = "Test" };
 		RestObject<TestModel> restObject = new()

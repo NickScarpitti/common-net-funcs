@@ -71,7 +71,7 @@ public class SecurityHeadersStoreTests
 	public void SecurityHeaders_ContentSecurityPolicy_HasCorrectValue()
 	{
 		// Arrange
-		string expectedValue = "block-all-mixed-content; upgrade-insecure-requests; script-src 'self' http://cdnjs.cloudflare.com/ http://cdn.jsdelivr.net/; object-src 'self';";
+		const string expectedValue = "block-all-mixed-content; upgrade-insecure-requests; script-src 'self' http://cdnjs.cloudflare.com/ http://cdn.jsdelivr.net/; object-src 'self';";
 
 		// Assert
 		SecurityHeadersStore.SecurityHeaders["Content-Security-Policy"].ShouldBe(expectedValue);
@@ -153,10 +153,7 @@ public class SecurityHeadersStoreTests
 		List<string> headersList = new();
 
 		// Act
-		foreach (string header in SecurityHeadersStore.HeadersToRemove)
-		{
-			headersList.Add(header);
-		}
+		headersList.AddRange(SecurityHeadersStore.HeadersToRemove);
 
 		// Assert
 		headersList.Count.ShouldBe(2);

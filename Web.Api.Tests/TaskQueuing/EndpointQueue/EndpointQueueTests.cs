@@ -1,6 +1,5 @@
 ﻿using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing;
-using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 
 namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
@@ -553,10 +552,7 @@ public class EndpointQueueTests : IDisposable
 		List<Task> tasks = new();
 		for (int i = 0; i < 50; i++)
 		{
-			tasks.Add(Task.Run(async () =>
-			{
-				await queue.EnqueueAsync(_ => Task.FromResult(1), TestContext.Current.CancellationToken);
-			}, TestContext.Current.CancellationToken));
+			tasks.Add(Task.Run(async () => await queue.EnqueueAsync(_ => Task.FromResult(1), TestContext.Current.CancellationToken), TestContext.Current.CancellationToken));
 		}
 
 		await Task.WhenAll(tasks);

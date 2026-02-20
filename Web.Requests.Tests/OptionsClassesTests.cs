@@ -108,7 +108,10 @@ public sealed class OptionsClassesTests
 	{
 		// Arrange
 
-		static bool customRetryFunc(HttpStatusCode status) => status == HttpStatusCode.BadRequest;
+		static bool customRetryFunc(HttpStatusCode status)
+		{
+			return status == HttpStatusCode.BadRequest;
+		}
 
 		// Act
 
@@ -189,7 +192,10 @@ public sealed class OptionsClassesTests
 		// Arrange
 
 		ResilienceOptions options = new();
-		static bool newRetryFunc(HttpStatusCode status) => status == HttpStatusCode.ServiceUnavailable;
+		static bool newRetryFunc(HttpStatusCode status)
+		{
+			return status == HttpStatusCode.ServiceUnavailable;
+		}
 
 		// Act
 
@@ -221,7 +227,10 @@ public sealed class OptionsClassesTests
 	{
 		// Arrange
 
-		static bool customRetryFunc(HttpResponseMessage? response, ResilienceOptions opts) => true;
+		static bool customRetryFunc(HttpResponseMessage? _, ResilienceOptions __)
+		{
+			return true;
+		}
 
 		// Act
 
@@ -238,7 +247,10 @@ public sealed class OptionsClassesTests
 	{
 		// Arrange
 
-		static ValueTask<string> tokenFunc(string apiName, bool forceRefresh) => new($"token-{apiName}-{forceRefresh}");
+		static ValueTask<string> tokenFunc(string apiName, bool forceRefresh)
+		{
+			return new($"token-{apiName}-{forceRefresh}");
+		}
 
 		// Act
 
@@ -385,7 +397,7 @@ public sealed class OptionsClassesTests
 	{
 		// Arrange
 
-		ResilienceOptions resilienceOptions = new(GetBearerTokenFunc: (apiName, forceRefresh) => new ValueTask<string>("dynamic-token"));
+		ResilienceOptions resilienceOptions = new(GetBearerTokenFunc: (_, __) => new ValueTask<string>("dynamic-token"));
 
 		// Act
 

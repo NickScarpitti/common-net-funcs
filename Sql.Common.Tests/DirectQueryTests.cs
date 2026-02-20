@@ -312,10 +312,7 @@ public sealed class DirectQueryTests : IDisposable
 		cmd.CommandText = "SELECT Id, Name FROM TestTable ORDER BY Id LIMIT 2";
 
 		List<TestModel> results = new();
-		foreach (TestModel item in DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, cancellationToken: Current.CancellationToken))
-		{
-			results.Add(item);
-		}
+		results.AddRange(DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(2);
 		results[0].Id.ShouldBe(1);
@@ -427,10 +424,7 @@ public sealed class DirectQueryTests : IDisposable
 		cmd.CommandText = "SELECT Id, Name FROM TestTable ORDER BY Id LIMIT 2";
 
 		List<TestModel> results = new();
-		foreach (TestModel item in DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, useCache: false, cancellationToken: Current.CancellationToken))
-		{
-			results.Add(item);
-		}
+		results.AddRange(DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, useCache: false, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(2);
 		results[0].Id.ShouldBe(1);
@@ -548,10 +542,7 @@ public sealed class DirectQueryTests : IDisposable
 		cmd.CommandText = "SELECT Id, Name, LongValue, DoubleValue FROM ComplexTestTable ORDER BY Id";
 
 		List<ComplexTestModel> results = new();
-		foreach (ComplexTestModel item in DirectQuery.GetDataStreamSynchronous<ComplexTestModel>(connection, cmd, cancellationToken: Current.CancellationToken))
-		{
-			results.Add(item);
-		}
+		results.AddRange(DirectQuery.GetDataStreamSynchronous<ComplexTestModel>(connection, cmd, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(2);
 		results[0].Id.ShouldBe(1);
@@ -585,7 +576,7 @@ public sealed class DirectQueryTests : IDisposable
 	[Fact]
 	public async Task GetDataStreamAsync_WithNullValues_ShouldMapCorrectly()
 	{
-		using SqliteCommand createCommand = connection.CreateCommand();
+		await using SqliteCommand createCommand = connection.CreateCommand();
 		createCommand.CommandText =
 			@"
 				CREATE TABLE IF NOT EXISTS NullableTestTable (
@@ -630,10 +621,7 @@ public sealed class DirectQueryTests : IDisposable
 		cmd.CommandText = "SELECT Id, Name FROM NullableTestTable2 ORDER BY Id";
 
 		List<NullableTestModel> results = new();
-		foreach (NullableTestModel item in DirectQuery.GetDataStreamSynchronous<NullableTestModel>(connection, cmd, cancellationToken: Current.CancellationToken))
-		{
-			results.Add(item);
-		}
+		results.AddRange(DirectQuery.GetDataStreamSynchronous<NullableTestModel>(connection, cmd, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(2);
 		results[0].Name.ShouldBeNull();
@@ -643,7 +631,7 @@ public sealed class DirectQueryTests : IDisposable
 	[Fact]
 	public async Task GetDataDirectAsync_WithNullValues_ShouldMapCorrectly()
 	{
-		using SqliteCommand createCommand = connection.CreateCommand();
+		await using SqliteCommand createCommand = connection.CreateCommand();
 		createCommand.CommandText =
 			@"
 				CREATE TABLE IF NOT EXISTS NullableTestTable3 (
@@ -783,7 +771,7 @@ public sealed class DirectQueryTests : IDisposable
 	[Fact]
 	public async Task GetDataStreamAsync_WithVariousTypes_ShouldMapCorrectly()
 	{
-		using SqliteCommand createCommand = connection.CreateCommand();
+		await using SqliteCommand createCommand = connection.CreateCommand();
 		createCommand.CommandText =
 			@"
 				CREATE TABLE IF NOT EXISTS VariousTypesTable (
@@ -1109,10 +1097,10 @@ public sealed class DirectQueryTests : IDisposable
 	public async Task GetDataTable_WithTableDroppedDuringRetries_ShouldHandleExceptions()
 	{
 		// Create a temporary connection and table
-		using SqliteConnection tempConn = new("DataSource=:memory:");
+		await using SqliteConnection tempConn = new("DataSource=:memory:");
 		await tempConn.OpenAsync(Current.CancellationToken);
 
-		using SqliteCommand setupCmd = tempConn.CreateCommand();
+		await using SqliteCommand setupCmd = tempConn.CreateCommand();
 		setupCmd.CommandText = "CREATE TABLE TempTable (Id INTEGER); INSERT INTO TempTable VALUES (1);";
 		await setupCmd.ExecuteNonQueryAsync(Current.CancellationToken);
 
@@ -1145,7 +1133,7 @@ public sealed class DirectQueryTests : IDisposable
 	[Fact]
 	public async Task RunUpdateQuery_WithSyntaxError_ShouldRetryAndReturnFailure()
 	{
-		using SqliteConnection tempConn = new("DataSource=:memory:");
+		await using SqliteConnection tempConn = new("DataSource=:memory:");
 		await tempConn.OpenAsync(Current.CancellationToken);
 
 		await using SqliteCommand cmd = tempConn.CreateCommand();
@@ -1175,7 +1163,7 @@ public sealed class DirectQueryTests : IDisposable
 	[Fact]
 	public async Task GetDataDirectAsync_WithConnectionClosedBetweenRetries_ShouldThrow()
 	{
-		using SqliteConnection tempConn = new("DataSource=:memory:");
+		await using SqliteConnection tempConn = new("DataSource=:memory:");
 		await using SqliteCommand cmd = new("SELECT * FROM NonExistentTable", tempConn);
 
 		await Should.ThrowAsync<DataException>(async () => await DirectQuery.GetDataDirectAsync<TestModel>(tempConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken));
@@ -1185,7 +1173,7 @@ public sealed class DirectQueryTests : IDisposable
 	public async Task GetDataTable_WithNonDbException_ShouldCatchAndRetry()
 	{
 		// Create a scenario where a general exception (not DbException) occurs
-		using SqliteConnection tempConn = new("DataSource=:memory:");
+		await using SqliteConnection tempConn = new("DataSource=:memory:");
 		await tempConn.OpenAsync(Current.CancellationToken);
 
 		await using SqliteCommand cmd = tempConn.CreateCommand();
@@ -1218,7 +1206,7 @@ public sealed class DirectQueryTests : IDisposable
 	[Fact]
 	public async Task RunUpdateQuery_WithNonDbException_ShouldCatchAndRetry()
 	{
-		using SqliteConnection tempConn = new("DataSource=:memory:");
+		await using SqliteConnection tempConn = new("DataSource=:memory:");
 		await tempConn.OpenAsync(Current.CancellationToken);
 
 		await using SqliteCommand cmd = tempConn.CreateCommand();
@@ -1382,10 +1370,7 @@ public sealed class DirectQueryTests : IDisposable
 
 		// First call - should create and cache the mapper
 		List<TestModel> results = new();
-		foreach (TestModel item in DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, useCache: true, cancellationToken: Current.CancellationToken))
-		{
-			results.Add(item);
-		}
+		results.AddRange(DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, useCache: true, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(1);
 
@@ -1405,10 +1390,7 @@ public sealed class DirectQueryTests : IDisposable
 
 		// First call - should create and cache the mapper
 		List<TestModel> results = new();
-		foreach (TestModel item in DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, useCache: true, cancellationToken: Current.CancellationToken))
-		{
-			results.Add(item);
-		}
+		results.AddRange(DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, useCache: true, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(1);
 

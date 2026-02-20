@@ -240,7 +240,7 @@ public sealed class ServiceCollectionExtensionsTests
 		IServiceCollection services = new ServiceCollection();
 
 		// Act
-		IHttpClientBuilder builder = services.AddRestClient("TestApi", client => { });
+		IHttpClientBuilder builder = services.AddRestClient("TestApi", _ => { });
 
 		// Assert
 		builder.ShouldNotBeNull();
@@ -281,7 +281,7 @@ public sealed class ServiceCollectionExtensionsTests
 		IServiceCollection services = new ServiceCollection();
 
 		// Act
-		IHttpClientBuilder builder = services.AddRestClient("TestApi", (provider, client) => client.BaseAddress = new Uri("https://api.example.com"));
+		IHttpClientBuilder builder = services.AddRestClient("TestApi", (_, client) => client.BaseAddress = new Uri("https://api.example.com"));
 
 		// Assert
 		builder.ShouldNotBeNull();
@@ -297,7 +297,7 @@ public sealed class ServiceCollectionExtensionsTests
 		Uri expectedBaseAddress = new("https://api.example.com");
 
 		// Act
-		services.AddRestClient("TestApi", (provider, client) =>
+		services.AddRestClient("TestApi", (_, client) =>
 		{
 			client.BaseAddress = expectedBaseAddress;
 			client.Timeout = TimeSpan.FromSeconds(90);
@@ -346,7 +346,7 @@ public sealed class ServiceCollectionExtensionsTests
 		IServiceCollection services = new ServiceCollection();
 
 		// Act
-		IHttpClientBuilder builder = services.AddRestClient("TestApi", (provider, client) => { });
+		IHttpClientBuilder builder = services.AddRestClient("TestApi", (_, __) => { });
 
 		// Assert
 		builder.ShouldNotBeNull();

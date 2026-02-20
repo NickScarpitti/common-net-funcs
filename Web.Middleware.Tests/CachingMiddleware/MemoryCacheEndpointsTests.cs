@@ -182,7 +182,7 @@ public sealed class MemoryCacheEndpointsTests
 		CacheMetrics metrics = host.Services.GetRequiredService<CacheMetrics>();
 
 		// Add large size value to test formatting
-		long largeSize = 1024 * 1024 * 5; // 5 MB
+		const long largeSize = 1024 * 1024 * 5; // 5 MB
 		metrics.AddToSize(largeSize);
 
 		// Act
@@ -291,7 +291,7 @@ public sealed class MemoryCacheEndpointsTests
 		CacheTracker tracker = host.Services.GetRequiredService<CacheTracker>();
 
 		// Add a cache entry
-		string cacheKey = "test-key";
+		const string cacheKey = "test-key";
 		CacheEntry entry = new()
 		{
 			Data = Encoding.UTF8.GetBytes("test data"),
@@ -398,9 +398,9 @@ public sealed class MemoryCacheEndpointsTests
 		CacheTracker tracker = host.Services.GetRequiredService<CacheTracker>();
 
 		// Add cache entries with the same tag
-		string tag = "test-tag";
-		string key1 = "key1";
-		string key2 = "key2";
+		const string tag = "test-tag";
+		const string key1 = "key1";
+		const string key2 = "key2";
 
 		CacheEntry entry1 = new()
 		{
@@ -534,9 +534,10 @@ public sealed class MemoryCacheEndpointsTests
 						services.AddRouting();
 						services.MemoryValueCaching();
 						services.AddAuthentication("TestScheme")
-							.AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>("TestScheme", options => { });
-						services.AddAuthorization(options => options.AddPolicy("TestPolicy", policy =>
-								policy.RequireAuthenticatedUser()));
+							.AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>("TestScheme", _ => { });
+						services.AddAuthorizationBuilder()
+							.AddPolicy("TestPolicy", policy =>
+								policy.RequireAuthenticatedUser());
 					})
 					.Configure(app =>
 					{
@@ -581,7 +582,7 @@ public sealed class MemoryCacheEndpointsTests
 		CacheTracker tracker = host.Services.GetRequiredService<CacheTracker>();
 
 		// Add a cache entry with multiple tags
-		string cacheKey = "test-key";
+		const string cacheKey = "test-key";
 		CacheEntry entry = new()
 		{
 			Data = Encoding.UTF8.GetBytes("test data"),
@@ -640,10 +641,10 @@ public sealed class MemoryCacheEndpointsTests
 		CacheTracker tracker = host.Services.GetRequiredService<CacheTracker>();
 
 		// Add cache entries with overlapping tags
-		string tag = "shared-tag";
-		string key1 = "key1";
-		string key2 = "key2";
-		string key3 = "key3";
+		const string tag = "shared-tag";
+		const string key1 = "key1";
+		const string key2 = "key2";
+		const string key3 = "key3";
 
 		CacheEntry entry1 = new()
 		{

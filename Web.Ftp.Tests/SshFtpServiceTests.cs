@@ -2,7 +2,6 @@
 using CommonNetFuncs.Web.Ftp;
 using Renci.SshNet;
 using Renci.SshNet.Common;
-using Renci.SshNet.Sftp;
 
 namespace Web.Ftp.Tests;
 
@@ -244,17 +243,11 @@ public class SshFtpServiceTests
 		});
 	}
 
-	private static ISftpFile CreateSftpFile(string name, bool isRegularFile)
-	{
-		ISftpFile file = A.Fake<ISftpFile>();
-		A.CallTo(() => file.Name).Returns(name);
-		A.CallTo(() => file.IsRegularFile).Returns(isRegularFile);
-		return file;
-	}
-
 	private class TestCsvModel
 	{
 		public string Name { get; set; } = string.Empty;
+#pragma warning disable S1144 // Unused private types or members should be removed
 		public int Age { get; set; }
+#pragma warning restore S1144 // Unused private types or members should be removed
 	}
 }

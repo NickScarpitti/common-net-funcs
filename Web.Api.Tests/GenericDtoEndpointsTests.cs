@@ -1249,7 +1249,7 @@ public sealed class GenericDtoEndpointsTests
 		// Arrange
 
 		System.Linq.Expressions.Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		static void setPropertyCalls(UpdateSettersBuilder<TestEntity> builder)
+		static void setPropertyCalls(UpdateSettersBuilder<TestEntity> _)
 		{
 			// Method intentionally left empty.
 		}
@@ -1273,7 +1273,7 @@ public sealed class GenericDtoEndpointsTests
 		// Arrange
 
 		System.Linq.Expressions.Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		static void setPropertyCalls(UpdateSettersBuilder<TestEntity> builder)
+		static void setPropertyCalls(UpdateSettersBuilder<TestEntity> _)
 		{
 			// Method intentionally left empty.
 		}
@@ -1295,7 +1295,7 @@ public sealed class GenericDtoEndpointsTests
 		// Arrange
 
 		System.Linq.Expressions.Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		static void setPropertyCalls(UpdateSettersBuilder<TestEntity> builder)
+		static void setPropertyCalls(UpdateSettersBuilder<TestEntity> _)
 		{
 			// Method intentionally left empty.
 		}
@@ -1320,7 +1320,7 @@ public sealed class GenericDtoEndpointsTests
 		// Arrange
 
 		System.Linq.Expressions.Expression<Func<TestEntity, bool>> whereClause = x => x.Id > 5;
-		Action<UpdateSettersBuilder<TestEntity>> setPropertyCalls = builder => { };
+		Action<UpdateSettersBuilder<TestEntity>> setPropertyCalls = _ => { };
 		GlobalFilterOptions filterOptions = new();
 		CancellationToken cancellationToken = new();
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();

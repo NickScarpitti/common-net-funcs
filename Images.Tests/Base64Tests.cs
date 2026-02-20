@@ -431,7 +431,7 @@ public sealed class Base64Tests : IDisposable
 	{
 		// Arrange
 		byte[] imageBytes = await File.ReadAllBytesAsync(testImagePath);
-		using NonReadableMemoryStream ms = new(imageBytes);
+		await using NonReadableMemoryStream ms = new(imageBytes);
 
 		// Act & Assert - method catches the exception and returns null
 		string? result = await ms.ConvertImageFileToBase64Async();

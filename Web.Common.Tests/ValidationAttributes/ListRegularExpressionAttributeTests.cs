@@ -178,7 +178,7 @@ public sealed class ListRegularExpressionAttributeTests : ValidationTestBase
 	public void IsValid_WithExactMatch_ShouldBreakEarlyOnMatch()
 	{
 		// Arrange - test to ensure the break statement in the match loop is executed
-		ListRegularExpressionAttribute attribute = new(@"^test$");
+		ListRegularExpressionAttribute attribute = new("^test$");
 		List<string> list = ["test", "test2"]; // First matches exactly, second doesn't
 
 		// Act

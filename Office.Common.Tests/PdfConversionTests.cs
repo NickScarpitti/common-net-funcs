@@ -187,7 +187,7 @@ public sealed class PdfConversionTests //: IDisposable
 		cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
 		// Act & Assert
-		await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 3));
+		await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, maxRetries: 3, cancellationToken: cts.Token));
 	}
 
 	[Fact]
@@ -307,7 +307,7 @@ public sealed class PdfConversionTests //: IDisposable
 		try
 		{
 			// Act
-			await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, cancellationToken: null, maxRetries: 1);
+			await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 1, cancellationToken: null);
 
 			// Assert
 			File.Exists(outputFile).ShouldBeTrue();
@@ -704,7 +704,7 @@ public sealed class PdfConversionTests //: IDisposable
 			await cts.CancelAsync();
 
 			// Assert - Should wrap OperationCanceledException in LibreOfficeFailedException
-			LibreOfficeFailedException exception = await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 1));
+			LibreOfficeFailedException exception = await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, maxRetries: 1, cancellationToken: cts.Token));
 
 			exception.Message.ShouldContain("canceled");
 		}
@@ -917,15 +917,16 @@ public sealed class PdfConversionTests //: IDisposable
 	}
 
 	[Theory]
+	[InlineData(null)]
 	[InlineData("")]
 	[InlineData("   ")]
-	public void ConvertToPdf_WithWhitespaceLibreOfficePath_ShouldThrowException(string whitespaceValue)
+	public void ConvertToPdf_WithInvalidLibreOfficePath_ShouldThrowException(string? invalidPath)
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
 
-		// Act & Assert - Should throw when LibreOffice path is whitespace
-		Should.Throw<Exception>(() => ConvertToPdf(whitespaceValue, sourceFile));
+		// Act & Assert - Should throw when LibreOffice path is null or whitespace
+		Should.Throw<Exception>(() => ConvertToPdf(invalidPath!, sourceFile));
 	}
 
 	[Fact]
@@ -940,7 +941,7 @@ public sealed class PdfConversionTests //: IDisposable
 		try
 		{
 			// Act & Assert - Should throw LibreOfficeFailedException when canceled
-			await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 0));
+			await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, maxRetries: 0, cancellationToken: cts.Token));
 		}
 		finally
 		{

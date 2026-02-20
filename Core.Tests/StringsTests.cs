@@ -1402,12 +1402,12 @@ public sealed class StringsTests
 		decimal? dec = 2.71m;
 		bool? b = true;
 		object? o = "test";
-		int? ni = null;
-		long? nl = null;
-		double? ndbl = null;
-		decimal? ndec = null;
-		bool? nb = null;
-		object? no = null;
+		int? nInt = null;
+		long? nLong = null;
+		double? nDouble = null;
+		decimal? nDecimal = null;
+		bool? nBool = null;
+		object? nObject = null;
 
 		// Act & Assert
 		dt.ToNString().ShouldBe(dt.ToString());
@@ -1420,12 +1420,12 @@ public sealed class StringsTests
 		b.ToNString().ShouldBe("True");
 		o.ToNString().ShouldBe("test");
 
-		ni.ToNString().ShouldBe(null);
-		nl.ToNString().ShouldBe(null);
-		ndbl.ToNString().ShouldBe(null);
-		ndec.ToNString().ShouldBe(null);
-		nb.ToNString().ShouldBe(null);
-		no.ToNString().ShouldBe(null);
+		nInt.ToNString().ShouldBe(null);
+		nLong.ToNString().ShouldBe(null);
+		nDouble.ToNString().ShouldBe(null);
+		nDecimal.ToNString().ShouldBe(null);
+		nBool.ToNString().ShouldBe(null);
+		nObject.ToNString().ShouldBe(null);
 		((object?)null).ToNString().ShouldBeNull();
 	}
 
@@ -2381,7 +2381,7 @@ public sealed class StringsTests
 
 	[Theory]
 	[InlineData("123", 123)]
-	[InlineData("notanint", null)]
+	[InlineData("NotAnInt", null)]
 	[InlineData("", null)]
 	public void ToNInt_Span_Works(string input, int? expected)
 	{
@@ -2397,7 +2397,7 @@ public sealed class StringsTests
 
 	[Theory]
 	[InlineData("3.14", 3.14)]
-	[InlineData("notanumber", null)]
+	[InlineData("NotANumber", null)]
 	[InlineData("", null)]
 	public void ToNDouble_Span_Works(string input, double? expected)
 	{
@@ -2413,7 +2413,7 @@ public sealed class StringsTests
 
 	[Theory]
 	[InlineData("2.71", 2.71)]
-	[InlineData("notanumber", null)]
+	[InlineData("NotANumber", null)]
 	[InlineData("", null)]
 	public void ToNDecimal_Span_Works(string input, double? expected)
 	{

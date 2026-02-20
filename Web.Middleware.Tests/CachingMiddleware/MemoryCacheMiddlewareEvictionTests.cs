@@ -104,7 +104,7 @@ public sealed class MemoryCacheMiddlewareEvictionTests
 			Tags = new HashSet<string> { "tag1" }
 		};
 
-		tracker.CacheTags.TryAdd("tag1", new HashSet<string> { "testkey" });
+		tracker.CacheTags.TryAdd("tag1", new HashSet<string> { "TestKey" });
 
 		object? outValue = entry;
 		A.CallTo(() => cache.TryGetValue(A<object>._, out outValue)).Returns(true);

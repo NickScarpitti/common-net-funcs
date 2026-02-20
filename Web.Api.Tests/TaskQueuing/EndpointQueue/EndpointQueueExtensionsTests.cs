@@ -239,7 +239,7 @@ public class EndpointQueueExtensionsTests
 
 		// Assert
 		result.ShouldBe(123);
-		capturedToken.ShouldBe(default(CancellationToken));
+		capturedToken.ShouldBe(default);
 	}
 
 	[Fact]
@@ -328,7 +328,5 @@ public class EndpointQueueExtensionsTests
 	}
 
 	// Test controller for endpoint key generation tests
-	public class TestController : ControllerBase
-	{
-	}
+	public class TestController : ControllerBase;
 }

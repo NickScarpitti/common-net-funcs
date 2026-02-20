@@ -121,9 +121,9 @@ public class SequentialTaskExtensionsTests
 	public void Results_Problem_Should_Create_ProblemResult_With_StatusCode()
 	{
 		// Arrange
-		string detail = "Test error message";
-		int statusCode = StatusCodes.Status500InternalServerError;
-		string title = "Error retrieving endpoint queue metrics";
+		const string detail = "Test error message";
+		const int statusCode = StatusCodes.Status500InternalServerError;
+		const string title = "Error retrieving endpoint queue metrics";
 
 		// Act
 		IResult result = Results.Problem(detail: detail, statusCode: statusCode, title: title);
@@ -137,8 +137,8 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		string detail = string.Empty;
-		int statusCode = StatusCodes.Status500InternalServerError;
-		string title = "Error retrieving endpoint queue metrics";
+		const int statusCode = StatusCodes.Status500InternalServerError;
+		const string title = "Error retrieving endpoint queue metrics";
 
 		// Act
 		IResult result = Results.Problem(detail: detail, statusCode: statusCode, title: title);
@@ -152,8 +152,8 @@ public class SequentialTaskExtensionsTests
 	{
 		// Arrange
 		Exception ex = new InvalidOperationException("Database connection failed");
-		int statusCode = StatusCodes.Status500InternalServerError;
-		string title = "Error retrieving endpoint queue metrics";
+		const int statusCode = StatusCodes.Status500InternalServerError;
+		const string title = "Error retrieving endpoint queue metrics";
 
 		// Act
 		IResult result = Results.Problem(detail: ex.Message, statusCode: statusCode, title: title);

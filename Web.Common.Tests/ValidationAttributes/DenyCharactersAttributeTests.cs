@@ -161,7 +161,7 @@ public sealed class DenyCharactersAttributeTests : ValidationTestBase
 
 	[Theory]
 	[InlineData("test space", " ", false)]            // Contains space - invalid
-	[InlineData("testspace", " ", true)]              // No space - valid
+	[InlineData("TestSpace", " ", true)]              // No space - valid
 	[InlineData("test\ttab", "\t", false)]            // Contains tab - invalid
 	[InlineData("test\nnewline", "\n", false)]        // Contains newline - invalid
 	public void IsValid_WithWhitespaceBlacklist_ShouldValidateCorrectly(string value, string blacklist, bool shouldBeValid)

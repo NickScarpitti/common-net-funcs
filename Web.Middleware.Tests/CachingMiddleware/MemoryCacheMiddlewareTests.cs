@@ -225,7 +225,7 @@ public sealed class MemoryCacheMiddlewareTests
 		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
-		string originalData = "Test data";
+		const string originalData = "Test data";
 		byte[] compressedData = await Encoding.UTF8.GetBytes(originalData).Compress(ECompressionType.Gzip);
 		object? outValue = new CacheEntry()
 		{
@@ -491,7 +491,7 @@ public sealed class MemoryCacheMiddlewareTests
 		context.Request.Method = "POST";
 		context.Request.Path = "/api/test";
 
-		string bodyContent = "{\"test\":\"data\"}";
+		const string bodyContent = "{\"test\":\"data\"}";
 		MemoryStream bodyStream = new(Encoding.UTF8.GetBytes(bodyContent));
 		context.Request.Body = bodyStream;
 		context.Response.StatusCode = StatusCodes.Status200OK;

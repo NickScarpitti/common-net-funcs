@@ -107,9 +107,9 @@ public static class PdfConversion
 	/// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable.</param>
 	/// <param name="fileName">File name including full file path to the file to convert to a PDF</param>
 	/// <param name="outputPath">Optional: Path to output file to, defaults to the same path as fileName if null</param>
-	/// <param name="cancellationToken">Optional: Cancellation token for asynchronous conversion operation</param>
 	/// <param name="maxRetries">Optional: Number of times to retry the conversion if it fails before throwing an exception, default is 3</param>
 	/// <param name="overwriteExistingFile">Optional: Whether to overwrite the output file if it already exists, default is false</param>
+	/// <param name="cancellationToken">Optional: Cancellation token for asynchronous conversion operation</param>
 	/// <exception cref="LibreOfficeFailedException"></exception>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="FileNotFoundException"></exception>

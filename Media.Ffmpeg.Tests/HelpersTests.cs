@@ -367,8 +367,8 @@ public sealed class HelpersTests : IDisposable
 		bool sizeFailure = false;
 		FileInfo fileToConvert = new(testVideoPath);
 		TimeSpan videoTimespan = TimeSpan.FromMinutes(1);
-		int conversionIndex = 1;
-		bool cancelIfLarger = false;
+		const int conversionIndex = 1;
+		const bool cancelIfLarger = false;
 		ConcurrentBag<string>? conversionOutputs = null;
 		ConcurrentDictionary<int, decimal>? fpsDict = null;
 		CancellationTokenSource? cancellationTokenSource = null;
@@ -390,8 +390,8 @@ public sealed class HelpersTests : IDisposable
 		bool sizeFailure = false;
 		FileInfo fileToConvert = new(testVideoPath);
 		TimeSpan videoTimespan = TimeSpan.FromMinutes(1);
-		int conversionIndex = 1;
-		bool cancelIfLarger = false;
+		const int conversionIndex = 1;
+		const bool cancelIfLarger = false;
 		ConcurrentBag<string> conversionOutputs = new();
 		ConcurrentDictionary<int, decimal> fpsDict = new();
 		CancellationTokenSource? cancellationTokenSource = null;
@@ -417,8 +417,8 @@ public sealed class HelpersTests : IDisposable
 		bool sizeFailure = false;
 		FileInfo fileToConvert = new(testVideoPath);
 		TimeSpan videoTimespan = TimeSpan.FromMinutes(1);
-		int conversionIndex = 2;
-		bool cancelIfLarger = false;
+		const int conversionIndex = 2;
+		const bool cancelIfLarger = false;
 		ConcurrentBag<string> conversionOutputs = new();
 		ConcurrentDictionary<int, decimal> fpsDict = new();
 		fpsDict.TryAdd(conversionIndex, 5.0m); // Pre-existing value
@@ -444,8 +444,8 @@ public sealed class HelpersTests : IDisposable
 		bool sizeFailure = false;
 		FileInfo fileToConvert = new(testVideoPath);
 		TimeSpan videoTimespan = TimeSpan.FromMinutes(1);
-		int conversionIndex = 3;
-		bool cancelIfLarger = true; // Enable cancellation on size increase
+		const int conversionIndex = 3;
+		const bool cancelIfLarger = true; // Enable cancellation on size increase
 		ConcurrentBag<string> conversionOutputs = new();
 		ConcurrentDictionary<int, decimal> fpsDict = new();
 		CancellationTokenSource cancellationTokenSource = new();
@@ -472,8 +472,8 @@ public sealed class HelpersTests : IDisposable
 		bool sizeFailure = false;
 		FileInfo fileToConvert = new(testVideoPath);
 		TimeSpan videoTimespan = TimeSpan.FromMinutes(1);
-		int conversionIndex = 4;
-		bool cancelIfLarger = false;
+		const int conversionIndex = 4;
+		const bool cancelIfLarger = false;
 		ConcurrentBag<string> conversionOutputs = new();
 		ConcurrentDictionary<int, decimal> fpsDict = new();
 		CancellationTokenSource? cancellationTokenSource = null;
@@ -508,8 +508,8 @@ public sealed class HelpersTests : IDisposable
 		DateTime lastSummaryOutput = DateTime.UtcNow.AddSeconds(-40);
 		bool conversionFailed = false;
 		bool sizeFailure = false;
-		int conversionIndex = 5;
-		bool cancelIfLarger = false;
+		const int conversionIndex = 5;
+		const bool cancelIfLarger = false;
 		ConcurrentBag<string> conversionOutputs = new();
 		ConcurrentDictionary<int, decimal> fpsDict = new();
 		CancellationTokenSource? cancellationTokenSource = null;
@@ -586,8 +586,8 @@ public sealed class HelpersTests : IDisposable
 		bool sizeFailure = false;
 		FileInfo fileToConvert = new(testVideoPath);
 		TimeSpan videoTimespan = TimeSpan.FromSeconds(10); // 10 second video
-		int conversionIndex = 6;
-		bool cancelIfLarger = false;
+		const int conversionIndex = 6;
+		const bool cancelIfLarger = false;
 		ConcurrentBag<string> conversionOutputs = new();
 		ConcurrentDictionary<int, decimal> fpsDict = new();
 		CancellationTokenSource? cancellationTokenSource = null;
@@ -615,8 +615,8 @@ public sealed class HelpersTests : IDisposable
 		bool sizeFailure = false;
 		FileInfo fileToConvert = new(testVideoPath);
 		TimeSpan videoTimespan = TimeSpan.FromMinutes(1);
-		int conversionIndex = 7;
-		bool cancelIfLarger = false;
+		const int conversionIndex = 7;
+		const bool cancelIfLarger = false;
 		ConcurrentBag<string> conversionOutputs = new();
 		ConcurrentDictionary<int, decimal> fpsDict = new();
 		CancellationTokenSource? cancellationTokenSource = null;
@@ -659,8 +659,8 @@ public sealed class HelpersTests : IDisposable
 	public async Task GetKeyFrameSpacing_WithNegativeSampleLength_ShouldDefaultToTenSeconds()
 	{
 		// Arrange - Use a sample length <= 0 to trigger default value
-		int numberOfSamples = 2;
-		int sampleLengthSec = -5; // This should be set to 10 internally
+		const int numberOfSamples = 2;
+		const int sampleLengthSec = -5; // This should be set to 10 internally
 
 		// Act
 		decimal result = await testVideoPath.GetKeyFrameSpacing(numberOfSamples, sampleLengthSec);
@@ -673,8 +673,8 @@ public sealed class HelpersTests : IDisposable
 	public async Task GetKeyFrameSpacing_WithLargeSampleParameters_ShouldReadEntireVideo()
 	{
 		// Arrange - Set numberOfSamples * sampleLengthSec to be very large
-		int numberOfSamples = 100;
-		int sampleLengthSec = 100; // This total will likely be >= video duration
+		const int numberOfSamples = 100;
+		const int sampleLengthSec = 100; // This total will likely be >= video duration
 
 		// Act
 		decimal result = await testVideoPath.GetKeyFrameSpacing(numberOfSamples, sampleLengthSec);
@@ -704,7 +704,7 @@ public sealed class HelpersTests : IDisposable
 		const string fileName = "testfile";
 		const bool success = true;
 		long? originalSize = null;
-		long endSize = 100;
+		const long endSize = 100;
 
 		// Act
 		await Helpers.RecordResults(fileName, success, bag, tempLogFile, originalSize, endSize);
@@ -720,7 +720,7 @@ public sealed class HelpersTests : IDisposable
 		ConcurrentBag<string> bag = new();
 		const string fileName = "testfile";
 		const bool success = true;
-		long originalSize = 100;
+		const long originalSize = 100;
 		long? endSize = null;
 
 		// Act

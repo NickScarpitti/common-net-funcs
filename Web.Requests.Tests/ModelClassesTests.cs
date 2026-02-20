@@ -3,7 +3,6 @@ using CommonNetFuncs.Web.Requests;
 using CommonNetFuncs.Web.Requests.Rest;
 using MemoryPack;
 using MessagePack;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Requests.Tests;
 
@@ -231,7 +230,7 @@ public sealed class ModelClassesTests
 	{
 		// Arrange
 		HttpResponseMessage response = new(System.Net.HttpStatusCode.OK);
-		IAsyncEnumerable<string> asyncEnumerable = CreateAsyncEnumerable(new[] { "item1", "item2" });
+		IAsyncEnumerable<string> asyncEnumerable = CreateAsyncEnumerable(["item1", "item2"]);
 
 		// Act
 		StreamingRestObject<string> streamingObject = new()
@@ -370,9 +369,9 @@ public sealed class ModelClassesTests
 	public void RestHelperConstants_EDelayBackoffType_HasExpectedValues()
 	{
 		// Assert - verify enum values exist
-		RestHelperConstants.EDelayBackoffType constantValue = RestHelperConstants.EDelayBackoffType.Constant;
-		RestHelperConstants.EDelayBackoffType linearValue = RestHelperConstants.EDelayBackoffType.Linear;
-		RestHelperConstants.EDelayBackoffType exponentialValue = RestHelperConstants.EDelayBackoffType.Exponential;
+		const RestHelperConstants.EDelayBackoffType constantValue = RestHelperConstants.EDelayBackoffType.Constant;
+		const RestHelperConstants.EDelayBackoffType linearValue = RestHelperConstants.EDelayBackoffType.Linear;
+		const RestHelperConstants.EDelayBackoffType exponentialValue = RestHelperConstants.EDelayBackoffType.Exponential;
 
 		constantValue.ShouldBe(RestHelperConstants.EDelayBackoffType.Constant);
 		linearValue.ShouldBe(RestHelperConstants.EDelayBackoffType.Linear);

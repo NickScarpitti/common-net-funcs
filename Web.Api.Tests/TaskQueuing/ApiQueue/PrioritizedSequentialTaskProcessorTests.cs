@@ -159,7 +159,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		BoundedChannelOptions options = new(10);
 		using PrioritizedSequentialTaskProcessor processor = new(options);
 		await processor.StartAsync(CancellationToken.None);
-		int expectedValue = 42;
+		const int expectedValue = 42;
 
 		// Act
 
@@ -196,7 +196,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		BoundedChannelOptions options = new(10);
 		using PrioritizedSequentialTaskProcessor processor = new(options);
 		await processor.StartAsync(CancellationToken.None);
-		string expectedValue = "test result";
+		const string expectedValue = "test result";
 
 		// Act
 
@@ -333,7 +333,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		BoundedChannelOptions options = new(10);
 		using PrioritizedSequentialTaskProcessor processor = new(options);
 		await processor.StartAsync(CancellationToken.None);
-		int priority = 5;
+		const int priority = 5;
 
 		// Act
 
@@ -637,7 +637,7 @@ public class PrioritizedSequentialTaskProcessorTests
 		BoundedChannelOptions options = new(100);
 		using PrioritizedSequentialTaskProcessor processor = new(options);
 		await processor.StartAsync(CancellationToken.None);
-		int taskCount = 50;
+		const int taskCount = 50;
 		List<Task<int?>> tasks = new();
 
 		// Act

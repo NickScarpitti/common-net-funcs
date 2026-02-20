@@ -30,7 +30,7 @@ public sealed class ManipulationTests : IDisposable
 		{
 			if (disposing)
 			{
-				Thread.Sleep(2000);
+				Task.Delay(2000).Wait();
 			}
 			disposed = true;
 		}
@@ -3535,7 +3535,7 @@ public sealed class ManipulationTests : IDisposable
 	public async Task TryDetectImageTypeAsync_String_WithShortPath_ReturnsNull()
 	{
 		// Arrange - path less than 4 characters
-		string shortPath = "ab";
+		const string shortPath = "ab";
 
 		// Act
 		IImageFormat? format = await Manipulation.TryDetectImageTypeAsync(shortPath);
@@ -3548,7 +3548,7 @@ public sealed class ManipulationTests : IDisposable
 	public async Task TryGetMetadataAsync_String_WithShortPath_ReturnsNull()
 	{
 		// Arrange - path less than 4 characters
-		string shortPath = "xyz";
+		const string shortPath = "xyz";
 
 		// Act
 		ImageMetadata? metadata = await Manipulation.TryGetMetadataAsync(shortPath);

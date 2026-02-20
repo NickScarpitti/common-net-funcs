@@ -504,8 +504,9 @@ public sealed class StreamsTests
 	[Fact]
 	public async Task DetectCompressionType_Should_Return_None_For_Non_Compressed_Data()
 	{
-		// Arrange
-		await using MemoryStream stream = new(smallData);
+		// Arrange - Use predictable ASCII text data that won't match compression signatures
+		byte[] nonCompressedData = "This is plain text data that should not match any compression signature."u8.ToArray();
+		await using MemoryStream stream = new(nonCompressedData);
 
 		// Act
 		ECompressionType detectedType = await stream.DetectCompressionType();

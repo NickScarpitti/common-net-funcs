@@ -1088,83 +1088,66 @@ public sealed class AsyncTests
 
 	#region ObjectFill<T> List<T> with Func, Semaphore, CancellationToken
 
-	[Fact]
-	public async Task ObjectFill_List_WithFuncSemaphore_ShouldAddItems()
+	public enum ObjectFillCollectionType { List, HashSet }
+	public enum ObjectFillFuncScenario { Normal, ReturnsNull, ThrowsException, NullSemaphore }
+
+	[Theory]
+	[InlineData(ObjectFillCollectionType.List, ObjectFillFuncScenario.Normal)]
+	[InlineData(ObjectFillCollectionType.List, ObjectFillFuncScenario.ReturnsNull)]
+	[InlineData(ObjectFillCollectionType.List, ObjectFillFuncScenario.NullSemaphore)]
+	[InlineData(ObjectFillCollectionType.List, ObjectFillFuncScenario.ThrowsException)]
+	[InlineData(ObjectFillCollectionType.HashSet, ObjectFillFuncScenario.Normal)]
+	[InlineData(ObjectFillCollectionType.HashSet, ObjectFillFuncScenario.ReturnsNull)]
+	[InlineData(ObjectFillCollectionType.HashSet, ObjectFillFuncScenario.ThrowsException)]
+	public async Task ObjectFill_Collection_WithVariousScenarios_HandlesCorrectly(ObjectFillCollectionType collectionType, ObjectFillFuncScenario scenario)
 	{
-		using SemaphoreSlim semaphore = new(1, 1);
+		switch (collectionType)
+		{
+			case ObjectFillCollectionType.List:
+				await TestObjectFillList(scenario);
+				break;
+			case ObjectFillCollectionType.HashSet:
+				await TestObjectFillHashSet(scenario);
+				break;
+		}
+	}
+
+	private static async Task TestObjectFillList(ObjectFillFuncScenario scenario)
+	{
 		List<int> collection = new() { 1, 2, 3 };
-		static Task<List<int>> func() => Task.FromResult(new List<int> { 4, 5, 6 });
+		using SemaphoreSlim? semaphore = scenario == ObjectFillFuncScenario.NullSemaphore ? null : new(1, 1);
+
+		Task<List<int>> func() => scenario switch
+		{
+			ObjectFillFuncScenario.Normal or ObjectFillFuncScenario.NullSemaphore => Task.FromResult(new List<int> { 4, 5, 6 }),
+			ObjectFillFuncScenario.ReturnsNull => Task.FromResult<List<int>>(null!),
+			ObjectFillFuncScenario.ThrowsException => Task.FromException<List<int>>(new InvalidOperationException("Test error")),
+			_ => throw new ArgumentOutOfRangeException(nameof(scenario))
+		};
 
 		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
-		collection.Count.ShouldBe(6);
+
+		int expectedCount = scenario is ObjectFillFuncScenario.Normal or ObjectFillFuncScenario.NullSemaphore ? 6 : 3;
+		collection.Count.ShouldBe(expectedCount);
 	}
 
-	[Fact]
-	public async Task ObjectFill_List_WithFuncReturningNull_ShouldKeepOriginal()
-	{
-		using SemaphoreSlim semaphore = new(1, 1);
-		List<int> collection = new() { 1, 2, 3 };
-		static Task<List<int>> func() => Task.FromResult<List<int>>(null!);
-
-		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
-		collection.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_List_WithNullSemaphore_ShouldAddItems()
-	{
-		List<int> collection = new() { 1, 2, 3 };
-		static Task<List<int>> func() => Task.FromResult(new List<int> { 4, 5, 6 });
-
-		await Async.ObjectFill(collection, func, null, Current.CancellationToken);
-		collection.Count.ShouldBe(6);
-	}
-
-	[Fact]
-	public async Task ObjectFill_List_WithFuncThrowingException_ShouldKeepOriginal()
-	{
-		using SemaphoreSlim semaphore = new(1, 1);
-		List<int> collection = new() { 1, 2, 3 };
-		static Task<List<int>> func() => Task.FromException<List<int>>(new InvalidOperationException("Test error"));
-
-		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
-		collection.Count.ShouldBe(3);
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSet_WithFuncSemaphore_ShouldAddItems()
-	{
-		using SemaphoreSlim semaphore = new(1, 1);
-		HashSet<int> collection = new() { 1, 2, 3 };
-
-		static Task<HashSet<int>> func() => Task.FromResult(new HashSet<int> { 4, 5, 6 });
-
-		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
-		collection.Count.ShouldBe(6);  // {1, 2, 3, 4, 5, 6}
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSet_WithFuncReturningNull_ShouldHandleGracefully()
+	private static async Task TestObjectFillHashSet(ObjectFillFuncScenario scenario)
 	{
 		HashSet<int> collection = new() { 1, 2, 3 };
 		using SemaphoreSlim semaphore = new(1, 1);
-		static Task<HashSet<int>> func() => Task.FromResult<HashSet<int>>(null!);
+
+		Task<HashSet<int>> func() => scenario switch
+		{
+			ObjectFillFuncScenario.Normal => Task.FromResult(new HashSet<int> { 4, 5, 6 }),
+			ObjectFillFuncScenario.ReturnsNull => Task.FromResult<HashSet<int>>(null!),
+			ObjectFillFuncScenario.ThrowsException => Task.FromException<HashSet<int>>(new InvalidOperationException("Test error")),
+			_ => throw new ArgumentOutOfRangeException(nameof(scenario))
+		};
 
 		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
 
-		collection.Count.ShouldBe(3); // Collection unchanged when result is null
-	}
-
-	[Fact]
-	public async Task ObjectFill_HashSet_WithFuncThrowingException_ShouldHandleGracefully()
-	{
-		HashSet<int> collection = new() { 1, 2, 3 };
-		using SemaphoreSlim semaphore = new(1, 1);
-		static Task<HashSet<int>> func() => Task.FromException<HashSet<int>>(new InvalidOperationException("Test error"));
-
-		await Async.ObjectFill(collection, func, semaphore, Current.CancellationToken);
-
-		collection.Count.ShouldBe(3); // Collection unchanged when exception thrown
+		int expectedCount = scenario == ObjectFillFuncScenario.Normal ? 6 : 3;
+		collection.Count.ShouldBe(expectedCount);
 	}
 
 	[Theory]

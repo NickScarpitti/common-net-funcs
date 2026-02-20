@@ -4,6 +4,19 @@ using static CommonNetFuncs.Office.Common.PdfConversion;
 
 namespace Office.Common.Tests;
 
+public enum ExceptionConstructorType
+{
+	Default,
+	WithMessage,
+	WithMessageAndInner
+}
+
+public enum ExecutionMode
+{
+	Asynchronous,
+	Synchronous
+}
+
 public sealed class PdfConversionTests //: IDisposable
 {
 	private readonly string testDataPath;
@@ -190,43 +203,42 @@ public sealed class PdfConversionTests //: IDisposable
 		await Should.ThrowAsync<LibreOfficeFailedException>(() => ConvertToPdfAsync(libreOfficePath, sourceFile, cancellationToken: cts.Token, maxRetries: 3));
 	}
 
-	[Fact]
-	public void LibreOfficeFailedException_DefaultConstructor_ShouldCreateInstance()
-	{
-		// Act
-		LibreOfficeFailedException exception = new();
-
-		// Assert
-		exception.ShouldNotBeNull();
-		exception.Message.ShouldNotBeNull();
-	}
-
-	[Fact]
-	public void LibreOfficeFailedException_MessageConstructor_ShouldSetMessage()
+	[Theory]
+	[InlineData(ExceptionConstructorType.Default)]
+	[InlineData(ExceptionConstructorType.WithMessage)]
+	[InlineData(ExceptionConstructorType.WithMessageAndInner)]
+	public void LibreOfficeFailedException_Constructors_ShouldWorkCorrectly(ExceptionConstructorType constructorType)
 	{
 		// Arrange
 		const string expectedMessage = "Test error message";
+		Exception? innerException = new InvalidOperationException("Inner exception");
 
 		// Act
-		LibreOfficeFailedException exception = new(expectedMessage);
+		LibreOfficeFailedException exception = constructorType switch
+		{
+			ExceptionConstructorType.Default => new LibreOfficeFailedException(),
+			ExceptionConstructorType.WithMessage => new LibreOfficeFailedException(expectedMessage),
+			ExceptionConstructorType.WithMessageAndInner => new LibreOfficeFailedException(expectedMessage, innerException),
+			_ => throw new InvalidOperationException($"Unknown constructor type: {constructorType}")
+		};
 
 		// Assert
-		exception.Message.ShouldBe(expectedMessage);
-	}
+		switch (constructorType)
+		{
+			case ExceptionConstructorType.Default:
+				exception.ShouldNotBeNull();
+				exception.Message.ShouldNotBeNull();
+				break;
 
-	[Fact]
-	public void LibreOfficeFailedException_MessageAndInnerConstructor_ShouldSetBoth()
-	{
-		// Arrange
-		const string expectedMessage = "Test error message";
-		Exception innerException = new InvalidOperationException("Inner exception");
+			case ExceptionConstructorType.WithMessage:
+				exception.Message.ShouldBe(expectedMessage);
+				break;
 
-		// Act
-		LibreOfficeFailedException exception = new(expectedMessage, innerException);
-
-		// Assert
-		exception.Message.ShouldBe(expectedMessage);
-		exception.InnerException.ShouldBe(innerException);
+			case ExceptionConstructorType.WithMessageAndInner:
+				exception.Message.ShouldBe(expectedMessage);
+				exception.InnerException.ShouldBe(innerException);
+				break;
+		}
 	}
 
 	[Fact]
@@ -370,34 +382,6 @@ public sealed class PdfConversionTests //: IDisposable
 			{
 				ConvertToPdf(libreOfficePath, sourceFile, tempPath,
 					conversionTimeout: TimeSpan.FromMilliseconds(1), maxRetries: 2);
-			});
-#pragma warning restore S6966 // Awaitable method should be used
-		}
-		finally
-		{
-			// Cleanup
-			if (Directory.Exists(tempPath))
-			{
-				Directory.Delete(tempPath, true);
-			}
-		}
-	}
-
-	[Fact]
-	public void ConvertToPdf_WithNullLibreOfficePath_ShouldThrowException()
-	{
-		// Arrange
-		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
-		Directory.CreateDirectory(tempPath);
-		string sourceFile = Combine(testDataPath, "Test.xlsx");
-
-		try
-		{
-			// Act & Assert
-#pragma warning disable S6966 // Awaitable method should be used
-			Should.Throw<Exception>(() =>
-			{
-				ConvertToPdf(null!, sourceFile, tempPath);
 			});
 #pragma warning restore S6966 // Awaitable method should be used
 		}
@@ -933,15 +917,16 @@ public sealed class PdfConversionTests //: IDisposable
 	}
 
 	[Theory]
+	[InlineData(null)]
 	[InlineData("")]
 	[InlineData("   ")]
-	public void ConvertToPdf_WithWhitespaceLibreOfficePath_ShouldThrowException(string whitespaceValue)
+	public void ConvertToPdf_WithInvalidLibreOfficePath_ShouldThrowException(string? invalidPath)
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
 
-		// Act & Assert - Should throw when LibreOffice path is whitespace
-		Should.Throw<Exception>(() => ConvertToPdf(whitespaceValue, sourceFile));
+		// Act & Assert - Should throw when LibreOffice path is null or whitespace
+		Should.Throw<Exception>(() => ConvertToPdf(invalidPath!, sourceFile));
 	}
 
 	[Fact]
@@ -1259,14 +1244,16 @@ public sealed class PdfConversionTests //: IDisposable
 		}
 	}
 
-	[Fact]
-	public async Task ConvertToPdfAsync_WithDefaultOverwriteAndExistingFile_ShouldThrowException()
+	[Theory]
+	[InlineData(ExecutionMode.Asynchronous)]
+	[InlineData(ExecutionMode.Synchronous)]
+	public async Task ConvertToPdf_WithDefaultOverwriteAndExistingFile_ShouldThrowException(ExecutionMode mode)
 	{
 		// Arrange
 		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 		Directory.CreateDirectory(tempPath);
-		string sourceFile = Combine(testDataPath, "TestAsyncDefaultOverwrite.xlsx");
-		string expectedOutputFile = Combine(tempPath, "TestAsyncDefaultOverwrite.pdf");
+		string sourceFile = Combine(testDataPath, $"Test{mode}DefaultOverwrite.xlsx");
+		string expectedOutputFile = Combine(tempPath, $"Test{mode}DefaultOverwrite.pdf");
 
 		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
 		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", TestContext.Current.CancellationToken);
@@ -1274,48 +1261,20 @@ public sealed class PdfConversionTests //: IDisposable
 		try
 		{
 			// Act & Assert - Not passing overwriteExistingFile, should use default (false) and fail
-			LibreOfficeFailedException exception = await Should.ThrowAsync<LibreOfficeFailedException>(async () =>
+			LibreOfficeFailedException exception = mode switch
 			{
-				await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 1);
-			});
-
-			exception.Message.ShouldContain("Failed to run LibreOffice!");
-		}
-		finally
-		{
-			// Cleanup
-			if (File.Exists(sourceFile))
-			{
-				File.Delete(sourceFile);
-			}
-			if (Directory.Exists(tempPath))
-			{
-				Directory.Delete(tempPath, true);
-			}
-		}
-	}
-
-	[Fact]
-	public async Task ConvertToPdf_WithDefaultOverwriteAndExistingFile_ShouldThrowException()
-	{
-		// Arrange
-		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
-		Directory.CreateDirectory(tempPath);
-		string sourceFile = Combine(testDataPath, "TestSyncDefaultOverwrite.xlsx");
-		string expectedOutputFile = Combine(tempPath, "TestSyncDefaultOverwrite.pdf");
-
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", TestContext.Current.CancellationToken);
-
-		try
-		{
-			// Act & Assert - Not passing overwriteExistingFile, should use default (false) and fail
-			LibreOfficeFailedException exception = Should.Throw<LibreOfficeFailedException>(() =>
-			{
+				ExecutionMode.Asynchronous => await Should.ThrowAsync<LibreOfficeFailedException>(async () =>
+				{
+					await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 1);
+				}),
+				ExecutionMode.Synchronous => Should.Throw<LibreOfficeFailedException>(() =>
+				{
 #pragma warning disable S6966 // Awaitable method should be used
-				ConvertToPdf(libreOfficePath, sourceFile, tempPath, maxRetries: 1);
+					ConvertToPdf(libreOfficePath, sourceFile, tempPath, maxRetries: 1);
 #pragma warning restore S6966 // Awaitable method should be used
-			});
+				}),
+				_ => throw new InvalidOperationException($"Unknown execution mode: {mode}")
+			};
 
 			exception.Message.ShouldContain("Failed to run LibreOffice!");
 		}

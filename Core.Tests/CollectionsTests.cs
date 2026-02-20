@@ -1135,360 +1135,277 @@ public sealed class CollectionsTests
 
 	#region ToDataTable Tests
 
-	//	[Theory]
-	//	[InlineData(true)]
-	//	[InlineData(false)]
-	//	public void ToDataTable_ConvertsCollectionToDataTable(bool useExpressionTrees)
-	//	{
-	//		// Arrange
-	//		List<TestClass> collection = new()
-	//				{
-	//						new TestClass { Id = 1, Name = "test1", IsActive = true },
-	//						new TestClass { Id = 2, Name = "test2", IsActive = false }
-	//				};
-
-	//		using DataTable result = new();
-
-	//		// Act
-	//		if (useExpressionTrees)
-	//		{
-	//			collection.ToDataTable(result);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			collection.ToDataTableReflection(result);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-
-	//		// Assert
-	//		result.ShouldNotBeNull();
-	//		result.Columns.Count.ShouldBe(7); // Id, Name, IsActive
-	//		result.Rows.Count.ShouldBe(2);
-
-	//		result.Rows[0]["Id"].ShouldBe(1);
-	//		result.Rows[0]["Name"].ShouldBe("test1");
-	//		result.Rows[0]["IsActive"].ShouldBe(true);
-
-	//		result.Rows[1]["Id"].ShouldBe(2);
-	//		result.Rows[1]["Name"].ShouldBe("test2");
-	//		result.Rows[1]["IsActive"].ShouldBe(false);
-
-	//		result.Dispose();
-	//	}
-
-	//	[Theory]
-	//	[InlineData(nameof(TestClass.Id), nameof(TestClass.Name), false)]
-	//	[InlineData(nameof(TestClass.Id), nameof(TestClass.Name), true)]
-	//	[InlineData($"{nameof(TestClass.Id)}NotInTestClass1", $"{nameof(TestClass.Name)}NotInTestClass2", false)]
-	//	[InlineData($"{nameof(TestClass.Id)}NotInTestClass1", $"{nameof(TestClass.Name)}NotInTestClass2", true)]
-	//	[InlineData(null, null, false)]
-	//	[InlineData(null, null, true)]
-	//	public void ToDataTable_WithExistingDataTable_AddsRowsToIt(string? column1Name, string? column2Name, bool useExpressionTrees)
-	//	{
-	//		// Arrange
-	//		List<TestClass> collection = new()
-	//				{
-	//						new TestClass { Id = 1, Name = "test1" },
-	//						new TestClass { Id = 2, Name = "test2" }
-	//				};
-
-	//		using DataTable dataTable = new();
-
-	//		if (column1Name != null)
-	//		{
-	//			dataTable.Columns.Add(column1Name, typeof(int));
-	//		}
-
-	//		if (column2Name != null)
-	//		{
-	//			dataTable.Columns.Add(column2Name, typeof(string));
-	//		}
-
-	//		// Act
-	//		DataTable result = new();
-
-	//		// Act
-	//		if (useExpressionTrees)
-	//		{
-	//			result = collection.ToDataTable(dataTable);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			result = collection.ToDataTableReflection(dataTable);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-
-	//		// Assert
-	//		result.ShouldBeSameAs(dataTable);
-	//		result.Rows.Count.ShouldBe(2);
-	//		result.Rows[0]["Id"].ShouldBe(1);
-	//		result.Rows[0]["Name"].ShouldBe("test1");
-	//		result.Rows[1]["Id"].ShouldBe(2);
-	//		result.Rows[1]["Name"].ShouldBe("test2");
-	//	}
-
-	//	[Theory]
-	//	[InlineData(true)]
-	//	[InlineData(false)]
-	//	public void ToDataTable_WithParallel_ConvertsCollectionToDataTable(bool useExpressionTrees)
-	//	{
-	//		// Arrange
-	//		List<TestClass> collection = new()
-	//				{
-	//						new TestClass { Id = 1, Name = "test1" },
-	//						new TestClass { Id = 2, Name = "test2" }
-	//				};
-
-	//		// Act
-	//		using DataTable result = new();
-	//		if (useExpressionTrees)
-	//		{
-	//			collection.ToDataTable(result, useParallel: true);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			collection.ToDataTableReflection(result, useParallel: true);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-	//		// Assert
-	//		result.ShouldNotBeNull();
-	//		result.Rows.Count.ShouldBe(2);
-
-	//		// Since parallel processing doesn't guarantee order, we need to check both rows exist
-	//		bool foundRow1 = false;
-	//		bool foundRow2 = false;
-
-	//		foreach (DataRow row in result.Rows)
-	//		{
-	//			if (((int)row["Id"] == 1) && ((string)row["Name"] == "test1"))
-	//			{
-	//				foundRow1 = true;
-	//			}
-	//			else if (((int)row["Id"] == 2) && ((string)row["Name"] == "test2"))
-	//			{
-	//				foundRow2 = true;
-	//			}
-	//		}
-
-	//		foundRow1.ShouldBeTrue();
-	//		foundRow2.ShouldBeTrue();
-	//	}
-
-	//	[Theory]
-	//	[InlineData(true)]
-	//	[InlineData(false)]
-	//	public void ToDataTable_WithNullCollection_ReturnsNull(bool useExpressionTrees)
-	//	{
-	//		// Act
-	//		DataTable? result = new();
-	//		if (useExpressionTrees)
-	//		{
-	//			result = Collections.ToDataTable<TestClass>(null, result);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			result = Collections.ToDataTableReflection<TestClass>(null, result);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-
-	//		// Assert
-	//		result.ShouldBeNull();
-	//	}
-
-
-	[Fact]
-	public void ToDataTable_ConvertsCollectionToDataTable()
+	public enum ToDataTableScenario
 	{
-		// Arrange
+		ConvertsCollectionToDataTable,
+		WithNullCollection_ReturnsNull,
+		WithParallel_ConvertsCollectionToDataTable,
+		WithParallelAndCustomDegreeOfParallelism_ConvertsCorrectly,
+		WithExistingDataTableHavingInvalidColumns_RemovesInvalidColumns,
+		WithExistingDataTableHavingValidColumns_KeepsValidColumns
+	}
 
-		List<TestClass> collection = new()
+	[Theory]
+	[InlineData(ToDataTableScenario.ConvertsCollectionToDataTable)]
+	[InlineData(ToDataTableScenario.WithNullCollection_ReturnsNull)]
+	[InlineData(ToDataTableScenario.WithParallel_ConvertsCollectionToDataTable)]
+	[InlineData(ToDataTableScenario.WithParallelAndCustomDegreeOfParallelism_ConvertsCorrectly)]
+	[InlineData(ToDataTableScenario.WithExistingDataTableHavingInvalidColumns_RemovesInvalidColumns)]
+	[InlineData(ToDataTableScenario.WithExistingDataTableHavingValidColumns_KeepsValidColumns)]
+	public void ToDataTable_VariousScenarios_WorkCorrectly(ToDataTableScenario scenario)
+	{
+		// Arrange & Act & Assert
+		switch (scenario)
 		{
-			new TestClass { Id = 1, Name = "test1", IsActive = true },
-			new TestClass { Id = 2, Name = "test2", IsActive = false }
-		};
-
-		// Act
-
-		DataTable? result = collection.ToDataTable(cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		result.ShouldNotBeNull();
-		result.Columns.Count.ShouldBe(7); // All properties of TestClass
-
-		result.Rows.Count.ShouldBe(2);
-		result.Rows[0]["Id"].ShouldBe(1);
-		result.Rows[0]["Name"].ShouldBe("test1");
-		result.Rows[0]["IsActive"].ShouldBe(true);
-	}
-
-	[Fact]
-	public void ToDataTable_WithNullCollection_ReturnsNull()
-	{
-		// Act
-
-		DataTable? result = Collections.ToDataTable<TestClass>(null, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		result.ShouldBeNull();
-	}
-
-	[Fact]
-	public void ToDataTable_WithParallel_ConvertsCollectionToDataTable()
-	{
-		// Arrange
-
-		List<TestClass> collection = new()
-		{
-			new TestClass { Id = 1, Name = "test1" },
-			new TestClass { Id = 2, Name = "test2" },
-			new TestClass { Id = 3, Name = "test3" }
-		};
-
-		// Act
-
-		DataTable? result = collection.ToDataTable(useParallel: true, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		result.ShouldNotBeNull();
-		result.Rows.Count.ShouldBe(3);
-		// Check that all rows were added (order may vary due to parallel processing)
-
-		result.Rows.Cast<DataRow>().Count(r => (int)r["Id"] == 1).ShouldBe(1);
-		result.Rows.Cast<DataRow>().Count(r => (int)r["Id"] == 2).ShouldBe(1);
-		result.Rows.Cast<DataRow>().Count(r => (int)r["Id"] == 3).ShouldBe(1);
-	}
-
-	[Fact]
-	public void ToDataTable_WithParallelAndCustomDegreeOfParallelism_ConvertsCorrectly()
-	{
-		// Arrange
-
-		List<TestClass> collection = Enumerable.Range(1, 10)
-			.Select(i => new TestClass { Id = i, Name = $"test{i}" })
-			.ToList();
-
-		// Act
-
-		DataTable? result = collection.ToDataTable(useParallel: true, degreeOfParallelism: 2, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		result.ShouldNotBeNull();
-		result.Rows.Count.ShouldBe(10);
-	}
-
-	[Fact]
-	public void ToDataTable_WithExistingDataTableHavingInvalidColumns_RemovesInvalidColumns()
-	{
-		// Arrange
-
-		List<TestClass> collection = new()
-		{
-			new TestClass { Id = 1, Name = "test1" }
-		};
-		DataTable dataTable = new();
-		dataTable.Columns.Add("InvalidColumn", typeof(string));
-		dataTable.Columns.Add("AnotherInvalidColumn", typeof(int));
-
-		// Act
-
-		DataTable? result = collection.ToDataTable(dataTable, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		result.ShouldNotBeNull();
-		result.Columns.Contains("InvalidColumn").ShouldBeFalse();
-		result.Columns.Contains("AnotherInvalidColumn").ShouldBeFalse();
-		result.Columns.Contains("Id").ShouldBeTrue();
-		result.Columns.Contains("Name").ShouldBeTrue();
-	}
-
-	[Fact]
-	public void ToDataTable_WithExistingDataTableHavingValidColumns_KeepsValidColumns()
-	{
-		// Arrange
-
-		List<TestClass> collection = new()
-		{
-			new TestClass { Id = 1, Name = "test1" }
-		};
-		DataTable dataTable = new();
-		dataTable.Columns.Add("Id", typeof(int));
-		dataTable.Columns.Add("Name", typeof(string));
-
-		// Act
-
-		DataTable? result = collection.ToDataTable(dataTable, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		result.ShouldNotBeNull();
-		result.Columns.Contains("Id").ShouldBeTrue();
-		result.Columns.Contains("Name").ShouldBeTrue();
-		result.Rows.Count.ShouldBe(1);
+			case ToDataTableScenario.ConvertsCollectionToDataTable:
+				{
+					List<TestClass> collection = new()
+					{
+						new TestClass { Id = 1, Name = "test1", IsActive = true },
+						new TestClass { Id = 2, Name = "test2", IsActive = false }
+					};
+					DataTable? result = collection.ToDataTable(cancellationToken: Current.CancellationToken);
+					result.ShouldNotBeNull();
+					result.Columns.Count.ShouldBe(7); // All properties of TestClass
+					result.Rows.Count.ShouldBe(2);
+					result.Rows[0]["Id"].ShouldBe(1);
+					result.Rows[0]["Name"].ShouldBe("test1");
+					result.Rows[0]["IsActive"].ShouldBe(true);
+					break;
+				}
+			case ToDataTableScenario.WithNullCollection_ReturnsNull:
+				{
+					DataTable? result = Collections.ToDataTable<TestClass>(null, cancellationToken: Current.CancellationToken);
+					result.ShouldBeNull();
+					break;
+				}
+			case ToDataTableScenario.WithParallel_ConvertsCollectionToDataTable:
+				{
+					List<TestClass> collection = new()
+					{
+						new TestClass { Id = 1, Name = "test1" },
+						new TestClass { Id = 2, Name = "test2" },
+						new TestClass { Id = 3, Name = "test3" }
+					};
+					DataTable? result = collection.ToDataTable(useParallel: true, cancellationToken: Current.CancellationToken);
+					result.ShouldNotBeNull();
+					result.Rows.Count.ShouldBe(3);
+					// Check that all rows were added (order may vary due to parallel processing)
+					result.Rows.Cast<DataRow>().Count(r => (int)r["Id"] == 1).ShouldBe(1);
+					result.Rows.Cast<DataRow>().Count(r => (int)r["Id"] == 2).ShouldBe(1);
+					result.Rows.Cast<DataRow>().Count(r => (int)r["Id"] == 3).ShouldBe(1);
+					break;
+				}
+			case ToDataTableScenario.WithParallelAndCustomDegreeOfParallelism_ConvertsCorrectly:
+				{
+					List<TestClass> collection = Enumerable.Range(1, 10)
+						.Select(i => new TestClass { Id = i, Name = $"test{i}" })
+						.ToList();
+					DataTable? result = collection.ToDataTable(useParallel: true, degreeOfParallelism: 2, cancellationToken: Current.CancellationToken);
+					result.ShouldNotBeNull();
+					result.Rows.Count.ShouldBe(10);
+					break;
+				}
+			case ToDataTableScenario.WithExistingDataTableHavingInvalidColumns_RemovesInvalidColumns:
+				{
+					List<TestClass> collection = new()
+					{
+						new TestClass { Id = 1, Name = "test1" }
+					};
+					DataTable dataTable = new();
+					dataTable.Columns.Add("InvalidColumn", typeof(string));
+					dataTable.Columns.Add("AnotherInvalidColumn", typeof(int));
+					DataTable? result = collection.ToDataTable(dataTable, cancellationToken: Current.CancellationToken);
+					result.ShouldNotBeNull();
+					result.Columns.Contains("InvalidColumn").ShouldBeFalse();
+					result.Columns.Contains("AnotherInvalidColumn").ShouldBeFalse();
+					result.Columns.Contains("Id").ShouldBeTrue();
+					result.Columns.Contains("Name").ShouldBeTrue();
+					break;
+				}
+			case ToDataTableScenario.WithExistingDataTableHavingValidColumns_KeepsValidColumns:
+				{
+					List<TestClass> collection = new()
+					{
+						new TestClass { Id = 1, Name = "test1" }
+					};
+					DataTable dataTable = new();
+					dataTable.Columns.Add("Id", typeof(int));
+					dataTable.Columns.Add("Name", typeof(string));
+					DataTable? result = collection.ToDataTable(dataTable, cancellationToken: Current.CancellationToken);
+					result.ShouldNotBeNull();
+					result.Columns.Contains("Id").ShouldBeTrue();
+					result.Columns.Contains("Name").ShouldBeTrue();
+					result.Rows.Count.ShouldBe(1);
+					break;
+				}
+		}
 	}
 
 	#endregion
 
 	#region StringAggProps Tests
 
-
-	[Fact]
-	public void StringAggProps_WithSingleProperty_AggregatesValues()
+	public enum StringAggPropsScenario
 	{
-		// Arrange
+		WithSingleProperty_AggregatesValues,
+		WithCustomSeparator_UsesCorrectSeparator,
+		WithDistinctFalse_IncludesDuplicates,
+		WithDistinctTrue_RemovesDuplicates,
+		WithParallelTrue_AggregatesValuesCorrectly,
+		WithNullCollection_ReturnsEmptyList,
+		WithInvalidProperty_ThrowsArgumentException,
+		WithEmptyPropsToAgg_ThrowsArgumentException
+	}
 
-		List<TestClass> collection = new()
+	[Theory]
+	[InlineData(StringAggPropsScenario.WithSingleProperty_AggregatesValues)]
+	[InlineData(StringAggPropsScenario.WithCustomSeparator_UsesCorrectSeparator)]
+	[InlineData(StringAggPropsScenario.WithDistinctFalse_IncludesDuplicates)]
+	[InlineData(StringAggPropsScenario.WithDistinctTrue_RemovesDuplicates)]
+	[InlineData(StringAggPropsScenario.WithParallelTrue_AggregatesValuesCorrectly)]
+	[InlineData(StringAggPropsScenario.WithNullCollection_ReturnsEmptyList)]
+	[InlineData(StringAggPropsScenario.WithInvalidProperty_ThrowsArgumentException)]
+	[InlineData(StringAggPropsScenario.WithEmptyPropsToAgg_ThrowsArgumentException)]
+	public void StringAggProps_VariousScenarios_WorkCorrectly(StringAggPropsScenario scenario)
+	{
+		// Arrange & Act & Assert
+		switch (scenario)
+		{
+			case StringAggPropsScenario.WithSingleProperty_AggregatesValues:
 				{
+					List<TestClass> collection = new()
+					{
 						new TestClass { Id = 1, Name = "test1" },
 						new TestClass { Id = 1, Name = "test2" },
 						new TestClass { Id = 2, Name = "test3" }
-				};
-
-		// Act
-
-		List<TestClass> result = collection.StringAggProps("Name").ToList();
-
-		// Assert
-
-		result.Count.ShouldBe(2);
-
-		TestClass? group1 = result.FirstOrDefault(x => x.Id == 1);
-		group1.ShouldNotBeNull();
-		group1.Name.ShouldBe("test1;test2");
-
-		TestClass? group2 = result.FirstOrDefault(x => x.Id == 2);
-		group2.ShouldNotBeNull();
-		group2.Name.ShouldBe("test3");
+					};
+					List<TestClass> result = collection.StringAggProps("Name").ToList();
+					result.Count.ShouldBe(2);
+					TestClass? group1 = result.FirstOrDefault(x => x.Id == 1);
+					group1.ShouldNotBeNull();
+					group1.Name.ShouldBe("test1;test2");
+					TestClass? group2 = result.FirstOrDefault(x => x.Id == 2);
+					group2.ShouldNotBeNull();
+					group2.Name.ShouldBe("test3");
+					break;
+				}
+			case StringAggPropsScenario.WithCustomSeparator_UsesCorrectSeparator:
+				{
+					List<TestClass> collection = new()
+					{
+						new TestClass { Id = 1, Name = "test1" },
+						new TestClass { Id = 1, Name = "test2" }
+					};
+					List<TestClass> result = collection.StringAggProps("Name", separator: ",").ToList();
+					result.Count.ShouldBe(1);
+					result[0].Name.ShouldBe("test1,test2");
+					break;
+				}
+			case StringAggPropsScenario.WithDistinctFalse_IncludesDuplicates:
+				{
+					List<TestClass> collection = new()
+					{
+						new TestClass { Id = 1, Name = "test1" },
+						new TestClass { Id = 1, Name = "test1" },
+						new TestClass { Id = 1, Name = "test2" }
+					};
+					List<TestClass> result = collection.StringAggProps("Name", distinct: false).ToList();
+					result.Count.ShouldBe(1);
+					result[0].Name.ShouldBe("test1;test1;test2");
+					break;
+				}
+			case StringAggPropsScenario.WithDistinctTrue_RemovesDuplicates:
+				{
+					List<TestClass> collection = new()
+					{
+						new TestClass { Id = 1, Name = "test1" },
+						new TestClass { Id = 1, Name = "test1" },
+						new TestClass { Id = 1, Name = "test2" }
+					};
+					List<TestClass> result = collection.StringAggProps("Name", distinct: true).ToList();
+					result.Count.ShouldBe(1);
+					result[0].Name.ShouldBe("test1;test2");
+					break;
+				}
+			case StringAggPropsScenario.WithParallelTrue_AggregatesValuesCorrectly:
+				{
+					List<TestClass> collection = new()
+					{
+						new TestClass { Id = 1, Name = "test1" },
+						new TestClass { Id = 1, Name = "test2" },
+						new TestClass { Id = 2, Name = "test3" }
+					};
+					List<TestClass> result = collection.StringAggProps("Name", parallel: true).ToList();
+					result.Count.ShouldBe(2);
+					TestClass? group1 = result.FirstOrDefault(x => x.Id == 1);
+					group1.ShouldNotBeNull();
+					group1.Name.ShouldNotBeNull();
+					group1.Name.ShouldContain("test1");
+					group1.Name.ShouldContain("test2");
+					TestClass? group2 = result.FirstOrDefault(x => x.Id == 2);
+					group2.ShouldNotBeNull();
+					group2.Name.ShouldBe("test3");
+					break;
+				}
+			case StringAggPropsScenario.WithNullCollection_ReturnsEmptyList:
+				{
+					IEnumerable<TestClass> result = Collections.StringAggProps<TestClass>(null, "Name");
+					result.ShouldBeEmpty();
+					break;
+				}
+			case StringAggPropsScenario.WithInvalidProperty_ThrowsArgumentException:
+				{
+					List<TestClass> collection = new() { new TestClass { Id = 1, Name = "test1" } };
+					Should.Throw<ArgumentException>(() => collection.StringAggProps("InvalidProperty").ToList());
+					break;
+				}
+			case StringAggPropsScenario.WithEmptyPropsToAgg_ThrowsArgumentException:
+				{
+					List<TestClass> collection = new() { new TestClass { Id = 1, Name = "test1" } };
+					Should.Throw<ArgumentException>(() => collection.StringAggProps(new HashSet<string>()).ToList());
+					break;
+				}
+		}
 	}
 
-	[Fact]
-	public void StringAggProps_WithCustomSeparator_UsesCorrectSeparator()
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void StringAggProps_WithMultipleProperties_AggregatesAllSpecifiedProperties(bool distinct)
 	{
 		// Arrange
 
 		List<TestClass> collection = new()
 				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" }
+						new TestClass { Id = 1, Name = "test1", Description = "desc1" },
+						new TestClass { Id = 1, Name = "test2", Description = "desc2" },
+						new TestClass { Id = 1, Name = "test1", Description = "desc1" }
 				};
 
 		// Act
 
-		List<TestClass> result = collection.StringAggProps("Name", separator: ",").ToList();
+		List<TestClass> result = collection.StringAggProps(new HashSet<string> { "Name", "Description" }, distinct: distinct).ToList();
 
 		// Assert
 
-		result.Count.ShouldBe(1);
-		result[0].Name.ShouldBe("test1,test2");
+		if (distinct)
+		{
+			result.Count.ShouldBe(1);
+			result[0].Name.ShouldBe("test1;test2");
+			result[0].Description.ShouldBe("desc1;desc2");
+		}
+		else
+		{
+			result.Count.ShouldBe(1);
+			result[0].Name.ShouldBe("test1;test2;test1");
+			result[0].Description.ShouldBe("desc1;desc2;desc1");
+		}
 	}
+
+	#endregion
+
+	#region ArrayTraverse Tests
 
 	public enum ArrayDimension
 	{
@@ -1650,151 +1567,6 @@ public sealed class CollectionsTests
 					break;
 				}
 		}
-	}
-
-	[Fact]
-	public void StringAggProps_WithDistinctFalse_IncludesDuplicates()
-	{
-		// Arrange
-
-		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" }
-				};
-
-		// Act
-
-		List<TestClass> result = collection.StringAggProps("Name", distinct: false).ToList();
-
-		// Assert
-
-		result.Count.ShouldBe(1);
-		result[0].Name.ShouldBe("test1;test1;test2");
-	}
-
-	[Fact]
-	public void StringAggProps_WithDistinctTrue_RemovesDuplicates()
-	{
-		// Arrange
-
-		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" }
-				};
-
-		// Act
-
-		List<TestClass> result = collection.StringAggProps("Name", distinct: true).ToList();
-
-		// Assert
-
-		result.Count.ShouldBe(1);
-		result[0].Name.ShouldBe("test1;test2");
-	}
-
-	[Fact]
-	public void StringAggProps_WithParallelTrue_AggregatesValuesCorrectly()
-	{
-		// Arrange
-
-		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" },
-						new TestClass { Id = 2, Name = "test3" }
-				};
-
-		// Act
-
-		List<TestClass> result = collection.StringAggProps("Name", parallel: true).ToList();
-
-		// Assert
-
-		result.Count.ShouldBe(2);
-
-		TestClass? group1 = result.FirstOrDefault(x => x.Id == 1);
-		group1.ShouldNotBeNull();
-		group1.Name.ShouldNotBeNull();
-		group1.Name.ShouldContain("test1");
-		group1.Name.ShouldContain("test2");
-
-		TestClass? group2 = result.FirstOrDefault(x => x.Id == 2);
-		group2.ShouldNotBeNull();
-		group2.Name.ShouldBe("test3");
-	}
-
-	[Fact]
-	public void StringAggProps_WithNullCollection_ReturnsEmptyList()
-	{
-		// Act
-
-		IEnumerable<TestClass> result = Collections.StringAggProps<TestClass>(null, "Name");
-
-		// Assert
-
-		result.ShouldBeEmpty();
-	}
-
-	[Theory]
-	[InlineData(true)]
-	[InlineData(false)]
-	public void StringAggProps_WithMultipleProperties_AggregatesAllSpecifiedProperties(bool distinct)
-	{
-		// Arrange
-
-		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1", Description = "desc1" },
-						new TestClass { Id = 1, Name = "test2", Description = "desc2" },
-						new TestClass { Id = 1, Name = "test1", Description = "desc1" }
-				};
-
-		// Act
-
-		List<TestClass> result = collection.StringAggProps(new HashSet<string> { "Name", "Description" }, distinct: distinct).ToList();
-
-		// Assert
-
-		if (distinct)
-		{
-			result.Count.ShouldBe(1);
-			result[0].Name.ShouldBe("test1;test2");
-			result[0].Description.ShouldBe("desc1;desc2");
-		}
-		else
-		{
-			result.Count.ShouldBe(1);
-			result[0].Name.ShouldBe("test1;test2;test1");
-			result[0].Description.ShouldBe("desc1;desc2;desc1");
-		}
-	}
-
-	[Fact]
-	public void StringAggProps_WithInvalidProperty_ThrowsArgumentException()
-	{
-		// Arrange
-
-		List<TestClass> collection = new() { new TestClass { Id = 1, Name = "test1" } };
-
-		// Act & Assert
-
-		Should.Throw<ArgumentException>(() => collection.StringAggProps("InvalidProperty").ToList());
-	}
-
-	[Fact]
-	public void StringAggProps_WithEmptyPropsToAgg_ThrowsArgumentException()
-	{
-		// Arrange
-
-		List<TestClass> collection = new() { new TestClass { Id = 1, Name = "test1" } };
-
-		// Act & Assert
-
-		Should.Throw<ArgumentException>(() => collection.StringAggProps(new HashSet<string>()).ToList());
 	}
 
 	#endregion
